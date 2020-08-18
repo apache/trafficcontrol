@@ -20,11 +20,17 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileProfileUnknownConfig(toData *config.TOData, fileName string) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
 	inScope := false
 	for _, scopeParam := range toData.ScopeParams {
 		if scopeParam.ConfigFile != fileName {
@@ -41,7 +47,7 @@ func GetConfigFileProfileUnknownConfig(toData *config.TOData, fileName string) (
 	}
 	params := ParamsToMap(FilterParams(toData.ServerParams, fileName, "", "", "location"))
 
-	commentType := atscfg.GetUnknownConfigCommentType(toData.Server.Profile, params, toData.TOToolName, toData.TOURL)
-	txt := atscfg.MakeUnknownConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL)
+	commentType := atscfg.GetUnknownConfigCommentType(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL)
+	txt := atscfg.MakeUnknownConfig(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL)
 	return txt, atscfg.ContentTypeUnknownConfig, commentType, nil
 }

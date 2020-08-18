@@ -32,23 +32,8 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     string(serverName),
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		// ParentCacheGroupID:            45,
-		// ParentCacheGroupType:          "CGType4",
-		ProfileID: 46,
-		Profile:   "MyProfile",
-		TCPPort:   12080,
-		// SecondaryParentCacheGroupID:   47,
-		// SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type: "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -77,7 +62,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -166,19 +151,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -207,7 +180,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -236,7 +209,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -275,7 +248,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(server.HostName), toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -288,19 +261,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -329,7 +290,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -358,7 +319,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -397,7 +358,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -424,19 +385,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -465,7 +414,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -494,7 +443,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -533,7 +482,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -546,19 +495,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -587,7 +524,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -616,7 +553,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -655,7 +592,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -668,19 +605,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -734,11 +659,11 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds2.ID),
 		},
 	}
@@ -777,7 +702,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -816,7 +741,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -829,19 +754,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -871,7 +784,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -900,7 +813,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -939,7 +852,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -975,19 +888,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1017,7 +918,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1046,7 +947,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1085,7 +986,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1112,19 +1013,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1154,7 +1043,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1183,7 +1072,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1222,7 +1111,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1256,19 +1145,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1298,7 +1175,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1327,7 +1204,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1366,7 +1243,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1400,19 +1277,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1443,7 +1308,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1472,7 +1337,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1523,7 +1388,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1558,19 +1423,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1601,7 +1454,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1630,7 +1483,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1681,7 +1534,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1708,19 +1561,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1751,7 +1592,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1780,7 +1621,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -1831,7 +1672,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1862,19 +1703,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "MID",
-	}
+	server := makeTestRemapServer()
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -1930,7 +1759,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -1959,7 +1788,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -2010,7 +1839,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2023,19 +1852,8 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -2091,11 +1909,11 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds2.ID),
 		},
 	}
@@ -2134,7 +1952,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -2186,7 +2004,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	txt = strings.TrimSpace(txt)
 	txt = strings.Replace(txt, "\n\n", "\n", -1)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2210,19 +2028,8 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	dses := []tc.DeliveryServiceNullable{}
 	{ // see regexes - has invalid regex type
@@ -2444,35 +2251,35 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(1),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(2),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(3),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(4),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(5),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(6),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(7),
 		},
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(8),
 		},
 	}
@@ -2571,7 +2378,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -2622,7 +2429,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2636,19 +2443,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -2679,7 +2475,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -2708,7 +2504,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -2759,7 +2555,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2790,19 +2586,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -2833,7 +2618,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -2862,7 +2647,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -2913,7 +2698,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2944,19 +2729,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -2987,7 +2761,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3016,7 +2790,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3067,7 +2841,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3098,19 +2872,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3141,7 +2904,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3170,7 +2933,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3221,7 +2984,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3252,19 +3015,8 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3295,7 +3047,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3324,7 +3076,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3375,7 +3127,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3393,7 +3145,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		t.Errorf("expected literal pattern to replace '__http__', actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "myliteralpattern"+server.HostName+"foo") {
+	if !strings.Contains(remapLine, "myliteralpattern"+*server.HostName+"foo") {
 		t.Errorf("expected literal pattern to replace __http__ with server name, actual '%v'", txt)
 	}
 }
@@ -3402,19 +3154,8 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3445,7 +3186,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3474,13 +3215,13 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3531,7 +3272,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3558,19 +3299,8 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3601,7 +3331,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3630,13 +3360,13 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3687,7 +3417,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3714,19 +3444,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3757,7 +3476,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3786,13 +3505,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -3843,7 +3562,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3874,19 +3593,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -3917,7 +3625,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -3946,13 +3654,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4003,7 +3711,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4034,19 +3742,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4077,7 +3774,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4106,13 +3803,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4163,7 +3860,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4194,19 +3891,8 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4237,7 +3923,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4266,13 +3952,13 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4323,7 +4009,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4349,19 +4035,8 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4392,7 +4067,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4421,13 +4096,13 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4478,7 +4153,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4504,19 +4179,8 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4547,7 +4211,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4576,13 +4240,13 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4633,7 +4297,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4659,19 +4323,8 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4702,7 +4355,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4731,13 +4384,13 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4788,7 +4441,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4814,19 +4467,8 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -4857,7 +4499,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -4886,13 +4528,13 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -4943,7 +4585,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4969,19 +4611,8 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5012,7 +4643,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5041,13 +4672,13 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5098,7 +4729,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5122,19 +4753,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5165,7 +4785,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5194,13 +4814,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5251,7 +4871,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5278,19 +4898,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5321,7 +4930,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5350,13 +4959,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5407,7 +5016,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5434,19 +5043,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5477,7 +5075,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5506,13 +5104,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "location",
@@ -5538,7 +5136,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5562,19 +5160,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5605,7 +5192,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5634,13 +5221,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5660,7 +5247,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5689,19 +5276,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5732,7 +5308,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5761,13 +5337,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5787,7 +5363,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5821,19 +5397,8 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5864,7 +5429,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -5893,13 +5458,13 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -5919,7 +5484,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5950,19 +5515,8 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -5993,7 +5547,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6022,13 +5576,13 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6048,7 +5602,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6071,19 +5625,8 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6114,7 +5657,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6143,13 +5686,13 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6200,7 +5743,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6235,19 +5778,8 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6278,7 +5810,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6307,13 +5839,13 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6364,7 +5896,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6391,19 +5923,8 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6434,7 +5955,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6463,13 +5984,13 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6520,7 +6041,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6543,19 +6064,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6586,7 +6096,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6615,13 +6125,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6672,7 +6182,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6699,19 +6209,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6742,7 +6241,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6771,13 +6270,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6828,7 +6327,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6855,19 +6354,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -6898,7 +6386,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -6927,13 +6415,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -6984,7 +6472,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7011,19 +6499,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7055,7 +6532,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7084,13 +6561,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7141,7 +6618,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7172,19 +6649,8 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7216,7 +6682,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7245,13 +6711,13 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7302,7 +6768,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7346,19 +6812,8 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7390,7 +6845,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7419,13 +6874,13 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7476,7 +6931,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7514,19 +6969,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7557,7 +7001,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7586,13 +7030,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7643,7 +7087,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7670,19 +7114,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7713,7 +7146,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7742,13 +7175,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7799,7 +7232,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7822,19 +7255,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -7865,7 +7287,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -7894,13 +7316,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -7951,7 +7373,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7974,19 +7396,8 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -8017,7 +7428,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -8046,13 +7457,13 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -8103,7 +7514,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8126,19 +7537,8 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -8169,7 +7569,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -8198,13 +7598,13 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -8255,7 +7655,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8282,19 +7682,8 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -8325,7 +7714,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -8354,13 +7743,13 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -8411,7 +7800,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8434,19 +7823,8 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -8477,7 +7855,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -8506,13 +7884,13 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -8563,7 +7941,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8576,19 +7954,8 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	server := &tc.Server{
-		CachegroupID: 42,
-		CDNName:      "mycdn",
-		CDNID:        43,
-		HostName:     "server0",
-		HTTPSPort:    12443,
-		ID:           44,
-		IPAddress:    "192.168.2.4",
-		ProfileID:    46,
-		Profile:      "MyProfile",
-		TCPPort:      12080,
-		Type:         "EDGE",
-	}
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
 
 	ds := tc.DeliveryServiceNullable{}
 	ds.ID = util.IntPtr(48)
@@ -8619,7 +7986,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(server.ID),
+			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
@@ -8648,13 +8015,13 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.Profile),
+			Profiles:   []byte(*server.Profile),
 		},
 	}
 
@@ -8705,7 +8072,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, server.HostName, toToolName, toURL)
+	testComment(t, txt, *server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8713,4 +8080,22 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		t.Fatalf("expected no remaps for DS with nil regex type, actual: '%v' count %v", txt, len(txtLines))
 	}
 
+}
+
+func makeTestRemapServer() *tc.ServerNullable {
+	server := &tc.ServerNullable{}
+	server.ProfileID = util.IntPtr(42)
+	server.CDNName = util.StrPtr("mycdn")
+	server.Cachegroup = util.StrPtr("cg0")
+	server.DomainName = util.StrPtr("mydomain")
+	server.CDNID = util.IntPtr(43)
+	server.HostName = util.StrPtr("server0")
+	server.HTTPSPort = util.IntPtr(12443)
+	server.ID = util.IntPtr(44)
+	setIP(server, "192.168.2.4")
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("MyProfile")
+	server.TCPPort = util.IntPtr(12080)
+	server.Type = "MID"
+	return server
 }

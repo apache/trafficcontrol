@@ -24,6 +24,7 @@ import (
 	"io"
 	"math/rand"
 	"mime/multipart"
+	"net"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -31,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
@@ -132,15 +134,51 @@ var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 // PreprocessConfigFile does global preprocessing on the given config file cfgFile.
 // This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
 // These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(server tc.Server, cfgFile string) string {
-	if server.TCPPort != 80 && server.TCPPort != 0 {
-		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(server.TCPPort), -1)
+func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
+	if server.TCPPort != nil && *server.TCPPort != 80 && *server.TCPPort != 0 {
+		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(*server.TCPPort), -1)
 	} else {
 		cfgFile = strings.Replace(cfgFile, `:__SERVER_TCP_PORT__`, ``, -1)
 	}
-	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, server.IPAddress, -1)
-	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, server.HostName, -1)
-	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, server.HostName+`.`+server.DomainName, -1)
+
+	ipAddr := ""
+	for _, iFace := range server.Interfaces {
+		for _, addr := range iFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+			addrStr := addr.Address
+			ip := net.ParseIP(addrStr)
+			if ip == nil {
+				err := error(nil)
+				ip, _, err = net.ParseCIDR(addrStr)
+				if err != nil {
+					ip = nil // don't bother with the error, just skip
+				}
+			}
+			if ip.To4() == nil {
+				continue
+			}
+			ipAddr = addrStr
+			break
+		}
+	}
+	if ipAddr != "" {
+		cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, ipAddr, -1)
+	} else {
+		log.Errorln("Preprocessing: this server had a missing or malformed IPv4 Service Interface, cannot replace __CACHE_IPV4__ directives!")
+	}
+
+	if server.HostName == nil || *server.HostName == "" {
+		log.Errorln("Preprocessing: this server missing HostName, cannot replace __HOSTNAME__ directives!")
+	} else {
+		cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, *server.HostName, -1)
+	}
+	if server.HostName == nil || *server.HostName == "" || server.DomainName == nil || *server.DomainName == "" {
+		log.Errorln("Preprocessing: this server missing HostName or DomainName, cannot replace __FULL_HOSTNAME__ directives!")
+	} else {
+		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
+	}
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
 	return cfgFile
 }

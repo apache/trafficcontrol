@@ -83,24 +83,30 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 		toData.Servers = servers
 
-		server := tc.Server{ID: atscfg.InvalidID}
+		server := &tc.ServerNullable{}
 		for _, toServer := range servers {
-			if toServer.HostName == cfg.CacheHostName {
-				server = toServer
+			if toServer.HostName != nil && *toServer.HostName == cfg.CacheHostName {
+				server = &toServer
 				break
 			}
 		}
-		if server.ID == atscfg.InvalidID {
+		if server.ID == nil {
 			return errors.New("server '" + cfg.CacheHostName + " not found in servers")
+		} else if server.CDNName == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing CDNName")
+		} else if server.CDNID == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing CDNID")
+		} else if server.Profile == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing Profile")
 		}
 
 		toData.Server = server
 
 		sslF := func() error {
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
-			keys, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(server.CDNName))
+			keys, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName))
 			if err != nil {
-				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
 			toData.SSLKeys = keys
 			return nil
@@ -108,10 +114,10 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(server.CDNID)
+			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(*server.CDNID)
 			if err == nil && unsupported {
 				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
-				var legacyDSes []tc.DeliveryServiceNullable
+				legacyDSes := []tc.DeliveryServiceNullable{}
 				legacyDSes, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
 				if err == nil {
 					dses = make([]tc.DeliveryServiceNullableV30, 0, len(legacyDSes))
@@ -127,7 +133,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 			allDSesHaveTopologies := true
 			for _, ds := range toData.DeliveryServices {
-				if ds.CDNID == nil || *ds.CDNID != server.CDNID {
+				if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
 					continue
 				}
 				if ds.Topology == nil {
@@ -212,29 +218,29 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
-			params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+			params, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
 			if err != nil {
-				return errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
+				return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 			} else if len(params) == 0 {
-				return errors.New("getting server profile '" + server.Profile + "' parameters: no parameters (profile not found?)")
+				return errors.New("getting server profile '" + *server.Profile + "' parameters: no parameters (profile not found?)")
 			}
 			toData.ServerParams = params
 			return nil
 		}
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
-			cdn, err := cfg.TOClient.GetCDN(tc.CDNName(server.CDNName))
+			cdn, err := cfg.TOClient.GetCDN(tc.CDNName(*server.CDNName))
 			if err != nil {
-				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
 			toData.CDN = cdn
 			return nil
 		}
 		profileF := func() error {
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			profile, err := cfg.TOClient.GetProfileByName(server.Profile)
+			profile, err := cfg.TOClient.GetProfileByName(*server.Profile)
 			if err != nil {
-				return errors.New("getting profile '" + server.Profile + "': " + err.Error())
+				return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
 			}
 			toData.Profile = profile
 			return nil

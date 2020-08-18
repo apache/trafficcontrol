@@ -149,6 +149,31 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 	return status, false, nil
 }
 
+func (cl *TOClient) GetServers() ([]tc.ServerNullable, bool, error) {
+	servers := []tc.ServerNullable{}
+	unsupported := false
+	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
+		toServers, reqInf, err := cl.C.GetServers(nil, nil)
+		if err != nil {
+			if IsUnsupportedErr(err) {
+				unsupported = true
+				return nil
+			}
+			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		servers := obj.(*[]tc.ServerNullable)
+		*servers = toServers.Response
+		return nil
+	})
+	if unsupported {
+		return nil, true, nil
+	}
+	if err != nil {
+		return nil, false, errors.New("getting servers: " + err.Error())
+	}
+	return servers, false, nil
+}
+
 func IsUnsupportedErr(err error) bool {
 	errStr := strings.ToLower(err.Error())
 	return strings.Contains(errStr, "not found") || strings.Contains(errStr, "not impl")

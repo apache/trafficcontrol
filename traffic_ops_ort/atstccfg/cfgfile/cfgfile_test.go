@@ -79,12 +79,20 @@ func TestWriteConfigs(t *testing.T) {
 func TestPreprocessConfigFile(t *testing.T) {
 	// the TCP port replacement is fundamentally different for 80 vs non-80, so test both
 	{
-		server := tc.Server{
-			TCPPort:    8080,
-			IPAddress:  "127.0.2.1",
-			HostName:   "my-edge",
-			DomainName: "example.net",
+		server := &tc.ServerNullable{}
+		server.TCPPort = util.IntPtr(8080)
+		server.Interfaces = []tc.ServerInterfaceInfo{
+			tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					tc.ServerIPAddress{
+						Address:        "127.0.2.1",
+						ServiceAddress: true,
+					},
+				},
+			},
 		}
+		server.HostName = util.StrPtr("my-edge")
+		server.DomainName = util.StrPtr("example.net")
 		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno\r\n"
 
 		actual := PreprocessConfigFile(server, cfgFile)
@@ -97,12 +105,21 @@ func TestPreprocessConfigFile(t *testing.T) {
 	}
 
 	{
-		server := tc.Server{
-			TCPPort:    80,
-			IPAddress:  "127.0.2.1",
-			HostName:   "my-edge",
-			DomainName: "example.net",
+		server := &tc.ServerNullable{}
+		server.TCPPort = util.IntPtr(80)
+		server.Interfaces = []tc.ServerInterfaceInfo{
+			tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					tc.ServerIPAddress{
+						Address:        "127.0.2.1",
+						ServiceAddress: true,
+					},
+				},
+			},
 		}
+		server.HostName = util.StrPtr("my-edge")
+		server.DomainName = util.StrPtr("example.net")
+
 		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno:__SERVER_TCP_PORT__\r\n"
 
 		actual := PreprocessConfigFile(server, cfgFile)
@@ -293,56 +310,66 @@ func randDS() *tc.DeliveryServiceNullableV30 {
 	return &ds
 }
 
-func randServer() *tc.Server {
-	return &tc.Server{
-		Cachegroup:     *randStr(),
-		CachegroupID:   *randInt(),
-		CDNID:          *randInt(),
-		CDNName:        *randStr(),
-		DomainName:     *randStr(),
-		FQDN:           &*randStr(),
-		FqdnTime:       time.Now(),
-		GUID:           *randStr(),
-		HostName:       *randStr(),
-		HTTPSPort:      *randInt(),
-		ID:             *randInt(),
-		ILOIPAddress:   *randStr(),
-		ILOIPGateway:   *randStr(),
-		ILOIPNetmask:   *randStr(),
-		ILOPassword:    *randStr(),
-		ILOUsername:    *randStr(),
-		InterfaceMtu:   *randInt(),
-		InterfaceName:  *randStr(),
-		IP6Address:     *randStr(),
-		IP6IsService:   *randBool(),
-		IP6Gateway:     *randStr(),
-		IPAddress:      *randStr(),
-		IPIsService:    *randBool(),
-		IPGateway:      *randStr(),
-		IPNetmask:      *randStr(),
-		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
-		MgmtIPAddress:  *randStr(),
-		MgmtIPGateway:  *randStr(),
-		MgmtIPNetmask:  *randStr(),
-		OfflineReason:  *randStr(),
-		PhysLocation:   *randStr(),
-		PhysLocationID: *randInt(),
-		Profile:        *randStr(),
-		ProfileDesc:    *randStr(),
-		ProfileID:      *randInt(),
-		Rack:           *randStr(),
-		RevalPending:   *randBool(),
-		RouterHostName: *randStr(),
-		RouterPortName: *randStr(),
-		Status:         *randStr(),
-		StatusID:       *randInt(),
-		TCPPort:        *randInt(),
-		Type:           *randStr(),
-		TypeID:         *randInt(),
-		UpdPending:     *randBool(),
-		XMPPID:         *randStr(),
-		XMPPPasswd:     *randStr(),
+func randServer() *tc.ServerNullable {
+	sv := &tc.ServerNullable{}
+	sv.Cachegroup = randStr()
+	sv.CachegroupID = randInt()
+	sv.CDNID = randInt()
+	sv.CDNName = randStr()
+	sv.DomainName = randStr()
+	sv.FQDN = randStr()
+	sv.FqdnTime = time.Now()
+	sv.GUID = randStr()
+	sv.HostName = randStr()
+	sv.HTTPSPort = randInt()
+	sv.ID = randInt()
+	sv.ILOIPAddress = randStr()
+	sv.ILOIPGateway = randStr()
+	sv.ILOIPNetmask = randStr()
+	sv.ILOPassword = randStr()
+	sv.ILOUsername = randStr()
+
+	sv.Interfaces = []tc.ServerInterfaceInfo{
+		tc.ServerInterfaceInfo{
+			Name: *randStr(),
+			IPAddresses: []tc.ServerIPAddress{
+				tc.ServerIPAddress{
+					Address:        *randStr(),
+					Gateway:        randStr(),
+					ServiceAddress: true,
+				},
+				tc.ServerIPAddress{
+					Address:        *randStr(),
+					Gateway:        randStr(),
+					ServiceAddress: true,
+				},
+			},
+		},
 	}
+
+	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
+	sv.MgmtIPAddress = randStr()
+	sv.MgmtIPGateway = randStr()
+	sv.MgmtIPNetmask = randStr()
+	sv.OfflineReason = randStr()
+	sv.PhysLocation = randStr()
+	sv.PhysLocationID = randInt()
+	sv.Profile = randStr()
+	sv.ProfileDesc = randStr()
+	sv.ProfileID = randInt()
+	sv.Rack = randStr()
+	sv.RevalPending = randBool()
+	sv.RouterHostName = randStr()
+	sv.RouterPortName = randStr()
+	sv.Status = randStr()
+	sv.StatusID = randInt()
+	sv.TCPPort = randInt()
+	sv.Type = *randStr()
+	sv.TypeID = randInt()
+	sv.UpdPending = randBool()
+	sv.XMPPID = randStr()
+	sv.XMPPPasswd = randStr()
+	return sv
 }
 
 func randCacheGroup() *tc.CacheGroupNullable {
@@ -434,28 +461,28 @@ func MakeFakeTOData() *config.TOData {
 	cg1.ParentName = cg0.Name
 	cg1.ParentCachegroupID = cg0.ID
 
-	sv0 := *randServer()
-	sv1 := *randServer()
-	sv2 := *randServer()
+	sv0 := randServer()
+	sv1 := randServer()
+	sv2 := randServer()
 
-	sv0.Cachegroup = *cg0.Name
-	sv1.Cachegroup = *cg0.Name
-	sv2.Cachegroup = *cg1.Name
+	sv0.Cachegroup = cg0.Name
+	sv1.Cachegroup = cg0.Name
+	sv2.Cachegroup = cg1.Name
 
 	ds0 := *randDS()
 	ds1 := *randDS()
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
-			Server:          &sv0.ID,
+			Server:          sv0.ID,
 			DeliveryService: ds0.ID,
 		},
 		tc.DeliveryServiceServer{
-			Server:          &sv0.ID,
+			Server:          sv0.ID,
 			DeliveryService: ds1.ID,
 		},
 		tc.DeliveryServiceServer{
-			Server:          &sv1.ID,
+			Server:          sv1.ID,
 			DeliveryService: ds0.ID,
 		},
 	}
@@ -509,9 +536,9 @@ func MakeFakeTOData() *config.TOData {
 			ds0,
 			ds1,
 		},
-		Servers: []tc.Server{
-			sv1,
-			sv2,
+		Servers: []tc.ServerNullable{
+			*sv1,
+			*sv2,
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,

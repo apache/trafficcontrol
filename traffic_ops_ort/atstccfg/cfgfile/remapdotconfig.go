@@ -26,7 +26,7 @@ import (
 
 func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, string, error) {
 	return atscfg.MakeRemapDotConfig(
-		&toData.Server,
+		toData.Server,
 		toData.DeliveryServices,
 		toData.DeliveryServiceServers,
 		toData.DeliveryServiceRegexes,

@@ -24,28 +24,29 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeMetaConfig(t *testing.T) {
-	serverHostName := tc.CacheName("myServer")
-	server := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "myserverdomain.invalid",
-		HostName:                      "myserver",
-		HTTPSPort:                     443,
-		ID:                            44,
-		IP:                            "192.168.2.9",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "MID_LOC",
-		ProfileID:                     46,
-		ProfileName:                   "myserverprofile",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MID_LOC",
-		Type:                          "EDGE",
-	}
+	server := &tc.ServerNullable{}
+	server.CachegroupID = util.IntPtr(42)
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CDNName = util.StrPtr("mycdn")
+	server.CDNID = util.IntPtr(43)
+	server.DomainName = util.StrPtr("myserverdomain.invalid")
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(443)
+	server.ID = util.IntPtr(44)
+	ip := "192.168.2.9"
+	setIP(server, ip)
+	// server.ParentCacheGroupID=            45
+	// server.ParentCacheGroupType=          "MID_LOC"
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("myserverprofile")
+	server.TCPPort = util.IntPtr(80)
+	// server.SecondaryParentCacheGroupID=   47
+	// server.SecondaryParentCacheGroupType= "MID_LOC"
+	server.Type = "EDGE"
 
 	tmURL := "https://myto.invalid"
 	tmReverseProxyURL := "https://myrp.myto.invalid"
@@ -118,12 +119,13 @@ func TestMakeMetaConfig(t *testing.T) {
 	topologies := []tc.Topology{}
 
 	cfgPath := "/etc/foo/trafficserver"
-	cfg, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
+
+	cfg, err := MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
 	if err != nil {
 		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
 
-	if cfg.Info.ProfileID != int(server.ProfileID) {
+	if cfg.Info.ProfileID != int(*server.ProfileID) {
 		t.Errorf("expected Info.ProfileID %v actual %v", server.ProfileID, cfg.Info.ProfileID)
 	}
 
@@ -135,30 +137,26 @@ func TestMakeMetaConfig(t *testing.T) {
 		t.Errorf("expected Info.TOURL %v actual %v", tmURL, cfg.Info.TOURL)
 	}
 
-	if server.IP != cfg.Info.ServerIPv4 {
-		t.Errorf("expected Info.ServerIP %v actual %v", server.IP, cfg.Info.ServerIPv4)
+	if *server.TCPPort != cfg.Info.ServerPort {
+		t.Errorf("expected Info.ServerPort %v actual %v", server.TCPPort, cfg.Info.ServerPort)
 	}
 
-	if server.Port != cfg.Info.ServerPort {
-		t.Errorf("expected Info.ServerPort %v actual %v", server.Port, cfg.Info.ServerPort)
+	if *server.HostName != cfg.Info.ServerName {
+		t.Errorf("expected Info.ServerName %v actual %v", *server.HostName, cfg.Info.ServerName)
 	}
 
-	if server.HostName != cfg.Info.ServerName {
-		t.Errorf("expected Info.ServerName %v actual %v", server.HostName, cfg.Info.ServerName)
+	if cfg.Info.CDNID != *server.CDNID {
+		t.Errorf("expected Info.CDNID %v actual %v", *server.CDNID, cfg.Info.CDNID)
 	}
 
-	if cfg.Info.CDNID != server.CDNID {
-		t.Errorf("expected Info.CDNID %v actual %v", server.CDNID, cfg.Info.CDNID)
+	if cfg.Info.CDNName != *server.CDNName {
+		t.Errorf("expected Info.CDNName %v actual %v", server.CDNName, cfg.Info.CDNName)
 	}
-
-	if cfg.Info.CDNName != string(server.CDN) {
-		t.Errorf("expected Info.CDNName %v actual %v", server.CDN, cfg.Info.CDNName)
+	if cfg.Info.ServerID != *server.ID {
+		t.Errorf("expected Info.ServerID %v actual %v", *server.ID, cfg.Info.ServerID)
 	}
-	if cfg.Info.ServerID != server.ID {
-		t.Errorf("expected Info.ServerID %v actual %v", server.ID, cfg.Info.ServerID)
-	}
-	if cfg.Info.ProfileName != server.ProfileName {
-		t.Errorf("expected Info.ProfileName %v actual %v", server.ProfileName, cfg.Info.ProfileName)
+	if cfg.Info.ProfileName != *server.Profile {
+		t.Errorf("expected Info.ProfileName %v actual %v", *server.Profile, cfg.Info.ProfileName)
 	}
 
 	expectedConfigs := map[string]func(cf tc.ATSConfigMetaDataConfigFile){
@@ -294,7 +292,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	cfg, err = MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
+	cfg, err = MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
 	if err != nil {
 		t.Fatalf("MakeMetaObj: " + err.Error())
 	}

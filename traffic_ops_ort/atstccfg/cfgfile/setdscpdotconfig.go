@@ -20,6 +20,7 @@ package cfgfile
  */
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -28,10 +29,14 @@ import (
 )
 
 func GetConfigFileCDNSetDSCP(toData *config.TOData, fileName string) (string, string, string, error) {
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server missing CDNName")
+	}
+
 	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
 	dscpNumStr := fileName
 	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")
 	dscpNumStr = strings.TrimSuffix(dscpNumStr, ".config")
 
-	return atscfg.MakeSetDSCPDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, dscpNumStr), atscfg.ContentTypeSetDSCPDotConfig, atscfg.LineCommentSetDSCPDotConfig, nil
+	return atscfg.MakeSetDSCPDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, dscpNumStr), atscfg.ContentTypeSetDSCPDotConfig, atscfg.LineCommentSetDSCPDotConfig, nil
 }

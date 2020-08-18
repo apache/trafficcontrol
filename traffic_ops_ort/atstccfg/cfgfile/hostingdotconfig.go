@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -31,17 +32,32 @@ import (
 func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.HostingConfigParamConfigFile, "", "", ""))
 
-	cdnServers := map[tc.CacheName]tc.Server{}
+	if toData.Server.CDNID == nil {
+		return "", "", "", errors.New("this server missing CDNID")
+	}
+
+	cdnServers := map[tc.CacheName]tc.ServerNullable{}
 	for _, sv := range toData.Servers {
-		if sv.CDNID != toData.Server.CDNID {
+		if sv.HostName == nil {
+			log.Errorln("TO Servers had server missing HostName, skipping!")
+			continue
+		} else if sv.CDNID == nil {
+			log.Errorln("TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		cdnServers[tc.CacheName(sv.HostName)] = sv
+		if *sv.CDNID != *toData.Server.CDNID {
+			continue
+		}
+		cdnServers[tc.CacheName(*sv.HostName)] = sv
 	}
 
 	serverIDs := map[int]struct{}{}
 	for _, sv := range cdnServers {
-		serverIDs[sv.ID] = struct{}{}
+		if sv.CDNID == nil {
+			log.Errorln("TO Servers had server missing CDNID, skipping!")
+			continue
+		}
+		serverIDs[*sv.ID] = struct{}{}
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -66,13 +82,17 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 
 	isMid := strings.HasPrefix(toData.Server.Type, tc.MidTypePrefix)
 
+	if toData.Server.ID == nil {
+		return "", "", "", errors.New("this server missing ID")
+	}
+
 	filteredDSes := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
-		if *ds.CDNID != toData.Server.CDNID {
+		if *ds.CDNID != *toData.Server.CDNID {
 			continue
 		}
 		if ds.Topology == nil {
@@ -99,7 +119,7 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 					continue
 				}
 
-				if _, ok := dsServerMap[*ds.ID][toData.Server.ID]; !ok {
+				if _, ok := dsServerMap[*ds.ID][*toData.Server.ID]; !ok {
 					continue
 				}
 			}
@@ -108,5 +128,5 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		filteredDSes = append(filteredDSes, ds)
 	}
 
-	return atscfg.MakeHostingDotConfig(&toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
+	return atscfg.MakeHostingDotConfig(toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
 }
