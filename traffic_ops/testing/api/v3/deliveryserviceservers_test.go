@@ -41,12 +41,14 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top", nil)
+	params := url.Values{}
+	params.Set("xmlId", "ds-top")
+	ds, _, err := TOSession.GetDeliveryServicesV30(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
 	}
 	if len(ds) != 1 {
-		t.Fatalf("expected one delivery service: 'ds-top', actual: %v", ds)
+		t.Fatalf("expected one delivery service: 'ds-top', actual: %v", len(ds))
 	}
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
