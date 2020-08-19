@@ -48,9 +48,8 @@ if ! timeout 10m $docker_compose logs readiness; then
 	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
 	exit_code=1;
 	store_ciab_logs;
-elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$container_exit_code" -ne 0 ]; then
+elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$exit_code" -ne 0 ]; then
 	echo 'Readiness container exited with an error' >&2;
-	exit_code="$container_exit_code";
 	store_ciab_logs;
 fi;
 
