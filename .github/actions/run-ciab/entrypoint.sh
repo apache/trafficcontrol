@@ -35,14 +35,11 @@ time $docker_compose build --parallel $logged_services $other_services;
 $docker_compose up -d $logged_services $other_services;
 $docker_compose logs -f $logged_services &
 
-set +e;
-container_exit_code="$(timeout 10m docker wait "$($docker_compose ps -q readiness)")"
-exit_code=$?;
-set -e;
-if [ $exit_code -ne 0 ]; then
+if ! timeout 10m $docker_compose logs readiness; then
 	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
+	exit_code=1;
 	$docker_compose --no-ansi logs --no-color $other_services;
-elif [ "$container_exit_code" -ne 0 ]; then
+elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$container_exit_code" -ne 0 ]; then
 	echo 'Readiness container exited with an error' >&2;
 	$docker_compose --no-ansi logs --no-color $other_services;
 	exit_code="$container_exit_code";
