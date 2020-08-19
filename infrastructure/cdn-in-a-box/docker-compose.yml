@@ -233,7 +233,6 @@ services:
     hostname: origin
     volumes:
       - shared:/shared
-      - ./origin/content:/var/www/html
 
 
   # enroller provides a way to register component instances with traffic_ops
