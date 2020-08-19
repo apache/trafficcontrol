@@ -36,6 +36,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.servers'
 								} else {
 									return serverService.getServers({ dsId: $stateParams.deliveryServiceId });
 								}
+							},
+							filter: function() {
+								return null;
 							}
 						}
 					}
