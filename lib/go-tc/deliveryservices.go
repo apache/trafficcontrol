@@ -45,7 +45,16 @@ type DeliveryServicesResponse struct {
 	Alerts
 }
 
+// DeliveryServicesResponseV30 is the type of a response from the
+// /api/3.0/deliveryservices Traffic Ops endpoint.
+// TODO: Move these into the respective clients?
+type DeliveryServicesResponseV30 struct {
+	Response []DeliveryServiceNullableV30 `json:"response"`
+	Alerts
+}
+
 // DeliveryServicesNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type DeliveryServicesNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
 	Alerts
@@ -59,6 +68,7 @@ type CreateDeliveryServiceResponse struct {
 }
 
 // CreateDeliveryServiceNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type CreateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
 	Alerts
@@ -72,6 +82,7 @@ type UpdateDeliveryServiceResponse struct {
 }
 
 // UpdateDeliveryServiceNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type UpdateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
 	Alerts
@@ -159,9 +170,7 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV30 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
-
-type DeliveryServiceNullable struct {
+type DeliveryServiceNullableV30 struct {
 	DeliveryServiceNullableV15
 	Topology           *string `json:"topology" db:"topology"`
 	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
@@ -170,6 +179,8 @@ type DeliveryServiceNullable struct {
 	ServiceCategory    *string `json:"serviceCategory" db:"service_category"`
 }
 
+// Deprecated: Use versioned structures only from now on.
+type DeliveryServiceNullable DeliveryServiceNullableV15
 type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
@@ -324,7 +335,7 @@ func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error)
 	return &protocol, &FQDN, port, nil
 }
 
-func (ds *DeliveryServiceNullable) Sanitize() {
+func (ds *DeliveryServiceNullableV30) Sanitize() {
 	if ds.GeoLimitCountries != nil {
 		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}
@@ -433,9 +444,81 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"topology": validation.Validate(ds,
+	}
+	toErrs := tovalidate.ToErrors(errs)
+	if len(toErrs) > 0 {
+		return errors.New(util.JoinErrsStr(toErrs))
+	}
+	return nil
+}
+
+func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
+	// Validate the TypeName related fields below
+	err := error(nil)
+	DNSRegexType := "^DNS.*$"
+	HTTPRegexType := "^HTTP.*$"
+	SteeringRegexType := "^STEERING.*$"
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
+
+	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
+	if err != nil {
+		return err
+	}
+
+	errs := validation.Errors{
+		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*DeliveryServiceNullable)
+				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
+					return nil
+				}
+				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
+			})),
+		"initialDispersion": validation.Validate(ds.InitialDispersion,
+			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
+			validation.By(tovalidate.IsGreaterThanZero)),
+		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
+			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+		"missLat": validation.Validate(ds.MissLat,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.Min(-90.0).Error(latitudeErr),
+			validation.Max(90.0).Error(latitudeErr)),
+		"missLong": validation.Validate(ds.MissLong,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.Min(-180.0).Error(longitudeErr),
+			validation.Max(180.0).Error(longitudeErr)),
+		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
+		"rangeSliceBlockSize": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if ds.RangeRequestHandling != nil {
+					if *ds.RangeRequestHandling == 3 {
+						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
+							// Per Slice Plugin implementation
+							validation.Min(262144),   // 256KiB
+							validation.Max(33554432), // 32MiB
+						)
+					}
+					if ds.RangeSliceBlockSize != nil {
+						return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
+					}
+				}
+				return nil
+			})),
+		"protocol": validation.Validate(ds.Protocol,
+			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+		"qstringIgnore": validation.Validate(ds.QStringIgnore,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"topology": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullableV30)
 				if ds.Topology != nil && DSType(typeName).IsSteering() {
 					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
 				}
@@ -450,6 +533,37 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 }
 
 func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
+	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
+		"must be one of 'NEVER' or 'ALWAYS'")
+	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
+	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"active":              validation.Validate(ds.Active, validation.NotNil),
+		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
+		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
+		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
+		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
+		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
+		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
+	})
+	if err := ds.validateTypeFields(tx); err != nil {
+		errs = append(errs, errors.New("type fields: "+err.Error()))
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return util.JoinErrs(errs)
+}
+
+func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -484,7 +598,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(errs)
 }
 
-func (ds *DeliveryServiceNullable) validateTopologyFields() error {
+func (ds *DeliveryServiceNullableV30) validateTopologyFields() error {
 	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
 		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
 	}
@@ -678,12 +792,21 @@ func (r *DeliveryServiceSafeUpdateRequest) Validate(*sql.Tx) error {
 	return nil
 }
 
-// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT request to its
-// /deliveryservices/{{ID}}/safe endpoint.
+// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
+// request to its /deliveryservices/{{ID}}/safe endpoint.
+// Deprecated: Please only use versioned structures.
 type DeliveryServiceSafeUpdateResponse struct {
 	Alerts
 	// Response contains the representation of the Delivery Service after it has been updated.
-	// Note that this should be "cast" to the appropriate version of Delivery Service, reflecting
-	// the API version that was called.
 	Response []DeliveryServiceNullable `json:"response"`
+}
+
+// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
+// request to its /api/3.0/deliveryservices/{{ID}}/safe endpoint.
+// Deprecated: Please only use versioned structures.
+type DeliveryServiceSafeUpdateResponseV30 struct {
+	Alerts
+	// Response contains the representation of the Delivery Service after it has
+	// been updated.
+	Response []DeliveryServiceNullableV30 `json:"response"`
 }

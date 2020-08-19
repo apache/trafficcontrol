@@ -35,7 +35,7 @@ type CacheURLDS struct {
 	CacheURL      string
 }
 
-func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CacheURLDS {
+func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) map[tc.DeliveryServiceName]CacheURLDS {
 	sDSes := map[tc.DeliveryServiceName]CacheURLDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil || ds.Active == nil {

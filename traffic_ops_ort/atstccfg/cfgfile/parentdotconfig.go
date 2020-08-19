@@ -272,7 +272,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		parentConfigServerCacheProfileParams[cgServer.Profile] = profileCache
 	}
 
-	dsIDMap := map[int]tc.DeliveryServiceNullable{}
+	dsIDMap := map[int]tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			log.Errorln("delivery services got nil ID!")
@@ -286,7 +286,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		dsIDMap[*ds.ID] = ds
 	}
 
-	allDSMap := map[int]tc.DeliveryServiceNullable{} // all DSes for this server, NOT all dses in TO
+	allDSMap := map[int]tc.DeliveryServiceNullableV30{} // all DSes for this server, NOT all dses in TO
 	for _, dsIDs := range parentServerDSes {
 		for dsID, _ := range dsIDs {
 			if _, ok := dsIDMap[dsID]; !ok {
@@ -460,7 +460,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.
-func GetDSOrigins(dses map[int]tc.DeliveryServiceNullable) (map[int]*atscfg.OriginURI, error) {
+func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*atscfg.OriginURI, error) {
 	dsOrigins := map[int]*atscfg.OriginURI{}
 	for _, ds := range dses {
 		if ds.ID == nil {

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -111,8 +112,23 @@ const (
 	API_DELIVERY_SERVICES_SERVERS = apiBase + "/deliveryservices/%s/servers"
 )
 
+// GetDeliveryServicesByServerV30 returns all of the (tenant-visible) Delivery
+// Services to which the server identified by the integral, unique identifier
+// 'id' is assigned.
+func (to *Session) GetDeliveryServicesByServerV30(id int) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+	var data tc.DeliveryServicesResponseV30
+	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, nil)
+	return data.Response, reqInf, err
+}
+
 // GetDeliveryServicesByServer returns all of the (tenant-visible) Delivery Services assigned to
 // the server identified by the integral, unique identifier 'id'.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesByServerV30.
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 
@@ -124,7 +140,28 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNull
 	return data.Response, reqInf, nil
 }
 
+// GetDeliveryServicesV30 returns all (tenant-visible) Delivery Services that
+// satisfy the passed query string parameters. See the API documentation for
+// information on the available parameters.
+func (to *Session) GetDeliveryServicesV30(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+	uri := API_DELIVERY_SERVICES
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+
+	var data tc.DeliveryServicesResponseV30
+
+	reqInf, err := get(to, API_DELIVERY_SERVICES, &data, header)
+	return data.Response, reqInf, err
+}
+
 // GetDeliveryServicesNullable returns a slice of Delivery Services.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesV30.
 func (to *Session) GetDeliveryServicesNullable(header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
@@ -138,6 +175,12 @@ func (to *Session) GetDeliveryServicesNullable(header http.Header) ([]tc.Deliver
 
 // GetDeliveryServicesByCDNID returns the (tenant-visible) Delivery Services within the CDN identified
 // by the integral, unique identifier 'cdnID'.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesV30.
 func (to *Session) GetDeliveryServicesByCDNID(cdnID int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
@@ -151,6 +194,12 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int, header http.Header) ([]
 
 // GetDeliveryServiceNullable returns the Delivery Service identified by the integral, unique identifier
 // 'id' (which must be passed as a string).
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesV30.
 func (to *Session) GetDeliveryServiceNullable(id string, header http.Header) (*tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
@@ -168,6 +217,12 @@ func (to *Session) GetDeliveryServiceNullable(id string, header http.Header) (*t
 // GetDeliveryServiceByXMLIDNullable returns the Delivery Service identified by the passed XMLID.
 // The length of the returned slice should always be 1 when the request is succesful - if it isn't
 // something very wicked has happened to Traffic Ops.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesV30.
 func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlId="+XMLID, &data, header)
@@ -178,7 +233,37 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.H
 	return data.Response, reqInf, nil
 }
 
+// CreateDeliveryServiceV30 creates the Delivery Service it's passed.
+// Note that unlike the deprecated, legacy function, this does not make multiple
+// requests to try to fill in information for the caller; the passed 'ds' must
+// be valid.
+func (to *Session) GetDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+	var reqInf ReqInf
+	bts, err := json.Marshal(ds)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, nil
+	}
+
+	var data tc.DeliveryServicesResponseV30
+	reqInf, err = post(to, API_DELIVERY_SERVICES, bts, &data)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to create Delivery Service, response indicated %d were created", len(data.Response))
+	}
+
+	return data.Response[0], reqInf, nil
+}
+
 // CreateDeliveryServiceNullable creates the DeliveryService it's passed.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format, and
+// only accepts input in an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// CreateDeliveryServiceV30.
 func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
 	if ds.TypeID == nil && ds.Type != nil {
 		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
@@ -234,8 +319,36 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
+// UpdateDeliveryServiceV30 replaces the Delivery Service identified by the
+// integral, unique identifier 'id' with the one it's passed.
+func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+	var reqInf ReqInf
+	bts, err := json.Marshal(ds)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
+	}
+
+	var data tc.DeliveryServicesResponseV30
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+	}
+	return data.Response[0], reqInf, nil
+
+}
+
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format, and
+// only accepts input in an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// UpdateDeliveryServiceV30.
 func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
@@ -360,7 +473,33 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.H
 	return []byte(data), reqInf, nil
 }
 
+// SafeDeliveryServiceUpdateV30 updates the "safe" fields of the Delivery
+// Service identified by the integral, unique identifier 'id'.
+func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+	var reqInf ReqInf
+	req, err := json.Marshal(r)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
+	}
+
+	var data tc.DeliveryServiceSafeUpdateResponseV30
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data)
+	if err != nil {
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+	}
+	return data.Response[0], reqInf, nil
+}
+
 // UpdateDeliveryServiceSafe updates the given Delivery Service identified by 'id' with the given "safe" fields.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// SafeDeliveryServiceUpdateV30.
 func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var reqInf ReqInf
 	var resp tc.DeliveryServiceSafeUpdateResponse
@@ -382,6 +521,12 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 
 // GetAccessibleDeliveryServicesByTenant gets all delivery services associated with the given tenant and all of
 // its children.
+//
+// Warning: This method coerces its returned data into an APIv1.5 format.
+//
+// Deprecated: Please used versioned library imports in the future, and
+// versioned methods, specifically, for API v3.0 - in this case,
+// GetDeliveryServicesV30.
 func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := tc.DeliveryServicesNullableResponse{}
 	reqInf, err := get(to, fmt.Sprintf("%v?accessibleTo=%v", API_DELIVERY_SERVICES, tenantId), &data, nil)

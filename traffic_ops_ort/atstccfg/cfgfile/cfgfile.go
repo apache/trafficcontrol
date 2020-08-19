@@ -112,7 +112,14 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(server.CDNID)
 			if err == nil && unsupported {
 				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
-				dses, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
+				var legacyDSes []tc.DeliveryServiceNullable
+				legacyDSes, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
+				if err == nil {
+					dses = make([]tc.DeliveryServiceNullableV30, 0, len(legacyDSes))
+					for _, ds := range legacyDSes {
+						dses = append(dses, tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)})
+					}
+				}
 			}
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
