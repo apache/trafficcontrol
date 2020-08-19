@@ -162,3 +162,9 @@ jobs:
         path: ${{ github.workspace }}/dist/
     - name: Start CDN-in-a-Box
       uses: ./.github/actions/run-ciab
+    - name: Upload CDN-in-a-Box logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: ciab-logs
+        path: infrastructure/cdn-in-a-box/logs/*.log
+      if: ${{ failure() }}

@@ -17,6 +17,15 @@
 # under the License.
 
 set -ex;
+
+store_ciab_logs() {
+	echo 'Storing CDN-in-a-Box logs...';
+	mkdir logs;
+	for service in $($docker_compose ps --services); do
+		$docker_compose logs --no-color --timestamps "$service" >"logs/${service}.log";
+	done;
+}
+
 export COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 # use Docker BuildKit for better image building performance
 (
 cd dist;
@@ -38,11 +47,11 @@ $docker_compose logs -f $logged_services &
 if ! timeout 10m $docker_compose logs readiness; then
 	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
 	exit_code=1;
-	$docker_compose --no-ansi logs --no-color $other_services;
+	store_ciab_logs;
 elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$container_exit_code" -ne 0 ]; then
 	echo 'Readiness container exited with an error' >&2;
-	$docker_compose --no-ansi logs --no-color $other_services;
 	exit_code="$container_exit_code";
+	store_ciab_logs;
 fi;
 
 $docker_compose down -v --remove-orphans;
