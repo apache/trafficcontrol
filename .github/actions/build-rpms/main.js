@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+"use strict";
 const child_process = require("child_process");
 const spawnArgs = {
 	stdio: "inherit",
