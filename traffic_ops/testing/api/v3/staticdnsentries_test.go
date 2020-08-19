@@ -151,7 +151,11 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
+	expectedAlerts := []tc.Alerts{
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' for type: CNAME_RECORD must have a trailing period", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
 
 	// A_RECORD
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]
@@ -193,6 +197,18 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[1])
 	}
 
+	//CNAME_RECORD: missing a trailing period
+	expectedAddressMissingPeriod := "cdn.test.com"
+	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	t.Log("Status Code [expect 400]: ", status)
+	if err != nil {
+		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+	}
+	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	}
+
 	// AAAA_RECORD
 	thirdStaticDNSEntry := testData.StaticDNSEntries[2]
 	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
@@ -208,8 +224,8 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
-	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	if !reflect.DeepEqual(alert, expectedAlerts[3]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[3])
 	}
 }
 

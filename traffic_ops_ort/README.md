@@ -94,6 +94,12 @@ ORT verifies all devices in the file are owned by the owner listed in the file, 
 
 ORT verifies all devices in the file do not have filesystems. If any device has a filesystem, ORT assumes it was a mistake to assign as an ATS storage device, and logs a fatal error.
 
+# Logging
+
+ORT outputs its immediate log to `stdout`, therefore it will log wherever you direct it. The recommended system location is `/var/log/ort/ort.log`.
+
+ORT uses the helper tool `atstccfg` to generate config files. Its log is output at `/var/log/ort/atstccfg.log`.
+
 # Trivia
 
 ORT stands for "Operational Readiness Test." The acronym is a legacy artifact and does not reflect the current purpose, which is to apply configuration from Traffic Ops.

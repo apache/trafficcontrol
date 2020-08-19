@@ -18,7 +18,9 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -87,6 +89,16 @@ func AssignTestDeliveryService(t *testing.T) {
 
 	if !found {
 		t.Errorf(`Server/DS assignment not found after "successful" assignment!`)
+	}
+
+	currentTime := time.Now().UTC().Add(5 * time.Second)
+	time := currentTime.Format(time.RFC1123)
+	var header http.Header
+	header = make(map[string][]string)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, _ := TOSession.GetServerIDDeliveryServices(*firstServer.ID, header)
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 }
 

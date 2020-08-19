@@ -2556,7 +2556,7 @@
                             "serviceAddress": false
                         },
                         {
-                            "address": "127.0.0.13/30",
+                            "address": "127.0.0.19/30",
                             "gateway": "127.0.0.1",
                             "serviceAddress": true
                         }
@@ -2590,7 +2590,7 @@
                             "serviceAddress": false
                         },
                         {
-                            "address": "127.0.0.13/30",
+                            "address": "127.0.0.20/30",
                             "gateway": "127.0.0.1",
                             "serviceAddress": true
                         }
@@ -2662,6 +2662,16 @@
             "serverCapability": "bar"
         }
     ],
+    "serviceCategories": [
+        {
+            "name": "serviceCategory1",
+            "tenant": "tenant3"
+        },
+        {
+            "name": "serviceCategory2",
+            "tenant": "tenant4"
+        }
+    ],
     "staticdnsentries": [
         {
             "address": "192.168.0.1",
@@ -2677,7 +2687,7 @@
             "deliveryservice": "ds1",
             "host": "host1",
             "type": "CNAME_RECORD",
-            "ttl": 10
+            "ttl": 0
         },
         {
             "address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",

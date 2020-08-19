@@ -16,6 +16,7 @@ package deliveryservice
 */
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -36,7 +37,23 @@ func TestGetEligibleServers(t *testing.T) {
 	defer db.Close()
 
 	testServers := getMockDSServers()
-	cols := []string{"cachegroup",
+
+	mock.ExpectBegin()
+
+	idRows := sqlmock.NewRows([]string{"id"})
+	for _, s := range testServers {
+		idRows = idRows.AddRow(*s.ID)
+	}
+	mock.ExpectQuery("SELECT s.id FROM server s (.+)").WithArgs(1).WillReturnRows(idRows)
+
+	for _, s := range testServers {
+		testInterfaces := createServerIntefaces(*s.ID)
+		mockServerInterfaces(mock, *s.ID, testInterfaces)
+	}
+
+	cols := []string{
+		"id",
+		"cachegroup",
 		"cachegroup_id",
 		"cdn_id",
 		"cdn_name",
@@ -44,13 +61,11 @@ func TestGetEligibleServers(t *testing.T) {
 		"guid",
 		"host_name",
 		"https_port",
-		"id",
 		"ilo_ip_address",
 		"ilo_ip_gateway",
 		"ilo_ip_netmask",
 		"ilo_password",
 		"ilo_username",
-		"interfaces",
 		"last_updated",
 		"mgmt_ip_address",
 		"mgmt_ip_gateway",
@@ -72,11 +87,11 @@ func TestGetEligibleServers(t *testing.T) {
 		"upd_pending",
 		"server_capabilities",
 		"deliveryservice_capabilities"}
-
-	rows := sqlmock.NewRows(cols)
+	eligbleRows := sqlmock.NewRows(cols)
 
 	for _, s := range testServers {
-		rows = rows.AddRow(
+		eligbleRows = eligbleRows.AddRow(
+			s.ID,
 			s.Cachegroup,
 			s.CachegroupID,
 			s.CDNID,
@@ -85,13 +100,11 @@ func TestGetEligibleServers(t *testing.T) {
 			s.GUID,
 			s.HostName,
 			s.HTTPSPort,
-			s.ID,
 			s.ILOIPAddress,
 			s.ILOIPGateway,
 			s.ILOIPNetmask,
 			s.ILOPassword,
 			s.ILOUsername,
-			[]byte(`{"{\"ipAddresses\" : [{\"address\" : \"127.0.0.0\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`),
 			s.LastUpdated,
 			s.MgmtIPAddress,
 			s.MgmtIPGateway,
@@ -115,9 +128,8 @@ func TestGetEligibleServers(t *testing.T) {
 			[]byte(`{""}`),
 		)
 	}
+	mock.ExpectQuery("SELECT s.id ,").WillReturnRows(eligbleRows)
 
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
 	actualSrvs, err := getEligibleServers(db.MustBegin().Tx, 1)
@@ -130,17 +142,21 @@ func TestGetEligibleServers(t *testing.T) {
 	}
 
 	srvInts := *(actualSrvs[0]).ServerInterfaces
-	if len(srvInts) != 1 {
-		t.Fatalf("servers.read expected len(srvInts) == 1, actual = %v", len(srvInts))
+	if len(srvInts) != 2 {
+		t.Fatalf("servers.read expected len(srvInts) == 2, actual = %v", len(srvInts))
 	}
 
-	if len(srvInts[0].IPAddresses) != 1 {
-		t.Fatalf("servers.read expected len(srvInts[0].IPAddresses) == 1, actual = %v", len(srvInts[0].IPAddresses))
+	for _, interf := range srvInts {
+		if len(interf.IPAddresses) != 4 {
+			t.Fatalf("servers.read expected len(interf.IPAddresses) == 4, actual = %v", len(interf.IPAddresses))
+		}
 	}
+
 }
 
 func getMockDSServers() []tc.DSServer {
 	base := tc.DSServerBase{
+		ID:           util.IntPtr(1),
 		Cachegroup:   util.StrPtr("cgTest"),
 		CachegroupID: util.IntPtr(1),
 		CDNID:        util.IntPtr(1),
@@ -153,4 +169,79 @@ func getMockDSServers() []tc.DSServer {
 	}
 	srvsExpected := []tc.DSServer{srv}
 	return srvsExpected
+}
+
+func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
+	return []tc.ServerInterfaceInfo{
+		{
+			IPAddresses: []tc.ServerIPAddress{
+				{
+					Address:        "5.6.7.8",
+					Gateway:        util.StrPtr("5.6.7.0/24"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "2020::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "5.6.7.9",
+					Gateway:        util.StrPtr("5.6.7.0/24"),
+					ServiceAddress: false,
+				},
+				{
+					Address:        "2021::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: util.Uint64Ptr(2500),
+			Monitor:      true,
+			MTU:          util.Uint64Ptr(1500),
+			Name:         "interfaceName" + strconv.Itoa(cacheID),
+		},
+		{
+			IPAddresses: []tc.ServerIPAddress{
+				{
+					Address:        "6.7.8.9",
+					Gateway:        util.StrPtr("6.7.8.0/24"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "2021::4",
+					Gateway:        util.StrPtr("fd54::9"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "6.6.7.9",
+					Gateway:        util.StrPtr("6.6.7.0/24"),
+					ServiceAddress: false,
+				},
+				{
+					Address:        "2022::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: util.Uint64Ptr(1500),
+			Monitor:      false,
+			MTU:          util.Uint64Ptr(1500),
+			Name:         "interfaceName2" + strconv.Itoa(cacheID),
+		},
+	}
+}
+
+func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
+	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
+	for _, interf := range serverInterfaces {
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID)
+		for _, ip := range interf.IPAddresses {
+			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
+		}
+	}
+
+	mock.ExpectQuery("SELECT (.+) FROM interface").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT (.+) FROM ip_address").WillReturnRows(ipAddressRows)
 }
