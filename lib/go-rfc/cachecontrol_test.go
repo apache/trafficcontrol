@@ -30,9 +30,6 @@ func TestETag(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error parsing the time, but got %v", err.Error())
 	}
-	if updatedAt.String() != "2020-08-06 12:11:22.278418 -0600 MDT" {
-		t.Errorf("Expected time %v, actual %v", "2020-08-06 12:11:22.278418 -0600 MDT", updatedAt.String())
-	}
 	etag := ETag(updatedAt)
 	if etag != `"v1-c4q474ughgls"` {
 		t.Errorf("Expected Etag to be %v, actual %v", `"v1-c4q474ughgls"`, etag)
@@ -41,7 +38,7 @@ func TestETag(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error parsing the time, but got %v", err.Error())
 	}
-	if ans.String() != "2020-08-06 12:11:22.278418 -0600 MDT" {
-		t.Errorf("Expected time %v, actual %v", "2020-08-06 12:11:22.278418 -0600 MDT", ans.String())
+	if ans.UTC().String() != "2020-08-06 18:11:22.278418 +0000 UTC" {
+		t.Errorf("Expected time %v, actual %v", "2020-08-06 18:11:22.278418 +0000 UTC", ans.UTC().String())
 	}
 }

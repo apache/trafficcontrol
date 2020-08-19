@@ -53,16 +53,18 @@ func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
-	remoteDivision := resp[0]
-	expectedDivision := "division-test"
-	remoteDivision.Name = expectedDivision
+	if len(resp) > 0 {
+		remoteDivision := resp[0]
+		expectedDivision := "division-test"
+		remoteDivision.Name = expectedDivision
 
-	_, reqInf, err := TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		_, reqInf, err := TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -167,18 +169,19 @@ func UpdateTestDivisions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
-	respDivision := resp[0]
-	if respDivision.Name != expectedDivision {
-		t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
-	}
+	if len(resp) > 0 {
+		respDivision := resp[0]
+		if respDivision.Name != expectedDivision {
+			t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
+		}
 
-	// Set the name back to the fixture value so we can delete it after
-	remoteDivision.Name = firstDivision.Name
-	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		// Set the name back to the fixture value so we can delete it after
+		remoteDivision.Name = firstDivision.Name
+		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		}
 	}
-
 }
 
 func GetTestDivisions(t *testing.T) {

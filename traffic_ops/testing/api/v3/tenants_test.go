@@ -57,14 +57,16 @@ func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}
-	modTenant.ParentID = newParent.ID
+	if newParent != nil {
+		modTenant.ParentID = newParent.ID
 
-	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, header)
-	if err == nil {
-		t.Fatalf("expected a precondition failed error, got none")
-	}
-	if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
-		t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+		_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, header)
+		if err == nil {
+			t.Fatalf("expected a precondition failed error, got none")
+		}
+		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+			t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+		}
 	}
 }
 

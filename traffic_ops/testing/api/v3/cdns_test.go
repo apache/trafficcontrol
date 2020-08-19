@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {
@@ -51,14 +51,16 @@ func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
-	remoteCDN := resp[0]
-	remoteCDN.DomainName = "domain2"
-	_, reqInf, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, header)
-	if err == nil {
-		t.Errorf("Expected error about Precondition Failed, got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	if len(resp) > 0 {
+		remoteCDN := resp[0]
+		remoteCDN.DomainName = "domain2"
+		_, reqInf, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, header)
+		if err == nil {
+			t.Errorf("Expected error about Precondition Failed, got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -124,25 +126,28 @@ func UpdateTestCDNs(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
-	remoteCDN := resp[0]
-	expectedCDNDomain := "domain2"
-	remoteCDN.DomainName = expectedCDNDomain
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remoteCDN := resp[0]
+		expectedCDNDomain := "domain2"
+		remoteCDN.DomainName = expectedCDNDomain
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the CDN to check CDN name got updated
-	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
+		// Retrieve the CDN to check CDN name got updated
+		resp, _, err = TOSession.GetCDNByID(remoteCDN.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
+		}
+		if len(resp) > 0 {
+			respCDN := resp[0]
+			if respCDN.DomainName != expectedCDNDomain {
+				t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
+			}
+		}
 	}
-	respCDN := resp[0]
-	if respCDN.DomainName != expectedCDNDomain {
-		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
-	}
-
 }
 
 func GetTestCDNs(t *testing.T) {

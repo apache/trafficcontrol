@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCoordinates(t *testing.T) {
@@ -50,16 +50,18 @@ func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
 	}
-	coord := resp[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
+	if len(resp) > 0 {
+		coord := resp[0]
+		expectedLat := 12.34
+		coord.Latitude = expectedLat
 
-	_, reqInf, err := TOSession.UpdateCoordinateByID(coord.ID, coord, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		_, reqInf, err := TOSession.UpdateCoordinateByID(coord.ID, coord, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -130,24 +132,26 @@ func UpdateTestCoordinates(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
 	}
-	coord := resp[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
+	if len(resp) > 0 {
+		coord := resp[0]
+		expectedLat := 12.34
+		coord.Latitude = expectedLat
 
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
-	}
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Coordinate to check Coordinate name got updated
-	resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
-	}
-	coord = resp[0]
-	if coord.Latitude != expectedLat {
-		t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
+		// Retrieve the Coordinate to check Coordinate name got updated
+		resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
+		}
+		coord = resp[0]
+		if coord.Latitude != expectedLat {
+			t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
+		}
 	}
 }
 

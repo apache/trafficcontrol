@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestPhysLocations(t *testing.T) {
@@ -54,15 +54,17 @@ func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
-	remotePhysLocation := resp[0]
-	expectedPhysLocationCity := "city1"
-	remotePhysLocation.City = expectedPhysLocationCity
-	_, reqInf, err := TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	if len(resp) > 0 {
+		remotePhysLocation := resp[0]
+		expectedPhysLocationCity := "city1"
+		remotePhysLocation.City = expectedPhysLocationCity
+		_, reqInf, err := TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -128,25 +130,28 @@ func UpdateTestPhysLocations(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
-	remotePhysLocation := resp[0]
-	expectedPhysLocationCity := "city1"
-	remotePhysLocation.City = expectedPhysLocationCity
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remotePhysLocation := resp[0]
+		expectedPhysLocationCity := "city1"
+		remotePhysLocation.City = expectedPhysLocationCity
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the PhysLocation to check PhysLocation name got updated
-	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
+		// Retrieve the PhysLocation to check PhysLocation name got updated
+		resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
+		}
+		if len(resp) > 0 {
+			respPhysLocation := resp[0]
+			if respPhysLocation.City != expectedPhysLocationCity {
+				t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
+			}
+		}
 	}
-	respPhysLocation := resp[0]
-	if respPhysLocation.City != expectedPhysLocationCity {
-		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
-	}
-
 }
 
 func GetTestPhysLocations(t *testing.T) {

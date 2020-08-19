@@ -44,18 +44,20 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 }
 
 func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header http.Header) {
-	comments, _, err := TOSession.GetDeliveryServiceRequestComments(header)
+	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(header)
 
-	firstComment := comments[0]
-	newFirstCommentValue := "new comment value"
-	firstComment.Value = newFirstCommentValue
+	if len(comments) > 0 {
+		firstComment := comments[0]
+		newFirstCommentValue := "new comment value"
+		firstComment.Value = newFirstCommentValue
 
-	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, header)
-	if err == nil {
-		t.Errorf("expected precondition failed error, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, header)
+		if err == nil {
+			t.Errorf("expected precondition failed error, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -91,15 +93,15 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	}
 	if len(resp) != 1 {
 		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)
-	}
+	} else {
+		respDSR := resp[0]
 
-	respDSR := resp[0]
-
-	for _, comment := range testData.DeliveryServiceRequestComments {
-		comment.DeliveryServiceRequestID = respDSR.ID
-		resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
-		if err != nil {
-			t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
+		for _, comment := range testData.DeliveryServiceRequestComments {
+			comment.DeliveryServiceRequestID = respDSR.ID
+			resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
+			if err != nil {
+				t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
+			}
 		}
 	}
 
