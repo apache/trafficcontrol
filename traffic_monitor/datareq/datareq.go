@@ -113,7 +113,7 @@ func MakeDispatchMap(
 		}, rfc.ContentTypeTextPlain)),
 		"/api/traffic-ops-uri": wrap(WrapBytes(func() []byte {
 			return srvAPITrafficOpsURI(opsConfig)
-		}, rfc.ApplicationJSON)),
+		}, rfc.ContentTypeURIList)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus, statMaxKbpses, monitorConfig)
 		}, rfc.ApplicationJSON)),

@@ -48,6 +48,7 @@ const (
 	ApplicationOctetStream    = "application/octet-stream" // RFC2046§4.5.2
 	ContentTypeMultiPartMixed = "multipart/mixed"          // RFC1341§7.2
 	ContentTypeTextPlain      = "text/plain"               // RFC2046§4.1
+	ContentTypeURIList        = "text/uri-list"            // RFC2483§5
 	Gzip                      = "gzip"                     // RFC7230§4.2.3
 )
 
