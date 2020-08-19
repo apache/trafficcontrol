@@ -16,7 +16,7 @@
 # under the License.
 
 name: 'build-rpms'
-description: 'Builds the RPMs'
+description: 'Builds RPMs for a single ATC component'
 runs:
   using: 'node12'
   main: 'main.js'

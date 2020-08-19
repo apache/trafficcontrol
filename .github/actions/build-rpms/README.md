@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# build-rpms Docker action
+# build-rpms JavaScript action
 
 This action runs the builds RPMs for the various Traffic Control components.
 
@@ -31,5 +31,5 @@ None
 
 ## Example usage
 ```yaml
-uses: actions/build-rpms@v1
+uses: .github/actions/build-rpms
 ```

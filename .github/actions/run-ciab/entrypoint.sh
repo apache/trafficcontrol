@@ -16,8 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -ex
+set -ex;
 export COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 # use Docker BuildKit for better image building performance
+(
+cd dist;
+mv -- */*.rpm .;
+);
 
 docker-compose --version;
 cd infrastructure/cdn-in-a-box;

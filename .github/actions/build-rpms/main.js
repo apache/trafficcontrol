@@ -13,24 +13,25 @@
 */
 
 const child_process = require("child_process");
+const spawnArgs = {
+	stdio: "inherit",
+	stderr: "inherit",
+};
 
-const dockerComposeArgs = [
-	"-f",
-	`${process.env.GITHUB_WORKSPACE}/infrastructure/docker/build/docker-compose.yml`,
-	"up"
-];
-
-const spawnArgs = {stdio: "inherit", stderr: "inherit"};
-
+let atcComponent = process.env.ATC_COMPONENT;
+const dockerComposeArgs = ["-f", `${process.env.GITHUB_WORKSPACE}/infrastructure/docker/build/docker-compose.yml`, "run", "--rm"];
+if (typeof atcComponent !== "string" || atcComponent.length === 0) {
+	console.error("Missing environment variable ATC_COMPONENT");
+	process.exit(1);
+}
+const nonRpmComponents = ["source", "weasel", "docs"];
+if (nonRpmComponents.indexOf(atcComponent) === -1) {
+	atcComponent += "_build";
+}
+dockerComposeArgs.push(atcComponent);
 const proc = child_process.spawnSync(
 	"docker-compose",
 	dockerComposeArgs,
 	spawnArgs
 );
-
-if (proc.status !== 0) {
-	console.error("Building the RPMs failed");
-} else {
-	console.log("Finished building RPMS");
-}
 process.exit(proc.status);
