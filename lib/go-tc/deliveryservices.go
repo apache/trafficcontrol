@@ -469,7 +469,7 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 	errs := validation.Errors{
 		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullable)
+				ds := dsi.(*DeliveryServiceNullableV30)
 				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
 					return nil
 				}
@@ -495,7 +495,7 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
 		"rangeSliceBlockSize": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullable)
+				ds := dsi.(*DeliveryServiceNullableV30)
 				if ds.RangeRequestHandling != nil {
 					if *ds.RangeRequestHandling == 3 {
 						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
