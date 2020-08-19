@@ -19,7 +19,31 @@ name: CDN-in-a-Box CI
 
 on:
   push:
+    paths-ignore:
+      - '*.*'
+      - '**/.gitignore'
+      - '**/*.md'
+      - '**/test/**'
+      - 'blueprints/**'
+      - 'docs/**'
+      - 'experimental/**'
+      - 'licenses/**'
+      - 'misc/**'
+      - 'NOTICE'
+      - 'traffic_control/java'
   create:
+    paths-ignore:
+      - '*.*'
+      - '**/.gitignore'
+      - '**/*.md'
+      - '**/test/**'
+      - 'blueprints/**'
+      - 'docs/**'
+      - 'experimental/**'
+      - 'licenses/**'
+      - 'misc/**'
+      - 'NOTICE'
+      - 'traffic_control/java'
   pull_request:
     types: [opened, reopened, edited, synchronize]
 
