@@ -17,7 +17,11 @@
 
 name: CDN-in-a-Box CI
 
-on: push
+on:
+  push:
+  create:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
 
 jobs:
   source:
