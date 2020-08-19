@@ -47,8 +47,7 @@ func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Update a Coordinate by ID
-func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(coordinate)
@@ -68,6 +67,12 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate, header
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a Coordinate by ID
+// UpdateCoordinateByID is Deprecated - Will be removed in 6.0. Use UpdateCoordinateByIDWithHdr.
+func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+	return to.UpdateCoordinateByIDWithHdr(id, coordinate, nil)
 }
 
 // Returns a list of Coordinates

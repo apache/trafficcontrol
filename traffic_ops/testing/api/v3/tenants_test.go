@@ -60,7 +60,7 @@ func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
 	if newParent != nil {
 		modTenant.ParentID = newParent.ID
 
-		_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, header)
+		_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
 		if err == nil {
 			t.Fatalf("expected a precondition failed error, got none")
 		}
@@ -132,7 +132,7 @@ func UpdateTestTenants(t *testing.T) {
 	}
 	modTenant.ParentID = newParent.ID
 
-	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, nil)
+	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
 	if err != nil {
 		t.Errorf("cannot UPDATE Tenant by id: %v", err)
 	}
@@ -306,7 +306,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 		if tn.Name == "root" {
 			continue
 		}
-		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn, nil); err != nil {
+		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn); err != nil {
 			t.Fatalf("restoring original tenants: " + err.Error())
 		}
 	}
@@ -318,7 +318,7 @@ func setTenantActive(t *testing.T, name string, active bool) {
 		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 	tn.Active = active
-	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn, nil)
+	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
 	}

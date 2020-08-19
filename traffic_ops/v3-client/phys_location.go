@@ -58,8 +58,7 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, er
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdatePhysLocationByIDWithHdr(id int, pl tc.PhysLocation, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
@@ -79,6 +78,13 @@ func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation, header htt
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a PhysLocation by ID
+// UpdatePhysLocationByID is Deprecated - Will be removed in 6.0. Use UpdatePhysLocationByIDWithHdr.
+func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+
+	return to.UpdatePhysLocationByIDWithHdr(id, pl, nil)
 }
 
 // Returns a list of PhysLocations with optional query parameters applied

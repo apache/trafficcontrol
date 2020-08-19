@@ -55,7 +55,7 @@ func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
 		expectedLat := 12.34
 		coord.Latitude = expectedLat
 
-		_, reqInf, err := TOSession.UpdateCoordinateByID(coord.ID, coord, header)
+		_, reqInf, err := TOSession.UpdateCoordinateByIDWithHdr(coord.ID, coord, header)
 		if err == nil {
 			t.Errorf("Expected error about precondition failed, but got none")
 		}
@@ -138,7 +138,7 @@ func UpdateTestCoordinates(t *testing.T) {
 		coord.Latitude = expectedLat
 
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord, nil)
+		alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord)
 		if err != nil {
 			t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
 		}

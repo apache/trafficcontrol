@@ -60,7 +60,7 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 			remoteStatus := resp[0]
 			expectedStatusDesc := "new description"
 			remoteStatus.Description = expectedStatusDesc
-			_, reqInf, err := TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus, header)
+			_, reqInf, err := TOSession.UpdateStatusByIDWithHdr(remoteStatus.ID, remoteStatus, header)
 			if err == nil {
 				t.Errorf("Expected error about precondition failed, but got none")
 			}
@@ -151,7 +151,7 @@ func UpdateTestStatuses(t *testing.T) {
 			expectedStatusDesc := "new description"
 			remoteStatus.Description = expectedStatusDesc
 			var alert tc.Alerts
-			alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus, nil)
+			alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus)
 			if err != nil {
 				t.Errorf("cannot UPDATE Status by id: %v - %v", err, alert)
 			}

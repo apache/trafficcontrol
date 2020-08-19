@@ -71,7 +71,7 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 		}
 		cg.TypeID = &typeResp[0].ID
 
-		_, reqInf, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, h)
+		_, reqInf, err := TOSession.UpdateCacheGroupNullableByIDWithHdr(*cg.ID, cg, h)
 		if err == nil {
 			t.Errorf("Expected an error showing Precondition Failed, got none")
 		}
@@ -277,7 +277,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Fatal("got an empty response for types")
 	}
 	cg.TypeID = &typeResp[0].ID
-	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
@@ -320,7 +320,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	expectedLong := 8.0
 	cg.Latitude = &expectedLat
 	cg.Longitude = &expectedLong
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
@@ -345,7 +345,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// test localizationMethods
 	expectedMethods := []tc.LocalizationMethod{tc.LocalizationMethodGeo}
 	cg.LocalizationMethods = &expectedMethods
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
@@ -383,7 +383,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// Test adding fallbacks when previously nil
 	expectedFallbacks := []string{"fallback1", "fallback2"}
 	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
@@ -405,7 +405,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// Test adding fallback to existing list
 	expectedFallbacks = []string{"fallback1", "fallback2", "fallback3"}
 	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v)", err, updResp)
 	}
@@ -427,7 +427,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// Test removing fallbacks
 	expectedFallbacks = []string{}
 	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
@@ -531,7 +531,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 	if _, _, err = NoAuthTOSession.GetCacheGroupNullableByID(*cg.ID, nil); err == nil {
 		t.Error(fmt.Errorf(errFormat, "GetCacheGroupByID"))
 	}
-	if _, _, err = NoAuthTOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil); err == nil {
+	if _, _, err = NoAuthTOSession.UpdateCacheGroupNullableByID(*cg.ID, cg); err == nil {
 		t.Error(fmt.Errorf(errFormat, "UpdateCacheGroupByID"))
 	}
 	if _, _, err = NoAuthTOSession.DeleteCacheGroupByID(*cg.ID); err == nil {

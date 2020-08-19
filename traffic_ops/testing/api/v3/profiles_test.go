@@ -58,7 +58,7 @@ func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
 		}
 		if len(resp) > 0 {
 			remoteProfile := resp[0]
-			_, reqInf, err := TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, header)
+			_, reqInf, err := TOSession.UpdateProfileByIDWithHdr(remoteProfile.ID, remoteProfile, header)
 			if err == nil {
 				t.Errorf("Expected error about precondition failed, but got none")
 			}
@@ -245,7 +245,7 @@ func UpdateTestProfiles(t *testing.T) {
 		expectedProfileDesc := "UPDATED"
 		remoteProfile.Description = expectedProfileDesc
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, nil)
+		alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
 		if err != nil {
 			t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
 		}

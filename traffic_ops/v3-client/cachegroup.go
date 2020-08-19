@@ -87,8 +87,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	return &cachegroupResp, reqInf, nil
 }
 
-// Update a CacheGroup by ID.
-func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable, h http.Header) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+func (to *Session) UpdateCacheGroupNullableByIDWithHdr(id int, cachegroup tc.CacheGroupNullable, h http.Header) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
@@ -110,6 +109,12 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 		return nil, reqInf, err
 	}
 	return &cachegroupResp, reqInf, nil
+}
+
+// Update a CacheGroup by ID.
+// UpdateCacheGroupNullableByID is Deprecated - Will be removed in 6.0. Use UpdateCacheGroupNullableByIDWithHdr.
+func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+	return to.UpdateCacheGroupNullableByIDWithHdr(id, cachegroup, nil)
 }
 
 // Returns a list of CacheGroups.

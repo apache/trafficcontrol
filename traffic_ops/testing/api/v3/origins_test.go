@@ -63,7 +63,7 @@ func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
 		// update port and FQDN values on origin
 		remoteOrigin.Port = &updatedPort
 		remoteOrigin.FQDN = &updatedFQDN
-		_, reqInf, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin, header)
+		_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
 		if err == nil {
 			t.Errorf("Expected error about precondition failed, but got none")
 		}
@@ -121,7 +121,7 @@ func UpdateTestOrigins(t *testing.T) {
 		// update port and FQDN values on origin
 		remoteOrigin.Port = &updatedPort
 		remoteOrigin.FQDN = &updatedFQDN
-		updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin, nil)
+		updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
 		if err != nil && updResp != nil {
 			t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
 		}
@@ -180,7 +180,7 @@ func OriginTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's origin
-	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin, nil); err == nil {
+	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin); err == nil {
 		t.Error("expected tenant4user to be unable to update tenant3's origin")
 	}
 

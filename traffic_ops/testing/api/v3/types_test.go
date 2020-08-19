@@ -137,7 +137,7 @@ func UpdateTestTypes(t *testing.T) {
 		remoteType.UseInTable = "server"
 
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType, nil)
+		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
 		if originalType.UseInTable != "server" {
 			if err == nil {
 				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
@@ -162,7 +162,7 @@ func UpdateTestTypes(t *testing.T) {
 
 		// Revert name change
 		respType.Name = originalType.Name
-		alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType, nil)
+		alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
 		if err != nil {
 			t.Fatalf("cannot restore UPDATE Type by id: %v - %v", err, alert)
 		}

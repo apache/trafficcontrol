@@ -48,8 +48,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// UpdateTypeByID updates a Type by ID.
-func (to *Session) UpdateTypeByID(id int, typ tc.Type, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateTypeByIDWithHdr(id int, typ tc.Type, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(typ)
@@ -69,6 +68,13 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type, header http.Header) (tc.A
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateTypeByID updates a Type by ID.
+// UpdateTypeByID is Deprecated - Will be removed in 6.0. Use UpdateTypeByIDWithHdr.
+func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+
+	return to.UpdateTypeByIDWithHdr(id, typ, nil)
 }
 
 // GetTypes returns a list of Types. If a 'useInTable' parameter is passed, the returned Types

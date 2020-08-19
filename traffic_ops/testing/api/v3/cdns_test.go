@@ -54,7 +54,7 @@ func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
 	if len(resp) > 0 {
 		remoteCDN := resp[0]
 		remoteCDN.DomainName = "domain2"
-		_, reqInf, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, header)
+		_, reqInf, err := TOSession.UpdateCDNByIDWithHdr(remoteCDN.ID, remoteCDN, header)
 		if err == nil {
 			t.Errorf("Expected error about Precondition Failed, got none")
 		}
@@ -131,7 +131,7 @@ func UpdateTestCDNs(t *testing.T) {
 		expectedCDNDomain := "domain2"
 		remoteCDN.DomainName = expectedCDNDomain
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, nil)
+		alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
 		if err != nil {
 			t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
 		}

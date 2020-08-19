@@ -67,8 +67,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqI
 	return alerts, reqInf, nil
 }
 
-// UpdateParameterByID performs a PUT to update a Parameter by ID.
-func (to *Session) UpdateParameterByID(id int, pl tc.Parameter, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateParameterByIDWithHdr(id int, pl tc.Parameter, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
@@ -88,6 +87,12 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter, header http.Head
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateParameterByID performs a PUT to update a Parameter by ID.
+// UpdateParameterByID is Deprecated - Will be removed in 6.0. Use UpdateParameterByIDWithHdr.
+func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqInf, error) {
+	return to.UpdateParameterByIDWithHdr(id, pl, nil)
 }
 
 // GetParameters returns a list of Parameters.

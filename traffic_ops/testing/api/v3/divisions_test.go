@@ -58,7 +58,7 @@ func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
 		expectedDivision := "division-test"
 		remoteDivision.Name = expectedDivision
 
-		_, reqInf, err := TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, header)
+		_, reqInf, err := TOSession.UpdateDivisionByIDWithHdr(remoteDivision.ID, remoteDivision, header)
 		if err == nil {
 			t.Errorf("Expected error about precondition failed, but got none")
 		}
@@ -159,7 +159,7 @@ func UpdateTestDivisions(t *testing.T) {
 	expectedDivision := "division-test"
 	remoteDivision.Name = expectedDivision
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, nil)
+	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
 	if err != nil {
 		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
 	}
@@ -177,7 +177,7 @@ func UpdateTestDivisions(t *testing.T) {
 
 		// Set the name back to the fixture value so we can delete it after
 		remoteDivision.Name = firstDivision.Name
-		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision, nil)
+		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
 		if err != nil {
 			t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
 		}

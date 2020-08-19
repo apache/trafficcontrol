@@ -189,8 +189,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int, header http.Header) ([]
 	return data.Response, reqInf, nil
 }
 
-// Update a DeliveryServiceRequest by ID
-func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequestByIDWithHdr(id int, dsr tc.DeliveryServiceRequest, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 
@@ -211,6 +210,12 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a DeliveryServiceRequest by ID
+// UpdateDeliveryServiceRequestByID is Deprecated - Will be removed in 6.0. Use UpdateDeliveryServiceRequestByIDWithHdr.
+func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+	return to.UpdateDeliveryServiceRequestByIDWithHdr(id, dsr, nil)
 }
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee

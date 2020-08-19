@@ -66,7 +66,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	respDSR := resp[0]
 	respDSR.DeliveryService.DisplayName = "new display name"
 
-	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR, header)
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(respDSR.ID, respDSR, header)
 	if err == nil {
 		t.Errorf("Expected error about precondition failed, but got none")
 	}
@@ -236,7 +236,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			}
 		}
 
-		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted", nil)
 
 		expected = []string{
 			"deliveryservice_request was updated.",
@@ -249,11 +249,11 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	})
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string, header http.Header) (tc.Alerts, tc.DeliveryServiceRequest) {
 	ID := dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
-	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr, nil)
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(ID, dsr, header)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request: %v", err)
 		return alerts, dsr
@@ -310,7 +310,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	expDisplayName := "new display name"
 	respDSR.DeliveryService.DisplayName = expDisplayName
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR, nil)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
 	t.Log("Response: ", alert)
 	if err != nil {
 		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v", err, alert)

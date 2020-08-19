@@ -320,7 +320,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameterByID(eparam.ID, p, nil)
+			alerts, _, err = toSession.UpdateParameterByID(eparam.ID, p)
 			if err != nil {
 				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
 				break
@@ -556,7 +556,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		profile = profiles[0]
 		action = "creating"
 	} else {
-		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile, nil)
+		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile)
 		action = "updating"
 	}
 

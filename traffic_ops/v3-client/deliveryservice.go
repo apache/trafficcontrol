@@ -234,9 +234,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
-// UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
-// passed with the DeliveryService it is passed.
-func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
@@ -248,6 +246,13 @@ func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServi
 	}
 
 	return &data, nil
+}
+
+// UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
+// passed with the DeliveryService it is passed.
+// UpdateDeliveryServiceNullable is Deprecated - Will be removed in 6.0. Use UpdateDeliveryServiceNullableWithHdr.
+func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+	return to.UpdateDeliveryServiceNullableWithHdr(id, ds, nil)
 }
 
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed.

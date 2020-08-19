@@ -60,7 +60,7 @@ func UpdateTestStaticDNSEntriesWithHeaders(t *testing.T, header http.Header) {
 			expectedAddress := "192.168.0.2"
 			remoteStaticDNSEntry.Address = expectedAddress
 
-			_, _, status, _ := TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
+			_, _, status, _ := TOSession.UpdateStaticDNSEntryByIDWithHdr(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
 			if status != http.StatusPreconditionFailed {
 				t.Errorf("Expected status code 412, got %v", status)
 			}
@@ -136,7 +136,7 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 		remoteStaticDNSEntry.Address = expectedAddress
 		var alert tc.Alerts
 		var status int
-		alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+		alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 		t.Log("Status Code: ", status)
 		if err != nil {
 			t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v", err, alert)
@@ -176,7 +176,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry.Address = expectedAddress
 	var alert tc.Alerts
 	var status int
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
@@ -195,7 +195,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry = resp[0]
 	expectedAddress = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 	remoteStaticDNSEntry.Address = expectedAddress
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
@@ -207,7 +207,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	//CNAME_RECORD: missing a trailing period
 	expectedAddressMissingPeriod := "cdn.test.com"
 	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
@@ -226,7 +226,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry = resp[0]
 	expectedAddress = "192.168.0.1"
 	remoteStaticDNSEntry.Address = expectedAddress
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)

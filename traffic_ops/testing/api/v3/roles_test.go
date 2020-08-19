@@ -68,7 +68,7 @@ func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
 			remoteRole := resp[0]
 			expectedRole := "new admin2"
 			remoteRole.Name = &expectedRole
-			_, reqInf, status, _ := TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, header)
+			_, reqInf, status, _ := TOSession.UpdateRoleByIDWithHdr(*remoteRole.ID, remoteRole, header)
 			if status != http.StatusPreconditionFailed {
 				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 			}
@@ -149,7 +149,7 @@ func UpdateTestRoles(t *testing.T) {
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole
 	var alert tc.Alerts
-	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, nil)
+	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
@@ -168,7 +168,7 @@ func UpdateTestRoles(t *testing.T) {
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRole.Name = firstRole.Name
-	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, nil)
+	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)

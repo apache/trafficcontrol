@@ -47,8 +47,7 @@ func (to *Session) CreateStatusNullable(status tc.StatusNullable) (tc.Alerts, Re
 	return alerts, reqInf, nil
 }
 
-// UpdateStatusByID updates a Status by ID.
-func (to *Session) UpdateStatusByID(id int, status tc.Status, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(status)
@@ -68,6 +67,13 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status, header http.Header
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateStatusByID updates a Status by ID.
+// UpdateStatusByID is Deprecated - Will be removed in 6.0. Use UpdateStatusByIDWithHdr.
+func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf, error) {
+
+	return to.UpdateStatusByIDWithHdr(id, status, nil)
 }
 
 // GetStatuses returns a list of Statuses.

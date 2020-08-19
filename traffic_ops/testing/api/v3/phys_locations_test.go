@@ -58,7 +58,7 @@ func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
 		remotePhysLocation := resp[0]
 		expectedPhysLocationCity := "city1"
 		remotePhysLocation.City = expectedPhysLocationCity
-		_, reqInf, err := TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, header)
+		_, reqInf, err := TOSession.UpdatePhysLocationByIDWithHdr(remotePhysLocation.ID, remotePhysLocation, header)
 		if err == nil {
 			t.Errorf("Expected error about precondition failed, but got none")
 		}
@@ -135,7 +135,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 		expectedPhysLocationCity := "city1"
 		remotePhysLocation.City = expectedPhysLocationCity
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, nil)
+		alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
 		if err != nil {
 			t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
 		}

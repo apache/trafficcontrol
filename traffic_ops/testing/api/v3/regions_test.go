@@ -57,7 +57,7 @@ func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
 		if len(resp) > 0 {
 			remoteRegion := resp[0]
 			remoteRegion.Name = "OFFLINE-TEST"
-			_, reqInf, err := TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, header)
+			_, reqInf, err := TOSession.UpdateRegionByIDWithHdr(remoteRegion.ID, remoteRegion, header)
 			if err == nil {
 				t.Errorf("Expected error about precondition failed, but got none")
 			}
@@ -134,7 +134,7 @@ func UpdateTestRegions(t *testing.T) {
 		expectedRegion := "OFFLINE-TEST"
 		remoteRegion.Name = expectedRegion
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
+		alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
 		if err != nil {
 			t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 		}
@@ -152,7 +152,7 @@ func UpdateTestRegions(t *testing.T) {
 
 			// Set the name back to the fixture value so we can delete it after
 			remoteRegion.Name = firstRegion.Name
-			alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
+			alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
 			if err != nil {
 				t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 			}

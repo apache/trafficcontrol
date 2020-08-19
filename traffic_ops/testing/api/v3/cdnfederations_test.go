@@ -54,7 +54,7 @@ func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 		if fed != nil && len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
-			_, reqInf, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, h)
+			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "foo", id, h)
 			if err == nil {
 				t.Errorf("Expected an error saying precondition failed, but got none")
 			}
@@ -107,7 +107,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		expectedCName := "new.cname."
 		if fed != nil && len(fed.Response) > 0 {
 			fed.Response[0].CName = &expectedCName
-			resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, nil)
+			resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
 			if err != nil {
 				t.Errorf("cannot PUT federation by id: %v", err)
 			}

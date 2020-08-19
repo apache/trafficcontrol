@@ -48,8 +48,7 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// UpdateCDNByID updates a CDN by ID.
-func (to *Session) UpdateCDNByID(id int, cdn tc.CDN, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCDNByIDWithHdr(id int, cdn tc.CDN, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cdn)
@@ -69,6 +68,12 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN, header http.Header) (tc.Ale
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateCDNByID updates a CDN by ID.
+// UpdateCDNByID is Deprecated - Will be removed in 6.0. Use UpdateCDNByIDWithHdr.
+func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+	return to.UpdateCDNByIDWithHdr(id, cdn, nil)
 }
 
 // GetCDNs eturns a list of CDNs.

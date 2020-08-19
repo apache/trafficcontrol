@@ -82,7 +82,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	_, err = TOSession.SnapshotCRConfig(cdn, nil)
+	_, err = TOSession.SnapshotCRConfig(cdn)
 	if err != nil {
 		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
 	}
@@ -143,7 +143,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 func SnapshotTestCDNbyName(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
-	_, err := TOSession.SnapshotCRConfig(firstCDN.Name, nil)
+	_, err := TOSession.SnapshotCRConfig(firstCDN.Name)
 	if err != nil {
 		t.Errorf("failed to snapshot CDN by name: %v", err)
 	}
@@ -152,7 +152,7 @@ func SnapshotTestCDNbyName(t *testing.T) {
 func SnapshotTestCDNbyInvalidName(t *testing.T) {
 
 	invalidCDNName := "cdn-invalid"
-	_, err := TOSession.SnapshotCRConfig(invalidCDNName, nil)
+	_, err := TOSession.SnapshotCRConfig(invalidCDNName)
 	if err == nil {
 		t.Errorf("snapshot occurred on invalid cdn name: %v - %v", invalidCDNName, err)
 	}

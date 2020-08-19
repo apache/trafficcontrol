@@ -51,7 +51,7 @@ func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header ht
 		newFirstCommentValue := "new comment value"
 		firstComment.Value = newFirstCommentValue
 
-		_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, header)
+		_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(firstComment.ID, firstComment, header)
 		if err == nil {
 			t.Errorf("expected precondition failed error, but got none")
 		}
@@ -116,7 +116,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 	firstComment.Value = newFirstCommentValue
 
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, nil)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment)
 	if err != nil {
 		t.Errorf("cannot UPDATE delivery service request comment by id: %v - %v", err, alert)
 	}

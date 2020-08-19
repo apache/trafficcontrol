@@ -48,8 +48,7 @@ func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServic
 	return alerts, reqInf, nil
 }
 
-// Update a delivery service request by ID
-func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.DeliveryServiceRequestComment, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequestCommentByIDWithHdr(id int, comment tc.DeliveryServiceRequestComment, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(comment)
@@ -69,6 +68,12 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.De
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a delivery service request by ID
+// UpdateDeliveryServiceRequestCommentByID is Deprecated - Will be removed in 6.0. Use UpdateDeliveryServiceRequestCommentByIDWithHdr.
+func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
+	return to.UpdateDeliveryServiceRequestCommentByIDWithHdr(id, comment, nil)
 }
 
 // Returns a list of delivery service request comments

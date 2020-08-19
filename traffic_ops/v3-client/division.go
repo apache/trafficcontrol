@@ -47,8 +47,7 @@ func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, erro
 	return alerts, reqInf, nil
 }
 
-// Update a Division by ID
-func (to *Session) UpdateDivisionByID(id int, division tc.Division, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDivisionByIDWithHdr(id int, division tc.Division, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(division)
@@ -68,6 +67,12 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division, header http.
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a Division by ID
+// UpdateDivisionByID is Deprecated - Will be removed in 6.0. Use UpdateDivisionByIDWithHdr.
+func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
+	return to.UpdateDivisionByIDWithHdr(id, division, nil)
 }
 
 // Returns a list of Divisions

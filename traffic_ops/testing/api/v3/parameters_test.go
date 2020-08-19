@@ -60,7 +60,7 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 		remoteParameter := resp[0]
 		expectedParameterValue := "UPDATED"
 		remoteParameter.Value = expectedParameterValue
-		_, reqInf, err := TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, header)
+		_, reqInf, err := TOSession.UpdateParameterByIDWithHdr(remoteParameter.ID, remoteParameter, header)
 		if err == nil {
 			t.Errorf("Expected error about precondition failed, but got none")
 		}
@@ -120,7 +120,7 @@ func UpdateTestParameters(t *testing.T) {
 		expectedParameterValue := "UPDATED"
 		remoteParameter.Value = expectedParameterValue
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, nil)
+		alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
 		if err != nil {
 			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
 		}

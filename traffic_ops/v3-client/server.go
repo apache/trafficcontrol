@@ -125,8 +125,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	return alerts, reqInf, err
 }
 
-// UpdateServerByID updates a Server by ID.
-func (to *Session) UpdateServerByID(id int, server tc.ServerNullable, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, header http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -149,6 +148,12 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable, header htt
 
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, err
+}
+
+// UpdateServerByID updates a Server by ID.
+// UpdateServerByID is Deprecated - Will be removed in 6.0. Use UpdateServerByIDWithHdr.
+func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+	return to.UpdateServerByIDWithHdr(id, server, nil)
 }
 
 // GetServers returns a list of Servers.
