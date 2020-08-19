@@ -44,7 +44,8 @@ time $docker_compose build --parallel $logged_services $other_services;
 $docker_compose up -d $logged_services $other_services;
 $docker_compose logs -f $logged_services &
 
-if ! timeout 10m $docker_compose logs readiness; then
+echo 'Waiting for the readiness container to exit...';
+if ! timeout 10m $docker_compose logs -f readiness >/dev/null; then
 	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
 	exit_code=1;
 	store_ciab_logs;
