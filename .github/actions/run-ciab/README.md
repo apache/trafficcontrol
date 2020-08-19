@@ -19,7 +19,7 @@
 
 # run-ciab Docker action
 
-This action runs the CDN-in-a-Box.
+This action runs the CDN-in-a-Box and exits with the exit code from the `readiness` service.
 
 ## Inputs
 None
@@ -31,5 +31,5 @@ Exit code of the script
 
 ## Example usage
 ```yaml
-uses: actions/run-ciab@v1
+uses: .github/actions/run-ciab
 ```

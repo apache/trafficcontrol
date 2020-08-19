@@ -20,21 +20,29 @@ set -ex
 export COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 # use Docker BuildKit for better image building performance
 
 docker-compose --version;
-STARTING_POINT="$PWD";
 cd infrastructure/cdn-in-a-box;
 make; # All RPMs should have already been built
 
-time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml -f ./docker-compose.traffic-ops-test.yml build --parallel integration edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;
-time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml up -d edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;
+docker images;
+logged_services='trafficrouter readiness';
+other_services='dns edge enroller mid origin trafficmonitor trafficops trafficops-perl trafficstats trafficvault';
+docker_compose='docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml';
+time $docker_compose build --parallel $logged_services $other_services;
+$docker_compose up -d $logged_services $other_services;
+$docker_compose logs -f $logged_services &
 
-ret=$(timeout 10m docker wait cdn-in-a-box_readiness_1)
-if [[ "$ret" -ne 0 ]]; then
-	echo "CDN in a Box didn't become ready within 10 minutes - exiting" >&2;
-	docker-compose -f ./docker-compose.readiness.yml logs;
-	docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml down -v --remove-orphans;
-	exit "$ret";
-fi
+set +e;
+container_exit_code="$(timeout 10m docker wait "$($docker_compose ps -q readiness)")"
+exit_code=$?;
+set -e;
+if [ $exit_code -ne 0 ]; then
+	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
+  $docker_compose --no-ansi logs --no-color $other_services;
+elif [ "$container_exit_code" -ne 0 ]; then
+	echo 'Readiness container exited with an error' >&2;
+  $docker_compose --no-ansi logs --no-color $other_services;
+	exit_code="$container_exit_code";
+fi;
 
-docker-compose -f ./docker-compose.traffic-ops-test.yml up;
-ls junit || echo "JUnit dir not found";
-docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml -f ./docker-compose.traffic-ops-test.yml down -v --remove-orphans;
+$docker_compose down -v --remove-orphans;
+exit "$exit_code";
