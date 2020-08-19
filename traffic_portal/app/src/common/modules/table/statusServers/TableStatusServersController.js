@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $controller, $scope) {
+var TableStatusServersController = function(status, servers, filter, $controller, $scope) {
 
-	// extends the TableParentServersController to inherit common methods
-	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
-
-	let statusServersTable;
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { tableName: 'statusServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.status = status;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = statusServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		statusServersTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		statusServersTable = $('#statusServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_statusServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_statusServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope'];
+TableStatusServersController.$inject = ['status', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableStatusServersController;

@@ -31,7 +31,16 @@ module.exports = angular.module('trafficPortal.private.statuses.servers', [])
 								return statusService.getStatus($stateParams.statusId);
 							},
 							servers: function(status, serverService) {
-								return serverService.getServers({ status: status.name, orderby: 'hostName' });
+								return serverService.getServers({ orderby: 'hostName' });
+							},
+							filter: function(status) {
+								return {
+									status: {
+										filterType: "text",
+										type: "equals",
+										filter: status.name
+									}
+								}
 							}
 						}
 					}
