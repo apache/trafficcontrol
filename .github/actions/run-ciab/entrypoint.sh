@@ -21,7 +21,7 @@ set -ex
 docker-compose --version;
 STARTING_POINT="$PWD";
 cd infrastructure/cdn-in-a-box;
-make traffic_ops/traffic_ops.rpm traffic_stats/traffic_stats.rpm traffic_monitor/traffic_monitor.rpm traffic_router/tomcat.rpm traffic_router/traffic_router.rpm;
+make; # All RPMs should have already been built
 
 time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml -f ./docker-compose.traffic-ops-test.yml build integration edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;
 time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml up -d edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;

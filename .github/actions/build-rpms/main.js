@@ -20,7 +20,8 @@ const components = [
 	"traffic_monitor",
 	"traffic_ops",
 	"traffic_router",
-	"traffic_stats"
+	"traffic_stats",
+	"traffic_ops_ort"
 ];
 
 const dockerArgs = [
@@ -28,10 +29,12 @@ const dockerArgs = [
 	"-e",
 	`GOPATH=${GOPATH}`,
 	"-v",
-	`${process.env.GITHUB_WORKSPACE}:${srcDir}`
+	`${process.env.GITHUB_WORKSPACE}:${srcDir}`,
+	"-w",
+	srcDir
 ];
 
-const spawnArgs = {stdio: "inherit"};
+const spawnArgs = {stdio: "inherit", stderr: "inherit"};
 
 const timers = new Map();
 
@@ -40,8 +43,8 @@ for (const component of components) {
 	const proc = child_process.spawnSync(
 		"docker",
 		dockerArgs.concat([
-			`trafficcontrol/${component}_builder`,
-			`${srcDir}/build/build.sh`,
+			`apache/${component}_builder:master`,
+			`build/build.sh`,
 			component
 		]),
 		spawnArgs
