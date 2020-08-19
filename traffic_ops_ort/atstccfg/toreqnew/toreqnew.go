@@ -76,7 +76,9 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 	deliveryServices := []tc.DeliveryServiceNullableV30{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID, nil)
+		params := url.Values{}
+		params.Set("cdn", strconv.Itoa(cdnID))
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesV30(nil, params)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
@@ -84,7 +86,7 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 			}
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dses := obj.(*[]tc.DeliveryServiceNullable)
+		dses := obj.(*[]tc.DeliveryServiceNullableV30)
 		*dses = toDSes
 		return nil
 	})
