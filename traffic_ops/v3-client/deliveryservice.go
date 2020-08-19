@@ -151,7 +151,7 @@ func (to *Session) GetDeliveryServicesV30(header http.Header, params url.Values)
 
 	var data tc.DeliveryServicesResponseV30
 
-	reqInf, err := get(to, API_DELIVERY_SERVICES, &data, header)
+	reqInf, err := get(to, uri, &data, header)
 	return data.Response, reqInf, err
 }
 
@@ -234,11 +234,49 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.H
 }
 
 // CreateDeliveryServiceV30 creates the Delivery Service it's passed.
-// Note that unlike the deprecated, legacy function, this does not make multiple
-// requests to try to fill in information for the caller; the passed 'ds' must
-// be valid.
-func (to *Session) GetDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
+	if ds.TypeID == nil && ds.Type != nil {
+		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
+		if err != nil {
+			return tc.DeliveryServiceNullableV30{}, reqInf, err
+		}
+		if len(ty) == 0 {
+			return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("no type named %s", ds.Type)
+		}
+		ds.TypeID = &ty[0].ID
+	}
+
+	if ds.CDNID == nil && ds.CDNName != nil {
+		cdns, _, err := to.GetCDNByName(*ds.CDNName, nil)
+		if err != nil {
+			return tc.DeliveryServiceNullableV30{}, reqInf, err
+		}
+		if len(cdns) == 0 {
+			return tc.DeliveryServiceNullableV30{}, reqInf, errors.New("no CDN named " + *ds.CDNName)
+		}
+		ds.CDNID = &cdns[0].ID
+	}
+
+	if ds.ProfileID == nil && ds.ProfileName != nil {
+		profiles, _, err := to.GetProfileByName(*ds.ProfileName, nil)
+		if err != nil {
+			return tc.DeliveryServiceNullableV30{}, reqInf, err
+		}
+		if len(profiles) == 0 {
+			return tc.DeliveryServiceNullableV30{}, reqInf, errors.New("no Profile named " + *ds.ProfileName)
+		}
+		ds.ProfileID = &profiles[0].ID
+	}
+
+	if ds.TenantID == nil && ds.Tenant != nil {
+		ten, _, err := to.TenantByName(*ds.Tenant, nil)
+		if err != nil {
+			return tc.DeliveryServiceNullableV30{}, reqInf, err
+		}
+		ds.TenantID = &ten.ID
+	}
+
 	bts, err := json.Marshal(ds)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, nil
