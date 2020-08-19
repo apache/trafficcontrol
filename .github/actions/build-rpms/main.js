@@ -24,10 +24,7 @@ if (typeof atcComponent !== "string" || atcComponent.length === 0) {
 	console.error("Missing environment variable ATC_COMPONENT");
 	process.exit(1);
 }
-const nonRpmComponents = ["source", "weasel", "docs"];
-if (nonRpmComponents.indexOf(atcComponent) === -1) {
-	atcComponent += "_build";
-}
+atcComponent += "_build";
 dockerComposeArgs.push(atcComponent);
 const proc = child_process.spawnSync(
 	"docker-compose",
