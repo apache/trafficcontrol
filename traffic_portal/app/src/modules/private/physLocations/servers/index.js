@@ -31,7 +31,16 @@ module.exports = angular.module('trafficPortal.private.physLocations.servers', [
 								return physLocationService.getPhysLocation($stateParams.physLocationId);
 							},
 							servers: function($stateParams, serverService) {
-								return serverService.getServers({ physLocation: $stateParams.physLocationId, orderby: 'hostName' });
+								return serverService.getServers({ orderby: 'hostName' });
+							},
+							filter: function(physLocation) {
+								return {
+									physLocation: {
+										filterType: "text",
+										type: "equals",
+										filter: physLocation.name
+									}
+								}
 							}
 						}
 					}
