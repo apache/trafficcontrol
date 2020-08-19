@@ -72,6 +72,7 @@ func (to *Session) GetServerCapabilitiesWithHdr(header http.Header) ([]tc.Server
 }
 
 // GetServerCapabilities returns all the server capabilities.
+// GetServerCapabilities is Deprecated - Will be removed in 6.0. Use GetServerCapabilitiesWithHdr.
 func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error) {
 	return to.GetServerCapabilitiesWithHdr(nil)
 }
@@ -103,6 +104,7 @@ func (to *Session) GetServerCapabilityWithHdr(name string, header http.Header) (
 }
 
 // GetServerCapability returns the given server capability by name.
+// GetServerCapability is Deprecated - Will be removed in 6.0. Use GetServerCapabilityWithHdr.
 func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
 	return to.GetServerCapabilityWithHdr(name, nil)
 }

@@ -36,6 +36,7 @@ func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, ReqInf, error
 }
 
 // GetUsers returns all users accessible from current user
+// GetUsers is Deprecated - Will be removed in 6.0. Use GetUsersWithHdr.
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	return to.GetUsersWithHdr(nil)
 }
@@ -48,6 +49,7 @@ func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([
 }
 
 // GetUsersByRole returns all users accessible from current user for a given role
+// GetUsersByRole is Deprecated - Will be removed in 6.0. Use GetUsersByRoleWithHdr.
 func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
 	return to.GetUsersByRoleWithHdr(roleName, nil)
 }
@@ -59,6 +61,7 @@ func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, Re
 	return data.Response, inf, err
 }
 
+// GetUserByID is Deprecated - Will be removed in 6.0. Use GetUserByIDWithHdr.
 func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
 	return to.GetUserByIDWithHdr(id, nil)
 }
@@ -70,6 +73,7 @@ func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header)
 	return data.Response, inf, err
 }
 
+// GetUserByUsername is Deprecated - Will be removed in 6.0. Use GetUserByUsernameWithHdr.
 func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
 	return to.GetUserByUsernameWithHdr(username, nil)
 }
@@ -85,6 +89,7 @@ func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, R
 }
 
 // GetUserCurrent gets information about the current user
+// GetUserCurrent is Deprecated - Will be removed in 6.0. Use GetUserCurrentWithHdr.
 func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 	return to.GetUserCurrentWithHdr(nil)
 }

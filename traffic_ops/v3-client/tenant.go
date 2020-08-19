@@ -42,6 +42,7 @@ func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, erro
 }
 
 // Tenants gets an array of Tenants.
+// Tenants is Deprecated - Will be removed in 6.0. Use TenantsWithHdr.
 func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 	return to.TenantsWithHdr(nil)
 }
@@ -61,6 +62,7 @@ func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, Req
 
 // Tenant gets the Tenant identified by the passed integral, unique identifer - which
 // must be passed as a string.
+// Tenant is Deprecated - Will be removed in 6.0. Use TenantWithHdr.
 func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	return to.TenantWithHdr(id, nil)
 }
@@ -86,6 +88,7 @@ func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Ten
 }
 
 // TenantByName gets the Tenant with the name it's passed.
+// TenantByName is Deprecated - Will be removed in 6.0. Use TenantByNameWithHdr.
 func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 	return to.TenantByNameWithHdr(name, nil)
 }

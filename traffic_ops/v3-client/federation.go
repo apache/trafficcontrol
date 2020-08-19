@@ -34,6 +34,7 @@ func (to *Session) FederationsWithHdr(header http.Header) ([]tc.AllDeliveryServi
 	return data.Response, inf, err
 }
 
+// Federations is Deprecated - Will be removed in 6.0. Use FederationsWithHdr.
 func (to *Session) Federations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	return to.FederationsWithHdr(nil)
 }
@@ -47,6 +48,7 @@ func (to *Session) AllFederationsWithHdr(header http.Header) ([]tc.AllDeliverySe
 	return data.Response, inf, err
 }
 
+// AllFederations is Deprecated - Will be removed in 6.0. Use AllFederationsWithHdr.
 func (to *Session) AllFederations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	return to.AllFederationsWithHdr(nil)
 }
@@ -77,6 +79,7 @@ func (to *Session) AllFederationsForCDNWithHdr(cdnName string, header http.Heade
 	return feds, inf, nil
 }
 
+// AllFederationsForCDN is Deprecated - Will be removed in 6.0. Use AllFederationsForCDNWithHdr.
 func (to *Session) AllFederationsForCDN(cdnName string) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	return to.AllFederationsForCDNWithHdr(cdnName, nil)
 }
@@ -102,6 +105,7 @@ func (to *Session) GetFederationDeliveryServicesWithHdr(federationID int, header
 }
 
 // GetFederationDeliveryServices Returns a given Federation's Delivery Services
+// GetFederationDeliveryServices is Deprecated - Will be removed in 6.0. Use GetFederationDeliveryServicesWithHdr.
 func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
 	return to.GetFederationDeliveryServicesWithHdr(federationID, nil)
 }
@@ -144,6 +148,7 @@ func (to *Session) GetFederationUsersWithHdr(federationID int, header http.Heade
 }
 
 // GetFederationUsers Returns a given Federation's Users
+// GetFederationUsers is Deprecated - Will be removed in 6.0. Use GetFederationUsersWithHdr.
 func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, ReqInf, error) {
 	return to.GetFederationUsersWithHdr(federationID, nil)
 }

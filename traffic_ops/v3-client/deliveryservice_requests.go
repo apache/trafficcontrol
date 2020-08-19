@@ -136,6 +136,7 @@ func (to *Session) GetDeliveryServiceRequestsWithHdr(header http.Header) ([]tc.D
 }
 
 // GetDeliveryServiceRequests retrieves all deliveryservices available to session user.
+// GetDeliveryServiceRequests is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRequestsWithHdr.
 func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	return to.GetDeliveryServiceRequestsWithHdr(nil)
 }
@@ -167,6 +168,7 @@ func (to *Session) GetDeliveryServiceRequestByXMLIDWithHdr(XMLID string, header 
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
+// GetDeliveryServiceRequestByXMLID is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRequestByXMLIDWithHdr.
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	return to.GetDeliveryServiceRequestByXMLIDWithHdr(XMLID, nil)
 }
@@ -197,6 +199,7 @@ func (to *Session) GetDeliveryServiceRequestByIDWithHdr(id int, header http.Head
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest id
+// GetDeliveryServiceRequestByID is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRequestByIDWithHdr.
 func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	return to.GetDeliveryServiceRequestByIDWithHdr(id, nil)
 }

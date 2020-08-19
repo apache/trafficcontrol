@@ -43,6 +43,7 @@ func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, 
 }
 
 // GetCapabilities retrieves all capabilities.
+// GetCapabilities is Deprecated - Will be removed in 6.0. Use GetCapabilitiesWithHdr.
 func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 	return to.GetCapabilitiesWithHdr(nil)
 }
@@ -76,6 +77,7 @@ func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capabi
 }
 
 // GetCapability retrieves only the capability named 'c'.
+// GetCapability is Deprecated - Will be removed in 6.0. Use GetCapabilityWithHdr.
 func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 	return to.GetCapabilityWithHdr(c, nil)
 }

@@ -119,6 +119,7 @@ func (to *Session) GetParametersByProfileNameWithHdr(profileName string, header 
 }
 
 // GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
+// GetParametersByProfileName is Deprecated - Will be removed in 6.0. Use GetParametersByProfileNameWithHdr.
 func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParametersByProfileNameWithHdr(profileName, nil)
 }
@@ -146,6 +147,7 @@ func (to *Session) GetProfilesWithHdr(header http.Header) ([]tc.Profile, ReqInf,
 }
 
 // GetProfiles returns a list of Profiles.
+// GetProfiles is Deprecated - Will be removed in 6.0. Use GetProfilesWithHdr.
 func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	return to.GetProfilesWithHdr(nil)
 }
@@ -172,6 +174,7 @@ func (to *Session) GetProfileByIDWithHdr(id int, header http.Header) ([]tc.Profi
 }
 
 // GetProfileByID GETs a Profile by the Profile ID.
+// GetProfileByID is Deprecated - Will be removed in 6.0. Use GetProfileByIDWithHdr.
 func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 	return to.GetProfileByIDWithHdr(id, nil)
 }
@@ -198,6 +201,7 @@ func (to *Session) GetProfileByNameWithHdr(name string, header http.Header) ([]t
 }
 
 // GetProfileByName GETs a Profile by the Profile name.
+// GetProfileByName is Deprecated - Will be removed in 6.0. Use GetProfileByNameWithHdr.
 func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 	return to.GetProfileByNameWithHdr(name, nil)
 }
@@ -224,6 +228,7 @@ func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header
 }
 
 // GetProfileByParameter GETs a Profile by the Profile "param".
+// GetProfileByParameter is Deprecated - Will be removed in 6.0. Use GetProfileByParameterWithHdr.
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
 	return to.GetProfileByParameterWithHdr(param, nil)
 }
@@ -250,6 +255,7 @@ func (to *Session) GetProfileByCDNIDWithHdr(cdnID int, header http.Header) ([]tc
 }
 
 // GetProfileByCDNID GETs a Profile by the Profile CDN ID.
+// GetProfileByCDNID is Deprecated - Will be removed in 6.0. Use GetProfileByCDNIDWithHdr.
 func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 	return to.GetProfileByCDNIDWithHdr(cdnID, nil)
 }

@@ -83,6 +83,7 @@ func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostN
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
 // Callers can filter the results by server id, server host name and/or server capability via the optional parameters
+// GetServerServerCapabilities is Deprecated - Will be removed in 6.0. Use GetServerServerCapabilitiesWithHdr.
 func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapability, ReqInf, error) {
 	return to.GetServerServerCapabilitiesWithHdr(serverID, serverHostName, serverCapability, nil)
 }

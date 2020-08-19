@@ -113,6 +113,7 @@ const (
 
 // GetDeliveryServicesByServer returns all of the (tenant-visible) Delivery Services assigned to
 // the server identified by the integral, unique identifier 'id'.
+// GetDeliveryServicesByServer is Deprecated - Will be removed in 6.0. Use GetDeliveryServicesByServerWithHdr.
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetDeliveryServicesByServerWithHdr(id, nil)
 }
@@ -140,6 +141,7 @@ func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.
 }
 
 // GetDeliveryServicesNullable returns a slice of Delivery Services.
+// GetDeliveryServicesNullable is Deprecated - Will be removed in 6.0. Use GetDeliveryServicesNullableWithHdr.
 func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetDeliveryServicesNullableWithHdr(nil)
 }
@@ -157,6 +159,7 @@ func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Head
 
 // GetDeliveryServicesByCDNID returns the (tenant-visible) Delivery Services within the CDN identified
 // by the integral, unique identifier 'cdnID'.
+// GetDeliveryServicesByCDNID is Deprecated - Will be removed in 6.0. Use GetDeliveryServicesByCDNIDWithHdr.
 func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetDeliveryServicesByCDNIDWithHdr(cdnID, nil)
 }
@@ -177,6 +180,7 @@ func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Head
 
 // GetDeliveryServiceNullable returns the Delivery Service identified by the integral, unique identifier
 // 'id' (which must be passed as a string).
+// GetDeliveryServiceNullable is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceNullableWithHdr.
 func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetDeliveryServiceNullableWithHdr(id, nil)
 }
@@ -194,6 +198,7 @@ func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header
 // GetDeliveryServiceByXMLIDNullable returns the Delivery Service identified by the passed XMLID.
 // The length of the returned slice should always be 1 when the request is succesful - if it isn't
 // something very wicked has happened to Traffic Ops.
+// GetDeliveryServiceByXMLIDNullable is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceByXMLIDNullableWithHdr.
 func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetDeliveryServiceByXMLIDNullableWithHdr(XMLID, nil)
 }
@@ -293,6 +298,7 @@ func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header
 
 // GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
+// GetDeliveryServiceHealth is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceHealthWithHdr.
 func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, ReqInf, error) {
 	return to.GetDeliveryServiceHealthWithHdr(id, nil)
 }
@@ -309,12 +315,14 @@ func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Head
 
 // GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
+// GetDeliveryServiceCapacity is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceCapacityWithHdr.
 func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	return to.GetDeliveryServiceCapacityWithHdr(id, nil)
 }
 
 // GetDeliveryServiceServer returns associations between Delivery Services and servers using the
 // provided pagination controls.
+// GetDeliveryServiceServer is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceServerWithHdr.
 func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	return to.GetDeliveryServiceServerWithHdr(page, limit, nil)
 }
@@ -331,6 +339,7 @@ func (to *Session) GetDeliveryServiceServerWithHdr(page, limit string, header ht
 
 // GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
 // Delivery Services.
+// GetDeliveryServiceRegexes is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
 func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
 	return to.GetDeliveryServiceRegexesWithHdr(nil)
 }
@@ -347,6 +356,7 @@ func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.De
 
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
+// GetDeliveryServiceSSLKeysByID is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceSSLKeysByIDWithHdr.
 func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
 	return to.GetDeliveryServiceSSLKeysByIDWithHdr(XMLID, nil)
 }
@@ -375,16 +385,18 @@ func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Head
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
 // Service identified by the integral, unique identifier 'dsID'.
+// GetDeliveryServicesEligible is Deprecated - Will be removed in 6.0. Use GetDeliveryServicesEligibleWithHdr.
 func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
 	return to.GetDeliveryServicesEligibleWithHdr(dsID, nil)
 }
 
+// GetDeliveryServiceURLSigKeys returns the URL-signing keys used by the Delivery Service
+// identified by the XMLID 'dsName'.
+// GetDeliveryServiceURLSigKeys is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceURLSigKeysWithHdr.
 func (to *Session) GetDeliveryServiceURLSigKeys(dsName string) (tc.URLSigKeys, ReqInf, error) {
 	return to.GetDeliveryServiceURLSigKeysWithHdr(dsName, nil)
 }
 
-// GetDeliveryServiceURLSigKeys returns the URL-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'.
 func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header http.Header) (tc.URLSigKeys, ReqInf, error) {
 	data := struct {
 		Response tc.URLSigKeys `json:"response"`
@@ -397,6 +409,7 @@ func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header htt
 	return data.Response, reqInf, nil
 }
 
+// GetDeliveryServiceURISigningKeys is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceURISigningKeysWithHdr.
 func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqInf, error) {
 	return to.GetDeliveryServiceURISigningKeysWithHdr(dsName, nil)
 }

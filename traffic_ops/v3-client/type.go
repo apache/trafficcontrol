@@ -112,6 +112,7 @@ func (to *Session) GetTypesWithHdr(header http.Header, useInTable []string) ([]t
 // GetTypes returns a list of Types. If a 'useInTable' parameter is passed, the returned Types
 // are restricted to those with that exact 'useInTable' property. Only exactly 1 or exactly 0
 // 'useInTable' parameters may be passed; passing more will result in an error being returned.
+// GetTypes is Deprecated - Will be removed in 6.0. Use GetTypesWithHdr.
 func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	return to.GetTypesWithHdr(nil, useInTable)
 }
@@ -141,11 +142,11 @@ func (to *Session) GetTypeByIDWithHdr(id int, header http.Header) ([]tc.Type, Re
 }
 
 // GetTypeByID GETs a Type by the Type ID.
+// GetTypeByID is Deprecated - Will be removed in 6.0. Use GetTypeByIDWithHdr.
 func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
 	return to.GetTypeByIDWithHdr(id, nil)
 }
 
-// GetTypeByNameWithHdr GETs a Type by the Type name, and filters by http header params in the request.
 func (to *Session) GetTypeByNameWithHdr(name string, header http.Header) ([]tc.Type, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_TYPES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
@@ -170,6 +171,7 @@ func (to *Session) GetTypeByNameWithHdr(name string, header http.Header) ([]tc.T
 }
 
 // GetTypeByName GETs a Type by the Type name.
+// GetTypeByName is Deprecated - Will be removed in 6.0. Use GetTypeByNameWithHdr.
 func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 	return to.GetTypeByNameWithHdr(name, nil)
 }

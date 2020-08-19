@@ -100,6 +100,7 @@ func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, ReqInf, e
 }
 
 // GetRegions returns a list of regions.
+// GetRegions is Deprecated - Will be removed in 6.0. Use GetRegionsWithHdr.
 func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 	return to.GetRegionsWithHdr(nil)
 }
@@ -128,6 +129,7 @@ func (to *Session) GetRegionByIDWithHdr(id int, header http.Header) ([]tc.Region
 }
 
 // GetRegionByID GETs a Region by the Region ID.
+// GetRegionByID is Deprecated - Will be removed in 6.0. Use GetRegionByIDWithHdr.
 func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 	return to.GetRegionByIDWithHdr(id, nil)
 }
@@ -156,6 +158,7 @@ func (to *Session) GetRegionByNameWithHdr(name string, header http.Header) ([]tc
 }
 
 // GetRegionByName GETs a Region by the Region name.
+// GetRegionByName is Deprecated - Will be removed in 6.0. Use GetRegionByNameHdr.
 func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 	return to.GetRegionByNameWithHdr(name, nil)
 }

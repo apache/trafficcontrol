@@ -107,6 +107,7 @@ func (to *Session) GetParametersWithHdr(header http.Header) ([]tc.Parameter, Req
 }
 
 // GetParameters returns a list of Parameters.
+// GetParameters is Deprecated - Will be removed in 6.0. Use GetParametersWithHdr.
 func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 	return to.GetParametersWithHdr(nil)
 }
@@ -135,6 +136,7 @@ func (to *Session) GetParameterByIDWithHdr(id int, header http.Header) ([]tc.Par
 }
 
 // GetParameterByID GETs a Parameter by the Parameter ID.
+// GetParameterByID is Deprecated - Will be removed in 6.0. Use GetParameterByIDWithHdr.
 func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParameterByIDWithHdr(id, nil)
 }
@@ -163,6 +165,7 @@ func (to *Session) GetParameterByNameWithHdr(name string, header http.Header) ([
 }
 
 // GetParameterByName GETs a Parameter by the Parameter name.
+// GetParameterByName is Deprecated - Will be removed in 6.0. Use GetParameterByNameWithHdr.
 func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParameterByNameWithHdr(name, nil)
 }
@@ -191,6 +194,7 @@ func (to *Session) GetParameterByConfigFileWithHdr(configFile string, header htt
 }
 
 // GetParameterByConfigFile GETs a Parameter by the Parameter ConfigFile.
+// GetParameterByConfigFile is Deprecated - Will be removed in 6.0. Use GetParameterByConfigFileWithHdr.
 func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParameterByConfigFileWithHdr(configFile, nil)
 }
@@ -219,6 +223,7 @@ func (to *Session) GetParameterByNameAndConfigFileWithHdr(name string, configFil
 }
 
 // GetParameterByNameAndConfigFile GETs a Parameter by the Parameter Name and ConfigFile.
+// GetParameterByNameAndConfigFile is Deprecated - Will be removed in 6.0. Use GetParameterByNameAndConfigFileWithHdr.
 func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParameterByNameAndConfigFileWithHdr(name, configFile, nil)
 }
@@ -242,6 +247,7 @@ func (to *Session) GetParameterByNameAndConfigFileAndValueWithHdr(name, configFi
 // GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
 // TODO: API should support all 3, but does not support filter by value
 // currently. Until then, loop through hits until you find one with that value.
+// GetParameterByNameAndConfigFileAndValue is Deprecated - Will be removed in 6.0. Use GetParameterByNameAndConfigFileAndValueWithHdr.
 func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string) ([]tc.Parameter, ReqInf, error) {
 	return to.GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value, nil)
 }
