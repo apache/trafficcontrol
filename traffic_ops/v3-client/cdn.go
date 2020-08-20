@@ -88,7 +88,7 @@ func (to *Session) GetCDNsWithHdr(header http.Header) ([]tc.CDN, ReqInf, error) 
 }
 
 // GetCDNs eturns a list of CDNs.
-// GetCDNs is Deprecated - Will be removed in 6.0. Use GetCDNsWithHdr.
+// Deprecated: GetCDNs will be removed in 6.0. Use GetCDNsWithHdr.
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	return to.GetCDNsWithHdr(nil)
 }
@@ -117,7 +117,7 @@ func (to *Session) GetCDNByIDWithHdr(id int, header http.Header) ([]tc.CDN, ReqI
 }
 
 // GetCDNByID a CDN by the CDN ID.
-// GetCDNByID is Deprecated - Will be removed in 6.0. Use GetCDNByIDWithHdr.
+// Deprecated: GetCDNByID will be removed in 6.0. Use GetCDNByIDWithHdr.
 func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 	return to.GetCDNByIDWithHdr(id, nil)
 }
@@ -146,7 +146,7 @@ func (to *Session) GetCDNByNameWithHdr(name string, header http.Header) ([]tc.CD
 }
 
 // GetCDNByName gets a CDN by the CDN name.
-// GetCDNByName is Deprecated - Will be removed in 6.0. Use GetCDNByNameWithHdr.
+// Deprecated: GetCDNByName will be removed in 6.0. Use GetCDNByNameWithHdr.
 func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 	return to.GetCDNByNameWithHdr(name, nil)
 }
@@ -188,7 +188,7 @@ func (to *Session) GetCDNSSLKeysWithHdr(name string, header http.Header) ([]tc.C
 	return data.Response, reqInf, nil
 }
 
-// GetCDNSSLKeys is Deprecated - Will be removed in 6.0. Use GetCDNSSLKeysWithHdr.
+// Deprecated: GetCDNSSLKeys will be removed in 6.0. Use GetCDNSSLKeysWithHdr.
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
-	return to.GetCDNSSLKeys(name)
+	return to.GetCDNSSLKeysWithHdr(name, nil)
 }

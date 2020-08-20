@@ -135,7 +135,7 @@ func (to *Session) GetStaticDNSEntriesWithHdr(header http.Header) ([]tc.StaticDN
 }
 
 // GetStaticDNSEntries returns a list of Static DNS Entrys.
-// GetStaticDNSEntries is Deprecated - Will be removed in 6.0. Use GetStaticDNSEntriesWithHdr.
+// Deprecated: GetStaticDNSEntries will be removed in 6.0. Use GetStaticDNSEntriesWithHdr.
 func (to *Session) GetStaticDNSEntries() ([]tc.StaticDNSEntry, ReqInf, error) {
 	return to.GetStaticDNSEntriesWithHdr(nil)
 }
@@ -164,7 +164,7 @@ func (to *Session) GetStaticDNSEntryByIDWithHdr(id int, header http.Header) ([]t
 }
 
 // GetStaticDNSEntryByID GETs a Static DNS Entry by the Static DNS Entry's ID.
-// GetStaticDNSEntryByID is Deprecated - Will be removed in 6.0. Use GetStaticDNSEntryByIDWithHdr.
+// Deprecated: GetStaticDNSEntryByID will be removed in 6.0. Use GetStaticDNSEntryByIDWithHdr.
 func (to *Session) GetStaticDNSEntryByID(id int) ([]tc.StaticDNSEntry, ReqInf, error) {
 	return to.GetStaticDNSEntryByIDWithHdr(id, nil)
 }
@@ -193,7 +193,7 @@ func (to *Session) GetStaticDNSEntriesByHostWithHdr(host string, header http.Hea
 }
 
 // GetStaticDNSEntriesByHost GETs a Static DNS Entry by the Static DNS Entry's host.
-// GetStaticDNSEntriesByHost is Deprecated - Will be removed in 6.0. Use GetStaticDNSEntriesByHostWithHdr.
+// Deprecated: GetStaticDNSEntriesByHost will be removed in 6.0. Use GetStaticDNSEntriesByHostWithHdr.
 func (to *Session) GetStaticDNSEntriesByHost(host string) ([]tc.StaticDNSEntry, ReqInf, error) {
 	return to.GetStaticDNSEntriesByHostWithHdr(host, nil)
 }

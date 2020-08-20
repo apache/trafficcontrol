@@ -178,7 +178,7 @@ func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc
 // parameters" in the request.
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
-// GetServers is Deprecated - Will be removed in 6.0. Use GetServersWithHdr.
+// Deprecated: GetServers will be removed in 6.0. Use GetServersWithHdr.
 func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf, error) {
 	return to.GetServersWithHdr(params, nil)
 }
@@ -203,7 +203,7 @@ func (to *Session) GetFirstServerWithHdr(params *url.Values, header http.Header)
 // parameters" in the request.
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
-// GetFirstServer is Deprecated - Will be removed in 6.0. Use GetFirstServerWithHdr.
+// Deprecated: GetFirstServer will be removed in 6.0. Use GetFirstServerWithHdr.
 func (to *Session) GetFirstServer(params *url.Values) (tc.ServerNullable, ReqInf, error) {
 	return to.GetFirstServerWithHdr(params, nil)
 }
@@ -235,7 +235,7 @@ func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header htt
 }
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
-// GetServerDetailsByHostName is Deprecated - Will be removed in 6.0. Use GetServerDetailsByHostNameWithHdr.
+// Deprecated: GetServerDetailsByHostName will be removed in 6.0. Use GetServerDetailsByHostNameWithHdr.
 func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV30, ReqInf, error) {
 	return to.GetServerDetailsByHostNameWithHdr(hostName, nil)
 }
@@ -280,7 +280,7 @@ func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, t
 
 // GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first
 // server found to have the Host Name 'n'.
-// GetServerFQDN is Deprecated - Will be removed in 6.0. Use GetServerFQDNWithHdr.
+// Deprecated: GetServerFQDN will be removed in 6.0. Use GetServerFQDNWithHdr.
 func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 	return to.GetServerFQDNWithHdr(n, nil)
 }
@@ -307,7 +307,7 @@ func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header htt
 
 // GetServersShortNameSearch returns all of the Host Names of servers that
 // contain 'shortname'.
-// GetServersShortNameSearch is Deprecated - Will be removed in 6.0. Use GetServersShortNameSearchWithHdr.
+// Deprecated: GetServersShortNameSearch will be removed in 6.0. Use GetServersShortNameSearchWithHdr.
 func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Alerts, ReqInf, error) {
 	return to.GetServersShortNameSearchWithHdr(shortname, nil)
 }
@@ -364,7 +364,7 @@ func (to *Session) GetServerIDDeliveryServicesWithHdr(server int, header http.He
 
 // GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
 // by the integral, unique identifier 'server'.
-// GetServerIDDeliveryServices is Deprecated - Will be removed in 6.0. Use GetServerIDDeliveryServicesWithHdr.
+// Deprecated: GetServerIDDeliveryServices will be removed in 6.0. Use GetServerIDDeliveryServicesWithHdr.
 func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	return to.GetServerIDDeliveryServicesWithHdr(server, nil)
 }
@@ -389,7 +389,7 @@ func (to *Session) GetServerUpdateStatusWithHdr(hostName string, header http.Hea
 }
 
 // GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
-// GetServerUpdateStatus is Deprecated - Will be removed in 6.0. Use GetServerUpdateStatusWithHdr.
+// Deprecated: GetServerUpdateStatus will be removed in 6.0. Use GetServerUpdateStatusWithHdr.
 func (to *Session) GetServerUpdateStatus(hostName string) (tc.ServerUpdateStatus, ReqInf, error) {
 	return to.GetServerUpdateStatusWithHdr(hostName, nil)
 }

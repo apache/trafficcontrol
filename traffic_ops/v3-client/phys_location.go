@@ -99,7 +99,7 @@ func (to *Session) GetPhysLocationsWithHdr(params map[string]string, header http
 }
 
 // Returns a list of PhysLocations with optional query parameters applied
-// GetPhysLocations is Deprecated - Will be removed in 6.0. Use GetPhysLocationsWithHdr.
+// Deprecated: GetPhysLocations will be removed in 6.0. Use GetPhysLocationsWithHdr.
 func (to *Session) GetPhysLocations(params map[string]string) ([]tc.PhysLocation, ReqInf, error) {
 	return to.GetPhysLocationsWithHdr(params, nil)
 }
@@ -128,7 +128,7 @@ func (to *Session) GetPhysLocationByIDWithHdr(id int, header http.Header) ([]tc.
 }
 
 // GET a PhysLocation by the PhysLocation ID
-// GetPhysLocationByID is Deprecated - Will be removed in 6.0. Use GetPhysLocationByIDWithHdr.
+// Deprecated: GetPhysLocationByID will be removed in 6.0. Use GetPhysLocationByIDWithHdr.
 func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
 	return to.GetPhysLocationByIDWithHdr(id, nil)
 }
@@ -157,7 +157,7 @@ func (to *Session) GetPhysLocationByNameWithHdr(name string, header http.Header)
 }
 
 // GET a PhysLocation by the PhysLocation name
-// GetPhysLocationByName is Deprecated - Will be removed in 6.0. Use GetPhysLocationByNameWithHdr.
+// Deprecated: GetPhysLocationByName will be removed in 6.0. Use GetPhysLocationByNameWithHdr.
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
 	return to.GetPhysLocationByNameWithHdr(name, nil)
 }

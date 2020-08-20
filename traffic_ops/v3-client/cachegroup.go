@@ -125,7 +125,7 @@ func (to *Session) GetCacheGroupsNullableWithHdr(header http.Header) ([]tc.Cache
 }
 
 // Returns a list of CacheGroups.
-// GetCacheGroupsNullable is Deprecated - Will be removed in 6.0. Use GetCacheGroupsNullableWithHdr.
+// Deprecated: GetCacheGroupsNullable will be removed in 6.0. Use GetCacheGroupsNullableWithHdr.
 func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, error) {
 	return to.GetCacheGroupsNullableWithHdr(nil)
 }
@@ -148,7 +148,7 @@ func (to *Session) GetCacheGroupNullableByIDWithHdr(id int, header http.Header) 
 }
 
 // GET a CacheGroup by the CacheGroup ID.
-// GetCacheGroupNullableByID is Deprecated - Will be removed in 6.0. Use GetCacheGroupNullableByIDWithHdr.
+// Deprecated: GetCacheGroupNullableByID will be removed in 6.0. Use GetCacheGroupNullableByIDWithHdr.
 func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
 	return to.GetCacheGroupNullableByIDWithHdr(id, nil)
 }
@@ -177,7 +177,7 @@ func (to *Session) GetCacheGroupNullableByNameWithHdr(name string, header http.H
 }
 
 // GET a CacheGroup by the CacheGroup name.
-// GetCacheGroupNullableByName is Deprecated - Will be removed in 6.0. Use GetCacheGroupNullableByNameWithHdr.
+// Deprecated: GetCacheGroupNullableByName will be removed in 6.0. Use GetCacheGroupNullableByNameWithHdr.
 func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
 	return to.GetCacheGroupNullableByNameWithHdr(name, nil)
 }
@@ -206,7 +206,7 @@ func (to *Session) GetCacheGroupNullableByShortNameWithHdr(shortName string, hea
 }
 
 // GET a CacheGroup by the CacheGroup short name.
-// GetCacheGroupNullableByShortName is Deprecated - Will be removed in 6.0. Use GetCacheGroupNullableByShortNameWithHdr.
+// Deprecated: GetCacheGroupNullableByShortName will be removed in 6.0. Use GetCacheGroupNullableByShortNameWithHdr.
 func (to *Session) GetCacheGroupNullableByShortName(shortName string) ([]tc.CacheGroupNullable, ReqInf, error) {
 	return to.GetCacheGroupNullableByShortNameWithHdr(shortName, nil)
 }
@@ -228,7 +228,7 @@ func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
 }
 
 // GetCacheGroupsByQueryParams gets cache groups by the given query parameters.
-// GetCacheGroupsByQueryParams is Deprecated - Will be removed in 6.0. Use GetCacheGroupsByQueryParamsWithHdr.
+// Deprecated: GetCacheGroupsByQueryParams will be removed in 6.0. Use GetCacheGroupsByQueryParamsWithHdr.
 func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGroupNullable, ReqInf, error) {
 	return to.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 }

@@ -83,7 +83,7 @@ func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServic
 
 // GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
 // Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
-// GetDeliveryServicesRequiredCapabilities is Deprecated - Will be removed in 6.0. Use GetDeliveryServicesRequiredCapabilitiesWithHdr.
+// Deprecated: GetDeliveryServicesRequiredCapabilities will be removed in 6.0. Use GetDeliveryServicesRequiredCapabilitiesWithHdr.
 func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServicesRequiredCapability, ReqInf, error) {
 	return to.GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID, xmlID, capability, nil)
 }

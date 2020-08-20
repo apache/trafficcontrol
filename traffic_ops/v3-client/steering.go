@@ -43,7 +43,7 @@ func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, e
 	return data.Response, reqInf, err
 }
 
-// Steering is Deprecated - Will be removed in 6.0. Use SteeringWithHdr.
+// Deprecated: Steering will be removed in 6.0. Use SteeringWithHdr.
 func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
 	return to.SteeringWithHdr(nil)
 }

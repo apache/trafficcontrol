@@ -88,7 +88,7 @@ func (to *Session) GetProfileParametersWithHdr(header http.Header) ([]tc.Profile
 }
 
 // Returns a list of Profile Parameters
-// GetProfileParameters is Deprecated - Will be removed in 6.0. Use GetProfileParametersWithHdr.
+// Deprecated: GetProfileParameters will be removed in 6.0. Use GetProfileParametersWithHdr.
 func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
 	return to.GetProfileParametersWithHdr(nil)
 }
@@ -117,7 +117,7 @@ func (to *Session) GetProfileParameterByQueryParamsWithHdr(queryParams string, h
 }
 
 // GET a Profile Parameter by the Parameter
-// GetProfileParameterByQueryParams is Deprecated - Will be removed in 6.0. Use GetProfileParameterByQueryParamsWithHdr.
+// Deprecated: GetProfileParameterByQueryParams will be removed in 6.0. Use GetProfileParameterByQueryParamsWithHdr.
 func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.ProfileParameter, ReqInf, error) {
 	return to.GetProfileParameterByQueryParamsWithHdr(queryParams, nil)
 }

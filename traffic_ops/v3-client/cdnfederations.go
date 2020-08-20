@@ -47,7 +47,7 @@ func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.He
 	return &data, inf, err
 }
 
-// GetCDNFederationsByName is Deprecated - Will be removed in 6.0. Use GetCDNFederationsByNameWithHdr.
+// Deprecated: GetCDNFederationsByName will be removed in 6.0. Use GetCDNFederationsByNameWithHdr.
 func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationResponse, ReqInf, error) {
 	return to.GetCDNFederationsByNameWithHdr(CDNName, nil)
 }
@@ -59,7 +59,7 @@ func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header h
 	return &data, inf, err
 }
 
-// GetCDNFederationsByID is Deprecated - Will be removed in 6.0. Use GetCDNFederationsByIDWithHdr.
+// Deprecated: GetCDNFederationsByID will be removed in 6.0. Use GetCDNFederationsByIDWithHdr.
 func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, ReqInf, error) {
 	return to.GetCDNFederationsByIDWithHdr(CDNName, ID, nil)
 }

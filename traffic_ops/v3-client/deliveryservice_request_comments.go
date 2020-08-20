@@ -88,7 +88,7 @@ func (to *Session) GetDeliveryServiceRequestCommentsWithHdr(header http.Header) 
 }
 
 // Returns a list of delivery service request comments
-// GetDeliveryServiceRequestComments is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRequestCommentsWithHdr.
+// Deprecated: GetDeliveryServiceRequestComments will be removed in 6.0. Use GetDeliveryServiceRequestCommentsWithHdr.
 func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
 	return to.GetDeliveryServiceRequestCommentsWithHdr(nil)
 }
@@ -117,7 +117,7 @@ func (to *Session) GetDeliveryServiceRequestCommentByIDWithHdr(id int, header ht
 }
 
 // GET a delivery service request comment by ID
-// GetDeliveryServiceRequestCommentByID is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRequestCommentByIDWithHdr.
+// Deprecated: GetDeliveryServiceRequestCommentByID will be removed in 6.0. Use GetDeliveryServiceRequestCommentByIDWithHdr.
 func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
 	return to.GetDeliveryServiceRequestCommentByIDWithHdr(id, nil)
 }

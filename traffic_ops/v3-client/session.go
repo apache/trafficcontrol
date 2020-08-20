@@ -397,7 +397,7 @@ func (to *Session) RawRequestWithHdr(method, path string, body []byte, header ht
 // RawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
 // Returns the response, the remote address of the Traffic Ops instance used, and any error.
 // The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
-// RawRequest is Deprecated - Will be removed in 6.0. Use RawRequestWithHdr.
+// Deprecated: RawRequest will be removed in 6.0. Use RawRequestWithHdr.
 func (to *Session) RawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
 	return to.RawRequestWithHdr(method, path, body, nil)
 }

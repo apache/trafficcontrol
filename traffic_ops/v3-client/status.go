@@ -87,7 +87,7 @@ func (to *Session) GetStatusesWithHdr(header http.Header) ([]tc.Status, ReqInf, 
 }
 
 // GetStatuses returns a list of Statuses.
-// GetStatuses is Deprecated - Will be removed in 6.0. Use GetStatusesWithHdr.
+// Deprecated: GetStatuses will be removed in 6.0. Use GetStatusesWithHdr.
 func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 	return to.GetStatusesWithHdr(nil)
 }
@@ -116,7 +116,7 @@ func (to *Session) GetStatusByIDWithHdr(id int, header http.Header) ([]tc.Status
 }
 
 // GetStatusByID GETs a Status by the Status ID.
-// GetStatusByID is Deprecated - Will be removed in 6.0. Use GetStatusByIDWithHdr.
+// Deprecated: GetStatusByID will be removed in 6.0. Use GetStatusByIDWithHdr.
 func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 	return to.GetStatusByIDWithHdr(id, nil)
 }
@@ -145,7 +145,7 @@ func (to *Session) GetStatusByNameWithHdr(name string, header http.Header) ([]tc
 }
 
 // GetStatusByName GETs a Status by the Status name.
-// GetStatusByName is Deprecated - Will be removed in 6.0. Use GetStatusByNameWithHdr.
+// Deprecated: GetStatusByName will be removed in 6.0. Use GetStatusByNameWithHdr.
 func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
 	return to.GetStatusByNameWithHdr(name, nil)
 }

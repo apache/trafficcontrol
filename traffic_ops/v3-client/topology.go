@@ -71,7 +71,7 @@ func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, ReqI
 }
 
 // GetTopologies returns all topologies.
-// GetTopologies is Deprecated - Will be removed in 6.0. Use GetTopologiesWithHdr.
+// Deprecated: GetTopologies will be removed in 6.0. Use GetTopologiesWithHdr.
 func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 	return to.GetTopologiesWithHdr(nil)
 }
@@ -100,7 +100,7 @@ func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topo
 }
 
 // GetTopology returns the given topology by name.
-// GetTopology is Deprecated - Will be removed in 6.0. Use GetTopologyWithHdr.
+// Deprecated: GetTopology will be removed in 6.0. Use GetTopologyWithHdr.
 func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	return to.GetTopologyWithHdr(name, nil)
 }

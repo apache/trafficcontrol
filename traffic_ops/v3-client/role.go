@@ -94,7 +94,7 @@ func (to *Session) GetRolesWithHdr(header http.Header) ([]tc.Role, ReqInf, int, 
 }
 
 // GetRoles returns a list of roles.
-// GetRoles is Deprecated - Will be removed in 6.0. Use GetRolesWithHdr.
+// Deprecated: GetRoles will be removed in 6.0. Use GetRolesWithHdr.
 func (to *Session) GetRoles() ([]tc.Role, ReqInf, int, error) {
 	return to.GetRolesWithHdr(nil)
 }
@@ -122,7 +122,7 @@ func (to *Session) GetRoleByIDWithHdr(id int, header http.Header) ([]tc.Role, Re
 }
 
 // GetRoleByID GETs a Role by the Role ID.
-// GetRoleByID is Deprecated - Will be removed in 6.0. Use GetRoleByIDWithHdr.
+// Deprecated: GetRoleByID will be removed in 6.0. Use GetRoleByIDWithHdr.
 func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
 	return to.GetRoleByIDWithHdr(id, nil)
 }
@@ -150,7 +150,7 @@ func (to *Session) GetRoleByNameWithHdr(name string, header http.Header) ([]tc.R
 }
 
 // GetRoleByName GETs a Role by the Role name.
-// GetRoleByName is Deprecated - Will be removed in 6.0. Use GetRoleByNameWithHdr.
+// Deprecated: GetRoleByName will be removed in 6.0. Use GetRoleByNameWithHdr.
 func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
 	return to.GetRoleByNameWithHdr(name, nil)
 }
@@ -181,7 +181,7 @@ func (to *Session) GetRoleByQueryParamsWithHdr(queryParams map[string]string, he
 }
 
 // GetRoleByQueryParams gets a Role by the Role query parameters.
-// GetRoleByQueryParams is Deprecated - Will be removed in 6.0. Use GetRoleByQueryParamsWithHdr.
+// Deprecated: GetRoleByQueryParams will be removed in 6.0. Use GetRoleByQueryParamsWithHdr.
 func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Role, ReqInf, int, error) {
 	return to.GetRoleByQueryParamsWithHdr(queryParams, nil)
 }

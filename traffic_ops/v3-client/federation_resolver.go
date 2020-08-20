@@ -50,7 +50,7 @@ func (to *Session) GetFederationResolversWithHdr(header http.Header) ([]tc.Feder
 }
 
 // GetFederationResolvers retrieves all Federation Resolvers from Traffic Ops
-// GetFederationResolvers is Deprecated - Will be removed in 6.0. Use GetFederationResolversWithHdr.
+// Deprecated: GetFederationResolvers will be removed in 6.0. Use GetFederationResolversWithHdr.
 func (to *Session) GetFederationResolvers() ([]tc.FederationResolver, ReqInf, error) {
 	return to.GetFederationResolversWithHdr(nil)
 }
@@ -65,7 +65,7 @@ func (to *Session) GetFederationResolverByIDWithHdr(ID uint, header http.Header)
 }
 
 // GetFederationResolverByID retrieves a single Federation Resolver identified by ID.
-// GetFederationResolverByID is Deprecated - Will be removed in 6.0. Use GetFederationResolverByIDWithHdr.
+// Deprecated: GetFederationResolverByID will be removed in 6.0. Use GetFederationResolverByIDWithHdr.
 func (to *Session) GetFederationResolverByID(ID uint) (tc.FederationResolver, ReqInf, error) {
 	return to.GetFederationResolverByIDWithHdr(ID, nil)
 }
@@ -81,7 +81,7 @@ func (to *Session) GetFederationResolverByIPAddressWithHdr(ip string, header htt
 
 // GetFederationResolverByIPAddress retrieves the Federation Resolver that uses the IP address or
 // CIDR-notation subnet 'ip'.
-// GetFederationResolverByIPAddress is Deprecated - Will be removed in 6.0. Use GetFederationResolverByIPAddressWithHdr.
+// Deprecated: GetFederationResolverByIPAddress will be removed in 6.0. Use GetFederationResolverByIPAddressWithHdr.
 func (to *Session) GetFederationResolverByIPAddress(ip string) (tc.FederationResolver, ReqInf, error) {
 	return to.GetFederationResolverByIPAddressWithHdr(ip, nil)
 }
@@ -91,7 +91,7 @@ func (to *Session) GetFederationResolversByTypeWithHdr(t string, header http.Hea
 }
 
 // GetFederationResolversByType gets all Federation Resolvers that are of the Type named 't'.
-// GetFederationResolversByType is Deprecated - Will be removed in 6.0. Use GetFederationResolversByTypeWithHdr.
+// Deprecated: GetFederationResolversByType will be removed in 6.0. Use GetFederationResolversByTypeWithHdr.
 func (to *Session) GetFederationResolversByType(t string) ([]tc.FederationResolver, ReqInf, error) {
 	return to.GetFederationResolversByTypeWithHdr(t, nil)
 }

@@ -29,7 +29,7 @@ func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, ReqInf, e
 	return data.Response, inf, nil
 }
 
-// GetDomains is Deprecated - Will be removed in 6.0. Use GetDomainsWithHdr.
+// Deprecated: GetDomains will be removed in 6.0. Use GetDomainsWithHdr.
 func (to *Session) GetDomains() ([]tc.Domain, ReqInf, error) {
 	return to.GetDomainsWithHdr(nil)
 }

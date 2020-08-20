@@ -87,7 +87,7 @@ func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, R
 }
 
 // Returns a list of Coordinates
-// GetCoordinates is Deprecated - Will be removed in 6.0. Use GetCoordinatesWithHdr.
+// Deprecated: GetCoordinates will be removed in 6.0. Use GetCoordinatesWithHdr.
 func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
 	return to.GetCoordinatesWithHdr(nil)
 }
@@ -116,13 +116,13 @@ func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Co
 }
 
 // GET a Coordinate by the Coordinate id
-// GetCoordinateByID is Deprecated - Will be removed in 6.0. Use GetCoordinateByIDWithHdr.
+// Deprecated: GetCoordinateByID will be removed in 6.0. Use GetCoordinateByIDWithHdr.
 func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
 	return to.GetCoordinateByIDWithHdr(id, nil)
 }
 
 // GET a Coordinate by the Coordinate name
-// GetCoordinateByName is Deprecated - Will be removed in 6.0. Use GetCoordinateByNameWithHdr.
+// Deprecated: GetCoordinateByName will be removed in 6.0. Use GetCoordinateByNameWithHdr.
 func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, error) {
 	return to.GetCoordinateByNameWithHdr(name, nil)
 }

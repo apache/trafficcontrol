@@ -441,7 +441,7 @@ func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header
 
 // GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
-// GetDeliveryServiceHealth is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceHealthWithHdr.
+// Deprecated: GetDeliveryServiceHealth will be removed in 6.0. Use GetDeliveryServiceHealthWithHdr.
 func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, ReqInf, error) {
 	return to.GetDeliveryServiceHealthWithHdr(id, nil)
 }
@@ -458,14 +458,14 @@ func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Head
 
 // GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
-// GetDeliveryServiceCapacity is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceCapacityWithHdr.
+// Deprecated: GetDeliveryServiceCapacity will be removed in 6.0. Use GetDeliveryServiceCapacityWithHdr.
 func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	return to.GetDeliveryServiceCapacityWithHdr(id, nil)
 }
 
 // GetDeliveryServiceServer returns associations between Delivery Services and servers using the
 // provided pagination controls.
-// GetDeliveryServiceServer is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceServerWithHdr.
+// Deprecated: GetDeliveryServiceServer will be removed in 6.0. Use GetDeliveryServiceServerWithHdr.
 func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	return to.GetDeliveryServiceServerWithHdr(page, limit, nil)
 }
@@ -482,7 +482,7 @@ func (to *Session) GetDeliveryServiceServerWithHdr(page, limit string, header ht
 
 // GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
 // Delivery Services.
-// GetDeliveryServiceRegexes is Deprecated - Will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
+// Deprecated: GetDeliveryServiceRegexes will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
 func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
 	return to.GetDeliveryServiceRegexesWithHdr(nil)
 }

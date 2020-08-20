@@ -87,7 +87,7 @@ func (to *Session) GetDivisionsWithHdr(header http.Header) ([]tc.Division, ReqIn
 }
 
 // Returns a list of Divisions
-// GetDivisions is Deprecated - Will be removed in 6.0. Use GetDivisionsWithHdr.
+// Deprecated: GetDivisions will be removed in 6.0. Use GetDivisionsWithHdr.
 func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
 	return to.GetDivisionsWithHdr(nil)
 }
@@ -116,7 +116,7 @@ func (to *Session) GetDivisionByIDWithHdr(id int, header http.Header) ([]tc.Divi
 }
 
 // GET a Division by the Division id
-// GetDivisionByID is Deprecated - Will be removed in 6.0. Use GetDivisionByIDWithHdr.
+// Deprecated: GetDivisionByID will be removed in 6.0. Use GetDivisionByIDWithHdr.
 func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 	return to.GetDivisionByIDWithHdr(id, nil)
 }
@@ -145,7 +145,7 @@ func (to *Session) GetDivisionByNameWithHdr(name string, header http.Header) ([]
 }
 
 // GET a Division by the Division name
-// GetDivisionByName is Deprecated - Will be removed in 6.0. Use GetDivisionByNameWithHdr.
+// Deprecated: GetDivisionByName will be removed in 6.0. Use GetDivisionByNameWithHdr.
 func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
 	return to.GetDivisionByNameWithHdr(name, nil)
 }

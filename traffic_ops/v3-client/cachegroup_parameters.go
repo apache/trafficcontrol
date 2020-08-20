@@ -33,7 +33,7 @@ func (to *Session) GetCacheGroupParametersWithHdr(cacheGroupID int, header http.
 }
 
 // GetCacheGroupParameters Gets a Cache Group's Parameters
-// GetCacheGroupParameters is Deprecated - Will be removed in 6.0. Use GetCacheGroupParametersWithHdr.
+// Deprecated: GetCacheGroupParameters will be removed in 6.0. Use GetCacheGroupParametersWithHdr.
 func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
 	return to.GetCacheGroupParametersWithHdr(cacheGroupID, nil)
 }
@@ -44,7 +44,7 @@ func (to *Session) GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID int,
 }
 
 // GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
-// GetCacheGroupParametersByQueryParams is Deprecated - Will be removed in 6.0. Use GetCacheGroupParametersByQueryParamsWithHdr.
+// Deprecated: GetCacheGroupParametersByQueryParams will be removed in 6.0. Use GetCacheGroupParametersByQueryParamsWithHdr.
 func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
 	return to.GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID, queryParams, nil)
 }
@@ -88,7 +88,7 @@ func (to *Session) GetAllCacheGroupParametersWithHdr(header http.Header) ([]tc.C
 }
 
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
-// GetAllCacheGroupParameters is Deprecated - Will be removed in 6.0. Use GetAllCacheGroupParametersWithHdr.
+// Deprecated: GetAllCacheGroupParameters will be removed in 6.0. Use GetAllCacheGroupParametersWithHdr.
 func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	return to.GetAllCacheGroupParametersWithHdr(nil)
 }
