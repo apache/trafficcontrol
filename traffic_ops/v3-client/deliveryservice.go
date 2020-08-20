@@ -357,6 +357,8 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
+// UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
+// integral, unique identifier 'id' with the one it's passed.
 func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	bts, err := json.Marshal(ds)
@@ -376,13 +378,6 @@ func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryService
 
 }
 
-// UpdateDeliveryServiceV30 replaces the Delivery Service identified by the
-// integral, unique identifier 'id' with the one it's passed.
-// Deprecated: Use UpdateDeliveryServiceV30WithHdr instead.
-func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	return to.UpdateDeliveryServiceV30WithHdr(id, ds, nil)
-}
-
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
 //
@@ -391,7 +386,7 @@ func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullabl
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// UpdateDeliveryServiceV30.
+// UpdateDeliveryServiceV30WithHdr.
 func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	return to.UpdateDeliveryServiceNullableWithHdr(id, ds, nil)
 }
@@ -520,9 +515,9 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.H
 	return []byte(data), reqInf, nil
 }
 
-// SafeDeliveryServiceUpdateV30 updates the "safe" fields of the Delivery
+// SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	req, err := json.Marshal(r)
 	if err != nil {
@@ -530,7 +525,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 	}
 
 	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, nil)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -546,7 +541,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// SafeDeliveryServiceUpdateV30.
+// SafeDeliveryServiceUpdateV30WithHdr.
 func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var reqInf ReqInf
 	var resp tc.DeliveryServiceSafeUpdateResponse
