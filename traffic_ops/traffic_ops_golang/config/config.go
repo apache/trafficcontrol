@@ -20,6 +20,7 @@ package config
  */
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,7 +29,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"crypto/tls"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -72,7 +72,7 @@ type ConfigHypnotoad struct {
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
 	// Deprecated in 5.0
-	Insecure                 bool                       `json:"insecure"`
+	Insecure bool `json:"insecure"`
 	// end deprecated
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
@@ -102,9 +102,9 @@ type ConfigTrafficOpsGolang struct {
 	RiakPort                 *uint                      `json:"riak_port"`
 	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
 	OAuthClientSecret        string                     `json:"oauth_client_secret"`
-	RoutingBlacklist                                    `json:"routing_blacklist"`
-	SupportedDSMetrics       []string                   `json:"supported_ds_metrics"`
-	TLSConfig                *tls.Config                `json:"tls_config"`
+	RoutingBlacklist         `json:"routing_blacklist"`
+	SupportedDSMetrics       []string    `json:"supported_ds_metrics"`
+	TLSConfig                *tls.Config `json:"tls_config"`
 
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
