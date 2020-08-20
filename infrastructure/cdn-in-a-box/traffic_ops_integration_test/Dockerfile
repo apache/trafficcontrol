@@ -76,6 +76,10 @@ COPY --from=integration-builder \
     /go/bin/go-junit-report \
     /opt/integration/app/
 
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 VOLUME ["/junit"]
 
 WORKDIR /opt/integration/app

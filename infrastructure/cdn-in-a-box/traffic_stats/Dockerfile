@@ -43,4 +43,8 @@ ADD enroller/server_template.json \
     traffic_stats/run.sh \
     /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 ENTRYPOINT /run.sh

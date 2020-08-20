@@ -66,7 +66,7 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 
 	isMid := strings.HasPrefix(toData.Server.Type, tc.MidTypePrefix)
 
-	filteredDSes := []tc.DeliveryServiceNullable{}
+	filteredDSes := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
