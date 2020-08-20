@@ -80,6 +80,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 
 	serverInfo := atscfg.ServerInfo{
 		CacheGroupID:                  toData.Server.CachegroupID,
+		CacheGroupName:                toData.Server.Cachegroup,
 		CDN:                           tc.CDNName(toData.Server.CDNName),
 		CDNID:                         toData.Server.CDNID,
 		DomainName:                    toData.Server.DomainName,
@@ -160,7 +161,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 			if ds.XMLID == nil {
 				continue // TODO log?
 			}
-			if _, ok := dssMap[*ds.ID]; !ok {
+			if _, ok := dssMap[*ds.ID]; !ok && ds.Topology == nil {
 				continue
 			}
 			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
@@ -197,7 +198,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
 	}
 
-	metaObj, err := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, dir)
+	metaObj, err := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, toData.CacheGroups, toData.Topologies, dir)
 	if err != nil {
 		return nil, errors.New("generating: " + err.Error())
 	}

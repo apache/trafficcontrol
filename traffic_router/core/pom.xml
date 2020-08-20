@@ -100,6 +100,7 @@
 					<targetJdk>${java.version}</targetJdk>
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
+					<printFailingErrors>true</printFailingErrors>
 					<rulesets>
 						<ruleset>${project.basedir}${file.separator}build${file.separator}pmd${file.separator}ruleset.xml</ruleset>
 					</rulesets>

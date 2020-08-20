@@ -19,7 +19,7 @@
 
 module.exports = function(){
 	this.moreBtn=element(by.name('moreBtn'));
-	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
+	this.viewStaticCapabilitiesMenuItem=element(by.css('a[ng-click*=viewStaticDnsEntries]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.manageServersMenuItem=element(by.css('a[ng-click*=viewServers]'));
 	this.selectServersBtn=element(by.name('selectServersBtn'));
@@ -43,4 +43,11 @@ module.exports = function(){
 	this.searchFilter=element(by.id('deliveryServicesTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	// delivery service static dns entry fields
+	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
+	this.addStaticDNSBtn=element(by.name('addStaticDNSBtn'));
+	this.host=element(by.name('host'));
+	this.staticDNStypeId=element(by.name('typeId'));
+	this.ttl=element(by.name('ttl'));
+	this.address=element(by.name('address'));
 };

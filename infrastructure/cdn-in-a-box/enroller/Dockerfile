@@ -43,5 +43,9 @@ COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
    /
 
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 WORKDIR /shared/enroller
 CMD /run.sh

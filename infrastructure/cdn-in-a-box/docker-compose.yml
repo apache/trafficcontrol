@@ -47,8 +47,6 @@ services:
     volumes:
       - /var/lib/postgresql/data
       - shared:/shared
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
@@ -73,8 +71,6 @@ services:
     hostname: trafficops
     image: trafficops-go
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
@@ -96,9 +92,6 @@ services:
     # TODO: change to expose: "60443" to limit to containers
     volumes:
       - ./traffic_ops/ca:/ca
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - ./traffic_ops/set-to-ips-from-dns.sh:/usr/local/sbin/set-to-ips-from-dns.sh
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
@@ -117,8 +110,6 @@ services:
     hostname: trafficportal
     image: trafficportal
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
@@ -131,8 +122,6 @@ services:
     depends_on:
       - enroller
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
     domainname: infra.ciab.test
     env_file:
@@ -155,8 +144,6 @@ services:
       - variables.env
     hostname: trafficrouter
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficstats collect traffic information
@@ -164,6 +151,7 @@ services:
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile
+    image: trafficstats
     depends_on:
       - enroller
       - influxdb
@@ -172,8 +160,6 @@ services:
       - variables.env
     hostname: trafficstats
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   influxdb:
@@ -187,8 +173,6 @@ services:
     env_file:
       - variables.env
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficvault runs a riak container to store private keys
@@ -203,8 +187,6 @@ services:
     labels:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - schemas:/etc/riak/schemas
       - shared:/shared
     domainname: infra.ciab.test
@@ -217,15 +199,12 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/edge/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: edge
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - ./edge/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # mid cache
@@ -233,15 +212,12 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: mid
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - ./mid/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches
@@ -256,10 +232,7 @@ services:
       - variables.env
     hostname: origin
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
-      - ./origin/content:/var/www/html
 
 
   # enroller provides a way to register component instances with traffic_ops
@@ -273,8 +246,6 @@ services:
       - variables.env
     hostname: enroller
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # Bind9 DNS services work in combination with the traffic router to route clients to the optimal cache
@@ -285,8 +256,6 @@ services:
     env_file:
       - variables.env
     volumes:
-      - ./dns/set-self-dns.sh:/usr/local/sbin/set-self-dns.sh
-      - ./dns/set-dns-update.sh:/usr/local/sbin/set-dns-update.sh
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
@@ -302,8 +271,6 @@ services:
       - variables.env
     volumes:
       - shared:/shared
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
     domainname: infra.ciab.test
 
 volumes:

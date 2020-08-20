@@ -30,16 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-type Reuse int
-
-const (
-	ReuseCan Reuse = iota
-	ReuseCannot
-	ReuseMustRevalidate
-	// ReuseMustRevalidateCanStale indicates the response must be revalidated, but if the parent cannot be reached, may be served stale, per RFC7234§4.2.4
-	ReuseMustRevalidateCanStale
-)
-
 // ParentSelectionType is the algorithm to use for selecting parents.
 type ParentSelectionType string
 

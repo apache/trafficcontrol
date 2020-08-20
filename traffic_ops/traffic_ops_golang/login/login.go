@@ -57,7 +57,7 @@ const instanceNameQuery = `
 SELECT value
 FROM parameter
 WHERE name='tm.instance_name' AND
-      config_file='global'
+      config_file=$1
 `
 const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
@@ -419,7 +419,7 @@ func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
 
 func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPortal) ([]byte, error) {
 	var instanceName string
-	row := db.QueryRow(instanceNameQuery)
+	row := db.QueryRow(instanceNameQuery, tc.GlobalConfigFileName)
 	if err := row.Scan(&instanceName); err != nil {
 		return nil, err
 	}

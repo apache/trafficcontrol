@@ -21,13 +21,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"code.cloudfoundry.org/bytefmt"
-	"github.com/apache/trafficcontrol/grove/web"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/rfc"
+	"github.com/apache/trafficcontrol/grove/web"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+
+	"code.cloudfoundry.org/bytefmt"
 )
 
 func init() {

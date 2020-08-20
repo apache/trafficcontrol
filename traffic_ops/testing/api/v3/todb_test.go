@@ -342,6 +342,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM status;
 	DELETE FROM snapshot;
 	DELETE FROM cdn;
+	DELETE FROM service_category;
 	DELETE FROM tenant;
 	ALTER SEQUENCE tenant_id_seq RESTART WITH 1;
 `

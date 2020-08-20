@@ -246,7 +246,7 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	dsr := testData.DeliveryServiceRequests[dsrGood]

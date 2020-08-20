@@ -88,9 +88,8 @@ FROM trafficops-perl-deps
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_OPS_RPM) && \
+RUN rpm -Uvh /$(basename $TRAFFIC_OPS_RPM) && \
     rm /$(basename $TRAFFIC_OPS_RPM) && \
-    yum -y clean all && \
     rm /opt/traffic_ops/app/bin/traffic_ops_golang
 
 # Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
@@ -107,6 +106,11 @@ ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
     infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
     infrastructure/cdn-in-a-box/variables.env \
     /
+
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
+     /usr/local/sbin/
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 

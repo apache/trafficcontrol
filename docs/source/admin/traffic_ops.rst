@@ -450,8 +450,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:tls_config: An optional stanza for TLS configuration. The values of which conform to the :godoc:`crypto/tls.Config` structure.
 
 :use_ims:
+
     .. versionadded:: 5.0
-    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
 Example cdn.conf
 ''''''''''''''''

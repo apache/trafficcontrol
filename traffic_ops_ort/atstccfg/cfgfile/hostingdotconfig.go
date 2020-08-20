@@ -28,9 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
-const ServerHostingDotConfigMidIncludeInactive = false
-const ServerHostingDotConfigEdgeIncludeInactive = true
-
 func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.HostingConfigParamConfigFile, "", "", ""))
 
@@ -67,59 +64,49 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		dsServerMap[*dss.DeliveryService][*dss.Server] = struct{}{}
 	}
 
-	hostingDSes := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
-
 	isMid := strings.HasPrefix(toData.Server.Type, tc.MidTypePrefix)
 
+	filteredDSes := []tc.DeliveryServiceNullable{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
-
-		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
-			continue
-		}
-
 		if *ds.CDNID != toData.Server.CDNID {
 			continue
 		}
-
-		if isMid {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
+		if ds.Topology == nil {
+			if !*ds.Active && ((!isMid && !atscfg.ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !atscfg.ServerHostingDotConfigMidIncludeInactive)) {
 				continue
 			}
 
-			// mids: include all DSes with at least one server assigned
-			if len(dsServerMap[*ds.ID]) == 0 {
-				continue
-			}
-		} else {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
-				continue
-			}
+			if isMid {
+				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
+					continue
+				}
 
-			// edges: only include DSes assigned to this edge
-			if dsServerMap[*ds.ID] == nil {
-				continue
-			}
+				// mids: include all DSes with at least one server assigned
+				if len(dsServerMap[*ds.ID]) == 0 {
+					continue
+				}
+			} else {
+				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
+					continue
+				}
 
-			if _, ok := dsServerMap[*ds.ID][toData.Server.ID]; !ok {
-				continue
+				// edges: only include DSes assigned to this edge
+				if dsServerMap[*ds.ID] == nil {
+					continue
+				}
+
+				if _, ok := dsServerMap[*ds.ID][toData.Server.ID]; !ok {
+					continue
+				}
 			}
 		}
 
-		hostingDSes[tc.DeliveryServiceName(*ds.XMLID)] = ds
+		filteredDSes = append(filteredDSes, ds)
 	}
 
-	originSet := map[string]struct{}{}
-	for _, ds := range hostingDSes {
-		originSet[*ds.OrgServerFQDN] = struct{}{}
-	}
-	origins := []string{}
-	for origin, _ := range originSet {
-		origins = append(origins, origin)
-	}
-
-	return atscfg.MakeHostingDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, fileParams, origins), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
+	return atscfg.MakeHostingDotConfig(toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
 }

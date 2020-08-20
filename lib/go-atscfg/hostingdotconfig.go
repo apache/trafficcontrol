@@ -35,14 +35,20 @@ const LineCommentHostingDotConfig = LineCommentHash
 const ParamDrivePrefix = "Drive_Prefix"
 const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
 
+const ServerHostingDotConfigMidIncludeInactive = false
+const ServerHostingDotConfigEdgeIncludeInactive = true
+
 func MakeHostingDotConfig(
-	serverName tc.CacheName,
+	server tc.Server,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config
-	origins []string, // origins of delivery services assigned to this server. Should only include LIVE and LIVE_NATNL for Edges, and only LIVE_NATNL for Mids.
+	dses []tc.DeliveryServiceNullable,
+	topologies []tc.Topology,
 ) string {
-	text := GenericHeaderComment(string(serverName), toToolName, toURL)
+	text := GenericHeaderComment(server.HostName, toToolName, toURL)
+
+	nameTopologies := MakeTopologyNameMap(topologies)
 
 	lines := []string{}
 	if _, ok := params[ParamRAMDrivePrefix]; ok {
@@ -56,10 +62,23 @@ func MakeHostingDotConfig(
 		text += `# TRAFFIC OPS NOTE: volume ` + strconv.Itoa(ramVolume) + ` is the RAM volume` + "\n"
 
 		seenOrigins := map[string]struct{}{}
-		for _, origin := range origins {
+		for _, ds := range dses {
+			if ds.OrgServerFQDN == nil || ds.XMLID == nil || ds.Active == nil {
+				continue // TODO warn?
+			}
+
+			origin := *ds.OrgServerFQDN
 			if _, ok := seenOrigins[origin]; ok {
 				continue
 			}
+
+			if ds.Topology != nil && *ds.Topology != "" {
+				topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
+				if hasTopology && !topologyIncludesServer(topology, server) {
+					continue
+				}
+			}
+
 			seenOrigins[origin] = struct{}{}
 			origin = strings.TrimPrefix(origin, `http://`)
 			origin = strings.TrimPrefix(origin, `https://`)
