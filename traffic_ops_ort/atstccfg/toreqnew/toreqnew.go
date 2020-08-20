@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 )
 
@@ -72,11 +72,13 @@ func New(cookies string, url *url.URL, user string, pass string, insecure bool, 
 // GetCDNDeliveryServices returns the deliveryservices, whether this client's version is unsupported by the server, and any error.
 // Note if the server returns a 404 or 503, this returns false and a nil error.
 // Users should check the "not supported" bool, and use the vendored TOClient if it's set, and set proper defaults for the new feature(s).
-func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullable, bool, error) {
-	deliveryServices := []tc.DeliveryServiceNullable{}
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullableV30, bool, error) {
+	deliveryServices := []tc.DeliveryServiceNullableV30{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
+		params := url.Values{}
+		params.Set("cdn", strconv.Itoa(cdnID))
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesV30WithHdr(nil, params)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
@@ -84,7 +86,7 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 			}
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dses := obj.(*[]tc.DeliveryServiceNullable)
+		dses := obj.(*[]tc.DeliveryServiceNullableV30)
 		*dses = toDSes
 		return nil
 	})

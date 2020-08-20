@@ -47,7 +47,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 	server tc.Server,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
-	ds tc.DeliveryServiceNullable,
+	ds tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
 	cacheGroupArr []tc.CacheGroupNullable,
 	servers []tc.Server,

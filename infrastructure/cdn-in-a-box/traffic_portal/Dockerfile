@@ -50,6 +50,10 @@ ADD enroller/server_template.json \
     traffic_portal/run.sh \
     traffic_ops/to-access.sh /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 443
 
 CMD /run.sh

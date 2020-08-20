@@ -21,7 +21,7 @@
 
 ``PUT``
 =======
-Updates server status and queues updates on all descendant :ref:`Topology` nodes or child caches if server type is EDGE or MID. Also, captures offline reason if status is set to ADMIN_DOWN or OFFLINE and prepends offline reason with the user that initiated the status change.
+Updates server status and queues updates on all descendant :term:`Topology` nodes or child caches if server type is EDGE or MID. Also, captures offline reason if status is set to ADMIN_DOWN or OFFLINE and prepends offline reason with the user that initiated the status change.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

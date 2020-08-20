@@ -38,5 +38,9 @@ RUN cd ~ \
     && rm /traffic_stats.rpm \
     && rm ~/traffic_stats-*.cpio
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 ENTRYPOINT [ "/run-grafana.sh" ]
 EXPOSE 443

@@ -66,7 +66,7 @@ func MakeMetaConfig(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 ) string {
@@ -101,7 +101,7 @@ func AddMetaObjConfigDir(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 ) (tc.ATSConfigMetaData, error) {
@@ -273,7 +273,7 @@ func MakeMetaObj(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 	configDir string,
