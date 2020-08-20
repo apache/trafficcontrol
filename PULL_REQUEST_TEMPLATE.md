@@ -39,6 +39,7 @@ explain why documentation is not required. -->
 - Traffic Router
 - Traffic Stats
 - Traffic Vault
+- CI tests
 
 ## What is the best way to verify this PR?
 <!-- Please include here ALL the steps necessary to test your Pull Request. If

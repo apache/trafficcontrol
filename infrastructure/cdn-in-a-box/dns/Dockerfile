@@ -41,6 +41,10 @@ COPY dns/zone.ip6.arpa /etc/bind
 COPY traffic_ops/to-access.sh /
 COPY enroller/server_template.json /
 
+COPY dns/set-self-dns.sh \
+     dns/set-dns-update.sh \
+     /usr/local/sbin/
+
 RUN chmod 755 /sbin/entrypoint.sh
 
 EXPOSE 53/udp 53/tcp

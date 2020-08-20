@@ -15,28 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-############################################################
-# Dockerfile to build Mid-Tier Cache container images for
-# Apache Traffic Control
-# Based on CentOS 7.2
-############################################################
+FROM docker:stable
 
-FROM alpine:latest
+VOLUME /var/run/docker.sock:/var/run/docker.sock
+RUN apk add make docker-compose git
 
-RUN apk add --no-cache lighttpd bash curl bind-tools
+COPY entrypoint.sh /
+RUN chmod a+x /entrypoint.sh
 
-RUN rm /etc/lighttpd/lighttpd.conf
-RUN rm -rf /var/www/localhost/
-
-ADD origin/content /var/www/html/
-
-ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD origin/run.sh traffic_ops/to-access.sh /
-
-COPY dns/set-dns.sh \
-     dns/insert-self-into-dns.sh \
-     /usr/local/sbin/
-
-EXPOSE 80
-
-CMD /run.sh
+ENTRYPOINT /entrypoint.sh
