@@ -32,6 +32,7 @@ on:
       - 'NOTICE'
       - 'traffic_control/java'
   create:
+  pull_request:
     paths-ignore:
       - '*.*'
       - '**/.gitignore'
@@ -44,7 +45,6 @@ on:
       - 'misc/**'
       - 'NOTICE'
       - 'traffic_control/java'
-  pull_request:
     types: [opened, reopened, edited, synchronize]
 
 jobs:
