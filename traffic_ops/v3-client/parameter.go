@@ -90,7 +90,7 @@ func (to *Session) UpdateParameterByIDWithHdr(id int, pl tc.Parameter, header ht
 }
 
 // UpdateParameterByID performs a PUT to update a Parameter by ID.
-// UpdateParameterByID is Deprecated - Will be removed in 6.0. Use UpdateParameterByIDWithHdr.
+// Deprecated: UpdateParameterByID will be removed in 6.0. Use UpdateParameterByIDWithHdr.
 func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	return to.UpdateParameterByIDWithHdr(id, pl, nil)
 }

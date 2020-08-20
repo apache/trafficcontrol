@@ -112,7 +112,7 @@ func (to *Session) UpdateCacheGroupNullableByIDWithHdr(id int, cachegroup tc.Cac
 }
 
 // Update a CacheGroup by ID.
-// UpdateCacheGroupNullableByID is Deprecated - Will be removed in 6.0. Use UpdateCacheGroupNullableByIDWithHdr.
+// Deprecated: UpdateCacheGroupNullableByID will be removed in 6.0. Use UpdateCacheGroupNullableByIDWithHdr.
 func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 	return to.UpdateCacheGroupNullableByIDWithHdr(id, cachegroup, nil)
 }

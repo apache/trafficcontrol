@@ -66,7 +66,7 @@ func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName s
 	return &data, inf, err
 }
 
-// UpdateCDNFederationsByID is Deprecated - Will be removed in 6.0. Use UpdateCDNFederationsByIDWithHdr.
+// Deprecated: UpdateCDNFederationsByID will be removed in 6.0. Use UpdateCDNFederationsByIDWithHdr.
 func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
 	return to.UpdateCDNFederationsByIDWithHdr(f, CDNName, ID, nil)
 }

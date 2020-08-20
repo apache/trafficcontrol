@@ -70,7 +70,7 @@ func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http
 }
 
 // UpdateStatusByID updates a Status by ID.
-// UpdateStatusByID is Deprecated - Will be removed in 6.0. Use UpdateStatusByIDWithHdr.
+// Deprecated: UpdateStatusByID will be removed in 6.0. Use UpdateStatusByIDWithHdr.
 func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf, error) {
 
 	return to.UpdateStatusByIDWithHdr(id, status, nil)

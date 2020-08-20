@@ -71,7 +71,7 @@ func (to *Session) UpdateTypeByIDWithHdr(id int, typ tc.Type, header http.Header
 }
 
 // UpdateTypeByID updates a Type by ID.
-// UpdateTypeByID is Deprecated - Will be removed in 6.0. Use UpdateTypeByIDWithHdr.
+// Deprecated: UpdateTypeByID will be removed in 6.0. Use UpdateTypeByIDWithHdr.
 func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
 
 	return to.UpdateTypeByIDWithHdr(id, typ, nil)

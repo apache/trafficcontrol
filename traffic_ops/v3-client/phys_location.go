@@ -81,7 +81,7 @@ func (to *Session) UpdatePhysLocationByIDWithHdr(id int, pl tc.PhysLocation, hea
 }
 
 // Update a PhysLocation by ID
-// UpdatePhysLocationByID is Deprecated - Will be removed in 6.0. Use UpdatePhysLocationByIDWithHdr.
+// Deprecated: UpdatePhysLocationByID will be removed in 6.0. Use UpdatePhysLocationByIDWithHdr.
 func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
 
 	return to.UpdatePhysLocationByIDWithHdr(id, pl, nil)

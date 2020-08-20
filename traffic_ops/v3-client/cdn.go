@@ -71,7 +71,7 @@ func (to *Session) UpdateCDNByIDWithHdr(id int, cdn tc.CDN, header http.Header) 
 }
 
 // UpdateCDNByID updates a CDN by ID.
-// UpdateCDNByID is Deprecated - Will be removed in 6.0. Use UpdateCDNByIDWithHdr.
+// Deprecated: UpdateCDNByID will be removed in 6.0. Use UpdateCDNByIDWithHdr.
 func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return to.UpdateCDNByIDWithHdr(id, cdn, nil)
 }

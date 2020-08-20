@@ -142,7 +142,7 @@ func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http
 }
 
 // Update an Origin by ID
-// UpdateOriginByID is Deprecated - Will be removed in 6.0. Use UpdateOriginByIDWithHdr.
+// Deprecated: UpdateOriginByID will be removed in 6.0. Use UpdateOriginByIDWithHdr.
 func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
 	return to.UpdateOriginByIDWithHdr(id, origin, nil)
 }

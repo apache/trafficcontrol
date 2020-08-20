@@ -71,7 +71,7 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByIDWithHdr(id int, commen
 }
 
 // Update a delivery service request by ID
-// UpdateDeliveryServiceRequestCommentByID is Deprecated - Will be removed in 6.0. Use UpdateDeliveryServiceRequestCommentByIDWithHdr.
+// Deprecated: UpdateDeliveryServiceRequestCommentByID will be removed in 6.0. Use UpdateDeliveryServiceRequestCommentByIDWithHdr.
 func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
 	return to.UpdateDeliveryServiceRequestCommentByIDWithHdr(id, comment, nil)
 }

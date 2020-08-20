@@ -70,7 +70,7 @@ func (to *Session) UpdateDivisionByIDWithHdr(id int, division tc.Division, heade
 }
 
 // Update a Division by ID
-// UpdateDivisionByID is Deprecated - Will be removed in 6.0. Use UpdateDivisionByIDWithHdr.
+// Deprecated: UpdateDivisionByID will be removed in 6.0. Use UpdateDivisionByIDWithHdr.
 func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
 	return to.UpdateDivisionByIDWithHdr(id, division, nil)
 }

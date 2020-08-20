@@ -83,7 +83,7 @@ func (to *Session) UpdateRegionByIDWithHdr(id int, region tc.Region, header http
 }
 
 // UpdateRegionByID updates a Region by ID.
-// UpdateRegionByID is Deprecated - Will be removed in 6.0. Use UpdateRegionByIDWithHdr.
+// Deprecated: UpdateRegionByID will be removed in 6.0. Use UpdateRegionByIDWithHdr.
 func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
 
 	return to.UpdateRegionByIDWithHdr(id, region, nil)

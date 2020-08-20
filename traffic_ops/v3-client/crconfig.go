@@ -57,7 +57,7 @@ func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqI
 }
 
 // SnapshotCRConfig snapshots a CDN by name.
-// SnapshotCRConfig is Deprecated - Will be removed in 6.0. Use SnapshotCRConfigWithHdr.
+// Deprecated: SnapshotCRConfig will be removed in 6.0. Use SnapshotCRConfigWithHdr.
 func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
 	return to.SnapshotCRConfigWithHdr(cdn, nil)
 }

@@ -115,7 +115,7 @@ func (to *Session) UpdateStaticDNSEntryByIDWithHdr(id int, sdns tc.StaticDNSEntr
 }
 
 // UpdateStaticDNSEntryByID updates a Static DNS Entry by ID.
-// UpdateStaticDNSEntryByID is Deprecated - Will be removed in 6.0. Use UpdateStaticDNSEntryByIDWithHdr.
+// Deprecated: UpdateStaticDNSEntryByID will be removed in 6.0. Use UpdateStaticDNSEntryByIDWithHdr.
 func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
 	return to.UpdateStaticDNSEntryByIDWithHdr(id, sdns, nil)
 }

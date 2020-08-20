@@ -70,7 +70,7 @@ func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate,
 }
 
 // Update a Coordinate by ID
-// UpdateCoordinateByID is Deprecated - Will be removed in 6.0. Use UpdateCoordinateByIDWithHdr.
+// Deprecated: UpdateCoordinateByID will be removed in 6.0. Use UpdateCoordinateByIDWithHdr.
 func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
 	return to.UpdateCoordinateByIDWithHdr(id, coordinate, nil)
 }

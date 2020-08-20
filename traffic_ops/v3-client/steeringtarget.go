@@ -71,7 +71,7 @@ func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, hea
 	return alerts, reqInf, err
 }
 
-// UpdateSteeringTarget is Deprecated - Will be removed in 6.0. Use UpdateSteeringTargetWithHdr.
+// Deprecated: UpdateSteeringTarget will be removed in 6.0. Use UpdateSteeringTargetWithHdr.
 func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
 	return to.UpdateSteeringTargetWithHdr(st, nil)
 }

@@ -72,7 +72,7 @@ func (to *Session) UpdateRoleByIDWithHdr(id int, region tc.Role, header http.Hea
 }
 
 // UpdateRoleByID updates a Role by ID.
-// UpdateRoleByID is Deprecated - Will be removed in 6.0. Use UpdateRoleByIDWithHdr.
+// Deprecated: UpdateRoleByID will be removed in 6.0. Use UpdateRoleByIDWithHdr.
 func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, int, error) {
 
 	return to.UpdateRoleByIDWithHdr(id, region, nil)

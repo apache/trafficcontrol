@@ -213,7 +213,7 @@ func (to *Session) UpdateDeliveryServiceRequestByIDWithHdr(id int, dsr tc.Delive
 }
 
 // Update a DeliveryServiceRequest by ID
-// UpdateDeliveryServiceRequestByID is Deprecated - Will be removed in 6.0. Use UpdateDeliveryServiceRequestByIDWithHdr.
+// Deprecated: UpdateDeliveryServiceRequestByID will be removed in 6.0. Use UpdateDeliveryServiceRequestByIDWithHdr.
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 	return to.UpdateDeliveryServiceRequestByIDWithHdr(id, dsr, nil)
 }

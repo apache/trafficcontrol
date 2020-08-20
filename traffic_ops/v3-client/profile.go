@@ -98,7 +98,7 @@ func (to *Session) UpdateProfileByIDWithHdr(id int, pl tc.Profile, header http.H
 }
 
 // UpdateProfileByID updates a Profile by ID.
-// UpdateProfileByID is Deprecated - Will be removed in 6.0. Use UpdateProfileByIDWithHdr.
+// Deprecated: UpdateProfileByID will be removed in 6.0. Use UpdateProfileByIDWithHdr.
 func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	return to.UpdateProfileByIDWithHdr(id, pl, nil)
 }

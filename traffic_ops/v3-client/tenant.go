@@ -120,7 +120,7 @@ func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Head
 
 // UpdateTenant updates the Tenant matching the ID it's passed with
 // the Tenant it is passed.
-// UpdateTenant is Deprecated - Will be removed in 6.0. Use UpdateTenantWithHdr.
+// Deprecated: UpdateTenant will be removed in 6.0. Use UpdateTenantWithHdr.
 func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
 	return to.UpdateTenantWithHdr(id, t, nil)
 }

@@ -151,7 +151,7 @@ func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, hea
 }
 
 // UpdateServerByID updates a Server by ID.
-// UpdateServerByID is Deprecated - Will be removed in 6.0. Use UpdateServerByIDWithHdr.
+// Deprecated: UpdateServerByID will be removed in 6.0. Use UpdateServerByIDWithHdr.
 func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
 	return to.UpdateServerByIDWithHdr(id, server, nil)
 }
