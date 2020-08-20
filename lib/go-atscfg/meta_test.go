@@ -110,7 +110,7 @@ func TestMakeMetaConfig(t *testing.T) {
 		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
-	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{"mydsname": {}}
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 

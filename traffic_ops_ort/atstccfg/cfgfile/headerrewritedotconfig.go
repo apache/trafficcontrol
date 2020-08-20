@@ -31,7 +31,7 @@ import (
 func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewritePrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	tcDS := tc.DeliveryServiceNullable{}
+	tcDS := tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue

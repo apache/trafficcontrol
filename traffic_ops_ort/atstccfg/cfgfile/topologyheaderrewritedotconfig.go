@@ -35,7 +35,7 @@ func GetConfigFileServerTopologyHeaderRewrite(toData *config.TOData, fileName st
 	dsName = strings.TrimPrefix(dsName, atscfg.HeaderRewriteInnerPrefix)
 	dsName = strings.TrimPrefix(dsName, atscfg.HeaderRewriteLastPrefix)
 
-	tcDS := tc.DeliveryServiceNullable{}
+	tcDS := tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue

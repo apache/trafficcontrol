@@ -43,7 +43,7 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 		dssMap[*dss.DeliveryService] = append(dssMap[*dss.DeliveryService], *dss.Server)
 	}
 
-	dsesWithServers := []tc.DeliveryServiceNullable{}
+	dsesWithServers := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue // TODO warn
