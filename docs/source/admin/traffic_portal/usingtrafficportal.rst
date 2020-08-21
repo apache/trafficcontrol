@@ -365,15 +365,16 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 	Table of Servers
 
-Use the `Select Columns` menu to select the server columns to view and search. Columns can also be rearranged using drag-and-drop. Available server columns include:
+Use the `Select Columns` menu to select the server columns to view. Columns can also be rearranged using drag-and-drop. Available server columns include:
 
 :Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:Hash ID:			The identifier of the server used in Traffic Router's consistent hashing algorithm.
 :Host:              [Visible by default] The (short) hostname of the server
 :HTTPS Port:        The port on which the server listens for incoming HTTPS connections/requests
 :ID:                An integral, unique identifier for this server
-:ILO IP Address:    [Visible by default] The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service
+:ILO IP Address:    The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
 
@@ -392,7 +393,7 @@ Use the `Select Columns` menu to select the server columns to view and search. C
 :Network MTU:       The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
 :Network Subnet:    The IPv4 subnet mask used by ``interfaceName``
 :Offline Reason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:Phys Location:     [Visible by default] The name of the physical location where the server resides
+:Phys Location:     The name of the physical location where the server resides
 :Profile:           [Visible by default] The :ref:`profile-name` of the :term:`Profile` used by this server
 :Rack:              A string indicating "server rack" location
 :Reval Pending:     [Visible by default] A boolean value represented as a clock (content invalidation/revalidation is pending) or green check mark (content invalidation/revalidation is not pending)
@@ -414,7 +415,6 @@ Server management includes the ability to (where applicable):
 - :term:`Queue Updates` on a server, or clear such updates
 - Update server status
 - View server :term:`Delivery Services`
-- View server configuration files
 - Clone :term:`Delivery Service` assignments
 - Assign :term:`Delivery Services` to server(s)
 - :ref:`server_server_capabilities`
