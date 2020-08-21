@@ -126,7 +126,7 @@ Response Structure
 	:signed:                        ``true`` if     and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 	:signingAlgorithm:              Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 	:sslKeyVersion:                 This integer indicates the :ref:`ds-ssl-key-version`
-	:tenant:                        The name of the :term:`Tenant` who owns this :term:`origin`
+	:tenant:                        The name of the :term:`Tenant` who owns this :term:`Origin`
 	:tenantId:                      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 	:topology:                      The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:              If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`

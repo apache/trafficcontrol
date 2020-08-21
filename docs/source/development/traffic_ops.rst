@@ -82,7 +82,7 @@ All Go code dependencies are managed through the :atc-file:`vendor/` directory a
 
 Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`go-get(1)` rather than downloaded by hand.
 
-.. tip:: All new dependencies need to be subject to community review to ensure necessity (because it will be added in its entirety to the repository, after all) and license compliance via `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`.
+.. tip:: All new dependencies need to be subject to community review to ensure necessity (because it will be added in its entirety to the repository, after all) and license compliance via `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`_.
 
 Traffic Ops Project Tree Overview
 =================================

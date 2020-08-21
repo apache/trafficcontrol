@@ -43,7 +43,7 @@ func MakeHostingDotConfig(
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config
-	dses []tc.DeliveryServiceNullable,
+	dses []tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
 ) string {
 	text := GenericHeaderComment(server.HostName, toToolName, toURL)
