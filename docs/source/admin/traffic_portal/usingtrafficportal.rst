@@ -365,7 +365,7 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 	Table of Servers
 
-Use the `Select Columns` menu to select the server columns to view. Columns can also be rearranged using drag-and-drop. Available server columns include:
+Use the `Quick Search` to search across all table columns or the column filter to apply a more powerful filter to individual columns. Use the `Select Columns` menu to select the server columns to view. Columns can also be rearranged using drag-and-drop. Available server columns include:
 
 :Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
