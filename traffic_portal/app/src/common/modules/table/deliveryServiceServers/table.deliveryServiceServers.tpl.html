@@ -53,7 +53,7 @@ under the License.
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                         <li role="menuitem">
-                            <button type="button" title="{{(!deliveryService.topology) ? 'Assign servers to delivery service' : 'Servers cannot be manually assigned to topology-based delivery services'}}" ng-disabled="deliveryService.topology" ng-click="selectServers()">Assign Servers</button>
+                            <button type="button" name="selectServersMenuItem" title="{{(!deliveryService.topology) ? 'Assign servers to delivery service' : 'Servers cannot be manually assigned to topology-based delivery services'}}" ng-disabled="deliveryService.topology" ng-click="selectServers()">Assign Servers</button>
                         </li>
                         <li class="divider"></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearColFilters()">Clear Column Filters</button></li>
