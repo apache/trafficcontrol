@@ -95,6 +95,7 @@
 #  Postgres user
 # ------------------------------------------------------
    host  all   {{ postgresql_user }}  127.0.0.1/32  trust
+   host  all   {{ postgresql_user }}  ::1/128  trust
 
    # --  TO Instances for Postinstall
 {% for host_obj in (groups['traffic_ops']) %}
@@ -132,35 +133,42 @@
    host  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
 {% endfor %}
 
+{% if postgresql_replica_user is defined and postgresql_replica_user is not none %}
 # ------------------------------------------------------
 #  REPLICATION
 # ------------------------------------------------------
 # --  Primary
-      hostssl  replication to_replication {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}/32  md5
+      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}/32  md5
 
 {% if groups['traffic_opsdb-standby'] is defined %}
 # --  Secondary
-      hostssl  replication to_replication {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}/32  md5
+      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}/32  md5
 {% endif %}
 
 {% if groups['traffic_opsdb-replicas'] is defined %}
 # --  Replicas
   {% for host_obj in (groups['traffic_opsdb-replicas']) %}
-      hostssl  replication to_replication {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
   {% endfor %}
 {% endif %}
+{% endif %}
 
+{% if telegraf_db_user is defined and telegraf_db_user is not none %}
 # ------------------------------------------------------
 #  TELEGRAF
 # ------------------------------------------------------
-  host    {{ todb_db_name }}     {{ telegraf_db_user }}        172.18.0.1/32  md5
+  host    {{ todb_db_name }}     {{ telegraf_db_user }}        127.0.0.1/32  md5
+  host    {{ todb_db_name }}     {{ telegraf_db_user }}        ::1/128  md5
 {% for host_obj in (groups['traffic_stats']) %}
   host  {{ todb_db_name }} {{ telegraf_db_user }} {{ (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
 {% endfor %}
+{% endif %}
 
+{% if grafana_db_user is defined and grafana_db_user is not none %}
 # ------------------------------------------------------
 #  GRAFANA
 # ------------------------------------------------------
  {% for host_obj in (groups['traffic_stats']) %}
    host  {{ grafana_db_name }} {{ grafana_db_user }} {{ (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
  {% endfor %}
+{% endif %}

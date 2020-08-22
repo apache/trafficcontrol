@@ -138,3 +138,18 @@
   wait_for:
     port: "{{ postgresql_port }}"
     delay: 3
+
+- name: Create Postgres Replication Database User
+  postgresql_user:
+    encrypted: yes
+    name: "{{ postgresql_replica_user }}"
+    password: "{{ postgresql_admin_user_password }}"
+    port: "{{ postgresql_port }}"
+    login_host: 127.0.0.1
+    role_attr_flags: REPLICATION
+    ssl_rootcert: "{{ postgresql_certs_ca }}"
+  no_log: true
+  notify: Restart Traffic OpsDB
+  when:
+    - (postgresql_replica_user is defined) and ((postgresql_replica_user|string|length) > 0)
+    - (postgresql_admin_user_password is defined) and ((postgresql_admin_user_password|string|length) > 0)
