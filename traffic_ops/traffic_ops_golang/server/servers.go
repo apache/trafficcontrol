@@ -61,8 +61,8 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
-const deliveryServiceServersJoin = `
-FULL OUTER JOIN (
+/* language=SQL */
+const dssTopologiesJoinSubquery = `
 SELECT
 	td.id deliveryservice,
 	s.id "server"
@@ -71,6 +71,12 @@ JOIN cachegroup c on s.cachegroup = c.id
 LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 LEFT JOIN deliveryservice td ON td.topology = tc.topology
 UNION
+`
+
+/* language=SQL */
+const deliveryServiceServersJoin = `
+FULL OUTER JOIN (
+%s
 SELECT
 	dss.deliveryservice,
 	dss."server"
@@ -533,7 +539,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, version)
 	if maxTime != nil {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
@@ -598,7 +604,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, inf.Version)
 	if len(servers) > 1 {
 		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
 		return
@@ -637,7 +643,7 @@ JOIN type t ON s.type = t.id ` +
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
-func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version *api.Version) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	// Query Parameters to Database Query column mappings
@@ -667,8 +673,15 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
+
+		var joinSubQuery string
+		if version.Major >= 3 {
+			joinSubQuery = dssTopologiesJoinSubquery
+		} else {
+			joinSubQuery = ""
+		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = deliveryServiceServersJoin
+		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
@@ -1002,7 +1015,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	//Get original xmppid
-	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false, inf.Version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -1347,7 +1360,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	id := inf.IntParams["id"]
 
 	var servers []tc.ServerNullable
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, inf.Version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

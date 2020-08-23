@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
@@ -256,7 +257,9 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	user := auth.CurrentUser{}
 
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
+	version := &api.Version{Major: 3, Minor: 0}
+
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
@@ -360,7 +363,8 @@ func TestGetMidServers(t *testing.T) {
 	v := map[string]string{}
 
 	user := auth.CurrentUser{}
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
+	version := &api.Version{Major: 3, Minor: 0}
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
