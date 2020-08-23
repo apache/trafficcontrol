@@ -102,6 +102,7 @@ type Cfg struct {
 	ReverseProxyDisable bool
 	RunMode             Mode
 	SkipOSCheck         bool
+	TOInsecure          bool
 	TOTimeoutMS         time.Duration
 	TOUser              string
 	TOPass              string
@@ -176,6 +177,7 @@ func GetCfg() (Cfg, error) {
 	reverseProxyDisablePtr := getopt.BoolLong("reverse-proxy-disable", 'p', "[false | true] bypass the reverse proxy even if one has been configured default is false")
 	runModePtr := getopt.StringLong("run-mode", 'm', "report", "[badass | report | revalidate | syncds] run mode, default is 'report'")
 	skipOSCheckPtr := getopt.BoolLong("skip-os-check", 's', "[false | true] skip os check, default is false")
+	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL")
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'U', "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER")
@@ -206,6 +208,7 @@ func GetCfg() (Cfg, error) {
 	revalWaitTime := time.Second * time.Duration(*revalWaitTimePtr)
 	reverseProxyDisable := *reverseProxyDisablePtr
 	skipOsCheck := *skipOSCheckPtr
+	toInsecure := *toInsecurePtr
 	toTimeoutMS := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	toURL := *toURLPtr
 	toUser := *toUserPtr
@@ -303,6 +306,7 @@ func GetCfg() (Cfg, error) {
 		ReverseProxyDisable: reverseProxyDisable,
 		RunMode:             runMode,
 		SkipOSCheck:         skipOsCheck,
+		TOInsecure:          toInsecure,
 		TOTimeoutMS:         toTimeoutMS,
 		TOUser:              toUser,
 		TOPass:              toPass,
@@ -373,9 +377,10 @@ func printConfig(cfg Cfg) {
 	log.Debugf("ReverseProxyDisable: %t\n", cfg.ReverseProxyDisable)
 	log.Debugf("RunMode: %s\n", cfg.RunMode)
 	log.Debugf("SkipOSCheck: %t\n", cfg.SkipOSCheck)
+	log.Debugf("TOInsecure: %t\n", cfg.TOInsecure)
 	log.Debugf("TOTimeoutMS: %d\n", cfg.TOTimeoutMS)
 	log.Debugf("TOUser: %s\n", cfg.TOUser)
-	log.Debugf("TOPass: %s\n", cfg.TOPass)
+	log.Debugf("TOPass: Pass len: '%d'\n", len(cfg.TOPass))
 	log.Debugf("TOURL: %s\n", cfg.TOURL)
 	log.Debugf("TSHome: %s\n", TSHome)
 	log.Debugf("WaitForParents: %t\n", cfg.WaitForParents)
@@ -387,16 +392,17 @@ func Usage() {
 	fmt.Println("\t[options]:")
 	fmt.Println("\t  --dispersion=[time in seconds] | -D, [time in seconds] wait a random number between 0 and <time in seconds> before starting, default = 300s")
 	fmt.Println("\t  --login-dispersion=[time in seconds] | -l, [time in seconds] wait a random number between 0 and <time in seconds> befor login, default = 0")
-	fmt.Println("\t  --log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stdout")
-	fmt.Println("\t  --log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stdout")
-	fmt.Println("\t  --log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stdout")
-	fmt.Println("\t  --log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stdout")
+	fmt.Println("\t  --log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stderr")
+	fmt.Println("\t  --log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stderr")
+	fmt.Println("\t  --log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stderr")
+	fmt.Println("\t  --log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
 	fmt.Println("\t  --run-mode=[mode] | -m [mode] where mode is one of [ report | badass | syncds | revalidate ], default = report")
 	fmt.Println("\t  --cache-hostname=[hostname] | -H [hostname], Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	fmt.Println("\t  --num-retries=[number] | -r [number], retry connection to Traffic Ops URL [number] times, default is 3")
 	fmt.Println("\t  --reval-wait-time=[seconds] | -T [seconds] wait a random number of seconds between 0 and [seconds] before revlidation, default is 60")
 	fmt.Println("\t  --rev-proxy-disable=[true|false] | -p [true|false] bypass the reverse proxy even if one has been configured, default = false")
 	fmt.Println("\t  --skip-os-check=[true|false] | -s [true | false] bypass the check for a supported CentOS version. default = false")
+	fmt.Println("\t  --traffic-ops-insecure=[true|false] -I [true | false] Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging, default = false")
 	fmt.Println("\t  --traffic-ops-timeout-milliseconds=[milliseconds] | -t [milliseconds] the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds)")
 	fmt.Println("\t  --traffic-ops-url=[url] | -u [url], Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL")
 	fmt.Println("\t  --traffic-ops-user=[username] | -U [username], Traffic Ops username. Required. May also be set with the environment variable TO_USER")
