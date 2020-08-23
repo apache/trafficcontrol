@@ -36,7 +36,9 @@ Request Structure
 	+============+==========+===================================================================================================================+
 	| cachegroup | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-id`                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| dsId       | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier |
+	| dsId       | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier.|
+	|            | no       | If the Delivery Service has a :term:` Topology` assigned to it, the :ref:`to-api-servers` endpoint will return    |
+	|            | no       | each server whose :ref:`Cache Group` is associated with a :term:`Topology Node` of that Topology.                 |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| hostName   | no       | Return only those servers that have this (short) hostname                                                         |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
