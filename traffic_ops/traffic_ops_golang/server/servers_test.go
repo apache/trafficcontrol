@@ -226,6 +226,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.UpdPending,
 			ts.XMPPID,
 			ts.XMPPPasswd,
+			ts.StatusLastUpdated,
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -333,6 +334,7 @@ func TestGetMidServers(t *testing.T) {
 			ts.UpdPending,
 			ts.XMPPID,
 			ts.XMPPPasswd,
+			ts.StatusLastUpdated,
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -467,6 +469,7 @@ func TestGetMidServers(t *testing.T) {
 		ts.UpdPending,
 		ts.XMPPID,
 		ts.XMPPPasswd,
+		ts.StatusLastUpdated,
 	)
 
 	mock.ExpectBegin()

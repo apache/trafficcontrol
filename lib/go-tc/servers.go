@@ -288,6 +288,7 @@ type Server struct {
 	UpdPending       bool                `json:"updPending" db:"upd_pending"`
 	XMPPID           string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
+	StatusLastUpdated time.Time          `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 type ServerV1 struct {
