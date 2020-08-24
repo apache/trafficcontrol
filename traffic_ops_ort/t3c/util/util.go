@@ -99,11 +99,18 @@ func DirectoryExists(dir string) (bool, os.FileInfo) {
 }
 
 func ExecCommand(fullCommand string, arg ...string) ([]byte, int, error) {
-	var output bytes.Buffer
+	var outbuf bytes.Buffer
+	var errbuf bytes.Buffer
 	cmd := exec.Command(fullCommand, arg...)
-	cmd.Stdout = &output
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
 	err := cmd.Run()
-	return output.Bytes(), cmd.ProcessState.ExitCode(), err
+
+  if err != nil {
+    return outbuf.Bytes(), cmd.ProcessState.ExitCode(), 
+      errors.New("Error executing '" + fullCommand + "': " + errbuf.String())
+  }
+	return outbuf.Bytes(), cmd.ProcessState.ExitCode(), err
 }
 
 func FileExists(fn string) (bool, os.FileInfo) {
