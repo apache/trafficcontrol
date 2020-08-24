@@ -37,7 +37,7 @@ const LineCommentRemapDotConfig = LineCommentHash
 
 func MakeRemapDotConfig(
 	server *tc.ServerNullable,
-	unfilteredDSes []tc.DeliveryServiceNullable,
+	unfilteredDSes []tc.DeliveryServiceNullableV30,
 	dss []tc.DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	serverParams []tc.Parameter,
@@ -90,7 +90,7 @@ func MakeRemapDotConfig(
 func GetServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
 	profilesCacheKeyConfigParams map[int]map[string]string,
-	dses []tc.DeliveryServiceNullable,
+	dses []tc.DeliveryServiceNullableV30,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	header string,
 	server *tc.ServerNullable,
@@ -191,7 +191,7 @@ func GetServerConfigRemapDotConfigForEdge(
 	cacheURLConfigParams map[string]string,
 	profilesCacheKeyConfigParams map[int]map[string]string,
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
-	dses []tc.DeliveryServiceNullable,
+	dses []tc.DeliveryServiceNullableV30,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	atsMajorVersion int,
 	header string,
@@ -268,7 +268,7 @@ func BuildEdgeRemapLine(
 	server *tc.ServerNullable,
 	pData map[string]string,
 	text string,
-	ds tc.DeliveryServiceNullable,
+	ds tc.DeliveryServiceNullableV30,
 	dsRegex tc.DeliveryServiceRegex,
 	mapFrom string,
 	mapTo string,
@@ -387,7 +387,7 @@ func BuildEdgeRemapLine(
 
 // MakeDSTopologyHeaderRewriteTxt returns the appropriate header rewrite remap line text for the given DS on the given server.
 // May be empty, if the DS has no header rewrite for the server's position in the topology.
-func MakeDSTopologyHeaderRewriteTxt(ds tc.DeliveryServiceNullable, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) string {
+func MakeDSTopologyHeaderRewriteTxt(ds tc.DeliveryServiceNullableV30, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) string {
 	placement := getTopologyPlacement(cg, topology, cacheGroups)
 	log.Errorf("DEBUG topo MakeDSTopologyHeaderRewriteTxt calling getTopologyPlacement cg '"+string(cg)+"' placement %+v\n", placement)
 	const pluginTxt = ` @plugin=header_rewrite.so @pparam=`
@@ -422,7 +422,7 @@ type RemapLine struct {
 // MakeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
 // Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
 func MakeEdgeDSDataRemapLines(
-	ds tc.DeliveryServiceNullable,
+	ds tc.DeliveryServiceNullableV30,
 	dsRegex tc.DeliveryServiceRegex,
 	server *tc.ServerNullable,
 	cdnDomain string,
@@ -545,7 +545,7 @@ func makeServerPackageParamData(server *tc.ServerNullable, serverParams []tc.Par
 // remapFilterDSes filters Delivery Services to be used to generate remap.config for the given server.
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
-func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullable, cacheKeyParams []tc.Parameter) []tc.DeliveryServiceNullable {
+func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) []tc.DeliveryServiceNullableV30 {
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
 
 	serverIDs := map[int]struct{}{}
@@ -582,7 +582,7 @@ func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, 
 		useInactive = true
 	}
 
-	filteredDSes := []tc.DeliveryServiceNullable{}
+	filteredDSes := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range dses {
 		if ds.Topology == nil {
 			ds.Topology = util.StrPtr("")
@@ -653,7 +653,7 @@ func getATSMajorVersion(serverParams []tc.Parameter) int {
 }
 
 // makeDSProfilesCacheKeyConfigParams returns a map[ProfileID][ParamName]ParamValue for the cache key params for each profile.
-func makeDSProfilesCacheKeyConfigParams(server *tc.ServerNullable, dses []tc.DeliveryServiceNullable, cacheKeyParams []tc.Parameter) (map[int]map[string]string, error) {
+func makeDSProfilesCacheKeyConfigParams(server *tc.ServerNullable, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) (map[int]map[string]string, error) {
 	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(cacheKeyParams)
 	if err != nil {
 		return nil, errors.New("decoding cache key parameter profiles: " + err.Error())

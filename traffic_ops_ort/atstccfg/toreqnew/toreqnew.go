@@ -153,7 +153,7 @@ func (cl *TOClient) GetServers() ([]tc.ServerNullable, bool, error) {
 	servers := []tc.ServerNullable{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
-		toServers, reqInf, err := cl.C.GetServers(nil, nil)
+		toServers, reqInf, err := cl.C.GetServers(nil)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true

@@ -122,7 +122,7 @@ func (s ParentConfigDSTopLevelSortByName) Less(i, j int) bool {
 	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
 }
 
-type DSesSortByName []tc.DeliveryServiceNullable
+type DSesSortByName []tc.DeliveryServiceNullableV30
 
 func (s DSesSortByName) Len() int      { return len(s) }
 func (s DSesSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
@@ -181,7 +181,7 @@ type OriginURI struct {
 func MakeParentDotConfig(
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses []tc.DeliveryServiceNullable,
+	dses []tc.DeliveryServiceNullableV30,
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
 	topologies []tc.Topology,
@@ -544,7 +544,7 @@ func MakeParentDotConfig(
 	// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
 	defaultDestText := ""
 	if !IsTopLevelCache(serverParentCGData) {
-		invalidDS := &tc.DeliveryServiceNullable{}
+		invalidDS := &tc.DeliveryServiceNullableV30{}
 		invalidDS.ID = util.IntPtr(-1)
 		parents, secondaryParents := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
 		defaultDestText = `dest_domain=. ` + parents
@@ -567,7 +567,7 @@ func MakeParentDotConfig(
 func GetTopologyParentConfigLine(
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.config
 	nameTopologies map[TopologyName]tc.Topology,
@@ -634,7 +634,7 @@ func getTopologyParentIsProxyStr(serverIsLastTier bool) string {
 }
 
 func getTopologyRoundRobin(
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	serverIsLastTier bool,
 	msoAlgorithm string,
@@ -652,7 +652,7 @@ func getTopologyRoundRobin(
 	return roundRobinConsistentHash
 }
 
-func getTopologyGoDirect(ds *tc.DeliveryServiceNullable, serverIsLastTier bool) string {
+func getTopologyGoDirect(ds *tc.DeliveryServiceNullableV30, serverIsLastTier bool) string {
 	if !serverIsLastTier {
 		return "false"
 	}
@@ -666,7 +666,7 @@ func getTopologyGoDirect(ds *tc.DeliveryServiceNullable, serverIsLastTier bool) 
 }
 
 func getTopologyQueryString(
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	serverIsLastTier bool,
 	msoAlgorithm string,
@@ -750,7 +750,7 @@ func serverParentStr(sv *tc.ServerNullable, params []ParameterWithProfilesMap) (
 
 func GetTopologyParents(
 	server *tc.ServerNullable,
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	servers []tc.ServerNullable,
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.confign
 	topology tc.Topology,
@@ -858,7 +858,7 @@ func GetOriginURI(fqdn string) (*url.URL, error) {
 
 // getParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines.
 func getParentStrs(
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	parentInfos []ParentInfo,
 	atsMajorVer int,
@@ -908,7 +908,7 @@ func getParentStrs(
 
 // getMSOParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines, for MSO.
 func getMSOParentStrs(
-	ds *tc.DeliveryServiceNullable,
+	ds *tc.DeliveryServiceNullableV30,
 	parentInfos []ParentInfo,
 	atsMajorVer int,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
@@ -1035,14 +1035,14 @@ func GetOriginServersAndProfileCaches(
 	cgServers map[int]tc.ServerNullable,
 	parentServerDSes map[int]map[int]struct{},
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
-	dses []tc.DeliveryServiceNullable,
+	dses []tc.DeliveryServiceNullableV30,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 ) (map[OriginHost][]CGServer, map[ProfileID]ProfileCache, error) {
 	originServers := map[OriginHost][]CGServer{}  // "deliveryServices" in Perl
 	profileCaches := map[ProfileID]ProfileCache{} // map[profileID]ProfileCache
 
-	dsIDMap := map[int]tc.DeliveryServiceNullable{}
+	dsIDMap := map[int]tc.DeliveryServiceNullableV30{}
 	for _, ds := range dses {
 		if ds.ID == nil {
 			return nil, nil, errors.New("delivery services got nil ID!")
@@ -1053,7 +1053,7 @@ func GetOriginServersAndProfileCaches(
 		dsIDMap[*ds.ID] = ds
 	}
 
-	allDSMap := map[int]tc.DeliveryServiceNullable{} // all DSes for this server, NOT all dses in TO
+	allDSMap := map[int]tc.DeliveryServiceNullableV30{} // all DSes for this server, NOT all dses in TO
 	for _, dsIDs := range parentServerDSes {
 		for dsID, _ := range dsIDs {
 			if _, ok := dsIDMap[dsID]; !ok {
@@ -1214,7 +1214,7 @@ func GetParentConfigProfileParams(
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.
-func GetDSOrigins(dses map[int]tc.DeliveryServiceNullable) (map[int]*OriginURI, error) {
+func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*OriginURI, error) {
 	dsOrigins := map[int]*OriginURI{}
 	for _, ds := range dses {
 		if ds.ID == nil {

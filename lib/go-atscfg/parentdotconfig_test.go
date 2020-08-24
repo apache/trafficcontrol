@@ -45,7 +45,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 
-	dses := []tc.DeliveryServiceNullable{*ds0, *ds1}
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -138,7 +138,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
 	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
 
-	dses := []tc.DeliveryServiceNullable{*ds0}
+	dses := []tc.DeliveryServiceNullableV30{*ds0}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -280,7 +280,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
 	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
 	ds0.MultiSiteOrigin = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullable{*ds0}
+	dses := []tc.DeliveryServiceNullableV30{*ds0}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -401,7 +401,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullable{*ds0, *ds1}
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -537,7 +537,7 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 
-	dses := []tc.DeliveryServiceNullable{*ds0, *ds1}
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -659,7 +659,7 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 	ds2.OrgServerFQDN = util.StrPtr("http://ds2.example.net")
 	ds2.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullable{*ds0, *ds1, *ds2}
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1, *ds2}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -809,8 +809,8 @@ func makeTestParentServer() *tc.ServerNullable {
 	return server
 }
 
-func makeParentDS() *tc.DeliveryServiceNullable {
-	ds := &tc.DeliveryServiceNullable{}
+func makeParentDS() *tc.DeliveryServiceNullableV30 {
+	ds := &tc.DeliveryServiceNullableV30{}
 	ds.ID = util.IntPtr(42)
 	ds.XMLID = util.StrPtr("ds1")
 	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
