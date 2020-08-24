@@ -80,7 +80,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -95,7 +95,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -144,7 +144,7 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
+			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability)
 			if err != nil {
 				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
@@ -198,7 +198,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -301,7 +301,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Tests that a capability cannot be made required if the DS's services do not have it assigned
 
 	// Get Delivery Capability for a DS
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 	}
@@ -313,7 +313,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// TODO: DON'T hard-code hostnames!
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServers(&params, nil)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
@@ -389,7 +389,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -445,7 +445,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if xmlID == nil {
 		t.Fatal("xml id must not be nil")
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*xmlID, nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*xmlID)
 	if err != nil {
 		t.Fatal(err)
 	}

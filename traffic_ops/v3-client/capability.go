@@ -23,8 +23,7 @@ import "github.com/apache/trafficcontrol/lib/go-tc"
 
 const API_CAPABILITIES = apiBase + "/capabilities"
 
-// GetCapabilities retrieves all capabilities.
-func (to *Session) GetCapabilities(header http.Header) ([]tc.Capability, ReqInf, error) {
+func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -43,8 +42,13 @@ func (to *Session) GetCapabilities(header http.Header) ([]tc.Capability, ReqInf,
 	return data.Response, reqInf, err
 }
 
-// GetCapability retrieves only the capability named 'c'.
-func (to *Session) GetCapability(c string, header http.Header) (tc.Capability, ReqInf, error) {
+// GetCapabilities retrieves all capabilities.
+// Deprecated: GetCapabilities will be removed in 6.0. Use GetCapabilitiesWithHdr.
+func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
+	return to.GetCapabilitiesWithHdr(nil)
+}
+
+func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capability, ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
 	endpoint := API_CAPABILITIES + "?" + v.Encode()
@@ -70,4 +74,10 @@ func (to *Session) GetCapability(c string, header http.Header) (tc.Capability, R
 	}
 
 	return data.Response[0], reqInf, nil
+}
+
+// GetCapability retrieves only the capability named 'c'.
+// Deprecated: GetCapability will be removed in 6.0. Use GetCapabilityWithHdr.
+func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
+	return to.GetCapabilityWithHdr(c, nil)
 }

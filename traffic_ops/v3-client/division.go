@@ -67,8 +67,7 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of Divisions
-func (to *Session) GetDivisions(header http.Header) ([]tc.Division, ReqInf, error) {
+func (to *Session) GetDivisionsWithHdr(header http.Header) ([]tc.Division, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_DIVISIONS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -87,8 +86,13 @@ func (to *Session) GetDivisions(header http.Header) ([]tc.Division, ReqInf, erro
 	return data.Response, reqInf, nil
 }
 
-// GET a Division by the Division id
-func (to *Session) GetDivisionByID(id int, header http.Header) ([]tc.Division, ReqInf, error) {
+// Returns a list of Divisions
+// Deprecated: GetDivisions will be removed in 6.0. Use GetDivisionsWithHdr.
+func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
+	return to.GetDivisionsWithHdr(nil)
+}
+
+func (to *Session) GetDivisionByIDWithHdr(id int, header http.Header) ([]tc.Division, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DIVISIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -111,8 +115,13 @@ func (to *Session) GetDivisionByID(id int, header http.Header) ([]tc.Division, R
 	return data.Response, reqInf, nil
 }
 
-// GET a Division by the Division name
-func (to *Session) GetDivisionByName(name string, header http.Header) ([]tc.Division, ReqInf, error) {
+// GET a Division by the Division id
+// Deprecated: GetDivisionByID will be removed in 6.0. Use GetDivisionByIDWithHdr.
+func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
+	return to.GetDivisionByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetDivisionByNameWithHdr(name string, header http.Header) ([]tc.Division, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_DIVISIONS, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -133,6 +142,12 @@ func (to *Session) GetDivisionByName(name string, header http.Header) ([]tc.Divi
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GET a Division by the Division name
+// Deprecated: GetDivisionByName will be removed in 6.0. Use GetDivisionByNameWithHdr.
+func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
+	return to.GetDivisionByNameWithHdr(name, nil)
 }
 
 // DELETE a Division by Division id

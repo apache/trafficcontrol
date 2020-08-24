@@ -191,7 +191,7 @@ func DeleteTestTopologies(t *testing.T) {
 			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
 		}
 
-		topology, _, err := TOSession.GetTopology(top.Name, nil)
+		topology, _, err := TOSession.GetTopology(top.Name)
 		if err == nil {
 			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
 		}

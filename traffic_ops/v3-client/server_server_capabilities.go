@@ -55,9 +55,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	return alerts, reqInf, err
 }
 
-// GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
-// Callers can filter the results by server id, server host name and/or server capability via the optional parameters
-func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, ReqInf, error) {
+func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, ReqInf, error) {
 	v := url.Values{}
 	if serverID != nil {
 		v.Add("serverId", strconv.Itoa(*serverID))
@@ -81,4 +79,11 @@ func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, se
 		return nil, reqInf, err
 	}
 	return resp.Response, reqInf, nil
+}
+
+// GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
+// Callers can filter the results by server id, server host name and/or server capability via the optional parameters
+// Deprecated: GetServerServerCapabilities will be removed in 6.0. Use GetServerServerCapabilitiesWithHdr.
+func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapability, ReqInf, error) {
+	return to.GetServerServerCapabilitiesWithHdr(serverID, serverHostName, serverCapability, nil)
 }

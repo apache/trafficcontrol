@@ -27,16 +27,26 @@ const (
 	API_CACHEGROUPPARAMETERS = apiBase + "/cachegroupparameters"
 )
 
-// GetCacheGroupParameters Gets a Cache Group's Parameters
-func (to *Session) GetCacheGroupParameters(cacheGroupID int, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
+func (to *Session) GetCacheGroupParametersWithHdr(cacheGroupID int, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, "", header)
 }
 
-// GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
-func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
+// GetCacheGroupParameters Gets a Cache Group's Parameters
+// Deprecated: GetCacheGroupParameters will be removed in 6.0. Use GetCacheGroupParametersWithHdr.
+func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
+	return to.GetCacheGroupParametersWithHdr(cacheGroupID, nil)
+}
+
+func (to *Session) GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID int, queryParams string, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, queryParams, header)
+}
+
+// GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
+// Deprecated: GetCacheGroupParametersByQueryParams will be removed in 6.0. Use GetCacheGroupParametersByQueryParamsWithHdr.
+func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
+	return to.GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID, queryParams, nil)
 }
 
 func (to *Session) getCacheGroupParameters(route, queryParams string, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
@@ -61,8 +71,7 @@ func (to *Session) getCacheGroupParameters(route, queryParams string, header htt
 	return data.Response, reqInf, nil
 }
 
-// GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
-func (to *Session) GetAllCacheGroupParameters(header http.Header) ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
+func (to *Session) GetAllCacheGroupParametersWithHdr(header http.Header) ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/", API_CACHEGROUPPARAMETERS)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -76,6 +85,12 @@ func (to *Session) GetAllCacheGroupParameters(header http.Header) ([]tc.CacheGro
 		return nil, reqInf, err
 	}
 	return data.Response.CacheGroupParameters, reqInf, nil
+}
+
+// GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
+// Deprecated: GetAllCacheGroupParameters will be removed in 6.0. Use GetAllCacheGroupParametersWithHdr.
+func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
+	return to.GetAllCacheGroupParametersWithHdr(nil)
 }
 
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group

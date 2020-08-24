@@ -87,8 +87,7 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 	return alerts, reqInf, nil
 }
 
-// GetParameters returns a list of Parameters.
-func (to *Session) GetParameters(header http.Header) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParametersWithHdr(header http.Header) ([]tc.Parameter, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_PARAMETERS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -107,8 +106,13 @@ func (to *Session) GetParameters(header http.Header) ([]tc.Parameter, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByID GETs a Parameter by the Parameter ID.
-func (to *Session) GetParameterByID(id int, header http.Header) ([]tc.Parameter, ReqInf, error) {
+// GetParameters returns a list of Parameters.
+// Deprecated: GetParameters will be removed in 6.0. Use GetParametersWithHdr.
+func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
+	return to.GetParametersWithHdr(nil)
+}
+
+func (to *Session) GetParameterByIDWithHdr(id int, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PARAMETERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -131,8 +135,13 @@ func (to *Session) GetParameterByID(id int, header http.Header) ([]tc.Parameter,
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByName GETs a Parameter by the Parameter name.
-func (to *Session) GetParameterByName(name string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+// GetParameterByID GETs a Parameter by the Parameter ID.
+// Deprecated: GetParameterByID will be removed in 6.0. Use GetParameterByIDWithHdr.
+func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParameterByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetParameterByNameWithHdr(name string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := API_PARAMETERS + "?name=" + url.QueryEscape(name)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -155,8 +164,13 @@ func (to *Session) GetParameterByName(name string, header http.Header) ([]tc.Par
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByConfigFile GETs a Parameter by the Parameter ConfigFile.
-func (to *Session) GetParameterByConfigFile(configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+// GetParameterByName GETs a Parameter by the Parameter name.
+// Deprecated: GetParameterByName will be removed in 6.0. Use GetParameterByNameWithHdr.
+func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParameterByNameWithHdr(name, nil)
+}
+
+func (to *Session) GetParameterByConfigFileWithHdr(configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := API_PARAMETERS + "?configFile=" + url.QueryEscape(configFile)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -179,8 +193,13 @@ func (to *Session) GetParameterByConfigFile(configFile string, header http.Heade
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByNameAndConfigFile GETs a Parameter by the Parameter Name and ConfigFile.
-func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+// GetParameterByConfigFile GETs a Parameter by the Parameter ConfigFile.
+// Deprecated: GetParameterByConfigFile will be removed in 6.0. Use GetParameterByConfigFileWithHdr.
+func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParameterByConfigFileWithHdr(configFile, nil)
+}
+
+func (to *Session) GetParameterByNameAndConfigFileWithHdr(name string, configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_PARAMETERS, url.QueryEscape(name), url.QueryEscape(configFile))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -203,11 +222,14 @@ func (to *Session) GetParameterByNameAndConfigFile(name string, configFile strin
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
-// TODO: API should support all 3, but does not support filter by value
-// currently. Until then, loop through hits until you find one with that value.
-func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	params, reqInf, err := to.GetParameterByNameAndConfigFile(name, configFile, header)
+// GetParameterByNameAndConfigFile GETs a Parameter by the Parameter Name and ConfigFile.
+// Deprecated: GetParameterByNameAndConfigFile will be removed in 6.0. Use GetParameterByNameAndConfigFileWithHdr.
+func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParameterByNameAndConfigFileWithHdr(name, configFile, nil)
+}
+
+func (to *Session) GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+	params, reqInf, err := to.GetParameterByNameAndConfigFileWithHdr(name, configFile, header)
 	if reqInf.StatusCode == http.StatusNotModified {
 		return []tc.Parameter{}, reqInf, nil
 	}
@@ -220,6 +242,14 @@ func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, val
 		}
 	}
 	return nil, reqInf, err
+}
+
+// GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
+// TODO: API should support all 3, but does not support filter by value
+// currently. Until then, loop through hits until you find one with that value.
+// Deprecated: GetParameterByNameAndConfigFileAndValue will be removed in 6.0. Use GetParameterByNameAndConfigFileAndValueWithHdr.
+func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value, nil)
 }
 
 // DeleteParameterByID DELETEs a Parameter by ID.

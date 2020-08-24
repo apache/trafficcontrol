@@ -23,7 +23,7 @@ import (
 )
 
 func GetTestDomains(t *testing.T) {
-	resp, _, err := TOSession.GetDomains(nil)
+	resp, _, err := TOSession.GetDomains()
 	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not GET domains: %v", err)
@@ -36,7 +36,7 @@ func GetTestDomainsIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDomains(header)
+	_, reqInf, err := TOSession.GetDomainsWithHdr(header)
 	if err != nil {
 		t.Fatalf("could not GET domains: %v", err)
 	}
