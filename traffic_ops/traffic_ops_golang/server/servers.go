@@ -102,7 +102,8 @@ SELECT
 	s.type AS server_type_id,
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
-	s.xmpp_passwd
+	s.xmpp_passwd,
+    s.status_last_updated
 ` + serversFromAndJoin
 
 const insertQuery = `
@@ -131,7 +132,8 @@ INSERT INTO server (
 	type,
 	upd_pending,
 	xmpp_id,
-	xmpp_passwd
+	xmpp_passwd,
+    status_last_updated
 ) VALUES (
 	:cachegroup_id,
 	:cdn_id,
@@ -157,7 +159,8 @@ INSERT INTO server (
 	:server_type_id,
 	:upd_pending,
 	:xmpp_id,
-	:xmpp_passwd
+	:xmpp_passwd,
+    :status_last_updated
 ) RETURNING
 	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
 	cachegroup AS cachegroup_id,
@@ -192,7 +195,8 @@ INSERT INTO server (
 	tcp_port,
 	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
 	type AS server_type_id,
-	upd_pending
+	upd_pending,
+    status_last_updated
 `
 
 const updateQuery = `
@@ -220,7 +224,8 @@ UPDATE server SET
 	tcp_port=:tcp_port,
 	type=:server_type_id,
 	upd_pending=:upd_pending,
-	xmpp_passwd=:xmpp_passwd
+	xmpp_passwd=:xmpp_passwd,
+    status_last_updated=:status_last_updated
 WHERE id=:id
 RETURNING
 	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
@@ -256,7 +261,8 @@ RETURNING
 	tcp_port,
 	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
 	type AS server_type_id,
-	upd_pending
+	upd_pending,
+    status_last_updated
 `
 
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
@@ -986,14 +992,25 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	//Get original xmppid
+	//Get original xmppid and status
 	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	originalXMPPID := *origSer[0].XMPPID
+	if len(origSer) == 0 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("the server doesn't exist, cannot update"), nil)
+		return
+	}
+	originalXMPPID := ""
+	originalStatusID := 0
 	changeXMPPID := false
+	if origSer[0].XMPPID != nil {
+		originalXMPPID = *origSer[0].XMPPID
+	}
+	if origSer[0].Status != nil {
+		originalStatusID = *origSer[0].StatusID
+	}
 
 	var server tc.ServerNullableV2
 	var interfaces []tc.ServerInterfaceInfo
@@ -1003,8 +1020,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if *newServer.XMPPID != originalXMPPID {
+		if newServer.XMPPID != nil && *newServer.XMPPID != originalXMPPID {
 			changeXMPPID = true
+		}
+		if newServer.StatusID != nil && *newServer.StatusID != originalStatusID {
+			newServer.StatusLastUpdated = time.Now()
+		} else {
+			newServer.StatusLastUpdated = origSer[0].StatusLastUpdated
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
@@ -1257,6 +1279,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	server.StatusLastUpdated = time.Now()
 	v2Server, err := server.ToServerV2()
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
