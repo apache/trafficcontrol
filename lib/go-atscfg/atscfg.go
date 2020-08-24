@@ -486,6 +486,57 @@ func GetServerIPAddress(sv *tc.ServerNullable) net.IP {
 	return nil
 }
 
+// GetServerServiceAddresses returns the first "service" addresses for IPv4 and IPv6 that it finds.
+// If an IPv4 or IPv6 "service" address is not found, returns nil for that IP.
+// If no IPv4 address set as a ServiceAddress exists, returns nil
+// Malformed addresses are ignored and skipped.
+func getServiceAddresses(sv *tc.ServerNullable) (net.IP, net.IP) {
+	v4 := net.IP(nil)
+	v6 := net.IP(nil)
+	for _, iFace := range sv.Interfaces {
+		for _, addr := range iFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+			if ip := net.ParseIP(addr.Address); ip != nil {
+				if ip4 := ip.To4(); ip4 != nil {
+					if v4 == nil {
+						v4 = ip4
+					}
+				} else {
+					if v6 == nil {
+						v6 = ip
+					}
+				}
+				if v4 != nil && v6 != nil {
+					return v4, v6
+				}
+				continue
+			}
+
+			// not an IP, try a CIDR
+			ip, _, err := net.ParseCIDR(addr.Address)
+			if err != nil || ip == nil {
+				continue // TODO log error? Not an IP or CIDR
+			}
+			if ip4 := ip.To4(); ip4 != nil {
+				if v4 == nil {
+					v4 = ip4
+				}
+			} else {
+				if v6 == nil {
+					v6 = ip
+				}
+			}
+			if v4 != nil && v6 != nil {
+				return v4, v6
+			}
+			continue
+		}
+	}
+	return v4, v6
+}
+
 // GetTOToolNameAndURL takes the Global Parameters and returns the Traffic Ops Tool Name and URL, as set in the tc.GlobalProfileName Profile 'tm.toolname' and 'tm.url' name Parameters.
 func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
 	// TODO move somewhere generic
