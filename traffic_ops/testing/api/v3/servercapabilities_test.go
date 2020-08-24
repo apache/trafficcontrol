@@ -42,7 +42,7 @@ func CreateTestServerCapabilities(t *testing.T) {
 func GetTestServerCapabilities(t *testing.T) {
 
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.GetServerCapability(sc.Name, nil)
+		resp, _, err := TOSession.GetServerCapability(sc.Name)
 		if err != nil {
 			t.Errorf("cannot GET server capability: %v - %v", err, resp)
 		} else if resp == nil {
@@ -50,7 +50,7 @@ func GetTestServerCapabilities(t *testing.T) {
 		}
 	}
 
-	resp, _, err := TOSession.GetServerCapabilities(nil)
+	resp, _, err := TOSession.GetServerCapabilities()
 	if err != nil {
 		t.Errorf("cannot GET server capabilities: %v", err)
 	}
@@ -74,7 +74,7 @@ func DeleteTestServerCapabilities(t *testing.T) {
 			t.Errorf("cannot DELETE server capability: %v - %v", err, delResp)
 		}
 
-		serverCapability, _, err := TOSession.GetServerCapability(sc.Name, nil)
+		serverCapability, _, err := TOSession.GetServerCapability(sc.Name)
 		if err == nil {
 			t.Errorf("expected error trying to GET deleted server capability: %s, actual: nil", sc.Name)
 		}

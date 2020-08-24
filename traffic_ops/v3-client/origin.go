@@ -32,7 +32,7 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupNullableByName(*origin.Cachegroup, nil)
+		p, _, err := to.GetCacheGroupNullableByName(*origin.Cachegroup)
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(*origin.DeliveryService, nil)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(*origin.DeliveryService)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
+		profiles, _, err := to.GetProfileByName(*origin.Profile)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.CoordinateID == nil && origin.Coordinate != nil {
-		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate, nil)
+		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate)
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByName(*origin.Tenant, nil)
+		tenant, _, err := to.TenantByName(*origin.Tenant)
 		if err != nil {
 			return err
 		}

@@ -87,19 +87,27 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlId string
 	return resp, reqInf, nil
 }
 
-// GetDeliveryServiceServers gets all delivery service servers, with the default API limit.
-func (to *Session) GetDeliveryServiceServers(h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+func (to *Session) GetDeliveryServiceServersWithHdr(h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
 	return to.getDeliveryServiceServers(url.Values{}, h)
 }
 
-// GetDeliveryServiceServersN gets all delivery service servers, with a limit of n.
-func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}}, nil)
+// GetDeliveryServiceServers gets all delivery service servers, with the default API limit.
+// Deprecated: GetDeliveryServiceServers will be removed in 6.0. Use GetDeliveryServiceServersWithHdr.
+func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	return to.GetDeliveryServiceServersWithHdr(nil)
 }
 
-// GetDeliveryServiceServersWithLimits gets all delivery service servers, allowing specifying the limit of mappings to return, the delivery services to return, and the servers to return.
-// The limit may be 0, in which case the default limit will be applied. The deliveryServiceIDs and serverIDs may be nil or empty, in which case all delivery services and/or servers will be returned.
-func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServiceIDs []int, serverIDs []int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+func (to *Session) GetDeliveryServiceServersNWithHdr(n int, header http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}}, header)
+}
+
+// GetDeliveryServiceServersN gets all delivery service servers, with a limit of n.
+// Deprecated: GetDeliveryServiceServersN will be removed in 6.0. Use GetDeliveryServiceServersNWithHdr.
+func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	return to.GetDeliveryServiceServersNWithHdr(n, nil)
+}
+
+func (to *Session) GetDeliveryServiceServersWithLimitsWithHdr(limit int, deliveryServiceIDs []int, serverIDs []int, header http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
 	vals := url.Values{}
 	if limit != 0 {
 		vals.Set("limit", strconv.Itoa(limit))
@@ -121,7 +129,14 @@ func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServic
 		vals.Set("serverids", strings.Join(serverIDStrs, ","))
 	}
 
-	return to.getDeliveryServiceServers(vals, nil)
+	return to.getDeliveryServiceServers(vals, header)
+}
+
+// GetDeliveryServiceServersWithLimits gets all delivery service servers, allowing specifying the limit of mappings to return, the delivery services to return, and the servers to return.
+// The limit may be 0, in which case the default limit will be applied. The deliveryServiceIDs and serverIDs may be nil or empty, in which case all delivery services and/or servers will be returned.
+// Deprecated: GetDeliveryServiceServersWithLimits will be removed in 6.0. Use GetDeliveryServiceServersWithLimitsWithHdr.
+func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServiceIDs []int, serverIDs []int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	return to.GetDeliveryServiceServersWithLimitsWithHdr(limit, deliveryServiceIDs, serverIDs, nil)
 }
 
 func (to *Session) getDeliveryServiceServers(urlQuery url.Values, h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {

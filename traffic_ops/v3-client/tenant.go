@@ -28,8 +28,7 @@ import (
 const API_TENANTS = apiBase + "/tenants"
 const API_TENANT_ID = API_TENANTS + "/%v"
 
-// Tenants gets an array of Tenants.
-func (to *Session) Tenants(header http.Header) ([]tc.Tenant, ReqInf, error) {
+func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := get(to, API_TENANTS, &data, header)
 	if reqInf.StatusCode == http.StatusNotModified {
@@ -42,9 +41,13 @@ func (to *Session) Tenants(header http.Header) ([]tc.Tenant, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Tenant gets the Tenant identified by the passed integral, unique identifer - which
-// must be passed as a string.
-func (to *Session) Tenant(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
+// Tenants gets an array of Tenants.
+// Deprecated: Tenants will be removed in 6.0. Use TenantsWithHdr.
+func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
+	return to.TenantsWithHdr(nil)
+}
+
+func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data, header)
 	if reqInf.StatusCode == http.StatusNotModified {
@@ -57,8 +60,14 @@ func (to *Session) Tenant(id string, header http.Header) (*tc.Tenant, ReqInf, er
 	return &data.Response[0], reqInf, nil
 }
 
-// TenantByName gets the Tenant with the name it's passed.
-func (to *Session) TenantByName(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
+// Tenant gets the Tenant identified by the passed integral, unique identifer - which
+// must be passed as a string.
+// Deprecated: Tenant will be removed in 6.0. Use TenantWithHdr.
+func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
+	return to.TenantWithHdr(id, nil)
+}
+
+func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := API_TENANTS + "?name=" + url.QueryEscape(name)
 	reqInf, err := get(to, query, &data, header)
@@ -78,10 +87,16 @@ func (to *Session) TenantByName(name string, header http.Header) (*tc.Tenant, Re
 	return ten, reqInf, err
 }
 
+// TenantByName gets the Tenant with the name it's passed.
+// Deprecated: TenantByName will be removed in 6.0. Use TenantByNameWithHdr.
+func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
+	return to.TenantByNameWithHdr(name, nil)
+}
+
 // CreateTenant creates the Tenant it's passed.
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.TenantByName(t.ParentName, nil)
+		tenant, _, err := to.TenantByName(t.ParentName)
 		if err != nil {
 			return nil, err
 		}

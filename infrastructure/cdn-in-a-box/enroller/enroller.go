@@ -49,10 +49,10 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 	return session{s}, err
 }
 
-func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
+func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters(nil)
+	parameters, _, err := s.GetParametersWithHdr(header)
 	if err != nil {
 		return m, err
 	}
@@ -65,7 +65,7 @@ func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n), nil)
+	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -222,7 +222,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId, nil)
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params, nil)
+		servers, _, err := toSession.GetServers(params)
 		if err != nil {
 			return err
 		}
@@ -317,7 +317,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 	}
 
 	for _, p := range params {
-		eparam, err := toSession.getParameter(p)
+		eparam, err := toSession.getParameter(p, nil)
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
@@ -332,7 +332,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 				log.Infof("error creating parameter: %s from %+v\n", err.Error(), p)
 				return err
 			}
-			eparam, err = toSession.getParameter(p)
+			eparam, err = toSession.getParameter(p, nil)
 			if err != nil {
 				return err
 			}
@@ -348,7 +348,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n, nil)
+				profiles, _, err := toSession.GetProfileByName(n)
 				if err != nil {
 					return err
 				}
@@ -525,7 +525,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
+	profiles, _, err := toSession.GetProfileByName(profile.Name)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -547,7 +547,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
+		profiles, _, err = toSession.GetProfileByName(profile.Name)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -579,7 +579,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			value = *p.Value
 		}
 		param := tc.Parameter{ConfigFile: configFile, Name: name, Value: value, Secure: secure}
-		eparam, err := toSession.getParameter(param)
+		eparam, err := toSession.getParameter(param, nil)
 		if err != nil {
 			// create it
 			log.Infof("creating param %+v\n", param)
@@ -588,7 +588,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("can't create parameter %+v: %s\n", param, err.Error())
 				continue
 			}
-			eparam, err = toSession.getParameter(param)
+			eparam, err = toSession.getParameter(param, nil)
 			if err != nil {
 				log.Infof("error getting new parameter %+v: \n", param)
 				log.Infof(err.Error())

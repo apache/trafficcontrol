@@ -53,7 +53,7 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 			continue
 		}
 		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(&params, header)
+		_, reqInf, err := TOSession.GetServersWithHdr(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -71,7 +71,7 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 			continue
 		}
 		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(&params, header)
+		_, reqInf, err := TOSession.GetServersWithHdr(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -94,7 +94,7 @@ func GetTestServersIMS(t *testing.T) {
 			continue
 		}
 		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(&params, header)
+		_, reqInf, err := TOSession.GetServersWithHdr(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -127,7 +127,7 @@ func GetTestServers(t *testing.T) {
 			continue
 		}
 		params.Set("hostName", *server.HostName)
-		resp, _, err := TOSession.GetServers(&params, nil)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
@@ -143,7 +143,7 @@ func GetTestServersDetails(t *testing.T) {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName, nil)
+		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName)
 		if err != nil {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
@@ -151,7 +151,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -166,7 +166,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	_, _, err = TOSession.GetServers(&params, nil)
+	_, _, err = TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
@@ -176,14 +176,14 @@ func GetTestServersQueryParameters(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, _ := TOSession.GetServers(&params, header)
+	_, reqInf, _ := TOSession.GetServersWithHdr(&params, header)
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
 	params.Del("dsId")
 
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
 		t.Fatalf("Failed to get servers: %v", err)
 	}
@@ -195,7 +195,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	s := resp.Response[0]
 
 	params.Add("type", s.Type)
-	if _, _, err := TOSession.GetServers(&params, nil); err != nil {
+	if _, _, err := TOSession.GetServers(&params); err != nil {
 		t.Errorf("Error getting servers by type: %v", err)
 	}
 	params.Del("type")
@@ -204,7 +204,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no Cache Group ID")
 	} else {
 		params.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
-		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
+		if _, _, err := TOSession.GetServers(&params); err != nil {
 			t.Errorf("Error getting servers by Cache Group ID: %v", err)
 		}
 		params.Del("cachegroup")
@@ -214,7 +214,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no status")
 	} else {
 		params.Add("status", *s.Status)
-		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
+		if _, _, err := TOSession.GetServers(&params); err != nil {
 			t.Errorf("Error getting servers by status: %v", err)
 		}
 		params.Del("status")
@@ -224,13 +224,13 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no Profile ID")
 	} else {
 		params.Add("profileId", strconv.Itoa(*s.ProfileID))
-		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
+		if _, _, err := TOSession.GetServers(&params); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v", err)
 		}
 		params.Del("profileId")
 	}
 
-	cgs, _, err := TOSession.GetCacheGroupsNullable(nil)
+	cgs, _, err := TOSession.GetCacheGroupsNullable()
 	if err != nil {
 		t.Fatalf("Failed to get Cache Groups: %v", err)
 	}
@@ -242,14 +242,14 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
-	if _, _, err = TOSession.GetServers(&params, nil); err != nil {
+	if _, _, err = TOSession.GetServers(&params); err != nil {
 		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
 	}
 	params.Del("parentCacheGroup")
 }
 
 func UniqueIPProfileTestServers(t *testing.T) {
-	serversResp, _, err := TOSession.GetServers(nil, nil)
+	serversResp, _, err := TOSession.GetServers(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +286,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		// Cleanup, don't want to break other tests
 		pathParams := url.Values{}
 		pathParams.Add("xmppid", xmppId)
-		server, _, err := TOSession.GetServers(&pathParams, nil)
+		server, _, err := TOSession.GetServers(&pathParams)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -331,7 +331,7 @@ func UpdateTestServers(t *testing.T) {
 	params.Add("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(&params, nil)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
@@ -379,7 +379,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Retrieve the server to check rack, interfaceName, hostName values were updated
-	resp, _, err = TOSession.GetServers(&idParam, nil)
+	resp, _, err = TOSession.GetServers(&idParam)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
@@ -434,13 +434,13 @@ func UpdateTestServers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
 	}
-	resp, _, err = TOSession.GetServers(&params, nil)
+	resp, _, err = TOSession.GetServers(&params)
 	if err != nil {
 		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
 	}
 
 	// Assign server to DS and then attempt to update to a different type
-	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -448,7 +448,7 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
 	}
 
-	serverTypes, _, err := TOSession.GetTypes(nil, "server")
+	serverTypes, _, err := TOSession.GetTypes("server")
 	if err != nil {
 		t.Fatalf("cannot GET Server Types: %v", err)
 	}
@@ -488,7 +488,7 @@ func DeleteTestServers(t *testing.T) {
 
 		params.Set("hostName", *server.HostName)
 
-		resp, _, err := TOSession.GetServers(&params, nil)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Errorf("cannot GET Server by hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
 			continue
@@ -512,7 +512,7 @@ func DeleteTestServers(t *testing.T) {
 			}
 
 			// Retrieve the Server to see if it got deleted
-			resp, _, err := TOSession.GetServers(&params, nil)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
 				t.Errorf("error deleting Server hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
 			}
