@@ -166,13 +166,13 @@ It further provides the following query parameters:
 
 *GET `/traffic_portals` Query Parameters*
 
-Parameter | Description
-==========+============
-ipv4Address | Filters results to contain only the Traffic Portals with the given IPv4 Address.
-ipv6Address | Filters results to contain only the Traffic Portals with the given IPv6 Address.
-online | Filters results to contain only the Traffic Portals that have the provided "Online" value - valid values are "true" and "false".
-tag | Filters results to contain only the Traffic Portals with the given Tag. Multiple tags may be given, either in regular, `application/x-www-form-urlencoded` format like e.g. `tag=Foo&tag=Bar` *or* as a comma-separated list, e.g. `tag=Foo,Bar`. In either case - or even in the case of mixed conventions - the filtered results will contain only those Traffic Portals that have *all* specified Tags.
-url | Filters results to contain only the Traffic Portals with the given URL. This URL must be valid, and may not contain a non-root path - e.g. `https://example.com:443/` is acceptable, whereas `https://example.com:443/foo` is not.
+| Parameter   | Description                                                    |
+|-------------|----------------------------------------------------------------|
+| ipv4Address | Filters results to contain only the Traffic Portals with the given IPv4 Address. |
+| ipv6Address | Filters results to contain only the Traffic Portals with the given IPv6 Address. |
+| online      | Filters results to contain only the Traffic Portals that have the provided "Online" value - valid values are "true" and "false". |
+| tag         | Filters results to contain only the Traffic Portals with the given Tag. Multiple tags may be given, either in regular, `application/x-www-form-urlencoded` format like e.g. `tag=Foo&tag=Bar` *or* as a comma-separated list, e.g. `tag=Foo,Bar`. In either case - or even in the case of mixed conventions - the filtered results will contain only those Traffic Portals that have *all* specified Tags. |
+| url         | Filters results to contain only the Traffic Portals with the given URL. This URL must be valid, and may not contain a non-root path - e.g. `https://example.com:443/` is acceptable, whereas `https://example.com:443/foo` is not. |
 
 *Request Example*
 ```http
@@ -204,7 +204,7 @@ ETag: Sample Text
 	{
 		"ipv4Address": "192.168.240.12",
 		"ipv6Address": null,
-		"lastUpdated": "2009-11-10T23:00:00Z"
+		"lastUpdated": "2009-11-10T23:00:00Z",
 		"notes": "The default Traffic Portal instance for CDN-in-a-Box.",
 		"online": true,
 		"tags": [],
@@ -229,9 +229,9 @@ shown below.
 
 *POST `/traffic_portals` Query Parameters*
 
-Parameter | Description
-==========+=============
-lookupAddress | When this query string parameter is given, and is "true", then when the request body contains a `null` `ipv4Address` or `ipv6Address`, the value will be "filled" in by looking up the host name portion of the request body's `url` property. This may also be one of the strings "ipv4Address" and "ipv6Address", to limit the "filling in" behavior to the named IP address property.
+| Parameter | Description |
+|-----------|-------------|
+| lookupAddress | When this query string parameter is given, and is "true", then when the request body contains a `null` `ipv4Address` or `ipv6Address`, the value will be "filled" in by looking up the host name portion of the request body's `url` property. This may also be one of the strings "ipv4Address" and "ipv6Address", to limit the "filling in" behavior to the named IP address property. When this lookup fails for some reason, a warning-level alert accompanies the (presumably) successful response indicating the issue, and the field(s) requested to be "filled in" will remain "null"-typed in the created object. |
 
 *Request Example*
 ```http
@@ -323,7 +323,7 @@ ETag: Sample Text
 { "response": {
 	"ipv4Address": "192.168.240.12",
 	"ipv6Address": null,
-	"lastUpdated": "2009-11-10T23:00:00Z"
+	"lastUpdated": "2009-11-10T23:00:00Z",
 	"notes": "The default Traffic Portal instance for CDN-in-a-Box.",
 	"online": true,
 	"tags": [],
@@ -344,9 +344,9 @@ request path. Only one query parameter is supported, as shown below.
 
 *POST `/traffic_portals} Query Parameters`*
 
-Parameter | Description
-==========+=============
-lookupAddress | When this query string parameter is given, and is "true", then when the request body contains a `null` `ipv4Address` or `ipv6Address`, the value will be "filled" in by looking up the host name portion of the request body's `url` property. This may also be one of the strings "ipv4Address" and "ipv6Address", to limit the "filling in" behavior to the named IP address property.
+| Parameter | Description |
+|-----------|-------------|
+| lookupAddress | When this query string parameter is given, and is "true", then when the request body contains a `null` `ipv4Address` or `ipv6Address`, the value will be "filled" in by looking up the host name portion of the request body's `url` property. This may also be one of the strings "ipv4Address" and "ipv6Address", to limit the "filling in" behavior to the named IP address property. When this lookup fails for some reason, a warning-level alert accompanies the (presumably) successful response indicating the issue, and the field(s) requested to be "filled in" will remain "null"-typed in the created object. |
 
 *Request Example*
 ```http
@@ -509,3 +509,54 @@ ETag: Sample Text
 	}
 ]}
 ```
+
+##### `/servers` and `/servers/{{ID}}`
+When a server is created with or modified to have a Type of TRAFFIC_PORTAL, an
+API deprecation warning should be emitted to indicate that these should be made
+into proper Traffic Portal instances with the appropriate endpoint.
+
+#### Client Impact
+New client methods will need to be added to service these endpoints.
+
+### Traffic Portal Impact
+A new view will need to be added for listing all the Traffic Portals, and a new
+form view will need to be added for creating and modifying Traffic Portals.
+
+## Documentation Impact
+All new API routes will need to be documented. Since this is an entirely new
+object, the terse descriptions of request and response payloads found above
+should suffice, provided the representations are linked to an overview section
+for Traffic Portal objects, and that the ways in which Traffic Portals may be
+represented are not polluted.
+
+## Testing Impact
+All Traffic Ops API changes should be accompanied by associated client/API
+integration tests.
+
+## Performance Impact
+This should have the effect of - very slightly - improving the performance of
+requests for the generic `/servers` endpoint (once operational changes have been
+made to delete the old, generic forms of the Traffic Portal servers).
+
+## Security Impact
+None.
+
+## Upgrade Impact
+None. No data is removed or changed, only added; transition should be seamless.
+In a worst-case upgrade-order scenario, a Traffic Portal will exist for a short
+time without the ability to display the new data.
+
+## Operations Impact
+Registering Traffic Portals will become easier, but it will also become a
+different operation than just registering a server. Changes to deployment
+systems will undoubtedly be necessary as support for TRAFFIC_PORTAL-Type servers
+is removed.
+
+## Developer Impact
+Developers should be nearly totally unaffected.
+
+## Alternatives
+Putting Traffic Portals into the semi-planned "infrastructure server" category
+was considered, but ultimately since all other components have their own
+semi-planned object types, it was deemed best for consistency's sake that
+Traffic Portals be afforded the same treatment.
