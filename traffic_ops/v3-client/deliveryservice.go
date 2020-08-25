@@ -531,6 +531,17 @@ func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields 
 	return response.Response, reqInf, nil
 }
 
+func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, ReqInf, error) {
+	resp := struct {
+		Response string `json:"resposne"`
+	}{}
+	reqInf, err := del(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &resp)
+	if err != nil {
+		return "", reqInf, err
+	}
+	return resp.Response, reqInf, nil
+}
+
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
 // Deprecated: GetDeliveryServiceSSLKeysByID will be removed in 6.0. Use GetDeliveryServiceSSLKeysByIDWithHdr.

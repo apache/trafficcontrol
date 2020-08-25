@@ -39,7 +39,9 @@ func TestDeliveryServices(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, currentTime.Format(time.RFC1123))
 
-		DeliveryServiceCDNKeyTransferTest(t)
+		if includeSystemTests {
+			DeliveryServiceCDNKeyTransferTest(t)
+		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
@@ -83,9 +85,9 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 }
 
 func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
-	cdnNameOld := "test"
+	cdnNameOld := "sslkeytransfer"
 	oldCdn := createBlankCDN(cdnNameOld, t)
-	cdnNameNew := "test1"
+	cdnNameNew := "sslkeytransfer1"
 	newCdn := createBlankCDN(cdnNameNew, t)
 
 	types, _, err := TOSession.GetTypeByNameWithHdr("HTTP", nil)
@@ -135,11 +137,11 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	ds.CDNName = &oldCdn.Name
 
 	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
-		BusinessUnit: util.StrPtr("My business"),
-		City:         util.StrPtr("City town"),
-		Organization: util.StrPtr("Business inc"),
+		BusinessUnit: util.StrPtr("BU"),
+		City:         util.StrPtr("CI"),
+		Organization: util.StrPtr("OR"),
 		HostName:     util.StrPtr("*.test.com"),
-		Country:      util.StrPtr("Home"),
+		Country:      util.StrPtr("CO"),
 		State:        util.StrPtr("ST"),
 	})
 	if err != nil {
@@ -182,6 +184,10 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	}
 
 	// Clean up
+	_, _, err = TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
 	if err != nil {
 		t.Fatal(err)
@@ -194,6 +200,7 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 }
 
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
