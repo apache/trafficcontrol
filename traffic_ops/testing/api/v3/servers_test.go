@@ -42,6 +42,7 @@ func TestServers(t *testing.T) {
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
 		UniqueIPProfileTestServers(t)
+		UpdateTestServerStatus(t)
 	})
 }
 
@@ -313,6 +314,134 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
 	if err != nil {
 		t.Fatalf("expected update to pass: %s", err)
+	}
+}
+
+func UpdateTestServerStatus(t *testing.T) {
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one server to test updating")
+	}
+
+	firstServer := testData.Servers[0]
+	if firstServer.HostName == nil {
+		t.Fatalf("First test server had nil hostname: %+v", firstServer)
+	}
+
+	hostName := *firstServer.HostName
+	params := url.Values{}
+	params.Add("hostName", hostName)
+
+	// Retrieve the server by hostname so we can get the id for the Update
+	resp, _, err := TOSession.GetServers(&params)
+	if err != nil {
+		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+	remoteServer := resp.Response[0]
+	if remoteServer.ID == nil {
+		t.Fatalf("Got null ID for server '%s'", hostName)
+	}
+	id := fmt.Sprintf("%v", *resp.Response[0].ID)
+	idParam := url.Values{}
+	idParam.Add("id", id)
+	originalStatusID := 0
+	updatedStatusID := 0
+
+	statuses, _, err := TOSession.GetStatusesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("cannot get statuses: %v", err.Error())
+	}
+	for _, status := range statuses {
+		if status.Name == "REPORTED" {
+			originalStatusID = status.ID
+		}
+		if status.Name == "ONLINE" {
+			updatedStatusID = status.ID
+		}
+	}
+	// Keeping the status same, perform an update and make sure that statusLastUpdated didnt change
+	remoteServer.StatusID = &originalStatusID
+
+	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+	}
+
+	resp, _, err = TOSession.GetServers(&idParam)
+	if err != nil {
+		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	respServer := resp.Response[0]
+
+	if remoteServer.StatusLastUpdated != respServer.StatusLastUpdated {
+		t.Errorf("since status didnt change, no change in 'StatusLastUpdated' time was expected. Difference observer: old value: %v, new value: %v",
+			remoteServer.StatusLastUpdated.String(), respServer.StatusLastUpdated.String())
+	}
+
+	// Changing the status, perform an update and make sure that statusLastUpdated changed
+	remoteServer.StatusID = &updatedStatusID
+
+	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+	}
+
+	resp, _, err = TOSession.GetServers(&idParam)
+	if err != nil {
+		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	respServer = resp.Response[0]
+
+	if remoteServer.StatusLastUpdated == respServer.StatusLastUpdated {
+		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
+	}
+
+	// Changing the status, perform an update and make sure that statusLastUpdated changed
+	remoteServer.StatusID = &originalStatusID
+
+	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+	}
+
+	resp, _, err = TOSession.GetServers(&idParam)
+	if err != nil {
+		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	respServer = resp.Response[0]
+
+	if remoteServer.StatusLastUpdated == respServer.StatusLastUpdated {
+		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
 	}
 }
 
