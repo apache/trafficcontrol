@@ -161,8 +161,7 @@ SET    status = $1,
        status_last_updated = $3
 WHERE  id = $4
 `
-	status_last_updated := time.Now()
-	if _, err := tx.Exec(q, statusID, offlineReason, &status_last_updated, serverID); err != nil {
+	if _, err := tx.Exec(q, statusID, offlineReason, time.Now(), serverID); err != nil {
 		return errors.New("updating server status and offline_reason: " + err.Error())
 	}
 	return nil

@@ -184,7 +184,7 @@ func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf,
 }
 
 func (to *Session) GetFirstServerWithHdr(params *url.Values, header http.Header) (tc.ServerNullable, ReqInf, error) {
-	serversResponse, reqInf, err := to.GetServers(params)
+	serversResponse, reqInf, err := to.GetServersWithHdr(params, header)
 	var firstServer tc.ServerNullable
 	if err != nil || reqInf.StatusCode == http.StatusNotModified {
 		return firstServer, reqInf, err
@@ -259,7 +259,7 @@ func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, t
 	params := url.Values{}
 	params.Add("hostName", n)
 
-	resp, reqInf, err := to.GetServers(&params)
+	resp, reqInf, err := to.GetServersWithHdr(&params, header)
 	if err != nil {
 		return "", resp.Alerts, reqInf, err
 	}
@@ -287,7 +287,7 @@ func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 
 func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header http.Header) ([]string, tc.Alerts, ReqInf, error) {
 	var serverlst []string
-	resp, reqInf, err := to.GetServers(nil)
+	resp, reqInf, err := to.GetServersWithHdr(nil, header)
 	if err != nil {
 		return serverlst, resp.Alerts, reqInf, err
 	}

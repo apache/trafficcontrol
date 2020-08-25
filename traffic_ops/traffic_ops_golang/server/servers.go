@@ -195,8 +195,7 @@ INSERT INTO server (
 	tcp_port,
 	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
 	type AS server_type_id,
-	upd_pending,
-    status_last_updated
+	upd_pending
 `
 
 const updateQuery = `

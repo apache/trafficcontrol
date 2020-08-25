@@ -382,7 +382,6 @@ type CommonServerProperties struct {
 	UpdPending        *bool                `json:"updPending" db:"upd_pending"`
 	XMPPID            *string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd        *string              `json:"xmppPasswd" db:"xmpp_passwd"`
-	StatusLastUpdated time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ServerNullableV11 is a server as it appeared in API version 1.1.
@@ -396,12 +395,14 @@ type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
+	StatusLastUpdated time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
 	CommonServerProperties
 	Interfaces []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+	StatusLastUpdated time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
@@ -423,7 +424,7 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 
 	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
 	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
-
+	legacyServer.StatusLastUpdated = s.StatusLastUpdated
 	return legacyServer, nil
 }
 
