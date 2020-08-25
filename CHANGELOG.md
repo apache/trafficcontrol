@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
+- Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
 
 ### Fixed
 - Fixed #3400 - Allow "0" as a TTL value for Static DNS entries
