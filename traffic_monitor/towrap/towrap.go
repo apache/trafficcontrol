@@ -526,7 +526,7 @@ func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.
 
 	params := url.Values{}
 	params.Set("hostName", hostName)
-	resp, _, err := ss.GetServers(&params, nil)
+	resp, _, err := ss.GetServersWithHdr(&params, nil)
 	if err != nil {
 		return tc.ServerNullable{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
 	}
