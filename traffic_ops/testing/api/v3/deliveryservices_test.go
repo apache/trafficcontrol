@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
@@ -34,16 +35,13 @@ import (
 
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, currentTime.Format(time.RFC1123))
-
-		if includeSystemTests {
-			DeliveryServiceCDNKeyTransferTest(t)
-		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
@@ -56,151 +54,6 @@ func TestDeliveryServices(t *testing.T) {
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
 	})
-}
-
-func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
-	_, _, err := TOSession.CreateCDN(tc.CDN{
-		DNSSECEnabled: false,
-		DomainName:    cdnName + ".ai",
-		Name:          cdnName,
-	})
-	if err != nil {
-		t.Fatal("unable to create cdn: " + err.Error())
-	}
-	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
-	if err != nil {
-		t.Fatalf("unable to get cdn %v: %v", cdnName, err)
-	}
-	if len(cdns) < 1 {
-		t.Fatal("expected more than 0 cdns")
-	}
-	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
-	if err != nil {
-		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
-	}
-	if len(keys) != 0 {
-		t.Fatal("expected no ssl keys on cdn " + cdnName)
-	}
-	return cdns[0]
-}
-
-func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
-	cdnNameOld := "sslkeytransfer"
-	oldCdn := createBlankCDN(cdnNameOld, t)
-	cdnNameNew := "sslkeytransfer1"
-	newCdn := createBlankCDN(cdnNameNew, t)
-
-	types, _, err := TOSession.GetTypeByNameWithHdr("HTTP", nil)
-	if err != nil {
-		t.Fatal("unable to get types: " + err.Error())
-	}
-	if len(types) < 1 {
-		t.Fatal("expected at least one type")
-	}
-
-	customDS := tc.DeliveryServiceNullableV30{
-		DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
-			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-							Active:               util.BoolPtr(true),
-							CDNID:                util.IntPtr(oldCdn.ID),
-							DSCP:                 util.IntPtr(0),
-							DisplayName:          util.StrPtr("asdf"),
-							GeoLimit:             util.IntPtr(0),
-							GeoProvider:          util.IntPtr(0),
-							IPV6RoutingEnabled:   util.BoolPtr(false),
-							InitialDispersion:    util.IntPtr(1),
-							LogsEnabled:          util.BoolPtr(true),
-							MissLat:              util.FloatPtr(0),
-							MissLong:             util.FloatPtr(0),
-							MultiSiteOrigin:      util.BoolPtr(false),
-							OrgServerFQDN:        util.StrPtr("https://test.com"),
-							Protocol:             util.IntPtr(2),
-							QStringIgnore:        util.IntPtr(0),
-							RangeRequestHandling: util.IntPtr(0),
-							RegionalGeoBlocking:  util.BoolPtr(false),
-							TenantID:             util.IntPtr(1),
-							TypeID:               util.IntPtr(types[0].ID),
-							XMLID:                util.StrPtr("asdf"),
-						},
-					},
-				},
-			},
-		},
-	}
-	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ds.CDNName = &oldCdn.Name
-
-	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
-		BusinessUnit: util.StrPtr("BU"),
-		City:         util.StrPtr("CI"),
-		Organization: util.StrPtr("OR"),
-		HostName:     util.StrPtr("*.test.com"),
-		Country:      util.StrPtr("CO"),
-		State:        util.StrPtr("ST"),
-	})
-	if err != nil {
-		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
-	}
-
-	// Check old CDN has an ssl key
-	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
-	}
-	if len(keys) != 1 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
-	}
-
-	// Change CDN
-	ds.CDNID = &newCdn.ID
-	ds.CDNName = &newCdn.Name
-	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Check new CDN has ssl key
-	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
-	}
-	if len(keys) != 1 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
-	}
-
-	// Check old CDN does not have ssl key
-	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
-	}
-	if len(keys) != 0 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
-	}
-
-	// Clean up
-	_, _, err = TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(oldCdn.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(newCdn.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 }
 
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {

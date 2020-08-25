@@ -63,15 +63,6 @@ type DeliveryServiceSSLKeysV15 struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
-type SSLKeyRequestFields struct {
-	BusinessUnit *string `json:"businessUnit,omitempty"`
-	City         *string `json:"city,omitempty"`
-	Organization *string `json:"organization,omitempty"`
-	HostName     *string `json:"hostname,omitempty"`
-	Country      *string `json:"country,omitempty"`
-	State        *string `json:"state,omitempty"`
-}
-
 type DeliveryServiceSSLKeysReq struct {
 	AuthType        *string `json:"authType,omitempty"`
 	CDN             *string `json:"cdn,omitempty"`
