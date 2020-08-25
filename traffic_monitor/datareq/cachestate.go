@@ -26,7 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/ds"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
@@ -176,14 +175,16 @@ func createCacheStatuses(
 
 			if healthOk {
 				infStatus.Status, infStatus.Available = interfaceStatus(inf, health[0])
+				if infVit, ok := health[0].InterfaceVitals[inf.Name]; ok {
+					infStatus.BandwidthKbps = float64(infVit.KbpsOut)
+					if inf.Monitor {
+						totalKbps += infStatus.BandwidthKbps
+					}
+				} else {
+					log.Infof("Cache server '%s' interface '%s' not in last health measurement.", cacheName, inf.Name)
+				}
 			}
 
-			if lastStat, ok := lastStats.Caches[tc.CacheName(cacheName)]; !ok {
-				log.Infof("Cache server '%s' not in last kbps cache.", cacheName)
-			} else {
-				infStatus.BandwidthKbps = lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
-				totalKbps += infStatus.BandwidthKbps
-			}
 			interfaceStatuses[interfaceName] = infStatus
 		}
 
