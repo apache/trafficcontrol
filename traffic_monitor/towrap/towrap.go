@@ -290,15 +290,16 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 
 // TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
+	var configMap *tc.LegacyTrafficMonitorConfigMap
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	configMap, _, err := ss.GetTrafficMonitorConfigMap(cdn)
+	tmConfig, _, err := ss.GetTrafficMonitorConfig(cdn)
 
 	if err == nil {
-		err = tc.MonitorConfigValid(configMap)
+		configMap, err = tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	}
 
 	if err != nil {
@@ -314,14 +315,14 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
-		if err := json.Unmarshal(b, &configMap); err != nil {
+		if err := json.Unmarshal(b, &tmConfig); err != nil {
 			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
 		}
-		return configMap, err
+		return tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	}
 
 	json := jsoniter.ConfigFastest
-	data, err := json.Marshal(*configMap)
+	data, err := json.Marshal(*tmConfig)
 	if err == nil {
 		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
 	}
