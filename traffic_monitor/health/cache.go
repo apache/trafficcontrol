@@ -262,8 +262,13 @@ func CalcAvailability(
 
 		lastStatus, ok := localCacheStatuses[result.ID]
 		if ok {
-			availStatus.Available.IPv4 = serverInfo.IPv4() != "" && lastStatus.Available.IPv4
-			availStatus.Available.IPv6 = serverInfo.IPv6() != "" && lastStatus.Available.IPv6
+			if result.UsingIPv4 {
+				availStatus.Available.IPv4 = true
+				availStatus.Available.IPv6 = serverInfo.IPv6() != "" && lastStatus.Available.IPv6
+			} else {
+				availStatus.Available.IPv6 = true
+				availStatus.Available.IPv4 = serverInfo.IPv4() != "" && lastStatus.Available.IPv4
+			}
 		}
 
 		reasons := []string{}
@@ -275,9 +280,9 @@ func CalcAvailability(
 
 			available, why := EvalInterface(resultInfo.InterfaceVitals, inf)
 			if result.UsingIPv4 {
-				availStatus.Available.IPv4 = available
+				availStatus.Available.IPv4 = availStatus.Available.IPv4 && available
 			} else {
-				availStatus.Available.IPv6 = available
+				availStatus.Available.IPv6 = availStatus.Available.IPv6 && available
 			}
 
 			if why != "" {
@@ -317,7 +322,7 @@ func CalcAvailability(
 			Ipv6Available: availStatus.Available.IPv6,
 		})
 
-		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != availStatus.ProcessedAvailable {
+		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || !available.IsAvailable || !availStatus.ProcessedAvailable {
 			protocol := "IPv4"
 			if !availStatus.LastCheckedIPv4 {
 				protocol = "IPv6"
