@@ -219,7 +219,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.moreBtn.click();
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
-		pageData.selectServersBtn.click();
+		pageData.moreBtn.click();
+		pageData.selectServersMenuItem.click();
 		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
 		pageData.selectAllCB.click();
 		pageData.selectFormSubmitButton.click();
