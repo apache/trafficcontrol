@@ -102,8 +102,101 @@ SELECT
 	s.type AS server_type_id,
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
-	s.xmpp_passwd
+	s.xmpp_passwd,
+    s.status_last_updated
 ` + serversFromAndJoin
+
+const insertQueryV3 = `
+INSERT INTO server (
+	cachegroup,
+	cdn_id,
+	domain_name,
+	host_name,
+	https_port,
+	ilo_ip_address,
+	ilo_ip_netmask,
+	ilo_ip_gateway,
+	ilo_username,
+	ilo_password,
+	mgmt_ip_address,
+	mgmt_ip_netmask,
+	mgmt_ip_gateway,
+	offline_reason,
+	phys_location,
+	profile,
+	rack,
+	router_host_name,
+	router_port_name,
+	status,
+	tcp_port,
+	type,
+	upd_pending,
+	xmpp_id,
+	xmpp_passwd,
+	status_last_updated
+) VALUES (
+	:cachegroup_id,
+	:cdn_id,
+	:domain_name,
+	:host_name,
+	:https_port,
+	:ilo_ip_address,
+	:ilo_ip_netmask,
+	:ilo_ip_gateway,
+	:ilo_username,
+	:ilo_password,
+	:mgmt_ip_address,
+	:mgmt_ip_netmask,
+	:mgmt_ip_gateway,
+	:offline_reason,
+	:phys_location_id,
+	:profile_id,
+	:rack,
+	:router_host_name,
+	:router_port_name,
+	:status_id,
+	:tcp_port,
+	:server_type_id,
+	:upd_pending,
+	:xmpp_id,
+	:xmpp_passwd,
+	:status_last_updated
+) RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
+`
 
 const insertQuery = `
 INSERT INTO server (
@@ -911,6 +1004,16 @@ func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error
 	return nil, nil, http.StatusOK
 }
 
+func updateStatusLastUpdatedTime(id int, status_last_updated_time *time.Time, tx *sql.Tx) (error, error, int) {
+	query := `UPDATE server SET
+	status_last_updated=$1
+WHERE id=$2 `
+	if _, err := tx.Exec(query, status_last_updated_time, id); err != nil {
+		return errors.New("updating server status and offline_reason: " + err.Error()), nil, http.StatusInternalServerError
+	}
+	return nil, nil, http.StatusOK
+}
+
 func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (error, error, int) {
 	ifaceQry := `
 	INSERT INTO interface (
@@ -992,19 +1095,37 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	originalXMPPID := *origSer[0].XMPPID
+	if len(origSer) == 0 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("the server doesn't exist, cannot update"), nil)
+		return
+	}
+	originalXMPPID := ""
+	originalStatusID := 0
 	changeXMPPID := false
+	if origSer[0].XMPPID != nil {
+		originalXMPPID = *origSer[0].XMPPID
+	}
+	if origSer[0].Status != nil {
+		originalStatusID = *origSer[0].StatusID
+	}
 
 	var server tc.ServerNullableV2
 	var interfaces []tc.ServerInterfaceInfo
+	var statusLastUpdatedTime time.Time
 	if inf.Version.Major >= 3 {
 		var newServer tc.ServerNullable
 		if err := json.NewDecoder(r.Body).Decode(&newServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if *newServer.XMPPID != originalXMPPID {
+		if newServer.XMPPID != nil && *newServer.XMPPID != originalXMPPID {
 			changeXMPPID = true
+		}
+		currentTime := time.Now()
+		if newServer.StatusID != nil && *newServer.StatusID != originalStatusID {
+			newServer.StatusLastUpdated = &currentTime
+		} else {
+			newServer.StatusLastUpdated = origSer[0].StatusLastUpdated
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
@@ -1019,6 +1140,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		server.InterfaceName = util.StrPtr(serviceInterface)
 		interfaces = newServer.Interfaces
+		if newServer.StatusLastUpdated != nil {
+			statusLastUpdatedTime = *newServer.StatusLastUpdated
+		}
 	} else if inf.Version.Major == 2 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1113,7 +1237,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 3 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
+		if userErr, sysErr, errCode = updateStatusLastUpdatedTime(inf.IntParams["id"], &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces, StatusLastUpdated: &statusLastUpdatedTime})
 	} else if inf.Version.Minor <= 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
 	} else {
@@ -1251,21 +1379,24 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	str := uuid.New().String()
 	server.XMPPID = &str
 
-	serviceInterface, err := validateV3(&server, tx)
+	//serviceInterface, err := validateV3(&server, tx)
+	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	v2Server, err := server.ToServerV2()
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
+	currentTime := time.Now()
+	server.StatusLastUpdated = &currentTime
 
-	v2Server.InterfaceName = &serviceInterface
-
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, v2Server)
+	//v2Server, err := server.ToServerV2()
+	//if err != nil {
+	//	api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	//	return
+	//}
+	//
+	//v2Server.InterfaceName = &serviceInterface
+	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

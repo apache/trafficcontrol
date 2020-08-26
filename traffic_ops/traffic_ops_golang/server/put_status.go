@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -156,10 +157,11 @@ func updateServerStatusAndOfflineReason(serverID, statusID int, offlineReason *s
 	q := `
 UPDATE server
 SET    status = $1,
-       offline_reason = $2
-WHERE  id = $3
+       offline_reason = $2,
+       status_last_updated = $3
+WHERE  id = $4
 `
-	if _, err := tx.Exec(q, statusID, offlineReason, serverID); err != nil {
+	if _, err := tx.Exec(q, statusID, offlineReason, time.Now(), serverID); err != nil {
 		return errors.New("updating server status and offline_reason: " + err.Error())
 	}
 	return nil

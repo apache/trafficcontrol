@@ -264,6 +264,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: false,
 			filter: true,
 			cellRenderer: "updateCellRenderer"
+		},
+		{
+			headerName: "Status Last Updated",
+			field: "statusLastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			valueFormatter: dateCellFormatter
 		}
 	];
 
