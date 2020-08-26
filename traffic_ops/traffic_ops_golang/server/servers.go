@@ -1009,7 +1009,7 @@ func updateStatusLastUpdatedTime(id int, status_last_updated_time *time.Time, tx
 	status_last_updated=$1
 WHERE id=$2 `
 	if _, err := tx.Exec(query, status_last_updated_time, id); err != nil {
-		return errors.New("updating server status and offline_reason: " + err.Error()), nil, http.StatusInternalServerError
+		return errors.New("updating status last updated: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
