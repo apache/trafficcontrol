@@ -34,7 +34,7 @@ func GetTestSteering(t *testing.T) {
 		t.Error("get steering: test data missing ds")
 	}
 
-	steerings, _, err := TOSession.Steering(nil)
+	steerings, _, err := TOSession.Steering()
 	if err != nil {
 		t.Errorf("steering get: getting steering: %v", err)
 	}

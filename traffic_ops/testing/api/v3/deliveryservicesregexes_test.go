@@ -98,7 +98,7 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 }
 
 func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
-	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName, nil)
+	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
 	if err != nil {
 		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
 	}
@@ -107,7 +107,7 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	}
 	test.Type = dsTypes[0].ID
 
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName, nil)
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
 	if err != nil {
 		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
 	}
@@ -123,7 +123,7 @@ func QueryDSRegexTestIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", header)
+	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds1", header)
 	if err != nil {
 		t.Fatalf("could not GET delivery services regex: %v", err)
 	}
@@ -133,7 +133,7 @@ func QueryDSRegexTestIMS(t *testing.T) {
 }
 
 func QueryDSRegexTest(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
 	if err != nil {
 		t.Fatalf("unable to get ds ds1: %v", err)
 	}

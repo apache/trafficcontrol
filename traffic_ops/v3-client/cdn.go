@@ -76,8 +76,7 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	return to.UpdateCDNByIDWithHdr(id, cdn, nil)
 }
 
-// GetCDNs eturns a list of CDNs.
-func (to *Session) GetCDNs(header http.Header) ([]tc.CDN, ReqInf, error) {
+func (to *Session) GetCDNsWithHdr(header http.Header) ([]tc.CDN, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_CDNS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -96,8 +95,13 @@ func (to *Session) GetCDNs(header http.Header) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GetCDNByID a CDN by the CDN ID.
-func (to *Session) GetCDNByID(id int, header http.Header) ([]tc.CDN, ReqInf, error) {
+// GetCDNs eturns a list of CDNs.
+// Deprecated: GetCDNs will be removed in 6.0. Use GetCDNsWithHdr.
+func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
+	return to.GetCDNsWithHdr(nil)
+}
+
+func (to *Session) GetCDNByIDWithHdr(id int, header http.Header) ([]tc.CDN, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%v", API_CDNS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -120,8 +124,13 @@ func (to *Session) GetCDNByID(id int, header http.Header) ([]tc.CDN, ReqInf, err
 	return data.Response, reqInf, nil
 }
 
-// GetCDNByName gets a CDN by the CDN name.
-func (to *Session) GetCDNByName(name string, header http.Header) ([]tc.CDN, ReqInf, error) {
+// GetCDNByID a CDN by the CDN ID.
+// Deprecated: GetCDNByID will be removed in 6.0. Use GetCDNByIDWithHdr.
+func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
+	return to.GetCDNByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetCDNByNameWithHdr(name string, header http.Header) ([]tc.CDN, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_CDNS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -144,6 +153,12 @@ func (to *Session) GetCDNByName(name string, header http.Header) ([]tc.CDN, ReqI
 	return data.Response, reqInf, nil
 }
 
+// GetCDNByName gets a CDN by the CDN name.
+// Deprecated: GetCDNByName will be removed in 6.0. Use GetCDNByNameWithHdr.
+func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
+	return to.GetCDNByNameWithHdr(name, nil)
+}
+
 // DeleteCDNByID deletes a CDN by ID.
 func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_CDNS, id)
@@ -158,7 +173,7 @@ func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-func (to *Session) GetCDNSSLKeys(name string, header http.Header) ([]tc.CDNSSLKeys, ReqInf, error) {
+func (to *Session) GetCDNSSLKeysWithHdr(name string, header http.Header) ([]tc.CDNSSLKeys, ReqInf, error) {
 	url := fmt.Sprintf("%s/name/%s/sslkeys", API_CDNS, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -179,4 +194,9 @@ func (to *Session) GetCDNSSLKeys(name string, header http.Header) ([]tc.CDNSSLKe
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// Deprecated: GetCDNSSLKeys will be removed in 6.0. Use GetCDNSSLKeysWithHdr.
+func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
+	return to.GetCDNSSLKeysWithHdr(name, nil)
 }

@@ -67,7 +67,7 @@ func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
 
 func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {
 	for _, coord := range testData.Coordinates {
-		_, reqInf, err := TOSession.GetCoordinateByName(coord.Name, header)
+		_, reqInf, err := TOSession.GetCoordinateByNameWithHdr(coord.Name, header)
 		if err != nil {
 			t.Fatalf("could not GET coordinates: %v", err)
 		}
@@ -80,7 +80,7 @@ func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, coord := range testData.Coordinates {
-		_, reqInf, err := TOSession.GetCoordinateByName(coord.Name, header)
+		_, reqInf, err := TOSession.GetCoordinateByNameWithHdr(coord.Name, header)
 		if err != nil {
 			t.Fatalf("could not GET coordinates: %v", err)
 		}
@@ -97,7 +97,7 @@ func GetTestCoordinatesIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, coord := range testData.Coordinates {
-		_, reqInf, err := TOSession.GetCoordinateByName(coord.Name, header)
+		_, reqInf, err := TOSession.GetCoordinateByNameWithHdr(coord.Name, header)
 		if err != nil {
 			t.Fatalf("No error expected, but got: %v", err)
 		}
@@ -119,7 +119,7 @@ func CreateTestCoordinates(t *testing.T) {
 
 func GetTestCoordinates(t *testing.T) {
 	for _, coord := range testData.Coordinates {
-		resp, _, err := TOSession.GetCoordinateByName(coord.Name, nil)
+		resp, _, err := TOSession.GetCoordinateByName(coord.Name)
 		if err != nil {
 			t.Errorf("cannot GET Coordinate: %v - %v", err, resp)
 		}
@@ -128,7 +128,7 @@ func GetTestCoordinates(t *testing.T) {
 
 func UpdateTestCoordinates(t *testing.T) {
 	firstCoord := testData.Coordinates[0]
-	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
+	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name)
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
 	}
@@ -143,6 +143,7 @@ func UpdateTestCoordinates(t *testing.T) {
 			t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
 		}
 
+<<<<<<< HEAD
 		// Retrieve the Coordinate to check Coordinate name got updated
 		resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
 		if err != nil {
@@ -152,13 +153,23 @@ func UpdateTestCoordinates(t *testing.T) {
 		if coord.Latitude != expectedLat {
 			t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
 		}
+=======
+	// Retrieve the Coordinate to check Coordinate name got updated
+	resp, _, err = TOSession.GetCoordinateByID(coord.ID)
+	if err != nil {
+		t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
+	}
+	coord = resp[0]
+	if coord.Latitude != expectedLat {
+		t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
+>>>>>>> master
 	}
 }
 
 func DeleteTestCoordinates(t *testing.T) {
 	for _, coord := range testData.Coordinates {
 		// Retrieve the Coordinate by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCoordinateByName(coord.Name, nil)
+		resp, _, err := TOSession.GetCoordinateByName(coord.Name)
 		if err != nil {
 			t.Errorf("cannot GET Coordinate by name: %v - %v", coord.Name, err)
 		}
@@ -169,7 +180,7 @@ func DeleteTestCoordinates(t *testing.T) {
 				t.Errorf("cannot DELETE Coordinate by name: '%s' %v", respCoord.Name, err)
 			}
 			// Retrieve the Coordinate to see if it got deleted
-			coords, _, err := TOSession.GetCoordinateByName(coord.Name, nil)
+			coords, _, err := TOSession.GetCoordinateByName(coord.Name)
 			if err != nil {
 				t.Errorf("error deleting Coordinate name: %s", err.Error())
 			}

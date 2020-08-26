@@ -75,7 +75,7 @@ func GetTestPhysLocationsIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -88,7 +88,7 @@ func GetTestPhysLocationsIMS(t *testing.T) {
 
 func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -101,7 +101,7 @@ func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -126,7 +126,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 
 	firstPhysLocation := testData.PhysLocations[0]
 	// Retrieve the PhysLocation by name so we can get the id for the Update
-	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, nil)
+	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
@@ -140,6 +140,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 			t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
 		}
 
+<<<<<<< HEAD
 		// Retrieve the PhysLocation to check PhysLocation name got updated
 		resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
 		if err != nil {
@@ -151,13 +152,23 @@ func UpdateTestPhysLocations(t *testing.T) {
 				t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
 			}
 		}
+=======
+	// Retrieve the PhysLocation to check PhysLocation name got updated
+	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID)
+	if err != nil {
+		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
+	}
+	respPhysLocation := resp[0]
+	if respPhysLocation.City != expectedPhysLocationCity {
+		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
+>>>>>>> master
 	}
 }
 
 func GetTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
 		}
@@ -166,7 +177,7 @@ func GetTestPhysLocations(t *testing.T) {
 }
 
 func GetSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"}, nil)
+	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -179,7 +190,7 @@ func GetSortPhysLocationsTest(t *testing.T) {
 }
 
 func GetDefaultSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(nil, nil)
+	resp, _, err := TOSession.GetPhysLocations(nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -195,7 +206,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
 		}
@@ -208,7 +219,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 			}
 
 			// Retrieve the PhysLocation to see if it got deleted
-			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 			if err != nil {
 				t.Errorf("error deleting PhysLocation name: %s", err.Error())
 			}

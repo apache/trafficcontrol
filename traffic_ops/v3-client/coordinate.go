@@ -75,8 +75,7 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 	return to.UpdateCoordinateByIDWithHdr(id, coordinate, nil)
 }
 
-// Returns a list of Coordinates
-func (to *Session) GetCoordinates(header http.Header) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_COORDINATES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -95,8 +94,13 @@ func (to *Session) GetCoordinates(header http.Header) ([]tc.Coordinate, ReqInf, 
 	return data.Response, reqInf, nil
 }
 
-// GET a Coordinate by the Coordinate id
-func (to *Session) GetCoordinateByID(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
+// Returns a list of Coordinates
+// Deprecated: GetCoordinates will be removed in 6.0. Use GetCoordinatesWithHdr.
+func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
+	return to.GetCoordinatesWithHdr(nil)
+}
+
+func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -119,8 +123,19 @@ func (to *Session) GetCoordinateByID(id int, header http.Header) ([]tc.Coordinat
 	return data.Response, reqInf, nil
 }
 
+// GET a Coordinate by the Coordinate id
+// Deprecated: GetCoordinateByID will be removed in 6.0. Use GetCoordinateByIDWithHdr.
+func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
+	return to.GetCoordinateByIDWithHdr(id, nil)
+}
+
 // GET a Coordinate by the Coordinate name
-func (to *Session) GetCoordinateByName(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
+// Deprecated: GetCoordinateByName will be removed in 6.0. Use GetCoordinateByNameWithHdr.
+func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, error) {
+	return to.GetCoordinateByNameWithHdr(name, nil)
+}
+
+func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

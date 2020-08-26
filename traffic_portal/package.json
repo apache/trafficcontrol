@@ -1,5 +1,11 @@
 {
   "name": "traffic_portal",
+  "version": "5.0.0",
+  "homepage": "https://github.com/apache/trafficcontrol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apache/trafficcontrol.git"
+  },
   "devDependencies": {
     "browserify": "16.5.1",
     "connect-livereload": "0.6.1",

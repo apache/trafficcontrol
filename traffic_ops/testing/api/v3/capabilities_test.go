@@ -91,7 +91,7 @@ func GetTestCapabilitiesIMS(t *testing.T) {
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		_, reqInf, err := TOSession.GetCapability(c.Name, header)
+		_, reqInf, err := TOSession.GetCapabilityWithHdr(c.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -107,7 +107,7 @@ func GetTestCapabilities(t *testing.T) {
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		cap, _, err := TOSession.GetCapability(c.Name, nil)
+		cap, _, err := TOSession.GetCapability(c.Name)
 		if err != nil {
 			t.Errorf("could not get capability '%s': %v", c.Name, err)
 			continue
@@ -126,7 +126,7 @@ func GetTestCapabilities(t *testing.T) {
 		capMap[c.Name] = c.Description
 	}
 
-	caps, _, err := TOSession.GetCapabilities(nil)
+	caps, _, err := TOSession.GetCapabilities()
 	if err != nil {
 		t.Fatalf("could not get all capabilities: %v", err)
 	}

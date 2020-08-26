@@ -60,7 +60,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				},
 			} {
 				params.Set("hostName", s.name)
-				resp, _, err := TOSession.GetServers(&params, nil)
+				resp, _, err := TOSession.GetServers(&params)
 				if err != nil {
 					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, resp.Alerts)
 				}
@@ -130,7 +130,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE via status ID
-		status, _, err := TOSession.GetStatusByName("OFFLINE", nil)
+		status, _, err := TOSession.GetStatusByName("OFFLINE")
 		if err != nil {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}
@@ -209,7 +209,7 @@ func TestServerQueueUpdate(t *testing.T) {
 		var s tc.ServerNullable
 		params := url.Values{}
 		params.Add("hostName", serverName)
-		resp, _, err := TOSession.GetServers(&params, nil)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 		}
@@ -249,7 +249,7 @@ func TestServerQueueUpdate(t *testing.T) {
 				}
 
 				// assert that the server has updates queued
-				resp, _, err = TOSession.GetServers(&params, nil)
+				resp, _, err = TOSession.GetServers(&params)
 				if err != nil {
 					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 				}
@@ -285,7 +285,7 @@ func TestServerQueueUpdate(t *testing.T) {
 
 			// TODO: don't construct URLs like this, nor use "RawRequest"
 			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", *s.ID)
-			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req, nil)
+			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
 			if err != nil {
 				t.Fatalf("POST request failed: %v", err)
 			}
@@ -309,7 +309,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		params := url.Values{}
 		params.Add("hostName", *testServer.HostName)
 		testVals := func(queue *bool, reval *bool) {
-			resp, _, err := TOSession.GetServers(&params, nil)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
 				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {
@@ -329,7 +329,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
 			}
 
-			resp, _, err = TOSession.GetServers(&params, nil)
+			resp, _, err = TOSession.GetServers(&params)
 			if err != nil {
 				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {
@@ -391,7 +391,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		cachesByCacheGroup := map[string]tc.ServerNullable{}
 		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
 
-		forkedTopology, _, err := TOSession.GetTopology(topologyName, nil)
+		forkedTopology, _, err := TOSession.GetTopology(topologyName)
 		if err != nil {
 			t.Fatalf("topology %s was not found", topologyName)
 		}
@@ -407,7 +407,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("unable to find topology node with cachegroup %s", cacheGroupName)
 			}
 
-			cacheGroups, _, err := TOSession.GetCacheGroupNullableByName(cacheGroupName, nil)
+			cacheGroups, _, err := TOSession.GetCacheGroupNullableByName(cacheGroupName)
 			if err != nil {
 				t.Fatalf("unable to get cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -417,7 +417,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			cacheGroup := cacheGroups[0]
 
 			params := url.Values{"cachegroup": []string{strconv.Itoa(*cacheGroup.ID)}}
-			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params, nil)
+			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -433,13 +433,13 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 
 		for _, cacheGroupName := range cacheGroupNames {
 			params := url.Values{"cachegroup": []string{strconv.Itoa(*cachesByCacheGroup[cacheGroupName].CachegroupID)}}
-			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params, nil)
+			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -468,7 +468,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("cannot update server status on %s: %s", *cachesByCacheGroup[midCacheGroup].HostName, err.Error())
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -490,7 +490,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCacheGroup[midCacheGroup].HostName, err)
 		}
 
-		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, nil)
+		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName)
 		if err != nil {
 			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got %s", *cachesByCacheGroup[midCacheGroup].HostName, err)
 		}

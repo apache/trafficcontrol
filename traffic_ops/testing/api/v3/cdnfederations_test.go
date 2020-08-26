@@ -100,11 +100,12 @@ func CreateTestCDNFederations(t *testing.T) {
 
 func UpdateTestCDNFederations(t *testing.T) {
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		fed, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
 		expectedCName := "new.cname."
+<<<<<<< HEAD
 		if fed != nil && len(fed.Response) > 0 {
 			fed.Response[0].CName = &expectedCName
 			resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
@@ -113,6 +114,22 @@ func UpdateTestCDNFederations(t *testing.T) {
 			}
 			bytes, _ := json.Marshal(resp)
 			t.Logf("PUT Response: %s\n", bytes)
+=======
+		fed.Response[0].CName = &expectedCName
+		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
+		if err != nil {
+			t.Errorf("cannot PUT federation by id: %v", err)
+		}
+		bytes, _ := json.Marshal(resp)
+		t.Logf("PUT Response: %s\n", bytes)
+
+		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		if err != nil {
+			t.Errorf("cannot GET federation by id after PUT: %v", err)
+		}
+		bytes, _ = json.Marshal(resp2)
+		t.Logf("GET Response: %s\n", bytes)
+>>>>>>> master
 
 			resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 			if err != nil {
@@ -139,7 +156,7 @@ func GetTestCDNFederations(t *testing.T) {
 	// clean up fedIDs connection?)
 
 	for _, id := range fedIDs {
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
@@ -159,7 +176,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatal("not enough federation resolvers to test")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers(nil)
+	frs, _, err := TOSession.GetFederationResolvers()
 	if err != nil {
 		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
 	}
@@ -267,7 +284,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 		bytes, err := json.Marshal(resp)
 		t.Logf("DELETE Response: %s\n", bytes)
 
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}

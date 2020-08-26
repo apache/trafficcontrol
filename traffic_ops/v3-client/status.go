@@ -72,12 +72,10 @@ func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http
 // UpdateStatusByID updates a Status by ID.
 // Deprecated: UpdateStatusByID will be removed in 6.0. Use UpdateStatusByIDWithHdr.
 func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf, error) {
-
 	return to.UpdateStatusByIDWithHdr(id, status, nil)
 }
 
-// GetStatuses returns a list of Statuses.
-func (to *Session) GetStatuses(header http.Header) ([]tc.Status, ReqInf, error) {
+func (to *Session) GetStatusesWithHdr(header http.Header) ([]tc.Status, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -96,8 +94,13 @@ func (to *Session) GetStatuses(header http.Header) ([]tc.Status, ReqInf, error) 
 	return data.Response, reqInf, nil
 }
 
-// GetStatusByID GETs a Status by the Status ID.
-func (to *Session) GetStatusByID(id int, header http.Header) ([]tc.Status, ReqInf, error) {
+// GetStatuses returns a list of Statuses.
+// Deprecated: GetStatuses will be removed in 6.0. Use GetStatusesWithHdr.
+func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
+	return to.GetStatusesWithHdr(nil)
+}
+
+func (to *Session) GetStatusByIDWithHdr(id int, header http.Header) ([]tc.Status, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -120,8 +123,13 @@ func (to *Session) GetStatusByID(id int, header http.Header) ([]tc.Status, ReqIn
 	return data.Response, reqInf, nil
 }
 
-// GetStatusByName GETs a Status by the Status name.
-func (to *Session) GetStatusByName(name string, header http.Header) ([]tc.Status, ReqInf, error) {
+// GetStatusByID GETs a Status by the Status ID.
+// Deprecated: GetStatusByID will be removed in 6.0. Use GetStatusByIDWithHdr.
+func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
+	return to.GetStatusByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetStatusByNameWithHdr(name string, header http.Header) ([]tc.Status, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_STATUSES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -142,6 +150,12 @@ func (to *Session) GetStatusByName(name string, header http.Header) ([]tc.Status
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetStatusByName GETs a Status by the Status name.
+// Deprecated: GetStatusByName will be removed in 6.0. Use GetStatusByNameWithHdr.
+func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
+	return to.GetStatusByNameWithHdr(name, nil)
 }
 
 // DeleteStatusByID DELETEs a Status by ID.

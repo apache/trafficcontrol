@@ -35,7 +35,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
 	if pl.CDNID == 0 && pl.CDNName != "" {
-		cdns, _, err := to.GetCDNByName(pl.CDNName, nil)
+		cdns, _, err := to.GetCDNByName(pl.CDNName)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, err
 		}
@@ -103,8 +103,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	return to.UpdateProfileByIDWithHdr(id, pl, nil)
 }
 
-// GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
-func (to *Session) GetParametersByProfileName(profileName string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParametersByProfileNameWithHdr(profileName string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf(API_PROFILES_NAME_PARAMETERS, profileName)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -127,8 +126,13 @@ func (to *Session) GetParametersByProfileName(profileName string, header http.He
 	return data.Response, reqInf, nil
 }
 
-// GetProfiles returns a list of Profiles.
-func (to *Session) GetProfiles(header http.Header) ([]tc.Profile, ReqInf, error) {
+// GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
+// Deprecated: GetParametersByProfileName will be removed in 6.0. Use GetParametersByProfileNameWithHdr.
+func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
+	return to.GetParametersByProfileNameWithHdr(profileName, nil)
+}
+
+func (to *Session) GetProfilesWithHdr(header http.Header) ([]tc.Profile, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
 	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil, header)
@@ -150,8 +154,13 @@ func (to *Session) GetProfiles(header http.Header) ([]tc.Profile, ReqInf, error)
 	return data.Response, reqInf, err
 }
 
-// GetProfileByID GETs a Profile by the Profile ID.
-func (to *Session) GetProfileByID(id int, header http.Header) ([]tc.Profile, ReqInf, error) {
+// GetProfiles returns a list of Profiles.
+// Deprecated: GetProfiles will be removed in 6.0. Use GetProfilesWithHdr.
+func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
+	return to.GetProfilesWithHdr(nil)
+}
+
+func (to *Session) GetProfileByIDWithHdr(id int, header http.Header) ([]tc.Profile, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -172,8 +181,13 @@ func (to *Session) GetProfileByID(id int, header http.Header) ([]tc.Profile, Req
 	return data.Response, reqInf, err
 }
 
-// GetProfileByName GETs a Profile by the Profile name.
-func (to *Session) GetProfileByName(name string, header http.Header) ([]tc.Profile, ReqInf, error) {
+// GetProfileByID GETs a Profile by the Profile ID.
+// Deprecated: GetProfileByID will be removed in 6.0. Use GetProfileByIDWithHdr.
+func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
+	return to.GetProfileByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetProfileByNameWithHdr(name string, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?name=%s", API_PROFILES, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -194,8 +208,13 @@ func (to *Session) GetProfileByName(name string, header http.Header) ([]tc.Profi
 	return data.Response, reqInf, err
 }
 
-// GetProfileByParameter GETs a Profile by the Profile "param".
-func (to *Session) GetProfileByParameter(param string, header http.Header) ([]tc.Profile, ReqInf, error) {
+// GetProfileByName GETs a Profile by the Profile name.
+// Deprecated: GetProfileByName will be removed in 6.0. Use GetProfileByNameWithHdr.
+func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
+	return to.GetProfileByNameWithHdr(name, nil)
+}
+
+func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -216,8 +235,13 @@ func (to *Session) GetProfileByParameter(param string, header http.Header) ([]tc
 	return data.Response, reqInf, err
 }
 
-// GetProfileByCDNID GETs a Profile by the Profile CDN ID.
-func (to *Session) GetProfileByCDNID(cdnID int, header http.Header) ([]tc.Profile, ReqInf, error) {
+// GetProfileByParameter GETs a Profile by the Profile "param".
+// Deprecated: GetProfileByParameter will be removed in 6.0. Use GetProfileByParameterWithHdr.
+func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
+	return to.GetProfileByParameterWithHdr(param, nil)
+}
+
+func (to *Session) GetProfileByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?cdn=%s", API_PROFILES, strconv.Itoa(cdnID))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -236,6 +260,12 @@ func (to *Session) GetProfileByCDNID(cdnID int, header http.Header) ([]tc.Profil
 	err = json.NewDecoder(resp.Body).Decode(&data)
 
 	return data.Response, reqInf, err
+}
+
+// GetProfileByCDNID GETs a Profile by the Profile CDN ID.
+// Deprecated: GetProfileByCDNID will be removed in 6.0. Use GetProfileByCDNIDWithHdr.
+func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
+	return to.GetProfileByCDNIDWithHdr(cdnID, nil)
 }
 
 // DeleteProfileByID DELETEs a Profile by ID.

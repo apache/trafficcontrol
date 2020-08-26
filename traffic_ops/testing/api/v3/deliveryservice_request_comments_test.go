@@ -62,7 +62,7 @@ func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header ht
 }
 
 func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header http.Header) {
-	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
 	if err != nil {
 		t.Fatalf("could not GET delivery service request comments: %v", err)
 	}
@@ -73,7 +73,7 @@ func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header ht
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err = TOSession.GetDeliveryServiceRequestComments(header)
+	_, reqInf, err = TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
 	if err != nil {
 		t.Fatalf("could not GET delivery service request comments: %v", err)
 	}
@@ -87,7 +87,7 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
 	dsr := testData.DeliveryServiceRequests[0].DeliveryService
 
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID, nil)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
 	}
@@ -109,7 +109,7 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, err := TOSession.GetDeliveryServiceRequestComments(nil)
+	comments, _, err := TOSession.GetDeliveryServiceRequestComments()
 
 	firstComment := comments[0]
 	newFirstCommentValue := "new comment value"
@@ -122,7 +122,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 	}
 
 	// Retrieve the delivery service request comment to check that the value got updated
-	resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(firstComment.ID, nil)
+	resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(firstComment.ID)
 	if err != nil {
 		t.Errorf("cannot GET delivery service request comment by id: '$%d', %v", firstComment.ID, err)
 	}
@@ -139,7 +139,7 @@ func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
 	if err != nil {
 		t.Fatalf("could not GET delivery service request comments: %v", err)
 	}
@@ -150,10 +150,10 @@ func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
 
 func GetTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(nil)
+	comments, _, _ := TOSession.GetDeliveryServiceRequestComments()
 
 	for _, comment := range comments {
-		resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID, nil)
+		resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
 		if err != nil {
 			t.Errorf("cannot GET delivery service request comment by id: %v - %v", err, resp)
 		}
@@ -162,7 +162,7 @@ func GetTestDeliveryServiceRequestComments(t *testing.T) {
 
 func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(nil)
+	comments, _, _ := TOSession.GetDeliveryServiceRequestComments()
 
 	for _, comment := range comments {
 		_, _, err := TOSession.DeleteDeliveryServiceRequestCommentByID(comment.ID)
@@ -171,7 +171,7 @@ func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 		}
 
 		// Retrieve the delivery service request comment to see if it got deleted
-		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID, nil)
+		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
 		if err != nil {
 			t.Errorf("error deleting delivery service request comment: %s", err.Error())
 		}
