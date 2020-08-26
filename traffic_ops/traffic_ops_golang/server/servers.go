@@ -1379,7 +1379,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	str := uuid.New().String()
 	server.XMPPID = &str
 
-	//serviceInterface, err := validateV3(&server, tx)
 	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1388,14 +1387,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
-
-	//v2Server, err := server.ToServerV2()
-	//if err != nil {
-	//	api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-	//	return
-	//}
-	//
-	//v2Server.InterfaceName = &serviceInterface
+	
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
