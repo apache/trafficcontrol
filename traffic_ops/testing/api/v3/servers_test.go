@@ -260,24 +260,30 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	xmppId := "unique"
 	server := serversResp.Response[0]
 	_, _, err = TOSession.CreateServer(tc.ServerNullable{
-		CommonServerProperties: tc.CommonServerProperties{
-			Cachegroup: server.Cachegroup,
-			CDNName:    server.CDNName,
-			DomainName: util.StrPtr("mydomain"),
-			FQDN:       util.StrPtr("myfqdn"),
-			FqdnTime:   time.Time{},
-			HostName:   util.StrPtr("myhostname"),
-			HTTPSPort:  util.IntPtr(443),
-			LastUpdated: &tc.TimeNoMod{
-				Time:  time.Time{},
-				Valid: false,
+		ServerNullableV2: tc.ServerNullableV2{
+			ServerNullableV11: tc.ServerNullableV11{
+				CommonServerProperties: tc.CommonServerProperties{
+					Cachegroup: server.Cachegroup,
+					CDNName:    server.CDNName,
+					DomainName: util.StrPtr("mydomain"),
+					FQDN:       util.StrPtr("myfqdn"),
+					FqdnTime:   time.Time{},
+					HostName:   util.StrPtr("myhostname"),
+					HTTPSPort:  util.IntPtr(443),
+					LastUpdated: &tc.TimeNoMod{
+						Time:  time.Time{},
+						Valid: false,
+					},
+					PhysLocation: server.PhysLocation,
+					Profile:      server.Profile,
+					StatusID:     server.StatusID,
+					Type:         server.Type,
+					UpdPending:   util.BoolPtr(false),
+					XMPPID:       &xmppId,
+				},
 			},
-			PhysLocation: server.PhysLocation,
-			Profile:      server.Profile,
-			StatusID:     server.StatusID,
-			Type:         server.Type,
-			UpdPending:   util.BoolPtr(false),
-			XMPPID:       &xmppId,
+			IPIsService:       nil,
+			IP6IsService:      nil,
 		},
 		Interfaces: server.Interfaces,
 	})
@@ -387,7 +393,7 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	respServer := resp.Response[0]
 
-	if remoteServer.StatusLastUpdated != respServer.StatusLastUpdated {
+	if *remoteServer.StatusLastUpdated != *respServer.StatusLastUpdated {
 		t.Errorf("since status didnt change, no change in 'StatusLastUpdated' time was expected. Difference observer: old value: %v, new value: %v",
 			remoteServer.StatusLastUpdated.String(), respServer.StatusLastUpdated.String())
 	}
@@ -414,7 +420,7 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	respServer = resp.Response[0]
 
-	if remoteServer.StatusLastUpdated == respServer.StatusLastUpdated {
+	if *remoteServer.StatusLastUpdated == *respServer.StatusLastUpdated {
 		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
 	}
 
@@ -440,7 +446,7 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	respServer = resp.Response[0]
 
-	if remoteServer.StatusLastUpdated == respServer.StatusLastUpdated {
+	if *remoteServer.StatusLastUpdated == *respServer.StatusLastUpdated {
 		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
 	}
 }

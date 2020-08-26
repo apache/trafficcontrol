@@ -132,6 +132,96 @@ INSERT INTO server (
 	type,
 	upd_pending,
 	xmpp_id,
+	xmpp_passwd
+) VALUES (
+	:cachegroup_id,
+	:cdn_id,
+	:domain_name,
+	:host_name,
+	:https_port,
+	:ilo_ip_address,
+	:ilo_ip_netmask,
+	:ilo_ip_gateway,
+	:ilo_username,
+	:ilo_password,
+	:mgmt_ip_address,
+	:mgmt_ip_netmask,
+	:mgmt_ip_gateway,
+	:offline_reason,
+	:phys_location_id,
+	:profile_id,
+	:rack,
+	:router_host_name,
+	:router_port_name,
+	:status_id,
+	:tcp_port,
+	:server_type_id,
+	:upd_pending,
+	:xmpp_id,
+	:xmpp_passwd
+) RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
+`
+
+const insertQueryV3 = `
+INSERT INTO server (
+	cachegroup,
+	cdn_id,
+	domain_name,
+	host_name,
+	https_port,
+	ilo_ip_address,
+	ilo_ip_netmask,
+	ilo_ip_gateway,
+	ilo_username,
+	ilo_password,
+	mgmt_ip_address,
+	mgmt_ip_netmask,
+	mgmt_ip_gateway,
+	offline_reason,
+	phys_location,
+	profile,
+	rack,
+	router_host_name,
+	router_port_name,
+	status,
+	tcp_port,
+	type,
+	upd_pending,
+	xmpp_id,
 	xmpp_passwd,
     status_last_updated
 ) VALUES (
@@ -1011,7 +1101,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		originalStatusID = *origSer[0].StatusID
 	}
 
-	var server tc.ServerNullableV2
+	var server tc.ServerNullable
 	var interfaces []tc.ServerInterfaceInfo
 	if inf.Version.Major >= 3 {
 		var newServer tc.ServerNullable
@@ -1022,8 +1112,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if newServer.XMPPID != nil && *newServer.XMPPID != originalXMPPID {
 			changeXMPPID = true
 		}
+		currentTime := time.Now()
 		if newServer.StatusID != nil && *newServer.StatusID != originalStatusID {
-			newServer.StatusLastUpdated = time.Now()
+			newServer.StatusLastUpdated = &currentTime
 		} else {
 			newServer.StatusLastUpdated = origSer[0].StatusLastUpdated
 		}
@@ -1033,7 +1124,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		server, err = newServer.ToServerV2()
+		server, err = newServer.ToServerV3()
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting v3 server to v2 for update: %v", err))
 			return
@@ -1041,24 +1132,26 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		server.InterfaceName = util.StrPtr(serviceInterface)
 		interfaces = newServer.Interfaces
 	} else if inf.Version.Major == 2 {
-		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		var serverV2 tc.ServerNullableV2
+		if err := json.NewDecoder(r.Body).Decode(&serverV2); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if *server.XMPPID != originalXMPPID {
+		if *serverV2.XMPPID != originalXMPPID {
 			changeXMPPID = true
 		}
-		err := validateV2(&server, tx)
+		err := validateV2(&serverV2, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
-		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
+		interfaces, err = serverV2.LegacyInterfaceDetails.ToInterfaces(*serverV2.IPIsService, *serverV2.IP6IsService)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting server legacy interfaces to interface array: %v", err))
 			return
 		}
+		server.ServerNullableV2 = serverV2
 	} else {
 		var legacyServer tc.ServerNullableV11
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
@@ -1077,10 +1170,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting server legacy interfaces to interface array: %v", err))
 			return
 		}
-		server = tc.ServerNullableV2{
-			ServerNullableV11: legacyServer,
-			IPIsService:       util.BoolPtr(true),
-			IP6IsService:      util.BoolPtr(true),
+		server = tc.ServerNullable{
+			ServerNullableV2: tc.ServerNullableV2{
+				ServerNullableV11: legacyServer,
+				IPIsService:       util.BoolPtr(true),
+				IP6IsService:      util.BoolPtr(true),
+			},
 		}
 	}
 
@@ -1134,7 +1229,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 3 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{ServerNullableV2:  tc.ServerNullableV2{
+			ServerNullableV11 : tc.ServerNullableV11{
+				CommonServerProperties: server.CommonServerProperties,
+			},
+		}, Interfaces: interfaces, StatusLastUpdated: origSer[0].StatusLastUpdated})
 	} else if inf.Version.Minor <= 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
 	} else {
@@ -1278,16 +1377,11 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server.StatusLastUpdated = time.Now()
-	v2Server, err := server.ToServerV2()
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
+	currentTime := time.Now()
+	server.StatusLastUpdated = &currentTime
+	server.InterfaceName = &serviceInterface
 
-	v2Server.InterfaceName = &serviceInterface
-
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, v2Server)
+	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

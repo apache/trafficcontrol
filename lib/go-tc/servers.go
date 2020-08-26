@@ -288,7 +288,6 @@ type Server struct {
 	UpdPending       bool                `json:"updPending" db:"upd_pending"`
 	XMPPID           string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
-	StatusLastUpdated time.Time          `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 type ServerV1 struct {
@@ -395,14 +394,13 @@ type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
-	StatusLastUpdated time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
-	CommonServerProperties
-	Interfaces []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
-	StatusLastUpdated time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
+	ServerNullableV2
+	Interfaces        []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+	StatusLastUpdated *time.Time             `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
@@ -414,6 +412,30 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 		},
 		IPIsService:  new(bool),
 		IP6IsService: new(bool),
+	}
+
+	var err error
+	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(s.Interfaces)
+	if err != nil {
+		return legacyServer, err
+	}
+
+	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
+	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
+	return legacyServer, nil
+}
+
+// ToServerV3 converts the server to an equivalent ServerNullable structure,
+// if possible. If the conversion could not be performed, an error is returned.
+func (s *ServerNullable) ToServerV3() (ServerNullable, error) {
+	legacyServer := ServerNullable{
+		ServerNullableV2: ServerNullableV2{
+			ServerNullableV11: ServerNullableV11{
+				CommonServerProperties: s.CommonServerProperties,
+			},
+			IPIsService:  new(bool),
+			IP6IsService: new(bool),
+		},
 	}
 
 	var err error

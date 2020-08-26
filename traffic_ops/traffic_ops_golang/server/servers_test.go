@@ -521,16 +521,22 @@ func TestV3Validations(t *testing.T) {
 	}
 
 	testServer := tc.ServerNullable{
-		CommonServerProperties: tc.CommonServerProperties{
-			CDNID:          util.IntPtr(1),
-			HostName:       util.StrPtr("test"),
-			DomainName:     util.StrPtr("quest"),
-			PhysLocationID: new(int),
-			ProfileID:      new(int),
-			StatusID:       new(int),
-			TypeID:         new(int),
-			UpdPending:     new(bool),
-			CachegroupID:   new(int),
+		ServerNullableV2: tc.ServerNullableV2{
+			ServerNullableV11: tc.ServerNullableV11{
+				CommonServerProperties: tc.CommonServerProperties{
+					CDNID:          util.IntPtr(1),
+					HostName:       util.StrPtr("test"),
+					DomainName:     util.StrPtr("quest"),
+					PhysLocationID: new(int),
+					ProfileID:      new(int),
+					StatusID:       new(int),
+					TypeID:         new(int),
+					UpdPending:     new(bool),
+					CachegroupID:   new(int),
+				},
+			},
+			IPIsService:       nil,
+			IP6IsService:      nil,
 		},
 		Interfaces: []tc.ServerInterfaceInfo{goodInterface},
 	}
