@@ -30,8 +30,8 @@ module.exports = angular.module('trafficPortal.private.profiles.servers', [])
 							profile: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profileId);
 							},
-							servers: function($stateParams, serverService) {
-								return serverService.getServers({ orderby: 'hostName' });
+							servers: function(profile, $stateParams, serverService) {
+								return serverService.getServers({ profileId: profile.id, orderby: 'hostName' });
 							},
 							filter: function(profile) {
 								return {

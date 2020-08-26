@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.types.servers', [])
 								return typeService.getType($stateParams.typeId);
 							},
 							servers: function(type, serverService) {
-								return serverService.getServers({ orderby: 'hostName' });
+								return serverService.getServers({ type: type.name, orderby: 'hostName' });
 							},
 							filter: function(type) {
 								return {
