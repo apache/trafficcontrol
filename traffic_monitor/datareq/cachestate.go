@@ -248,7 +248,7 @@ func createCacheStatuses(
 			BandwidthKbps:          &totalKbps,
 			BandwidthCapacityKbps:  &totalMaxKbps,
 			ConnectionCount:        &connections,
-			Status:                 &cacheStatus.Status,
+			Status:                 &cacheStatus.Why,
 			StatusPoller:           &poller,
 			IPv4Available:          &cacheStatus.Available.IPv4,
 			IPv6Available:          &cacheStatus.Available.IPv6,
