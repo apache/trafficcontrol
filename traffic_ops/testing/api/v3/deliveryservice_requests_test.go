@@ -56,7 +56,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID, header)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", dsr.DeliveryService.XMLID, err)
 	}

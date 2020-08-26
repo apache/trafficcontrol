@@ -58,7 +58,7 @@ func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
 		t.Logf("testData.Roles contains: %+v\n", testData.Roles)
 		firstRole := testData.Roles[0]
 		// Retrieve the Role by role so we can get the id for the Update
-		resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name, header)
+		resp, _, status, err := TOSession.GetRoleByNameWithHdr(*firstRole.Name, header)
 		t.Log("Status Code: ", status)
 		if err != nil {
 			t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)

@@ -89,18 +89,13 @@ func (to *Session) UpdateParameterByIDWithHdr(id int, pl tc.Parameter, header ht
 	return alerts, reqInf, nil
 }
 
-<<<<<<< HEAD
 // UpdateParameterByID performs a PUT to update a Parameter by ID.
 // Deprecated: UpdateParameterByID will be removed in 6.0. Use UpdateParameterByIDWithHdr.
 func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	return to.UpdateParameterByIDWithHdr(id, pl, nil)
 }
 
-// GetParameters returns a list of Parameters.
-func (to *Session) GetParameters(header http.Header) ([]tc.Parameter, ReqInf, error) {
-=======
 func (to *Session) GetParametersWithHdr(header http.Header) ([]tc.Parameter, ReqInf, error) {
->>>>>>> master
 	resp, remoteAddr, err := to.request(http.MethodGet, API_PARAMETERS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {

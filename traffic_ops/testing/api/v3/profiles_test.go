@@ -52,7 +52,7 @@ func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.Profiles) > 0 {
 		firstProfile := testData.Profiles[0]
 		// Retrieve the Profile by name so we can get the id for the Update
-		resp, _, err := TOSession.GetProfileByName(firstProfile.Name, header)
+		resp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, header)
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 		}
@@ -240,29 +240,15 @@ func UpdateTestProfiles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
-	if len(resp) > 0 {
-		remoteProfile := resp[0]
-		expectedProfileDesc := "UPDATED"
-		remoteProfile.Description = expectedProfileDesc
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
-		if err != nil {
-			t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
-		}
+	remoteProfile := resp[0]
+	expectedProfileDesc := "UPDATED"
+	remoteProfile.Description = expectedProfileDesc
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
+	if err != nil {
+		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the Profile to check Profile name got updated
-		resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-		}
-		if len(resp) > 0 {
-			respProfile := resp[0]
-			if respProfile.Description != expectedProfileDesc {
-				t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
-			}
-		}
-=======
 	// Retrieve the Profile to check Profile name got updated
 	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID)
 	if err != nil {
@@ -271,7 +257,6 @@ func UpdateTestProfiles(t *testing.T) {
 	respProfile := resp[0]
 	if respProfile.Description != expectedProfileDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
->>>>>>> master
 	}
 
 }

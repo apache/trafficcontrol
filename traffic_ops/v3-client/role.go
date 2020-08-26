@@ -59,11 +59,7 @@ func (to *Session) UpdateRoleByIDWithHdr(id int, region tc.Role, header http.Hea
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
-<<<<<<< HEAD
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, header)
-=======
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
->>>>>>> master
+	resp, remoteAddr, errClient := to.RawRequestWithHdr(http.MethodPut, route, reqBody, header)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
@@ -75,7 +71,6 @@ func (to *Session) UpdateRoleByIDWithHdr(id int, region tc.Role, header http.Hea
 	return tc.Alerts{}, reqInf, 0, errClient
 }
 
-<<<<<<< HEAD
 // UpdateRoleByID updates a Role by ID.
 // Deprecated: UpdateRoleByID will be removed in 6.0. Use UpdateRoleByIDWithHdr.
 func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, int, error) {
@@ -83,13 +78,8 @@ func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, in
 	return to.UpdateRoleByIDWithHdr(id, region, nil)
 }
 
-// GetRoles returns a list of roles.
-func (to *Session) GetRoles(header http.Header) ([]tc.Role, ReqInf, int, error) {
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, API_ROLES, nil, header)
-=======
 func (to *Session) GetRolesWithHdr(header http.Header) ([]tc.Role, ReqInf, int, error) {
 	resp, remoteAddr, errClient := to.RawRequestWithHdr(http.MethodGet, API_ROLES, nil, header)
->>>>>>> master
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode

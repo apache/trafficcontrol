@@ -61,7 +61,7 @@ func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
 		t.Fatal("updating steering target: test data missing target")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService), nil)
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullableWithHdr(string(*st.DeliveryService), header)
 	if err != nil {
 		t.Fatalf("updating steering target: getting ds: %v", err)
 	}

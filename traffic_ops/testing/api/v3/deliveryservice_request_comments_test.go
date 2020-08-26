@@ -44,7 +44,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 }
 
 func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header http.Header) {
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(header)
+	comments, _, _ := TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
 
 	if len(comments) > 0 {
 		firstComment := comments[0]

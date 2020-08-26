@@ -52,7 +52,7 @@ func TestParameters(t *testing.T) {
 func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByName(firstParameter.Name, nil)
+	resp, _, err := TOSession.GetParametersByProfileNameWithHdr(firstParameter.Name, header)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -115,29 +115,15 @@ func UpdateTestParameters(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
-	if len(resp) > 0 {
-		remoteParameter := resp[0]
-		expectedParameterValue := "UPDATED"
-		remoteParameter.Value = expectedParameterValue
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
-		if err != nil {
-			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-		}
+	remoteParameter := resp[0]
+	expectedParameterValue := "UPDATED"
+	remoteParameter.Value = expectedParameterValue
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
+	if err != nil {
+		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the Parameter to check Parameter name got updated
-		resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp) > 0 {
-			respParameter := resp[0]
-			if respParameter.Value != expectedParameterValue {
-				t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-			}
-		}
-=======
 	// Retrieve the Parameter to check Parameter name got updated
 	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID)
 	if err != nil {
@@ -146,8 +132,8 @@ func UpdateTestParameters(t *testing.T) {
 	respParameter := resp[0]
 	if respParameter.Value != expectedParameterValue {
 		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
->>>>>>> master
 	}
+
 }
 
 func GetTestParametersIMS(t *testing.T) {

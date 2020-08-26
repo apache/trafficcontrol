@@ -50,7 +50,7 @@ func TestPhysLocations(t *testing.T) {
 func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
 	firstPhysLocation := testData.PhysLocations[0]
 	// Retrieve the PhysLocation by name so we can get the id for the Update
-	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, header)
+	resp, _, err := TOSession.GetPhysLocationByNameWithHdr(firstPhysLocation.Name, header)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
@@ -130,29 +130,15 @@ func UpdateTestPhysLocations(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
-	if len(resp) > 0 {
-		remotePhysLocation := resp[0]
-		expectedPhysLocationCity := "city1"
-		remotePhysLocation.City = expectedPhysLocationCity
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
-		if err != nil {
-			t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
-		}
+	remotePhysLocation := resp[0]
+	expectedPhysLocationCity := "city1"
+	remotePhysLocation.City = expectedPhysLocationCity
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
+	if err != nil {
+		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the PhysLocation to check PhysLocation name got updated
-		resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
-		}
-		if len(resp) > 0 {
-			respPhysLocation := resp[0]
-			if respPhysLocation.City != expectedPhysLocationCity {
-				t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
-			}
-		}
-=======
 	// Retrieve the PhysLocation to check PhysLocation name got updated
 	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID)
 	if err != nil {
@@ -161,8 +147,8 @@ func UpdateTestPhysLocations(t *testing.T) {
 	respPhysLocation := resp[0]
 	if respPhysLocation.City != expectedPhysLocationCity {
 		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
->>>>>>> master
 	}
+
 }
 
 func GetTestPhysLocations(t *testing.T) {

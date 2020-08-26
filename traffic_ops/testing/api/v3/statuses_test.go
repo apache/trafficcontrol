@@ -52,7 +52,7 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*firstStatus.Name, header)
+		resp, _, err := TOSession.GetStatusByNameWithHdr(*firstStatus.Name, header)
 		if err != nil {
 			t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
 		}
@@ -135,41 +135,7 @@ func CreateTestStatuses(t *testing.T) {
 }
 
 func UpdateTestStatuses(t *testing.T) {
-	if len(testData.Statuses) > 0 {
-		firstStatus := testData.Statuses[0]
-		if firstStatus.Name == nil {
-			t.Fatal("cannot update test statuses: first test data status must have a name")
-		}
 
-<<<<<<< HEAD
-		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*firstStatus.Name, nil)
-		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteStatus := resp[0]
-			expectedStatusDesc := "new description"
-			remoteStatus.Description = expectedStatusDesc
-			var alert tc.Alerts
-			alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus)
-			if err != nil {
-				t.Errorf("cannot UPDATE Status by id: %v - %v", err, alert)
-			}
-
-			// Retrieve the Status to check Status name got updated
-			resp, _, err = TOSession.GetStatusByID(remoteStatus.ID, nil)
-			if err != nil {
-				t.Errorf("cannot GET Status by ID: %v - %v", firstStatus.Description, err)
-			}
-			if len(resp) > 0 {
-				respStatus := resp[0]
-				if respStatus.Description != expectedStatusDesc {
-					t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
-				}
-			}
-		}
-=======
 	firstStatus := testData.Statuses[0]
 	if firstStatus.Name == nil {
 		t.Fatal("cannot update test statuses: first test data status must have a name")
@@ -197,8 +163,8 @@ func UpdateTestStatuses(t *testing.T) {
 	respStatus := resp[0]
 	if respStatus.Description != expectedStatusDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
->>>>>>> master
 	}
+
 }
 
 func GetTestStatuses(t *testing.T) {

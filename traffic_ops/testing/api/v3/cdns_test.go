@@ -47,7 +47,7 @@ func TestCDNs(t *testing.T) {
 func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, header)
+	resp, _, err := TOSession.GetCDNByNameWithHdr(firstCDN.Name, header)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
@@ -126,29 +126,15 @@ func UpdateTestCDNs(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
-	if len(resp) > 0 {
-		remoteCDN := resp[0]
-		expectedCDNDomain := "domain2"
-		remoteCDN.DomainName = expectedCDNDomain
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
-		if err != nil {
-			t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
-		}
+	remoteCDN := resp[0]
+	expectedCDNDomain := "domain2"
+	remoteCDN.DomainName = expectedCDNDomain
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
+	if err != nil {
+		t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the CDN to check CDN name got updated
-		resp, _, err = TOSession.GetCDNByID(remoteCDN.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
-		}
-		if len(resp) > 0 {
-			respCDN := resp[0]
-			if respCDN.DomainName != expectedCDNDomain {
-				t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
-			}
-		}
-=======
 	// Retrieve the CDN to check CDN name got updated
 	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
 	if err != nil {
@@ -157,8 +143,8 @@ func UpdateTestCDNs(t *testing.T) {
 	respCDN := resp[0]
 	if respCDN.DomainName != expectedCDNDomain {
 		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
->>>>>>> master
 	}
+
 }
 
 func GetTestCDNs(t *testing.T) {

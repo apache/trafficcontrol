@@ -50,7 +50,7 @@ func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.Regions) > 0 {
 		firstRegion := testData.Regions[0]
 		// Retrieve the Region by region so we can get the id for the Update
-		resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
+		resp, _, err := TOSession.GetRegionByNameWithHdr(firstRegion.Name, header)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 		}
@@ -129,28 +129,15 @@ func UpdateTestRegions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
-	if len(resp) > 0 {
-		remoteRegion := resp[0]
-		expectedRegion := "OFFLINE-TEST"
-		remoteRegion.Name = expectedRegion
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
-		if err != nil {
-			t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
-		}
+	remoteRegion := resp[0]
+	expectedRegion := "OFFLINE-TEST"
+	remoteRegion.Name = expectedRegion
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	if err != nil {
+		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the Region to check region got updated
-		resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-		}
-		if len(resp) > 0 {
-			respRegion := resp[0]
-			if respRegion.Name != expectedRegion {
-				t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
-			}
-=======
 	// Retrieve the Region to check region got updated
 	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID)
 	if err != nil {
@@ -160,16 +147,14 @@ func UpdateTestRegions(t *testing.T) {
 	if respRegion.Name != expectedRegion {
 		t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
 	}
->>>>>>> master
 
-			// Set the name back to the fixture value so we can delete it after
-			remoteRegion.Name = firstRegion.Name
-			alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
-			if err != nil {
-				t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
-			}
-		}
+	// Set the name back to the fixture value so we can delete it after
+	remoteRegion.Name = firstRegion.Name
+	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	if err != nil {
+		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
+
 }
 
 func GetTestRegions(t *testing.T) {

@@ -65,7 +65,7 @@ func TestDeliveryServices(t *testing.T) {
 func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable(header)
+	dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(header)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}

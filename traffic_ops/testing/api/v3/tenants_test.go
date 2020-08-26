@@ -48,12 +48,12 @@ func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "tenant2"
 	parentName := "tenant1"
-	modTenant, _, err := TOSession.TenantByName(name, header)
+	modTenant, _, err := TOSession.TenantByNameWithHdr(name, header)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 
-	newParent, _, err := TOSession.TenantByName(parentName, header)
+	newParent, _, err := TOSession.TenantByNameWithHdr(parentName, header)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}

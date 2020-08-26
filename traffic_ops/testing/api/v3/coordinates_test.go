@@ -46,7 +46,7 @@ func TestCoordinates(t *testing.T) {
 
 func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
 	firstCoord := testData.Coordinates[0]
-	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
+	resp, _, err := TOSession.GetCoordinateByNameWithHdr(firstCoord.Name, header)
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
 	}
@@ -132,28 +132,16 @@ func UpdateTestCoordinates(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
 	}
-	if len(resp) > 0 {
-		coord := resp[0]
-		expectedLat := 12.34
-		coord.Latitude = expectedLat
+	coord := resp[0]
+	expectedLat := 12.34
+	coord.Latitude = expectedLat
 
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord)
-		if err != nil {
-			t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
-		}
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord)
+	if err != nil {
+		t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
+	}
 
-<<<<<<< HEAD
-		// Retrieve the Coordinate to check Coordinate name got updated
-		resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
-		if err != nil {
-			t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
-		}
-		coord = resp[0]
-		if coord.Latitude != expectedLat {
-			t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
-		}
-=======
 	// Retrieve the Coordinate to check Coordinate name got updated
 	resp, _, err = TOSession.GetCoordinateByID(coord.ID)
 	if err != nil {
@@ -162,7 +150,6 @@ func UpdateTestCoordinates(t *testing.T) {
 	coord = resp[0]
 	if coord.Latitude != expectedLat {
 		t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
->>>>>>> master
 	}
 }
 

@@ -49,7 +49,7 @@ func TestDivisions(t *testing.T) {
 func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
 	firstDivision := testData.Divisions[0]
 	// Retrieve the Division by division so we can get the id for the Update
-	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name, header)
+	resp, _, err := TOSession.GetDivisionByNameWithHdr(firstDivision.Name, header)
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}

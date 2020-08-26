@@ -66,7 +66,7 @@ func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
 	params.Add("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(&params, header)
+	resp, _, err := TOSession.GetServersWithHdr(&params, header)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
