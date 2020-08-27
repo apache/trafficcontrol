@@ -428,7 +428,7 @@ Glossary
 	Parent Topology Nodes
 	Child Topology Node
 	Child Topology Nodes
-		Each :term:`Topology Node` is associated with a particular :term:`Cache Group`. In addition, the Topology Node has 0, 1, or 2 Parent Topology Nodes and has 0, 1, or 2 Child Topology Nodes, according to your configuration.
+		Each :dfn:`Topology Node` is associated with a particular :term:`Cache Group`. In addition, the Topology Node has 0, 1, or 2 Parent Topology Nodes and has 0, 1, or 2 Child Topology Nodes, according to your configuration.
 
 	Topology
 	Topologies
