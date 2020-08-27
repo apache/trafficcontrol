@@ -257,7 +257,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	user := auth.CurrentUser{}
 
-	version := &api.Version{Major: 3, Minor: 0}
+	version := api.Version{Major: 3, Minor: 0}
 
 	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
 	if userErr != nil || sysErr != nil {
@@ -363,7 +363,7 @@ func TestGetMidServers(t *testing.T) {
 	v := map[string]string{}
 
 	user := auth.CurrentUser{}
-	version := &api.Version{Major: 3, Minor: 0}
+	version := api.Version{Major: 3, Minor: 0}
 	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
 
 	if userErr != nil || sysErr != nil {
