@@ -56,8 +56,19 @@ public class RouterSslUtil extends SSLUtilBase {
 
     @Override
     @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
-    public SSLContext createSSLContext(final List<String> negotiableProtocols) throws Exception {
+    public SSLContext createSSLContextInternal(final List<String> negotiableProtocols) throws Exception {
         return new OpenSSLContext(certificate, negotiableProtocols);
+    }
+
+    /**
+     * Defines if TLS 1.3 renegotiation after handshake is permitted. As per the tomcat 8.5.57 source,
+     * this should be false for JSSE implementations, and true for openSSL.
+     * @return If TLS 1.3 renegotiation is available.
+     */
+    @Override
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
+    public boolean isTls13RenegAuthAvailable() {
+        return true;
     }
 
     @Override
