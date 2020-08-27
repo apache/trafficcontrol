@@ -71,8 +71,8 @@ Example Playbook
       vars:
         load_dataset: true
         dl_shallow_czf_url: http://examplewebserver.local/czf.json
-        dl_allow_ip4: "{{ (['127.0.0.1','192.168.100.0/24'] + (groups['traffic_monitor'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list)) | join(',') }}"
-        dl_allow_ip6: "{{ (['::1'] + (groups['traffic_monitor'] | map('extract', hostvars, ['ansible_default_ipv6', 'address']) | list)) | join(',') }}"
+        dl_allow_ip4: "{{ (['127.0.0.1','192.168.100.0/24'] + (dl_hosts_tm | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list)) | join(',') }}"
+        dl_allow_ip6: "{{ (['::1'] + (dl_hosts_tm | map('extract', hostvars, ['ansible_default_ipv6', 'address']) | list)) | join(',') }}"
         dl_to_url: "{{ to_url }}"
         dl_ds_merged_cdns: "{{ dl_ds_default_cdns | combine(dl_ds_test_cdns) }}"
         dl_ds_test_cdns:

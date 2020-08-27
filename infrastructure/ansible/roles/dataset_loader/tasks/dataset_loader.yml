@@ -26,7 +26,7 @@
 - name: Collect All CDN delegations assigned to Traffic Routers
   set_fact:
     tmp_cdnDelegation: "{{ hostvars[item]['cdn'] }}"
-  with_items: "{{groups['traffic_router']}}"
+  with_items: "{{dl_hosts_tr}}"
   register: tmp_cdnDelegation_result
 
 - name: Convert CDN Delegation facts to more usable list
@@ -55,7 +55,7 @@
     body: "{{ lookup('template', 'cdn.j2') }}"
   vars:
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
-    domainName: "{{ cdnDelegationPrimary }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+    domainName: "{{ cdnDelegationPrimary }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
     dnssecEnabled: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].dnssecEnabled | default(false) | lower }}"
     cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary }}`) == `true`].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
@@ -73,7 +73,7 @@
   with_items: "{{ cdnDelegationList | difference(cdnDelegationPrimary) | intersect(dl_ds_merged_cdns | list) + cdnDelegationList | difference(dl_ds_merged_cdns | list)}}"
   vars:
     name: "{{ item.name | default(item) }}"
-    domainName: "{{ item }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') }}"
+    domainName: "{{ item }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') }}"
     dnssecEnabled: "{{ dl_ds_merged_cdns[item].dnssecEnabled | default(false) | lower }}"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cdns_out
@@ -95,7 +95,7 @@
 - name: Assign fqdn to cdn
   set_fact:
     cdn_assignments: "{{ (cdn_assignments | default({})) | combine({ item: hostvars[item].cdn }) }}"
-  with_items: "{{ groups['all'] }}"
+  with_items: "{{ dl_hosts_all }}"
 
 - name: Get All Tenants
   uri:
@@ -300,11 +300,11 @@
   set_fact:
     cachegroups_assignments: "{{ {} |combine(origins) | combine(edges) | combine(mids) | combine(trs) | combine(infra) }}"
   vars:
-    origins: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'ORG_LOC') | map(attribute='name') | list | associate_round_robin(groups['fakeorigin'] | union(groups['mso_parent_alias'])) | denormalize_association }}"
-    edges: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'EDGE_LOC') | map(attribute='name') | list | associate_round_robin(groups['atsec'] | union(groups['grove'])) | denormalize_association }}"
-    mids: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'MID_LOC') | map(attribute='name') | list | associate_round_robin(groups['atsmid']) | denormalize_association }}"
-    trs: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'TR_LOC') | map(attribute='name') | list | associate_round_robin(groups['traffic_router']) | denormalize_association }}"
-    infra: "{{ ['infrastructure'] | associate_round_robin(groups['all'] | difference(groups['fakeorigin'] + groups['mso_parent_alias'] + groups['atsec'] + groups['grove'] + groups['atsmid'] + groups['traffic_router']) ) | denormalize_association }}"
+    origins: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'ORG_LOC') | map(attribute='name') | list | associate_round_robin(dl_hosts_fakeorigin | union(dl_hosts_mso_alias)) | denormalize_association }}"
+    edges: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'EDGE_LOC') | map(attribute='name') | list | associate_round_robin(dl_hosts_atsec | union(dl_hosts_grove)) | denormalize_association }}"
+    mids: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'MID_LOC') | map(attribute='name') | list | associate_round_robin(dl_hosts_atsmid) | denormalize_association }}"
+    trs: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'TR_LOC') | map(attribute='name') | list | associate_round_robin(dl_hosts_tr) | denormalize_association }}"
+    infra: "{{ ['infrastructure'] | associate_round_robin(dl_hosts_all | difference(dl_hosts_fakeorigin + dl_hosts_mso_alias + dl_hosts_atsec + dl_hosts_grove + dl_hosts_atsmid + dl_hosts_tr) ) | denormalize_association }}"
 
 - name: Build reverse lookup for cachegroups to eligible phys_locations
   set_fact:
@@ -452,7 +452,7 @@
 - name: Assign types to servers
   set_fact:
     type_assignments: "{{ (type_assignments | default({})) | combine({ item: dl_ds_merged_type_ansible_component_map[hostvars[item].component] | default('UNKNOWN') }) }}"
-  with_items: "{{ groups['all'] }}"
+  with_items: "{{ dl_hosts_all }}"
 
 - name: Assert a default location
   set_fact:
@@ -470,7 +470,7 @@
       block:
         - name: Force fact collection on ats edges and mids as well as grove, if not already performed
           setup:
-          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
           delegate_to: "{{ item }}"
           delegate_facts: True
           when: hostvars[item]['ansible_default_ipv4'] is not defined
@@ -481,7 +481,7 @@
             eligible_cache_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
           vars:
             eligible_device_query: "[?({{ dl_ds_merged_cache_block_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
-          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
           register: eligible_cache_disks_tmp2
 
         - name: Assemble information about eligible cache block drives in a more useful way
@@ -495,7 +495,7 @@
             eligible_cache_ram_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
           vars:
             eligible_device_query: "[?({{ dl_ds_merged_cache_ram_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
-          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
           register: eligible_cache_ram_disks_tmp2
 
         - name: Assemble information about eligible cache ram drives in a more useful way
@@ -507,7 +507,7 @@
         - name: Combine hardware data of caches into a single data object
           set_fact:
             dl_ds_cache_hardware_info: "{{ (dl_ds_cache_hardware_info | default({})) | combine({ item: {'ram_disks': ram_disks, 'cache_disks': cache_disks, 'ram_cache_size': ram_cache_size, 'primary_network_interface': primary_network_interface, 'network_bandwidth_limit': network_bandwidth_limit, 'load_avg_limit': load_avg_limit } }) }}"
-          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
           vars:
             ram_disks: "{{ eligible_cache_ram_disks[item] | default([]) }}"
             cache_disks: "{{ eligible_cache_rotational_disks[item] | default([]) }}"
@@ -530,7 +530,7 @@
     - name: Assemble information about hardware profiles in a more useful way
       set_fact:
         cache_hardware_profile_map: "{{ cache_hardware_profile_map | default({}) | combine({ item: { 'hardware_profile': cache_hardware_profile_index | dict2items | json_query(hw_lookup_query), 'component': hostvars[item].component } }) }}"
-      with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+      with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
       vars:
         hw_lookup_query: "[?value.ram_disks==`[{{ dl_ds_cache_hardware_info[item].ram_disks | map('to_json') | join(',') }}]` && value.cache_disks==`[{{ dl_ds_cache_hardware_info[item].cache_disks | map('to_json') | join(',') }}]` && value.ram_cache_size=='{{ dl_ds_cache_hardware_info[item].ram_cache_size }}'].key |[0]"
 
@@ -608,7 +608,7 @@
     - name: Handle Profile & Parameter CDN Templates
       include_tasks: parameter_loader.yml
       vars:
-        Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+        Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
         Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
         Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
         cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"
@@ -649,7 +649,7 @@
 
     - name: Associate eligible profiles to hosts
       set_fact:
-        profile_assignments: "{{ groups['all'] | associate_profile_to_servers(profile_names,cache_hardware_profile_map,hostvars,dl_ds_merged_profile_prefix_ansible_component_map) }}"
+        profile_assignments: "{{ dl_hosts_all | associate_profile_to_servers(profile_names,cache_hardware_profile_map,hostvars,dl_ds_merged_profile_prefix_ansible_component_map) }}"
       vars:
         profile_names: "{{ get_all_profiles.json.response | map(attribute='name') | list | map('lower') | list | unique | sort }}"
 
@@ -683,9 +683,9 @@
     lc_cdn_assignment_reverse_tmp: "{{ cdn_assignment_reverse_tmp | lower }}"
     cdn_query: "[?cdn == `{{ item }}`].host"
     cdns: "{{ lc_cdn_assignment_reverse_tmp | json_query(cdn_query) }}"
-    tm_cdns: "{{ groups['traffic_monitor'] | intersect(cdns) }}"
-    evenTM: "{{ (groups['traffic_monitor'] | intersect(cdns))[::2] }}"
-    oddTM: "{{ (groups['traffic_monitor'] | intersect(cdns))[1::2] }}"
+    tm_cdns: "{{ dl_hosts_tm | intersect(cdns) }}"
+    evenTM: "{{ (dl_hosts_tm | intersect(cdns))[::2] }}"
+    oddTM: "{{ (dl_hosts_tm | intersect(cdns))[1::2] }}"
 
 - name: Assign server status for offline traffic monitors
   set_fact:
@@ -704,14 +704,14 @@
 - name: Assign server status for caches
   set_fact:
     status_assignment: "{{ status_assignment | default({}) | combine({ item: 'REPORTED' }) }}"
-  with_items: "{{ groups['atsec'] + groups['atsmid'] + groups['grove'] }}"
+  with_items: "{{ dl_hosts_atsec + dl_hosts_atsmid + dl_hosts_grove }}"
 
 - name: Create Servers (Non-mso)
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
     method: POST
     body: "{{ lookup('template', 'server.j2') }}"
-  with_items: "{{ groups['all'] | difference(groups['mso_parent_alias']) }}"
+  with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     status_name: "{{ status_assignment[item] | default('ONLINE') }}"
@@ -785,7 +785,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
     method: POST
     body: "{{ lookup('template', 'server.j2') }}"
-  with_items: "{{ groups['mso_parent_alias'] }}"
+  with_items: "{{ dl_hosts_mso_alias }}"
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     status_name: "{{ status_assignment[item] | default('ONLINE') }}"
@@ -859,7 +859,7 @@
 - name: Collect All CDN delegations assigned to Fake Origins
   set_fact:
     cdnDelegationList: "{{ (cdnDelegationList | default([]) ) + [hostvars[item]['cdn']] }}"
-  with_items: "{{ groups['fakeorigin'] }}"
+  with_items: "{{ dl_hosts_fakeorigin }}"
 
 - name: Convert the CDN Delegation list into an index
   set_fact:
@@ -869,21 +869,21 @@
 - name: Create Index of Fake Origins
   set_fact:
     foIndex: "{{ (foIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
-  with_indexed_items: "{{ groups['fakeorigin'] }}"
+  with_indexed_items: "{{ dl_hosts_fakeorigin }}"
 
 - name: Assert we have enough Delivery Service CName records to go around
   assert:
     that:
-      - (hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length) >= (dl_ds_merged_ds_template | length)
-    success_msg: "Enough Delivery CNames Exist ({{ dl_ds_merged_ds_template | length }}/{{ hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length }})"
-    fail_msg: "Not enough DS CNames exist to cover all DS.  Please go and create {{ (dl_ds_merged_ds_template | length) - (hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length) }} more and rerun."
+      - (hostvars[dl_hosts_fakeorigin | first].ds_names.split(',') | length) >= (dl_ds_merged_ds_template | length)
+    success_msg: "Enough Delivery CNames Exist ({{ dl_ds_merged_ds_template | length }}/{{ hostvars[dl_hosts_fakeorigin | first].ds_names.split(',') | length }})"
+    fail_msg: "Not enough DS CNames exist to cover all DS.  Please go and create {{ (dl_ds_merged_ds_template | length) - (hostvars[dl_hosts_fakeorigin | first].ds_names.split(',') | length) }} more and rerun."
   vars:
     Target_cdn_delegation: Invalid (just for rendering)
 
 - name: Handle Delivery Service CDN Templates
   include_tasks: ds_loader.yml
   vars:
-    Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+    Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
     Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
     Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
     cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"

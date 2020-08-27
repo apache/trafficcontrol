@@ -70,6 +70,17 @@ dl_ds_reserved_bandwidth_percentage: 90
 #      - ram1
 #      - ram2
 
+# Hardcoded names of groups in the tasks are a bad idea, but this allows people to change them as needed to match their inventory
+dl_hosts_fakeorigin: "{{ groups['fakeorigin'] | default([],true) }}"
+dl_hosts_tm: "{{ groups['traffic_monitor'] | default([],true) }}"
+dl_hosts_tr: "{{ groups['traffic_router'] | default([],true) }}"
+dl_hosts_to: "{{ groups['traffic_ops'] | default([],true) }}"
+dl_hosts_mso_alias: "{{ groups['mso_parent_alias'] | default([],true) }}"
+dl_hosts_atsmid: "{{ groups['atsmid'] | default([],true) }}"
+dl_hosts_atsec: "{{ groups['atsec'] | default([],true) }}"
+dl_hosts_grove: "{{ groups['grove'] | default([],true) }}"
+dl_hosts_all: "{{ groups['all'] | default([],true) }}"
+
 # TO CDN
 dl_ds_merged_cdns: "{{ dl_ds_default_cdns }}"
 dl_ds_default_cdns:
@@ -3927,7 +3938,7 @@ dl_ds_default_ds_template:
     uniqueKey: simple-dns-live-nat
   - displayName: Global ANY_MAP DS
     longDesc: A basic ANY_MAP routed Delivery Service to catch all unmapped ATS requests and add some extra headers
-    remapText: "map / http://{{ groups['fakeorigin'] | first }}/ @plugin=header_rewrite.so @pparam=anymap_hdr_rw.config"
+    remapText: "map / http://{{ dl_hosts_fakeorigin | first }}/ @plugin=header_rewrite.so @pparam=anymap_hdr_rw.config"
     typeName: ANY_MAP
     uniqueKey: global-any-map
   - displayName: Steering with ordered targets DS
