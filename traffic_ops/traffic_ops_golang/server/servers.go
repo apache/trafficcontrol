@@ -813,9 +813,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 	}
 
-	returnable := make([]tc.ServerNullable, 0, len(servers))
-	for _, server := range servers {
-		for _, iface := range interfaces[*server.ID] {
+	returnable := make([]tc.ServerNullable, 0, len(ids))
+	for _, id := range ids {
+		server := servers[id]
+		for _, iface := range interfaces[id] {
 			server.Interfaces = append(server.Interfaces, iface)
 		}
 		returnable = append(returnable, server)
