@@ -183,7 +183,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	foundTopDs := false
 	const topDsXmlId = "ds-top"
-	for _, ds := range dses {
+	for _, ds = range dses {
 		if ds.XMLID != nil && *ds.XMLID != topDsXmlId {
 			continue
 		}
