@@ -120,7 +120,11 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	}
 	cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
 	if cap.Capacity == 0 {
-		return CapacityResp{}, errors.New("capacity was zero!") // avoid divide-by-zero below.
+		if dsHasSever(ds, crConfig) {
+			return CapacityResp{}, errors.New("Delivery service '" + string(ds) + "' has servers, but capacity was zero!'")
+		}
+		log.Warnf("Delivery service '" + string(ds) + "' has no servers. Returning 0 capacity'")
+		return CapacityResp{}, nil // avoid divide-by-zero below.
 	}
 
 	return CapacityResp{
@@ -129,6 +133,17 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 		MaintenancePercent: (cap.Maintenance * 100) / cap.Capacity,
 		AvailablePercent:   ((cap.Capacity - cap.Unavailable - cap.Maintenance - cap.Available) * 100) / cap.Capacity,
 	}, nil
+}
+
+// To check whether a given DS has servers.
+func dsHasSever(ds tc.DeliveryServiceName, crConfig tc.CRConfig) bool {
+	for _, server := range crConfig.ContentServers {
+		if _, ok := server.DeliveryServices[string(ds)]; ok {
+			return true
+		}
+	}
+	return false
+
 }
 
 const StatNameKBPS = "kbps"
@@ -145,7 +160,6 @@ func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stat
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' in CacheStats but not CRConfig, skipping")
 			continue
 		}
-
 		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
 			continue
 		}
