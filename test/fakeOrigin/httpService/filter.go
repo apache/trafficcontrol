@@ -143,8 +143,8 @@ func originHeaderManipulation(handler http.Handler) http.Handler {
 		iw := &BodyInterceptor{w: w}
 		handler.ServeHTTP(iw, r)
 		for key, value := range r.Header {
-			if strings.HasPrefix(key, "fakeOrigin-") {
-				newKey := strings.TrimPrefix(key, "fakeOrigin-")
+			if strings.HasPrefix(key, "Fakeorigin-") {
+				newKey := strings.TrimPrefix(key, "Fakeorigin-")
 				// Intentionally stomp on anything else you may otherwise have known
 				w.Header().Set(newKey, value[0])
 				for _, val := range value[1:len(value)] {
