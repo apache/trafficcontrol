@@ -217,7 +217,6 @@ func MakeIPAllowDotConfig(
 			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || string(childServer.Type) != tc.MonitorTypeName) {
 				continue
 			}
-			// 	childServers[tc.CacheName(*sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
 
 			for _, svInterface := range childServer.Interfaces {
 				for _, svAddr := range svInterface.IPAddresses {
