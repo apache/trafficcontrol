@@ -17,10 +17,7 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $uibModal, $window, locationUtils, serverService, messageModel) {
-
-	// extends the TableParentServersController to inherit common methods
-	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $uibModal, $window, locationUtils, serverService, messageModel) {
 
 	var removeCapability = function(serverId) {
 		serverService.removeServerCapability(serverId, serverCapability.name)
@@ -31,6 +28,8 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 				}
 			);
 	};
+
+	$scope.servers = servers;
 
 	$scope.serverCapability = serverCapability;
 
@@ -63,6 +62,10 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		}
 	];
 
+	$scope.editServer = function(id) {
+		locationUtils.navigateToPath('/servers/' + id);
+	};
+
 	$scope.confirmRemoveCapability = function(serverId, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
@@ -87,6 +90,10 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		});
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	angular.element(document).ready(function () {
 		$('#serverCapabilityServersTable').dataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -97,5 +104,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel'];
 module.exports = TableServerCapabilityServersController;

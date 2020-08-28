@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -48,10 +49,10 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 	return session{s}, err
 }
 
-func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
+func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters(nil)
+	parameters, _, err := s.GetParametersWithHdr(header)
 	if err != nil {
 		return m, err
 	}
@@ -64,7 +65,7 @@ func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n), nil)
+	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -82,7 +83,7 @@ func enrollType(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.Type
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Type: %s\n", err)
 		return err
 	}
@@ -109,7 +110,7 @@ func enrollCDN(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.CDN
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding CDN: %s\n", err)
 		return err
 	}
@@ -135,7 +136,7 @@ func enrollASN(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.ASN
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding ASN: %s\n", err)
 		return err
 	}
@@ -162,7 +163,7 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.CacheGroupNullable
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Cachegroup: %s\n", err)
 		return err
 	}
@@ -188,7 +189,7 @@ func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.DeliveryServiceNullable
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)
 		return err
 	}
@@ -216,12 +217,12 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	// DeliveryServiceServers lists ds xmlid and array of server names.  Use that to create multiple DeliveryServiceServer objects
 	var dss tc.DeliveryServiceServers
 	err := dec.Decode(&dss)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding DeliveryServiceServer: %s\n", err)
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId, nil)
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
 	if err != nil {
 		return err
 	}
@@ -237,7 +238,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params, nil)
+		servers, _, err := toSession.GetServers(params)
 		if err != nil {
 			return err
 		}
@@ -258,7 +259,7 @@ func enrollDivision(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.Division
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Division: %s\n", err)
 		return err
 	}
@@ -284,7 +285,7 @@ func enrollOrigin(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.Origin
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Origin: %s\n", err)
 		return err
 	}
@@ -310,13 +311,13 @@ func enrollParameter(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var params []tc.Parameter
 	err := dec.Decode(&params)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Parameter: %s\n", err)
 		return err
 	}
 
 	for _, p := range params {
-		eparam, err := toSession.getParameter(p)
+		eparam, err := toSession.getParameter(p, nil)
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
@@ -331,7 +332,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 				log.Infof("error creating parameter: %s from %+v\n", err.Error(), p)
 				return err
 			}
-			eparam, err = toSession.getParameter(p)
+			eparam, err = toSession.getParameter(p, nil)
 			if err != nil {
 				return err
 			}
@@ -347,7 +348,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n, nil)
+				profiles, _, err := toSession.GetProfileByName(n)
 				if err != nil {
 					return err
 				}
@@ -375,7 +376,7 @@ func enrollPhysLocation(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.PhysLocation
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding PhysLocation: %s\n", err)
 		return err
 	}
@@ -401,7 +402,7 @@ func enrollRegion(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.Region
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Region: %s\n", err)
 		return err
 	}
@@ -427,7 +428,7 @@ func enrollStatus(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.StatusNullable
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Status: %s\n", err)
 		return err
 	}
@@ -453,7 +454,7 @@ func enrollTenant(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.Tenant
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Tenant: %s\n", err)
 		return err
 	}
@@ -480,7 +481,7 @@ func enrollUser(toSession *session, r io.Reader) error {
 	var s tc.User
 	err := dec.Decode(&s)
 	log.Infof("User is %++v\n", s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding User: %s\n", err)
 		return err
 	}
@@ -508,7 +509,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 	var profile tc.Profile
 
 	err := dec.Decode(&profile)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Profile: %s\n", err)
 		return err
 	}
@@ -524,7 +525,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
+	profiles, _, err := toSession.GetProfileByName(profile.Name)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -546,7 +547,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
+		profiles, _, err = toSession.GetProfileByName(profile.Name)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -578,7 +579,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			value = *p.Value
 		}
 		param := tc.Parameter{ConfigFile: configFile, Name: name, Value: value, Secure: secure}
-		eparam, err := toSession.getParameter(param)
+		eparam, err := toSession.getParameter(param, nil)
 		if err != nil {
 			// create it
 			log.Infof("creating param %+v\n", param)
@@ -587,7 +588,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("can't create parameter %+v: %s\n", param, err.Error())
 				continue
 			}
-			eparam, err = toSession.getParameter(param)
+			eparam, err = toSession.getParameter(param, nil)
 			if err != nil {
 				log.Infof("error getting new parameter %+v: \n", param)
 				log.Infof(err.Error())
@@ -623,7 +624,7 @@ func enrollServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.ServerNullable
 	err := dec.Decode(&s)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		log.Infof("error decoding Server: %s\n", err)
 		return err
 	}
@@ -659,7 +660,12 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 		const (
 			processed = ".processed"
 			rejected  = ".rejected"
+			retry  = ".retry"
 		)
+		originalNameRegex := regexp.MustCompile(`(\.retry)*$`)
+
+		emptyCount := map[string]int{}
+		const maxEmptyTries = 10
 
 		for {
 			select {
@@ -692,10 +698,27 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 				if f, ok := dw.watched[dir]; ok {
 					t := filepath.Base(dir)
 					log.Infoln("creating " + t + " from " + event.Name)
-					// TODO: ensure file content is there before attempting to read.  For now, this does the trick..
+					// Sleep for 100 milliseconds so that the file content is probably there when the directory watcher
+					// sees the file
 					time.Sleep(100 * time.Millisecond)
 
 					err := f(toSession, event.Name)
+					// If a file is empty, try reading from it 10 times before giving up on that file
+					if err == io.EOF {
+						originalName := originalNameRegex.ReplaceAllString(event.Name, "")
+						if _, exists := emptyCount[originalName]; !exists {
+							emptyCount[originalName] = 0
+						}
+						emptyCount[originalName]++
+						log.Infof("empty json object %s: %s\ntried file %d out of %d times", originalName, err.Error(), emptyCount[originalName], maxEmptyTries)
+						if emptyCount[originalName] < maxEmptyTries {
+							newName := event.Name + retry
+							if err := os.Rename(event.Name, newName); err != nil {
+								log.Infof("error renaming %s to %s: %s", event.Name, newName, err)
+							}
+							continue
+						}
+					}
 					if err != nil {
 						log.Infof("error creating %s from %s: %s\n", dir, event.Name, err.Error())
 					} else {

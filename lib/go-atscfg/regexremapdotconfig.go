@@ -36,7 +36,7 @@ type CDNDS struct {
 	RegexRemap    string
 }
 
-func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CDNDS {
+func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullableV30) map[tc.DeliveryServiceName]CDNDS {
 	sDSes := map[tc.DeliveryServiceName]CDNDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {

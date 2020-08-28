@@ -60,8 +60,6 @@ services:
     hostname: vnc
     domainname: infra.ciab.test
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
       
 volumes:

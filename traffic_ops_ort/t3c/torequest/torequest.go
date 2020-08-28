@@ -193,6 +193,24 @@ func (r *TrafficOpsReq) atsTcExec(cmdstr string) ([]byte, error) {
 
 // atsTcExecCommand is used to run the atstccfg command.
 func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalState int) ([]byte, error) {
+	// adjust log locations used for atstccfg
+	// cannot use stdout as this will cause json parsing errors.
+	errorLocation := r.Cfg.LogLocationErr
+	if errorLocation == "stdout" {
+		errorLocation = "stderr"
+		log.Infoln("atstccfg error logging has been re-directed to 'stderr'")
+	}
+	infoLocation := r.Cfg.LogLocationInfo
+	if infoLocation == "stdout" {
+		infoLocation = "stderr"
+		log.Infoln("atstccfg info logging has been re-directed to 'stderr'")
+	}
+	warningLocation := r.Cfg.LogLocationWarn
+	if warningLocation == "stdout" {
+		warningLocation = "stderr"
+		log.Infoln("atstccfg warning logging has been re-directed to 'stderr'")
+	}
+
 	args := []string{
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(r.Cfg.TOTimeoutMS), 10),
 		"--traffic-ops-disable-proxy=" + strconv.FormatBool(r.Cfg.ReverseProxyDisable),
@@ -200,9 +218,13 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 		"--traffic-ops-password=" + r.Cfg.TOPass,
 		"--traffic-ops-url=" + r.Cfg.TOURL,
 		"--cache-host-name=" + r.Cfg.CacheHostName,
-		"--log-location-error=" + r.Cfg.LogLocationErr,
-		"--log-location-info=" + r.Cfg.LogLocationInfo,
-		"--log-location-warning=" + r.Cfg.LogLocationWarn,
+		"--log-location-error=" + errorLocation,
+		"--log-location-info=" + infoLocation,
+		"--log-location-warning=" + warningLocation,
+	}
+
+	if r.Cfg.TOInsecure == true {
+		args = append(args, "--traffic-ops-insecure")
 	}
 
 	switch cmdstr {
@@ -236,10 +258,18 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 	}
 
 	cmd := exec.Command(config.AtsTcConfig, args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	var outbuf bytes.Buffer
+	var errbuf bytes.Buffer
+
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
 	err := cmd.Run()
-	return out.Bytes(), err
+	if err != nil {
+		return nil, errors.New("Error from atstccfg: " + err.Error() + ": " + errbuf.String())
+	}
+
+	return outbuf.Bytes(), nil
 }
 
 // backUpFile makes a backup of a config file.
@@ -1452,7 +1482,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 		updateResult = true
 		log.Errorln("Traffic Ops is signaling that an update is ready to be applied but, none was found! Clearing update state in Traffic Ops anyway.")
 	} else if *syncdsUpdate == UpdateTropsNotNeeded {
-		log.Errorln("Traffic Ops does not require and update at this time")
+		log.Errorln("Traffic Ops does not require an update at this time")
 		return true, nil
 	} else if *syncdsUpdate == UpdateTropsFailed {
 		log.Errorln("Traffic Ops requires an update but, applying the update locally failed.  Traffic Ops is not being updated.")

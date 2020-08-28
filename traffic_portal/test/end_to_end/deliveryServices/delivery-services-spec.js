@@ -52,7 +52,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		steeringXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing.",
 		staticDNShostName: "static-dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
-		staticDNSTTL: 50,
+		staticDNSTTL: 0,
 		staticDNSAddress: "cdn.test.com."
 
 	};
@@ -219,7 +219,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.moreBtn.click();
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
-		pageData.selectServersBtn.click();
+		pageData.moreBtn.click();
+		pageData.selectServersMenuItem.click();
 		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
 		pageData.selectAllCB.click();
 		pageData.selectFormSubmitButton.click();

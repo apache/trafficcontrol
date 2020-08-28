@@ -42,7 +42,7 @@ func TestDivisions(t *testing.T) {
 
 func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
 		if err != nil {
 			t.Fatalf("could not GET divisions: %v", err)
 		}
@@ -55,7 +55,7 @@ func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
 		if err != nil {
 			t.Fatalf("could not GET divisions: %v", err)
 		}
@@ -72,7 +72,7 @@ func GetTestDivisionsIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
 		if err != nil {
 			t.Fatalf("could not GET divisions: %v", err)
 		}
@@ -85,7 +85,7 @@ func GetTestDivisionsIMS(t *testing.T) {
 func TryToDeleteDivision(t *testing.T) {
 	division := testData.Divisions[0]
 
-	resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
+	resp, _, err := TOSession.GetDivisionByName(division.Name)
 	if err != nil {
 		t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 	}
@@ -123,7 +123,7 @@ func UpdateTestDivisions(t *testing.T) {
 
 	firstDivision := testData.Divisions[0]
 	// Retrieve the Division by division so we can get the id for the Update
-	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name, nil)
+	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name)
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
@@ -137,7 +137,7 @@ func UpdateTestDivisions(t *testing.T) {
 	}
 
 	// Retrieve the Division to check division got updated
-	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID, nil)
+	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID)
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
@@ -157,7 +157,7 @@ func UpdateTestDivisions(t *testing.T) {
 
 func GetTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
-		resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
+		resp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
 			t.Errorf("cannot GET Division by division: %v - %v", err, resp)
 		}
@@ -168,7 +168,7 @@ func DeleteTestDivisions(t *testing.T) {
 
 	for _, division := range testData.Divisions {
 		// Retrieve the Division by name so we can get the id
-		resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
+		resp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
 			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 		}
@@ -180,7 +180,7 @@ func DeleteTestDivisions(t *testing.T) {
 		}
 
 		// Retrieve the Division to see if it got deleted
-		divisionResp, _, err := TOSession.GetDivisionByName(division.Name, nil)
+		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
 			t.Errorf("error deleting Division division: %s", err.Error())
 		}

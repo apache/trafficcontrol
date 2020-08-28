@@ -88,7 +88,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		useInactive = true
 	}
 
-	filteredDSes := []tc.DeliveryServiceNullable{}
+	filteredDSes := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue // TODO log?

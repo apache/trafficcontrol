@@ -58,6 +58,10 @@ COPY enroller/server_template.json \
      traffic_ops/to-access.sh \
      /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 WORKDIR /opt/traffic_ops/app
 EXPOSE  443
 CMD     /run-go.sh
