@@ -103,7 +103,7 @@ SELECT
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
 	s.xmpp_passwd,
-    s.status_last_updated
+	s.status_last_updated
 ` + serversFromAndJoin
 
 const insertQueryV3 = `
@@ -1387,7 +1387,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
-	
+
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
