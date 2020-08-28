@@ -47,6 +47,10 @@ RUN systemd-machine-id-setup && \
 
 ADD optional/vnc/run.sh /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 5909/tcp
 
 CMD /run.sh

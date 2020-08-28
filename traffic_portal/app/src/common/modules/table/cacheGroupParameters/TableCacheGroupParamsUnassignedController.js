@@ -17,22 +17,30 @@
  * under the License.
  */
 
-var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $uibModalInstance) {
+var TableCacheGroupParamsUnassignedController = function(cg, allParams, assignedParams, $scope, $uibModalInstance) {
 
 	var selectedParams = [];
 
 	$scope.cg = cg;
 
-	$scope.unassignedParams = parameters;
+	$scope.unassignedParams = allParams.filter(
+		function(p) {
+			return !assignedParams.has(p.id);
+		}
+	);
 
 	var addParam = function(paramId) {
-		if (_.indexOf(selectedParams, paramId) == -1) {
+		if (selectedParams.indexOf(paramId) === -1) {
 			selectedParams.push(paramId);
 		}
 	};
 
 	var removeParam = function(paramId) {
-		selectedParams = _.without(selectedParams, paramId);
+		selectedParams = selectedParams.filter(
+			function (param) {
+				return param !== paramId;
+			}
+		);
 	};
 
 	$scope.updateParams = function($event, paramId) {
@@ -42,6 +50,10 @@ var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $u
 		} else {
 			removeParam(paramId);
 		}
+	};
+
+	$scope.handleRowClick = function($index) {
+		$('#checkbox-' + $index).trigger('click');
 	};
 
 	$scope.submit = function() {
@@ -58,12 +70,13 @@ var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $u
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
 			"columnDefs": [
-				{ "width": "5%", "targets": 0 }
+				{ "width": "5%", "targets": 0 },
+				{ "width": "50%", "targets": 3 }
 			]
 		});
 	});
 
 };
 
-TableProfileParamsUnassignedController.$inject = ['cg', 'parameters', '$scope', '$uibModalInstance'];
-module.exports = TableProfileParamsUnassignedController;
+TableCacheGroupParamsUnassignedController.$inject = ['cg', 'allParams', 'assignedParams', '$scope', '$uibModalInstance'];
+module.exports = TableCacheGroupParamsUnassignedController;

@@ -25,7 +25,7 @@ import com.google.common.net.InetAddresses;
 import com.maxmind.geoip2.model.AnonymousIpResponse;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
@@ -105,8 +105,8 @@ public final class AnonymousIp {
 	private static void parseIPv6Whitelist(final JsonNode config, final AnonymousIp anonymousIp) throws JsonUtilsException {
 		if (config.has("ip6Whitelist")) {
 			try {
-				anonymousIp.ipv4Whitelist = new AnonymousIpWhitelist();
-				anonymousIp.ipv4Whitelist.init(JsonUtils.getJsonNode(config, "ip6Whitelist"));
+				anonymousIp.ipv6Whitelist = new AnonymousIpWhitelist();
+				anonymousIp.ipv6Whitelist.init(JsonUtils.getJsonNode(config, "ip6Whitelist"));
 			} catch (NetworkNodeException e) {
 				LOGGER.error("Anonymous Ip ERR: Network node err ", e);
 			}

@@ -108,52 +108,22 @@
 			"value": "INT 10000"
 		},
 		{
-			"configFile": "cache.config",
-			"name": "location",
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.output.logfile.rolling_enabled",
 			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "hosting.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "parent.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "plugin.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
+			"value": "INT 2"
 		},
 		{
 			"configFile": "records.config",
-			"name": "location",
+			"name": "CONFIG proxy.config.output.logfile.rolling_size_mb",
 			"secure": false,
-			"value": "/etc/trafficserver/"
+			"value": "INT 500"
 		},
 		{
-			"configFile": "remap.config",
-			"name": "location",
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.output.logfile.rolling_min_count",
 			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "storage.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "volume.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
+			"value": "INT 2"
 		},
 		{
 			"configFile": "records.config",

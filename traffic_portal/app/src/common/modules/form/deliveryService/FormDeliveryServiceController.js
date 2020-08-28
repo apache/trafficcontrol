@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -46,11 +46,26 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
             });
     };
 
+    var getServiceCategories = function() {
+        serviceCategoryService.getServiceCategories()
+            .then(function(result) {
+                $scope.serviceCategories = result;
+            });
+    };
+
     $scope.deliveryService = deliveryService;
+
+    $scope.showGeneralConfig = true;
+
+    $scope.showCacheConfig = true;
+
+    $scope.showRoutingConfig = true;
 
     $scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
     $scope.origin = origin[0];
+
+    $scope.topologies = topologies;
 
     $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
@@ -59,13 +74,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
     $scope.edgeFQDNs = function(ds) {
-        var urlString = '';
-        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
-            for (var i = 0; i < ds.exampleURLs.length; i++) {
-                urlString += ds.exampleURLs[i] + '\n';
-            }
-        }
-        return urlString;
+        return ds.exampleURLs.join('<br/>');
     };
 
     $scope.DRAFT = 0;
@@ -116,7 +125,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.activeInactive = [
         { value: true, label: 'Active' },
         { value: false, label: 'Not Active'}
-    ]
+    ];
 
     $scope.signingAlgos = [
         { value: null, label: 'None' },
@@ -175,7 +184,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.deepCachingTypes = [
         { value: 'NEVER', label: 'NEVER' },
         { value: 'ALWAYS', label: 'ALWAYS' }
-    ]
+    ];
 
     $scope.dispersions = [
         { value: 1, label: '1 - OFF' },
@@ -193,7 +202,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.rrhs = [
         { value: 0, label: "Don't cache Range Requests" },
         { value: 1, label: "Use the background_fetch plugin" },
-        { value: 2, label: "Use the cache_range_requests plugin" }
+        { value: 2, label: "Use the cache_range_requests plugin" },
+        { value: 3, label: "Use the slice plugin" }
     ];
 
     $scope.msoAlgos = [
@@ -204,44 +214,12 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
-    $scope.label = function(field, attribute) {
-        return propertiesModel.properties.deliveryServices.defaults.descriptions[field][attribute];
-    };
-
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
 
     $scope.clone = function(ds) {
-        var params = {
-            title: 'Clone Delivery Service: ' + ds.xmlId,
-            message: "Please select a content routing category for the clone"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function() {
-                    // the following represent the 4 categories of delivery services
-                    // the ids are arbitrary but the dialog.select dropdown needs them
-                    return [
-                        { id: 1, name: 'ANY_MAP' },
-                        { id: 2, name: 'DNS' },
-                        { id: 3, name: 'HTTP' },
-                        { id: 4, name: 'STEERING' }
-                    ];
-                }
-            }
-        });
-        modalInstance.result.then(function(type) {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + type.name);
-        }, function () {
-            // do nothing
-        });
+        locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + ds.type);
     };
 
     $scope.changeSigningAlgorithm = function(signingAlgorithm) {
@@ -260,8 +238,27 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         }
     };
 
+    $scope.addQueryParam = function() {
+        $scope.deliveryService.consistentHashQueryParams.push('');
+    };
+
+    $scope.removeQueryParam = function(index) {
+        if ($scope.deliveryService.consistentHashQueryParams.length > 1) {
+            $scope.deliveryService.consistentHashQueryParams.splice(index, 1);
+        } else {
+            // if only one query param is left, don't remove the item from the array. instead, just blank it out
+            // so the dynamic form widget will still be visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams[index] = '';
+        }
+        $scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
+    };
+
+    $scope.viewCapabilities = function() {
+        $location.path($location.path() + '/required-server-capabilities');
     };
 
     $scope.viewOrigins = function() {
@@ -306,14 +303,25 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    $scope.rangeRequestSelected = function() {
+        if ($scope.deliveryService.rangeRequestHandling != 3) {
+            $scope.deliveryService.rangeSliceBlockSize = null;
+        }
+    };
+
     var init = function () {
         getCDNs();
         getProfiles();
         getTenants();
+        getServiceCategories();
+        if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
+            // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams = [ '' ];
+        }
     };
     init();
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
 module.exports = FormDeliveryServiceController;

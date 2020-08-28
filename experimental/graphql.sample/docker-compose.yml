@@ -1,0 +1,75 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+---
+version: '2.1'
+
+services:
+  pg-db:
+    image: postgres:9.6
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "postgres", "-U", "postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./volumes/common:/host
+      - ./volumes/pg-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=SuperSecret
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 80:80
+    links:
+      - "pg-db"
+    depends_on:
+      pg-db:
+        condition: service_healthy
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=SuperSecret
+    volumes:
+      - ./volumes/common:/host
+      - ./volumes/pgadmin:/var/lib/pgadmin
+  postgraphile:
+    image: graphile/postgraphile
+    ports:
+      - 5000:5000
+    links:
+      - "pg-db"
+    depends_on:
+      pg-db:
+        condition: service_healthy
+    volumes:
+      - ./volumes/common:/host
+      - ./volumes/postgraphile:/postgraphile
+    entrypoint:
+      - postgraphile
+      - -n
+      - "0.0.0.0"
+      - -c
+      - postgres://traffic_ops:SuperSecret@pg-db:5432/traffic_ops
+      - --schema
+      - public
+      - --watch
+      - --dynamic-json
+      - --extended-errors
+      - "hint,detail,errcode"
+      - --show-error-stack
+      - -o

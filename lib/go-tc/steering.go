@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// Steering holds information about a steering delivery service.
 type Steering struct {
 	DeliveryService DeliveryServiceName      `json:"deliveryService"`
 	ClientSteering  bool                     `json:"clientSteering"`
@@ -26,11 +27,14 @@ type Steering struct {
 	Filters         []SteeringFilter         `json:"filters"`
 }
 
+// SteeringFilter is a filter for a target delivery service.
 type SteeringFilter struct {
 	DeliveryService DeliveryServiceName `json:"deliveryService"`
 	Pattern         string              `json:"pattern"`
 }
 
+// SteeringSteeringTarget is a target delivery service of a steering delivery
+// service.
 type SteeringSteeringTarget struct {
 	Order           int32               `json:"order"`
 	Weight          int32               `json:"weight"`

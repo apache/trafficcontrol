@@ -24,6 +24,8 @@ files and start, stop, and restart HTTP cache servers etc.
 
 .. program:: traffic_ops_ort
 
+.. seealso:: Contributions to :program:`traffic_ops_ort` should follow the :ref:`ATC Python contribution guidelines <py-contributing>`
+
 This package provides an executable script named :program:`traffic_ops_ort`
 
 Usage
@@ -67,6 +69,10 @@ Arguments and Flags
 .. option:: -v, --version
 
 	Print version information and exit
+
+.. option:: -t, --timeout
+
+	Sets the timeout in milliseconds for connections to Traffic Ops.
 
 .. option:: -k, --insecure
 
@@ -205,6 +211,11 @@ Arguments and Flags
 	that :program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
 	defined, either on the command line or in the execution environment.
 
+.. option:: --hostname HOSTNAME
+
+	Causes ORT to request configuration information for the server named ``HOSTNAME`` instead of
+	detecting the server's actual hostname. This is primarily useful for testing purposes.
+
 Environment Variables
 ---------------------
 .. envvar:: TO_URL
@@ -323,11 +334,12 @@ Module Contents
 ===============
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__  = "Brennan Fieck"
 
 import argparse
 import datetime
+from distutils.spawn import find_executable
 import logging
 import os
 import random
@@ -450,6 +462,9 @@ def main() -> int:
 	                    help="wait a random number between 0 and <dispersion> before starting.",
 	                    type=int,
 	                    default=300)
+	parser.add_argument("--hostname",
+	                    help="Pretend to be a server with the provided hostname instead of using "
+	                         "this server's actual hostname in communications with Traffic Ops")
 	parser.add_argument("--login_dispersion",
 	                    help="wait a random number between 0 and <login_dispersion> before login.",
 	                    type=int,
@@ -474,6 +489,10 @@ def main() -> int:
 	                    help="Skip verification of SSL certificates for Traffic Ops connections. "\
 	                         "DON'T use this in production!",
 	                    action="store_true")
+	parser.add_argument("-t", "--timeout",
+	                    help="Sets the timeout in milliseconds for requests made to Traffic Ops.",
+	                    type=int,
+	                    default=None)
 	parser.add_argument("-v", "--version",
 	                    action="version",
 	                    version="%(prog)s v"+__version__,
@@ -520,5 +539,8 @@ def main() -> int:
 			print("(Hint: use -h/--help for usage)", file=sys.stderr)
 			return 1
 
+	if not find_executable("atstccfg"):
+		print("Could not find atstccfg executable - this is required to run ORT!", file=sys.stderr)
+		return 1
 
 	return doMain(args)

@@ -53,7 +53,7 @@ public class TrafficOpsUtils {
 	}
 
 	public String getAuthUrl() {
-		return getUrl("api.auth.url", "https://${toHostname}/api/1.3/user/login");
+		return getUrl("api.auth.url", "https://${toHostname}/api/2.0/user/login");
 	}
 
 	public String getUsername() {

@@ -20,6 +20,18 @@
 				"host3",
 				"host4"
 			]
+		},
+		"csd-group": {
+			"network6": [
+				"fd12:3456::/64"
+			],
+			"network": [
+				"192.168.42.0/24"
+			],
+			"caches": [
+				"edge-cache-csd-1",
+				"edge-cache-csd-2"
+			]
 		}
 	}
 }

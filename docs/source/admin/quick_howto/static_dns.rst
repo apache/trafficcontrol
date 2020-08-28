@@ -29,7 +29,7 @@ Example
 To set up the aforementioned rule, follow these steps.
 
 #. In Traffic Portal, expand the :ref:`tp-services` sidebar menu and select :guilabel:`Delivery Services`.
-#. From the now-displayed table of :term:`Delivery Service`\ s, select the desired one for static DNS record configuration.
+#. From the now-displayed table of :term:`Delivery Services`, select the desired one for static DNS record configuration.
 #. From the :guilabel:`More` drop-down menu, select :guilabel:`Static DNS Entries`. The displayed table will probably be empty.
 
 	.. figure:: static_dns/00.png

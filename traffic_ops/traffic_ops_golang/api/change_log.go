@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -70,7 +71,11 @@ func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
 	}
 	keyStr += "}"
-	msg := action + " " + objType + ": " + auditName + " keys: " + keyStr
+	id, ok := keys["id"]
+	if !ok {
+		id = "N/A"
+	}
+	msg := fmt.Sprintf("%v: %v, ID: %v, ACTION: %v %v, keys: %v", strings.ToTitle(objType), auditName, id, strings.Title(action), objType, keyStr)
 	return CreateChangeLogRawErr(level, msg, user, tx)
 }
 

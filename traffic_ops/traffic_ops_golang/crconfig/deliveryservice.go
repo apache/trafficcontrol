@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 const CDNSOAMinimum = 30 * time.Second
@@ -91,12 +92,46 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 	}
 
 	q := `
-select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled, d.consistent_hash_regex
-from deliveryservice as d
-inner join type as t on t.id = d.type
-left outer join profile as p on p.id = d.profile
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
+SELECT d.anonymous_blocking_enabled,
+       d.consistent_hash_regex,
+       d.deep_caching_type,
+       d.initial_dispersion,
+       d.dns_bypass_cname,
+       d.dns_bypass_ip,
+       d.dns_bypass_ip6,
+       d.dns_bypass_ttl,
+       (SELECT ARRAY_AGG(name ORDER BY name)
+                         FROM deliveryservice_consistent_hash_query_param
+                         WHERE deliveryservice_id = d.id) AS query_keys,
+       d.routing_name,
+       d.ccr_dns_ttl AS ttl,
+       d.ecs_enabled,
+       d.regional_geo_blocking,
+       d.geo_limit,
+       d.geo_limit_countries,
+       d.geolimit_redirect_url,
+       d.geo_provider,
+       d.http_bypass_fqdn,
+       d.ipv6_routing_enabled,
+       d.max_dns_answers,
+       d.miss_lat,
+       d.miss_long,
+       p.name AS profile,
+       d.protocol,
+       (SELECT ARRAY_AGG(required_capability ORDER BY required_capability)
+                         FROM deliveryservices_required_capability
+                         WHERE deliveryservice_id = d.id) AS required_capabilities,
+       d.topology,
+       d.tr_request_headers,
+       d.tr_response_headers,
+       d.tr_response_headers,
+       t.name AS type,
+       d.xml_id
+FROM deliveryservice AS d
+INNER JOIN type AS t ON t.id = d.type
+LEFT OUTER JOIN profile AS p ON p.id = d.profile
+WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
+AND d.active = true
 `
 	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
 	rows, err := tx.Query(q, cdn)
@@ -107,10 +142,11 @@ and d.active = true
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			Protocol:        &tc.CRConfigDeliveryServiceProtocol{},
-			ResponseHeaders: map[string]string{},
-			Soa:             cdnSOA,
-			TTLs:            &tc.CRConfigTTL{},
+			ConsistentHashQueryParams: []string{},
+			Protocol:                  &tc.CRConfigDeliveryServiceProtocol{},
+			ResponseHeaders:           map[string]string{},
+			Soa:                       cdnSOA,
+			TTLs:                      &tc.CRConfigTTL{},
 		}
 
 		missLat := sql.NullFloat64{}
@@ -134,14 +170,49 @@ and d.active = true
 		dnsBypassCName := sql.NullString{}
 		httpBypassFQDN := sql.NullString{}
 		ip6RoutingEnabled := sql.NullBool{}
+		ecsEnabled := sql.NullBool{}
 		deepCachingType := sql.NullString{}
 		trRequestHeaders := sql.NullString{}
 		trResponseHeaders := sql.NullString{}
 		anonymousBlocking := false
 		consistentHashRegex := sql.NullString{}
-		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking, &consistentHashRegex); err != nil {
+		err := rows.Scan(
+			&anonymousBlocking,
+			&consistentHashRegex,
+			&deepCachingType,
+			&dispersion,
+			&dnsBypassCName,
+			&dnsBypassIP,
+			&dnsBypassIP6,
+			&dnsBypassTTL,
+			pq.Array(&ds.ConsistentHashQueryParams),
+			&ds.RoutingName,
+			&ds.TTL,
+			&ecsEnabled,
+			&geoBlocking,
+			&geoLimit,
+			&geoLimitCountries,
+			&geoLimitRedirectURL,
+			&geoProvider,
+			&httpBypassFQDN,
+			&ip6RoutingEnabled,
+			&maxDNSAnswers,
+			&missLat,
+			&missLon,
+			&profile,
+			&protocol,
+			pq.Array(&ds.RequiredCapabilities),
+			&ds.Topology,
+			&trRequestHeaders,
+			&trRespHdrsStr,
+			&trResponseHeaders,
+			&ttype,
+			&xmlID,
+		)
+		if err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
+
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
 			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}
@@ -313,6 +384,7 @@ and d.active = true
 		}
 
 		ds.IP6RoutingEnabled = &ip6RoutingEnabled.Bool // No Valid check, false if null
+		ds.EcsEnabled = &ecsEnabled.Bool               // No Valid check, false if null
 
 		if trResponseHeaders.Valid && trResponseHeaders.String != "" {
 			trResponseHeaders.String = strings.Replace(trResponseHeaders.String, "__RETURN__", "\n", -1)
@@ -409,6 +481,8 @@ order by dr.set_number asc
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()
+	// a map to keep track of the ds name and the last order of the regex for that ds
+	dsNameOrderMap := make(map[string]int)
 
 	for rows.Next() {
 		pattern := ""
@@ -419,12 +493,14 @@ order by dr.set_number asc
 		if err := rows.Scan(&pattern, &ttype, &dstype, &setnum, &dsname); err != nil {
 			return nil, nil, errors.New("scanning deliveryservice regexes: " + err.Error())
 		}
-
+		if _, ok := dsNameOrderMap[dsname]; !ok {
+			dsNameOrderMap[dsname] = 0
+		} else {
+			dsNameOrderMap[dsname] = dsNameOrderMap[dsname] + 1
+		}
 		protocolStr := getProtocolStr(dstype)
 
-		for len(dsmatchsets[dsname]) <= setnum {
-			dsmatchsets[dsname] = append(dsmatchsets[dsname], nil) // TODO change to not insert empties? Current behavior emulates old Perl CRConfig
-		}
+		dsmatchsets[dsname] = append(dsmatchsets[dsname], nil)
 
 		matchType := ""
 		switch ttype {
@@ -439,10 +515,12 @@ order by dr.set_number asc
 			continue
 		}
 
-		if dsmatchsets[dsname][setnum] == nil {
-			dsmatchsets[dsname][setnum] = &tc.MatchSet{}
+		// If there are gaps between two or more DS regex orders, do not add these missing orders in the final list.
+		// Instead, skip over them and add the next regex with a valid order.
+		if dsmatchsets[dsname][dsNameOrderMap[dsname]] == nil {
+			dsmatchsets[dsname][dsNameOrderMap[dsname]] = &tc.MatchSet{}
 		}
-		matchset := dsmatchsets[dsname][setnum]
+		matchset := dsmatchsets[dsname][dsNameOrderMap[dsname]]
 		matchset.Protocol = protocolStr
 		matchset.MatchList = append(matchset.MatchList, tc.MatchList{MatchType: matchType, Regex: pattern})
 

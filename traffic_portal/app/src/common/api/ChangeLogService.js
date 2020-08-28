@@ -17,19 +17,32 @@
  * under the License.
  */
 
-var ChangeLogService = function(Restangular, $rootScope, httpService, ENV) {
+var ChangeLogService = function($http, $rootScope, ENV) {
 
 	this.getNewLogCount = function() {
-		return httpService.get(ENV.api['root'] + 'logs/newcount', { ignoreLoadingBar: true });
+		return $http.get(ENV.api['root'] + 'logs/newcount', { ignoreLoadingBar: true }).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
 	this.getChangeLogs = function(queryParams) {
-		// broadcast an event that will zero out the change log count immediately
 		$rootScope.$broadcast('changeLogService::getChangeLogs');
-		return Restangular.all('logs').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'logs', {params: queryParams}).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
 };
 
-ChangeLogService.$inject = ['Restangular', '$rootScope', 'httpService', 'ENV'];
+ChangeLogService.$inject = ['$http', '$rootScope', 'ENV'];
 module.exports = ChangeLogService;

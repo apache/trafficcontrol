@@ -50,13 +50,27 @@ Configuring Traffic Monitor
 
 Configuration Overview
 ----------------------
-Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+
+Polling protocol can be set for peers and caches and has 3 options:
+
+:ipv4only: Traffic Monitor will communicate with the peers or caches only over IPv4
+:ipv6only: Traffic Monitor will communicate with the peers or caches only over IPv6 (use case for peers is if the other Traffic Monitor are only available over IPv6)
+:both (the default): Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
+
+.. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
+
+Peering and Optimistic Quorum
+-----------------------------
+As mentioned in the :ref:`health-proto` section of the :ref:`tm-overview` overview, peering a Traffic Monitor with one or more other Traffic Monitors enables the optimistic health protocol. In order to leverage the optimistic quorum feature along with the optimistic health protocol, a minimum of three Traffic Monitors are required. The optimistic quorum feature allows a Traffic Monitor to withdraw itself from the optimistic health protocol when it loses connectivity to a number of its peers.
+
+To enable the optimistic quorum feature, the ``peer_optimistic_quorum_min`` property in ``traffic_monitor.cfg`` should be configured with a value greater than zero that specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. If at any time the number of available peers falls below this threshold, the local Traffic Monitor will serve 503s whenever the aggregated, optimistic health protocol enabled view of the CDN's health is requested. Traffic Monitor will continue serving 503s and logging errors in ``traffic_monitor.log`` until the minimum number of peers are available. Once the mininimum number of peers are available, the local Traffic Monitor can resume participation in the optimisic health protocol. This prevents negative states caused by network isolation of a Traffic Monitor from propagating to downstream components such as Traffic Router.
 
 Stat and Health Flush Configuration
 -----------------------------------
-The Monitor has a health flush interval, a stat flush interval, and a stat buffer interval. Recall that the monitor polls both stats and health. The health poll is so small and fast, a buffer is largely unnecessary. However, in a large CDN, the stat poll may involve thousands of :term:`cache server` s with thousands of stats each, or more, and CPU may be a bottleneck.
+The Monitor has a health flush interval, a stat flush interval, and a stat buffer interval. Recall that the monitor polls both stats and health. The health poll is so small and fast, a buffer is largely unnecessary. However, in a large CDN, the stat poll may involve thousands of :term:`cache servers` with thousands of stats each, or more, and CPU may be a bottleneck.
 
-The flush intervals, ``health_flush_interval_ms`` and ``stat_flush_interval_ms``, indicate how often to flush stats or health, if results are continuously coming in with no break. This prevents starvation. Ideally, if there is enough CPU, the flushes should never occur. The default flush times are 200 milliseconds, which is suggested as a reasonable starting point; operators may adjust them higher or lower depending on the need to get health data and stop directing client traffic to unhealthy :term:`cache server` s as quickly as possible, balanced by the need to reduce CPU usage.
+The flush intervals, ``health_flush_interval_ms`` and ``stat_flush_interval_ms``, indicate how often to flush stats or health, if results are continuously coming in with no break. This prevents starvation. Ideally, if there is enough CPU, the flushes should never occur. The default flush times are 200 milliseconds, which is suggested as a reasonable starting point; operators may adjust them higher or lower depending on the need to get health data and stop directing client traffic to unhealthy :term:`cache servers` as quickly as possible, balanced by the need to reduce CPU usage.
 
 The stat buffer interval, ``stat_buffer_interval_ms``, also provides a temporal buffer for stat processing. Stats will not be processed except after this interval, whereupon all pending stats will be processed, unless the flush interval occurs as a starvation safety. The stat buffer and flush intervals may be thought of as a state machine with two states: the "buffer state" accepts results until the buffer interval has elapsed, whereupon the "flush state" is entered, and results are accepted while outstanding, and processed either when no results are outstanding or the flush interval has elapsed.
 
@@ -67,3 +81,21 @@ It is not recommended to set either flush interval to 0, regardless of the stat 
 Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.
+
+.. _admin-tm-extensions:
+
+Extensions
+==========
+Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`health.polling.format <param-health-polling-format>` :term:`Parameter`, or the default format (``astats``) will be assumed.
+
+For instructions on how to develop a parsing extension, refer to the :atc-godoc:`traffic_monitor/cache` package's documentation.
+
+Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is controlled by the :ref:`health.polling.url <param-health-polling-url>` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
+
+- System "loadavg" (only requires the one-minute value)
+
+	.. seealso:: For more information on what "loadavg" is, refer to the :manpage:`proc(5)` manual page.
+
+- Input bytes, output bytes, and speeds for all monitored network interfaces
+
+There are other optional and/or :term:`Delivery Service`-related statistics that may cause Traffic Stats to not have the right information if not provided, but the above are essential for implementing :ref:`health-proto`.

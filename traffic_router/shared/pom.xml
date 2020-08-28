@@ -25,7 +25,7 @@ under the License.
 	<parent>
 		<artifactId>traffic_router</artifactId>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-		<version>3.0.0</version>
+		<version>5.0.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -50,13 +50,13 @@ under the License.
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
+						<ruleset>${project.basedir}${file.separator}build${file.separator}pmd${file.separator}ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>log4j</groupId>

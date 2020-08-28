@@ -22,6 +22,7 @@ package asn
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -55,7 +56,6 @@ func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOASNV11) UpdateQuery() string { return updateQuery() }
 func (v *TOASNV11) DeleteQuery() string { return deleteQuery() }
-
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
@@ -98,10 +98,21 @@ func (asn TOASNV11) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
-func (as *TOASNV11) Read() ([]interface{}, error, error, int) { return api.GenericRead(as) }
-func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
-func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
+func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
+func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, as, useIMS)
+}
+func (v *TOASNV11) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(a.last_updated) as t from asn a
+JOIN
+  cachegroup c ON a.cachegroup = c.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
+}
+
+func (as *TOASNV11) Update() (error, error, int) { return api.GenericUpdate(as) }
+func (as *TOASNV11) Delete() (error, error, int) { return api.GenericDelete(as) }
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +125,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	asn := &TOASNV11{}
 	asn.SetInfo(inf)
-	asns, userErr, sysErr, errCode := api.GenericRead(asn)
+	asns, userErr, sysErr, errCode, _ := api.GenericRead(r.Header, asn, false)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

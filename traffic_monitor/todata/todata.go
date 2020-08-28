@@ -63,17 +63,21 @@ func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (tc.Del
 
 // NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
-	return Regexes{DirectMatches: map[string]tc.DeliveryServiceName{}, DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{}, RegexMatch: map[*regexp.Regexp]tc.DeliveryServiceName{}}
+	return Regexes{
+		DirectMatches:                      map[string]tc.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]tc.DeliveryServiceName{},
+	}
 }
 
 // TOData holds CDN data fetched from Traffic Ops.
 type TOData struct {
+	DeliveryServiceRegexes Regexes
 	DeliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName
+	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
+	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
-	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
-	DeliveryServiceRegexes Regexes
-	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 }
 
 // New returns a new empty TOData object, initializing pointer members.
@@ -123,6 +127,7 @@ type CRConfig struct {
 		Type             string                              `json:"type"`
 	} `json:"contentServers"`
 	DeliveryServices map[tc.DeliveryServiceName]struct {
+		Topology  tc.TopologyName `json:"topology"`
 		Matchsets []struct {
 			Protocol  string `json:"protocol"`
 			MatchList []struct {
@@ -130,6 +135,9 @@ type CRConfig struct {
 			} `json:"matchlist"`
 		} `json:"matchsets"`
 	} `json:"deliveryServices"`
+	Topologies map[tc.TopologyName]struct {
+		Nodes []string `json:"nodes"`
+	}
 }
 
 // Fetch gets the CRConfig from Traffic Ops, creates the TOData maps, and atomically sets the TOData.
@@ -191,11 +199,28 @@ func getDeliveryServiceServers(crc CRConfig) (map[tc.DeliveryServiceName][]tc.Ca
 	dsServers := map[tc.DeliveryServiceName][]tc.CacheName{}
 	serverDses := map[tc.CacheName][]tc.DeliveryServiceName{}
 
+	topologyCacheGroupDses := map[string][]tc.DeliveryServiceName{}
+	for deliveryServiceName, deliveryService := range crc.DeliveryServices {
+		if deliveryService.Topology == "" {
+			continue
+		}
+		for _, cacheGroup := range crc.Topologies[deliveryService.Topology].Nodes {
+			topologyCacheGroupDses[cacheGroup] = append(topologyCacheGroupDses[cacheGroup], deliveryServiceName)
+		}
+	}
+
 	for serverName, serverData := range crc.ContentServers {
+		if cacheGroupDses, inTopology := topologyCacheGroupDses[serverData.CacheGroup]; inTopology {
+			for _, deliveryServiceName := range cacheGroupDses {
+				dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
+			}
+			serverDses[serverName] = append(serverDses[serverName], cacheGroupDses...)
+		}
 		for deliveryServiceName := range serverData.DeliveryServices {
 			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
 			serverDses[serverName] = append(serverDses[serverName], deliveryServiceName)
 		}
+
 	}
 	return dsServers, serverDses, nil
 }

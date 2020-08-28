@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils) {
+var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils, $filter) {
 
 	var setSSLKeys = function(sslKeys) {
 		if (!sslKeys.hostname) {
@@ -35,10 +35,15 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 
 	$scope.deliveryService = deliveryService;
 	$scope.sslKeys = setSSLKeys(sslKeys);
+	if ($scope.sslKeys.authType === undefined || $scope.sslKeys.authType === '') {
+        $scope.sslKeys.authType = 'Not Assigned';
+    }
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 	$scope.navigateToPath = locationUtils.navigateToPath;
+
+	$scope.formattedExpiration = $scope.sslKeys.expiration !== undefined ? $filter('date')($scope.sslKeys.expiration, 'MM/dd/yyyy') : undefined;
 
 	$scope.generateKeys = function() {
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
@@ -64,12 +69,10 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
                     $anchorScroll();
                     if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
                 });
-		}, function () {
-			// do nothing
 		});
 	};
 
 };
 
-FormDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', '$scope', 'locationUtils', 'deliveryServiceSslKeysService', '$uibModal', '$anchorScroll', 'formUtils'];
+FormDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', '$scope', 'locationUtils', 'deliveryServiceSslKeysService', '$uibModal', '$anchorScroll', 'formUtils', '$filter'];
 module.exports = FormDeliveryServiceSslKeysController;

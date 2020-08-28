@@ -90,8 +90,8 @@ def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 
 	for cdn in cdns:
 		yield "/CRConfig-Snapshots/%s/CRConfig.json" % cdn
-		yield "/api/1.3/cdns/%s/snapshot" % cdn
-		yield "/api/1.3/cdns/%s/snapshot/new" % cdn
+		yield "/api/2.0/cdns/%s/snapshot" % cdn
+		yield "/api/2.0/cdns/%s/snapshot/new" % cdn
 
 
 def consolidateVariables(kwargs:argparse.Namespace) -> typing.Tuple[str, str,

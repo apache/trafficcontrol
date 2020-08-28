@@ -23,10 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	dbhelp "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -44,13 +45,12 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	profileName := inf.Params["name"]
-	profileID, profileExists, err := dbhelp.GetProfileIDFromName(profileName, inf.Tx.Tx)
+	profileID, ok, err := dbhelpers.GetProfileIDFromName(profileName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile '"+profileName+"' ID: "+err.Error()))
 		return
-	}
-	if !profileExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no profile with that name exists"), nil)
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no profile with that name exists"), nil)
 		return
 	}
 	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx.Tx)
@@ -59,6 +59,7 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}
+	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.Itoa(profileID)+", ACTION: Assigned parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Assign parameters successfully to profile "+profileName, resp)
 }
 

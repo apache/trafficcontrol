@@ -29,11 +29,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-// List returns the list of plugins compiled into the calling executable.
+// List returns the list of plugin names compiled into the calling executable.
 func List() []string {
 	l := []string{}
 	for _, p := range initPlugins {
-		l = append(l, p.name)
+		l = append(l, p.info.Name)
 	}
 	return l
 }
@@ -53,11 +53,11 @@ func getEnabled(enabled []string) pluginsSlice {
 	}
 	enabledPlugins := pluginsSlice{}
 	for _, plugin := range initPlugins {
-		if _, ok := enabledM[plugin.name]; !ok {
-			log.Infoln("getEnabled skipping: '" + plugin.name + "'")
+		if _, ok := enabledM[plugin.info.Name]; !ok {
+			log.Infoln("getEnabled skipping: '" + plugin.info.Name + "'")
 			continue
 		}
-		log.Infoln("plugin enabling: '" + plugin.name + "'")
+		log.Infoln("plugin enabling: '" + plugin.info.Name + "'")
 		enabledPlugins = append(enabledPlugins, plugin)
 	}
 	sort.Sort(enabledPlugins)
@@ -81,7 +81,7 @@ func loadFuncs(ps pluginsSlice) map[string]LoadFunc {
 		if plugin.funcs.load == nil {
 			continue
 		}
-		lf[plugin.name] = LoadFunc(plugin.funcs.load)
+		lf[plugin.info.Name] = LoadFunc(plugin.funcs.load)
 	}
 	return lf
 }
@@ -89,9 +89,10 @@ func loadFuncs(ps pluginsSlice) map[string]LoadFunc {
 type Plugins interface {
 	OnStartup(d StartupData)
 	OnRequest(d OnRequestData) bool
+	GetInfo() []Info
 }
 
-func AddPlugin(priority uint64, funcs Funcs) {
+func AddPlugin(priority uint64, funcs Funcs, description, version string) {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names") // print, because this is called in init, loggers don't exist yet
@@ -100,7 +101,12 @@ func AddPlugin(priority uint64, funcs Funcs) {
 
 	pluginName := strings.TrimSuffix(path.Base(filename), ".go")
 	log.Debugln("AddPlugin adding " + pluginName)
-	initPlugins = append(initPlugins, pluginObj{funcs: funcs, priority: priority, name: pluginName})
+	i := Info{
+		Name:        pluginName,
+		Description: description,
+		Version:     version,
+	}
+	initPlugins = append(initPlugins, pluginObj{funcs: funcs, priority: priority, info: i})
 }
 
 type Funcs struct {
@@ -142,7 +148,13 @@ type OnRequestFunc func(d OnRequestData) IsRequestHandled
 type pluginObj struct {
 	funcs    Funcs
 	priority uint64
-	name     string
+	info     Info
+}
+
+type Info struct {
+	Name        string
+	Description string
+	Version     string
 }
 
 type plugins struct {
@@ -163,12 +175,12 @@ var initPlugins = pluginsSlice{}
 func (ps plugins) OnStartup(d StartupData) {
 	for _, p := range ps.slice {
 		ictx := interface{}(nil)
-		ps.ctx[p.name] = &ictx
+		ps.ctx[p.info.Name] = &ictx
 		if p.funcs.onStartup == nil {
 			continue
 		}
-		d.Ctx = ps.ctx[p.name]
-		d.Cfg = ps.cfg[p.name]
+		d.Ctx = ps.ctx[p.info.Name]
+		d.Cfg = ps.cfg[p.info.Name]
 		p.funcs.onStartup(d)
 	}
 }
@@ -178,15 +190,23 @@ func (ps plugins) OnRequest(d OnRequestData) bool {
 	log.Debugf("DEBUG plugins.OnRequest calling %+v plugins\n", len(ps.slice))
 	for _, p := range ps.slice {
 		if p.funcs.onRequest == nil {
-			log.Debugln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
+			log.Debugln("plugins.OnRequest plugging " + p.info.Name + " - no onRequest func")
 			continue
 		}
-		d.Ctx = ps.ctx[p.name]
-		d.Cfg = ps.cfg[p.name]
-		log.Debugln("plugins.OnRequest plugging " + p.name)
+		d.Ctx = ps.ctx[p.info.Name]
+		d.Cfg = ps.cfg[p.info.Name]
+		log.Debugln("plugins.OnRequest plugging " + p.info.Name)
 		if stop := p.funcs.onRequest(d); stop {
 			return true
 		}
 	}
 	return false
+}
+
+func (ps plugins) GetInfo() []Info {
+	pluginsInfo := []Info{}
+	for _, p := range ps.slice {
+		pluginsInfo = append(pluginsInfo, p.info)
+	}
+	return pluginsInfo
 }

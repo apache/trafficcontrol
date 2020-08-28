@@ -39,6 +39,10 @@
 					sendReasonPhrase="true"/>
 		<Connector port="3333" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   connectionTimeout="10000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="ApiPort"/>
+		<Connector port="3443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				   scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" connectionTimeout="10000"
+				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecureApiPort" sendReasonPhrase="true"
+				   sslImplementationName="com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation"> </Connector>
 		<Connector port="443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" connectionTimeout="10000"
 				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sendReasonPhrase="true"

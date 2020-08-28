@@ -1,0 +1,55 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <h3 class="modal-title">Add Child Cache Groups to {{(parent.cachegroup) ? parent.cachegroup : 'ROOT'}}</h3>
+</div>
+<div class="modal-body">
+    <table id="availableCacheGroupsTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
+        <thead>
+        <tr class="headings">
+            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)"></th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th style="text-align: right;">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr id="{{::cg.id}}" title="{{cg.used ? 'Cache group already used in topology' : ''}}" class="cg-row" ng-class="{ 'success': cg.selected && !cg.used, 'active': cg.used }" ng-repeat="cg in ::cacheGroups" ng-click="onChange(cg)">
+            <td><input type="checkbox" ng-model="cg.selected" ng-disabled="cg.used"></td>
+            <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
+            <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
+            <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
+            <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
+            <td style="text-align: right;">
+                <a class="link action-link" title="View Cache Group Servers" ng-click="viewCacheGroupServers(cg, $event)">View Servers</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-link" ng-click="cancel()">cancel</button>
+    <button type="button" class="btn btn-primary" ng-click="submit()">Submit</button>
+</div>

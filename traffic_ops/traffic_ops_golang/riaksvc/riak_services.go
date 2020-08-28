@@ -55,7 +55,10 @@ var (
 	healthCheckInterval time.Duration
 )
 
-type AuthOptions riak.AuthOptions
+type TOAuthOptions struct {
+	riak.AuthOptions
+	MaxTLSVersion *string
+}
 
 // StorageCluster ...
 type StorageCluster interface {
@@ -84,6 +87,28 @@ func (ri RiakStorageCluster) Execute(command riak.Command) error {
 	return ri.Cluster.Execute(command)
 }
 
+func setMaxTLSVersion(riakConfig *TOAuthOptions) error {
+	if riakConfig.MaxTLSVersion == nil {
+		if riakConfig.TlsConfig.MaxVersion == 0 {
+			riakConfig.TlsConfig.MaxVersion = tls.VersionTLS11
+		}
+		return nil
+	}
+	tlsVersions := map[string]uint16{
+		"1.0": tls.VersionTLS10,
+		"1.1": tls.VersionTLS11,
+		"1.2": tls.VersionTLS12,
+		"1.3": tls.VersionTLS13,
+	}
+	var err error
+	if version, exists := tlsVersions[*riakConfig.MaxTLSVersion]; exists {
+		riakConfig.TlsConfig.MaxVersion = version
+	} else {
+		err = fmt.Errorf("%v is not a valid TLS version", riakConfig.MaxTLSVersion)
+	}
+	return err
+}
+
 func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 	riakConfString, err := ioutil.ReadFile(riakConfigFile)
 	if err != nil {
@@ -92,12 +117,13 @@ func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 
 	riakConfBytes := []byte(riakConfString)
 
-	rconf := &riak.AuthOptions{}
+	rconf := &TOAuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
 	err = json.Unmarshal(riakConfBytes, &rconf)
 	if err != nil {
 		return false, nil, fmt.Errorf("Unmarshaling riak conf '%v': %v", riakConfigFile, err)
 	}
+	setMaxTLSVersion(rconf)
 
 	type config struct {
 		Hci string `json:"HealthCheckInterval"`
@@ -121,7 +147,7 @@ func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 
 	log.Infoln("Riak health check interval set to:", healthCheckInterval)
 
-	return true, rconf, nil
+	return true, &rconf.AuthOptions, nil
 }
 
 // deletes an object from riak storage
@@ -235,7 +261,7 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 	defer rows.Close()
 	servers := []ServerAddr{}
 	if riakPort == nil {
-		riakPort = util.UintPtr(DefaultRiakPort)
+		riakPort = util.UIntPtr(DefaultRiakPort)
 	}
 	portStr := strconv.Itoa(int(*riakPort))
 	for rows.Next() {
@@ -321,10 +347,15 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint)
 		newcluster, err := GetRiakCluster(newservers, authOptions)
 		if err == nil {
 			if err := newcluster.Start(); err == nil {
-				log.Infoln("New cluster started")
+				log.Infof("New riak cluster started: %p\n", newcluster)
 
 				if sharedCluster != nil {
-					runtime.SetFinalizer(sharedCluster, sharedCluster.Stop())
+					runtime.SetFinalizer(sharedCluster, func(c *riak.Cluster) {
+						log.Infof("running finalizer for riak sharedcluster (%p)\n", c)
+						if err := c.Stop(); err != nil {
+							log.Errorf("in finalizer for riak sharedcluster (%p): stopping cluster: %s\n", c, err.Error())
+						}
+					})
 				}
 
 				sharedCluster = newcluster

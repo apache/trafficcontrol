@@ -41,7 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	"github.com/json-iterator/go"
 )
@@ -193,6 +193,7 @@ func StartOpsConfigManager(
 					toSession.Set(realToSession)
 					// At this point we have a valid 'dummy' session. This will allow us to pull from disk but will also retry when TO comes up
 					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
+					newOpsConfig.UsingDummyTO = true
 					break
 				}
 
@@ -200,9 +201,11 @@ func StartOpsConfigManager(
 				continue
 			} else {
 				toSession.Set(realToSession)
+				newOpsConfig.UsingDummyTO = false
 				break
 			}
 		}
+		opsConfig.Set(newOpsConfig)
 
 		if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))

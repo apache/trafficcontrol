@@ -31,7 +31,7 @@ import (
 
 type MonitorCfg struct {
 	CDN string
-	Cfg tc.TrafficMonitorConfigMap
+	Cfg tc.LegacyTrafficMonitorConfigMap
 }
 
 type MonitorConfigPoller struct {

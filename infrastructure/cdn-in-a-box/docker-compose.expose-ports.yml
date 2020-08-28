@@ -46,12 +46,14 @@ services:
       - "3080:80"
       - "3443:443"
       - "3333:3333"
+      - "2222:3443"
   influxdb:
     ports:
       - "8086:8086"
   trafficvault:
     ports:
       - "8087:8087"
+      - "8088:8088"
       - "8098:8098"
   edge:
     ports:
@@ -66,3 +68,6 @@ services:
     ports:
       - "9353:53/tcp"
       - "9353:53/udp"
+  smtp:
+    ports:
+      - "4443:443"

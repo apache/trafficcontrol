@@ -15,9 +15,14 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.powermock.reflect.Whitebox;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -35,6 +40,35 @@ public class DeliveryServiceTest {
     }
 
     @Test
+    public void itHandlesLackOfConsistentHashQueryParamsInJSON() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 0;
+    }
+
+    @Test
+    public void itHandlesDuplicatesInConsistentHashQueryParams() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"]}");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 2;
+        assert d.getConsistentHashQueryParams().contains("test");
+        assert d.getConsistentHashQueryParams().contains("quest");
+    }
+
+    @Test
+    public void itExtractsQueryParams() throws Exception {
+        final JsonNode json = (new ObjectMapper()).readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
+        final HTTPRequest r = new HTTPRequest();
+        r.setPath("/path1234/some_stream_name1234/some_other_info.m3u8");
+        r.setQueryString("test=value&foo=fizz&quest=oth%20ervalue&bar=buzz");
+        assert (new DeliveryService("test", json)).extractSignificantQueryParams(r).equals("quest=oth ervaluetest=value");
+    }
+
+    @Test
     public void itConfiguresRequestHeadersFromJSON() throws Exception {
         final ObjectMapper mapper = new ObjectMapper();
         final String jsonStr = "{\"routingName\":\"edge\",\"requestHeaders\":[\"Cookie\",\"Cache-Control\",\"If-Modified-Since\",\"Content-Type\"],\"coverageZoneOnly\":false}";
@@ -45,4 +79,12 @@ public class DeliveryServiceTest {
         assertThat(deliveryService.getRequestHeaders(), containsInAnyOrder("Cache-Control", "Cookie", "Content-Type", "If-Modified-Since"));
     }
 
+    @Test
+    public void itAddsRequiredCapabilities() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode jsonConfiguration = mapper.readTree("{\"requiredCapabilities\":[\"all-read\",\"all-write\",\"cdn-read\"],\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
+        final DeliveryService deliveryService = new DeliveryService("has-required-capabilities", jsonConfiguration);
+
+        assertThat(Whitebox.getInternalState(deliveryService, "requiredCapabilities"), containsInAnyOrder("all-read", "all-write", "cdn-read"));
+    }
 }

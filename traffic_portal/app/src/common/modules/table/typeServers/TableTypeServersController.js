@@ -17,22 +17,13 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $controller, $scope) {
+var TableTypeServersController = function(type, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'typeServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.type = type;
-
-	angular.element(document).ready(function () {
-		$('#typeServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$controller', '$scope'];
+TableTypeServersController.$inject = ['type', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableTypeServersController;

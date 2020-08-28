@@ -20,7 +20,12 @@ package types
  */
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -41,6 +46,9 @@ func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
 func (v *TOType) SelectQuery() string           { return selectQuery() }
+func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
+}
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
@@ -94,10 +102,74 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
-func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
-func (tp *TOType) Create() (error, error, int)              { return api.GenericCreate(tp) }
-func (tp *TOType) Delete() (error, error, int)              { return api.GenericDelete(tp) }
+func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, tp, useIMS)
+}
+
+func (tp *TOType) Update() (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New("can not update type"), nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(tp)
+}
+
+func (tp *TOType) Delete() (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
+	}
+	return api.GenericDelete(tp)
+}
+
+func (tp *TOType) Create() (error, error, int) {
+	if !tp.AllowMutation(true) {
+		return errors.New("can not create type"), nil, http.StatusBadRequest
+	}
+	return api.GenericCreate(tp)
+}
+
+func (tp *TOType) AllowMutation(forCreation bool) bool {
+	apiInfo := tp.APIInfo()
+	if apiInfo.Version.Major < 2 {
+		return true
+	}
+	if !forCreation {
+		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
+		if userErr != nil || sysErr != nil {
+			return false
+		} else if actualUseInTable != "server" {
+			return false
+		}
+	} else if *tp.UseInTable != "server" { // Only allow creating of types with UseInTable being "server"
+		return false
+	}
+	return true
+}
+
+func (tp *TOType) loadUseInTable() (error, error, string) {
+	var useInTable string
+	// ID is only nil on creation, should not call this method in that case
+	if tp.ID != nil {
+		query := `SELECT use_in_table from type where id=$1`
+		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
+		if err == sql.ErrNoRows {
+			return nil, nil, *tp.UseInTable
+		}
+		if err != nil {
+			return nil, err, ""
+		}
+	} else {
+		return errors.New("no type with that key found"), nil, ""
+	}
+
+	return nil, nil, useInTable
+}
+
+func selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` typ ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='type') as res`
+}
 
 func selectQuery() string {
 	return `SELECT

@@ -22,9 +22,20 @@ The Apache Traffic Control documentation is written in :abbr:`RST (reStructuredT
 
 .. seealso:: `The docutils RST reference <http://docutils.sourceforge.net/rst.html>`_.
 
+.. _docs-build:
+
 Building
 ========
-To build the documentation, see :ref:`docs-build`.
+This documentation uses the `Sphinx documentation build system <http://www.sphinx-doc.org/en/master/>`_, and as such requires a Python3 version that is at least 3.4.1. It also has dependency on Sphinx, and Sphinx extensions and themes. All of these can be easily installed using `pip` by referencing the requirements file like so:
+
+.. code-block:: shell
+	:caption: Run from the Repository's Root Directory
+
+	python3 -m pip install --user -r docs/source/requirements.txt
+
+Once all dependencies have been satisfied, build using the Makefile at ``docs/Makefile``.
+
+Alternatively, it is also possible to :ref:`pkg` or to :ref:`build-with-dc`, both of which will output a documentation "tarball" to ``dist/``.
 
 Writing
 =======
@@ -182,14 +193,16 @@ Section headings should *always* follow this order exactly, and **never** skip l
 
 Terms
 """""
-Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache server`\ s associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache server`\ s responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
+Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache servers` associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache servers` responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
 Generally speaking, be wary of using the word "cache". To most people that means the *actual* cache on a hard disk somewhere. This word is frequently confused with " :term:`cache server`", which - when accurate - is always preferred over "cache".
+
+.. _api-doc-guidelines:
 
 Documenting API Routes
 ----------------------
-Follow all of the formatting conventions in `Formatting`_. Maintain the structural format of the API documentation as outlined in the :ref:`to-api` section. API routes that have variable paths e.g. :ref:`to-api-profiles-id` should use `mustache templates <https://mustache.github.io/mustache.5.html>`_ **not** the Mojolicious-specific ``:param`` syntax. This keeps the templates generic, familiar, and reflects the inability of a request path to contain procedural instructions or program logic. Please do not include the ``/api/1.x/`` part of the request path for Traffic Ops API endpoints. If an endpoint is unavailable prior to a specific version, use the ``.. versionadded`` directive to indicate that version. Likewise, do not make a new page for an endpoint when it changes across versions, instead call out the changes using the ``.. versionchanged`` directive. If an endpoint should not be used because newer endpoints provide the same functionality in a better way, use the ``.. deprecated`` directive to link to them and explain why they are better.
+Follow all of the formatting conventions in `Formatting`_. Maintain the structural format of the API documentation as outlined in the :ref:`to-api` section. API routes that have variable paths e.g. :ref:`to-api-profiles-id` should use `mustache templates <https://mustache.github.io/mustache.5.html>`_ **not** the Mojolicious-specific ``:param`` syntax. This keeps the templates generic, familiar, and reflects the inability of a request path to contain procedural instructions or program logic. Please do not include the ``/api/2.x/`` part of the request path for Traffic Ops API endpoints. If an endpoint is unavailable prior to a specific version, use the ``.. versionadded`` directive to indicate that version. Likewise, do not make a new page for an endpoint when it changes across versions, instead call out the changes using the ``.. versionchanged`` directive. If an endpoint should not be used because newer endpoints provide the same functionality in a better way, use the ``.. deprecated`` directive to link to them and explain why they are better.
 
-When documenting an API route, be sure to include *all* methods, request/response JSON payload fields, path parameters, and query parameters, whether they are optional or not. When describing a field in a JSON payload, remember that JSON does not have "hashes" it has "objects" or even "maps". When documenting path parameters such as profile ID in :ref:`to-api-profiles-id`, consider that the endpoint path cannot be formed without defining **all** path parameters, and so to label them as "required" is superfluous.
+When documenting an API route, be sure to include *all* methods, request/response JSON payload fields, path parameters, and query parameters, whether they are optional or not. When describing a field in a JSON payload, remember that JSON does not have "hashes" it has "objects" or even "maps". When documenting path parameters such as :term:`Profile` :ref:`profile-id` in :ref:`to-api-profiles-id`, consider that the endpoint path cannot be formed without defining **all** path parameters, and so to label them as "required" is superfluous.
 
 The "Response Example" must **always** exist. "TODO" is **not** an acceptable Response Example for new endpoints. The "Request Example" must only exist if the request requires data in the body (most commonly this will be for ``PATCH``, ``POST`` and ``PUT`` methods). It is, however, strongly advised that a request example be given if the endpoint takes Query Parameters or Path Parameters, and it is required if the Response Example is a response to a request that used a query or path parameter. If the Request Example *is* present, then the Response Example **must** be the appropriate response **to that request**. When generating Request/Response Examples, attempt to use the :ref:`ciab` environment whenever possible to provide a common basis and familiarity to new users who likely set up "CDN in a Box" as a primer for understanding CDNs/Traffic Control. Responses are sometimes hundreds of lines long, and in those cases only as much as is required for an understanding of the structure needs to be included in the example - along with a note mentioning that the output was trimmed. Also always attempt to place structure explanations before any example so that the content of the example can be understood by the reader (though in general the placement of a floating environment like a code listing is not known at compile-time). Whenever possible, the Request and Response examples should include the *complete HTTP stack*, which captures behavior like Query Parameters, Path Parameters and HTTP cookie operations like those used by e.g. :ref:`to-api-logs`. A few caveats to the "include all headers" rule:
 
@@ -198,11 +211,11 @@ The "Response Example" must **always** exist. "TODO" is **not** an acceptable Re
 - The ``Content-Type`` header sent by :manpage:`curl(1)` (and possibly others) is always ``application/x-www-form-urlencoded`` regardless of the actual content (unless overridden). Virtually all payloads accepted by the API must be JSON, so this should be modified to reflect that when appropriate e.g. ``application/json``.
 - API output is often beautified by inserting line breaks and indentation, which will make the ``Content-Length`` header (if any) incorrect. Don't worry about fixing that - just try to leave the output as close as possible to what will actually be returned by leaving it the way it is.
 
-File names should reflect the request path of the endpoint, e.g. a file for an endpoint of the Traffic Ops API ``/api/1.7/foo/{{fooID}}/bar/{{barID}}`` should be named ``foo_fooID_bar_barID.rst``. Similarly, reference labels linking to the document title for API route pages should follow the convention: ``<component>-api-<path>`` in all lowercase where ``<component>`` is an abbreviated Traffic Control component name e.g. ``to`` and ``<path>`` is the request path e.g. ``foo_bar``. So a label for an endpoint of the Traffic Ops API at ``/api/1.7/foo_bar/{{ID}}`` should be ``to-api-foo_bar-id``.
+File names should reflect the request path of the endpoint, e.g. a file for an endpoint of the Traffic Ops API ``/api/2.0/foo/{{fooID}}/bar/{{barID}}`` should be named ``foo_fooID_bar_barID.rst``. Similarly, reference labels linking to the document title for API route pages should follow the convention: ``<component>-api-<path>`` in all lowercase where ``<component>`` is an abbreviated Traffic Control component name e.g. ``to`` and ``<path>`` is the request path e.g. ``foo_bar``. So a label for an endpoint of the Traffic Ops API at ``/api/2.0/foo_bar/{{ID}}`` should be ``to-api-foo_bar-id``.
 
 Extension
 ---------
-The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
+The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :atc-file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
 
 impl-detail
 	An admonition directive used to contain implementation-specific notes on a subject.
@@ -225,3 +238,10 @@ pr
 	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
 pull-request
 	A synonym for ``pr``
+
+godoc
+	A text role that can be used to easily link to the documentation for any Go package, type, or function/method (grouped constants/variables not supported). For example, "``:godoc:`net/http.HandlerFunc```" renders as :godoc:`net/http.HandlerFunc`.
+atc-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the Apache Traffic Control project. For example, ``:atc-godoc:`lib/go-rfc.MimeType.Quality``` renders as :atc-godoc:`lib/go-rfc.MimeType.Quality`.
+to-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the :atc-godoc:`traffic_ops/traffic_ops_golang` package. For example, ``:to-godoc:`api.APIInfo``` renders as :to-godoc:`api.APIInfo`.

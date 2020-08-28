@@ -27,6 +27,7 @@ import (
 // TypesResponse ...
 type TypesResponse struct {
 	Response []Type `json:"response"`
+	Alerts
 }
 
 // Type contains information about a given Type in Traffic Ops.

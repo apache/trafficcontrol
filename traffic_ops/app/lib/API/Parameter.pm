@@ -393,19 +393,20 @@ sub delete {
 sub validate {
     my $self = shift;
     my $params = $self->req->json;
+	my $alt = "GET /parameters";
 
     if ( !defined($params) ) {
-        return $self->alert("parameters must be in JSON format,  please check!");
+        return $self->with_deprecation("parameters must be in JSON format,  please check!", "error", 400, $alt);
     }
 
     if ( !defined($params->{name}) ) {
-        return $self->alert("Parameter name is required.");
+        return $self->with_deprecation("Parameter name is required.", "error", 400, $alt);
     }
     if ( !defined($params->{configFile}) ) {
-        return $self->alert("Parameter configFile is required.");
+        return $self->with_deprecation("Parameter configFile is required.", "error", 400, $alt);
     }
     if ( !defined($params->{value}) ) {
-        return $self->alert("Parameter value is required.");
+        return $self->with_deprecation("Parameter value is required.", "error", 400, $alt);
     }
 
     my $find = $self->db->resultset('Parameter')->find({ 
@@ -414,7 +415,7 @@ sub validate {
             value => $params->{value},
         } ) ;
     if ( !defined($find) ) {
-        return $self->alert("parameter [name:".$params->{name}.", config_file:".$params->{configFile}.", value:".$params->{value}."] does not exist.");
+        return $self->with_deprecation("parameter [name:".$params->{name}.", config_file:".$params->{configFile}.", value:".$params->{value}."] does not exist.", "error", 400, $alt);
     }
 
     my $response;
@@ -423,8 +424,7 @@ sub validate {
     $response->{configFile} = $find->config_file;
     $response->{value}  = $find->value;
     $response->{secure} = $find->secure;
-
-    return $self->success($response, "Parameter exists.");
+    return $self->with_deprecation("Parameter exists.", "success", 200, $alt);
 }
 
 1;

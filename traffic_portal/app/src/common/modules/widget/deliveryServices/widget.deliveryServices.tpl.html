@@ -35,7 +35,7 @@ under the License.
                     </div>
                     <div class="input-group delivery-services-search-form">
                         <input type="text" class="filter-input form-control" placeholder="Filter delivery services..."
-                               ng-model="search.displayName">
+                               ng-model="search.xmlId">
                         <span class="filter-input-group-btn input-group-btn">
                                 <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
                         </span>
@@ -49,8 +49,8 @@ under the License.
                         <a class="delivery-services-health list-group-item widgetTable"
                            ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index"
                            ng-click="getChartData(ds, ds.idx)">
-                            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-4 whitespace" style="float:left;" title="{{ds.displayName}} ({{ds.xmlId}})">{{ds.displayName}}
-                                <small>({{ds.xmlId}})<br>{{ds.tenant}}</small>
+                            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-4 whitespace" style="float:left;" title="{{ds.xmlId}}">{{ds.xmlId}}<br>
+                                <small>{{ds.displayName}}</small>
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 whitespace" style="float:left;" title="{{ds.type}}">{{ds.type}}</div>
                             <div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 whitespace" style="margin-top:8px; float:left;">
@@ -65,9 +65,9 @@ under the License.
         <div class="col-lg-7 col-md-6 col-sm-12 col-xs-12">
             <div ng-show="!isRequested">Select a Delivery Service to view bandwidth chart.</div>
             <div class="alert alert-info" ng-show="isLoading">Loading data
-                for {{selectedDeliveryService.displayName}}</div>
+                for {{selectedDeliveryService.xmlId}}</div>
             <div ng-show="!isLoading" class="dsWidgetMessages">
-                <div class="pull-left">{{selectedDeliveryService.displayName}} - Bandwidth Per Second <br>
+                <div class="pull-left">{{selectedDeliveryService.xmlId}} - Bandwidth Per Second <br>
                     <small>{{dateRangeText}}</small>
                 </div>
                 <div class="pull-right dsWidgetButtonAlignFix" role="group">

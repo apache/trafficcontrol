@@ -13,18 +13,21 @@
 .. limitations under the License.
 ..
 
+************************
 Traffic Control Overview
 ************************
 Introduces the Traffic Control architecture, components, and their integration.
 
 .. toctree::
-	:maxdepth: 2
+	:maxdepth: 3
 
-	introduction.rst
+	introduction
 	traffic_ops
-	traffic_portal
 	traffic_router
 	traffic_monitor
 	traffic_stats
+	traffic_portal
 	traffic_vault
 	delivery_services
+	cache_groups
+	profiles_and_parameters

@@ -35,13 +35,15 @@ func (t Time) MarshalJSON() ([]byte, error) {
 
 // Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
 type Event struct {
-	Time        Time   `json:"time"`
-	Index       uint64 `json:"index"`
-	Description string `json:"description"`
-	Name        string `json:"name"`
-	Hostname    string `json:"hostname"`
-	Type        string `json:"type"`
-	Available   bool   `json:"isAvailable"`
+	Time          Time   `json:"time"`
+	Index         uint64 `json:"index"`
+	Description   string `json:"description"`
+	Name          string `json:"name"`
+	Hostname      string `json:"hostname"`
+	Type          string `json:"type"`
+	Available     bool   `json:"isAvailable"`
+	IPv4Available bool   `json:"isAvailable"`
+	IPv6Available bool   `json:"isAvailable"`
 }
 
 // Events provides safe access for multiple goroutines readers and a single writer to a stored Events slice.

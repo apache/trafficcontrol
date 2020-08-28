@@ -52,6 +52,10 @@ func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
 	if st.TypeID == nil {
 		errs = append(errs, "missing typeId")
 	}
+	valid, err := ValidateTypeID(tx, st.TypeID, "steering_target")
+	if valid == "" {
+		errs = append(errs, err.Error())
+	}
 	if st.Value == nil {
 		errs = append(errs, "missing value")
 	}

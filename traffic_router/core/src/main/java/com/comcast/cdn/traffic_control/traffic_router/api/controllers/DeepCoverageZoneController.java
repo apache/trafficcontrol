@@ -15,7 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.api.controllers;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

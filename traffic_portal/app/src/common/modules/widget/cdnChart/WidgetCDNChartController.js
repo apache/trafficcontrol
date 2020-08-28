@@ -140,7 +140,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 				show: true,
 				content: function(label, xval, yval, flotItem){
 					var tooltipString = dateUtils.dateFormat(xval, "UTC: ddd mmm d yyyy H:MM:ss tt (Z)") + '<br>';
-					tooltipString += '<span>' + label + ': ' + $filter('number')(yval, 2) + '</span><br>'
+					tooltipString += '<span>' + label + ': ' + $filter('number')(yval, 2) + (flotItem.series.label === "Bandwidth" ? ' Gbps' : '') + '</span><br>';
 					return tooltipString;
 				}
 			}
@@ -168,7 +168,11 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 	};
 
 	var registerResizeListener = function() {
-		$(window).resize(plotChart);
+		$(window).bind("resize", plotChart);
+	};
+
+	var unregisterResizeListener = function() {
+		$(window).unbind("resize", plotChart);
 	};
 
 	var plotChart = function() {
@@ -187,6 +191,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	$scope.$on("$destroy", function() {
 		killIntervals();
+		unregisterResizeListener();
 	});
 
 	angular.element(document).ready(function () {

@@ -7,9 +7,9 @@ package API::Division;
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -57,7 +57,7 @@ sub index_by_name {
 			}
 		);
 	}
-	$self->success( \@data );
+	$self->deprecation(200, "GET /divisions with the 'name' parameter", \@data );
 }
 
 
@@ -181,28 +181,30 @@ sub delete {
 
 sub delete_by_name {
 	my $self = shift;
-	my $name     = $self->param('name');
+	my $name = $self->param('name');
+
+	my $alt = "DELETE /divsions/{{ID}}";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	my $division = $self->db->resultset('Division')->find( { name => $name } );
 	if ( !defined($division) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 
 	my $regions = $self->db->resultset('Region')->find( { division => $division->id } );
 	if ( defined($regions) ) {
-		return $self->alert("This division is currently used by regions.");
+		return $self->with_deprecation("This division is currently used by regions.", "error", 400, $alt);
 	}
 
 
 	my $rs = $division->delete();
 	if ($rs) {
-		return $self->success_message("Division deleted.");
+		return $self->with_deprecation("Division deleted.", "success", 200, $alt);
 	} else {
-		return $self->alert( "Division delete failed." );
+		return $self->with_deprecation("Division delete failed.", "error", 400, $alt);
 	}
 }
 

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.11 AS enroller-builder
+FROM golang:1.14.2 AS enroller-builder
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
@@ -31,13 +31,21 @@ RUN go clean && go get -v && go build
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools && apt-get clean
+RUN apt-get update && apt-get install -y \
+        netcat curl dnsutils net-tools \
+        #to-access dependencies
+        jq gettext && \
+    apt-get clean
 COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/enroller \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/run.sh \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/server_template.json \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
    /
+
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 WORKDIR /shared/enroller
 CMD /run.sh

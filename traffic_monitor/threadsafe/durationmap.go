@@ -26,7 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// DurationMap wraps a map[tc.CacheName]time.Duration in an object safe for a single writer and multiple readers
+// DurationMap wraps a map[tc.CacheName]time.Duration in an object safe for a single writer and multiple readers.
 type DurationMap struct {
 	durationMap *map[tc.CacheName]time.Duration
 	m           *sync.RWMutex

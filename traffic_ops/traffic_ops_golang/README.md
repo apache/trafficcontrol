@@ -23,7 +23,7 @@
 
 To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
 
-* Golang 1.8.4 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
+* Golang 1.14 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
 * Postgres 9.6 or greater
 * Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/INSTALL.md)
 
@@ -40,16 +40,15 @@ To download the remaining `golang.org/x` dependencies you need to:
 
 ## Configuration
 
-To run the Golang proxy locally the following represents a typical sequence flow.  */api/1.2* will proxy through to Mojo Perl. */api/1.3* will serve the response from the Golang proxy directly and/or interact with Postgres accordingly.
+To run the Golang TO API locally the following represents a typical sequence flow.  */api/1.x* will proxy through to Mojo Perl if the given route is not found or the route is blacklisted else it will serve the response from the Golang API. */api/2.0* will always serve the response from the Golang directly and/or interact with Postgres accordingly.
 
-**/api/1.2** routes:
+**/api/1.x** routes:
 
-`TO Golang Proxy (port 8443)`<-->`TO Mojo Perl`<-->`TO Database (Postgres)`
+`TO Golang API (port 8443)`<-->`TO Mojo Perl`(if route not found or blacklisted)<-->`TO Database (Postgres)`
 
-**/api/1.3** routes:
+**/api/2.0** routes:
 
-`TO Golang Proxy (port 8443)`<-->`TO Database (Postgres)`
-
+`TO Golang API (port 8443)`<-->`TO Database (Postgres)`
 
 ### cdn.conf changes
 
@@ -101,7 +100,6 @@ Most structs do not have versioning. If you are adding a field to a struct with 
 
 1. In `lib/go-tc`, rename the old struct to be the previous minor version.
     - For example, if you are adding a field to Delivery Service and existing minor version is 1.4 (so your new minor version is 1.5), in `lib/go-tc/deliveryservices.go` rename `type DeliveryServiceNullable struct` to `type DeliveryServiceNullableV14 struct`.
-  - Also rename any `Sanitize` and `Validate` functions to the old object.
 
 2. In `lib/go-tc`, create a new struct with an unversioned name, and anonymously embed the previous struct (that you just renamed), along with your new field.
     - For example:
@@ -112,87 +110,93 @@ type DeliveryServiceNullable struct {
 }
 ```
 
-3. Create a `Sanitize` function on the new struct, e.g. `func (ds *DeliveryServiceNullable) Sanitize()`, which sets your new field to a default value, if it is null.
-    - It must always be possible to create objects with previous API versions. Therefore, this step is not optional.
-    - The new `Sanitize` function must call the previous version's `Sanitize` as well, in order to sanitize all previous versions. E.g.
+3. In `lib/go-tc`, change the struct's type alias to the new minor version.
+    - For example:
 ```go
-  func (ds *DeliveryServiceNullable) Sanitize() {
-	ds.DeliveryServiceNullableV14.Sanitize()
+type DeliveryServiceNullableV15 DeliveryServiceNullable
 ```
 
-4. Create a `Validate` function, which immediately calls the `Sanitize` function, as well as doing any other validation on your new field.
-    - `Validate` is used to `Sanitize` by the API frameworks. If a `Validate` function doesn't exist, your new field won't be checked and made valid, and may result in nil panics. Therefore, this step is not optional.
+4. Update the `Sanitize` function on the unversioned struct, e.g. `func (ds *DeliveryServiceNullable) Sanitize()`, which sets your new field to a default value, if it is null.
+```go
+  func (ds *DeliveryServiceNullable) Sanitize() {
+    if ds.MyNewField == nil { ... }
+```
+
+5. Update the `Validate` function on the unversioned struct to add validation for your new field.
     - For example, if your new field is a port, `Validate` should verify it is between 0 and 65535.
     - Almost all fields can be invalid! Don't skip this step. Proper validation is essential to Traffic Control functioning properly and rejecting invalid input.
 
-    For example:
+6. Add new versioned Create and Update handlers for the new version in e.g. `deliveryservice/deliveryservices.go`. The added Create and Update handlers will decode requests into the latest version of the struct and should pass it to an underlying versioned `create` or `update` function:
 
+  For example:
 ```go
-func (ds *DeliveryServiceNullableV14) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
-```
+func CreateV15(w http.ResponseWriter, r *http.Request) {
+  ...
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
 
+	res, status, userErr, sysErr := createV15(w, r, inf, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV15{*res})
+}
 
-5. Create a func to convert the previous version to the new latest struct. For example, `func NewDeliveryServiceNullableFromV14(ds DeliveryServiceNullableV14) DeliveryServiceNullable`. This function will typically do nothing more than create the latest object with the older version, and sanitize new fields. E.g.
-```go
-func NewDeliveryServiceNullableFromV14(ds DeliveryServiceNullableV14) DeliveryServiceNullable {
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV14: ds}
-	newDS.Sanitize()
-	return newDS
+func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) *tc.DeliveryServiceNullableV15 {
+  ...
 }
 ```
 
-6. In `traffic_ops/traffic_ops_golang`, copy the existing previous version file, e.g. `cp traffic_ops/traffic_ops_golang/deliveryservice/deliveryservicesv1{3,4}.go`.
-    - If the object has no previous version, see `deliveryservice` for an example. The "CRUDer" version file should contain only boilerplate, no logic, and no reference to other versions except the latest. Hence, it should be possible to copy and rename, with no logic changes. The logic and latest version should all be in the main file, e.g. `deliveryservice/deliveryservices.go`.
+NOTE: the underlying `create` and `update` functions are chained together so that requests for previous minor versions are upgraded into requests of the next latest version until they are finally handled at the latest minor version.
 
-7. In the new version file, rename all instances of the previous version to the new version, e.g. `sed -i 's/v13/v14/' deliveryservicesv14.go`.
+Example call chains:
+```
+  CreateV12 -> createV12 -> createV13 -> createV14 -> createV15
+  CreateV13         ->      createV13 -> createV14 -> createV15
+  CreateV14                ->            createV14 -> createV15
+  CreateV15                      ->                   createV15
+  ```
 
-8. Add the logic for your new field to the latest version file, e.g. `deliveryservice/deliveryservices.go`.
+In this example you would rename the existing `createV14` function to `createV15` and update its signature to accept and return a V15 struct. Then you would create a new `createV14` function, in which you would simply create a V15 struct, insert the V14 struct into it, and pass it to the `createV15` function. By doing that, the V14 request would essentially be upgraded into a V15 request for the underlying `createV15` handler to use.
 
-9. Add your new version to `traffic_ops/traffic_ops_golang/routing/routes.go`, and add the versioned object to the previous route.
+For an `updateV14` function, you would follow the same pattern as the create function, but you also have to take into account any existing 1.5 fields that may already exist in the resource. So, you have to read existing 1.5 fields from the DB into your V15 struct before passing it to `updateV15`. That is how an "update" request can be upgraded from a 1.4 request to a 1.5 request.
+
+7. Modify the `createV15` and `updateV15` functions (and associated INSERT and UPDATE SQL queries) to create and update the new field in e.g. `deliveryservice/deliveryservices.go`.
+
+8. Modify the `Read` function (and associated SELECT SQL query) to read structs of the new version. For example in `deliveryservice/deliveryservices.go`, you would update the `switch` statement so that `version.Minor >= 5` returns structs of `DeliveryServiceNullable` (the latest version of the struct), and `version.Minor >= 4` returns structs of the embedded `DeliveryServiceNullableV14`. The SELECT SQL query should always be updated to read all of the latest fields, and the `Read` handler should always return the proper versioned struct for the requested API version.
+
+NOTE: the `Delete` handler should not need any modification when adding a new minor version of an API endpoint.
+
+9. Add the routes for your new `CreateV15` and `UpdateV15` handlers to `traffic_ops/traffic_ops_golang/routing/routes.go`.
     - The new latest route must go above the previous version. If the new version is below the old, the new version will never be routed to!
 
     For example, Change:
 ```go
-{1.4, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV14, auth.PrivLevelOperations, Authenticated, nil},
 ```
 
   To:
 
 ```go
-{1.5, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil},
-{1.4, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryServiceV14{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.5, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV15, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV14, auth.PrivLevelOperations, Authenticated, nil},
 ```
 
-## Converting Routes to Traffic Ops Golang
+NOTE: the `Read` and `Delete` handlers should always point to the lowest minor version since they are meant to handle requests of any minor version, so the routes for these handlers should not change when adding a new minor version.
 
-Traffic Ops is moving to Go! You can help!
+## Writing a new route
 
-We're in the process of migrating the Perl/Mojolicious Traffic Ops to Go. This involves converting each route, one-by-one. There are many small, simple routes, like `/api/1.2/regions` and `api/1.2/divisions`. If you want to help, you can convert some of these.
+### Getting a "Handle" on Routes
 
-You'll need at least a basic understanding of Perl and Go, or be willing to learn them. You'll also need a running Traffic Ops instance, to compare the old and new routes and make sure they're identical.
+Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler, ID}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
 
-### Converting an Endpoint
+NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as it's unique.
 
-#### Perl
-
-If you don't already have an endpoint in mind, open [TrafficOpsRoutes.pm](../app/lib/TrafficOpsRoutes.pm) and browse the routes. Start with `/api/` routes. We'll be moving others, like config files, but they're a bit more complex. We specifically won't be moving GUI routes (e.g. `/asns`), they'll go away when the new [Portal](https://github.com/apache/trafficcontrol/tree/master/traffic_portal) is done.
-
-After you pick a route, you'll need to look at the code that generates it. For example, if we look at `$r->get("/api/$version/cdns")->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#index', namespace => $namespace );`, we see it's calling `Cdn#index`, so we look in `app/lib/API/Cdn.pm` at `sub index`.
-
-As you can see, this is a very simple route. It queries the database `CDN` table, and puts the `id`, `name`, `domainName`, `dnssecEnabled`, and `lastUpdated` fields in an object, for every database entry, in an array.
-
-If you go to `/api/1.2/cdns` in a browser, you'll see Perl is also wrapping it in a `"response"` object.
-
-#### Go
-
-Now we need to create the Go endpoint.
-
-##### Getting a "Handle" on Routes
-
-Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
-
-##### Creating a Handler
+### Creating a Handler
 
 The first step is to create your handler. For an example, look at `monitoringHandler` in `monitoring.go`. Your handler arguments can be any data available to the router (the config and database, or what you can create from them). Passing the `db` or prepared `Stmt`s is common. The handler function must return a `RegexHandlerFunc`. In general, you want to return an inline function, `return func(w http.ResponseWriter, r *http.Request, p ParamMap) {...`.
 
@@ -200,13 +204,13 @@ The `ResponseWriter` and `Request` are standard Go `HandlerFunc` parameters. The
 
 Now, your handler just needs to load the data, format it, and write it to the `ResponseWriter`, like any other Go `HandlerFunc`.
 
-This is the hard part, where you have to recreate the Perl response. But it's all standard Go programming, reading from a database, creating JSON, and writing to the `http.ResponseWriter`. If you're just learning Go, look at some of the other endpoints like `monitoring.go`, and maybe google some Golang tutorials on SQL, JSON, and HTTP. The Go documentation is also helpful, particularly  https://golang.org/pkg/database/sql/ and https://golang.org/pkg/encoding/json/.
+ If you're just learning Go, look at some of the other endpoints like `monitoring.go`, and maybe google some Golang tutorials on SQL, JSON, and HTTP. The Go documentation is also helpful, particularly  https://golang.org/pkg/database/sql/ and https://golang.org/pkg/encoding/json/.
 
 Your handler should be in its own file, where you can create any structs and helper functions you need.
 
-##### Registering the Handler
+### Registering the Handler
 
-Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/1.2/cdns` would look like `{1.2, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
+Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/2.0/cdns` would look like `{2.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
 
 The only thing we haven't talked about are those `wrap` functions. They each take a `RegexHandlerFunc` and return a `RegexHandlerFunc`, which lets them 'wrap' your handler. You almost certainly need both of them; if you're not sure, ask on the mailing list or Slack. You'll notice the `wrapAuth` function also takes config parameters, as well as a `PrivLevel`. You should create a constant in your handler file of the form `EndpointPrivLevel` and pass that. If your endpoint modifies data, use `PrivLevelOperations`, otherwise `PrivLevelReadOnly`.
 

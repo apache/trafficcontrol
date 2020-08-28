@@ -15,10 +15,10 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
@@ -95,7 +95,7 @@ public class CoverageZoneTest {
 
 		when(cacheRegister.getCacheLocationById("east-cache-group")).thenReturn(eastCacheGroup);
 
-		when(cacheRegister.filterAvailableLocations("delivery-service-1")).thenReturn(cacheGroups);
+		when(cacheRegister.filterAvailableCacheLocations("delivery-service-1")).thenReturn(cacheGroups);
 		when(cacheRegister.getDeliveryService("delivery-service-1")).thenReturn(deliveryService);
 
 		trafficRouter = PowerMockito.mock(TrafficRouter.class);
@@ -103,7 +103,7 @@ public class CoverageZoneTest {
 		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1")).thenCallRealMethod();
 		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", false, null)).thenCallRealMethod();
 		when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
-		when(trafficRouter.orderCacheLocations(anyListOf(CacheLocation.class),any(Geolocation.class))).thenCallRealMethod();
+		when(trafficRouter.orderLocations(anyListOf(CacheLocation.class),any(Geolocation.class))).thenCallRealMethod();
 		when(trafficRouter.getSupportingCaches(anyListOf(Cache.class), eq(deliveryService))).thenCallRealMethod();
 		when(trafficRouter.filterEnabledLocations(anyListOf(CacheLocation.class), any(CacheLocation.LocalizationMethod.class))).thenCallRealMethod();
 		PowerMockito.when(trafficRouter, "getNetworkNode", "12.23.34.45").thenReturn(eastNetworkNode);

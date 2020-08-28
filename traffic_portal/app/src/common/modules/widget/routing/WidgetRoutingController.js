@@ -27,6 +27,7 @@ var WidgetRoutingController = function($scope, $interval, cdnService, properties
 			.then(function(response) {
 				$scope.native = response.cz;
 				$scope.thirdParty = response.geo;
+				$scope.deepCoverageZone = response.deepCz;
 				$scope.federated = response.fed;
 				$scope.miss = response.miss;
 				$scope.static = response.staticRoute;

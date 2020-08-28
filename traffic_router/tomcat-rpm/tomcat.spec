@@ -17,7 +17,7 @@ Version:    %{tomcat_version}
 Release:    %{build_number}
 Summary:    Apache Tomcat Servlet/JSP Engine 8.5+, RI for Servlet 3.1/JSP 2.3 API
 License:    Apache Software License
-URL:        https://github.com/apache/incubator-trafficcontrol/
+URL:        https://github.com/apache/trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
 Requires:   java >= 1.8
 
@@ -54,15 +54,15 @@ rm -rf ${RPM_BUILD_ROOT}
 # This here takes care of stopping and removing tomcat before installing new files
 %pretrans
 if [[ -e "/etc/init.d/tomcat" ]]; then
-  echo "Disabling and stopping SysV tomcat service..."
-  chkconfig tomcat off
-  service stop tomcat
+	echo "Disabling and stopping SysV tomcat service..."
+	chkconfig tomcat off
+	service stop tomcat
 fi
 
 if [ -d /opt/apache-tomcat-* ]; then
-  echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
-  rm -rf /opt/apache-tomcat-*
-  rm -rf /opt/tomcat
+	echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
+	rm -rf /opt/apache-tomcat-*
+	rm -rf /opt/tomcat
 fi
 
 %pre

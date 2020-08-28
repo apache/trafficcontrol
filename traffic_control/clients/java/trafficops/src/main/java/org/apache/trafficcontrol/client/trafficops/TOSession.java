@@ -41,27 +41,27 @@ import com.google.gson.GsonBuilder;
 @AutoValue
 public abstract class TOSession implements Closeable {
 	private static final Logger LOG = LoggerFactory.getLogger(TOSession.class);
-	
+
 	private static final String URL_FORMAT_STR = "/%s/%s/%s";
-	
+
 	public static final String DEFAULT_API_PATH = "api";
-	public static final String DEFAULT_API_VERSION = "1.2";
-	
+	public static final String DEFAULT_API_VERSION = "2.0";
+
 	public abstract RestApiSession restClient();
 	public abstract String host();
 	public abstract int port();
 	public abstract boolean ssl();
 	public abstract String apiVersion();
 	public abstract String apiBasePath();
-	
+
 	static final Gson gson = new GsonBuilder()
 			.create();
-	
+
 	private boolean isLoggedIn = false;
-	
+
 	protected URIBuilder newUriBuilder(final String path) {
 		final String _path = String.format(URL_FORMAT_STR, this.apiBasePath(), this.apiVersion(), path);
-		
+
 		return new URIBuilder()
 				.setScheme(this.ssl() ? "https" : "http")
 				.setHost(this.host())
@@ -77,25 +77,25 @@ public abstract class TOSession implements Closeable {
 		}
 		return Collections.emptyList();
 	}
-	
+
 	public void close() throws IOException {
 		this.restClient().close();
 	}
 	public boolean isLoggedIn() {
 		return isLoggedIn;
 	}
-	
+
 	public CompletableFuture<Boolean> login(final String username, final String password) {
 		URI uri;
 		try {
-			uri = this.newUriBuilder("user/login.json")
+			uri = this.newUriBuilder("user/login")
 					.build();
 		} catch (Throwable e) {
 			final CompletableFuture<Boolean> f = new CompletableFuture<>();
 			f.completeExceptionally(e);
 			return f;
 		}
-		
+
 		LOG.debug("Logging into: {}", uri);
 		return ResponseFuture.builder()
 			.setHandleException((f,t)-> {
@@ -116,7 +116,7 @@ public abstract class TOSession implements Closeable {
 	public CompletableFuture<Response.CollectionResponse> getServers(final Map<String, ?> filterParams){
 		URI uri;
 		try {
-			uri = this.newUriBuilder("servers.json")
+			uri = this.newUriBuilder("servers")
 					.setParameters(this.toPairs(filterParams))
 					.build();
 		} catch (Throwable e) {
@@ -130,14 +130,14 @@ public abstract class TOSession implements Closeable {
 				.setSession(this.restClient())
 				.build();
 	}
-	
+
 	public CompletableFuture<Response.CollectionResponse> getDeliveryServices(){
 		return this.getDeliveryServices(null);
 	}
 	public CompletableFuture<Response.CollectionResponse> getDeliveryServices(final Map<String, ?> filterParams){
 		URI uri;
 		try {
-			uri = this.newUriBuilder("deliveryservices.json")
+			uri = this.newUriBuilder("deliveryservices")
 					.setParameters(this.toPairs(filterParams))
 					.build();
 		} catch (Throwable e) {
@@ -152,21 +152,21 @@ public abstract class TOSession implements Closeable {
 				.setSession(this.restClient())
 				.build();
 	}
-	
-	
+
+
 	public static Builder builder() {
 		final Builder b = new AutoValue_TOSession.Builder()
 				.setApiBasePath(DEFAULT_API_PATH)
 				.setApiVersion(DEFAULT_API_VERSION);
-		
+
 		return b;
 	}
 	public abstract Builder toBuilder();
-	
+
 	@AutoValue.Builder
 	public abstract static class Builder {
 		public abstract TOSession build();
-		
+
 		public abstract Builder setRestClient(RestApiSession restClient);
 		public abstract RestApiSession.Builder restClientBuilder();
 
@@ -175,7 +175,7 @@ public abstract class TOSession implements Closeable {
 		public abstract Builder setApiVersion(String version);
 		public abstract Builder setApiBasePath(String version);
 		public abstract Builder setSsl(boolean ssl);
-		
+
 		public Builder fromURI(URI uri){
 			return this.setSsl(uri.getScheme().equals("http") ? false: true)
 					.setHost(uri.getHost())

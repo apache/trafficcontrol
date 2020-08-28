@@ -32,11 +32,13 @@ sub delete {
 	my $cache_id = $self->param('cacheGroupId');
 	my $fallback_id = $self->param('fallbackId');
 	my $params = $self->req->json;
-	my $rs_backups = undef; 
-	my $result = ""; 
+	my $rs_backups = undef;
+	my $result = "";
+
+	my $alt = "PUT /cachegroups with an empty 'fallbacks' array";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	if ( defined ($cache_id) && defined($fallback_id) ) {
@@ -49,20 +51,20 @@ sub delete {
 		$result = "Cachegroup $fallback_id DELETED from all the configured fallback lists";
 		$rs_backups = $self->db->resultset('CachegroupFallback')->search( { backup_cg => $fallback_id} );
 	} else {
-		return $self->alert("Invalid input");
+		return $self->with_deprecation("Invalid input", "error", 400, $alt);
 	}
 
 	if ( ($rs_backups->count > 0) ) {
 		my $del_records = $rs_backups->delete();
 		if ($del_records) {
 			&log( $self, $result, "APICHANGE");
-			return $self->success( $result );
+			return $self->with_deprecation($result, "success", 200, $alt);
 		} else {
-			return $self->alert( "Backup configuration DELETE Failed!." );
+			return $self->with_deprecation("Backup configuration DELETE Failed!.", "error", 400, $alt);
 		}
 	} else {
 		$self->app->log->error( "No backup Cachegroups found" );
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 }
 
@@ -71,11 +73,12 @@ sub show {
 	my $cache_id = $self->param("cacheGroupId");
 	my $fallback_id = $self->param("fallbackId");
 	my $id = $cache_id ? $cache_id : $fallback_id;
+	my $alt = "GET /cachegroups";
 
 	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback(undef, $cache_id);
 
 	if ( !$is_valid ) {
-		return $self->alert($result);
+		return $self->with_deprecation($result, "error", 400, $alt);
 	}
 
 	my $rs_backups = undef;
@@ -99,10 +102,10 @@ sub show {
 			$response->[$backup_cnt]{"fallbackOrder"} = $row->set_order;
 			$backup_cnt++;
 		}
-		return $self->success( $response );
+		return $self->deprecation(200, $alt, $response);
 	} else {
 		$self->app->log->error("No backup Cachegroups");
-		return $self->success([]);
+		return $self->deprecation(200, $alt, []);
 	}
 }
 
@@ -110,13 +113,14 @@ sub create {
 	my $self = shift;
 	my $cache_id = $self->param('cacheGroupId');
 	my $params = $self->req->json;
+	my $alt = "POST /cachegroups with a non-empty 'fallbacks' array";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format,  please check!");
+		return $self->with_deprecation("parameters must be in JSON format,  please check!", "error", 400, $alt);
 	}
 
 	if ( !defined($cache_id)) {
@@ -127,7 +131,7 @@ sub create {
 	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback($params, $cache_id);
 
 	if ( !$is_valid ) {
-		return $self->alert($result);
+		return $self->with_deprecation($result, "error", 400, $alt);
 	}
 
 	foreach my $config (@{ $params }) {
@@ -135,7 +139,7 @@ sub create {
 		if ( !defined($rs_backup) ) {
 			$self->app->log->error("ERROR Backup config: No such Cache Group $config->{fallbackId}");
 			next;
-		} 
+		}
 
 		if ( ($rs_backup->type->name ne "EDGE_LOC") ) {
 			$self->app->log->error("ERROR Backup config: $config->{name} is not EDGE_LOC");
@@ -152,7 +156,7 @@ sub create {
 			backup_cg  => $config->{fallbackId},
 			set_order  => $config->{fallbackOrder}
 		};
-        
+
 		my $rs_data = $self->db->resultset('CachegroupFallback')->create($values)->insert();
 		if ( !defined($rs_data)) {
 			$self->app->log->error("Database operation for backup configuration for cache group $cache_id failed.");
@@ -172,9 +176,9 @@ sub create {
 			$backup_cnt++;
 		}
 		&log( $self, "Backup configuration UPDATED for $cache_id", "APICHANGE");
-		return $self->success( $response, "Backup configuration CREATE for cache group $cache_id successful." );
+		return $self->with_deprecation("Backup configuration CREATE for cache group $cache_id successful.", "success", 200, $response);
 	} else {
-		return $self->alert("Backup configuration CREATE for cache group $cache_id Failed." );
+		return $self->with_deprecation("Backup configuration CREATE for cache group $cache_id Failed.", "error", 400, $alt);
 	}
 }
 
@@ -183,13 +187,14 @@ sub update {
 	my $self = shift;
 	my $cache_id = $self->param('cacheGroupId');
 	my $params = $self->req->json;
+	my $alt = "PUT /cachegroups";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format,  please check!");
+		return $self->with_deprecation("parameters must be in JSON format,  please check!", "error", 400, $alt);
 	}
 
 	if ( !defined($cache_id)) {
@@ -199,13 +204,13 @@ sub update {
 
 	my $rs_backups = $self->db->resultset('CachegroupFallback')->search( { primary_cg => $cache_id } );
 	if ( !defined ($rs_backups->next) ) {
-		return $self->alert( "Backup list not configured for $cache_id, create and update" );
+		return $self->with_deprecation( "Backup list not configured for $cache_id, create and update", "error", 400, $alt );
 	}
 
 	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback($params, $cache_id);
 
 	if ( !$is_valid ) {
-		return $self->alert($result);
+		return $self->with_deprecation($result, "error", 400, $alt);
 	}
 
 	foreach my $config (@{ $params }) {
@@ -213,7 +218,7 @@ sub update {
 		if ( !defined($rs_backup) ) {
 			$self->app->log->error("ERROR Backup config: No such Cache Group $config->{fallbackId}");
 			next;
-		} 
+		}
 
 		if ( ($rs_backup->type->name ne "EDGE_LOC") ) {
 			$self->app->log->error("ERROR Backup config: $config->{name} is not EDGE_LOC");
@@ -246,9 +251,9 @@ sub update {
 			$backup_cnt++;
 		}
 		&log( $self, "Backup configuration UPDATED for $cache_id", "APICHANGE");
-		return $self->success( $response, "Backup configuration UPDATE for cache group $cache_id successful." );
+		return $self->with_deprecation("Backup configuration UPDATE for cache group $cache_id successful.", "success", 200, $alt, $response);
 	} else {
-		return $self->alert("Backup configuration UPDATE for cache group $cache_id Failed." );
+		return $self->with_deprecation("Backup configuration UPDATE for cache group $cache_id Failed.", "error", 400, $alt );
 	}
 }
 

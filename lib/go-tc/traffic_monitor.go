@@ -25,10 +25,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
-
 // TMConfigResponse ...
 type TMConfigResponse struct {
 	Response TrafficMonitorConfig `json:"response"`
+}
+
+// LegacyTMConfigResponse ...
+type LegacyTMConfigResponse struct {
+	Response LegacyTrafficMonitorConfig `json:"response"`
 }
 
 // TrafficMonitorConfig ...
@@ -41,9 +45,47 @@ type TrafficMonitorConfig struct {
 	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
+// ToLegacyConfig converts TrafficMonitorConfig to LegacyTrafficMonitorConfig.
+func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
+	var servers []LegacyTrafficServer
+	for _, s := range tmc.TrafficServers {
+		servers = append(servers, s.ToLegacyServer())
+	}
+
+	legacy := LegacyTrafficMonitorConfig{
+		CacheGroups:      tmc.CacheGroups,
+		Config:           tmc.Config,
+		TrafficMonitors:  tmc.TrafficMonitors,
+		Profiles:         tmc.Profiles,
+		DeliveryServices: tmc.DeliveryServices,
+		TrafficServers:   servers,
+	}
+	return legacy
+}
+
+// LegacyTrafficMonitorConfig represents TrafficMonitorConfig for ATC versions before 5.0.
+type LegacyTrafficMonitorConfig struct {
+	TrafficServers   []LegacyTrafficServer  `json:"trafficServers,omitempty"`
+	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
+	Config           map[string]interface{} `json:"config,omitempty"`
+	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
+	DeliveryServices []TMDeliveryService    `json:"deliveryServices,omitempty"`
+	Profiles         []TMProfile            `json:"profiles,omitempty"`
+}
+
 // TrafficMonitorConfigMap ...
 type TrafficMonitorConfigMap struct {
 	TrafficServer   map[string]TrafficServer
+	CacheGroup      map[string]TMCacheGroup
+	Config          map[string]interface{}
+	TrafficMonitor  map[string]TrafficMonitor
+	DeliveryService map[string]TMDeliveryService
+	Profile         map[string]TMProfile
+}
+
+// LegacyTrafficMonitorConfigMap ...
+type LegacyTrafficMonitorConfigMap struct {
+	TrafficServer   map[string]LegacyTrafficServer
 	CacheGroup      map[string]TMCacheGroup
 	Config          map[string]interface{}
 	TrafficMonitor  map[string]TrafficMonitor
@@ -70,7 +112,8 @@ type TMCacheGroup struct {
 	Coordinates MonitoringCoordinates `json:"coordinates"`
 }
 
-// Coordinates ...
+// MonitoringCoordinates holds a coordinate pair for inclusion as a field in
+// TMCacheGroup.
 type MonitoringCoordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -228,4 +271,55 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	}
 
 	return &tm, nil
+}
+
+func LegacyTrafficMonitorTransformToMap(tmConfig *LegacyTrafficMonitorConfig) (*LegacyTrafficMonitorConfigMap, error) {
+	var tm LegacyTrafficMonitorConfigMap
+
+	tm.TrafficServer = make(map[string]LegacyTrafficServer)
+	tm.CacheGroup = make(map[string]TMCacheGroup)
+	tm.Config = make(map[string]interface{})
+	tm.TrafficMonitor = make(map[string]TrafficMonitor)
+	tm.DeliveryService = make(map[string]TMDeliveryService)
+	tm.Profile = make(map[string]TMProfile)
+
+	for _, trafficServer := range tmConfig.TrafficServers {
+		tm.TrafficServer[trafficServer.HostName] = trafficServer
+	}
+
+	for _, cacheGroup := range tmConfig.CacheGroups {
+		tm.CacheGroup[cacheGroup.Name] = cacheGroup
+	}
+
+	for parameterKey, parameterVal := range tmConfig.Config {
+		tm.Config[parameterKey] = parameterVal
+	}
+
+	for _, trafficMonitor := range tmConfig.TrafficMonitors {
+		tm.TrafficMonitor[trafficMonitor.HostName] = trafficMonitor
+	}
+
+	for _, deliveryService := range tmConfig.DeliveryServices {
+		tm.DeliveryService[deliveryService.XMLID] = deliveryService
+	}
+
+	for _, profile := range tmConfig.Profiles {
+		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
+		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
+		tm.Profile[profile.Name] = profile
+	}
+
+	return &tm, nil
+}
+
+type HealthData struct {
+	TotalOffline uint64                 `json:"totalOffline"`
+	TotalOnline  uint64                 `json:"totalOnline"`
+	CacheGroups  []HealthDataCacheGroup `json:"cachegroups"`
+}
+
+type HealthDataCacheGroup struct {
+	Offline int64          `json:"offline"`
+	Online  int64          `json:"online"`
+	Name    CacheGroupName `json:"name"`
 }

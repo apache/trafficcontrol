@@ -24,14 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -45,8 +44,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.RespWriter(w, r, inf.Tx.Tx)(getCachesStats(inf.Tx.Tx))
 }
 
-const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
-const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
 
 func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
@@ -55,18 +52,9 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 		return nil, errors.New("getting monitors: " + err.Error())
 	}
 
-	monitorForwardProxy, monitorForwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
+	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
-		return nil, errors.New("getting global monitor proxy parameter: " + err.Error())
-	}
-
-	client := &http.Client{Timeout: MonitorRequestTimeout}
-	if monitorForwardProxyExists {
-		proxyURI, err := url.Parse(monitorForwardProxy)
-		if err != nil {
-			return nil, errors.New("monitor forward proxy '" + monitorForwardProxy + "' in parameter '" + MonitorProxyParameter + "' not a URI: " + err.Error())
-		}
-		client = &http.Client{Timeout: MonitorRequestTimeout, Transport: &http.Transport{Proxy: http.ProxyURL(proxyURI)}}
+		return nil, errors.New("getting monitor client: " + err.Error())
 	}
 
 	cacheData, err := getCacheData(tx)
@@ -80,11 +68,10 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 			continue
 		}
 
-		success := true
+		success := false
 		errs := []error{}
 		for _, monitorFQDN := range monitorFQDNs {
-			crStates, err := getCRStates(monitorFQDN, client)
-			// TODO on err, try another online monitor
+			crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
 			if err != nil {
 				errs = append(errs, errors.New("getting CRStates for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 				continue
@@ -190,31 +177,7 @@ func addStats(cacheData []CacheData, stats CacheStats) []CacheData {
 	return cacheData
 }
 
-// CRStates contains the Monitor CRStates needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CRStates struct {
-	Caches map[tc.CacheName]Available `json:"caches"`
-}
-
-type Available struct {
-	IsAvailable bool `json:"isAvailable"`
-}
-
-func getCRStates(monitorFQDN string, client *http.Client) (CRStates, error) {
-	path := `/publish/CrStates`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CRStates{}, errors.New("getting CRStates from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	crs := CRStates{}
-	if err := json.NewDecoder(resp.Body).Decode(&crs); err != nil {
-		return CRStates{}, errors.New("decoding CRStates from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return crs, nil
-}
-
-func addHealth(cacheData []CacheData, crStates CRStates) []CacheData {
+func addHealth(cacheData []CacheData, crStates tc.CRStates) []CacheData {
 	if crStates.Caches == nil {
 		return cacheData // TODO warn?
 	}
@@ -251,7 +214,7 @@ SELECT
   cg.name as cachegroup,
   st.name as status,
   p.name as profile,
-  s.ip_address
+  (select address from ip_address where s.id = ip_address.server and service_address = true AND family(address) = 4) as ip
 FROM
   server s
   JOIN cachegroup cg ON s.cachegroup = cg.id
@@ -274,16 +237,6 @@ WHERE
 		data = append(data, d)
 	}
 	return data, nil
-}
-
-func getMonitorForwardProxy(tx *sql.Tx) (string, error) {
-	forwardProxy, forwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
-	if err != nil {
-		return "", errors.New("getting global monitor proxy parameter: " + err.Error())
-	} else if !forwardProxyExists {
-		forwardProxy = ""
-	}
-	return forwardProxy, nil
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
@@ -324,21 +277,4 @@ WHERE
 		monitors[cdn] = append(monitors[cdn], fqdn)
 	}
 	return monitors, nil
-}
-
-// getGlobalParams returns the value of the global param, whether it existed, or any error
-func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	return getParam(tx, name, "global")
-}
-
-// getGlobalParams returns the value of the param, whether it existed, or any error.
-func getParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`SELECT value FROM parameter WHERE name = $1 AND config_file = $2`, name, configFile).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
 }

@@ -19,14 +19,6 @@ Quick How To Guides
 Traffic Control is a complicated system, and documenting it is not trivial. Sometimes a picture says more than a thousand words, so here are some screenshot-based tutorials on how to use some of the more involved features.
 
 .. toctree::
+	:glob:
 
-	anonymous_blocking
-	cachegroup_fallback
-	ciab
-	dnssec
-	ds_requests
-	federations
-	multi_site
-	regionalgeo
-	static_dns
-	steering
+	*

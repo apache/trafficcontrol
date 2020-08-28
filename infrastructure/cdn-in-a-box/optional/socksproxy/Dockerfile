@@ -39,6 +39,10 @@ RUN yum install -y net-tools bind-utils iproute wget curl automake autoconf gcc 
 COPY optional/socksproxy/sockd.conf /etc
 COPY optional/socksproxy/run.sh /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 1080
 
 CMD ["/run.sh"]

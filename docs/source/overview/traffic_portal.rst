@@ -25,6 +25,6 @@ Features
 - CDN Monitoring
 - CDN Administration
 - :term:`Delivery Service` Configuration
-- :term:`Cache Server` Maintenance
+- :term:`cache server` Maintenance
 
 .. seealso:: See :ref:`usingtrafficportal` for an overview of the Traffic Portal UI.

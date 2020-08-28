@@ -17,22 +17,13 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $controller, $scope) {
+var TableStatusServersController = function(status, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'statusServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.status = status;
-
-	angular.element(document).ready(function () {
-		$('#statusServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope'];
+TableStatusServersController.$inject = ['status', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableStatusServersController;

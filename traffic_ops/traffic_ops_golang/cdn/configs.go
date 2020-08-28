@@ -20,37 +20,40 @@ package cdn
  */
 
 import (
-	"database/sql"
-	"errors"
-	"net/http"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 )
 
-func GetConfigs(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getConfigs(inf.Tx.Tx))
+// TOCDNConf used as a type alias to define functions on to satisfy shared API REST interfaces.
+type TOCDNConf struct {
+	api.APIInfoImpl `json:"-"`
 }
 
-func getConfigs(tx *sql.Tx) ([]tc.CDNConfig, error) {
-	rows, err := tx.Query(`SELECT name, id FROM cdn`)
-	if err != nil {
-		return nil, errors.New("querying cdn configs: " + err.Error())
-	}
-	cdns := []tc.CDNConfig{}
-	defer rows.Close()
-	for rows.Next() {
-		c := tc.CDNConfig{}
-		if err := rows.Scan(&c.Name, &c.ID); err != nil {
-			return nil, errors.New("scanning cdn config: " + err.Error())
-		}
-		cdns = append(cdns, c)
-	}
-	return cdns, nil
+func (v *TOCDNConf) NewReadObj() interface{} { return &tc.CDNConfig{} }
+func (v *TOCDNConf) SelectQuery() string     { return cdnConfSelectQuery() }
+func (v *TOCDNConf) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{}
+}
+
+func cdnConfSelectQuery() string {
+	return `SELECT
+name,
+id
+FROM cdn`
+}
+
+func (v *TOCDNConf) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, v, useIMS)
+}
+func (v *TOCDNConf) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from federation ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
+}
+func (v TOCDNConf) GetType() string {
+	return "cdn_configs"
 }

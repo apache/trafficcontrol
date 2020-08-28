@@ -1,3 +1,5 @@
+// Package api provides general purpose tools for implementing the Traffic Ops
+// API.
 package api
 
 /*
@@ -20,40 +22,78 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
+	"net/mail"
+	"net/smtp"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
+	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
-const DBContextKey = "db"
-const ConfigContextKey = "context"
-const ReqIDContextKey = "reqid"
-const APIRespWrittenKey = "respwritten"
+// Common context.Context value keys.
+const (
+	DBContextKey      = "db"
+	ConfigContextKey  = "context"
+	ReqIDContextKey   = "reqid"
+	APIRespWrittenKey = "respwritten"
+)
+
+const influxServersQuery = `
+SELECT (host_name||'.'||domain_name) as fqdn,
+       tcp_port,
+       https_port
+FROM server
+WHERE type in ( SELECT id
+                FROM type
+                WHERE name='INFLUXDB'
+              )
+AND status=(SELECT id FROM status WHERE name='ONLINE')
+`
+
+type APIResponse struct {
+	Response interface{} `json:"response"`
+}
+
+type APIResponseWithSummary struct {
+	Response interface{} `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+}
+
+// GoneHandler is an http.Handler function that just writes a 410 Gone response
+// back to the client, along with an error-level alert stating that the endpoint
+// is no longer available.
+func GoneHandler(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("This endpoint is no longer available; please consult documentation")
+	HandleErr(w, r, nil, http.StatusGone, err, nil)
+}
 
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
-	resp := struct {
-		Response interface{} `json:"response"`
-	}{v}
+	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
 }
 
@@ -71,8 +111,20 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(bts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(bts, '\n'))
+}
+
+// WriteRespWithSummary writes a JSON-encoded representation of an arbitrary
+// object to the provided writer, and cleans up the corresponding request
+// object. It also provides a "summary" section to the response object that
+// contains the given "count".
+func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{}, count uint64) {
+	var resp APIResponseWithSummary
+	resp.Response = v
+	resp.Summary.Count = count
+
+	WriteRespRaw(w, r, resp)
 }
 
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
@@ -92,7 +144,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
@@ -115,25 +167,68 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
+func HandleErrOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool, alternative *string) {
+	if deprecated {
+		HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
+	} else {
+		HandleErr(w, r, tx, statusCode, userErr, sysErr)
+	}
+}
+
+// HandleDeprecatedErr handles an API error, adding a deprecation alert, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
+//
+// The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
+//
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+//
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, alternative *string) {
+	if respWritten(r) {
+		log.Errorf("HandleDeprecatedErr called after a write already occurred! Attempting to write the error anyway! Path %s", r.URL.Path)
+		// Don't return, attempt to rollback and write the error anyway
+	}
+
+	if tx != nil {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+	}
+
+	alerts := CreateDeprecationAlerts(alternative)
+
+	userErr = LogErr(r, statusCode, userErr, sysErr)
+	alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+	WriteAlerts(w, r, statusCode, alerts)
+}
+
+// LogErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
+// http.ResponseWriter, unlike handleSimpleErr. It returns the userErr which will be initialized to the
+// http.StatusText of errCode if it was passed as nil - otherwise left alone.
+func LogErr(r *http.Request, errCode int, userErr error, sysErr error) error {
+	if sysErr != nil {
+		log.Errorf(r.RemoteAddr + " " + sysErr.Error())
+	}
+	if userErr == nil {
+		userErr = errors.New(http.StatusText(errCode))
+	}
+	log.Debugln(userErr.Error())
+	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, errCode))
+	return userErr
+}
+
 // handleSimpleErr is a helper for HandleErr.
 // This exists to prevent exposing HandleErr calls in this file with nil transactions, which might be copy-pasted creating bugs.
 func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
-	if sysErr != nil {
-		log.Errorln(r.RemoteAddr + " " + sysErr.Error())
-	}
-	if userErr == nil {
-		userErr = errors.New(http.StatusText(statusCode))
-	}
+	userErr = LogErr(r, statusCode, userErr, sysErr)
+
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, http.StatusInternalServerError))
-		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)), '\n'))
 		return
 	}
-	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
 }
 
 // RespWriter is a helper to allow a one-line response, for endpoints with a function that returns the object that needs to be written and an error.
@@ -175,8 +270,27 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
+}
+
+// WriteRespAlertNotFound creates an alert indicating that the resource was not found and writes that to w.
+func WriteRespAlertNotFound(w http.ResponseWriter, r *http.Request) {
+	if respWritten(r) {
+		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct{ tc.Alerts }{tc.CreateAlerts(tc.ErrorLevel, "Resource not found.")}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(http.StatusNotFound)
+	w.Write(append(respBts, '\n'))
 }
 
 // WriteRespAlertObj Writes the given alert, and the given response object.
@@ -200,8 +314,56 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	_, _ = w.Write(append(respBts, '\n'))
+}
+
+func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts) {
+	if respWritten(r) {
+		log.Errorf("WriteAlerts called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(code)
+	if alerts.HasAlerts() {
+		resp, err := json.Marshal(alerts)
+		if err != nil {
+			handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+			return
+		}
+		_, _ = w.Write(append(resp, '\n'))
+	}
+}
+
+func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
+	if !alerts.HasAlerts() {
+		WriteResp(w, r, obj)
+		w.WriteHeader(code)
+		return
+	}
+	if respWritten(r) {
+		log.Errorf("WriteAlertsObj called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct {
+		tc.Alerts
+		Response interface{} `json:"response"`
+	}{
+		Alerts:   alerts,
+		Response: obj,
+	}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(code)
+	w.Write(append(respBts, '\n'))
 }
 
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
@@ -269,14 +431,17 @@ type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
 
-// Decode decodes a JSON object from r into the given v, validating and sanitizing the input. This helper should be used in API endpoints, rather than the json package, to safely decode and validate PUT and POST requests.
-// TODO change to take data loaded from db, to remove sql from tc package.
+// Parse decodes a JSON object from r into v, validating and sanitizing the
+// input. Use this function instead of the json package when writing API
+// endpoints to safely decode and validate PUT and POST requests.
+//
+// TODO: change to take data loaded from db, to remove sql from tc package.
 func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
-		return errors.New("decoding: " + err.Error())
+		return fmt.Errorf("decoding: %v", err)
 	}
 	if err := v.Validate(tx); err != nil {
-		return errors.New("validating: " + err.Error())
+		return fmt.Errorf("validating: %v", err)
 	}
 	return nil
 }
@@ -286,6 +451,7 @@ type APIInfo struct {
 	IntParams map[string]int
 	User      *auth.CurrentUser
 	ReqID     uint64
+	Version   *Version
 	Tx        *sqlx.Tx
 	Config    *config.Config
 }
@@ -332,6 +498,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	version := getRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
@@ -349,6 +516,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	return &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
+		Version:   version,
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
@@ -365,6 +533,103 @@ func (inf *APIInfo) Close() {
 	}
 }
 
+// SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
+func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
+	return SendMail(to, msg, inf.Config)
+}
+
+// IsResourceAuthorizedToCurrentUser is a convenience method used to call
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
+// using an APIInfo structure to provide the current user and database transaction.
+func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
+	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
+}
+
+// SendMail sends an email msg to the address identified by to. The msg parameter should be an
+// RFC822-style email with headers first, a blank line, and then the message body. The lines of msg
+// should be CRLF terminated. The msg headers should usually include fields such as "From", "To",
+// "Subject", and "Cc". Sending "Bcc" messages is accomplished by including an email address in the
+// to parameter but not including it in the msg headers.
+// The cfg parameter is used to set things like the "From" field, as well as for connection
+// and authentication with an external SMTP server.
+// SendMail returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, error) {
+	if !cfg.SMTP.Enabled {
+		return http.StatusInternalServerError, nil, errors.New("SMTP is not enabled; mail cannot be sent")
+	}
+	var auth smtp.Auth
+	if cfg.SMTP.User != "" {
+		auth = LoginAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	}
+	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.Address.Address, []string{to.Address.Address}, msg)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
+	}
+	return http.StatusOK, nil, nil
+}
+
+// CreateInfluxClient constructs and returns an InfluxDB HTTP client, if enabled and when possible.
+// The error this returns should not be exposed to the user; it's for logging purposes only.
+//
+// If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
+// that the caller will handle this situation appropriately.
+func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
+	if !inf.Config.InfluxEnabled {
+		return nil, nil
+	}
+
+	var fqdn string
+	var tcpPort uint
+	var httpsPort sql.NullInt64 // this is the only one that's optional
+
+	row := inf.Tx.Tx.QueryRow(influxServersQuery)
+	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
+		return nil, fmt.Errorf("Failed to create influx client: %v", e)
+	}
+
+	host := "http%s://%s:%d"
+	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
+		if !httpsPort.Valid {
+			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
+			httpsPort = sql.NullInt64{8086, true}
+		}
+		port, err := httpsPort.Value()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create influx client: %v", err)
+		}
+
+		p := port.(int64)
+		if p <= 0 || p > 65535 {
+			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
+			p = 8086
+		}
+
+		host = fmt.Sprintf(host, "s", fqdn, p)
+	} else if tcpPort > 0 && tcpPort <= 65535 {
+		host = fmt.Sprintf(host, "", fqdn, tcpPort)
+	} else {
+		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
+		host = fmt.Sprintf(host, "", fqdn, 8086)
+	}
+
+	config := influx.HTTPConfig{
+		Addr:      host,
+		Username:  inf.Config.ConfigInflux.User,
+		Password:  inf.Config.ConfigInflux.Password,
+		UserAgent: fmt.Sprintf("TrafficOps/%s (Go)", inf.Config.Version),
+		Timeout:   time.Duration(float64(inf.Config.ReadTimeout)/2.1) * time.Second,
+	}
+
+	var client influx.Client
+	client, e := influx.NewHTTPClient(config)
+	if client == nil {
+		return nil, fmt.Errorf("Failed to create influx client (client was nil): %v", e)
+	}
+	return &client, e
+}
+
 // APIInfoImpl implements APIInfo via the APIInfoer interface
 type APIInfoImpl struct {
 	ReqInfo *APIInfo
@@ -376,6 +641,40 @@ func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
 
 func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
+}
+
+type Version struct {
+	Major uint64
+	Minor uint64
+}
+
+// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
+func getRequestedAPIVersion(path string) *Version {
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 2 {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if strings.ToLower(pathParts[1]) != "api" {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if len(pathParts) < 3 {
+		return nil // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+	}
+	version := pathParts[2]
+
+	versionParts := strings.Split(version, ".")
+	if len(versionParts) != 2 {
+		return nil
+	}
+	majorVersion, err := strconv.ParseUint(versionParts[0], 10, 64)
+	if err != nil {
+		return nil
+	}
+	minorVersion, err := strconv.ParseUint(versionParts[1], 10, 64)
+	if err != nil {
+		return nil
+	}
+	return &Version{Major: majorVersion, Minor: minorVersion}
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
@@ -431,44 +730,6 @@ func respWritten(r *http.Request) bool {
 	return r.Context().Value(APIRespWrittenKey) != nil
 }
 
-// TypeErrToAPIErr takes a slice of errors and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
-func TypeErrsToAPIErr(errs []error, errType tc.ApiErrorType) (error, error, int) {
-	if len(errs) == 0 {
-		return nil, nil, http.StatusOK
-	}
-	switch errType {
-	case tc.SystemError:
-		return nil, util.JoinErrs(errs), http.StatusInternalServerError
-	case tc.DataConflictError:
-		return util.JoinErrs(errs), nil, http.StatusBadRequest
-	case tc.DataMissingError:
-		return util.JoinErrs(errs), nil, http.StatusNotFound
-	default:
-		log.Errorln("TypeErrsToAPIErr received unknown ApiErrorType from read: " + errType.String())
-		return nil, util.JoinErrs(errs), http.StatusInternalServerError
-	}
-}
-
-// TypeErrToAPIErr takes an error and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
-func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
-	if err == nil {
-		return nil, nil, http.StatusOK
-	}
-	switch errType {
-	case tc.SystemError:
-		return nil, err, http.StatusInternalServerError
-	case tc.DataConflictError:
-		return err, nil, http.StatusBadRequest
-	case tc.DataMissingError:
-		return err, nil, http.StatusNotFound
-	case tc.ForbiddenError:
-		return err, nil, http.StatusForbidden
-	default:
-		log.Errorln("TypeErrToAPIErr received unknown ApiErrorType from read: " + errType.String())
-		return nil, err, http.StatusInternalServerError
-	}
-}
-
 // small helper function to help with parsing below
 func toCamelCase(str string) string {
 	mutable := []byte(str)
@@ -490,6 +751,16 @@ func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
 }
 
+// parses pq errors for empty string check constraint
+func parseEmptyConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`new row for relation "[^"]*" violates check constraint "(.*)_empty"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s cannot be ", match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for violated foreign key constraints
 func parseNotPresentFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
@@ -507,13 +778,23 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	if match == nil {
 		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
+}
+
+// parses pq errors for database enum constraint violations
+func parseEnumConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`invalid input value for enum (.+): \"(.+)\"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("invalid enum value %s for field %s.", match[2], match[1]), nil, http.StatusBadRequest
 }
 
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
 //
 // Note: This method would also catch an ON UPDATE RESTRICT fk constraint,
-// but only an error message appropiate for delete is returned. Currently,
+// but only an error message appropriate for delete is returned. Currently,
 // no API endpoint can trigger an ON UPDATE RESTRICT fk constraint since
 // no API endpoint updates the primary key of any table.
 //
@@ -521,14 +802,14 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 // names that are captured in the regex to not contain any underscores.
 // This function fixes issues like #3410. If an error message needs to be made
 // for tables with underscores in particular, it should be made into an issue
-// and this function should be udated then. At the moment, there are no documented
+// and this function should be updated then. At the moment, there are no documented
 // issues for this case, so I won't include it.
 //
 // It may be helpful to look at constraints for api_capability, role_capability,
 // and user_role for examples.
 //
 func parseRestrictFKConstraint(err *pq.Error) (error, error, int) {
-	pattern := regexp.MustCompile(`update or delete on table "([a-z]+)" violates foreign key constraint ".+" on table "([a-z]+)"`)
+	pattern := regexp.MustCompile(`update or delete on table "([a-z_]+)" violates foreign key constraint ".+" on table "([a-z_]+)"`)
 	match := pattern.FindStringSubmatch(err.Message)
 	if match == nil {
 		return nil, nil, http.StatusOK
@@ -548,11 +829,8 @@ func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
 	if !ok {
-		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
-	}
-
-	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
-		return usrErr, sysErr, errCode
+		log.Errorf("a non-pq error was given")
+		return nil, ierr, http.StatusInternalServerError
 	}
 
 	if usrErr, sysErr, errCode := parseNotPresentFKConstraint(err); errCode != http.StatusOK {
@@ -564,6 +842,18 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseRestrictFKConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
@@ -613,8 +903,9 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		return auth.CurrentUser{}, userErr, sysErr, code
 	}
 
-	newCookieVal := tocookie.Refresh(oldCookie, secret)
-	http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+	duration := tocookie.DefaultDuration
+	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
+	http.SetCookie(w, newCookie)
 	return user, nil, nil, http.StatusOK
 }
 
@@ -622,4 +913,84 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+// SendEmailFromTemplate allows a user to input an html template to format an email.  It parses the template and creates a message before calling the SendMail method.
+// SendEmailFromTemplate returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
+	email := rfc.EmailAddress{
+		Address: mail.Address{Name: "", Address: toEmail},
+	}
+
+	msgBodyBuffer, err := parseTemplate(templateFile, data)
+	if err != nil {
+		return http.StatusInternalServerError, err, nil
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
+	return SendMail(email, msg, &config)
+
+}
+
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = t.Execute(buf, data)
+
+	return buf, err
+}
+
+type loginAuth struct {
+	identity, username, password, host string
+}
+
+func LoginAuth(identity, username, password, host string) smtp.Auth {
+	return &loginAuth{identity, username, password, host}
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS && !isLocalhost(server.Name) {
+		return "", nil, errors.New("unencrypted connection")
+	}
+	if server.Name != a.host {
+		return "", nil, errors.New("wrong host name")
+	}
+	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+	return "LOGIN", resp, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
+	if more {
+		if command == "username" {
+			return []byte(a.username), nil
+		} else if command == "password" {
+			return []byte(a.password), nil
+		} else {
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
+	}
+	return nil, nil
+}
+
+// CreateDeprecationAlerts creates a deprecation notice with an optional alternative route suggestion.
+func CreateDeprecationAlerts(alternative *string) tc.Alerts {
+	if alternative != nil {
+		return tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
+	} else {
+		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
+	}
 }

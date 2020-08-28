@@ -20,7 +20,7 @@
 var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scope, $location, $uibModal, formUtils, locationUtils, cdnService, messageModel) {
 
 	var generate = function() {
-		$scope.dnssecKeysRequest.effectiveDate = moment($scope.effectiveDate).format('x');
+		$scope.dnssecKeysRequest.effectiveDate = moment($scope.effectiveDate).utc().format();
 		cdnService.generateDNSSECKeys($scope.dnssecKeysRequest)
 			.then(function(result) {
 				messageModel.setMessages(result.data.alerts, true);

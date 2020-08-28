@@ -28,11 +28,14 @@ import org.apache.tomcat.util.net.SocketEvent;
 import org.apache.tomcat.util.net.SocketProcessorBase;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
 	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
+	private String protocols;
 
 	// Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
 	// and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
@@ -40,8 +43,8 @@ public class RouterNioEndpoint extends NioEndpoint {
 	// certificates.  When we are done we call the parent classes initialiseSsl.
 	@SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
 	@Override
-	protected void initialiseSsl() throws Exception{
-		if (isSSLEnabled()){
+	protected void initialiseSsl() throws Exception {
+		if (isSSLEnabled()) {
 			destroySsl();
 			sslHostConfigs.clear();
 			final KeyManager keyManager = new KeyManager();
@@ -54,31 +57,70 @@ public class RouterNioEndpoint extends NioEndpoint {
 		}
 	}
 
-	synchronized public void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData){
+	synchronized private List<String> replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
 		final Set<String> aliases = sslHostsData.keySet();
 		String lastHostName = "";
+		final List<String> failedUpdates = new ArrayList<>();
 
-		for (final String alias : aliases){
+		for (final String alias : aliases) {
 			final SSLHostConfig sslHostConfig = new SSLHostConfig();
 			final SSLHostConfigCertificate cert = new SSLHostConfigCertificate(sslHostConfig, SSLHostConfigCertificate.Type.RSA);
+			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
 			cert.setCertificateKeyAlias(alias);
 			sslHostConfig.addCertificate(cert);
 			sslHostConfig.setCertificateKeyAlias(alias);
-			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
-			sslHostConfig.setProtocols("all");
+			sslHostConfig.setProtocols(protocols != null ? protocols : "all");
+			sslHostConfig.setConfigType(getSslConfigType());
 			sslHostConfig.setCertificateVerification("none");
-			LOGGER.info("sslHostConfig: " + sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
+			LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
 
-			if (!sslHostConfig.getHostName().equals(lastHostName)){
+		if (!sslHostConfig.getHostName().equals(lastHostName)){
+			try{
 				addSslHostConfig(sslHostConfig, true);
-				lastHostName = sslHostConfig.getHostName();
+			} catch (Exception fubar){
+				LOGGER.error("In RouterNioEndpoint.replaceSSLHosts, sslHostConfig and certs did not get replaced " +
+				  "for host: " + sslHostConfig.getHostName() + ", because of execption - " + fubar.toString());
+				failedUpdates.add(alias);
 			}
+			lastHostName = sslHostConfig.getHostName();
+		}
 
-			if (CertificateRegistry.DEFAULT_SSL_KEY.equals(alias)){
+			if (CertificateRegistry.DEFAULT_SSL_KEY.equals(alias) && !failedUpdates.contains(alias)){
 				// One of the configs must be set as the default
 				setDefaultSSLHostConfigName(sslHostConfig.getHostName());
 			}
 		}
+		return failedUpdates;
+	}
+
+	synchronized public List<String> reloadSSLHosts(final Map<String, HandshakeData> cr) {
+		final List<String> failedUpdates = replaceSSLHosts(cr);
+		if (!failedUpdates.isEmpty()) {
+			failedUpdates.forEach(alias-> {
+				cr.remove(alias);
+			});
+		}
+
+		final List<String> failedContextUpdates = new ArrayList<>();
+		for (final String alias : cr.keySet()) {
+			try{
+				final HandshakeData data = cr.get(alias);
+				final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
+				sslHostConfig.setConfigType(getSslConfigType());
+				createSSLContext(sslHostConfig);
+			}
+			catch (Exception rfubar) {
+				LOGGER.error("In RouterNioEndpoint could not create new SSLContext for cert " + alias +
+						" because of exception: "+rfubar.toString());
+				failedContextUpdates.add(alias);
+			}
+		}
+
+		if (!failedContextUpdates.isEmpty()) {
+			failedUpdates.addAll(failedContextUpdates);
+		}
+
+		return failedUpdates;
 	}
 
 	@Override
@@ -117,6 +159,14 @@ public class RouterNioEndpoint extends NioEndpoint {
 				SSL.getLastErrorNumber();
 			}
 		}
+	}
+
+	public String getProtocols() {
+		return protocols;
+	}
+
+	public void setProtocols(final String protocols) {
+		this.protocols = protocols;
 	}
 
 }

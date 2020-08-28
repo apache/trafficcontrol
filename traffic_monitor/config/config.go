@@ -20,7 +20,10 @@ package config
  */
 
 import (
+	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -46,35 +49,82 @@ const (
 	TMConfigBackupFile = "/opt/traffic_monitor/tmconfig.backup"
 )
 
+// PollingProtocol is a string value indicating whether to use IPv4, IPv6, or both.
+type PollingProtocol string
+
+const (
+	IPv4Only               = PollingProtocol("ipv4only")
+	IPv6Only               = PollingProtocol("ipv6only")
+	Both                   = PollingProtocol("both")
+	InvalidPollingProtocol = PollingProtocol("invalid_polling_protocol")
+)
+
+// String returns a string representation of this PollingProtocol.
+func (t PollingProtocol) String() string {
+	return string(t)
+}
+
+// PollingProtocolFromString returns a PollingProtocol based on the string input.
+func PollingProtocolFromString(s string) PollingProtocol {
+	s = strings.ToLower(s)
+	switch s {
+	case IPv4Only.String():
+		return IPv4Only
+	case IPv6Only.String():
+		return IPv6Only
+	case Both.String():
+		return Both
+	default:
+		return InvalidPollingProtocol
+	}
+}
+
+// UnmarshalJSON implements the json.Unmarshaller interface
+func (t *PollingProtocol) UnmarshalJSON(b []byte) error {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	*t = PollingProtocolFromString(s)
+	if *t == InvalidPollingProtocol {
+		return errors.New("parsed invalid PollingProtocol: " + s)
+	}
+	return nil
+}
+
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
-	CacheHealthPollingInterval   time.Duration `json:"-"`
-	CacheStatPollingInterval     time.Duration `json:"-"`
-	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HTTPTimeout                  time.Duration `json:"-"`
-	PeerPollingInterval          time.Duration `json:"-"`
-	PeerOptimistic               bool          `json:"peer_optimistic"`
-	MaxEvents                    uint64        `json:"max_events"`
-	MaxStatHistory               uint64        `json:"max_stat_history"`
-	MaxHealthHistory             uint64        `json:"max_health_history"`
-	HealthFlushInterval          time.Duration `json:"-"`
-	StatFlushInterval            time.Duration `json:"-"`
-	StatBufferInterval           time.Duration `json:"-"`
-	LogLocationError             string        `json:"log_location_error"`
-	LogLocationWarning           string        `json:"log_location_warning"`
-	LogLocationInfo              string        `json:"log_location_info"`
-	LogLocationDebug             string        `json:"log_location_debug"`
-	LogLocationEvent             string        `json:"log_location_event"`
-	ServeReadTimeout             time.Duration `json:"-"`
-	ServeWriteTimeout            time.Duration `json:"-"`
-	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	StaticFileDir                string        `json:"static_file_dir"`
-	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
-	TrafficOpsMinRetryInterval   time.Duration `json:"-"`
-	TrafficOpsMaxRetryInterval   time.Duration `json:"-"`
-	CRConfigBackupFile           string        `json:"crconfig_backup_file"`
-	TMConfigBackupFile           string        `json:"tmconfig_backup_file"`
-	TrafficOpsDiskRetryMax       uint64        `json:"-"`
+	CacheHealthPollingInterval   time.Duration   `json:"-"`
+	CacheStatPollingInterval     time.Duration   `json:"-"`
+	MonitorConfigPollingInterval time.Duration   `json:"-"`
+	HTTPTimeout                  time.Duration   `json:"-"`
+	PeerPollingInterval          time.Duration   `json:"-"`
+	PeerOptimistic               bool            `json:"peer_optimistic"`
+	PeerOptimisticQuorumMin      int             `json:"peer_optimistic_quorum_min"`
+	MaxEvents                    uint64          `json:"max_events"`
+	MaxStatHistory               uint64          `json:"max_stat_history"`
+	MaxHealthHistory             uint64          `json:"max_health_history"`
+	HealthFlushInterval          time.Duration   `json:"-"`
+	StatFlushInterval            time.Duration   `json:"-"`
+	StatBufferInterval           time.Duration   `json:"-"`
+	LogLocationError             string          `json:"log_location_error"`
+	LogLocationWarning           string          `json:"log_location_warning"`
+	LogLocationInfo              string          `json:"log_location_info"`
+	LogLocationDebug             string          `json:"log_location_debug"`
+	LogLocationEvent             string          `json:"log_location_event"`
+	ServeReadTimeout             time.Duration   `json:"-"`
+	ServeWriteTimeout            time.Duration   `json:"-"`
+	HealthToStatRatio            uint64          `json:"health_to_stat_ratio"`
+	StaticFileDir                string          `json:"static_file_dir"`
+	CRConfigHistoryCount         uint64          `json:"crconfig_history_count"`
+	TrafficOpsMinRetryInterval   time.Duration   `json:"-"`
+	TrafficOpsMaxRetryInterval   time.Duration   `json:"-"`
+	CRConfigBackupFile           string          `json:"crconfig_backup_file"`
+	TMConfigBackupFile           string          `json:"tmconfig_backup_file"`
+	TrafficOpsDiskRetryMax       uint64          `json:"-"`
+	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
+	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -91,6 +141,7 @@ var DefaultConfig = Config{
 	HTTPTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
 	PeerOptimistic:               true,
+	PeerOptimisticQuorumMin:      0,
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
 	MaxHealthHistory:             5,
@@ -112,6 +163,8 @@ var DefaultConfig = Config{
 	CRConfigBackupFile:           CRConfigBackupFile,
 	TMConfigBackupFile:           TMConfigBackupFile,
 	TrafficOpsDiskRetryMax:       2,
+	CachePollingProtocol:         Both,
+	PeerPollingProtocol:          Both,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -125,6 +178,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 bool   `json:"peer_optimistic"`
+		PeerOptimisticQuorumMin        int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           uint64 `json:"stat_buffer_interval_ms"`
@@ -138,6 +192,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
 		PeerOptimistic:                 bool(true),
+		PeerOptimisticQuorumMin:        int(c.PeerOptimisticQuorumMin),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
 		StatBufferIntervalMs:           uint64(c.StatBufferInterval / time.Millisecond),
@@ -155,6 +210,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 *bool   `json:"peer_optimistic"`
+		PeerOptimisticQuorumMin        *int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           *uint64 `json:"stat_buffer_interval_ms"`
@@ -206,6 +262,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.PeerOptimistic != nil {
 		c.PeerOptimistic = *aux.PeerOptimistic
+	}
+	if aux.PeerOptimisticQuorumMin != nil {
+		c.PeerOptimisticQuorumMin = *aux.PeerOptimisticQuorumMin
 	}
 	if aux.TrafficOpsMinRetryIntervalMs != nil {
 		c.TrafficOpsMinRetryInterval = time.Duration(*aux.TrafficOpsMinRetryIntervalMs) * time.Millisecond

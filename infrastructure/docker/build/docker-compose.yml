@@ -19,80 +19,88 @@ version: '2'
 
 services:
   source:
-    image: trafficcontrol_tarball
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-source
-      context: ../../..
+    image: apache/traffic_source_tarballer:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-source
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_monitor_build:
-    image: traffic_monitor_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
-      context: ../../..
+    image: apache/traffic_monitor_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_build:
-    image: traffic_ops_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
-      context: ../../..
+    image: apache/traffic_ops_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
+    #  context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_ops_ort_build:
+    image: apache/traffic_ops_ort_builder:master
+    # build:
+    #   dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+    #   context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_portal_build:
-    image: traffic_portal_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
-      context: ../../..
+    image: apache/traffic_portal_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_router_build:
-    image: traffic_router_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
-      context: ../../..
+    image: apache/traffic_router_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.m2:/root/.m2:z
 
   traffic_stats_build:
-    image: traffic_stats_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
-      context: ../../..
+    image: apache/traffic_stats_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   grove_build:
-    image: grove_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-grove
-      context: ../../..
+    image: apache/traffic_grove_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-grove
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   grovetccfg_build:
-    image: grovetccfg_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
-      context: ../../..
+    image: apache/traffic_grovetccfg_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   weasel:
-    image: licenseweasel/weasel:0.3
+    image: licenseweasel/weasel:v0.4
     volumes:
       - ../../..:/trafficcontrol:z
     command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
 
   docs:
-    image: docs_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-docs
-      context: ../../..
+    image: apache/traffic_docs_builder:master
+    #build:
+    #  dockerfile: infrastructure/docker/build/Dockerfile-docs
+    #  context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z

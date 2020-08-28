@@ -31,24 +31,17 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_ops/client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
 	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
+	TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error)
 	Set(session *client.Session)
-	URL() (string, error)
-	User() (string, error)
-	Servers() ([]tc.Server, error)
-	Profiles() ([]tc.Profile, error)
-	Parameters(profileName string) ([]tc.Parameter, error)
-	DeliveryServices() ([]tc.DeliveryService, error)
-	CacheGroups() ([]tc.CacheGroupNullable, error)
 	CRConfigHistory() []CRConfigStat
 	BackupFileExists() bool
 }
@@ -193,22 +186,6 @@ func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	return *s.session
 }
 
-func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
-	}
-	return ss.URL, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) User() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
-	}
-	return ss.UserName, nil
-}
-
 func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
 	return s.crConfigHist.Get()
 }
@@ -244,7 +221,7 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-func MonitorConfigValid(cfg *tc.TrafficMonitorConfigMap) error {
+func MonitorConfigValid(cfg *tc.LegacyTrafficMonitorConfigMap) error {
 	if cfg == nil {
 		return errors.New("MonitorConfig is nil")
 	}
@@ -347,8 +324,8 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
-// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `TrafficMonitorConfigMap`. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple goroutines.
+func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
@@ -388,8 +365,8 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	return configMap, err
 }
 
-// TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+// LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
+func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
@@ -414,11 +391,11 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	return mc, nil
 }
 
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
+func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.LegacyTrafficMonitorConfigMap) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.TrafficServer{}
+	mc.TrafficServer = map[string]tc.LegacyTrafficServer{}
 	for name, srv := range crConfig.ContentServers {
-		s := tc.TrafficServer{}
+		s := tc.LegacyTrafficServer{}
 		if srv.Profile != nil {
 			s.Profile = *srv.Profile
 		} else {
@@ -469,6 +446,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 			s.HashID = *srv.HashId
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
+		}
+		if srv.HttpsPort != nil {
+			s.HTTPSPort = *srv.HttpsPort
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing HttpsPort field\n", name)
 		}
 		mc.TrafficServer[name] = s
 	}
@@ -535,49 +517,4 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		}
 	}
 	return mc, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) Servers() ([]tc.Server, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	servers, _, error := ss.GetServers()
-	return servers, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Profiles() ([]tc.Profile, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	profiles, _, error := ss.GetProfiles()
-	return profiles, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]tc.Parameter, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	parameters, _, error := ss.GetParametersByProfileName(profileName)
-	return parameters, error
-}
-
-func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryService, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	deliveryServices, _, error := ss.GetDeliveryServices()
-	return deliveryServices, error
-}
-
-func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]tc.CacheGroupNullable, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	cacheGroups, _, error := ss.GetCacheGroupsNullable()
-	return cacheGroups, error
 }

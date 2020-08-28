@@ -30,14 +30,21 @@ const DNSSECZSKType = "zsk"
 const DNSSECKeyStatusNew = "new"
 const DNSSECKeyStatusExpired = "expired"
 const DNSSECStatusExisting = "existing"
+const (
+	SelfSignedCertAuthType           = "Self Signed"
+	CertificateAuthorityCertAuthType = "Certificate Authority"
+	LetsEncryptAuthType              = "Lets Encrypt"
+)
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
+	AuthType        string                            `json:"authType,omitempty"`
 	CDN             string                            `json:"cdn,omitempty"`
 	DeliveryService string                            `json:"deliveryservice,omitempty"`
 	BusinessUnit    string                            `json:"businessUnit,omitempty"`
@@ -51,7 +58,13 @@ type DeliveryServiceSSLKeys struct {
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+type DeliveryServiceSSLKeysV15 struct {
+	DeliveryServiceSSLKeys
+	Expiration time.Time `json:"expiration,omitempty"`
+}
+
 type DeliveryServiceSSLKeysReq struct {
+	AuthType        *string `json:"authType,omitempty"`
 	CDN             *string `json:"cdn,omitempty"`
 	DeliveryService *string `json:"deliveryservice,omitempty"`
 	BusinessUnit    *string `json:"businessUnit,omitempty"`
@@ -124,7 +137,7 @@ func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 		if r.Certificate.Crt == "" {
 			errs = append(errs, "certificate.crt required")
 		}
-		if r.Certificate.CSR == "" {
+		if r.Certificate.CSR == "" && (r.AuthType == nil || *r.AuthType != LetsEncryptAuthType) {
 			errs = append(errs, "certificate.csr required")
 		}
 	}
@@ -162,6 +175,19 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+type DeliveryServiceLetsEncryptSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceLetsEncryptSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
 func checkNilOrEmpty(s *string) bool {
 	return s == nil || *s == ""
 }
@@ -185,7 +211,7 @@ type DNSSECKeySet struct {
 	KSK []DNSSECKey `json:"ksk"`
 }
 
-// DNSSECKeyDSRecordRiak is a DNSSEC key set (ZSK and KSK), as stored in Riak.
+// DNSSECKeySetV11 is a DNSSEC key set (ZSK and KSK), as stored in Riak.
 // This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
 type DNSSECKeySetV11 struct {
 	ZSK []DNSSECKeyV11 `json:"zsk"`

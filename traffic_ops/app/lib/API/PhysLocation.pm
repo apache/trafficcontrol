@@ -259,24 +259,26 @@ sub create_for_region {
 	my $self        = shift;
 	my $region_name = $self->param('region_name');
 	my $params      = $self->req->json;
+	my $alt         = "POST /phys_locations";
+
 	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format,  please check!");
+		return $self->with_deprecation("parameters must be in JSON format,  please check!", "error", 400, $alt);
 	}
 	if ( !&is_oper($self) ) {
-		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+		return $self->with_deprecation("You must be an ADMIN or OPER to perform this operation!", "error", 400, $alt);
 	}
 
 	my $existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{name} } )->get_column('name')->single();
 	if ( defined($existing_physlocation) ) {
-		return $self->alert( "physical location[" . $params->{name} . "] already exists." );
+		return $self->with_deprecation("physical location[" . $params->{name} . "] already exists.", "error", 400, $alt);
 	}
 	$existing_physlocation = $self->db->resultset('PhysLocation')->search( { name => $params->{shortName} } )->get_column('name')->single();
 	if ( defined($existing_physlocation) ) {
-		return $self->alert( "physical location with shortName[" . $params->{shortName} . "] already exists." );
+		return $self->with_deprecation("physical location with shortName[" . $params->{shortName} . "] already exists.", "error", 400, $alt);
 	}
 	my $region_id = $self->db->resultset('Region')->search( { name => $region_name } )->get_column('id')->single();
 	if ( !defined($region_id) ) {
-		return $self->alert( "region[" . $region_name . "] does not exist." );
+		return $self->with_deprecation("region[" . $region_name . "] does not exist.", "error", 400, $alt);
 	}
 
 	my $insert = $self->db->resultset('PhysLocation')->create(
@@ -312,9 +314,9 @@ sub create_for_region {
 		$response->{poc}        = $rs->poc;
 		$response->{email}      = $rs->email;
 		$response->{comments}   = $rs->comments;
-		return $self->success($response);
+		return $self->deprecation(200, $alt, $response);
 	}
-	return $self->alert( "create region " . $params->{name} . " failed." );
+	return $self->with_deprecation("create region " . $params->{name} . " failed.", "error", 400, $alt);
 }
 
 sub delete {
