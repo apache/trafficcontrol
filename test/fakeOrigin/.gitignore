@@ -6,6 +6,7 @@ config.json
 out/*
 origin/*
 *.crt
+*.cert
 *.key
 dist/*
 docker_host/*
