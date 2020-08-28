@@ -195,7 +195,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool {
-		"atlanta-edge-01": true,
+		"edge1-cdn1-cg3": true,
+		"edge2-cdn1-cg3": true,
 		"atlanta-mid-16": true,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
