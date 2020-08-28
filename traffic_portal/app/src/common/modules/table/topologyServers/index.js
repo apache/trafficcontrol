@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,13 +18,5 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, filter, $controller, $scope) {
-
-	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { tableName: 'physLocationServers', servers: servers, filter: filter, $scope: $scope }));
-
-	$scope.physLocation = physLocation;
-};
-
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', 'filter', '$controller', '$scope'];
-module.exports = TablePhysLocationServersController;
+module.exports = angular.module('trafficPortal.table.topologyServers', [])
+	.controller('TableTopologyServersController', require('./TableTopologyServersController'));
