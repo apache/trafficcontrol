@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strings"
 	"time"
@@ -152,8 +153,36 @@ WHERE (server.cdn_id = $1
 	return nil
 }
 
+// checkExistingStatusInfo returns the existing status and status_last_updated values for the server in question
+func checkExistingStatusInfo(serverID int, tx *sql.Tx) (int, time.Time) {
+	status := 0
+	var status_last_updated time.Time
+	q := `SELECT status,
+status_last_updated 
+FROM server
+WHERE id = $1`
+	response, err := tx.Query(q, serverID)
+	if err != nil {
+		log.Errorf("couldn't get status/ status_last_updated for server with id %v", serverID)
+		return status, status_last_updated
+	}
+	defer response.Close()
+	for response.Next() {
+		if err := response.Scan(&status, &status_last_updated); err != nil {
+			log.Errorf("couldn't get status/ status_last_updated of server with id %v, err: %v", serverID, err.Error())
+		}
+	}
+	return status, status_last_updated
+}
+
 // updateServerStatusAndOfflineReason updates a server's status and offline_reason and returns an error (if one occurs).
 func updateServerStatusAndOfflineReason(serverID, statusID int, offlineReason *string, tx *sql.Tx) error {
+	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(serverID, tx)
+	newStatusUpdatedTime := time.Now()
+	// Set the status_last_updated time to the current time ONLY IF the new status is different from the old one
+	if existingStatus == statusID {
+		newStatusUpdatedTime = existingStatusUpdatedTime
+	}
 	q := `
 UPDATE server
 SET    status = $1,
@@ -161,7 +190,7 @@ SET    status = $1,
        status_last_updated = $3
 WHERE  id = $4
 `
-	if _, err := tx.Exec(q, statusID, offlineReason, time.Now(), serverID); err != nil {
+	if _, err := tx.Exec(q, statusID, offlineReason, &newStatusUpdatedTime, serverID); err != nil {
 		return errors.New("updating server status and offline_reason: " + err.Error())
 	}
 	return nil
