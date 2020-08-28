@@ -156,7 +156,7 @@ func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
 					ip = nil // don't bother with the error, just skip
 				}
 			}
-			if ip.To4() == nil {
+			if ip == nil || ip.To4() == nil {
 				continue
 			}
 			ipAddr = addrStr
