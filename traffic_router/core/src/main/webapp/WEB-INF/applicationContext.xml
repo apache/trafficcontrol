@@ -297,9 +297,14 @@
 		<constructor-arg index="4" ref="TCPBlockingQueue" />
 	</bean>
 
+	<bean id="DnsStreamInetAddress" class="java.net.InetAddress" factory-method="getByName">
+		<constructor-arg index="0" value="$[dns.tcp.host:0.0.0.0]" />
+	</bean>
+
 	<bean id="ServerSocket" class="java.net.ServerSocket">
 		<constructor-arg index="0" value="$[dns.tcp.port:53]" />
 		<constructor-arg index="1" value="$[dns.tcp.backlog:0]" />
+		<constructor-arg index="2" ref="DnsStreamInetAddress" />
 	</bean>
 
 	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
@@ -312,8 +317,13 @@
 		<property name="taskTimeout" value="$[dns.tcp.timeout.task:5000]" />
 	</bean>
 
+	<bean id="DatagramInetAddress" class="java.net.InetAddress" factory-method="getByName">
+		<constructor-arg index="0" value="$[dns.udp.host:0.0.0.0]" />
+	</bean>
+
 	<bean id="DatagramSocket" class="java.net.DatagramSocket">
 		<constructor-arg index="0" value="$[dns.udp.port:53]" />
+		<constructor-arg index="1" ref="DatagramInetAddress" />
 	</bean>
 
 	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">
