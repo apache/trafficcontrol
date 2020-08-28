@@ -139,6 +139,7 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
+	reqInf.StatusCode = resp.StatusCode
 	if err != nil {
 		return alerts, reqInf, err
 	}

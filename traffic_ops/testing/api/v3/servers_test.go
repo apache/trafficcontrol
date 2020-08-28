@@ -452,9 +452,9 @@ func UpdateTestServers(t *testing.T) {
 
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
-	al, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
-	if err != nil {
-		t.Logf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
+	al, reqInf, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil && reqInf.StatusCode != http.StatusBadRequest {
+		t.Logf("error making sure that XMPPID does not get updated, %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
 	}
 
 	//Change back hostname and xmppid to its original name for other tests to pass
