@@ -119,7 +119,7 @@ func WriteConfig(cfg Config, path string) error {
 	if err != nil {
 		return errors.New("marshalling JSON: " + err.Error())
 	}
-	if err = ioutil.WriteFile(path, bts, 0755); err != nil {
+	if err = ioutil.WriteFile(path, bts, 0644); err != nil {
 		return errors.New("writing file '" + path + "': " + err.Error())
 	}
 	return nil
