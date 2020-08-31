@@ -77,7 +77,7 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 
 	// Handle system specific values and remove them from the map for precomputing to not have issues
 	if stats.Loadavg, err = LoadavgFromRawLine(statMap["proc.loadavg"].(string)); err != nil {
-		return stats, nil, fmt.Errorf("error parsing loadavg for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("parsing loadavg for cache '%s': %v", cacheName, err)
 	} else {
 		delete(statMap, "proc.loadavg")
 	}
@@ -99,13 +99,19 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 	}
 
 	// Clean up other non-stats entries
-	delete(statMap, "astatsLoad")
-	delete(statMap, "lastReloadRequest")
-	delete(statMap, "version")
-	delete(statMap, "something")
-	delete(statMap, "lastReload")
-	delete(statMap, "configReloadRequests")
-	delete(statMap, "configReloads")
+	nonStats := []string{
+		"astatsLoad",
+		"lastReloadRequest",
+		"version",
+		"something",
+		"lastReload",
+		"configReloadRequests",
+		"configReloads",
+	}
+	for _, nonStat := range nonStats {
+		delete(statMap, nonStat)
+	}
+
 	if len(stats.Interfaces) < 1 {
 		return stats, nil, fmt.Errorf("cache '%s' had no interfaces", cacheName)
 	}

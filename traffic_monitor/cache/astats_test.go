@@ -41,14 +41,11 @@ func TestAstatsJson(t *testing.T) {
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
 	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
-	_, thismap, err := astatsParse("testCache", file, ctx)
+	_, _, err = astatsParse("testCache", file, ctx)
 
 	if err != nil {
 		t.Error(err)
 	}
-
-	t.Logf("Found %v key/val pairs in ats\n", len(thismap))
-
 }
 
 func TestAstatsCSV(t *testing.T) {
@@ -60,14 +57,11 @@ func TestAstatsCSV(t *testing.T) {
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
 	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
-	_, thismap, err := astatsParse("testCache", file, ctx)
+	_, _, err = astatsParse("testCache", file, ctx)
 
 	if err != nil {
 		t.Error(err)
 	}
-
-	t.Logf("Found %v key/val pairs in ats\n", len(thismap))
-
 }
 
 func BenchmarkAstatsJson(b *testing.B) {
