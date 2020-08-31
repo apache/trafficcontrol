@@ -85,6 +85,19 @@ FROM deliveryservice_server dss
 JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
 `
 
+/* language=SQL */
+const requiredCapabilitiesCondition = `
+AND (
+	SELECT ARRAY_AGG(ssc.server_capability)
+	FROM server_server_capability ssc
+	WHERE ssc."server" = s.id
+) @> (
+SELECT ARRAY_AGG(drc.required_capability)
+FROM deliveryservices_required_capability drc
+WHERE drc.deliveryservice_id = d.id
+)
+`
+
 const serverCountQuery = `
 SELECT COUNT(s.id)
 ` + serversFromAndJoin
@@ -671,6 +684,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	usesMids := false
 	queryAddition := ""
+	dsHasRequiredCapabilities := false
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
@@ -684,12 +698,24 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 		var joinSubQuery string
 		if version.Major >= 3 {
+			const hasRequiredCapabilitiesQuery = `
+SELECT EXISTS(
+    SELECT drc.required_capability
+	FROM deliveryservices_required_capability drc
+	WHERE drc.deliveryservice_id = $1
+)
+`
+			if err = tx.QueryRow(hasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
+				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+				return nil, 0, nil, err, http.StatusInternalServerError, nil
+			}
 			joinSubQuery = dssTopologiesJoinSubquery
 		} else {
 			joinSubQuery = ""
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
+
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
@@ -703,6 +729,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if dsHasRequiredCapabilities {
+		where += requiredCapabilitiesCondition
+	}
 	if len(errs) > 0 {
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
