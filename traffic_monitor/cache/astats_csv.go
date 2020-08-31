@@ -43,12 +43,15 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 	}
 
 	var atsData astatsDataCsv
-	atsData.Ats = make(map[string]interface{})
+	var allData []string
 	scanner := bufio.NewScanner(data)
-
 	for scanner.Scan() {
+		allData = append(allData, scanner.Text())
+	}
 
-		line := scanner.Text()
+	atsData.Ats = make(map[string]interface{}, len(allData))
+
+	for _, line := range allData {
 		delim := strings.IndexByte(line, ',')
 
 		// No delimiter found, skip this line as invalid
