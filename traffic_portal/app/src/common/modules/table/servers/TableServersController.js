@@ -281,6 +281,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	$scope.servers = servers.map(
 		function(x) {
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
+			x.statusLastUpdated = x.statusLastUpdated ? new Date(x.statusLastUpdated): x.statusLastUpdated;
 			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
 	});
 
