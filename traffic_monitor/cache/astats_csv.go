@@ -34,7 +34,7 @@ type astatsDataCsv struct {
 	Ats map[string]interface{}
 }
 
-func astatsCsvParseCsv(cacheName string, data io.Reader, pollCTX interface{}) (Statistics, map[string]interface{}, error) {
+func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	var err error
 	if data == nil {
@@ -57,9 +57,9 @@ func astatsCsvParseCsv(cacheName string, data io.Reader, pollCTX interface{}) (S
 		}
 		// Special cases where we just want the string value
 		if strings.Contains(line[0:delim], "proc.") || strings.Contains(line[0:delim], "inf.name") {
-			atsData.Ats[line[0:delim]] = line[delim+1 : len(line)]
+			atsData.Ats[line[0:delim]] = line[delim+1:]
 		} else {
-			value, err := strconv.ParseFloat(line[delim+1:len(line)], 64)
+			value, err := strconv.ParseFloat(line[delim+1:], 64)
 
 			// Skip values that dont parse
 			if err != nil {
@@ -70,20 +70,20 @@ func astatsCsvParseCsv(cacheName string, data io.Reader, pollCTX interface{}) (S
 	}
 
 	if len(atsData.Ats) < 1 {
-		return stats, nil, errors.New("No 'global' data object found in stats_over_http payload")
+		return stats, nil, errors.New("no 'global' data object found in stats_over_http payload")
 	}
 
 	statMap := atsData.Ats
 
 	// Handle system specific values and remove them from the map for precomputing to not have issues
 	if stats.Loadavg, err = LoadavgFromRawLine(statMap["proc.loadavg"].(string)); err != nil {
-		return stats, nil, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("error parsing loadavg for cache '%s': %v", cacheName, err)
 	} else {
 		delete(statMap, "proc.loadavg")
 	}
 
 	if err := stats.AddInterfaceFromRawLine(statMap["proc.net.dev"].(string)); err != nil {
-		return stats, nil, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("failed to parse interface line for cache '%s': %v", cacheName, err)
 	} else {
 		delete(statMap, "proc.net.dev")
 	}

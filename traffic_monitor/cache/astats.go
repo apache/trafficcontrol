@@ -88,7 +88,7 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 		}
 
 		if err := stats.AddInterfaceFromRawLine(astats.System.ProcNetDev); err != nil {
-			return stats, nil, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
+			return stats, nil, fmt.Errorf("failed to parse interface line for cache '%s': %v", cacheName, err)
 		}
 		if inf, ok := stats.Interfaces[astats.System.InfName]; !ok {
 			return stats, nil, errors.New("/proc/net/dev line didn't match reported interface line")
@@ -98,7 +98,7 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 		}
 
 		if load, err := LoadavgFromRawLine(astats.System.ProcLoadavg); err != nil {
-			return stats, nil, fmt.Errorf("Failed to parse loadavg line for cache '%s': %v", cacheName, err)
+			return stats, nil, fmt.Errorf("failed to parse loadavg line for cache '%s': %v", cacheName, err)
 		} else {
 			stats.Loadavg = load
 		}
@@ -119,9 +119,9 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
-		return astatsCsvParseCsv(cacheName, rdr, pollCTX)
+		return astatsCsvParseCsv(cacheName, rdr)
 	} else {
-		return stats, nil, fmt.Errorf("Stats Content-Type (%s) can not be parsed by astats", ctype)
+		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by astats", ctype)
 	}
 }
 
@@ -201,10 +201,10 @@ func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, 
 
 	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 	if !ok {
-		return stats, fmt.Errorf("No Delivery Service match for '%s.%s.%s' stat '%v'", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("no Delivery Service match for '%s.%s.%s' stat '%v'", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 	if ds == "" {
-		return stats, fmt.Errorf("Empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 
 	dsName := string(ds)

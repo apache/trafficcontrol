@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
