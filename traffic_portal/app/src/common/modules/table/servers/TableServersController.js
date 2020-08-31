@@ -66,7 +66,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
-		return dateUtils.getRelativeTime(params.value);
+		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
 
 
