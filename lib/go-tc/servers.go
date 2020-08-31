@@ -399,8 +399,12 @@ type ServerNullableV2 struct {
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
 	CommonServerProperties
-	Interfaces []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+	Interfaces        []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+	StatusLastUpdated *time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
+
+// ServerV30 is the server struct to be used by the TO API
+type ServerV30 ServerNullable
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
 // if possible. If the conversion could not be performed, an error is returned.
