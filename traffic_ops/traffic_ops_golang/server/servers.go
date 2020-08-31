@@ -82,6 +82,7 @@ SELECT
 	dss."server"
 FROM deliveryservice_server dss
 ) dss ON dss.server = s.id
+JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
 `
 
 const serverCountQuery = `
