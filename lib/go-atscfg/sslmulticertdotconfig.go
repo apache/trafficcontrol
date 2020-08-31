@@ -38,7 +38,7 @@ type SSLMultiCertDS struct {
 	ExampleURLs []string
 }
 
-func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullableV30) map[tc.DeliveryServiceName]SSLMultiCertDS {
+func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceV30) map[tc.DeliveryServiceName]SSLMultiCertDS {
 	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
 	for _, ds := range dses {
 		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {

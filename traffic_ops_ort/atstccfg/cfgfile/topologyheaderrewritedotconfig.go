@@ -47,7 +47,7 @@ func GetConfigFileServerTopologyHeaderRewrite(toData *config.TOData, fileName st
 		return "", "", "", errors.New("topology header rewrite called for unknown tier: '" + fileName + "'")
 	}
 
-	tcDS := tc.DeliveryServiceNullableV30{}
+	tcDS := tc.DeliveryServiceV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue

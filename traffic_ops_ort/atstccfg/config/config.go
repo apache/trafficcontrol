@@ -257,7 +257,7 @@ type TOData struct {
 	ParentConfigParams []tc.Parameter
 
 	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
-	DeliveryServices []tc.DeliveryServiceNullableV30
+	DeliveryServices []tc.DeliveryServiceV30
 
 	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
 	DeliveryServiceServers []tc.DeliveryServiceServer

@@ -86,7 +86,7 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		return "", "", "", errors.New("this server missing ID")
 	}
 
-	filteredDSes := []tc.DeliveryServiceNullableV30{}
+	filteredDSes := []tc.DeliveryServiceV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify

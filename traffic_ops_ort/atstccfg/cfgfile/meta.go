@@ -73,7 +73,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 		}
 	}
 
-	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{}
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceV30{}
 	if tc.CacheTypeFromString(toData.Server.Type) != tc.CacheTypeMid {
 		dsIDs := map[int]struct{}{}
 		for _, ds := range toData.DeliveryServices {

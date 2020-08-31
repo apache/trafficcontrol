@@ -199,7 +199,7 @@ func enrollTopology(toSession *session, r io.Reader) error {
 
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.DeliveryServiceNullableV30
+	var s tc.DeliveryServiceV30
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)

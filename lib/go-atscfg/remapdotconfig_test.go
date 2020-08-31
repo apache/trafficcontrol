@@ -35,7 +35,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE")
 	ds.Type = &dsType
@@ -58,7 +58,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -153,7 +153,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE")
 	ds.Type = &dsType
@@ -176,7 +176,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -263,7 +263,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -286,7 +286,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -387,7 +387,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -410,7 +410,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -497,7 +497,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -520,7 +520,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -607,7 +607,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -631,7 +631,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := tc.DeliveryServiceV30{}
 	ds2.ID = util.IntPtr(49)
 	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
 	ds2.Type = &dsType2
@@ -655,7 +655,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []tc.DeliveryServiceV30{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -756,7 +756,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -780,7 +780,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -890,7 +890,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -914,7 +914,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1015,7 +1015,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1039,7 +1039,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1147,7 +1147,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1171,7 +1171,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1279,7 +1279,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1304,7 +1304,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1425,7 +1425,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1450,7 +1450,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1563,7 +1563,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1588,7 +1588,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1705,7 +1705,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1730,7 +1730,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := tc.DeliveryServiceV30{}
 	ds2.ID = util.IntPtr(48)
 	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
 	ds2.Type = &dsType2
@@ -1755,7 +1755,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []tc.DeliveryServiceV30{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1855,7 +1855,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("ANY_MAP")
 	ds.Type = &dsType
@@ -1880,7 +1880,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := tc.DeliveryServiceV30{}
 	ds2.ID = util.IntPtr(49)
 	dsType2 := tc.DSType("ANY_MAP")
 	ds2.Type = &dsType2
@@ -1905,7 +1905,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []tc.DeliveryServiceV30{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2031,9 +2031,9 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	dses := []tc.DeliveryServiceNullableV30{}
+	dses := []tc.DeliveryServiceV30{}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(1)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2060,7 +2060,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(2)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2087,7 +2087,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(3)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2114,7 +2114,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(4)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2141,7 +2141,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(5)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2168,7 +2168,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(6)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2195,7 +2195,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(7)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2222,7 +2222,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - nil pattern
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.ID = util.IntPtr(8)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2446,7 +2446,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2471,7 +2471,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2589,7 +2589,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2614,7 +2614,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2732,7 +2732,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2757,7 +2757,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2875,7 +2875,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2900,7 +2900,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3018,7 +3018,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3043,7 +3043,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3157,7 +3157,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3182,7 +3182,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3302,7 +3302,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3327,7 +3327,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3447,7 +3447,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3472,7 +3472,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3596,7 +3596,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3621,7 +3621,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3745,7 +3745,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3770,7 +3770,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3894,7 +3894,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3919,7 +3919,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4038,7 +4038,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4063,7 +4063,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4182,7 +4182,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4207,7 +4207,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4326,7 +4326,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4351,7 +4351,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4470,7 +4470,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4495,7 +4495,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4614,7 +4614,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4639,7 +4639,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4756,7 +4756,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4781,7 +4781,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4901,7 +4901,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4926,7 +4926,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5046,7 +5046,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5071,7 +5071,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5163,7 +5163,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5188,7 +5188,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5279,7 +5279,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5304,7 +5304,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5400,7 +5400,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5425,7 +5425,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5518,7 +5518,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5543,7 +5543,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5628,7 +5628,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5653,7 +5653,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5781,7 +5781,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5806,7 +5806,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5926,7 +5926,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5951,7 +5951,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6067,7 +6067,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6092,7 +6092,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6212,7 +6212,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6237,7 +6237,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6357,7 +6357,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6382,7 +6382,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6502,7 +6502,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6528,7 +6528,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6652,7 +6652,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6678,7 +6678,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6815,7 +6815,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6841,7 +6841,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6972,7 +6972,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6997,7 +6997,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7117,7 +7117,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7142,7 +7142,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7258,7 +7258,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7283,7 +7283,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7399,7 +7399,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7424,7 +7424,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7540,7 +7540,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7565,7 +7565,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7685,7 +7685,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7710,7 +7710,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7826,7 +7826,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7851,7 +7851,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7957,7 +7957,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7982,7 +7982,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []tc.DeliveryServiceV30{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{

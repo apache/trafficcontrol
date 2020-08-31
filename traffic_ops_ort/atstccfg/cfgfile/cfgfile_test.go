@@ -224,11 +224,11 @@ func randDSS() tc.DeliveryServiceServer {
 	}
 }
 
-func randDS() *tc.DeliveryServiceNullableV30 {
+func randDS() *tc.DeliveryServiceV30 {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	ds.EcsEnabled = *randBool()
 	ds.RangeSliceBlockSize = randInt()
 	ds.ConsistentHashRegex = randStr()
@@ -532,7 +532,7 @@ func MakeFakeTOData() *config.TOData {
 			*randParam(),
 			*randParam(),
 		},
-		DeliveryServices: []tc.DeliveryServiceNullableV30{
+		DeliveryServices: []tc.DeliveryServiceV30{
 			ds0,
 			ds1,
 		},

@@ -44,7 +44,7 @@ func MakeHostingDotConfig(
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config
-	dses []tc.DeliveryServiceNullableV30,
+	dses []tc.DeliveryServiceV30,
 	topologies []tc.Topology,
 ) string {
 	if server.HostName == nil || *server.HostName == "" {

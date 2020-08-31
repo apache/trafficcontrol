@@ -104,7 +104,7 @@ func HeaderRewriteServerFromServerNotNullable(sv tc.Server) (HeaderRewriteServer
 	return HeaderRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
 }
 
-func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (HeaderRewriteDS, error) {
+func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceV30) (HeaderRewriteDS, error) {
 	errs := []error{}
 	if ds.ID == nil {
 		errs = append(errs, errors.New("ID cannot be nil"))

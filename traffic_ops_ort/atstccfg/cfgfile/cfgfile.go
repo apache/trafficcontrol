@@ -120,9 +120,9 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 				legacyDSes := []tc.DeliveryServiceNullable{}
 				legacyDSes, err = cfg.TOClient.GetCDNDeliveryServices(*server.CDNID)
 				if err == nil {
-					dses = make([]tc.DeliveryServiceNullableV30, 0, len(legacyDSes))
+					dses = make([]tc.DeliveryServiceV30, 0, len(legacyDSes))
 					for _, ds := range legacyDSes {
-						dses = append(dses, tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)})
+						dses = append(dses, tc.DeliveryServiceV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)})
 					}
 				}
 			}

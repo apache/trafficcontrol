@@ -45,9 +45,9 @@ func TestMakeHostingDotConfig(t *testing.T) {
 		"https://origin4.example.net/",
 		"http://origin5.example.net/",
 	}
-	dses := []tc.DeliveryServiceNullableV30{}
+	dses := []tc.DeliveryServiceV30{}
 	for _, origin := range origins {
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := tc.DeliveryServiceV30{}
 		ds.OrgServerFQDN = util.StrPtr(origin)
 		dses = append(dses, ds)
 	}
@@ -105,19 +105,19 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 		"somethingelse":     "somethingelse-shouldnotappearinconfig",
 	}
 
-	dsTopology := tc.DeliveryServiceNullableV30{}
+	dsTopology := tc.DeliveryServiceV30{}
 	dsTopology.OrgServerFQDN = util.StrPtr("https://origin0.example.net")
 	dsTopology.XMLID = util.StrPtr("ds-topology")
 	dsTopology.Topology = util.StrPtr("t0")
 	dsTopology.Active = util.BoolPtr(true)
 
-	dsTopologyWithoutServer := tc.DeliveryServiceNullableV30{}
+	dsTopologyWithoutServer := tc.DeliveryServiceV30{}
 	dsTopologyWithoutServer.OrgServerFQDN = util.StrPtr("https://origin1.example.net")
 	dsTopologyWithoutServer.XMLID = util.StrPtr("ds-topology-without-server")
 	dsTopologyWithoutServer.Topology = util.StrPtr("t1")
 	dsTopologyWithoutServer.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{dsTopology, dsTopologyWithoutServer}
+	dses := []tc.DeliveryServiceV30{dsTopology, dsTopologyWithoutServer}
 
 	topologies := []tc.Topology{
 		tc.Topology{

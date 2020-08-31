@@ -117,7 +117,7 @@ const (
 	API_DELIVERY_SERVICES_SERVERS = apiBase + "/deliveryservices/%s/servers"
 )
 
-func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Header) ([]tc.DeliveryServiceV30, ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
 	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, header)
 	return data.Response, reqInf, err
@@ -149,7 +149,7 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceV30, ReqInf, error) {
 	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
@@ -256,15 +256,15 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.Deliver
 }
 
 // CreateDeliveryServiceV30 creates the Delivery Service it's passed.
-func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceV30) (tc.DeliveryServiceV30, ReqInf, error) {
 	var reqInf ReqInf
 	if ds.TypeID == nil && ds.Type != nil {
 		ty, _, err := to.GetTypeByName(ds.Type.String())
 		if err != nil {
-			return tc.DeliveryServiceNullableV30{}, reqInf, err
+			return tc.DeliveryServiceV30{}, reqInf, err
 		}
 		if len(ty) == 0 {
-			return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("no type named %s", ds.Type)
+			return tc.DeliveryServiceV30{}, reqInf, fmt.Errorf("no type named %s", ds.Type)
 		}
 		ds.TypeID = &ty[0].ID
 	}
@@ -272,10 +272,10 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	if ds.CDNID == nil && ds.CDNName != nil {
 		cdns, _, err := to.GetCDNByName(*ds.CDNName)
 		if err != nil {
-			return tc.DeliveryServiceNullableV30{}, reqInf, err
+			return tc.DeliveryServiceV30{}, reqInf, err
 		}
 		if len(cdns) == 0 {
-			return tc.DeliveryServiceNullableV30{}, reqInf, errors.New("no CDN named " + *ds.CDNName)
+			return tc.DeliveryServiceV30{}, reqInf, errors.New("no CDN named " + *ds.CDNName)
 		}
 		ds.CDNID = &cdns[0].ID
 	}
@@ -283,10 +283,10 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	if ds.ProfileID == nil && ds.ProfileName != nil {
 		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
 		if err != nil {
-			return tc.DeliveryServiceNullableV30{}, reqInf, err
+			return tc.DeliveryServiceV30{}, reqInf, err
 		}
 		if len(profiles) == 0 {
-			return tc.DeliveryServiceNullableV30{}, reqInf, errors.New("no Profile named " + *ds.ProfileName)
+			return tc.DeliveryServiceV30{}, reqInf, errors.New("no Profile named " + *ds.ProfileName)
 		}
 		ds.ProfileID = &profiles[0].ID
 	}
@@ -294,23 +294,23 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	if ds.TenantID == nil && ds.Tenant != nil {
 		ten, _, err := to.TenantByName(*ds.Tenant)
 		if err != nil {
-			return tc.DeliveryServiceNullableV30{}, reqInf, err
+			return tc.DeliveryServiceV30{}, reqInf, err
 		}
 		ds.TenantID = &ten.ID
 	}
 
 	bts, err := json.Marshal(ds)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, nil
+		return tc.DeliveryServiceV30{}, reqInf, nil
 	}
 
 	var data tc.DeliveryServicesResponseV30
 	reqInf, err = post(to, API_DELIVERY_SERVICES, bts, &data)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
+		return tc.DeliveryServiceV30{}, reqInf, err
 	}
 	if len(data.Response) != 1 {
-		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to create Delivery Service, response indicated %d were created", len(data.Response))
+		return tc.DeliveryServiceV30{}, reqInf, fmt.Errorf("failed to create Delivery Service, response indicated %d were created", len(data.Response))
 	}
 
 	return data.Response[0], reqInf, nil
@@ -381,20 +381,20 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 
 // UpdateDeliveryServiceV30 replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceV30) (tc.DeliveryServiceV30, ReqInf, error) {
 	var reqInf ReqInf
 	bts, err := json.Marshal(ds)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
+		return tc.DeliveryServiceV30{}, reqInf, err
 	}
 
 	var data tc.DeliveryServicesResponseV30
 	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
+		return tc.DeliveryServiceV30{}, reqInf, err
 	}
 	if len(data.Response) != 1 {
-		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+		return tc.DeliveryServiceV30{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
 	}
 	return data.Response[0], reqInf, nil
 
@@ -615,20 +615,20 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 
 // SafeDeliveryServiceUpdateV30 updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceV30, ReqInf, error) {
 	var reqInf ReqInf
 	req, err := json.Marshal(r)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
+		return tc.DeliveryServiceV30{}, reqInf, err
 	}
 
 	var data tc.DeliveryServiceSafeUpdateResponseV30
 	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data)
 	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
+		return tc.DeliveryServiceV30{}, reqInf, err
 	}
 	if len(data.Response) != 1 {
-		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+		return tc.DeliveryServiceV30{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
 	}
 	return data.Response[0], reqInf, nil
 }

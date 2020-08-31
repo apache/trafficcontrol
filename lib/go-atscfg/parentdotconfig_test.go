@@ -45,7 +45,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -138,7 +138,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
 	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []tc.DeliveryServiceV30{*ds0}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -280,7 +280,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
 	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
 	ds0.MultiSiteOrigin = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []tc.DeliveryServiceV30{*ds0}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -401,7 +401,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -537,7 +537,7 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -659,7 +659,7 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 	ds2.OrgServerFQDN = util.StrPtr("http://ds2.example.net")
 	ds2.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1, *ds2}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1, *ds2}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -805,7 +805,7 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -946,7 +946,7 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1083,7 +1083,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	ds1.Topology = util.StrPtr("t0")
 	ds1.MultiSiteOrigin = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{*ds1}
+	dses := []tc.DeliveryServiceV30{*ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1215,7 +1215,7 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 	ds1.ProfileID = util.IntPtr(994)
 	ds1.MultiSiteOrigin = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{*ds1}
+	dses := []tc.DeliveryServiceV30{*ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1389,7 +1389,7 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 	ds1.ProfileID = util.IntPtr(994)
 	ds1.MultiSiteOrigin = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{*ds1}
+	dses := []tc.DeliveryServiceV30{*ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1570,7 +1570,7 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 	ds1.ProfileID = util.IntPtr(312)
 	ds1.ProfileName = util.StrPtr("ds1Profile")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1729,7 +1729,7 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 	ds1.ProfileID = util.IntPtr(312)
 	ds1.ProfileName = util.StrPtr("ds1Profile")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+	dses := []tc.DeliveryServiceV30{*ds0, *ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
@@ -1882,8 +1882,8 @@ func makeTestParentServer() *tc.ServerNullable {
 	return server
 }
 
-func makeParentDS() *tc.DeliveryServiceNullableV30 {
-	ds := &tc.DeliveryServiceNullableV30{}
+func makeParentDS() *tc.DeliveryServiceV30 {
+	ds := &tc.DeliveryServiceV30{}
 	ds.ID = util.IntPtr(42)
 	ds.XMLID = util.StrPtr("ds1")
 	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
