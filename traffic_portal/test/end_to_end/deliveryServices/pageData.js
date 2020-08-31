@@ -22,7 +22,7 @@ module.exports = function(){
 	this.viewStaticCapabilitiesMenuItem=element(by.css('a[ng-click*=viewStaticDnsEntries]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.manageServersMenuItem=element(by.css('a[ng-click*=viewServers]'));
-	this.selectServersBtn=element(by.name('selectServersBtn'));
+	this.selectServersMenuItem=element(by.name('selectServersMenuItem'));
 	this.selectAllCB=element(by.id('selectAllCB'));
 	this.dsLink=element(by.name('dsLink'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));

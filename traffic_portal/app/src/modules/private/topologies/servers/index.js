@@ -17,30 +17,24 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.profiles.servers', [])
+module.exports = angular.module('trafficPortal.private.topologies.servers', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficPortal.private.profiles.servers', {
-				url: '/{profileId}/servers',
+			.state('trafficPortal.private.topologies.servers', {
+				url: '/servers?name',
 				views: {
-					profilesContent: {
-						templateUrl: 'common/modules/table/profileServers/table.profileServers.tpl.html',
-						controller: 'TableProfileServersController',
+					topologiesContent: {
+						templateUrl: 'common/modules/table/topologyServers/table.topologyServers.tpl.html',
+						controller: 'TableTopologyServersController',
 						resolve: {
-							profile: function($stateParams, profileService) {
-								return profileService.getProfile($stateParams.profileId);
+							topologies: function($stateParams, topologyService) {
+								return topologyService.getTopologies({ name: $stateParams.name });
 							},
-							servers: function(profile, $stateParams, serverService) {
-								return serverService.getServers({ profileId: profile.id, orderby: 'hostName' });
+							servers: function(topologies, serverService) {
+								return serverService.getServers({ topology: topologies[0].name });
 							},
-							filter: function(profile) {
-								return {
-									profile: {
-										filterType: "text",
-										type: "equals",
-										filter: profile.name
-									}
-								}
+							filter: function() {
+								return null;
 							}
 						}
 					}

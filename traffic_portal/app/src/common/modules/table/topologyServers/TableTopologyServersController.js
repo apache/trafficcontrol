@@ -17,13 +17,13 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, filter, $controller, $scope) {
+var TableTopologyServersController = function(topologies, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { tableName: 'physLocationServers', servers: servers, filter: filter, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'topologyServers', servers: servers, filter: filter, $scope: $scope }));
 
-	$scope.physLocation = physLocation;
+	$scope.topology = topologies[0];
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', 'filter', '$controller', '$scope'];
-module.exports = TablePhysLocationServersController;
+TableTopologyServersController.$inject = ['topologies', 'servers', 'filter', '$controller', '$scope'];
+module.exports = TableTopologyServersController;

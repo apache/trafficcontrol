@@ -27,8 +27,14 @@ module.exports = angular.module('trafficPortal.private.servers.list', [])
                         templateUrl: 'common/modules/table/servers/table.servers.tpl.html',
                         controller: 'TableServersController',
                         resolve: {
+                            tableName: function() {
+                                return 'servers';
+                            },
                             servers: function(serverService) {
                                 return serverService.getServers({ orderby: 'hostName' });
+                            },
+                            filter: function() {
+                                return null;
                             }
                         }
                     }

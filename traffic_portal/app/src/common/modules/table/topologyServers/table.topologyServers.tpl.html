@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a href="#!/types">Types</a></li>
-            <li><a ng-href="#!/types/{{type.id}}">{{::type.name}}</a></li>
+            <li><a href="#!/topologies">Topologies</a></li>
+            <li><a ng-href="#!/topologies/edit?name={{topology.name}}">{{::topology.name}}</a></li>
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
@@ -52,8 +52,6 @@ under the License.
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                        <li role="menuitem"><a name="createServerMenuItem" href="#!/servers/new">Create New Server</a></li>
-                        <li class="divider"></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearColFilters()">Clear Column Filters</button></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="exportCSV()">Export CSV</button></li>
                     </ul>
@@ -100,9 +98,6 @@ under the License.
         <hr class="divider"/>
         <li role="menuitem" ng-show="isCache(server)">
             <a ng-href="#!/servers/{{server.id}}/capabilities">Manage Capabilities</a>
-        </li>
-        <li role="menuitem" ng-show="isEdge(server) || isOrigin(server)">
-            <a ng-href="#!/servers/{{server.id}}/delivery-services">Manage Delivery Services</a>
         </li>
     </ul>
 </menu>
