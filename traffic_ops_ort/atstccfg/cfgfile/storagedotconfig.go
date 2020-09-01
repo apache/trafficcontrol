@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -27,6 +29,10 @@ import (
 const StorageFileName = "storage.config"
 
 func GetConfigFileProfileStorageDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
 	params := ParamsToMap(FilterParams(toData.ServerParams, StorageFileName, "", "", "location"))
-	return atscfg.MakeStorageDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeStorageDotConfig, atscfg.LineCommentStorageDotConfig, nil
+	return atscfg.MakeStorageDotConfig(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeStorageDotConfig, atscfg.LineCommentStorageDotConfig, nil
 }

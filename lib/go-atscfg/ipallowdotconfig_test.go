@@ -24,11 +24,10 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeIPAllowDotConfig(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	serverType := tc.CacheTypeMid
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string][]string{
@@ -38,36 +37,17 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
 	}
-	childServers := map[tc.CacheName]IPAllowServer{
-		"child0": IPAllowServer{
-			IPAddress:  "192.168.2.1",
-			IP6Address: "2001:DB8:1::1/64",
-		},
-		"child1": IPAllowServer{
-			IPAddress:  "192.168.2.100/30",
-			IP6Address: "2001:DB8:2::1/64",
-		},
-		"child2": IPAllowServer{
-			IPAddress: "192.168.2.150",
-		},
-		"child3": IPAllowServer{
-			IP6Address: "2001:DB8:2::2/64",
-		},
-		"child4": IPAllowServer{
-			IPAddress: "192.168.2.155/32",
-		},
-		"child5": IPAllowServer{
-			IP6Address: "2001:DB8:3::1",
-		},
-		"child6": IPAllowServer{
-			IP6Address: "2001:DB8:2::3/64",
-		},
-		"child7": IPAllowServer{
-			IP6Address: "2001:DB8:2::4/64",
-		},
-		"child8": IPAllowServer{
-			IP6Address: "2001:DB8:2::5/64",
-		},
+
+	svs := []tc.ServerNullable{
+		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
+		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
+		*makeIPAllowChild("child2", "192.168.2.150", ""),
+		*makeIPAllowChild("child3", "", "2001:DB8:2::2/64"),
+		*makeIPAllowChild("child4", "", "192.168.2.155/32"),
+		*makeIPAllowChild("child5", "", "2001:DB8:3::1"),
+		*makeIPAllowChild("child6", "", "2001:DB8:2::3"),
+		*makeIPAllowChild("child7", "", "2001:DB8:2::4"),
+		*makeIPAllowChild("child8", "", "2001:DB8:2::5/64"),
 	}
 
 	expecteds := []string{
@@ -84,7 +64,18 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		"2001:db8:2::-2001:db8:2:ffff:ffff:ffff:ffff:ffff",
 	}
 
-	txt := MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, params, childServers)
+	cgs := []tc.CacheGroupNullable{
+		tc.CacheGroupNullable{
+			Name: util.StrPtr("cg0"),
+		},
+	}
+
+	sv := &tc.ServerNullable{}
+	sv.HostName = util.StrPtr("server0")
+	sv.Type = string(tc.CacheTypeMid)
+	sv.Cachegroup = cgs[0].Name
+	svs = append(svs, *sv)
+	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
 
 	lines := strings.Split(txt, "\n")
 
@@ -114,8 +105,6 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 }
 
 func TestMakeIPAllowDotConfigEdge(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	serverType := tc.CacheTypeEdge
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string][]string{
@@ -124,36 +113,17 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
 	}
-	childServers := map[tc.CacheName]IPAllowServer{
-		"child0": IPAllowServer{
-			IPAddress:  "192.168.2.1",
-			IP6Address: "2001:DB8:1::1/64",
-		},
-		"child1": IPAllowServer{
-			IPAddress:  "192.168.2.100/30",
-			IP6Address: "2001:DB8:2::1/64",
-		},
-		"child2": IPAllowServer{
-			IPAddress: "192.168.2.150",
-		},
-		"child3": IPAllowServer{
-			IP6Address: "2001:DB8:2::2/64",
-		},
-		"child4": IPAllowServer{
-			IPAddress: "192.168.2.155/32",
-		},
-		"child5": IPAllowServer{
-			IP6Address: "2001:DB8:3::1",
-		},
-		"child6": IPAllowServer{
-			IP6Address: "2001:DB8:2::3/64",
-		},
-		"child7": IPAllowServer{
-			IP6Address: "2001:DB8:2::4/64",
-		},
-		"child8": IPAllowServer{
-			IP6Address: "2001:DB8:2::5/64",
-		},
+
+	svs := []tc.ServerNullable{
+		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
+		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
+		*makeIPAllowChild("child2", "192.168.2.150", ""),
+		*makeIPAllowChild("child3", "", "2001:DB8:2::2/64"),
+		*makeIPAllowChild("child4", "", "192.168.2.155/32"),
+		*makeIPAllowChild("child5", "", "2001:DB8:3::1"),
+		*makeIPAllowChild("child6", "", "2001:DB8:2::3"),
+		*makeIPAllowChild("child7", "", "2001:DB8:2::4"),
+		*makeIPAllowChild("child8", "", "2001:DB8:2::5/64"),
 	}
 
 	expecteds := []string{
@@ -168,7 +138,18 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		"192.168.2",
 	}
 
-	txt := MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, params, childServers)
+	cgs := []tc.CacheGroupNullable{
+		tc.CacheGroupNullable{
+			Name: util.StrPtr("cg0"),
+		},
+	}
+
+	sv := &tc.ServerNullable{}
+	sv.HostName = util.StrPtr("server0")
+	sv.Type = string(tc.CacheTypeEdge)
+	sv.Cachegroup = cgs[0].Name
+	svs = append(svs, *sv)
+	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
 
 	lines := strings.Split(txt, "\n")
 
@@ -204,8 +185,6 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 }
 
 func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	serverType := tc.CacheTypeMid
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string][]string{
@@ -215,36 +194,17 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"100"},
 	}
-	childServers := map[tc.CacheName]IPAllowServer{
-		"child0": IPAllowServer{
-			IPAddress:  "192.168.2.1",
-			IP6Address: "2001:DB8:1::1/64",
-		},
-		"child1": IPAllowServer{
-			IPAddress:  "192.168.2.100/30",
-			IP6Address: "2001:DB8:2::1/64",
-		},
-		"child2": IPAllowServer{
-			IPAddress: "192.168.2.150",
-		},
-		"child3": IPAllowServer{
-			IP6Address: "2001:DB8:2::2/64",
-		},
-		"child4": IPAllowServer{
-			IPAddress: "192.168.2.155/32",
-		},
-		"child5": IPAllowServer{
-			IP6Address: "2001:DB8:3::1",
-		},
-		"child6": IPAllowServer{
-			IP6Address: "2001:DB8:2::3",
-		},
-		"child7": IPAllowServer{
-			IP6Address: "2001:DB8:2::4",
-		},
-		"child8": IPAllowServer{
-			IP6Address: "2001:DB8:2::5/64",
-		},
+
+	svs := []tc.ServerNullable{
+		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
+		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
+		*makeIPAllowChild("child2", "192.168.2.150", ""),
+		*makeIPAllowChild("child3", "", "2001:DB8:2::2/64"),
+		*makeIPAllowChild("child4", "", "192.168.2.155/32"),
+		*makeIPAllowChild("child5", "", "2001:DB8:3::1"),
+		*makeIPAllowChild("child6", "", "2001:DB8:2::3"),
+		*makeIPAllowChild("child7", "", "2001:DB8:2::4"),
+		*makeIPAllowChild("child8", "", "2001:DB8:2::5/64"),
 	}
 
 	expecteds := []string{
@@ -261,7 +221,18 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 		"2001:db8:2::4",
 	}
 
-	txt := MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, params, childServers)
+	cgs := []tc.CacheGroupNullable{
+		tc.CacheGroupNullable{
+			Name: util.StrPtr("cg0"),
+		},
+	}
+
+	sv := &tc.ServerNullable{}
+	sv.HostName = util.StrPtr("server0")
+	sv.Type = string(tc.CacheTypeMid)
+	sv.Cachegroup = cgs[0].Name
+	svs = append(svs, *sv)
+	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
 
 	lines := strings.Split(txt, "\n")
 
@@ -288,4 +259,13 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 			t.Errorf("expected %+v actual '%v'\n", expected, txt)
 		}
 	}
+}
+
+func makeIPAllowChild(name string, ip string, ip6 string) *tc.ServerNullable {
+	sv := &tc.ServerNullable{}
+	sv.Cachegroup = util.StrPtr("childcg")
+	sv.HostName = util.StrPtr("child0")
+	sv.Type = tc.MonitorTypeName
+	setIPInfo(sv, "eth0", ip, ip6)
+	return sv
 }

@@ -50,6 +50,11 @@ under the License.
                 <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" ng-disabled="!settings.isNew"></select>
             </div>
 
+            <label ng-if="!settings.isNew" for="statusLastUpdated">Status Last Updated</label>
+            <div ng-if="!settings.isNew">
+                <input id="statusLastUpdated" name="statusLastUpdated" type="text" class="form-control" ng-model="server.statusLastUpdated" ng-disabled="true">
+            </div>
+
             <label ng-if="server.offlineReason.length > 0" for="offlineReason">Offline Reason</label>
             <div ng-if="server.offlineReason.length > 0">
                 <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="server.offlineReason" maxlength="256" readonly>

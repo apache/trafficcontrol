@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -27,6 +29,10 @@ import (
 )
 
 func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server CDNName missing")
+	}
+
 	params := map[string][]string{}
 	for _, param := range toData.GlobalParams {
 		if param.ConfigFile != atscfg.RegexRevalidateFileName {
@@ -52,5 +58,5 @@ func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, st
 		jobs = append(jobs, job)
 	}
 
-	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, atscfg.LineCommentRegexRevalidateDotConfig, nil
+	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(*toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, atscfg.LineCommentRegexRevalidateDotConfig, nil
 }

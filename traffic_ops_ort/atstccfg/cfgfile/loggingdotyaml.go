@@ -20,11 +20,17 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileProfileLoggingDotYAML(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("this server missing Profile")
+	}
+
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.LoggingYAMLFileName, "", "", "location"))
-	return atscfg.MakeLoggingDotYAML(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLoggingDotYAML, atscfg.LineCommentLoggingDotYAML, nil
+	return atscfg.MakeLoggingDotYAML(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLoggingDotYAML, atscfg.LineCommentLoggingDotYAML, nil
 }

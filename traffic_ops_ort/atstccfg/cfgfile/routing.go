@@ -56,7 +56,10 @@ type ConfigFilePrefixSuffixFunc struct {
 }
 
 func GetConfigFileCDN(toData *config.TOData, fileName string) (string, string, string, error) {
-	log.Infoln("GetConfigFileCDN cdn '" + toData.Server.CDNName + "' fileName '" + fileName + "'")
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server missing CDNName")
+	}
+	log.Infoln("GetConfigFileCDN cdn '" + *toData.Server.CDNName + "' fileName '" + fileName + "'")
 
 	txt := ""
 	contentType := ""
@@ -84,7 +87,11 @@ func GetConfigFileCDN(toData *config.TOData, fileName string) (string, string, s
 }
 
 func GetConfigFileProfile(toData *config.TOData, fileName string) (string, string, string, error) {
-	log.Infoln("GetConfigFileProfile profile '" + toData.Server.Profile + "' fileName '" + fileName + "'")
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
+	log.Infoln("GetConfigFileProfile profile '" + *toData.Server.Profile + "' fileName '" + fileName + "'")
 
 	txt := ""
 	contentType := ""
@@ -163,7 +170,11 @@ func ServerConfigFileFuncs() map[string]func(toData *config.TOData) (string, str
 }
 
 func GetConfigFileServer(toData *config.TOData, fileName string) (string, string, string, error) {
-	log.Infoln("GetConfigFileServer server '" + toData.Server.HostName + "' fileName '" + fileName + "'")
+	if toData.Server.HostName == nil {
+		return "", "", "", errors.New("server missing HostName")
+	}
+
+	log.Infoln("GetConfigFileServer server '" + *toData.Server.HostName + "' fileName '" + fileName + "'")
 	txt := ""
 	contentType := ""
 	lineComment := ""
