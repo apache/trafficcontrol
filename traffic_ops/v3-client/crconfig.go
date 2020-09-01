@@ -46,6 +46,21 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	return []byte(resp.Response), reqInf, nil
 }
 
+// GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
+func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
+	uri := apiBase + `/cdns/` + cdn + `/snapshot/new`
+	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	resp := OuterResponse{}
+	if err := json.Unmarshal(bts, &resp); err != nil {
+		return nil, reqInf, err
+	}
+	return []byte(resp.Response), reqInf, nil
+}
+
 // SnapshotCRConfig snapshots a CDN by name.
 func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
 	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
