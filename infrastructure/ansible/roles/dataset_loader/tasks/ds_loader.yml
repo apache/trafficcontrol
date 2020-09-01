@@ -135,7 +135,9 @@
     body:
       serverNames: "{{ get_all_servers.json.response | to_json | from_json | json_query(server_query) }}"
   with_indexed_items: "{{ dl_ds_merged_ds_template }}"
-  when: serveFromGrove
+  when:
+    - dl_hosts_grove | length > 0
+    - serveFromGrove
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
   no_log: true
