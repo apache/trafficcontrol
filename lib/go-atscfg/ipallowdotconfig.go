@@ -214,7 +214,7 @@ func MakeIPAllowDotConfig(
 			//       for all non-first-tier caches.
 			//
 			_, isChild := childCGs[*childServer.Cachegroup]
-			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || string(childServer.Type) != tc.MonitorTypeName) {
+			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {
 				continue
 			}
 
