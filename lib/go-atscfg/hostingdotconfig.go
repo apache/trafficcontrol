@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -39,14 +40,18 @@ const ServerHostingDotConfigMidIncludeInactive = false
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
 func MakeHostingDotConfig(
-	server tc.Server,
+	server *tc.ServerNullable,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config
 	dses []tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
 ) string {
-	text := GenericHeaderComment(server.HostName, toToolName, toURL)
+	if server.HostName == nil || *server.HostName == "" {
+		return "Error: server had no host name!"
+	}
+
+	text := GenericHeaderComment(*server.HostName, toToolName, toURL)
 
 	nameTopologies := MakeTopologyNameMap(topologies)
 
@@ -74,8 +79,15 @@ func MakeHostingDotConfig(
 
 			if ds.Topology != nil && *ds.Topology != "" {
 				topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
-				if hasTopology && !topologyIncludesServer(topology, server) {
-					continue
+				if hasTopology {
+					topoHasServer, err := topologyIncludesServerNullable(topology, server)
+					if err != nil {
+						log.Errorln("Error checking if topology has server, skipping! : " + err.Error())
+						topoHasServer = false
+					}
+					if !topoHasServer {
+						continue
+					}
 				}
 			}
 

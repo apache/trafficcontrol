@@ -22,6 +22,7 @@ package atscfg
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 const LineCommentHash = "#"
 
 type TopologyName string
-
+type CacheGroupType string
 type ServerCapability string
 
 type ServerInfo struct {
@@ -68,6 +69,91 @@ type ServerInfo struct {
 func (s *ServerInfo) IsTopLevelCache() bool {
 	return (s.ParentCacheGroupType == tc.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
 		(s.SecondaryParentCacheGroupType == tc.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
+}
+
+func MakeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
+	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
+	for _, cg := range cgs {
+		if cg.Name == nil {
+			return nil, errors.New("got cachegroup with nil name!'")
+		}
+		cgMap[tc.CacheGroupName(*cg.Name)] = cg
+	}
+	return cgMap, nil
+}
+
+type ServerParentCacheGroupData struct {
+	ParentID            int
+	ParentType          CacheGroupType
+	SecondaryParentID   int
+	SecondaryParentType CacheGroupType
+}
+
+// GetParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
+// Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
+// If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
+func GetParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (ServerParentCacheGroupData, error) {
+	if server.Cachegroup == nil || *server.Cachegroup == "" {
+		return ServerParentCacheGroupData{}, errors.New("server missing cachegroup")
+	} else if server.HostName == nil || *server.HostName == "" {
+		return ServerParentCacheGroupData{}, errors.New("server missing hostname")
+	}
+	serverCG, ok := cgMap[tc.CacheGroupName(*server.Cachegroup)]
+	if !ok {
+		return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' not found in CacheGroups")
+	}
+
+	parentCGID := InvalidID
+	parentCGType := ""
+	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
+		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.ParentName)]
+		if !ok {
+			return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+		}
+		if parentCG.ID == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+		}
+		parentCGID = *parentCG.ID
+
+		if parentCG.Type == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+		}
+		parentCGType = *parentCG.Type
+	}
+
+	secondaryParentCGID := InvalidID
+	secondaryParentCGType := ""
+	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
+		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.SecondaryParentName)]
+		if !ok {
+			return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+		}
+
+		if parentCG.ID == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+		}
+		secondaryParentCGID = *parentCG.ID
+		if parentCG.Type == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+		}
+
+		secondaryParentCGType = *parentCG.Type
+	}
+
+	return ServerParentCacheGroupData{
+		ParentID:            parentCGID,
+		ParentType:          CacheGroupType(parentCGType),
+		SecondaryParentID:   secondaryParentCGID,
+		SecondaryParentType: CacheGroupType(secondaryParentCGType),
+	}, nil
+}
+
+// IsTopLevelCache returns whether server is a top-level cache, as defined by traditional CacheGroup parentage.
+// This does not consider Topologies, and should not be used if the Delivery Service being considered has a Topology.
+// Takes a ServerParentCacheGroupData, which may be created via GetParentCacheGroupData.
+func IsTopLevelCache(s ServerParentCacheGroupData) bool {
+	return (s.ParentType == tc.CacheGroupOriginTypeName || s.ParentID == InvalidID) &&
+		(s.SecondaryParentType == tc.CacheGroupOriginTypeName || s.SecondaryParentID == InvalidID)
 }
 
 func HeaderCommentWithTOVersionStr(name string, nameVersionStr string) string {
@@ -140,14 +226,27 @@ func GetConfigFile(prefix string, xmlId string) string {
 	return prefix + xmlId + ConfigSuffix
 }
 
-// topologyIncludesServer returns whether the given topology includes the given server
-func topologyIncludesServer(topology tc.Topology, server tc.Server) bool {
+// topologyIncludesServer returns whether the given topology includes the given server.
+func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 	for _, node := range topology.Nodes {
 		if node.Cachegroup == server.Cachegroup {
 			return true
 		}
 	}
 	return false
+}
+
+// topologyIncludesServerNullable returns whether the given topology includes the given server.
+func topologyIncludesServerNullable(topology tc.Topology, server *tc.ServerNullable) (bool, error) {
+	if server.Cachegroup == nil {
+		return false, errors.New("server missing Cachegroup")
+	}
+	for _, node := range topology.Nodes {
+		if node.Cachegroup == *server.Cachegroup {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // TopologyCacheTier is the position of a cache in the topology.
@@ -244,18 +343,6 @@ func MakeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 	return topoNames
 }
 
-func MakeCGMap(cgs []tc.CacheGroupNullable) map[tc.CacheGroupName]tc.CacheGroupNullable {
-	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
-	for _, cg := range cgs {
-		if cg.Name == nil {
-			log.Errorln("ATS config generation: got cachegroup with nil name, skipping!")
-			continue
-		}
-		cgMap[tc.CacheGroupName(*cg.Name)] = cg
-	}
-	return cgMap
-}
-
 type ParameterWithProfiles struct {
 	tc.Parameter
 	ProfileNames []string
@@ -293,4 +380,184 @@ func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWit
 		params = append(params, param)
 	}
 	return params
+}
+
+func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
+	// TODO filter only DSes on this server's CDN? Does anything ever needs DSS cross-CDN? Surely not.
+	//      Then, we can remove a bunch of config files that filter only DSes on the current cdn.
+	filtered := []tc.DeliveryServiceServer{}
+	for _, dss := range dsses {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue // TODO warn?
+		}
+		if len(dsIDs) > 0 {
+			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+				continue
+			}
+		}
+		if len(serverIDs) > 0 {
+			if _, ok := serverIDs[*dss.Server]; !ok {
+				continue
+			}
+		}
+		filtered = append(filtered, dss)
+	}
+	return filtered
+}
+
+// FilterParams filters params and returns only the parameters which match configFile, name, and value.
+// If configFile, name, or value is the empty string, it is not filtered.
+// Returns a slice of parameters.
+func FilterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
+	filtered := []tc.Parameter{}
+	for _, param := range params {
+		if configFile != "" && param.ConfigFile != configFile {
+			continue
+		}
+		if name != "" && param.Name != name {
+			continue
+		}
+		if value != "" && param.Value != value {
+			continue
+		}
+		if omitName != "" && param.Name == omitName {
+			continue
+		}
+		filtered = append(filtered, param)
+	}
+	return filtered
+}
+
+// ParamsToMap converts a []tc.Parameter to a map[paramName]paramValue.
+// If multiple params have the same value, the first one in params will be used an an error will be logged.
+// See ParamArrToMultiMap.
+func ParamsToMap(params []tc.Parameter) map[string]string {
+	mp := map[string]string{}
+	for _, param := range params {
+		if val, ok := mp[param.Name]; ok {
+			if val < param.Value {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+			}
+		}
+		mp[param.Name] = param.Value
+	}
+	return mp
+}
+
+// ParamArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
+func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
+	mp := map[string][]string{}
+	for _, param := range params {
+		mp[param.Name] = append(mp[param.Name], param.Value)
+	}
+	return mp
+}
+
+// GetServerIPAddress gets the old IPv4 tc.Server.IPAddress from the new tc.Server.Interfaces.
+// If no IPv4 address set as a ServiceAddress exists, returns nil
+// Malformed addresses are ignored and skipped.
+func GetServerIPAddress(sv *tc.ServerNullable) net.IP {
+	for _, iFace := range sv.Interfaces {
+		for _, addr := range iFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+			if ip := net.ParseIP(addr.Address); ip != nil {
+				if ip4 := ip.To4(); ip4 != nil {
+					return ip4 // Valid IPv4, return it
+				}
+				continue // IP, but not v4, keep looking
+			}
+			// not an IP, try a CIDR
+			ip, _, err := net.ParseCIDR(addr.Address)
+			if err != nil || ip == nil {
+				continue // TODO log? Not a CIDR or IP, keep looking
+			}
+			// got a valid CIDR
+			if ip4 := ip.To4(); ip4 != nil {
+				return ip4 // CIDR is V4, return its IP
+			}
+			continue // valid CIDR, but not v4, keep looking
+		}
+	}
+	return nil
+}
+
+// GetServerServiceAddresses returns the first "service" addresses for IPv4 and IPv6 that it finds.
+// If an IPv4 or IPv6 "service" address is not found, returns nil for that IP.
+// If no IPv4 address set as a ServiceAddress exists, returns nil
+// Malformed addresses are ignored and skipped.
+func getServiceAddresses(sv *tc.ServerNullable) (net.IP, net.IP) {
+	v4 := net.IP(nil)
+	v6 := net.IP(nil)
+	for _, iFace := range sv.Interfaces {
+		for _, addr := range iFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+			if ip := net.ParseIP(addr.Address); ip != nil {
+				if ip4 := ip.To4(); ip4 != nil {
+					if v4 == nil {
+						v4 = ip4
+					}
+				} else {
+					if v6 == nil {
+						v6 = ip
+					}
+				}
+				if v4 != nil && v6 != nil {
+					return v4, v6
+				}
+				continue
+			}
+
+			// not an IP, try a CIDR
+			ip, _, err := net.ParseCIDR(addr.Address)
+			if err != nil || ip == nil {
+				continue // TODO log error? Not an IP or CIDR
+			}
+			if ip4 := ip.To4(); ip4 != nil {
+				if v4 == nil {
+					v4 = ip4
+				}
+			} else {
+				if v6 == nil {
+					v6 = ip
+				}
+			}
+			if v4 != nil && v6 != nil {
+				return v4, v6
+			}
+			continue
+		}
+	}
+	return v4, v6
+}
+
+// GetTOToolNameAndURL takes the Global Parameters and returns the Traffic Ops Tool Name and URL, as set in the tc.GlobalProfileName Profile 'tm.toolname' and 'tm.url' name Parameters.
+func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
+	// TODO move somewhere generic
+	toToolName := ""
+	toURL := ""
+	for _, param := range globalParams {
+		if param.Name == "tm.toolname" {
+			toToolName = param.Value
+		} else if param.Name == "tm.url" {
+			toURL = param.Value
+		}
+		if toToolName != "" && toURL != "" {
+			break
+		}
+	}
+	// TODO error here? Perl doesn't.
+	if toToolName == "" {
+		log.Warnln("Global Parameter tm.toolname not found, config may not be constructed properly!")
+	}
+	if toURL == "" {
+		log.Warnln("Global Parameter tm.url not found, config may not be constructed properly!")
+	}
+	return toToolName, toURL
 }

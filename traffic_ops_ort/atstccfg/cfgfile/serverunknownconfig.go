@@ -20,13 +20,21 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileServerUnknownConfig(toData *config.TOData, fileName string) (string, string, string, error) {
+	if toData.Server.HostName == nil {
+		return "", "", "", errors.New("server missing HostName")
+	} else if toData.Server.DomainName == nil {
+		return "", "", "", errors.New("server missing DomainName")
+	}
+
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, fileName, "", "", ""))
-	lineComment := atscfg.GetServerUnknownConfigCommentType(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params)
-	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, lineComment, nil
+	lineComment := atscfg.GetServerUnknownConfigCommentType(tc.CacheName(*toData.Server.HostName), *toData.Server.DomainName, toData.TOToolName, toData.TOURL, params)
+	return atscfg.MakeServerUnknown(tc.CacheName(*toData.Server.HostName), *toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, lineComment, nil
 }
