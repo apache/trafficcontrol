@@ -21,6 +21,9 @@ package atscfg
 
 import (
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const RecordsSeparator = " "
@@ -29,6 +32,7 @@ const ContentTypeRecordsDotConfig = ContentTypeTextASCII
 const LineCommentRecordsDotConfig = LineCommentHash
 
 func MakeRecordsDotConfig(
+	server *tc.ServerNullable,
 	profileName string,
 	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
@@ -41,6 +45,35 @@ func MakeRecordsDotConfig(
 	}
 	txt = replaceLineSuffixes(txt, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
 	txt = hdr + txt
+
+	txt = addRecordsDotConfigOverrides(txt, server)
+
+	return txt
+}
+
+func addRecordsDotConfigOverrides(txt string, server *tc.ServerNullable) string {
+	txt = addRecordsDotConfigOutgoingIP(txt, server)
+	return txt
+}
+
+func addRecordsDotConfigOutgoingIP(txt string, server *tc.ServerNullable) string {
+	outgoingIPConfig := `proxy.local.outgoing_ip_to_bind`
+	if strings.Contains(txt, outgoingIPConfig) {
+		log.Warnln("records.config had a proxy.local.outgoing_ip_to_bind Parameter! Using Parameter, not setting Outgoing IP from Server")
+		return txt
+	}
+
+	v4, v6 := getServiceAddresses(server)
+	if v4 == nil {
+		log.Errorln("Generating records.config: server had no IPv4 service address, cannot set " + outgoingIPConfig + "!")
+		return txt
+	}
+
+	txt = txt + `LOCAL ` + outgoingIPConfig + ` STRING ` + v4.String()
+	if v6 != nil {
+		txt += ` [` + v6.String() + `]`
+	}
+	txt += "\n"
 	return txt
 }
 

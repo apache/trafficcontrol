@@ -20,18 +20,32 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range toData.Servers {
-		if sv.Profile != toData.Server.Profile {
+		if sv.Profile == nil {
+			log.Errorln("TO returned server with nil profile, skipping!")
 			continue
 		}
-		profileServerIDsMap[sv.ID] = struct{}{}
+		if sv.ID == nil {
+			log.Errorln("TO returned server with nil id, skipping!")
+			continue
+		}
+		if *sv.Profile != *toData.Server.Profile {
+			continue
+		}
+		profileServerIDsMap[*sv.ID] = struct{}{}
 	}
 
 	dsServers := FilterDSS(toData.DeliveryServiceServers, nil, profileServerIDsMap)
@@ -65,5 +79,5 @@ func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, 
 		profileDSes = append(profileDSes, atscfg.ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
 	}
 
-	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), atscfg.ContentTypeCacheDotConfig, atscfg.LineCommentCacheDotConfig, nil
+	return atscfg.MakeCacheDotConfig(*toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), atscfg.ContentTypeCacheDotConfig, atscfg.LineCommentCacheDotConfig, nil
 }

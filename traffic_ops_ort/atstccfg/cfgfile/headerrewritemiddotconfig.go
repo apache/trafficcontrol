@@ -66,16 +66,30 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range toData.Servers {
+		if sv.CDNName == nil {
+			log.Errorln("TO returned Servers server with missing CDNName, skipping!")
+			continue
+		} else if sv.ID == nil {
+			log.Errorln("TO returned Servers server with missing ID, skipping!")
+			continue
+		} else if sv.Status == nil {
+			log.Errorln("TO returned Servers server with missing Status, skipping!")
+			continue
+		} else if sv.Cachegroup == nil {
+			log.Errorln("TO returned Servers server with missing Cachegroup, skipping!")
+			continue
+		}
+
 		if sv.CDNName != toData.Server.CDNName {
 			continue
 		}
-		if _, ok := assignedServers[sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {
+		if _, ok := assignedServers[*sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {
 			continue
 		}
-		if tc.CacheStatus(sv.Status) != tc.CacheStatusReported && tc.CacheStatus(sv.Status) != tc.CacheStatusOnline {
+		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
 			continue
 		}
-		serverCGs[tc.CacheGroupName(sv.Cachegroup)] = struct{}{}
+		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
 	}
 
 	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
@@ -92,23 +106,23 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		parentCGs[*cg.ParentName] = struct{}{}
 	}
 
-	parentServers := []tc.Server{}
-	for _, sv := range toData.Servers {
-		if _, ok := parentCGs[sv.Cachegroup]; !ok {
-			continue
-		}
-		parentServers = append(parentServers, sv)
-	}
-
 	assignedMids := []atscfg.HeaderRewriteServer{}
 	for _, server := range toData.Servers {
-		if server.CDNName != *tcDS.CDNName {
+		if server.CDNName == nil {
+			log.Errorln("TO returned Servers server with missing CDNName, skipping!")
 			continue
 		}
-		if _, ok := parentCGs[server.Cachegroup]; !ok {
+		if server.Cachegroup == nil {
+			log.Errorln("TO returned Servers server with missing Cachegroup, skipping!")
 			continue
 		}
-		cfgServer, err := atscfg.HeaderRewriteServerFromServerNotNullable(server)
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := parentCGs[*server.Cachegroup]; !ok {
+			continue
+		}
+		cfgServer, err := atscfg.HeaderRewriteServerFromServer(server)
 		if err != nil {
 			continue // TODO warn?
 		}
@@ -117,5 +131,9 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 
 	log.Infof("MakeHeaderRewriteMidDotConfig ds "+*tcDS.XMLID+" got mids %+v\n", len(assignedMids))
 
-	return atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedMids), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("this server missing CDNName")
+	}
+
+	return atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedMids), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }

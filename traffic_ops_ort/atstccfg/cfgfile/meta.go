@@ -28,73 +28,20 @@ import (
 )
 
 func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
-	cgMap := map[string]tc.CacheGroupNullable{}
-	for _, cg := range toData.CacheGroups {
-		if cg.Name == nil {
-			return nil, errors.New("got cachegroup with nil name!'")
-		}
-		cgMap[*cg.Name] = cg
-	}
-
-	serverCG, ok := cgMap[toData.Server.Cachegroup]
-	if !ok {
-		return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
-	}
-
-	parentCGID := -1
-	parentCGType := ""
-	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
-		parentCG, ok := cgMap[*serverCG.ParentName]
-		if !ok {
-			return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
-		}
-		if parentCG.ID == nil {
-			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
-		}
-		parentCGID = *parentCG.ID
-
-		if parentCG.Type == nil {
-			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
-		}
-		parentCGType = *parentCG.Type
-	}
-
-	secondaryParentCGID := -1
-	secondaryParentCGType := ""
-	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
-		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
-		if !ok {
-			return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
-		}
-
-		if parentCG.ID == nil {
-			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
-		}
-		secondaryParentCGID = *parentCG.ID
-		if parentCG.Type == nil {
-			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
-		}
-
-		secondaryParentCGType = *parentCG.Type
-	}
-
-	serverInfo := atscfg.ServerInfo{
-		CacheGroupID:                  toData.Server.CachegroupID,
-		CacheGroupName:                toData.Server.Cachegroup,
-		CDN:                           tc.CDNName(toData.Server.CDNName),
-		CDNID:                         toData.Server.CDNID,
-		DomainName:                    toData.Server.DomainName,
-		HostName:                      toData.Server.HostName,
-		ID:                            toData.Server.ID,
-		IP:                            toData.Server.IPAddress,
-		ParentCacheGroupID:            parentCGID,
-		ParentCacheGroupType:          parentCGType,
-		ProfileID:                     atscfg.ProfileID(toData.Server.ProfileID),
-		ProfileName:                   toData.Server.Profile,
-		Port:                          toData.Server.TCPPort,
-		SecondaryParentCacheGroupID:   secondaryParentCGID,
-		SecondaryParentCacheGroupType: secondaryParentCGType,
-		Type:                          toData.Server.Type,
+	if toData.Server.Cachegroup == nil {
+		return nil, errors.New("this server missing Cachegroup")
+	} else if toData.Server.HostName == nil {
+		return nil, errors.New("this server missing HostName")
+	} else if toData.Server.CachegroupID == nil {
+		return nil, errors.New("this server missing CachegroupID")
+	} else if toData.Server.Cachegroup == nil {
+		return nil, errors.New("this server missing Cachegroup")
+	} else if toData.Server.CDNID == nil {
+		return nil, errors.New("this server missing CDNID")
+	} else if toData.Server.CDNName == nil {
+		return nil, errors.New("this server missing CDNName")
+	} else if toData.Server.ID == nil {
+		return nil, errors.New("this server missing ID")
 	}
 
 	toReverseProxyURL := ""
@@ -145,7 +92,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 			if dss.Server == nil || dss.DeliveryService == nil {
 				continue // TODO warn?
 			}
-			if *dss.Server != toData.Server.ID {
+			if *dss.Server != *toData.Server.ID {
 				continue
 			}
 			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
@@ -174,7 +121,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 			if ds.XMLID == nil {
 				continue // TODO log?
 			}
-			if ds.CDNID == nil || *ds.CDNID != toData.Server.CDNID {
+			if ds.CDNID == nil || *ds.CDNID != *toData.Server.CDNID {
 				continue
 			}
 			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
@@ -198,7 +145,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
 	}
 
-	metaObj, err := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, toData.CacheGroups, toData.Topologies, dir)
+	metaObj, err := atscfg.MakeMetaObj(toData.Server, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, toData.CacheGroups, toData.Topologies, dir)
 	if err != nil {
 		return nil, errors.New("generating: " + err.Error())
 	}

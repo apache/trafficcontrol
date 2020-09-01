@@ -24,126 +24,95 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeParentDotConfig(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-			},
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds1",
-				QStringIgnore:   tc.QStringIgnoreDrop,
-				OriginFQDN:      "http://ds1.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeDNS,
-				QStringHandling: "ds1qstringhandling",
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
-
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
-
-	parentInfos := map[OriginHost][]ParentInfo{
-		"ds1.example.net": []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-0",
-				Port:            80,
-				Domain:          "my-parent-0-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	server := tc.Server{
-		CachegroupID: 42,
-		Cachegroup:   "myCG",
-		CDNName:      "myCDN",
-		CDNID:        43,
-		DomainName:   "serverdomain.example.net",
-		HostName:     "myserver",
-		ID:           44,
-		IPAddress:    "192.168.2.1",
-		ProfileID:    46,
-		Profile:      "MyProfileName",
-		TCPPort:      80,
-		Type:         "EDGE",
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
 	}
 
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         45,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	parentConfigParams := []tc.Parameter{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	cgs := []tc.CacheGroupNullable{}
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds1.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -159,144 +128,111 @@ func TestMakeParentDotConfig(t *testing.T) {
 }
 
 func TestMakeParentDotConfigCapabilities(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-				RequiredCapabilities: map[ServerCapability]struct{}{
-					"FOO": {},
-				},
-			},
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+
+	dses := []tc.DeliveryServiceNullableV30{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
-
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
-
-	parentInfos := map[OriginHost][]ParentInfo{
-		DeliveryServicesAllParentsKey: []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-nocaps",
-				Port:            80,
-				Domain:          "my-parent-nocaps-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.1",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-				Capabilities:    map[ServerCapability]struct{}{},
-			},
-			ParentInfo{
-				Host:            "my-parent-fooonly",
-				Port:            80,
-				Domain:          "my-parent-fooonly-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-				Capabilities: map[ServerCapability]struct{}{
-					"FOO": {},
-				},
-			},
-			ParentInfo{
-				Host:            "my-parent-foobar",
-				Port:            80,
-				Domain:          "my-parent-foobar-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-				Capabilities: map[ServerCapability]struct{}{
-					"FOO": {},
-					"BAR": {},
-				},
-			},
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
 		},
 	}
 
-	server := tc.Server{
-		CachegroupID: 42,
-		Cachegroup:   "myCG",
-		CDNName:      "myCDN",
-		CDNID:        43,
-		DomainName:   "serverdomain.example.net",
-		HostName:     "myserver",
-		ID:           44,
-		IPAddress:    "192.168.2.1",
-		ProfileID:    46,
-		Profile:      "MyProfileName",
-		TCPPort:      80,
-		Type:         "EDGE",
-	}
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         45,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.HostName = util.StrPtr("my-parent-nocaps")
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	mid0.CachegroupID = util.IntPtr(423)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.HostName = util.StrPtr("my-parent-fooonly")
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.ID = util.IntPtr(46)
+	mid1.CachegroupID = util.IntPtr(423)
+	setIP(mid1, "192.168.2.3")
+
+	mid2 := makeTestParentServer()
+	mid2.HostName = util.StrPtr("my-parent-foobar")
+	mid2.Cachegroup = util.StrPtr("midCG")
+	mid2.ID = util.IntPtr(47)
+	mid2.CachegroupID = util.IntPtr(423)
+	setIP(mid1, "192.168.2.4")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1, *mid2}
 
 	topologies := []tc.Topology{}
-	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	parentConfigParams := []tc.Parameter{}
-	cgs := []tc.CacheGroupNullable{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	serverCapabilities := map[int]map[ServerCapability]struct{}{
+		*mid1.ID: map[ServerCapability]struct{}{"FOO": {}},
+		*mid2.ID: map[ServerCapability]struct{}{"FOO": {}, "BAR": {}},
+	}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{
+		*ds0.ID: map[ServerCapability]struct{}{"FOO": {}},
+	}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -334,240 +270,188 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: true,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-			},
-			MSOAlgorithm: ParentConfigDSParamDefaultMSOAlgorithm,
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.MultiSiteOrigin = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullableV30{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            InvalidID,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   InvalidID,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
-
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
-
-	parentInfos := map[OriginHost][]ParentInfo{
-		"ds0.example.net": []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-0",
-				Port:            80,
-				Domain:          "my-parent-0-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: false,
-			},
-			ParentInfo{
-				Host:            "my-parent-1",
-				Port:            80,
-				Domain:          "my-parent-1-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.3",
-				PrimaryParent:   false,
-				SecondaryParent: true,
-			},
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
 		},
 	}
 
-	if !serverInfo.IsTopLevelCache() {
-		t.Fatal("server should have been top level, was not; cannot test MSO Secondary Parent")
-	}
+	server := makeTestParentServer()
 
-	server := tc.Server{
-		CachegroupID: 42,
-		Cachegroup:   "myCG",
-		CDNName:      "myCDN",
-		CDNID:        43,
-		DomainName:   "serverdomain.example.net",
-		HostName:     "myserver",
-		ID:           44,
-		IPAddress:    "192.168.2.1",
-		ProfileID:    46,
-		Profile:      "MyProfileName",
-		TCPPort:      80,
-		Type:         "EDGE",
-	}
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG0")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("my-parent-0")
+	mid0.DomainName = util.StrPtr("my-parent-0-domain")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
 
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         45,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG1")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("my-parent-1")
+	mid1.DomainName = util.StrPtr("my-parent-1-domain")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	parentConfigParams := []tc.Parameter{}
-	cgs := []tc.CacheGroupNullable{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG1}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
-	txt = strings.Replace(txt, " ", "", -1)
+	txtx := strings.Replace(txt, " ", "", -1)
 
-	if !strings.Contains(txt, `secondary_parent="my-parent-1.my-parent-1-domain`) {
+	if !strings.Contains(txtx, `secondary_parent="my-parent-1.my-parent-1-domain`) {
 		t.Errorf("expected secondary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
 	}
 }
 
 func TestMakeParentDotConfigTopologies(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-				// no Topology - test that generation works right with a DS with and one without
-			},
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
+
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds1",
-				QStringIgnore:   tc.QStringIgnoreDrop,
-				OriginFQDN:      "http://ds1.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeDNS,
-				QStringHandling: "ds1qstringhandling",
-				Topology:        "t0",
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CacheGroupName:                "edgeCG",
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
-
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
-
-	parentInfos := map[OriginHost][]ParentInfo{
-		"ds1.example.net": []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-0",
-				Port:            80,
-				Domain:          "my-parent-0-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
-	server.Cachegroup = "edgeCG"
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
 
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         45,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.CachegroupID = util.IntPtr(500)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -585,9 +469,40 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	}
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	parentConfigParams := []tc.Parameter{}
-	cgs := []tc.CacheGroupNullable{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds1.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -604,106 +519,71 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 // TestMakeParentDotConfigNotInTopologies tests when a given edge is NOT in a Topology, that it doesn't add a remap line.
 func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-				Topology:        "t0",
-			},
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.Topology = util.StrPtr("t0")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds1",
-				QStringIgnore:   tc.QStringIgnoreDrop,
-				OriginFQDN:      "http://ds1.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeDNS,
-				QStringHandling: "ds1qstringhandling",
-				// no Topology - test that generation works right with a DS with and one without
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
 		},
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
-
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
-
-	parentInfos := map[OriginHost][]ParentInfo{
-		"ds1.example.net": []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-0",
-				Port:            80,
-				Domain:          "my-parent-0-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-			},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
-	server.Cachegroup = "edgeCG"
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
 
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         45,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -721,9 +601,24 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 	}
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	parentConfigParams := []tc.Parameter{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	cgs := []tc.CacheGroupNullable{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds1.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -736,123 +631,85 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
-	atsMajorVer := 7
 	serverName := "myserver"
 	toolName := "myToolName"
 	toURL := "https://myto.example.net"
 
-	parentConfigDSes := []ParentConfigDSTopLevel{
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds0",
-				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
-				OriginFQDN:      "http://ds0.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeHTTP,
-				QStringHandling: "ds0qstringhandling",
-				Topology:        "t0",
-			},
-		},
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds1",
-				QStringIgnore:   tc.QStringIgnoreDrop,
-				OriginFQDN:      "http://ds1.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeDNS,
-				QStringHandling: "ds1qstringhandling",
-				Topology:        "t0",
-				RequiredCapabilities: map[ServerCapability]struct{}{
-					"FOO": {},
-				},
-			},
-		},
-		ParentConfigDSTopLevel{
-			ParentConfigDS: ParentConfigDS{
-				Name:            "ds2",
-				QStringIgnore:   tc.QStringIgnoreDrop,
-				OriginFQDN:      "http://ds2.example.net",
-				MultiSiteOrigin: false,
-				Type:            tc.DSTypeDNS,
-				QStringHandling: "ds2qstringhandling",
-				Topology:        "t0",
-				RequiredCapabilities: map[ServerCapability]struct{}{
-					"BAR": {},
-				},
-			},
-		},
-	}
+	ds0 := makeParentDS()
+	ds0.ID = util.IntPtr(42)
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.Topology = util.StrPtr("t0")
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "myCDN",
-		CDNID:                         43,
-		DomainName:                    "serverdomain.example.net",
-		HostName:                      "myserver",
-		ID:                            44,
-		IP:                            "192.168.2.1",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "myParentCGType",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfileName",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
-		Type:                          "EDGE",
-	}
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
 
-	serverParams := map[string]string{
-		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
-		ParentConfigParamQString:         "myQstringParam",
-	}
+	ds2 := makeParentDS()
+	ds2.ID = util.IntPtr(44)
+	ds2Type := tc.DSTypeDNS
+	ds2.Type = &ds2Type
+	ds2.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds2.OrgServerFQDN = util.StrPtr("http://ds2.example.net")
+	ds2.Topology = util.StrPtr("t0")
 
-	parentInfos := map[OriginHost][]ParentInfo{
-		"ds1.example.net": []ParentInfo{
-			ParentInfo{
-				Host:            "my-parent-0",
-				Port:            80,
-				Domain:          "my-parent-0-domain",
-				Weight:          "1",
-				UseIP:           false,
-				Rank:            1,
-				IP:              "192.168.2.2",
-				PrimaryParent:   true,
-				SecondaryParent: true,
-			},
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1, *ds2}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
-	server.Cachegroup = "edgeCG"
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
 
-	mid0 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid0",
-		ID:         45,
-		IPAddress:  "192.168.2.2",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	mid1 := &tc.Server{
-		Cachegroup: "midCG",
-		CDNName:    "myCDN",
-		CDNID:      43,
-		DomainName: "serverdomain.example.net",
-		HostName:   "mymid1",
-		ID:         46,
-		IPAddress:  "192.168.2.3",
-		ProfileID:  46,
-		Profile:    "MyProfileName",
-		TCPPort:    80,
-		Type:       "EDGE",
-	}
-	servers := []tc.Server{server, *mid0, *mid1}
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.CachegroupID = util.IntPtr(500)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []tc.ServerNullable{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -874,10 +731,47 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 		45: map[ServerCapability]struct{}{"FOO": {}},
 		46: map[ServerCapability]struct{}{"FOO": {}},
 	}
-	parentConfigParams := []tc.Parameter{}
-	cgs := []tc.CacheGroupNullable{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{
+		*ds1.ID: map[ServerCapability]struct{}{"FOO": {}},
+		*ds2.ID: map[ServerCapability]struct{}{"BAR": {}},
+	}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds0.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds1.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds2.ID),
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -890,4 +784,39 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 	if strings.Contains(txt, "dest_domain=ds2.example.net") {
 		t.Errorf("expected no parent 'dest_domain=ds2.example.net' without necessary required capabilities, actual: '%v'", txt)
 	}
+}
+
+func makeTestParentServer() *tc.ServerNullable {
+	server := &tc.ServerNullable{}
+	server.ProfileID = util.IntPtr(42)
+	server.CDNName = util.StrPtr("myCDN")
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CachegroupID = util.IntPtr(422)
+	server.DomainName = util.StrPtr("mydomain.example.net")
+	server.CDNID = util.IntPtr(43)
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(12443)
+	server.ID = util.IntPtr(44)
+	setIP(server, "192.168.2.1")
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("serverprofile")
+	server.TCPPort = util.IntPtr(80)
+	server.Type = "EDGE"
+	server.TypeID = util.IntPtr(91)
+	status := string(tc.CacheStatusReported)
+	server.Status = &status
+	server.StatusID = util.IntPtr(99)
+	return server
+}
+
+func makeParentDS() *tc.DeliveryServiceNullableV30 {
+	ds := &tc.DeliveryServiceNullableV30{}
+	ds.ID = util.IntPtr(42)
+	ds.XMLID = util.StrPtr("ds1")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	dsType := tc.DSTypeDNS
+	ds.Type = &dsType
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	return ds
 }
