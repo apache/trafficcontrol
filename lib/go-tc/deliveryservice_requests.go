@@ -23,6 +23,7 @@ import (
 	"html/template"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -387,6 +388,8 @@ func (o *OriginHeaders) UnmarshalJSON(data []byte) error {
 
 // DeliveryServiceRequest is used as part of the workflow to create,
 // modify, or delete a delivery service.
+//
+// Deprecated: Please use versioned structures from now on.
 type DeliveryServiceRequest struct {
 	AssigneeID      int             `json:"assigneeId,omitempty"`
 	Assignee        string          `json:"assignee,omitempty"`
@@ -405,6 +408,8 @@ type DeliveryServiceRequest struct {
 
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
+//
+// Deprecated: Please use versioned structures from now on.
 type DeliveryServiceRequestNullable struct {
 	AssigneeID      *int                `json:"assigneeId,omitempty" db:"assignee_id"`
 	Assignee        *string             `json:"assignee,omitempty"`
@@ -419,6 +424,61 @@ type DeliveryServiceRequestNullable struct {
 	DeliveryService *DeliveryServiceV30 `json:"deliveryService" db:"deliveryservice"`
 	Status          *RequestStatus      `json:"status" db:"status"`
 	XMLID           *string             `json:"-" db:"xml_id"`
+}
+
+// DeliveryServiceRequestV15 is the type of a Delivery Service Request as of API
+// version 1.5 (which is fully compatible with version 2.0).
+type DeliveryServiceRequestV15 DeliveryServiceRequestNullable
+
+// Upgrade coerces the DeliveryServiceRequestV15 to the newer
+// DeliveryServiceRequestV30 structure.
+//
+// All reference properties are "deep"-copied so they may be modified without
+// affecting the original. However, DeliveryService is constructed as a "deep"
+// copy of "Requested", but the properties of the underlying
+// DeliveryServiceNullableV15 are "shallow" copied, and so modifying them *can*
+// affect the original and vice-versa.
+func (dsr DeliveryServiceRequestV15) Upgrade() DeliveryServiceRequestV30 {
+	upgraded := DeliveryServiceRequestV30{}
+	if dsr.Assignee != nil {
+		upgraded.Assignee = new(string)
+		*upgraded.Assignee = *dsr.Assignee
+	}
+	if dsr.AssigneeID != nil {
+		upgraded.AssigneeID = new(int)
+		*upgraded.AssigneeID = *dsr.AssigneeID
+	}
+	if dsr.Author != nil {
+		upgraded.Author = *dsr.Author
+	}
+	if dsr.AuthorID != nil {
+		upgraded.AuthorID = new(int)
+		*upgraded.AuthorID = int(*dsr.AuthorID)
+	}
+	if dsr.ChangeType != nil {
+		upgraded.ChangeType = DSRChangeType(*dsr.ChangeType)
+	}
+	if dsr.CreatedAt != nil {
+		upgraded.CreatedAt = dsr.CreatedAt.Time
+	}
+	if dsr.DeliveryService != nil {
+		*upgraded.Requested = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+	}
+	if dsr.ID != nil {
+		upgraded.ID = new(int)
+		*upgraded.ID = *dsr.ID
+	}
+	if dsr.LastEditedBy != nil {
+		upgraded.LastEditedBy = *dsr.LastEditedBy
+	}
+	if dsr.LastEditedByID != nil {
+		upgraded.LastEditedByID = new(int)
+		*upgraded.LastEditedByID = int(*dsr.LastEditedByID)
+	}
+	if dsr.Status != nil {
+		upgraded.Status = *dsr.Status
+	}
+	return upgraded
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod
@@ -443,6 +503,10 @@ const (
 	// RequestStatusComplete -- implemented and locked
 	RequestStatusComplete = RequestStatus("complete")
 )
+
+func (s RequestStatus) String() string {
+	return string(s)
+}
 
 // RequestStatuses -- user-visible string associated with each of the above
 var RequestStatuses = []RequestStatus{
@@ -492,7 +556,7 @@ func (r *RequestStatus) Scan(src interface{}) error {
 	return json.Unmarshal(b, r)
 }
 
-// RequestStatusFromString gets the status enumeration from a string
+// RequestStatusFromString gets the status enumeration from a string.
 func RequestStatusFromString(rs string) (RequestStatus, error) {
 	if rs == "" {
 		return RequestStatusDraft, nil
@@ -505,7 +569,8 @@ func RequestStatusFromString(rs string) (RequestStatus, error) {
 	return RequestStatusInvalid, errors.New(rs + " is not a valid RequestStatus name")
 }
 
-// ValidTransition returns nil if the transition is allowed for the workflow, an error if not
+// ValidTransition returns nil if the transition is allowed for the workflow,
+// an error if not.
 func (r RequestStatus) ValidTransition(to RequestStatus) error {
 	if r == RequestStatusRejected || r == RequestStatusComplete {
 		// once rejected or completed,  no changes allowed
@@ -546,4 +611,236 @@ func (r RequestStatus) ValidTransition(to RequestStatus) error {
 		}
 	}
 	return errors.New("invalid transition from " + string(r) + " to " + string(to))
+}
+
+// DSRChangeType is an "enumerated" string type that encodes the legal values of
+// a Delivery Service Request's Change Type.
+type DSRChangeType string
+
+// These are the valid values for Delivery Service Request Change Types.
+const (
+	// The original Delivery Service is being modified to match the requested
+	// one.
+	DSRChangeTypeChange = DSRChangeType("change")
+	// The requested Delivery Service is being created.
+	DSRChangeTypeCreate = DSRChangeType("create")
+	// The requested Delivery Service is being deleted.
+	DSRChangeTypeDelete = DSRChangeType("delete")
+)
+
+// DSRChangeTypeFromString converts the passed string to a DSRChangeType
+// (case-insensitive), returning an error if the string is not a valid
+// Delivery Service Request Change Type.
+func DSRChangeTypeFromString(s string) (DSRChangeType, error) {
+	switch strings.ToLower(s) {
+	case "change":
+		return DSRChangeTypeChange, nil
+	case "create":
+		return DSRChangeTypeCreate, nil
+	case "delete":
+		return DSRChangeTypeDelete, nil
+	}
+	return DSRChangeType("INVALID"), fmt.Errorf("invalid Delivery Service Request changeType: '%s'", s)
+}
+
+// String implements the fmt.Stringer interface, returning a textual
+// representation of the DSRChangeType.
+func (dsrct DSRChangeType) String() string {
+	return string(dsrct)
+}
+
+// MarshalJSON implements the encoding/json.Marshaller interface.
+func (dsrct DSRChangeType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(string(dsrct))
+}
+
+// UnmarshalJSON implements the encoding/json.Unmarshaller interface.
+func (dsrct *DSRChangeType) UnmarshalJSON(b []byte) error {
+	// This should only happen if this method is called directly; encoding/json
+	// itself guards against this.
+	if dsrct == nil {
+		return errors.New("UnmarshalJSON(nil *tc.DSRChangeType)")
+	}
+
+	ctStr, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+
+	ct, err := DSRChangeTypeFromString(ctStr)
+	if err != nil {
+		return err
+	}
+	*dsrct = ct
+	return nil
+}
+
+// DeliveryServiceRequestV30 is the type of a Delivery Service Request in
+// Traffic Ops API version 3.0.
+type DeliveryServiceRequestV30 struct {
+	// Assignee is the username of the user assigned to the Delivery Service
+	// Request, if any.
+	Assignee *string `json:"assignee"`
+	// AssigneeID is the integral, unique identifier of the user assigned to the
+	// Delivery Service Request, if any.
+	AssigneeID *int `json:"-" db:"assignee_id"`
+	// Author is the username of the user who created the Delivery Service
+	// Request.
+	Author string `json:"author"`
+	// AuthorID is the integral, unique identifier of the user who created the
+	// Delivery Service Request, if/when it is known.
+	AuthorID *int `json:"-" db:"author_id"`
+	// ChangeType represents the type of change being made, must be one of
+	// "create", "change" or "delete".
+	ChangeType DSRChangeType `json:"changeType" db:"change_type"`
+	// CreatedAt is the date/time at which the Delivery Service Request was
+	// created.
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	// ID is the integral, unique identifier for the Delivery Service Request
+	// if/when it is known.
+	ID *int `json:"id" db:"id"`
+	// LastEditedBy is the username of the user by whom the Delivery Service
+	// Request was last edited.
+	LastEditedBy string `json:"lastEditedBy"`
+	// LastEditedByID is the integral, unique identifier of the user by whom the
+	// Delivery Service Request was last edited, if/when it is known.
+	LastEditedByID *int `json:"-" db:"last_edited_by_id"`
+	// LastUpdated is the date/time at which the Delivery Service was last
+	// modified.
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	// Original is the original Delivery Service for which changes are
+	// requested. This is present in responses only for ChangeTypes 'change' and
+	// 'delete', and is only required in requests in those cases.
+	Original *DeliveryServiceV30 `json:"original,omitempty" db:"original"`
+	// Requested is the set of requested changes. This is present in responses
+	// only for ChangeTypes 'change' and 'create', and is only required in
+	// requests in those cases.
+	Requested *DeliveryServiceV30 `json:"requested,omitempty" db:"requested"`
+	// Status is the status of the Delivery Service Request.
+	Status RequestStatus `json:"status" db:"status"`
+}
+
+// IsOpen returns whether or not the Delivery Service Request is still "open" -
+// i.e. has not been rejected or completed.
+func (dsr DeliveryServiceRequestV30) IsOpen() bool {
+	return !dsr.IsClosed()
+}
+
+// IsClosed returns whether or not the Delivery Service Request has been
+// "closed", by being either rejected or completed.
+func (dsr DeliveryServiceRequestV30) IsClosed() bool {
+	return dsr.Status == RequestStatusComplete || dsr.Status == RequestStatusRejected
+}
+
+// Downgrade coerces the DeliveryServiceRequestV30 to the older
+// DeliveryServiceRequestV15 structure.
+//
+// "XMLID" will be determined from the Original, if it exists, otherwise from
+// Requested.
+//
+// All reference properties are "deep"-copied so they may be modified without
+// affecting the original. However, DeliveryService is constructed as a "deep"
+// copy of "Requested", but the properties of the underlying
+// DeliveryServiceNullableV15 are "shallow" copied, and so modifying them *can*
+// affect the original and vice-versa.
+func (dsr DeliveryServiceRequestV30) Downgrade() DeliveryServiceRequestV15 {
+	downgraded := DeliveryServiceRequestV15{
+		Author:          new(string),
+		ChangeType:      new(string),
+		DeliveryService: new(DeliveryServiceNullable),
+		LastEditedBy:    new(string),
+		Status:          new(RequestStatus),
+	}
+	if dsr.Assignee != nil {
+		downgraded.Assignee = new(string)
+		*downgraded.Assignee = *dsr.Assignee
+	}
+	if dsr.AssigneeID != nil {
+		downgraded.AssigneeID = new(int)
+		*downgraded.AssigneeID = *dsr.AssigneeID
+	}
+	*downgraded.Author = dsr.Author
+	if dsr.AuthorID != nil {
+		downgraded.AuthorID = new(IDNoMod)
+		*downgraded.AuthorID = IDNoMod(*dsr.AuthorID)
+	}
+	*downgraded.ChangeType = dsr.ChangeType.String()
+	downgraded.CreatedAt = TimeNoModFromTime(dsr.CreatedAt)
+	*downgraded.DeliveryService = DeliveryServiceNullable(dsr.Requested.DeliveryServiceNullableV15)
+	if dsr.ID != nil {
+		downgraded.ID = new(int)
+		*downgraded.ID = *dsr.ID
+	}
+	*downgraded.LastEditedBy = dsr.LastEditedBy
+	if dsr.LastEditedByID != nil {
+		downgraded.LastEditedByID = new(IDNoMod)
+		*downgraded.LastEditedByID = IDNoMod(*dsr.LastEditedByID)
+	}
+	downgraded.LastUpdated = TimeNoModFromTime(dsr.LastUpdated)
+	*downgraded.Status = dsr.Status
+	if dsr.Original != nil && dsr.Original.XMLID != nil {
+		downgraded.XMLID = new(string)
+		*downgraded.XMLID = *dsr.Original.XMLID
+	} else if dsr.Requested.XMLID != nil {
+		downgraded.XMLID = new(string)
+		*downgraded.XMLID = *dsr.Requested.XMLID
+	}
+	return downgraded
+}
+
+// String encodes the DeliveryServiceRequestV30 as a string, in the format
+// "DeliveryServiceRequestV30({{Property}}={{Value}}[, {{Property}}={{Value}}]+)".
+//
+// If a property is a pointer value, then its dereferenced value is used -
+// unless it's nil, in which case "<nil>" is used as the value. Original and
+// Requested are omitted, because of how large they are. Times are formatted in
+// RFC3339 format.
+func (dsr DeliveryServiceRequestV30) String() string {
+	var builder strings.Builder
+	builder.Write([]byte("DeliveryServiceRequestV30(Assignee="))
+	if dsr.Assignee != nil {
+		builder.WriteRune('"')
+		builder.WriteString(*dsr.Assignee)
+		builder.WriteRune('"')
+	} else {
+		builder.Write([]byte("<nil>"))
+	}
+	builder.Write([]byte(", AssigneeID="))
+	if dsr.AssigneeID != nil {
+		builder.WriteString(strconv.Itoa(*dsr.AssigneeID))
+	} else {
+		builder.Write([]byte("<nil>"))
+	}
+	builder.Write([]byte(`, Author="`))
+	builder.WriteString(dsr.Author)
+	builder.Write([]byte(`", AuthorID=`))
+	if dsr.AuthorID != nil {
+		builder.WriteString(strconv.Itoa(*dsr.AuthorID))
+	} else {
+		builder.Write([]byte("<nil>"))
+	}
+	builder.Write([]byte(`, ChangeType="`))
+	builder.WriteString(dsr.ChangeType.String())
+	builder.Write([]byte(`", CreatedAt=`))
+	builder.WriteString(dsr.CreatedAt.Format(time.RFC3339))
+	builder.Write([]byte(", ID="))
+	if dsr.ID != nil {
+		builder.WriteString(strconv.Itoa(*dsr.ID))
+	} else {
+		builder.Write([]byte("<nil>"))
+	}
+	builder.Write([]byte(`, LastEditedBy="`))
+	builder.WriteString(dsr.LastEditedBy)
+	builder.Write([]byte(`", LastEditedByID=`))
+	if dsr.LastEditedByID != nil {
+		builder.WriteString(strconv.Itoa(*dsr.LastEditedByID))
+	} else {
+		builder.Write([]byte("<nil>"))
+	}
+	builder.Write([]byte(`, LastUpdated=`))
+	builder.WriteString(dsr.LastUpdated.Format(time.RFC3339))
+	builder.Write([]byte(`, Status="`))
+	builder.WriteString(dsr.Status.String())
+	builder.Write([]byte(`")`))
+	return builder.String()
 }
