@@ -41,6 +41,7 @@ func TestServers(t *testing.T) {
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		CreateTestServerWithoutProfileId(t)
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
 	})
@@ -235,28 +236,49 @@ func GetTestServersIMS(t *testing.T) {
 
 func CreateTestServers(t *testing.T) {
 	// loop through servers, assign FKs and create
-	for index, server := range testData.Servers {
+	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
-		}
-		if index == len(testData.Servers)-1 {
-			*server.Profile = ""
 		}
 		resp, _, err := TOSession.CreateServer(server)
 		t.Log("Response: ", *server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
 		}
-		//Reverting it back for further tests
-		if index == len(testData.Servers)-1 {
-			*server.Profile = "MID1"
-			resp, _, err := TOSession.CreateServer(server)
-			t.Log("Response: ", *server.HostName, " ", resp)
-			if err != nil {
-				t.Errorf("could not CREATE servers: %v", err)
-			}
-		}
+	}
+}
+
+func CreateTestServerWithoutProfileId(t *testing.T) {
+	params := url.Values{}
+	servers := testData.Servers[19]
+	params.Set("hostName", *servers.HostName)
+
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Errorf("cannot GET Server by name '%s': %v - %v", *servers.HostName, err, resp.Alerts)
+	}
+
+	server := resp.Response[0]
+	originalProfile := *server.Profile
+	delResp, _, err := TOSession.DeleteServerByID(*server.ID)
+	if err != nil {
+		t.Fatalf("cannot DELETE Server by ID %d: %v - %v", *server.ID, err, delResp)
+	}
+
+	*server.Profile = ""
+	response, _, errs := TOSession.CreateServer(server)
+	t.Log("Response0: ", *server.HostName, " ", response)
+	if errs == nil {
+		t.Errorf("could CREATE servers but is shouldn't have: %v", errs)
+	}
+
+	//Reverting it back for further tests
+	*server.Profile = originalProfile
+	response, _, errs = TOSession.CreateServer(server)
+	t.Log("Response1: ", *server.HostName, " ", response)
+	if errs != nil {
+		t.Errorf("could not CREATE servers: %v", errs)
 	}
 }
 
@@ -273,6 +295,7 @@ func GetTestServers(t *testing.T) {
 			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
 			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
+
 		}
 	}
 }
