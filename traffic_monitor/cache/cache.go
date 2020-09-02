@@ -278,7 +278,7 @@ func ComputedStats() map[string]StatComputeFunc {
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, usingIPv4 bool, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, usingIPv4 bool, pollCtx interface{}, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
 		ID:           id,
@@ -304,7 +304,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		return
 	}
 
-	stats, miscStats, err := decoder.Parse(result.ID, rdr)
+	stats, miscStats, err := decoder.Parse(result.ID, rdr, pollCtx)
 	if err != nil {
 		log.Warnf("%s decode error '%v'", id, err)
 		result.Error = err
