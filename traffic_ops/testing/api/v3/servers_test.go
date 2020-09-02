@@ -235,15 +235,27 @@ func GetTestServersIMS(t *testing.T) {
 
 func CreateTestServers(t *testing.T) {
 	// loop through servers, assign FKs and create
-	for _, server := range testData.Servers {
+	for index, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
+		if index == len(testData.Servers)-1 {
+			*server.Profile = ""
+		}
 		resp, _, err := TOSession.CreateServer(server)
-		t.Log("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", *server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
+		}
+		//Reverting it back for further tests
+		if index == len(testData.Servers)-1 {
+			*server.Profile = "MID1"
+			resp, _, err := TOSession.CreateServer(server)
+			t.Log("Response: ", *server.HostName, " ", resp)
+			if err != nil {
+				t.Errorf("could not CREATE servers: %v", err)
+			}
 		}
 	}
 }
