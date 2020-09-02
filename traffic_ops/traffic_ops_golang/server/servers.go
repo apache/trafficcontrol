@@ -571,7 +571,6 @@ and p.id = $1
 			var id int
 			var ipaddress string
 			err = rows.Scan(&id, &ipaddress)
-			fmt.Println(ipaddress, ipv4, ipv6, *s.ID, id)
 			if err != nil {
 				errs = append(errs, errors.New("unable to determine service address uniqueness"))
 			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
@@ -1380,7 +1379,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	str := uuid.New().String()
 	server.XMPPID = &str
 	_, err := validateV3(&server, tx)
-	fmt.Println("v3 err", err)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
