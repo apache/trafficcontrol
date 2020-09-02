@@ -92,9 +92,9 @@ AND (
 	FROM server_server_capability ssc
 	WHERE ssc."server" = s.id
 ) @> (
-SELECT ARRAY_AGG(drc.required_capability)
-FROM deliveryservices_required_capability drc
-WHERE drc.deliveryservice_id = d.id
+	SELECT ARRAY_AGG(drc.required_capability)
+	FROM deliveryservices_required_capability drc
+	WHERE drc.deliveryservice_id = d.id
 )
 `
 
