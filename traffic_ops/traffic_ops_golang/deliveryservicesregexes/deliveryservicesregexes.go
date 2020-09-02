@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
 
@@ -231,6 +232,11 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateDSRegexPattern(dsr.Pattern); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	regexID := 0
 	if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting deliveryserviceregex regex: "+err.Error()))
@@ -313,6 +319,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateDSRegexPattern(dsr.Pattern); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	if _, err := tx.Exec(`UPDATE regex SET pattern=$1, type=$2 WHERE id=$3`, dsr.Pattern, dsr.Type, regexID); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Put: updating regex: "+err.Error()))
 		return
@@ -355,6 +366,12 @@ where deliveryservice = $1 and set_number = $2`,
 		return errors.New("cannot add regex, another regex with the same order exists")
 	}
 	return nil
+}
+
+func validateDSRegexPattern(pattern string) error {
+	err := validation.Errors{
+		"pattern": validation.Validate(pattern, validation.Required)}
+	return err
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
