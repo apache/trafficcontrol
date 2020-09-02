@@ -35,7 +35,11 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 		"test-hostname-replacement": "fooSTRING __HOSTNAME__",
 	}
 
-	txt := MakeRecordsDotConfig(profileName, paramData, toolName, toURL)
+	server := makeTestRemapServer()
+	ipStr := "192.168.2.99"
+	setIP(server, ipStr)
+
+	txt := MakeRecordsDotConfig(server, profileName, paramData, toolName, toURL)
 
 	testComment(t, txt, profileName, toolName, toURL)
 
@@ -50,6 +54,9 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	}
 	if !strings.Contains(txt, "test-hostname-replacement fooSTRING __FULL_HOSTNAME__") {
 		t.Errorf("expected config to replace 'STRING __HOSTNAME__' with 'STRING __FULL_HOSTNAME__', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "LOCAL proxy.local.outgoing_ip_to_bind STRING "+ipStr) {
+		t.Errorf("expected config to contain outgoing_ip_to_bind from server, actual: '%v'", txt)
 	}
 }
 

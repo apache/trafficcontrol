@@ -36,6 +36,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
+- Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
+- Added ability to set DNS Listening IPs in dns.properties
 
 ### Fixed
 - Fixed #4237 - Not return an internal server error when delivery service's capacity is zero. [Related github issue](https://github.com/apache/trafficcontrol/issues/4237)
@@ -68,6 +70,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
 - Changed ORT to find the local ATS config directory and use it when location Parameters don't exist for many required configs, including all Delivery Service files (Header Rewrites, Regex Remap, URL Sig, URI Signing).
 - Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
+- Changed Traffic Monitor's `tmconfig.backup` to store the result of `GET /api/2.0/cdns/{{name}}/configs/monitoring` instead of a transformed map
 - [Multiple Interface Servers](https://github.com/apache/trafficcontrol/blob/master/blueprints/multi-interface-servers.md)
     - Interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
     - The `/servers` and `/servers/{{ID}}}` TO API endpoints have been updated to use and reflect multi-interface servers.

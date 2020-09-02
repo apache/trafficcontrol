@@ -20,11 +20,17 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileCDNBGFetchDotConfig(toData *config.TOData) (string, string, string, error) {
-	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), atscfg.ContentTypeBGFetchDotConfig, atscfg.LineCommentBGFetchDotConfig, nil
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server missing CDNName")
+	}
+
+	return atscfg.MakeBGFetchDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL), atscfg.ContentTypeBGFetchDotConfig, atscfg.LineCommentBGFetchDotConfig, nil
 }

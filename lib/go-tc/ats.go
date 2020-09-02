@@ -34,7 +34,6 @@ type ATSConfigMetaDataInfo struct {
 	CDNID             int    `json:"cdnId"`
 	CDNName           string `json:"cdnName"`
 	ServerID          int    `json:"serverId"`
-	ServerIPv4        string `json:"serverIpv4"`
 	ServerName        string `json:"serverName"`
 	ServerPort        int    `json:"serverTcpPort"`
 	ProfileID         int    `json:"profileId"`
