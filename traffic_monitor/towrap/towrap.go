@@ -221,42 +221,6 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-func MonitorConfigValid(cfg *tc.LegacyTrafficMonitorConfigMap) error {
-	if cfg == nil {
-		return errors.New("MonitorConfig is nil")
-	}
-	if len(cfg.TrafficServer) == 0 {
-		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
-	}
-	if len(cfg.CacheGroup) == 0 {
-		return errors.New("MonitorConfig.CacheGroup empty")
-	}
-	if len(cfg.TrafficMonitor) == 0 {
-		return errors.New("MonitorConfig.TrafficMonitor empty")
-	}
-	// TODO uncomment this, when TO is fixed to include DeliveryServices.
-	// See https://github.com/apache/trafficcontrol/issues/3528
-	// if len(cfg.DeliveryService) == 0 {
-	// 	return errors.New("MonitorConfig.DeliveryService empty")
-	// }
-	if len(cfg.Profile) == 0 {
-		return errors.New("MonitorConfig.Profile empty")
-	}
-
-	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
-	}
-
-	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
-	}
-
-	return nil
-}
 
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
@@ -326,15 +290,16 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 
 // TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
+	var configMap *tc.LegacyTrafficMonitorConfigMap
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	configMap, _, err := ss.GetTrafficMonitorConfigMap(cdn)
+	tmConfig, _, err := ss.GetTrafficMonitorConfig(cdn)
 
 	if err == nil {
-		err = MonitorConfigValid(configMap)
+		configMap, err = tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	}
 
 	if err != nil {
@@ -350,14 +315,14 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
-		if err := json.Unmarshal(b, &configMap); err != nil {
+		if err := json.Unmarshal(b, &tmConfig); err != nil {
 			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
 		}
-		return configMap, err
+		return tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	}
 
 	json := jsoniter.ConfigFastest
-	data, err := json.Marshal(*configMap)
+	data, err := json.Marshal(*tmConfig)
 	if err == nil {
 		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
 	}
