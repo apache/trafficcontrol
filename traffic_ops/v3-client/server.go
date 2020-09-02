@@ -117,6 +117,9 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
+		if strings.Contains(err.Error(), "400 Bad Request[400]") {
+			reqInf.StatusCode = 400
+		}
 		return alerts, reqInf, err
 	}
 	defer resp.Body.Close()

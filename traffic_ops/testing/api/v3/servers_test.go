@@ -256,7 +256,7 @@ func CreateTestServerWithoutProfileId(t *testing.T) {
 
 	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Errorf("cannot GET Server by name '%s': %v - %v", *servers.HostName, err, resp.Alerts)
+		t.Fatalf("cannot GET Server by name '%s': %v - %v", *servers.HostName, err, resp.Alerts)
 	}
 
 	server := resp.Response[0]
@@ -267,18 +267,19 @@ func CreateTestServerWithoutProfileId(t *testing.T) {
 	}
 
 	*server.Profile = ""
-	response, _, errs := TOSession.CreateServer(server)
-	t.Log("Response0: ", *server.HostName, " ", response)
-	if errs == nil {
-		t.Errorf("could CREATE servers but is shouldn't have: %v", errs)
+	server.ProfileID = nil
+	response, reqInfo, errs := TOSession.CreateServer(server)
+	t.Log("Response: ", *server.HostName, " ", response)
+	if reqInfo.StatusCode != 400 {
+		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
 	}
 
 	//Reverting it back for further tests
 	*server.Profile = originalProfile
 	response, _, errs = TOSession.CreateServer(server)
-	t.Log("Response1: ", *server.HostName, " ", response)
+	t.Log("Response: ", *server.HostName, " ", response)
 	if errs != nil {
-		t.Errorf("could not CREATE servers: %v", errs)
+		t.Fatalf("could not CREATE servers: %v", errs)
 	}
 }
 
