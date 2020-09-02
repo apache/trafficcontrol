@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -698,14 +699,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 		var joinSubQuery string
 		if version.Major >= 3 {
-			const hasRequiredCapabilitiesQuery = `
-SELECT EXISTS(
-    SELECT drc.required_capability
-	FROM deliveryservices_required_capability drc
-	WHERE drc.deliveryservice_id = $1
-)
-`
-			if err = tx.QueryRow(hasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
+			if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
 				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
 				return nil, 0, nil, err, http.StatusInternalServerError, nil
 			}
