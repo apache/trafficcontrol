@@ -352,7 +352,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if version.Major < 3 {
+	if version.Major >= 3 {
 		createV3(w, r, inf)
 	} else {
 		w.Write([]byte("unimplemented\n"))
