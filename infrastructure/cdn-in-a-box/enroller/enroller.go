@@ -171,6 +171,32 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 	return err
 }
 
+func enrollTopology(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var s tc.Topology
+	err := dec.Decode(&s)
+	if err != nil && err != io.EOF {
+		log.Infof("error decoding Topology: %s\n", err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateTopology(s)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			log.Infof("topology %s already exists\n", s.Name)
+			return nil
+		}
+		log.Infof("error creating Topology: %s\n", err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 	var s tc.DeliveryServiceNullableV30
@@ -846,6 +872,7 @@ func main() {
 		"types":                   enrollType,
 		"cdns":                    enrollCDN,
 		"cachegroups":             enrollCachegroup,
+		"topologies":              enrollTopology,
 		"profiles":                enrollProfile,
 		"parameters":              enrollParameter,
 		"servers":                 enrollServer,

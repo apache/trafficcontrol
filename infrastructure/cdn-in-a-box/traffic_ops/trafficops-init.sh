@@ -36,7 +36,7 @@ while ! to-ping 2>/dev/null; do
 done
 
 # NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
-endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers deliveryservice_servers"
+endpoints="cdns types divisions regions phys_locations tenants users cachegroups topologies deliveryservices profiles parameters servers deliveryservice_servers"
 vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 waitfor() {
@@ -77,14 +77,19 @@ load_data_from() {
         echo "Failed to load data from '$dir': directory does not exist"
     fi
     cd "$dir"
+
     local status=0
+    local has_ds_servers=''
+    if ls deliveryservice_servers/'*.json'; then
+      has_ds_servers='true'
+    fi
     for d in $endpoints; do
-        [[ -d $d ]] || continue
         # Let containers know to write out server.json
-        if [[ "$d" = "deliveryservice_servers" ]] ; then
+        if [[ "$d" = "deliveryservice_servers" ]] || [[ "$d" = 'servers' && -z "$has_ds_servers" ]]; then
            touch "$ENROLLER_DIR/initial-load-done"
            sync
         fi
+        [[ -d $d ]] || continue
         for f in "$d"/*.json; do
             echo "Loading $f"
             delayfor "$f"

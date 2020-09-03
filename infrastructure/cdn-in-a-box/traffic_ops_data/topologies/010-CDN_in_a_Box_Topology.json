@@ -1,0 +1,16 @@
+{
+  "name": "demo1-top",
+  "description": "A topology of the CDN-in-a-Box cachegroup parentage",
+  "nodes": [
+    {
+      "cachegroup": "CDN_in_a_Box_Mid",
+      "parents": []
+    },
+    {
+      "cachegroup": "CDN_in_a_Box_Edge",
+      "parents": [
+        0
+      ]
+    }
+  ]
+}
