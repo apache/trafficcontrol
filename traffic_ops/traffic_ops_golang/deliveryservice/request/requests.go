@@ -20,6 +20,7 @@ package request
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,16 +28,336 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
+
+const selectQuery = `
+SELECT
+	a.username AS author,
+	e.username AS lastEditedBy,
+	s.username AS assignee,
+	r.assignee_id,
+	r.author_id,
+	r.change_type,
+	r.created_at,
+	r.id,
+	r.last_edited_by_id,
+	r.last_updated,
+	r.deliveryservice,
+	r.original,
+	r.status
+FROM deliveryservice_request r
+JOIN tm_user a ON r.author_id = a.id
+LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id
+`
+
+const originalsQuery = deliveryservice.SelectDeliveryServicesQuery + `
+WHERE ds.id = ANY(:ids)
+`
+
+const insertQuery = `
+INSERT INTO deliveryservice_request (
+	assignee_id,
+	author_id,
+	change_type,
+	last_edited_by
+	deliveryservice,
+	original,
+	status
+) VALUES (
+	$1,
+	$1,
+	$2,
+	$1,
+	$3,
+	$4,
+	$5
+)
+RETURNING
+	id
+	last_updated
+	created_at
+`
+
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
+		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
+		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
+		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
+		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
+		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
+		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
+	}
+	if version.Major < 3 {
+		queryParamsToQueryCols["xmlId"] = dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"}
+		if _, ok := inf.Params["orderby"]; !ok {
+			inf.Params["orderby"] = "xmlId"
+		}
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	maxTime := new(time.Time)
+	if inf.UseIMS(r) {
+		var runSecond bool
+		runSecond, *maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.WriteIMSHitResp(w, r, *maxTime)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, inf.User.TenantID)
+	if err != nil {
+		sysErr = fmt.Errorf("dsr getting tenant list: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
+
+	query := selectQuery + where + orderBy + pagination
+	log.Debugln("Query is ", query)
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		sysErr = fmt.Errorf("dsr querying: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	dsrs := []tc.DeliveryServiceRequestV30{}
+	var needOriginals map[int][]*tc.DeliveryServiceRequestV30
+	var originalIDs []int
+	for rows.Next() {
+		var dsr tc.DeliveryServiceRequestV30
+		if err = rows.StructScan(&dsr); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("dsr scanning: %v", err))
+			return
+		}
+		dsrs = append(dsrs, dsr)
+		if dsr.IsOpen() && dsr.Requested != nil && dsr.Requested.ID != nil {
+			id := *dsr.Requested.ID
+			if _, ok := needOriginals[id]; !ok {
+				needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsr}
+			} else {
+				needOriginals[id] = append(needOriginals[id], &dsr)
+			}
+			originalIDs = append(originalIDs, id)
+		}
+	}
+
+	if maxTime != nil {
+		w.Header().Set(rfc.LastModified, maxTime.Format(rfc.LastModifiedFormat))
+	}
+
+	if version.Major >= 3 {
+		if len(originalIDs) > 1 {
+			var originals []tc.DeliveryServiceV30
+			originals, userErr, sysErr, errCode = deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(originalIDs)}, inf.Tx)
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
+			for _, original := range originals {
+				if original.ID == nil {
+					log.Warnf("Trying to fill in originals: found Delivery Service with no ID")
+				} else if need, ok := needOriginals[*original.ID]; ok {
+					for _, n := range need {
+						n.Original = new(tc.DeliveryServiceV30)
+						*n.Original = original
+					}
+				} else {
+					log.Warnf("Trying to fill in originals: found Delivery Service that wasn't identified by a DSR (#%d)", *original.ID)
+				}
+			}
+		}
+		api.WriteResp(w, r, dsrs)
+		return
+	}
+
+	downgraded := make([]tc.DeliveryServiceRequestV15, 0, len(dsrs))
+	for _, dsr := range dsrs {
+		downgraded = append(downgraded, dsr.Downgrade())
+	}
+
+	api.WriteResp(w, r, downgraded)
+}
+
+// IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
+func isTenantAuthorized(dsr tc.DeliveryServiceRequestV30, inf *api.APIInfo) (bool, error) {
+	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeChange || dsr.ChangeType == tc.DSRChangeTypeCreate) {
+		if dsr.Requested.TenantID == nil {
+			log.Debugf("requested.tenantID is nil")
+			return false, errors.New("requested.tenantID is nil")
+		}
+		ok, err := tenant.IsResourceAuthorizedToUserTx(*dsr.Requested.TenantID, inf.User, inf.Tx.Tx)
+		if err != nil {
+			err = fmt.Errorf("requested: %v", err)
+		}
+		if !ok || err != nil {
+			return ok, err
+		}
+	}
+
+	ds := dsr.Original
+	if ds == nil || dsr.ChangeType == tc.DSRChangeTypeDelete {
+		// No deliveryservice applied yet or change type doesn't require an original
+		return true, nil
+	}
+
+	if ds.TenantID == nil {
+		log.Debugf("original.tenantID is nil")
+		return false, errors.New("original.tenantID is nil")
+	}
+	ok, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, inf.User, inf.Tx.Tx)
+	if err != nil {
+		err = fmt.Errorf("original: %v", err)
+	}
+	return ok, err
+}
+
+func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV30
+	if err := api.Parse(r.Body, tx, &dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if dsr.Status != tc.RequestStatusDraft && dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("invalid initial request status '%s' - must be '%s' or '%s'", dsr.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	ok, err := isTenantAuthorized(dsr, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	dsr.Author = inf.User.UserName
+	// dsr.AuthorID = new(int)
+	// *dsr.AuthorID = inf.User.ID
+	dsr.LastEditedBy = inf.User.UserName
+	// dsr.LastEditedByID = new(int)
+	// *dsr.LastEditedByID = inf.User.ID
+
+	var requestedBts []byte
+	if dsr.Requested != nil {
+		requestedBts, err = json.Marshal(*dsr.Requested)
+		if err != nil {
+			sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	}
+	var originalBts []byte
+	if dsr.Original != nil && dsr.ChangeType == tc.DSRChangeTypeDelete {
+		originalBts, err = json.Marshal(*dsr.Original)
+		if err != nil {
+			sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	}
+
+	dsr.ID = new(int)
+	if err := tx.QueryRow(insertQuery, inf.User.ID, dsr.ChangeType, requestedBts, originalBts, dsr.Status).Scan(&dsr.LastUpdated, &dsr.CreatedAt, dsr.ID); err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if dsr.ChangeType == tc.DSRChangeTypeChange {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		if len(originals) != 1 {
+			sysErr = fmt.Errorf("bad number of Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		dsr.Original = new(tc.DeliveryServiceV30)
+		*dsr.Original = originals[0]
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
+	w.WriteHeader(http.StatusCreated)
+	api.WriteResp(w, r, dsr)
+}
+
+func Post(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+	if inf.User == nil {
+		sysErr = errors.New("no user in API Info")
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	if version.Major < 3 {
+		createV3(w, r, inf)
+	} else {
+		w.Write([]byte("unimplemented\n"))
+	}
+}
 
 // TODeliveryServiceRequest is the type alias to define functions on
 type TODeliveryServiceRequest struct {
