@@ -47,3 +47,24 @@ type TopologiesResponse struct {
 	Response []Topology `json:"response"`
 	Alerts
 }
+
+// TopologiesQueueUpdateRequest encodes the request data for the POST
+// topologies/{{name}}/queue_update endpoint.
+type TopologiesQueueUpdateRequest struct {
+	Action string `json:"action"`
+	CDNID  int64  `json:"cdnId"`
+}
+
+// TopologiesQueueUpdate encodes the response data for the POST
+// topologies/{{name}}/queue_update endpoint.
+type TopologiesQueueUpdateResponse struct {
+	TopologiesQueueUpdate `json:"response"`
+	Alerts
+}
+
+// TopologiesQueueUpdate encodes the response data for the POST
+// topologies/{{name}}/queue_update endpoint.
+type TopologiesQueueUpdate struct {
+	Action   string       `json:"action"`
+	Topology TopologyName `json:"topology"`
+}
