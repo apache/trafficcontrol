@@ -647,7 +647,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 		const (
 			processed = ".processed"
 			rejected  = ".rejected"
-			retry  = ".retry"
+			retry     = ".retry"
 		)
 		originalNameRegex := regexp.MustCompile(`(\.retry)*$`)
 
