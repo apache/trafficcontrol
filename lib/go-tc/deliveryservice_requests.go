@@ -910,10 +910,16 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				if !ok {
 					return fmt.Errorf("expected a Delivery Service, got %T", o)
 				}
+				if ds == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
 				if ds.ID == nil {
 					return errors.New("must be identified (specify ID)")
 				}
-				return ds.Validate(tx)
+				return nil
+				// I don't really think we need to validate this, since it's
+				// being deleted. ID is sufficient to fully identify it.
+				// return ds.Validate(tx)
 			},
 		)),
 		validation.Field(&dsr.Assignee, validation.By(
@@ -924,6 +930,9 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				assignee, ok := a.(*string)
 				if !ok {
 					return fmt.Errorf("expected string, got %T", a)
+				}
+				if assignee == nil {
+					return nil
 				}
 				var id int
 				if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *assignee).Scan(&id); err != nil {
