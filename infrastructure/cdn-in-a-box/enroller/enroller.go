@@ -187,14 +187,14 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.DeliveryServiceNullable
+	var s tc.DeliveryServiceNullableV30
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)
 		return err
 	}
 
-	alerts, err := toSession.CreateDeliveryServiceNullable(&s)
+	alerts, _, err := toSession.CreateDeliveryServiceV30(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
