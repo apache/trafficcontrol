@@ -19,13 +19,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -656,7 +657,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot delete tenant3user's deliveryservice
-	if _, err = tenant4TOClient.DeleteDeliveryService(string(*tenant3DS.ID)); err == nil {
+	if _, err = tenant4TOClient.DeleteDeliveryService(strconv.Itoa(*tenant3DS.ID)); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 
