@@ -64,20 +64,6 @@ func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter,
 	return m, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
 }
 
-func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(dses) == 0 {
-		return -1, errors.New("no deliveryservice with name " + n)
-	}
-	if dses[0].ID == nil {
-		return -1, errors.New("Delivery service " + n + " has a nil ID")
-	}
-	return *dses[0].ID, err
-}
-
 // enrollType takes a json file and creates a Type object using the TO API
 func enrollType(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
