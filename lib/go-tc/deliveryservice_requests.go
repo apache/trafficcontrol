@@ -844,3 +844,87 @@ func (dsr DeliveryServiceRequestV30) String() string {
 	builder.Write([]byte(`")`))
 	return builder.String()
 }
+
+func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
+	var fromStatus RequestStatus
+	if dsr.ID != nil && *dsr.ID > 0 {
+		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
+			return err
+		}
+	}
+
+	return validation.ValidateStruct(&dsr,
+		validation.Field(&dsr.ChangeType, validation.Required),
+		validation.Field(&dsr.Requested, validation.By(
+			func(r interface{}) error {
+				if dsr.ChangeType != DSRChangeTypeChange && dsr.ChangeType != DSRChangeTypeCreate {
+					return nil
+				}
+				if r == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				ds, ok := r.(*DeliveryServiceV30)
+				if !ok {
+					return fmt.Errorf("expected a Delivery Service, got %T", r)
+				}
+				err := ds.Validate(tx)
+				if err == nil {
+					dsr.XMLID = *ds.XMLID
+				}
+				return err
+			},
+		)),
+		validation.Field(&dsr.Status, validation.By(
+			func(s interface{}) error {
+				if s == nil {
+					return errors.New("cannot transition to nil status")
+				}
+				toStatus, ok := s.(RequestStatus)
+				if !ok {
+					return fmt.Errorf("expected Request Status, got %T", s)
+				}
+				return fromStatus.ValidTransition(toStatus)
+			},
+		)),
+		validation.Field(&dsr.Original, validation.By(
+			func(o interface{}) error {
+				if dsr.ChangeType != DSRChangeTypeDelete {
+					return nil
+				}
+				if o == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				ds, ok := o.(*DeliveryServiceV30)
+				if !ok {
+					return fmt.Errorf("expected a Delivery Service, got %T", o)
+				}
+				if ds.ID == nil {
+					return errors.New("must be identified (specify ID)")
+				}
+				return ds.Validate(tx)
+			},
+		)),
+		validation.Field(&dsr.Assignee, validation.By(
+			func(a interface{}) error {
+				if a == nil {
+					return nil
+				}
+				assignee, ok := a.(*string)
+				if !ok {
+					return fmt.Errorf("expected string, got %T", a)
+				}
+				var id int
+				if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *assignee).Scan(&id); err != nil {
+					if err == sql.ErrNoRows {
+						return fmt.Errorf("no such user '%s'", *assignee)
+					}
+					// TODO: allow ParseValidators to return system errors?
+					return errors.New("unknown error")
+				}
+				dsr.ID = new(int)
+				*dsr.ID = id
+				return nil
+			},
+		)),
+	)
+}
