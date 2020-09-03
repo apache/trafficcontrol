@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
 - Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
 - Added ability to set DNS Listening IPs in dns.properties
+- Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
 
 ### Fixed
 - Fixed #3400 - Allow "0" as a TTL value for Static DNS entries
