@@ -73,7 +73,7 @@ INSERT INTO deliveryservice_request (
 	assignee_id,
 	author_id,
 	change_type,
-	last_edited_by
+	last_edited_by_id,
 	deliveryservice,
 	original,
 	status
@@ -87,8 +87,8 @@ INSERT INTO deliveryservice_request (
 	$5
 )
 RETURNING
-	id
-	last_updated
+	id,
+	last_updated,
 	created_at
 `
 
