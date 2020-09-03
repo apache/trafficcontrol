@@ -20,28 +20,93 @@ package cache
  */
 
 import (
+	"bytes"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"os"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-
-	"github.com/json-iterator/go"
 )
 
-func TestAstats(t *testing.T) {
-	text, err := ioutil.ReadFile("astats.json")
+func TestAstatsJson(t *testing.T) {
+	file, err := os.Open("astats.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	aStats := Astats{}
-	json := jsoniter.ConfigFastest
-	err = json.Unmarshal(text, &aStats)
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	_, _, err = astatsParse("testCache", file, ctx)
+
 	if err != nil {
 		t.Error(err)
 	}
-	t.Logf("Found %v key/val pairs in ats\n", len(aStats.Ats))
+}
+
+func TestAstatsCSV(t *testing.T) {
+	file, err := os.Open("astats.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	_, _, err = astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkAstatsJson(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkAstatsCSV(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.csv")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Reset benchmark timer to not include reading the file
+	b.ResetTimer()
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
 }
 
 func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {

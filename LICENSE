@@ -406,9 +406,9 @@ The bytefmt component is used under the Apache 2.0 license:
 @grove/vendor/code.cloudfoundry.org/bytefmt/*
 ./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
-The bytefmt component is used under the MIT license:
-@grove/vendor/github.com/coreos/bbolt/*
-./grove/vendor/github.com/coreos/bbolt/LICENSE
+The bbolt component is used under the MIT license:
+@grove/vendor/go.etcd.io/bbolt/*
+./grove/vendor/go.etcd.io/bbolt/LICENSE
 
 For the siphash component:
 @grove/vendor/github.com/dchest/siphash/*

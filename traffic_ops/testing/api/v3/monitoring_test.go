@@ -43,7 +43,7 @@ func AllCDNsCanSnapshot(t *testing.T) {
 		}
 
 		tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(cdn.Name)
-		if err != nil {
+		if err != nil && tmConfig == nil {
 			t.Error(err)
 			continue
 		}

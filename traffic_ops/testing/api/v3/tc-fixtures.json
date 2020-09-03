@@ -2763,7 +2763,7 @@
                     "parents": []
                 },
                 {
-                    "cachegroup": "cachegroup1",
+                    "cachegroup": "cachegroup3",
                     "parents": [0, 1]
                 }
             ]

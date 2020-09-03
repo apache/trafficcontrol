@@ -19,9 +19,11 @@ package cache
  * under the License.
  */
 
-import "fmt"
-import "strconv"
-import "strings"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 // DSStat is a single Delivery Service statistic, which is associated with
 // a particular cache server.
