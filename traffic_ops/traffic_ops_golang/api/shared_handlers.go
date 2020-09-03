@@ -25,12 +25,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -180,7 +181,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		}
 		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
 			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			date := maxTime.Format(rfc.LastModifiedFormat)
 			w.Header().Add(rfc.LastModified, date)
 		}
 		w.WriteHeader(errCode)

@@ -205,9 +205,11 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	return criteria, queryValues, errs
 }
 
-// AddTenancyCheck takes a WHERE clause (can be ""), the associated queryValues (can be empty),
-// a tenantColumnName that should provide a bigint corresponding to the tenantID of the object being checked (this may require a CAST),
-// and an array of the tenantIDs the user has access to; it returns a where clause and associated queryValues including filtering based on tenancy.
+// AddTenancyCheck takes a WHERE clause (can be ""), the associated queryValues
+// (can be empty), a tenantColumnName that should provide a bigint corresponding
+// to the tenantID of the object being checked (this may require a CAST), and an
+// array of the tenantIDs the user has access to; it returns a where clause and
+// associated queryValues including filtering based on tenancy.
 func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantColumnName string, tenantIDs []int) (string, map[string]interface{}) {
 	if where == "" {
 		where = BaseWhere + " " + tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"

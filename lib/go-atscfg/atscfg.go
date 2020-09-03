@@ -281,7 +281,7 @@ type TopologyPlacement struct {
 // - Whether the cachegroup is the last tier in the topology.
 // - Whether the cachegroup is in the topology at all.
 // - Whether it's the first, inner, or last cache tier before the Origin.
-func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *tc.DeliveryServiceNullableV30) TopologyPlacement {
+func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *tc.DeliveryServiceV30) TopologyPlacement {
 	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 
 	serverNode := tc.TopologyNode{}

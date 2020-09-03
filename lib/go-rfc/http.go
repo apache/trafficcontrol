@@ -52,6 +52,10 @@ const (
 	Gzip                      = "gzip"                     // RFC7230§4.2.3
 )
 
+// LastModifiedFormat is the format used by dates in the HTTP Last-Modified
+// header.
+const LastModifiedFormat = "Mon, 02 Jan 2006 15:04:05 MST" // RFC1123
+
 // ValidHTTPCodes provides fast lookup of whether a HTTP response code is valid.
 var ValidHTTPCodes = map[int]struct{}{
 	http.StatusContinue:           {}, // RFC 7231, 6.2.1

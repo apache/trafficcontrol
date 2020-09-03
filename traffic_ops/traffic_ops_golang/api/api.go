@@ -147,6 +147,19 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	w.Write(append(respBts, '\n'))
 }
 
+// WriteIMSHitResp writes a response to 'w' for an IMS request "hit", using the
+// passed time as the Last-Modified date.
+func WriteIMSHitResp(w http.ResponseWriter, r *http.Request, t time.Time) {
+	if respWritten(r) {
+		log.Errorf("WriteIMSHitResp called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	w.Header().Add(rfc.LastModified, t.Format(rfc.LastModifiedFormat))
+	w.WriteHeader(http.StatusNotModified)
+}
+
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
 // The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
