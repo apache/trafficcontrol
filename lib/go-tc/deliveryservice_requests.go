@@ -858,14 +858,17 @@ func (dsr DeliveryServiceRequestV30) String() string {
 }
 
 func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
-	var fromStatus RequestStatus
-	if dsr.ID != nil && *dsr.ID > 0 {
-		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
-			return err
-		}
+	if tx == nil {
+		return errors.New("unknown error")
 	}
+	// var fromStatus RequestStatus
+	// if dsr.ID != nil && *dsr.ID > 0 {
+	// 	if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	return validation.ValidateStruct(&dsr,
+	return validation.ValidateStruct(dsr,
 		validation.Field(&dsr.ChangeType, validation.Required),
 		validation.Field(&dsr.Requested, validation.By(
 			func(r interface{}) error {
@@ -879,6 +882,9 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				if !ok {
 					return fmt.Errorf("expected a Delivery Service, got %T", r)
 				}
+				if ds == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
 				err := ds.Validate(tx)
 				if err == nil {
 					dsr.XMLID = *ds.XMLID
@@ -886,18 +892,7 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				return err
 			},
 		)),
-		validation.Field(&dsr.Status, validation.By(
-			func(s interface{}) error {
-				if s == nil {
-					return errors.New("cannot transition to nil status")
-				}
-				toStatus, ok := s.(RequestStatus)
-				if !ok {
-					return fmt.Errorf("expected Request Status, got %T", s)
-				}
-				return fromStatus.ValidTransition(toStatus)
-			},
-		)),
+		validation.Field(&dsr.Status, validation.Required),
 		validation.Field(&dsr.Original, validation.By(
 			func(o interface{}) error {
 				if dsr.ChangeType != DSRChangeTypeDelete {
