@@ -16,6 +16,7 @@ package tc
 */
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -462,7 +463,13 @@ func (dsr DeliveryServiceRequestV15) Upgrade() DeliveryServiceRequestV30 {
 		upgraded.CreatedAt = dsr.CreatedAt.Time
 	}
 	if dsr.DeliveryService != nil {
-		*upgraded.Requested = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+		if dsr.ChangeType != nil && *dsr.ChangeType == DSRChangeTypeDelete.String() {
+			upgraded.Original = new(DeliveryServiceV30)
+			*upgraded.Original = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+		} else {
+			upgraded.Requested = new(DeliveryServiceV30)
+			*upgraded.Requested = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+		}
 	}
 	if dsr.ID != nil {
 		upgraded.ID = new(int)
@@ -477,6 +484,9 @@ func (dsr DeliveryServiceRequestV15) Upgrade() DeliveryServiceRequestV30 {
 	}
 	if dsr.Status != nil {
 		upgraded.Status = *dsr.Status
+	}
+	if dsr.XMLID != nil {
+		upgraded.XMLID = *dsr.XMLID
 	}
 	return upgraded
 }
@@ -710,7 +720,7 @@ type DeliveryServiceRequestV30 struct {
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 	// Original is the original Delivery Service for which changes are
 	// requested. This is present in responses only for ChangeTypes 'change' and
-	// 'delete', and is only required in requests in those cases.
+	// 'delete', and is only required in requests where ChangeType is 'delete'.
 	Original *DeliveryServiceV30 `json:"original,omitempty" db:"original"`
 	// Requested is the set of requested changes. This is present in responses
 	// only for ChangeTypes 'change' and 'create', and is only required in
@@ -718,6 +728,8 @@ type DeliveryServiceRequestV30 struct {
 	Requested *DeliveryServiceV30 `json:"requested,omitempty" db:"requested"`
 	// Status is the status of the Delivery Service Request.
 	Status RequestStatus `json:"status" db:"status"`
+	// Used internally to define the affected Delivery Service.
+	XMLID string `json:"-"`
 }
 
 // IsOpen returns whether or not the Delivery Service Request is still "open" -
