@@ -133,3 +133,14 @@ func CDNExistsByName(name string, tx *sql.Tx) (bool, error) {
 	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM cdn WHERE name = $1)`, name).Scan(&exists)
 	return exists, err
 }
+
+// CDNQueueUpdateRequest encodes the request data for the POST
+// cdns/{{ID}}/queue_update endpoint.
+type CDNQueueUpdateRequest ServerQueueUpdateRequest
+
+// CDNQueueUpdateResponse encodes the response data for the POST
+// cdns/{{ID}}/queue_update endpoint.
+type CDNQueueUpdateResponse struct {
+	Action string `json:"action"`
+	CDNID  int64  `json:"cdnId"`
+}
