@@ -41,6 +41,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -151,6 +153,32 @@ public class TrafficRouterTest {
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
         assertThat(httpRouteResult.getUrl().toString(), equalTo("http://atscache.kabletown.net/index.html"));
+    }
+
+    @Test
+    public void itChecksDefaultLocation() throws Exception {
+        String ip = "1.2.3.4";
+        Track track = new Track();
+        Geolocation geolocation = mock(Geolocation.class);
+
+        when(trafficRouter.getClientLocation(ip, deliveryService, null, track)).thenReturn(geolocation);
+        when(geolocation.isDefaultLocation()).thenReturn(true);
+        when(geolocation.getCountryCode()).thenReturn("US");
+        Map<String, Geolocation> map = new HashMap<>();
+        Geolocation defaultUSLocation = new Geolocation(37.751,-97.822);
+        defaultUSLocation.setCountryCode("US");
+        map.put("US", defaultUSLocation);
+        when(trafficRouter.getDefaultGeoLocationsOverride()).thenReturn(map);
+        Cache cache = mock(Cache.class);
+        List<Cache> list = new ArrayList<>();
+        list.add(cache);
+        when(trafficRouter.getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track)).thenReturn(list);
+        when(trafficRouter.selectCachesByGeo(ip, deliveryService, null, track)).thenCallRealMethod();
+        List<Cache> result = trafficRouter.selectCachesByGeo(ip, deliveryService, null, track);
+        verify(trafficRouter).getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track);
+        assertThat(result.size(), equalTo(1));
+        assertThat(result.get(0), equalTo(cache));
+        assertThat(track.getResult(), equalTo(Track.ResultType.GEO_DS));
     }
 
     @Test

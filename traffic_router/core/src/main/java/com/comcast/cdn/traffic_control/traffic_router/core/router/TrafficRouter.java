@@ -368,7 +368,7 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Retrives a location for a given client being served a given Delivery Service.
+	 * Retrieves a location for a given client being served a given Delivery Service.
 	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
 	 * an IP address, but trailing port number specifications are stripped.
 	 * @param deliveryService The Delivery Service being served to the client.
@@ -492,6 +492,7 @@ public class TrafficRouter {
 	 * @param track The {@link #Track} object that tracks how requests are served
 	 */
 	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
+		boolean useDSDefaults = false;
 		Geolocation clientLocation = null;
 
 		try {
@@ -513,8 +514,9 @@ public class TrafficRouter {
 			}
 		}
 
-		if (clientLocation.isDefaultLocation() && defaultGeolocationsOverride.containsKey(clientLocation.getCountryCode())) {
-			clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
+			clientLocation = deliveryService.getMissLocation();
+			useDSDefaults = true;
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
@@ -523,7 +525,11 @@ public class TrafficRouter {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
 
-		track.setResult(ResultType.GEO);
+		if (useDSDefaults) {
+			track.setResult(ResultType.GEO_DS);
+		} else {
+			track.setResult(ResultType.GEO);
+		}
 		return caches;
 	}
 
@@ -1985,5 +1991,9 @@ public class TrafficRouter {
 		}
 
 		return edgeHTTPRoutingLimit;
+	}
+
+	public Map<String, Geolocation> getDefaultGeoLocationsOverride() {
+		return defaultGeolocationsOverride;
 	}
 }
