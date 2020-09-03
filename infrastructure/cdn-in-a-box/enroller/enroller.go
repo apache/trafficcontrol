@@ -208,7 +208,8 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
+	params := url.Values{"xmlId": []string{dss.XmlId}}
+	dses, _, err := toSession.GetDeliveryServicesV30WithHdr(nil, params)
 	if err != nil {
 		return err
 	}
@@ -220,11 +221,11 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 	dsID := *dses[0].ID
 
-	params := &url.Values{}
+	params = url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params)
+		servers, _, err := toSession.GetServersWithHdr(&params, nil)
 		if err != nil {
 			return err
 		}
@@ -334,7 +335,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n)
+				profiles, _, err := toSession.GetProfileByNameWithHdr(n, nil)
 				if err != nil {
 					return err
 				}
@@ -511,7 +512,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name)
+	profiles, _, err := toSession.GetProfileByNameWithHdr(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -533,7 +534,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name)
+		profiles, _, err = toSession.GetProfileByNameWithHdr(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
