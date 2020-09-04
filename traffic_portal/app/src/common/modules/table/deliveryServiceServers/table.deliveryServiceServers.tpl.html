@@ -22,7 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li><a href="#!/delivery-services">Delivery Services</a></li>
             <li><a name="dsLink" ng-href="{{'#!/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type}}">{{::deliveryService.xmlId}}</a></li>
-            <li class="active">Servers</li>
+            <li class="active">Servers <small ng-if="deliveryService.topology">[via {{deliveryService.topology}} Topology]</small></li>
         </ol>
         <div class="pull-right">
             <div class="form-inline" role="search">
@@ -76,7 +76,7 @@ under the License.
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <button type="button" ng-click="confirmRemoveServer(server, $event)" ng-disabled="deliveryService.topology">Remove Server from Delivery Service</button>
+            <button type="button" ng-click="confirmRemoveServer(server, $event)" ng-disabled="deliveryService.topology || (!isEdge(server) && !isOrigin(server))">Remove Server from Delivery Service</button>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
