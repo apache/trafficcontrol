@@ -30,6 +30,7 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, DeliveryServicesRegexes}, func() {
 		QueryDSRegexTest(t)
 		QueryDSRegexTestIMS(t)
+		CreateTestDSRegexWithMissingPattern(t)
 	})
 }
 
@@ -94,6 +95,30 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
 		}
+	}
+}
+
+func CreateTestDSRegexWithMissingPattern(t *testing.T) {
+	var regex = testData.DeliveryServicesRegexes[3]
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(regex.DSName, nil)
+	if err != nil {
+		t.Fatalf("unable to get ds ds2: %v", err)
+	}
+	if len(ds) == 0 {
+		t.Fatal("unable to get ds ds2")
+	}
+	var dsID int
+	fmt.Println(*ds[0].ID)
+	if ds[0].ID == nil {
+		t.Fatal("ds has a nil id")
+	} else {
+		dsID = *ds[0].ID
+	}
+
+	_, reqInfo, errs := TOSession.PostDeliveryServiceRegexesByDSID(dsID, nil)
+	fmt.Println("Error:", errs)
+	if reqInfo.StatusCode != 400 {
+		t.Errorf("Expected: %v, but got: %v", 400, reqInfo.StatusCode)
 	}
 }
 

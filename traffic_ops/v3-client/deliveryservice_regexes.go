@@ -23,7 +23,8 @@ import (
 
 const (
 	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
-	API_DS_REGEXES = apiBase + "/deliveryservices/%v/regexes"
+	API_DS_REGEXES      = apiBase + "/deliveryservices/%v/regexes"
+	API_DS_POST_REGEXES = apiBase + "/deliveryservices/%v/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
@@ -35,6 +36,19 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 
 	reqInf, err := get(to, fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), &response, nil)
 	if err != nil {
+		return []tc.DeliveryServiceIDRegex{}, reqInf, err
+	}
+	return response.Response, reqInf, nil
+}
+
+func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, params map[string]string) ([]tc.DeliveryServiceIDRegex, ReqInf, error) {
+	response := struct {
+		Response []tc.DeliveryServiceIDRegex `json:"response"`
+	}{}
+
+	reqInf, err := get(to, fmt.Sprintf(API_DS_POST_REGEXES, dsID)+mapToQueryParameters(params), &response, nil)
+	if err != nil {
+		reqInf.StatusCode = 400
 		return []tc.DeliveryServiceIDRegex{}, reqInf, err
 	}
 	return response.Response, reqInf, nil
