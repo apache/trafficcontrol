@@ -465,10 +465,10 @@ func (dsr DeliveryServiceRequestV15) Upgrade() DeliveryServiceRequestV30 {
 	if dsr.DeliveryService != nil {
 		if dsr.ChangeType != nil && *dsr.ChangeType == DSRChangeTypeDelete.String() {
 			upgraded.Original = new(DeliveryServiceV30)
-			*upgraded.Original = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+			*upgraded.Original = *dsr.DeliveryService
 		} else {
 			upgraded.Requested = new(DeliveryServiceV30)
-			*upgraded.Requested = DeliveryServiceV30{DeliveryServiceNullableV15: DeliveryServiceNullableV15(*dsr.DeliveryService)}
+			*upgraded.Requested = *dsr.DeliveryService
 		}
 	}
 	if dsr.ID != nil {
@@ -759,7 +759,7 @@ func (dsr DeliveryServiceRequestV30) Downgrade() DeliveryServiceRequestV15 {
 	downgraded := DeliveryServiceRequestV15{
 		Author:          new(string),
 		ChangeType:      new(string),
-		DeliveryService: new(DeliveryServiceNullable),
+		DeliveryService: new(DeliveryServiceV30),
 		LastEditedBy:    new(string),
 		Status:          new(RequestStatus),
 	}
@@ -778,7 +778,7 @@ func (dsr DeliveryServiceRequestV30) Downgrade() DeliveryServiceRequestV15 {
 	}
 	*downgraded.ChangeType = dsr.ChangeType.String()
 	downgraded.CreatedAt = TimeNoModFromTime(dsr.CreatedAt)
-	*downgraded.DeliveryService = DeliveryServiceNullable(dsr.Requested.DeliveryServiceNullableV15)
+	*downgraded.DeliveryService = *dsr.Requested
 	if dsr.ID != nil {
 		downgraded.ID = new(int)
 		*downgraded.ID = *dsr.ID

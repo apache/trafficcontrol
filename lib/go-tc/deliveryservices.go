@@ -609,8 +609,7 @@ func (ds *DeliveryServiceV30) validateTopologyFields() error {
 }
 
 func jsonValue(v interface{}) (driver.Value, error) {
-	b, err := json.Marshal(v)
-	return b, err
+	return json.Marshal(v)
 }
 
 func jsonScan(src interface{}, dest interface{}) error {
