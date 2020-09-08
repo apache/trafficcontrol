@@ -2755,8 +2755,8 @@
             "description": "a topology",
             "nodes": [
                 {
-                  "cachegroup": "parentCachegroup",
-                  "parents": []
+                    "cachegroup": "parentCachegroup",
+                    "parents": []
                 },
                 {
                     "cachegroup": "secondaryCachegroup",

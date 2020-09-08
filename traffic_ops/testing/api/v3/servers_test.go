@@ -41,6 +41,7 @@ func TestServers(t *testing.T) {
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		CreateTestServerWithoutProfileId(t)
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
 	})
@@ -241,10 +242,44 @@ func CreateTestServers(t *testing.T) {
 			continue
 		}
 		resp, _, err := TOSession.CreateServer(server)
-		t.Log("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", *server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
 		}
+	}
+}
+
+func CreateTestServerWithoutProfileId(t *testing.T) {
+	params := url.Values{}
+	servers := testData.Servers[19]
+	params.Set("hostName", *servers.HostName)
+
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("cannot GET Server by name '%s': %v - %v", *servers.HostName, err, resp.Alerts)
+	}
+
+	server := resp.Response[0]
+	originalProfile := *server.Profile
+	delResp, _, err := TOSession.DeleteServerByID(*server.ID)
+	if err != nil {
+		t.Fatalf("cannot DELETE Server by ID %d: %v - %v", *server.ID, err, delResp)
+	}
+
+	*server.Profile = ""
+	server.ProfileID = nil
+	response, reqInfo, errs := TOSession.CreateServer(server)
+	t.Log("Response: ", *server.HostName, " ", response)
+	if reqInfo.StatusCode != 400 {
+		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
+	}
+
+	//Reverting it back for further tests
+	*server.Profile = originalProfile
+	response, _, errs = TOSession.CreateServer(server)
+	t.Log("Response: ", *server.HostName, " ", response)
+	if errs != nil {
+		t.Fatalf("could not CREATE servers: %v", errs)
 	}
 }
 
@@ -261,6 +296,7 @@ func GetTestServers(t *testing.T) {
 			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
 			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
+
 		}
 	}
 }
