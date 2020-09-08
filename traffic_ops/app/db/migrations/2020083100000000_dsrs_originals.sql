@@ -19,13 +19,13 @@ ADD COLUMN original jsonb DEFAULT NULL;
 
 UPDATE deliveryservice_request
 SET original=deliveryservice
-WHERE status = 'complete' OR status = 'rejected';
+WHERE status = 'complete' OR status = 'rejected' OR change_type = 'delete';
 
 ALTER TABLE deliveryservice_request
 ADD CONSTRAINT closed_has_original
 CHECK (
 	(
-		(status = 'complete' OR status = 'rejected') AND
+		(status = 'complete' OR status = 'rejected' OR change_type = 'delete') AND
 		original IS NOT NULL
 	)
 	OR
