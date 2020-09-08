@@ -223,7 +223,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func isTenantAuthorized(dsr tc.DeliveryServiceRequestV30, inf *api.APIInfo) (bool, error) {
-	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeChange || dsr.ChangeType == tc.DSRChangeTypeCreate) {
+	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
 		if dsr.Requested.TenantID == nil {
 			log.Debugf("requested.tenantID is nil")
 			return false, errors.New("requested.tenantID is nil")
@@ -311,7 +311,7 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 		return
 	}
 
-	if dsr.ChangeType == tc.DSRChangeTypeChange {
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
 		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
 		if userErr != nil || sysErr != nil {

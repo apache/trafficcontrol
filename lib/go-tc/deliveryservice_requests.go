@@ -631,7 +631,7 @@ type DSRChangeType string
 const (
 	// The original Delivery Service is being modified to match the requested
 	// one.
-	DSRChangeTypeChange = DSRChangeType("change")
+	DSRChangeTypeUpdate = DSRChangeType("update")
 	// The requested Delivery Service is being created.
 	DSRChangeTypeCreate = DSRChangeType("create")
 	// The requested Delivery Service is being deleted.
@@ -643,8 +643,8 @@ const (
 // Delivery Service Request Change Type.
 func DSRChangeTypeFromString(s string) (DSRChangeType, error) {
 	switch strings.ToLower(s) {
-	case "change":
-		return DSRChangeTypeChange, nil
+	case "update":
+		return DSRChangeTypeUpdate, nil
 	case "create":
 		return DSRChangeTypeCreate, nil
 	case "delete":
@@ -872,7 +872,7 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 		validation.Field(&dsr.ChangeType, validation.Required),
 		validation.Field(&dsr.Requested, validation.By(
 			func(r interface{}) error {
-				if dsr.ChangeType != DSRChangeTypeChange && dsr.ChangeType != DSRChangeTypeCreate {
+				if dsr.ChangeType != DSRChangeTypeUpdate && dsr.ChangeType != DSRChangeTypeCreate {
 					return nil
 				}
 				if r == nil {
