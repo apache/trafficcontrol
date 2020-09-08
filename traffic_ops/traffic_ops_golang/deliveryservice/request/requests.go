@@ -164,7 +164,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	dsrs := []tc.DeliveryServiceRequestV30{}
-	var needOriginals map[int][]*tc.DeliveryServiceRequestV30
+	needOriginals := map[int][]*tc.DeliveryServiceRequestV30{}
 	var originalIDs []int
 	for rows.Next() {
 		var dsr tc.DeliveryServiceRequestV30
@@ -173,12 +173,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		dsrs = append(dsrs, dsr)
-		if dsr.IsOpen() && dsr.Requested != nil && dsr.Requested.ID != nil {
+		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeDelete && dsr.Requested != nil && dsr.Requested.ID != nil {
 			id := *dsr.Requested.ID
 			if _, ok := needOriginals[id]; !ok {
-				needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsr}
+				needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsrs[len(dsrs)-1]}
 			} else {
-				needOriginals[id] = append(needOriginals[id], &dsr)
+				needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
 			}
 			originalIDs = append(originalIDs, id)
 		}
