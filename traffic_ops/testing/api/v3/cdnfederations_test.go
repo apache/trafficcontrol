@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
@@ -123,7 +122,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		t.Logf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
-			log.Errorln("CName is nil after updating")
+			t.Error("CName is nil after updating")
 		} else if *resp2.Response[0].CName != expectedCName {
 			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
 		}

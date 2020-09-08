@@ -67,16 +67,17 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 		// fix the type id for test
 		typeResp, _, err := TOSession.GetTypeByIDWithHdr(*cg.TypeID, h)
 		if err != nil {
-			t.Error("could not lookup a typeID for this cachegroup")
+			t.Fatalf("could not lookup a typeID for this cachegroup: %v", err.Error())
 		}
-		cg.TypeID = &typeResp[0].ID
-
-		_, reqInf, err := TOSession.UpdateCacheGroupNullableByIDWithHdr(*cg.ID, cg, h)
-		if err == nil {
-			t.Errorf("Expected an error showing Precondition Failed, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		if len(typeResp) > 0 {
+			cg.TypeID = &typeResp[0].ID
+			_, reqInf, err := TOSession.UpdateCacheGroupNullableByIDWithHdr(*cg.ID, cg, h)
+			if err == nil {
+				t.Errorf("Expected an error showing Precondition Failed, got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
 		}
 	}
 }

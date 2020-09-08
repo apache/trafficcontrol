@@ -70,8 +70,11 @@ func ParseETag(e string) (time.Time, error) {
 	if len(e) < 2 || e[0] != '"' || e[len(e)-1] != '"' {
 		return time.Time{}, errors.New("unquoted string, value must be quoted")
 	}
-	e = e[1 : len(e)-1] // strip quotes
+	e, err := strconv.Unquote(e) // strip quotes
 
+	if err!= nil {
+		return time.Time{}, err
+	}
 	prefix := `v` + strconv.Itoa(ETagVersion) + `-`
 	if len(e) < len(prefix) || !strings.HasPrefix(e, prefix) {
 		return time.Time{}, errors.New("malformed, no version prefix")
@@ -81,7 +84,7 @@ func ParseETag(e string) (time.Time, error) {
 
 	i, err := strconv.ParseInt(timeStr, 36, 64)
 	if err != nil {
-		return time.Time{}, errors.New("malformed")
+		return time.Time{}, err
 	}
 
 	t := time.Unix(0, i)

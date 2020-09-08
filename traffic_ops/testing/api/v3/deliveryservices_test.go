@@ -63,40 +63,44 @@ func TestDeliveryServices(t *testing.T) {
 }
 
 func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
-	firstDS := testData.DeliveryServices[0]
-
-	dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(header)
-	if err != nil {
-		t.Errorf("cannot GET Delivery Services: %v", err)
-	}
-
-	remoteDS := tc.DeliveryServiceNullable{}
-	found := false
-	for _, ds := range dses {
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+		if firstDS.XMLID == nil {
+			t.Fatalf("couldn't get the xml ID of test DS")
 		}
-	}
-	if !found {
-		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
+		dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(header)
+		if err != nil {
+			t.Errorf("cannot GET Delivery Services: %v", err)
+		}
 
-	updatedLongDesc := "something different"
-	updatedMaxDNSAnswers := 164598
-	updatedMaxOriginConnections := 100
-	remoteDS.LongDesc = &updatedLongDesc
-	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
-	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
-	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
+		remoteDS := tc.DeliveryServiceNullable{}
+		found := false
+		for _, ds := range dses {
+			if ds.XMLID != nil && *ds.XMLID == *firstDS.XMLID {
+				found = true
+				remoteDS = ds
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("GET Delivery Services missing: %v", *firstDS.XMLID)
+		}
 
-	_, err = TOSession.UpdateDeliveryServiceNullableWithHdr(strconv.Itoa(*remoteDS.ID), &remoteDS, header)
-	if err == nil {
-		t.Errorf("expected precondition failed error, got none")
-	}
-	if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
-		t.Errorf("expected error to be related to 'precondition failed', but instead is realted to %v", err.Error())
+		updatedLongDesc := "something different"
+		updatedMaxDNSAnswers := 164598
+		updatedMaxOriginConnections := 100
+		remoteDS.LongDesc = &updatedLongDesc
+		remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
+		remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
+		remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
+
+		_, err = TOSession.UpdateDeliveryServiceNullableWithHdr(strconv.Itoa(*remoteDS.ID), &remoteDS, header)
+		if err == nil {
+			t.Errorf("expected precondition failed error, got none")
+		}
+		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+			t.Errorf("expected error to be related to 'precondition failed', but instead is realted to %v", err.Error())
+		}
 	}
 }
 

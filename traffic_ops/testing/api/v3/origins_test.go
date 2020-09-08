@@ -49,26 +49,34 @@ func TestOrigins(t *testing.T) {
 }
 
 func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
-	firstOrigin := testData.Origins[0]
-	// Retrieve the origin by name so we can get the id for the Update
-	resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
-	if err != nil {
-		t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
-	}
-	if len(resp) > 0 {
-		remoteOrigin := resp[0]
-		updatedPort := 4321
-		updatedFQDN := "updated.example.com"
-
-		// update port and FQDN values on origin
-		remoteOrigin.Port = &updatedPort
-		remoteOrigin.FQDN = &updatedFQDN
-		_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
+	if len(testData.Origins) > 0 {
+		firstOrigin := testData.Origins[0]
+		if firstOrigin.Name == nil {
+			t.Fatalf("couldn't get the name of test origin server")
 		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		// Retrieve the origin by name so we can get the id for the Update
+		resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
+		if err != nil {
+			t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteOrigin := resp[0]
+			if remoteOrigin.ID == nil {
+				t.Fatalf("couldn't get the ID of the response origin server")
+			}
+			updatedPort := 4321
+			updatedFQDN := "updated.example.com"
+
+			// update port and FQDN values on origin
+			remoteOrigin.Port = &updatedPort
+			remoteOrigin.FQDN = &updatedFQDN
+			_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
 		}
 	}
 }
