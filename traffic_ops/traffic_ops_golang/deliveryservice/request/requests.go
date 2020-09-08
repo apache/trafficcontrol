@@ -189,13 +189,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 3 {
-		if len(originalIDs) > 1 {
+		if len(originalIDs) > 0 {
 			var originals []tc.DeliveryServiceV30
 			originals, userErr, sysErr, errCode = deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(originalIDs)}, inf.Tx)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
 			}
+
 			for _, original := range originals {
 				if original.ID == nil {
 					log.Warnf("Trying to fill in originals: found Delivery Service with no ID")
