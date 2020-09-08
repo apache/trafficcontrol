@@ -15,13 +15,13 @@
 
 .. _to-api-topologies-name-queue_update:
 
-****************************
+************************************
 ``topologies/{{name}}/queue_update``
-****************************
+************************************
 
 ``POST``
 ========
-:term:`Queue` or "dequeue" updates for all servers assigned to the :term:`Cachegroups` in a specific :term:`Topology`.
+:term:`Queue` or "dequeue" updates for all servers assigned to the :term:`Cache Groups` in a specific :term:`Topology`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
