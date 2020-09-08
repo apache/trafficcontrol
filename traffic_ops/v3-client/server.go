@@ -141,6 +141,7 @@ func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, hea
 		reqInf.StatusCode = resp.StatusCode
 	}
 	reqInf.RemoteAddr = remoteAddr
+	reqInf.StatusCode = resp.StatusCode
 	if err != nil {
 		return alerts, reqInf, err
 	}

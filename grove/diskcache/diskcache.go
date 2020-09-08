@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "go.etcd.io/bbolt"
 )
 
 type DiskCache struct {

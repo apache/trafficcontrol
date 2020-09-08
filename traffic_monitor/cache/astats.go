@@ -37,6 +37,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -68,50 +69,60 @@ type Astats struct {
 	System AstatsSystem           `json:"system"`
 }
 
-func astatsParse(cacheName string, rdr io.Reader) (Statistics, map[string]interface{}, error) {
+func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if rdr == nil {
 		log.Warnf("%s handle reader nil", cacheName)
 		return stats, nil, errors.New("handler got nil reader")
 	}
 
-	var astats Astats
-	json := jsoniter.ConfigFastest
-	if err := json.NewDecoder(rdr).Decode(&astats); err != nil {
-		return stats, nil, err
-	}
+	ctx := pollCTX.(*poller.HTTPPollCtx)
 
-	if err := stats.AddInterfaceFromRawLine(astats.System.ProcNetDev); err != nil {
-		return stats, nil, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
-	}
-	if inf, ok := stats.Interfaces[astats.System.InfName]; !ok {
-		return stats, nil, errors.New("/proc/net/dev line didn't match reported interface line")
+	ctype := ctx.HTTPHeader.Get("Content-Type")
+
+	if ctype == "text/json" || ctype == "text/javascript" || ctype == "" {
+		var astats Astats
+		json := jsoniter.ConfigFastest
+		if err := json.NewDecoder(rdr).Decode(&astats); err != nil {
+			return stats, nil, err
+		}
+
+		if err := stats.AddInterfaceFromRawLine(astats.System.ProcNetDev); err != nil {
+			return stats, nil, fmt.Errorf("failed to parse interface line for cache '%s': %v", cacheName, err)
+		}
+		if inf, ok := stats.Interfaces[astats.System.InfName]; !ok {
+			return stats, nil, errors.New("/proc/net/dev line didn't match reported interface line")
+		} else {
+			inf.Speed = int64(astats.System.InfSpeed)
+			stats.Interfaces[astats.System.InfName] = inf
+		}
+
+		if load, err := LoadavgFromRawLine(astats.System.ProcLoadavg); err != nil {
+			return stats, nil, fmt.Errorf("failed to parse loadavg line for cache '%s': %v", cacheName, err)
+		} else {
+			stats.Loadavg = load
+		}
+
+		stats.NotAvailable = astats.System.NotAvailable
+
+		// TODO: what's using these?? Can we get rid of them?
+		astats.Ats["system.astatsLoad"] = float64(astats.System.AstatsLoad)
+		astats.Ats["system.configReloadRequests"] = float64(astats.System.ConfigLoadRequest)
+		astats.Ats["system.configReloads"] = float64(astats.System.ConfigReloads)
+		astats.Ats["system.inf.name"] = astats.System.InfName
+		astats.Ats["system.inf.speed"] = float64(astats.System.InfSpeed)
+		astats.Ats["system.lastReload"] = float64(astats.System.LastReload)
+		astats.Ats["system.lastReloadRequest"] = float64(astats.System.LastReloadRequest)
+		astats.Ats["system.notAvailable"] = stats.NotAvailable
+		astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
+		astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
+
+		return stats, astats.Ats, nil
+	} else if ctype == "text/csv" {
+		return astatsCsvParseCsv(cacheName, rdr)
 	} else {
-		inf.Speed = int64(astats.System.InfSpeed)
-		stats.Interfaces[astats.System.InfName] = inf
+		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by astats", ctype)
 	}
-
-	if load, err := LoadavgFromRawLine(astats.System.ProcLoadavg); err != nil {
-		return stats, nil, fmt.Errorf("Failed to parse loadavg line for cache '%s': %v", cacheName, err)
-	} else {
-		stats.Loadavg = load
-	}
-
-	stats.NotAvailable = astats.System.NotAvailable
-
-	// TODO: what's using these?? Can we get rid of them?
-	astats.Ats["system.astatsLoad"] = float64(astats.System.AstatsLoad)
-	astats.Ats["system.configReloadRequests"] = float64(astats.System.ConfigLoadRequest)
-	astats.Ats["system.configReloads"] = float64(astats.System.ConfigReloads)
-	astats.Ats["system.inf.name"] = astats.System.InfName
-	astats.Ats["system.inf.speed"] = float64(astats.System.InfSpeed)
-	astats.Ats["system.lastReload"] = float64(astats.System.LastReload)
-	astats.Ats["system.lastReloadRequest"] = float64(astats.System.LastReloadRequest)
-	astats.Ats["system.notAvailable"] = stats.NotAvailable
-	astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
-	astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
-
-	return stats, astats.Ats, nil
 }
 
 func astatsPrecompute(cacheName string, data todata.TOData, stats Statistics, miscStats map[string]interface{}) PrecomputedData {
@@ -190,10 +201,10 @@ func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, 
 
 	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 	if !ok {
-		return stats, fmt.Errorf("No Delivery Service match for '%s.%s.%s' stat '%v'", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("no Delivery Service match for '%s.%s.%s' stat '%v'", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 	if ds == "" {
-		return stats, fmt.Errorf("Empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 
 	dsName := string(ds)

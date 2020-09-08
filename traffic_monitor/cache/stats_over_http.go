@@ -19,17 +19,19 @@ package cache
  * under the License.
  */
 
-import "errors"
-import "fmt"
-import "io"
-import "math"
-import "strings"
-import "strconv"
+import (
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"strconv"
+	"strings"
 
-import "github.com/apache/trafficcontrol/lib/go-log"
-import "github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
-import "github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
+)
 
 // LOADAVG_SHIFT is the amount by which "loadavg" values returned by
 // stats_over_http need to be divided to obtain the values with which ATC
@@ -56,7 +58,7 @@ type stats_over_httpData struct {
 	Global map[string]interface{} `json:"global"`
 }
 
-func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
+func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if data == nil {
 		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)

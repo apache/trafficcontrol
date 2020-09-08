@@ -81,7 +81,7 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 // If a 'useInTable' parameter is passed, the returned Types are restricted to those with
 // that exact 'useInTable' property. Only exactly 1 or exactly 0 'useInTable' parameters may
 // be passed; passing more will result in an error being returned.
-func (to *Session) GetTypesWithHdr(header http.Header, useInTable []string) ([]tc.Type, ReqInf, error) {
+func (to *Session) GetTypesWithHdr(header http.Header, useInTable ...string) ([]tc.Type, ReqInf, error) {
 	if len(useInTable) > 1 {
 		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
 	}
@@ -123,7 +123,7 @@ func (to *Session) GetTypesWithHdr(header http.Header, useInTable []string) ([]t
 // 'useInTable' parameters may be passed; passing more will result in an error being returned.
 // Deprecated: GetTypes will be removed in 6.0. Use GetTypesWithHdr.
 func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
-	return to.GetTypesWithHdr(nil, useInTable)
+	return to.GetTypesWithHdr(nil, useInTable...)
 }
 
 // GetTypeByID GETs a Type by the Type ID, and filters by http header params in the request.
