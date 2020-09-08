@@ -937,8 +937,8 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 					// TODO: allow ParseValidators to return system errors?
 					return errors.New("unknown error")
 				}
-				dsr.ID = new(int)
-				*dsr.ID = id
+				dsr.AssigneeID = new(int)
+				*dsr.AssigneeID = id
 				return nil
 			},
 		)),
