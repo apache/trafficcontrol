@@ -28,6 +28,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -222,20 +223,25 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegexType(tx, dsr.Type); err != nil {
+	if err := validateRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if err := validateDSRegexPattern(dsr.Pattern); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
+	//if err := validateDSRegexType(tx, dsr.Type); err != nil {
+	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	//	return
+	//}
+	//
+	//if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
+	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	//	return
+	//}
+	//
+	//if err := validateDSRegexPattern(dsr.Pattern); err != nil {
+	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	//	return
+	//}
 
 	regexID := 0
 	if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
@@ -346,6 +352,29 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Updated a regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
+}
+
+func validateRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
+	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
+
+	var ds int
+	if dsr.SetNumber < 0 {
+		return errors.New("cannot add regex with order < 0")
+	}
+	setNumberErr := tx.QueryRow(`
+select deliveryservice from deliveryservice_regex 
+where deliveryservice = $1 and set_number = $2`,
+		dsID, dsr.SetNumber).Scan(&ds)
+	if setNumberErr == nil {
+		return errors.New("cannot add regex, another regex with the same order exists")
+	}
+
+	errs := validation.Errors{
+		"type":      typeErr,
+		"setNumber": setNumberErr,
+		"pattern":   validation.Validate(dsr.Pattern, validation.Required)}
+
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func validateDSRegexType(tx *sql.Tx, typeID int) error {
