@@ -20,7 +20,7 @@ package request
  */
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -79,12 +79,12 @@ INSERT INTO deliveryservice_request (
 	status
 ) VALUES (
 	$1,
-	$1,
 	$2,
-	$1,
 	$3,
+	$2,
 	$4,
-	$5
+	$5,
+	$6
 )
 RETURNING
 	id,
@@ -285,27 +285,27 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	// dsr.LastEditedByID = new(int)
 	// *dsr.LastEditedByID = inf.User.ID
 
-	var requestedBts []byte
-	if dsr.Requested != nil {
-		requestedBts, err = json.Marshal(*dsr.Requested)
-		if err != nil {
-			sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-	}
-	var originalBts []byte
-	if dsr.Original != nil && dsr.ChangeType == tc.DSRChangeTypeDelete {
-		originalBts, err = json.Marshal(*dsr.Original)
-		if err != nil {
-			sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-	}
+	// var requestedBts []byte
+	// if dsr.Requested != nil {
+	// 	requestedBts, err = json.Marshal(*dsr.Requested)
+	// 	if err != nil {
+	// 		sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
+	// 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+	// 		return
+	// 	}
+	// }
+	// var originalBts []byte
+	// if dsr.Original != nil && dsr.ChangeType == tc.DSRChangeTypeDelete {
+	// 	originalBts, err = json.Marshal(*dsr.Original)
+	// 	if err != nil {
+	// 		sysErr := fmt.Errorf("marshaling original for storage: %v", err)
+	// 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+	// 		return
+	// 	}
+	// }
 
 	dsr.ID = new(int)
-	if err := tx.QueryRow(insertQuery, inf.User.ID, dsr.ChangeType, requestedBts, originalBts, dsr.Status).Scan(&dsr.LastUpdated, &dsr.CreatedAt, dsr.ID); err != nil {
+	if err := tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(&dsr.LastUpdated, &dsr.CreatedAt, dsr.ID); err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
