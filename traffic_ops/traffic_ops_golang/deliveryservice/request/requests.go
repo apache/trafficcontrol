@@ -303,6 +303,11 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	// 		return
 	// 	}
 	// }
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
 
 	dsr.ID = new(int)
 	if err := tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(&dsr.LastUpdated, &dsr.CreatedAt, dsr.ID); err != nil {

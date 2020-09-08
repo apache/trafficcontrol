@@ -31,6 +31,7 @@ CHECK (
 	OR
 	(
 		(status = 'submitted' OR status = 'pending' OR status='draft') AND
+		change_type <> 'delete' AND
 		original IS NULL
 	)
 
