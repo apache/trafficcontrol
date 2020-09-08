@@ -310,7 +310,7 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	}
 
 	dsr.ID = new(int)
-	if err := tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(&dsr.LastUpdated, &dsr.CreatedAt, dsr.ID); err != nil {
+	if err := tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
