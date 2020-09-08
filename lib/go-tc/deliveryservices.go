@@ -636,10 +636,14 @@ func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
 	return jsonScan(src, ds)
 }
 
-// Value implements the driver.Valuer interface --
-// marshals struct to json to pass back as a json.RawMessage.
-func (ds *DeliveryServiceV30) Value() (driver.Value, error) {
-	return jsonValue(ds)
+// Value implements the database/sql/driver.Valuer interface to store a Delivery
+// Service (as a property of other objects) as a raw json blob.
+func (d *DeliveryServiceV30) Value() (driver.Value, error) {
+	if d == nil {
+		return nil, nil
+	}
+	b, err := json.Marshal(d)
+	return b, err
 }
 
 // Scan implements the sql.Scanner interface --
