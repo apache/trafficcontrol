@@ -116,7 +116,9 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 
 	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
-	reqInf.StatusCode = resp.StatusCode
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return alerts, reqInf, err
 	}
