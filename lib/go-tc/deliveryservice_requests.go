@@ -725,7 +725,7 @@ type DeliveryServiceRequestV30 struct {
 	// Requested is the set of requested changes. This is present in responses
 	// only for ChangeTypes 'change' and 'create', and is only required in
 	// requests in those cases.
-	Requested *DeliveryServiceV30 `json:"requested,omitempty" db:"requested"`
+	Requested *DeliveryServiceV30 `json:"requested,omitempty" db:"deliveryservice"`
 	// Status is the status of the Delivery Service Request.
 	Status RequestStatus `json:"status" db:"status"`
 	// Used internally to define the affected Delivery Service.
