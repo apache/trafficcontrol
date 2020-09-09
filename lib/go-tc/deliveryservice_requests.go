@@ -29,7 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
@@ -861,12 +861,13 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 	if tx == nil {
 		return errors.New("unknown error")
 	}
-	// var fromStatus RequestStatus
-	// if dsr.ID != nil && *dsr.ID > 0 {
-	// 	if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
-	// 		return err
-	// 	}
-	// }
+
+	fromStatus := RequestStatusDraft
+	if dsr.ID != nil && *dsr.ID > 0 {
+		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
+			return err
+		}
+	}
 
 	return validation.ValidateStruct(dsr,
 		validation.Field(&dsr.ChangeType, validation.Required),
@@ -892,7 +893,18 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				return err
 			},
 		)),
-		validation.Field(&dsr.Status, validation.Required),
+		validation.Field(&dsr.Status, validation.By(
+			func(s interface{}) error {
+				if s == nil {
+					return errors.New("required")
+				}
+				toStatus, ok := s.(RequestStatus)
+				if !ok {
+					return fmt.Errorf("expected RequestStatus type, got %T", s)
+				}
+				return fromStatus.ValidTransition(toStatus)
+			},
+		)),
 		validation.Field(&dsr.Original, validation.By(
 			func(o interface{}) error {
 				if dsr.ChangeType != DSRChangeTypeDelete {
