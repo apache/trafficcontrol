@@ -106,7 +106,7 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnId int64, d
 		t.Fatalf("expected action %s, received action %s", action, resp.Action)
 	}
 	if resp.CDNID != cdnId {
-		t.Fatalf("expected CDN ID %s, received CDN ID %s", cdnId, resp.CDNID)
+		t.Fatalf("expected CDN ID %d, received CDN ID %d", cdnId, resp.CDNID)
 	}
 	if topologyName != resp.Topology {
 		t.Fatalf("expected topology %s, received topology %s", topologyName, resp.Topology)
