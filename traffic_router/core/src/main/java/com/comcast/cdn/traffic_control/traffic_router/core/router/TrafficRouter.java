@@ -515,8 +515,12 @@ public class TrafficRouter {
 		}
 
 		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
-			clientLocation = deliveryService.getMissLocation();
-			useDSDefaults = true;
+			if (deliveryService.getMissLocation() != null) {
+				clientLocation = deliveryService.getMissLocation();
+				useDSDefaults = true;
+			} else {
+				clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+			}
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
