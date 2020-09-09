@@ -1,5 +1,3 @@
-package handler
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,30 +17,11 @@ package handler
  * under the License.
  */
 
-import (
-	"io"
-	"time"
-)
-
-const (
-	NOTIFY_NEVER = iota
-	NOTIFY_CHANGE
-	NOTIFY_ALWAYS
-)
-
-type OpsConfig struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	Url           string `json:"url"`
-	Insecure      bool   `json:"insecure"`
-	CdnName       string `json:"cdnName"`
-	HttpListener  string `json:"httpListener"`
-	HttpsListener string `json:"httpsListener"`
-	CertFile      string `json:"certFile"`
-	KeyFile       string `json:"keyFile"`
-	UsingDummyTO  bool   `json:"usingDummyTO"`
-}
-
-type Handler interface {
-	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, bool, interface{}, chan<- uint64)
-}
+module.exports = function(){
+	this.name=element(by.name('name'));
+	this.description=element(by.id('description'));
+	this.addChildCacheGroupBtn=element(by.css('.add-child-cg-btn'));
+	this.selectFormSubmitButton=element(by.buttonText('Submit'));
+	this.selectAllCB=element(by.id('selectAllCB'));
+	this.createButton=element(by.buttonText('Create'));
+};

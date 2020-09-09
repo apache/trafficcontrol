@@ -35,6 +35,7 @@ module.exports = function(){
 	this.cdn=element(by.name('cdn'));
 	this.orgServerFqdn=element(by.name('orgServerFqdn'));
 	this.protocol=element(by.name('protocol'));
+	this.topology=element(by.name('topology'));
 	this.longDesc=element(by.name('longDesc'));
 	this.remapText=element(by.name('remapText'));
 	this.createButton=element(by.buttonText('Create'));

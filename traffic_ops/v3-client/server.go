@@ -116,6 +116,9 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 
 	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return alerts, reqInf, err
 	}
@@ -139,6 +142,7 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
+	reqInf.StatusCode = resp.StatusCode
 	if err != nil {
 		return alerts, reqInf, err
 	}

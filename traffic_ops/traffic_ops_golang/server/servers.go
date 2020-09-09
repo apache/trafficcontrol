@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -59,6 +60,43 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
+`
+
+/* language=SQL */
+const dssTopologiesJoinSubquery = `
+SELECT
+	td.id deliveryservice,
+	s.id "server"
+FROM "server" s
+JOIN cachegroup c on s.cachegroup = c.id
+LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
+LEFT JOIN deliveryservice td ON td.topology = tc.topology
+UNION
+`
+
+/* language=SQL */
+const deliveryServiceServersJoin = `
+FULL OUTER JOIN (
+%s
+SELECT
+	dss.deliveryservice,
+	dss."server"
+FROM deliveryservice_server dss
+) dss ON dss.server = s.id
+JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
+`
+
+/* language=SQL */
+const requiredCapabilitiesCondition = `
+AND (
+	SELECT ARRAY_AGG(ssc.server_capability)
+	FROM server_server_capability ssc
+	WHERE ssc."server" = s.id
+) @> (
+	SELECT ARRAY_AGG(drc.required_capability)
+	FROM deliveryservices_required_capability drc
+	WHERE drc.deliveryservice_id = d.id
+)
 `
 
 const serverCountQuery = `
@@ -544,9 +582,9 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-
-	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
-
+	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
+		return serviceInterface, util.JoinErrs(errs)
+	}
 	query := `
 SELECT s.ID, ip.address FROM server s 
 JOIN profile p on p.Id = s.Profile
@@ -609,7 +647,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if maxTime != nil {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
@@ -666,6 +704,13 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	servers := []tc.ServerNullable{}
 	cfg, e := api.GetConfig(r.Context())
 	useIMS := false
@@ -674,7 +719,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if len(servers) > 1 {
 		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
 		return
@@ -713,7 +758,7 @@ JOIN type t ON s.type = t.id ` +
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
-func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	// Query Parameters to Database Query column mappings
@@ -733,6 +778,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	usesMids := false
 	queryAddition := ""
+	dsHasRequiredCapabilities := false
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
@@ -743,10 +789,20 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
+
+		var joinSubQuery string
+		if version.Major >= 3 {
+			if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
+				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+				return nil, 0, nil, err, http.StatusInternalServerError, nil
+			}
+			joinSubQuery = dssTopologiesJoinSubquery
+		} else {
+			joinSubQuery = ""
+		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = `
-			FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
-		`
+		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
+
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
@@ -760,6 +816,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if dsHasRequiredCapabilities {
+		where += requiredCapabilitiesCondition
+	}
 	if len(errs) > 0 {
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -906,9 +965,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 	}
 
-	returnable := make([]tc.ServerNullable, 0, len(servers))
-	for _, server := range servers {
-		for _, iface := range interfaces[*server.ID] {
+	returnable := make([]tc.ServerNullable, 0, len(ids))
+	for _, id := range ids {
+		server := servers[id]
+		for _, iface := range interfaces[id] {
 			server.Interfaces = append(server.Interfaces, iface)
 		}
 		returnable = append(returnable, server)
@@ -1089,8 +1149,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	//Get original xmppid
-	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -1378,7 +1445,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	str := uuid.New().String()
 	server.XMPPID = &str
-
 	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1452,10 +1518,17 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	id := inf.IntParams["id"]
 
 	var servers []tc.ServerNullable
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

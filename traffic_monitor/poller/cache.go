@@ -193,7 +193,7 @@ func poller(
 			}
 
 			log.Debugf("poll %v %v poller end\n", pollID, time.Now())
-			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
+			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollCtx, pollFinishedChan)
 
 			if oscillateProtocols {
 				usingIPv4 = !usingIPv4

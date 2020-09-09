@@ -423,3 +423,12 @@ deliveryservice_id) VALUES (
 :required_capability,
 :deliveryservice_id) RETURNING deliveryservice_id, required_capability, last_updated`
 }
+
+// language=SQL
+const HasRequiredCapabilitiesQuery = `
+SELECT EXISTS(
+	SELECT drc.required_capability
+	FROM deliveryservices_required_capability drc
+	WHERE drc.deliveryservice_id = $1
+)
+`
