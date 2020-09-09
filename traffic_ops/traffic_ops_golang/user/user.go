@@ -266,11 +266,15 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
-	existingLastUpdated, err := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
-	if err != nil {
+	existingLastUpdated, found, err := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
+	if err == nil && found == false {
 		return errors.New("no server found with this id"), nil, http.StatusNotFound
 	}
-	if !api.IsUnmodified(h, existingLastUpdated) {
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	if !api.IsUnmodified(h, *existingLastUpdated) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 

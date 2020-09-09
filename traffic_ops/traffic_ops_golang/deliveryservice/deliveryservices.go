@@ -780,11 +780,15 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	existingLastUpdated, err := api.GetLastUpdated(inf.Tx, *ds.ID, "deliveryservice")
-	if err != nil {
+	existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, *ds.ID, "deliveryservice")
+	if err == nil && found == false {
 		return nil, http.StatusNotFound, errors.New("no deliveryservice found with this id"), nil
 	}
-	if !api.IsUnmodified(r.Header, existingLastUpdated) {
+	if err != nil {
+		return nil, http.StatusInternalServerError, nil, err
+	}
+
+	if !api.IsUnmodified(r.Header, *existingLastUpdated) {
 		return nil, http.StatusPreconditionFailed, errors.New("resource was modified"), nil
 	}
 

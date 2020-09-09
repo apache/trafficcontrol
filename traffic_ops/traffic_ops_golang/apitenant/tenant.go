@@ -45,7 +45,7 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
-func (v *TOTenant) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOTenant) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "tenant")
 }
 

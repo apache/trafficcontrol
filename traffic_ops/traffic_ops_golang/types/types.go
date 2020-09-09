@@ -42,7 +42,7 @@ type TOType struct {
 	tc.TypeNullable
 }
 
-func (v *TOType) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOType) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "type")
 }
 

@@ -41,7 +41,7 @@ type TOCDN struct {
 	tc.CDNNullable
 }
 
-func (v *TOCDN) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOCDN) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "cdn")
 }
 

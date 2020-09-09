@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
@@ -123,10 +122,7 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if maxTime != nil {
-		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-		// RFC1123
-		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
+		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	// statusnotmodified
 	if err == nil && results == nil {
@@ -186,10 +182,7 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 
 	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
 	if maxTime != nil {
-		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-		// RFC1123
-		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
+		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)

@@ -41,30 +41,6 @@ func ETag(t time.Time) string {
 	return `"v` + strconv.Itoa(ETagVersion) + `-` + strconv.FormatInt(t.UnixNano(), 36) + `"`
 }
 
-// GetETagOrIfUnmodifiedSinceTime parses the http header and returns a list of Etags/ an "if-unmodified-since" time to compare to, in that order.
-func GetETagOrIfUnmodifiedSinceTime(h http.Header) ([]string, *time.Time) {
-	if h == nil {
-		return nil, nil
-	}
-	valIUMS := h.Get(IfUnmodifiedSince)
-	valIfMatch := h.Get(IfMatch)
-	// Check the If-Match header first, if that exists, go off of that. If not, check for If-Unmodified-Since header.
-	if valIfMatch != "" {
-		s := strings.Split(valIfMatch, ",")
-		eTagsTimeList := ParseEtagsList(s)
-		return eTagsTimeList, nil
-	}
-	if valIUMS != "" {
-		t, ok := ParseHTTPDate(valIUMS)
-		if ok {
-			return nil, &t
-		} else {
-			return nil, nil
-		}
-	}
-	return nil, nil
-}
-
 // ParseETag takes a complete ETag header string, including the quotes (if the client correctly set them), and returns the last modified time encoded in the ETag.
 func ParseETag(e string) (time.Time, error) {
 	if len(e) < 2 || e[0] != '"' || e[len(e)-1] != '"' {
@@ -99,18 +75,40 @@ func ParseETag(e string) (time.Time, error) {
 	return t, nil
 }
 
-// ParseEtagsList parses a list of etags and returns the time equivalent string for each of the etags.
-func ParseEtagsList(eTags []string) []string {
-	tagTimes := make([]string, 0, len(eTags))
+// GetUnmodifiedTime gets the latest time out of the Etags (if present), or the If-Unmodified-Since (if present)
+func GetUnmodifiedTime(h http.Header) (time.Time, bool) {
+	if h == nil {
+		return time.Time{}, false
+	}
+	if im := h.Get(IfMatch); im != "" {
+		if et, ok := ParseETags(strings.Split(im, ",")); ok {
+			return et, true
+		}
+	}
+	if ius := h.Get(IfUnmodifiedSince); ius != "" {
+		if tm, ok := ParseHTTPDate(ius); ok {
+			return tm, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// ParseETags the latest time of any valid ETag, and whether a valid ETag was found.
+func ParseETags(eTags []string) (time.Time, bool) {
+	latestTime := time.Time{}
 	for _, tag := range eTags {
 		tag = strings.TrimSpace(tag)
-		t, err := ParseETag(`"` + tag + `"`)
+		et, err := ParseETag(tag)
 		// errors are recoverable, keep going through the list of etags
 		if err != nil {
 			continue
 		}
-		tagTime := t.Format("2006-01-02 15:04:05.000000-07")
-		tagTimes = append(tagTimes, `"`+tagTime+`"`)
+		if et.After(latestTime) {
+			latestTime = et
+		}
 	}
-	return tagTimes
+	if latestTime == (time.Time{}) {
+		return time.Time{}, false
+	}
+	return latestTime, true
 }

@@ -54,7 +54,7 @@ type TOProfile struct {
 	tc.ProfileNullable
 }
 
-func (v *TOProfile) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOProfile) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "profile")
 }
 

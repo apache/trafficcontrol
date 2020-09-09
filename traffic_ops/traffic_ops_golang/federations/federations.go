@@ -115,10 +115,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
 	if maxTime != nil {
-		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-		// RFC1123
-		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
+		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	api.WriteResp(w, r, allFederations)
 }

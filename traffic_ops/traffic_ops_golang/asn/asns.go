@@ -42,7 +42,7 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
-func (v *TOASNV11) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOASNV11) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "asn")
 }
 

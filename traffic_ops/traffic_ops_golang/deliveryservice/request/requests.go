@@ -45,7 +45,7 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TODeliveryServiceRequest) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "deliveryservice_request")
 }
 
@@ -388,11 +388,14 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
-	existingLastUpdated, err := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
-	if err != nil {
+	existingLastUpdated, found, err := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
+	if err == nil && found == false {
 		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
 	}
-	if !api.IsUnmodified(h, existingLastUpdated) {
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if !api.IsUnmodified(h, *existingLastUpdated) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
@@ -460,7 +463,7 @@ func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, in
 
 	// LastEditedBy field should not change with status update
 	existingLastUpdated := current.LastUpdated
-	if !api.IsUnmodified(h, existingLastUpdated) {
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 

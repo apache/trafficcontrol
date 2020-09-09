@@ -35,7 +35,7 @@ type TORegion struct {
 	tc.Region
 }
 
-func (v *TORegion) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TORegion) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, v.ID, "region")
 }
 

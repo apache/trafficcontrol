@@ -44,7 +44,7 @@ type TOCDNFederation struct {
 	TenantID *int `json:"-" db:"tenant_id"`
 }
 
-func (v *TOCDNFederation) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOCDNFederation) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "federation")
 }
 

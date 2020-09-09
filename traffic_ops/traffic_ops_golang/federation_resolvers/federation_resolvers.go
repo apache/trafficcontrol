@@ -146,10 +146,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		runSecond, maxTime = TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-			// RFC1123
-			date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-			w.Header().Add(rfc.LastModified, date)
+			api.AddLastModifiedHdr(w, maxTime)
 			w.WriteHeader(http.StatusNotModified)
 			api.WriteResp(w, r, []tc.FederationResolver{})
 			return
@@ -186,10 +183,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		resolvers = append(resolvers, resolver)
 	}
 
-	truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-	// RFC1123
-	date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-	w.Header().Add(rfc.LastModified, date)
+	api.AddLastModifiedHdr(w, maxTime)
 	api.WriteResp(w, r, resolvers)
 }
 

@@ -244,11 +244,15 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 	if userErr, sysErr, errCode := tenant.CheckID(st.ReqInfo.Tx.Tx, st.ReqInfo.User, int(*st.DeliveryServiceID)); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	err, existingLastUpdated := CheckIfExistsBeforeUpdate(st.ReqInfo.Tx, st)
-	if err != nil {
+	err, found, existingLastUpdated := CheckIfExistsBeforeUpdate(st.ReqInfo.Tx, st)
+	if err == nil && found == false {
 		return errors.New("no steering target found with this id"), nil, http.StatusNotFound
 	}
-	if !api.IsUnmodified(h, existingLastUpdated) {
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	if !api.IsUnmodified(h, *existingLastUpdated) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
@@ -276,20 +280,22 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, st *TOSteeringTargetV11) (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, st *TOSteeringTargetV11) (error, bool, *time.Time) {
+	found := false
+	lastUpdated := time.Time{}
 	rows, err := tx.NamedQuery(`select last_updated from steering_target where deliveryservice=:deliveryservice and target=:target`, st)
 	if err != nil {
-		return err, nil
+		return errors.New("querying last_updated: " + err.Error()), found, nil
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		return errors.New("no server found with this id"), nil
+		return nil, found, nil
 	}
+	found = true
 	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
+		return errors.New("scanning last_updated: " + err.Error()), found, nil
 	}
-	return nil, &lastUpdated
+	return nil, found, &lastUpdated
 }
 
 func (st *TOSteeringTargetV11) Delete() (error, error, int) {

@@ -57,7 +57,7 @@ type GenericUpdater interface {
 	APIInfo() *APIInfo
 	SetLastUpdated(tc.TimeNoMod)
 	UpdateQuery() string
-	GetLastUpdated() (*tc.TimeNoMod, error)
+	GetLastUpdated() (*time.Time, bool, error)
 }
 
 type GenericDeleter interface {
@@ -226,11 +226,14 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
 func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
-	existingLastUpdated, err := val.GetLastUpdated()
-	if err != nil {
-		return errors.New("no " + val.GetType() + " found with this id"), err, http.StatusNotFound
+	existingLastUpdated, found, err := val.GetLastUpdated()
+	if err == nil && found == false {
+		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
 	}
-	if !IsUnmodified(h, existingLastUpdated) {
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 

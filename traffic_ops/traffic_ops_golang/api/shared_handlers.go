@@ -25,16 +25,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const PathParamsKey = "pathParams"
@@ -168,10 +165,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 			return
 		}
 		if maxTime != nil {
-			truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-			// RFC1123
-			date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-			w.Header().Add(rfc.LastModified, date)
+			AddLastModifiedHdr(w, *maxTime)
 		}
 		w.WriteHeader(errCode)
 		WriteResp(w, r, results)

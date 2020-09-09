@@ -996,34 +996,55 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 }
 
 // GetLastUpdated checks for the resource in the database, and returns its last_updated timestamp, if available.
-func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*tc.TimeNoMod, error) {
-	lastUpdated := tc.TimeNoMod{}
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, error) {
+	lastUpdated := time.Time{}
+	found := false
 	rows, err := tx.Query(`select last_updated from `+tableName+` where id=$1`, ID)
 	if err != nil {
-		return nil, err
+		return nil, found, errors.New("querying last_updated: " + err.Error())
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		return nil, errors.New("no resource found with this id")
+		return nil, found, nil
 	}
+	found = true
 	if err := rows.Scan(&lastUpdated); err != nil {
-		return nil, err
+		return nil, found, errors.New("scanning last_updated: " + err.Error())
 	}
-	return &lastUpdated, nil
+	return &lastUpdated, found, nil
 }
 
 // IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
-func IsUnmodified(h http.Header, existingLastUpdated *tc.TimeNoMod) bool {
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
+//func IsUnmodified(h http.Header, existingLastUpdated *time.Time) bool {
+//	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+//	existingEtag := rfc.ETag(*existingLastUpdated)
+//
+//	if h != nil {
+//		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+//			return false
+//		}
+//		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+//			return false
+//		}
+//	}
+//	return true
+//}
 
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return false
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return false
-		}
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
+func IsUnmodified(h http.Header, lastUpdated time.Time) bool {
+	unmodifiedTime, ok := rfc.GetUnmodifiedTime(h)
+	if !ok {
+		return true // no IUS/IM header: unmodified, proceed with normal update
 	}
-	return true
+	return !lastUpdated.After(unmodifiedTime)
+}
+
+// FormatLastModified trims the time string and formats it according to RFC1123
+func FormatLastModified(t time.Time) string {
+	return rfc.FormatHTTPDate(t.Truncate(time.Second).Add(time.Second))
+}
+
+// AddLastModifiedHdr adds the "last modified" header to the response
+func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
+	w.Header().Add(rfc.LastModified, FormatLastModified(t))
 }

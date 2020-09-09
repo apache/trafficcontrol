@@ -308,7 +308,7 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if !api.IsUnmodified(h, existingLastUpdated) {
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
 		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 

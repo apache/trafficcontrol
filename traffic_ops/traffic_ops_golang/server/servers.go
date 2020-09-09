@@ -33,7 +33,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -649,10 +648,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if maxTime != nil {
-		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
-		// RFC1123
-		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
+		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	if errCode == http.StatusNotModified {
 		w.WriteHeader(errCode)
@@ -1268,12 +1264,17 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLastUpdated, err := api.GetLastUpdated(inf.Tx, *server.ID, "server")
-	if err != nil {
+	existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, *server.ID, "server")
+	if err == nil && found == false {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
 		return
 	}
-	if !api.IsUnmodified(r.Header, existingLastUpdated) {
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	if !api.IsUnmodified(r.Header, *existingLastUpdated) {
 		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
 		return
 	}

@@ -42,7 +42,7 @@ type TOStatus struct {
 	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
-func (v *TOStatus) GetLastUpdated() (*tc.TimeNoMod, error) {
+func (v *TOStatus) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "status")
 }
 
