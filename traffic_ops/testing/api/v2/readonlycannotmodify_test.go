@@ -57,7 +57,7 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	}
 
 	for _, alert := range alerts.Alerts {
-		if alert.Level == string(tc.SuccessLevel) {
+		if alert.Level == tc.SuccessLevel.String() {
 			t.Errorf("readonlyuser creating cdn, alerts expected: no success alert, actual: got success alert '" + alert.Text + "'")
 		}
 	}

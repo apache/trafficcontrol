@@ -32,7 +32,7 @@ func init() {
 	registerDecoder("noop", noOpParse, noopPrecompute)
 }
 
-func noOpParse(string, io.Reader) (Statistics, map[string]interface{}, error) {
+func noOpParse(string, io.Reader, interface{}) (Statistics, map[string]interface{}, error) {
 	stats := Statistics{
 		Loadavg: Loadavg{
 			One:              0.1,

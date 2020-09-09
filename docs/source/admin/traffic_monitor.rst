@@ -78,6 +78,12 @@ Note that this means the stat buffer interval acts as "bufferbloat," increasing 
 
 It is not recommended to set either flush interval to 0, regardless of the stat buffer interval. This will cause new results to be immediately processed, with little to no processing of multiple results concurrently. Result processing does not scale linearly. For example, processing 100 results at once does not cost significantly more CPU usage or time than processing 10 results at once. Thus, a flush interval which is too low will cause increased CPU usage, and potentially increased overall poll times, with little or no benefit. The default value of 200 milliseconds is recommended as a starting point for configuration tuning.
 
+HTTP Accept Header Configuration
+--------------------------------
+The Accept header sent to caches for stat retrieval can be modified with the ``http_polling_format`` option. This is a string that will be inserted in to the Accept header of any requests. The default value is ``text/json`` which is the default value used by the astats plugin currently.
+
+However newer versions of astats also support CSV output, which can have some CPU savings. To enable that format using ``http_polling_format: "text/csv"`` in :file:`traffic_monitor.cfg` will set the Accept header properly.
+
 Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.

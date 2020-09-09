@@ -43,8 +43,9 @@ func httpGlobalInit(cfg config.Config, appData config.StaticAppData) interface{}
 		Timeout:   cfg.HTTPTimeout,
 	}
 	return &HTTPPollGlobalCtx{
-		UserAgent: appData.UserAgent,
-		Client:    sharedClient,
+		UserAgent:    appData.UserAgent,
+		Client:       sharedClient,
+		FormatAccept: cfg.HTTPPollingFormat,
 	}
 }
 
@@ -71,29 +72,33 @@ func httpInit(cfg PollerConfig, globalCtxI interface{}) interface{} {
 	}
 
 	return &HTTPPollCtx{
-		Client:      gctx.Client,
-		UserAgent:   gctx.UserAgent,
-		NoKeepAlive: cfg.NoKeepAlive,
-		URL:         cfg.URL,
-		URLv6:       cfg.URLv6,
-		Host:        cfg.Host,
-		PollerID:    cfg.PollerID,
+		Client:       gctx.Client,
+		UserAgent:    gctx.UserAgent,
+		NoKeepAlive:  cfg.NoKeepAlive,
+		URL:          cfg.URL,
+		URLv6:        cfg.URLv6,
+		Host:         cfg.Host,
+		PollerID:     cfg.PollerID,
+		FormatAccept: gctx.FormatAccept,
 	}
 }
 
 type HTTPPollGlobalCtx struct {
-	Client    *http.Client
-	UserAgent string
+	Client       *http.Client
+	UserAgent    string
+	FormatAccept string
 }
 
 type HTTPPollCtx struct {
-	Client      *http.Client
-	UserAgent   string
-	NoKeepAlive bool
-	URL         string
-	URLv6       string
-	Host        string
-	PollerID    string
+	Client       *http.Client
+	UserAgent    string
+	NoKeepAlive  bool
+	URL          string
+	URLv6        string
+	Host         string
+	PollerID     string
+	HTTPHeader   http.Header
+	FormatAccept string
 }
 
 func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte, time.Time, time.Duration, error) {
@@ -106,6 +111,8 @@ func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte,
 	if !ctx.NoKeepAlive {
 		req.Header.Set("Connection", "keep-alive")
 	}
+
+	req.Header.Set("Accept", ctx.FormatAccept)
 	req.Host = host
 	startReq := time.Now()
 	resp, err := ctx.Client.Do(req)
@@ -130,5 +137,6 @@ func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte,
 	}
 	reqEnd := time.Now()
 	reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
+	ctx.HTTPHeader = resp.Header.Clone()
 	return bts, reqEnd, reqTime, nil
 }

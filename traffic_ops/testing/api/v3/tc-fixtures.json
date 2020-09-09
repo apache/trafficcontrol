@@ -2761,15 +2761,15 @@
             "description": "a topology",
             "nodes": [
                 {
-                  "cachegroup": "parentCachegroup",
-                  "parents": []
+                    "cachegroup": "parentCachegroup",
+                    "parents": []
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
                     "parents": []
                 },
                 {
-                    "cachegroup": "cachegroup1",
+                    "cachegroup": "cachegroup3",
                     "parents": [0, 1]
                 }
             ]

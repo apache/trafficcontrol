@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/deliveryservices` to return all delivery services that employ a given topology.
+    - Traffic Ops: Added support for `dsId` query parameter for `GET /api/3.0/servers` for topology-based delivery services.
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Portal: Added the ability to assign topologies to delivery services.
     - Traffic Portal: Added the ability to view all delivery services and cache groups associated with a topology.
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
+    - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.
     - Traffic Router: Added support for topology-based delivery services
     - Traffic Monitor: Added the ability to mark topology-based delivery services as available
@@ -38,8 +40,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
 - Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
 - Added ability to set DNS Listening IPs in dns.properties
+- Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
 
 ### Fixed
+- Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
 - Fixed 4981 - Cannot create routing regular expression with a blank pattern param in Delivery Service [Related github issues](https://github.com/apache/trafficcontrol/issues/4981)
 - Fixed #3400 - Allow "0" as a TTL value for Static DNS entries
 - Fixed #4743 - Validate absolute DNS name requirement on Static DNS entry for CNAME type [Related github issue](https://github.com/apache/trafficcontrol/issues/4743)

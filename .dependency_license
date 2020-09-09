@@ -34,6 +34,7 @@ CHANGELOG$, Docs
 \.cfg$, Apache-2.0
 \.json$, Apache-2.0
 \.webmanifest, Apache-2.0
+\.csv$, Apache-2.0
 \.conf$, Apache-2.0
 \.config(\.example)?$, Apache-2.0
 /\.bowerrc$, Apache-2.0
