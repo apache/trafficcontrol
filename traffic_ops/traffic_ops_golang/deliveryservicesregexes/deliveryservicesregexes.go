@@ -223,25 +223,10 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-
-	//if err := validateDSRegexType(tx, dsr.Type); err != nil {
-	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-	//	return
-	//}
-	//
-	//if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
-	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-	//	return
-	//}
-	//
-	//if err := validateDSRegexPattern(dsr.Pattern); err != nil {
-	//	api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-	//	return
-	//}
 
 	regexID := 0
 	if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
@@ -315,17 +300,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if err := validateDSRegexType(tx, dsr.Type); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if err := validateDSRegexPattern(dsr.Pattern); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -354,24 +329,26 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
-func validateRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
+// Validate POST regex struct
+func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
 	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
 
 	var ds int
 	if dsr.SetNumber < 0 {
 		return errors.New("cannot add regex with order < 0")
 	}
-	setNumberErr := tx.QueryRow(`
-select deliveryservice from deliveryservice_regex 
+	err := tx.QueryRow(`
+select deliveryservice from deliveryservice_regex
 where deliveryservice = $1 and set_number = $2`,
 		dsID, dsr.SetNumber).Scan(&ds)
-	if setNumberErr == nil {
+	if err == nil {
 		return errors.New("cannot add regex, another regex with the same order exists")
 	}
+	err = nil
 
 	errs := validation.Errors{
 		"type":      typeErr,
-		"setNumber": setNumberErr,
+		"setNumber": err,
 		"pattern":   validation.Validate(dsr.Pattern, validation.Required)}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
