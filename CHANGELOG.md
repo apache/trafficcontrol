@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
 - Added ability to set DNS Listening IPs in dns.properties
 - Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
+- Added Traffic Monitor: Support stats over http CSV output
 
 ### Fixed
 - Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)

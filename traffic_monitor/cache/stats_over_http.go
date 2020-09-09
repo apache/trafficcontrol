@@ -20,6 +20,7 @@ package cache
  */
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -28,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
 	jsoniter "github.com/json-iterator/go"
@@ -66,10 +68,25 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 	}
 
 	var sohData stats_over_httpData
-	json := jsoniter.ConfigFastest
-	err := json.NewDecoder(data).Decode(&sohData)
-	if err != nil {
-		return stats, nil, err
+	var err error
+
+	ctx := pollCTX.(*poller.HTTPPollCtx)
+
+	ctype := ctx.HTTPHeader.Get("Content-Type")
+
+	if ctype == "text/json" || ctype == "text/javascript" || ctype == "application/json" || ctype == "" {
+		json := jsoniter.ConfigFastest
+		err := json.NewDecoder(data).Decode(&sohData)
+		if err != nil {
+			return stats, nil, err
+		}
+	} else if ctype == "text/csv" {
+		sohData.Global, err = statsOverHTTPParseCSV(cacheName, data)
+		if err != nil {
+			return stats, nil, err
+		}
+	} else {
+		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by statsOverHTTP", ctype)
 	}
 
 	if len(sohData.Global) < 1 {
@@ -88,6 +105,45 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 	}
 
 	return stats, statMap, nil
+}
+
+func statsOverHTTPParseCSV(cacheName string, data io.Reader) (map[string]interface{}, error) {
+
+	if data == nil {
+		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
+		return nil, errors.New("handler got nil reader")
+	}
+
+	var allData []string
+	scanner := bufio.NewScanner(data)
+	for scanner.Scan() {
+		allData = append(allData, scanner.Text())
+	}
+
+	globalData := make(map[string]interface{}, len(allData))
+
+	for _, line := range allData {
+		delim := strings.IndexByte(line, ',')
+
+		// No delimiter found, skip this line as invalid
+		if delim < 0 {
+			continue
+		}
+
+		value, err := strconv.ParseFloat(line[delim+1:], 64)
+
+		// Skip values that dont parse
+		if err != nil {
+			continue
+		}
+		globalData[line[0:delim]] = value
+	}
+
+	if len(globalData) < 1 {
+		return nil, errors.New("no valid data found in stats_over_http payload with csv format")
+	}
+
+	return globalData, nil
 }
 
 func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
@@ -326,7 +382,6 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 	for stat, value := range miscStats {
 		if strings.HasPrefix(stat, "plugin.remap_stats.") {
 			trimmedStat := strings.TrimPrefix(stat, "plugin.remap_stats.")
-
 			statParts := strings.Split(trimmedStat, ".")
 			if len(statParts) < 3 {
 				err := errors.New("stat has no remap_stats deliveryservice and name parts")
@@ -334,11 +389,9 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				precomputed.Errors = append(precomputed.Errors, err)
 				continue
 			}
-
 			subsubdomain := statParts[0]
 			subdomain := statParts[1]
 			domain := strings.Join(statParts[2:len(statParts)-1], ".")
-
 			ds, ok := data.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 			if !ok {
 				err := errors.New("No Delivery Service match for stat")
@@ -352,9 +405,16 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				precomputed.Errors = append(precomputed.Errors, err)
 				continue
 			}
-
 			dsName := string(ds)
 			dsStat := precomputed.DeliveryServiceStats[dsName]
+
+			/* Null check this dsStat, its possible to have stats entries for a DS that does not exist
+			in the table due to errant queries. ATS will still insert them into the remap stats but
+			they will not exist our DS list and so we will have a nullptr */
+			if dsStat == nil {
+				log.Infof("ds Stats received for ds: %s, unknown DS", dsName)
+				continue
+			}
 
 			parsedStat, err := parseNumericStat(value)
 			if err != nil {
@@ -386,6 +446,5 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 			precomputed.DeliveryServiceStats[dsName] = dsStat
 		}
 	}
-
 	return precomputed
 }
