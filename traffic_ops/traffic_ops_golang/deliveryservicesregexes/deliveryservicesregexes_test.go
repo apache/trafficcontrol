@@ -1,6 +1,7 @@
 package deliveryservicesregexes
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
@@ -43,7 +44,9 @@ func TestValidateDSRegexOrder(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("select").WithArgs(1, 3).WillReturnRows(rows)
 	tx := db.MustBegin().Tx
-	err = validateDSRegexOrder(tx, 1, 3)
+	regex := tc.DeliveryServiceRegexPost{Type: 33, SetNumber: 3, Pattern: ".*"}
+	err = validateDSRegex(tx, regex, 1)
+	//err = validateDSRegexOrder(tx, 1, 3)
 	if err == nil {
 		t.Fatal("Expected error but got nil")
 	}
@@ -52,11 +55,14 @@ func TestValidateDSRegexOrder(t *testing.T) {
 	}
 	mock.ExpectQuery("select").WithArgs(1, 4).WillReturnRows(nil)
 	mock.ExpectCommit()
-	err = validateDSRegexOrder(tx, 1, 3)
+	//err = validateDSRegexOrder(tx, 1, 3)
+	err = validateDSRegex(tx, regex, 1)
 	if err != nil {
 		t.Fatalf("Expect no error, got %v", err.Error())
 	}
-	err = validateDSRegexOrder(tx, 1, -1)
+	regex2 := tc.DeliveryServiceRegexPost{Type: 33, SetNumber: -1, Pattern: "/"}
+	err = validateDSRegex(tx, regex2, 1)
+	//err = validateDSRegexOrder(tx, 1, -1)
 	if err == nil {
 		t.Fatal("Expect error saying cannot add regex with order < 0, got nothing")
 	}
