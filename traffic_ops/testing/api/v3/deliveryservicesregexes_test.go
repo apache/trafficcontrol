@@ -102,23 +102,24 @@ func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 	var regex = testData.DeliveryServicesRegexes[3]
 	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(regex.DSName, nil)
 	if err != nil {
-		t.Fatalf("unable to get ds ds2: %v", err)
+		t.Fatalf("unable to get ds %v: %v", regex.DSName, err)
 	}
 	if len(ds) == 0 {
-		t.Fatal("unable to get ds ds2")
+		t.Fatalf("unable to get ds %v", regex.DSName)
 	}
+
 	var dsID int
-	fmt.Println(*ds[0].ID)
 	if ds[0].ID == nil {
 		t.Fatal("ds has a nil id")
 	} else {
 		dsID = *ds[0].ID
 	}
 
-	_, reqInfo, errs := TOSession.PostDeliveryServiceRegexesByDSID(dsID, nil)
-	fmt.Println("Error:", errs)
-	if reqInfo.StatusCode != 400 {
-		t.Errorf("Expected: %v, but got: %v", 400, reqInfo.StatusCode)
+	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
+
+	_, reqInfo, _ := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
+	if reqInfo.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected: %v, but got: %v", http.StatusBadRequest, reqInfo.StatusCode)
 	}
 }
 
@@ -176,8 +177,8 @@ func QueryDSRegexTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(dsID))
 	}
-	if len(dsRegexes) != 3 {
-		t.Fatal("expected to get 3 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	if len(dsRegexes) != 4 {
+		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
 	}
 
 	params := make(map[string]string)

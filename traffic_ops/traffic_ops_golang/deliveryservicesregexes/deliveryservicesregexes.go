@@ -329,22 +329,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
-// Validate POST regex struct
+// Validate POST/PUT regex struct
 func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
-	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
+	err := validateDSRegexOrder(tx, dsID, dsr.SetNumber)
 
-	var ds int
-	if dsr.SetNumber < 0 {
-		return errors.New("cannot add regex with order < 0")
-	}
-	err := tx.QueryRow(`
-select deliveryservice from deliveryservice_regex
-where deliveryservice = $1 and set_number = $2`,
-		dsID, dsr.SetNumber).Scan(&ds)
-	if err == nil {
-		return errors.New("cannot add regex, another regex with the same order exists")
-	}
-	err = nil
+	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
 
 	errs := validation.Errors{
 		"type":      typeErr,
@@ -352,11 +341,6 @@ where deliveryservice = $1 and set_number = $2`,
 		"pattern":   validation.Validate(dsr.Pattern, validation.Required)}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
-}
-
-func validateDSRegexType(tx *sql.Tx, typeID int) error {
-	_, err := tc.ValidateTypeID(tx, &typeID, "regex")
-	return err
 }
 
 func validateDSRegexOrder(tx *sql.Tx, dsID int, order int) error {
@@ -372,12 +356,6 @@ where deliveryservice = $1 and set_number = $2`,
 		return errors.New("cannot add regex, another regex with the same order exists")
 	}
 	return nil
-}
-
-func validateDSRegexPattern(pattern string) error {
-	err := validation.Errors{
-		"pattern": validation.Validate(pattern, validation.Required)}
-	return err
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
