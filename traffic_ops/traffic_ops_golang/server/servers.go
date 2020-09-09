@@ -581,9 +581,9 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-
-	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
-
+	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
+		return serviceInterface, util.JoinErrs(errs)
+	}
 	query := `
 SELECT s.ID, ip.address FROM server s 
 JOIN profile p on p.Id = s.Profile
@@ -1457,7 +1457,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	str := uuid.New().String()
 	server.XMPPID = &str
-
 	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
