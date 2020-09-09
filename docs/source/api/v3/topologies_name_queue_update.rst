@@ -59,6 +59,7 @@ Request Structure
 Response Structure
 ------------------
 :action:   The action processed, either ``"queue"`` or ``"dequeue"``
+:cdnId:    The CDN ID on which :term:`Queue Updates` was performed or cleared
 :topology: The name of the :term:`Topology` on which :term:`Queue Updates` was performed or cleared
 
 .. code-block:: http
@@ -81,6 +82,7 @@ Response Structure
 	{
 		"response": {
 			"action": "queue",
+			"cdnId": 1,
 			"topology": "demo1-top"
 		}
 	}

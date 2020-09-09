@@ -29,7 +29,7 @@ import (
 )
 
 func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, ReqInf, error) {
-	path := fmt.Sprintf(ApiTopologies + "/%s/queue_update", topologyName)
+	path := fmt.Sprintf(ApiTopologies+"/%s/queue_update", topologyName)
 	var reqInf ReqInf
 	var resp tc.TopologiesQueueUpdateResponse
 

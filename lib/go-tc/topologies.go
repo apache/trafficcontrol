@@ -66,5 +66,6 @@ type TopologiesQueueUpdateResponse struct {
 // topologies/{{name}}/queue_update endpoint.
 type TopologiesQueueUpdate struct {
 	Action   string       `json:"action"`
+	CDNID    int64        `json:"cdnId"`
 	Topology TopologyName `json:"topology"`
 }
