@@ -21,11 +21,14 @@ package request
 
 import (
 	// "encoding/json"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -255,6 +258,38 @@ func isTenantAuthorized(dsr tc.DeliveryServiceRequestV30, inf *api.APIInfo) (boo
 	return ok, err
 }
 
+// Warning: this assumes inf isn't nil, and neither is dsr, inf.Tx or inf.User or inf.Tx.Tx.
+func insert(dsr *tc.DeliveryServiceRequestV30, inf *api.APIInfo) (int, error, error) {
+	dsr.Author = inf.User.UserName
+	dsr.LastEditedBy = inf.User.UserName
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
+
+	dsr.ID = new(int)
+	if err := inf.Tx.Tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return errCode, userErr, sysErr
+	}
+
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+		if len(originals) != 1 {
+			sysErr = fmt.Errorf("bad number of Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			return http.StatusInternalServerError, nil, sysErr
+		}
+		dsr.Original = new(tc.DeliveryServiceV30)
+		*dsr.Original = originals[0]
+	}
+	return http.StatusOK, nil, nil
+}
+
 func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV30
@@ -279,63 +314,83 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 		return
 	}
 
-	dsr.Author = inf.User.UserName
-	// dsr.AuthorID = new(int)
-	// *dsr.AuthorID = inf.User.ID
-	dsr.LastEditedBy = inf.User.UserName
-	// dsr.LastEditedByID = new(int)
-	// *dsr.LastEditedByID = inf.User.ID
-
-	// var requestedBts []byte
-	// if dsr.Requested != nil {
-	// 	requestedBts, err = json.Marshal(*dsr.Requested)
-	// 	if err != nil {
-	// 		sysErr := fmt.Errorf("marshaling requested for storage: %v", err)
-	// 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-	// 		return
-	// 	}
-	// }
-	// var originalBts []byte
-	// if dsr.Original != nil && dsr.ChangeType == tc.DSRChangeTypeDelete {
-	// 	originalBts, err = json.Marshal(*dsr.Original)
-	// 	if err != nil {
-	// 		sysErr := fmt.Errorf("marshaling original for storage: %v", err)
-	// 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-	// 		return
-	// 	}
-	// }
-	if dsr.ChangeType != tc.DSRChangeTypeDelete {
-		dsr.Original = nil
-	} else {
-		dsr.Requested = nil
-	}
-
-	dsr.ID = new(int)
-	if err := tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	errCode, userErr, sysErr := insert(&dsr, inf)
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
-	}
-
-	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
-		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
-		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-		if len(originals) != 1 {
-			sysErr = fmt.Errorf("bad number of Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-		dsr.Original = new(tc.DeliveryServiceV30)
-		*dsr.Original = originals[0]
 	}
 
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
 	api.WriteResp(w, r, dsr)
+}
+
+func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV15
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		userErr := fmt.Errorf("decoding: %v", err)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+	if err := validateLegacy(dsr, tx); err != nil {
+		userErr := fmt.Errorf("validating: %v", err)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	upgraded := dsr.Upgrade()
+	authorized, err := isTenantAuthorized(upgraded, inf)
+	if err != nil {
+		sysErr := fmt.Errorf("checking tenant authorized: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if !authorized {
+		userErr := errors.New("not authorized on this tenant")
+		api.HandleErr(w, r, tx, http.StatusForbidden, userErr, nil)
+		return
+	}
+
+	if *dsr.Status != tc.RequestStatusDraft && *dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("invalid initial request status '%v'. Must be '%v' or '%v'", *dsr.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	// first, ensure there's not an active request with this XMLID
+	ds := dsr.DeliveryService
+	if ds == nil {
+		userErr := errors.New("no delivery service associated with this request")
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	if ds.XMLID == nil {
+		userErr := errors.New("no XMLID associated with this request")
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+	XMLID := *ds.XMLID
+	active, err := isActiveRequest(inf.Tx, XMLID)
+	if err != nil {
+		sysErr := fmt.Errorf("checking request active: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if active {
+		userErr := fmt.Errorf("an active request exists for Delivery Service '%s'", XMLID)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	errCode, userErr, sysErr := insert(&upgraded, inf)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade())
 }
 
 func Post(w http.ResponseWriter, r *http.Request) {
@@ -361,7 +416,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	if version.Major >= 3 {
 		createV3(w, r, inf)
 	} else {
-		w.Write([]byte("unimplemented\n"))
+		createLegacy(w, r, inf)
 	}
 }
 
