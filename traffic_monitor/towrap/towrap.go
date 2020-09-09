@@ -417,23 +417,23 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
-func (s TrafficOpsSessionThreadsafe) fetchTMConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+func (s TrafficOpsSessionThreadsafe) fetchTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	m, _, e := ss.GetTrafficMonitorConfigMap(cdn)
+	m, _, e := ss.GetTrafficMonitorConfig(cdn)
 	return m, e
 }
 
-func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
 	ss := s.getLegacy()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	m, _, e := ss.GetTrafficMonitorConfigMap(cdn)
+	m, _, e := ss.GetTrafficMonitorConfig(cdn)
 	return m.Upgrade(), e
 }
 
@@ -443,16 +443,17 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfigMap(cdn string) (*tc.Tra
 // is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
 // goroutines.
 func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+	var config *tc.TrafficMonitorConfig
 	var configMap *tc.TrafficMonitorConfigMap
 	var err error
 
 	if s.useLegacy {
-		configMap, err = s.fetchLegacyTMConfigMap(cdn)
+		config, err = s.fetchLegacyTMConfig(cdn)
 	} else {
-		configMap, err = s.fetchTMConfigMap(cdn)
+		config, err = s.fetchTMConfig(cdn)
 	}
 
-	if configMap == nil {
+	if config == nil {
 		if err != nil {
 			return nil, fmt.Errorf("getting Traffic Monitor configuration map: %v", err)
 		}
@@ -460,7 +461,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	}
 
 	if err == nil {
-		err = configMap.Valid()
+		configMap, err = tc.TrafficMonitorTransformToMap(config)
 	}
 
 	if err != nil {
@@ -476,14 +477,15 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
+		var tmConfig tc.TrafficMonitorConfig
 		if err := json.Unmarshal(b, &tmConfig); err != nil {
 			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
 		}
-		return tc.LegacyTrafficMonitorTransformToMap(tmConfig)
+		return tc.TrafficMonitorTransformToMap(&tmConfig)
 	}
 
 	json := jsoniter.ConfigFastest
-	data, err := json.Marshal(*tmConfig)
+	data, err := json.Marshal(*config)
 	if err == nil {
 		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
 	}

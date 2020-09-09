@@ -100,6 +100,22 @@ type LegacyTrafficMonitorConfig struct {
 	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
+// Upgrade converts a legacy TM Config to the newer structure.
+func (s *LegacyTrafficMonitorConfig) Upgrade() *TrafficMonitorConfig {
+	upgraded := TrafficMonitorConfig{
+		CacheGroups:      s.CacheGroups,
+		Config:           s.Config,
+		DeliveryServices: s.DeliveryServices,
+		Profiles:         s.Profiles,
+		TrafficMonitors:  s.TrafficMonitors,
+		TrafficServers:   make([]TrafficServer, 0, len(s.TrafficServers)),
+	}
+	for _, ts := range s.TrafficServers {
+		upgraded.TrafficServers = append(upgraded.TrafficServers, ts.Upgrade())
+	}
+	return &upgraded
+}
+
 // TrafficMonitorConfigMap is a representation of a TrafficMonitorConfig using
 // unique values as map keys.
 type TrafficMonitorConfigMap struct {
@@ -373,7 +389,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 		}
 	}
 
-	params.Thresholds = map[string]HealthThreshold{}
+	params.Thresholds = make(map[string]HealthThreshold, len(raw))
 	for k, v := range raw {
 		if strings.HasPrefix(k, ThresholdPrefix) {
 			stat := k[len(ThresholdPrefix):]

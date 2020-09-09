@@ -429,9 +429,16 @@ func TestTrafficMonitorTransformToMap(t *testing.T) {
 				},
 			},
 		},
-		CacheGroups:      []TMCacheGroup{},
-		Config:           map[string]interface{}{},
-		TrafficMonitors:  []TrafficMonitor{},
+		CacheGroups: []TMCacheGroup{
+			TMCacheGroup{},
+		},
+		Config: map[string]interface{}{
+			"peers.polling.interval":  5.0,
+			"health.polling.interval": 5.0,
+		},
+		TrafficMonitors: []TrafficMonitor{
+			TrafficMonitor{},
+		},
 		DeliveryServices: []TMDeliveryService{},
 		Profiles: []TMProfile{
 			{
