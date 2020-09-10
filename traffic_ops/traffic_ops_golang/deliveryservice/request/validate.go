@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -67,42 +66,6 @@ func validateLegacy(dsr tc.DeliveryServiceRequestV15, tx *sql.Tx) error {
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
 	e := dsr.DeliveryService.Validate(tx)
-
-	errs = append(errs, e)
-
-	return util.JoinErrs(errs)
-}
-
-// Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
-func (req *TODeliveryServiceRequest) Validate() error {
-	fromStatus := tc.RequestStatusDraft
-	if req.ID != nil && *req.ID > 0 {
-		err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	validTransition := func(s interface{}) error {
-		if s == nil {
-			return errors.New("cannot transition to nil status")
-		}
-		toStatus, ok := s.(*tc.RequestStatus)
-		if !ok {
-			return fmt.Errorf("Expected *tc.RequestStatus type,  got %T", s)
-		}
-		return fromStatus.ValidTransition(*toStatus)
-	}
-
-	errMap := validation.Errors{
-		"changeType":      validation.Validate(req.ChangeType, validation.Required),
-		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status":          validation.Validate(req.Status, validation.Required, validation.By(validTransition)),
-	}
-	errs := tovalidate.ToErrors(errMap)
-	// ensure the deliveryservice requested is valid
-	e := req.DeliveryService.Validate(req.APIInfo().Tx.Tx)
 
 	errs = append(errs, e)
 
