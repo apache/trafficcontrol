@@ -1,3 +1,5 @@
+// Package request provides handlers for API paths under
+// /api/{{version}}/deliveryservice_requests.
 package request
 
 /*
@@ -24,7 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -34,7 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
@@ -115,6 +116,17 @@ FROM deliveryservice_request
 WHERE id=$1
 `
 
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM deliveryservice_request r
+	JOIN tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
+}
+
+// Get is the GET handler for /deliveryservice_requests.
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -245,7 +257,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, downgraded)
 }
 
-// IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
+// isTenantAuthorized ensures the user is authorized on the DSR's Requested
+// and/or Original Delivery Service's Tenant, as appropriate to the change type.
 func isTenantAuthorized(dsr tc.DeliveryServiceRequestV30, inf *api.APIInfo) (bool, error) {
 	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
 		if dsr.Requested.TenantID == nil {
@@ -314,7 +327,46 @@ func insert(dsr *tc.DeliveryServiceRequestV30, inf *api.APIInfo) (int, error, er
 	return http.StatusOK, nil, nil
 }
 
-func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+// dsrManipulationResult encodes the result of manipulating a DSR.
+type dsrManipulationResult struct {
+	// Action is the action performed to manipulate the DSR.
+	Action string
+	// Assignee is a pointer to the name of the user assigned to a DSR - or nil
+	// if there isn't one.
+	Assignee *string
+	// ChangeType is the DSR's change type.
+	ChangeType tc.DSRChangeType
+	// Successful is whether or not the manipulation encountered no errors.
+	Successful bool
+	// XMLID is the XMLID of the Delivery Service affected by the DSR.
+	XMLID string
+}
+
+// String constructs a changelog message for the result.
+// Unsuccessful results do not have a changelog message.
+func (d dsrManipulationResult) String() string {
+	if !d.Successful {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.WriteString(d.Action)
+	builder.Write([]byte(" Delivery Service Request of type "))
+	builder.WriteString(d.ChangeType.String())
+	builder.Write([]byte(" for Delivery Service '"))
+	builder.WriteString(d.XMLID)
+	builder.WriteRune('\'')
+
+	if d.Assignee != nil {
+		builder.Write([]byte(" (assigned to user "))
+		builder.WriteString(*d.Assignee)
+		builder.WriteRune(')')
+	}
+
+	return builder.String()
+}
+
+func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV30
 	if err := api.Parse(r.Body, tx, &dsr); err != nil {
@@ -347,9 +399,16 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
 	api.WriteResp(w, r, dsr)
+
+	result.Successful = true
+	result.Assignee = dsr.Assignee
+	result.XMLID = dsr.XMLID
+	result.ChangeType = dsr.ChangeType
+	result.Action = api.Created
+	return
 }
 
-func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV15
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
@@ -414,8 +473,16 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade())
+
+	result.Successful = true
+	result.Assignee = dsr.Assignee
+	result.XMLID = upgraded.XMLID
+	result.ChangeType = upgraded.ChangeType
+	result.Action = api.Created
+	return
 }
 
+// Post is the handler for POST requests to /deliveryservice_requests.
 func Post(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -436,13 +503,19 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var result dsrManipulationResult
 	if version.Major >= 3 {
-		createV3(w, r, inf)
+		result = createV3(w, r, inf)
 	} else {
-		createLegacy(w, r, inf)
+		result = createLegacy(w, r, inf)
+	}
+
+	if result.Successful {
+		inf.CreateChangeLog(result.String())
 	}
 }
 
+// Delete is the handler for DELETE requests to /deliveryservice_requests.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -505,9 +578,18 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d deleted", inf.IntParams["id"]), resp)
+
+	res := dsrManipulationResult{
+		Successful: true,
+		XMLID:      dsr.XMLID,
+		Action:     api.Deleted,
+		Assignee:   dsr.Assignee,
+		ChangeType: dsr.ChangeType,
+	}
+	inf.CreateChangeLog(res.String())
 }
 
-func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV30
 	if err := api.Parse(r.Body, tx, &dsr); err != nil {
@@ -551,9 +633,15 @@ func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
+	result.Successful = true
+	result.Action = "Updated"
+	result.Assignee = dsr.Assignee
+	result.ChangeType = dsr.ChangeType
+	result.XMLID = dsr.XMLID
+	return
 }
 
-func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV15
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
@@ -605,8 +693,15 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
+	result.Action = api.Updated
+	result.Assignee = dsr.Assignee
+	result.ChangeType = upgraded.ChangeType
+	result.Successful = true
+	result.XMLID = upgraded.XMLID
+	return
 }
 
+// Put is the handler for PUT requests to /deliveryservice_requests.
 func Put(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
