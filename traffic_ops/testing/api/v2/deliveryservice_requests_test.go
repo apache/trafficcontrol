@@ -154,16 +154,32 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Expected no entries in DeliveryServiceRequest slice -- got %d", len(dsrs))
 		}
 
+		if len(testData.DeliveryServiceRequests) < 1 {
+			t.Fatalf("Need at least one DSR to test workflow")
+		}
+
 		// Create a draft request
-		src := testData.DeliveryServiceRequests[dsrDraft]
+		src := testData.DeliveryServiceRequests[0]
+		src.Status = "draft"
+		src.ChangeType = "create"
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
 		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+			t.Fatalf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected := []string{`deliveryservice_request was created.`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		success := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error when creating a Delivery Service Request: %v", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "created") {
+				success = true
+			}
+		}
+
+		if !success {
+			t.Error("Did not find success alert for creating Delivery Service Request")
+		}
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
@@ -171,10 +187,10 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
+		expected := []string{"an active request exists for Delivery Service '" + src.DeliveryService.XMLID + "'"}
 		utils.Compare(t, expected, alerts.ToStrings())
 
-		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
+		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(src.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
 			t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
 			if len(dsrs) == 0 {
@@ -189,8 +205,8 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 		}
 
 		utils.Compare(t, expected, alerts.ToStrings())
-		if dsr.Status != tc.RequestStatus("submitted") {
-			t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
+		if dsr.Status != tc.RequestStatusSubmitted {
+			t.Errorf("expected status=%s,  got %s", tc.RequestStatusSubmitted, dsr.Status)
 		}
 	})
 }
