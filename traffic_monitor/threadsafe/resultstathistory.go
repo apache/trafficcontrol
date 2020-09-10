@@ -364,7 +364,7 @@ func StatsMarshall(
 ) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[string]cache.StatsCache{},
+		Caches:        map[string]cache.ServerStats{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -380,7 +380,7 @@ func StatsMarshall(
 
 		cacheStatResultHistory := statResultHistory.LoadOrStore(cacheId)
 		if _, ok := stats.Caches[cacheId]; !ok {
-			stats.Caches[cacheId] = cache.StatsCache{
+			stats.Caches[cacheId] = cache.ServerStats{
 				Interfaces: make(map[string]map[string][]cache.ResultStatVal),
 				Stats:      make(map[string][]cache.ResultStatVal),
 			}

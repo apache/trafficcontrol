@@ -152,9 +152,9 @@ type Stat struct {
 	Value interface{} `json:"value"`
 }
 
-// StatsCache is a representation of cache server statistics as present in the
+// ServerStats is a representation of cache server statistics as present in the
 // TM API.
-type StatsCache struct {
+type ServerStats struct {
 	// Interfaces contains statistics specific to each monitored interface
 	// of the cache server.
 	Interfaces map[string]map[string][]ResultStatVal `json:"interfaces"`
@@ -168,7 +168,7 @@ type Stats struct {
 	srvhttp.CommonAPIData
 	// Caches is a map of cache server hostnames to groupings of statistics
 	// regarding each cache server and all of its separate network interfaces.
-	Caches map[string]StatsCache `json:"caches"`
+	Caches map[string]ServerStats `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
