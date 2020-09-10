@@ -200,11 +200,17 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
 
-		expected = []string{
-			"deliveryservice_request was updated.",
+		success = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error from updating DSR status: %v", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "updated") {
+				success = true
+			}
 		}
-
-		utils.Compare(t, expected, alerts.ToStrings())
+		if !success {
+			t.Error("Did not find a success alert for updating DSR status")
+		}
 		if dsr.Status != tc.RequestStatusSubmitted {
 			t.Errorf("expected status=%s,  got %s", tc.RequestStatusSubmitted, dsr.Status)
 		}
