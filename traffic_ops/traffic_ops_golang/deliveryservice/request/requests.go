@@ -450,7 +450,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var dsr tc.DeliveryServiceRequestV30
-	if err := inf.Tx.QueryRowx(selectQuery).StructScan(&dsr); err != nil {
+	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
