@@ -487,6 +487,8 @@ func (dsr DeliveryServiceRequestV15) Upgrade() DeliveryServiceRequestV30 {
 	}
 	if dsr.XMLID != nil {
 		upgraded.XMLID = *dsr.XMLID
+	} else if dsr.DeliveryService != nil && dsr.DeliveryService.XMLID != nil {
+		upgraded.XMLID = *dsr.DeliveryService.XMLID
 	}
 	return upgraded
 }
