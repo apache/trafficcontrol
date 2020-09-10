@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	// "encoding/json"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -93,6 +92,12 @@ RETURNING
 	id,
 	last_updated,
 	created_at
+`
+
+const deleteQuery = `
+DELETE
+FROM deliveryservice_request
+WHERE id=$1
 `
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -280,8 +285,12 @@ func insert(dsr *tc.DeliveryServiceRequestV30, inf *api.APIInfo) (int, error, er
 		if userErr != nil || sysErr != nil {
 			return errCode, userErr, sysErr
 		}
-		if len(originals) != 1 {
-			sysErr = fmt.Errorf("bad number of Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			return http.StatusConflict, userErr, nil
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
 			return http.StatusInternalServerError, nil, sysErr
 		}
 		dsr.Original = new(tc.DeliveryServiceV30)
@@ -417,6 +426,70 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	} else {
 		createLegacy(w, r, inf)
 	}
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+	if inf.User == nil {
+		sysErr = errors.New("no user in API Info")
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	var dsr tc.DeliveryServiceRequestV30
+	if err := inf.Tx.QueryRowx(selectQuery).StructScan(&dsr); err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	authorized, err := isTenantAuthorized(dsr, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	result, err := tx.Exec(deleteQuery, inf.IntParams["id"])
+	if err != nil {
+		sysErr = fmt.Errorf("deleting DSR #%d: %v", inf.IntParams["id"])
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if affected, err := result.RowsAffected(); err != nil {
+		sysErr = fmt.Errorf("checking affected rows: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	} else if affected != 1 {
+		sysErr = fmt.Errorf("incorrect number of rows affected by delete: %d", affected)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	var resp interface{}
+	if inf.Version.Major >= 3 {
+		resp = dsr
+	} else {
+		resp = dsr.Downgrade()
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d deleted", inf.IntParams["id"]), resp)
 }
 
 // TODeliveryServiceRequest is the type alias to define functions on
