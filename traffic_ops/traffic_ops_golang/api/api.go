@@ -541,6 +541,27 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	}, nil, nil, http.StatusOK
 }
 
+const createChangeLogQuery = `
+INSERT INTO log (
+	level,
+	message,
+	tm_user
+) VALUES (
+	'APICHANGE',
+	$1,
+	$2
+)
+`
+
+// CreateChangeLog creates a new changelog message at the APICHANGE level for
+// the current user.
+func (inf APIInfo) CreateChangeLog(msg string) {
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, msg, inf.User.ID)
+	if err != nil {
+		log.Errorf("Inserting chage log level 'APICHANGE' message '%s' for user '%s': %v", msg, inf.User.UserName, err)
+	}
+}
+
 // UseIMS returns whether or not If-Modified-Since constraints should be used to
 // service the given request.
 func (inf APIInfo) UseIMS(r *http.Request) bool {
