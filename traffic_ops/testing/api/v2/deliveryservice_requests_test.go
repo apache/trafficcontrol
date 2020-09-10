@@ -93,17 +93,23 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error occurred %v", err)
 		}
-
-		expected := []string{
-			"deliveryservice_request was created.",
-			//"'xmlId' the length must be between 1 and 48",
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "created") {
+				found = true
+			}
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error alert creating a DSR: %s", alert.Text)
+			}
 		}
 
-		utils.Compare(t, expected, alerts.ToStrings())
+		if !found {
+			t.Error("Expected a success alert creating a DSR, but didn't get one")
+		}
 
 		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
-			t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
 		}
 		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
 		if err != nil {
