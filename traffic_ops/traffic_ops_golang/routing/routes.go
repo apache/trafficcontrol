@@ -1137,11 +1137,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 3}, http.MethodDelete, `asns/?$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 680204898, noPerlBypass},
 
 		//Delivery service requests
-		{api.Version{1, 3}, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 1681163935, noPerlBypass},
-		{api.Version{1, 3}, http.MethodGet, `deliveryservice_requests/?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 286812311, noPerlBypass},
-		{api.Version{1, 3}, http.MethodPut, `deliveryservice_requests/?$`, api.UpdateHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelPortal, Authenticated, nil, 2049907918, noPerlBypass},
-		{api.Version{1, 3}, http.MethodPost, `deliveryservice_requests/?$`, api.CreateHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelPortal, Authenticated, nil, 59385039, noPerlBypass},
-		{api.Version{1, 3}, http.MethodDelete, `deliveryservice_requests/?$`, api.DeleteHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelPortal, Authenticated, nil, 1296985025, noPerlBypass},
+		{api.Version{1, 3}, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, dsrequest.Get, auth.PrivLevelReadOnly, Authenticated, nil, 1681163935, noPerlBypass},
+		{api.Version{1, 3}, http.MethodPut, `deliveryservice_requests/?$`, dsrequest.Put, auth.PrivLevelPortal, Authenticated, nil, 2049907918, noPerlBypass},
+		{api.Version{1, 3}, http.MethodPost, `deliveryservice_requests/?$`, dsrequest.Post, auth.PrivLevelPortal, Authenticated, nil, 59385039, noPerlBypass},
+		{api.Version{1, 3}, http.MethodDelete, `deliveryservice_requests/?$`, dsrequest.Delete, auth.PrivLevelPortal, Authenticated, nil, 1296985025, noPerlBypass},
 
 		//Delivery service request: Actions
 		{api.Version{1, 3}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, api.UpdateHandler(dsrequest.GetAssignmentSingleton()), auth.PrivLevelOperations, Authenticated, nil, 1703160290, noPerlBypass},
