@@ -334,8 +334,7 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 		return
 	}
 	if err := validateLegacy(dsr, tx); err != nil {
-		userErr := fmt.Errorf("validating: %v", err)
-		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
