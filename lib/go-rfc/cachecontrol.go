@@ -48,7 +48,7 @@ func ParseETag(e string) (time.Time, error) {
 	}
 	e, err := strconv.Unquote(e) // strip quotes
 
-	if err!= nil {
+	if err != nil {
 		return time.Time{}, err
 	}
 	prefix := `v` + strconv.Itoa(ETagVersion) + `-`

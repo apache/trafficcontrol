@@ -429,7 +429,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("unable to find deliveryservice %s", topDsXmlId)
 	}
 	params.Set("dsId", strconv.Itoa(*ds.ID))
-	expectedHostnames := map[string]bool {
+	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3": true,
 		"edge2-cdn1-cg3": true,
 		"atlanta-mid-16": true,

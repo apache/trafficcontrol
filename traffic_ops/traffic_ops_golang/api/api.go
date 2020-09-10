@@ -1015,22 +1015,6 @@ func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, er
 }
 
 // IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
-//func IsUnmodified(h http.Header, existingLastUpdated *time.Time) bool {
-//	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-//	existingEtag := rfc.ETag(*existingLastUpdated)
-//
-//	if h != nil {
-//		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-//			return false
-//		}
-//		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-//			return false
-//		}
-//	}
-//	return true
-//}
-
-// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
 func IsUnmodified(h http.Header, lastUpdated time.Time) bool {
 	unmodifiedTime, ok := rfc.GetUnmodifiedTime(h)
 	if !ok {
