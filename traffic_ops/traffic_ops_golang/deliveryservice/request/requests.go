@@ -94,6 +94,21 @@ RETURNING
 	created_at
 `
 
+const updateQuery = `
+UPDATE deliveryservice_request
+SET
+	assignee_id = $1,
+	change_type = $2,
+	last_edited_by_id = $3,
+	deliveryservice = $4,
+	original = $5,
+	status = $6
+WHERE id = $7
+RETURNING
+	last_updated,
+	created_at
+`
+
 const deleteQuery = `
 DELETE
 FROM deliveryservice_request
@@ -117,13 +132,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
-		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
-		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
-		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
-		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
-		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
-		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
+		"assignee":   {Column: "s.username"},
+		"assigneeId": {Column: "r.assignee_id", Checker: api.IsInt},
+		"author":     {Column: "a.username"},
+		"authorId":   {Column: "r.author_id", Checker: api.IsInt},
+		"changeType": {Column: "r.change_type"},
+		"id":         {Column: "r.id", Checker: api.IsInt},
+		"status":     {Column: "r.status"},
 	}
 	if version.Major < 3 {
 		queryParamsToQueryCols["xmlId"] = dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"}
@@ -468,7 +483,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	result, err := tx.Exec(deleteQuery, inf.IntParams["id"])
 	if err != nil {
-		sysErr = fmt.Errorf("deleting DSR #%d: %v", inf.IntParams["id"])
+		sysErr = fmt.Errorf("deleting DSR #%d: %v", inf.IntParams["id"], err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -490,6 +505,157 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d deleted", inf.IntParams["id"]), resp)
+}
+
+func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV30
+	if err := api.Parse(r.Body, tx, &dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if dsr.Status != tc.RequestStatusDraft && dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("Cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	authorized, err := isTenantAuthorized(dsr, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	dsr.LastEditedBy = inf.User.UserName
+	dsr.LastEditedByID = new(int)
+	*dsr.LastEditedByID = inf.User.ID
+
+	args := []interface{}{
+		dsr.AssigneeID,
+		dsr.ChangeType,
+		inf.User.ID,
+		dsr.Requested,
+		dsr.Original,
+		dsr.Status,
+		inf.IntParams["id"],
+	}
+	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
+}
+
+func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV15
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		userErr := fmt.Errorf("decoding: %v", err)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+	if err := validateLegacy(dsr, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if *dsr.Status != tc.RequestStatusDraft && *dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("Cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	dsr.LastEditedBy = new(string)
+	*dsr.LastEditedBy = inf.User.UserName
+	dsr.LastEditedByID = new(tc.IDNoMod)
+	*dsr.LastEditedByID = tc.IDNoMod(inf.User.ID)
+
+	upgraded := dsr.Upgrade()
+
+	authorized, err := isTenantAuthorized(upgraded, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	args := []interface{}{
+		upgraded.AssigneeID,
+		upgraded.ChangeType,
+		inf.User.ID,
+		upgraded.Requested,
+		upgraded.Original,
+		upgraded.Status,
+		inf.IntParams["id"],
+	}
+	if err := tx.QueryRow(updateQuery, args...).Scan(dsr.CreatedAt, dsr.LastUpdated); err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
+}
+
+func Put(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+	if inf.User == nil {
+		sysErr = errors.New("no user in API Info")
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	var current tc.DeliveryServiceRequestV30
+	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&current); err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	authorized, err := isTenantAuthorized(current, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	if current.Status != tc.RequestStatusDraft && current.Status != tc.RequestStatusSubmitted {
+		userErr = fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", current.Status)
+		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+		return
+	}
+
+	if inf.Version.Major >= 3 {
+		putV30(w, r, inf)
+	} else {
+		putLegacy(w, r, inf)
+	}
 }
 
 // TODeliveryServiceRequest is the type alias to define functions on
