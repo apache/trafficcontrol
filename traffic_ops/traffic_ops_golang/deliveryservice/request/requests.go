@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -771,9 +772,43 @@ func isActiveRequest(tx *sqlx.Tx, xmlID string) (bool, error) {
 ////////////////////////////////////////////////////////////////
 // Assignment change
 
+func GetAssignmentSingleton() api.Updater {
+	return &deliveryServiceRequestAssignment{}
+}
+
 type deliveryServiceRequestAssignment struct {
 	api.APIInfoImpl `json:"-"`
-	tc.DeliveryServiceRequestNullable
+	tc.DeliveryServiceRequestV15
+}
+
+func (req *deliveryServiceRequestAssignment) GetAuditName() string {
+	if req != nil && req.ID != nil {
+		return strconv.Itoa(*req.ID)
+	}
+	return "UNKNOWN"
+}
+
+func (req *deliveryServiceRequestAssignment) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
+}
+
+func (req *deliveryServiceRequestAssignment) GetKeys() (map[string]interface{}, bool) {
+	keys := map[string]interface{}{"id": 0}
+	success := false
+	if req.ID != nil {
+		keys["id"] = *req.ID
+		success = true
+	}
+	return keys, success
+}
+
+func (req *deliveryServiceRequestAssignment) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int)
+	req.ID = &i
+}
+
+func (*deliveryServiceRequestAssignment) GetType() string {
+	return "deliveryservice_request"
 }
 
 // Update assignee only
@@ -784,8 +819,8 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 
-	current := TODeliveryServiceRequest{}
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
+	var current tc.DeliveryServiceRequestV30
+	err := req.ReqInfo.Tx.QueryRowx(selectQuery+`WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("dsr assignment querying existing: " + err.Error()), http.StatusInternalServerError
 	}
@@ -796,19 +831,21 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 		return nil, nil, http.StatusOK
 	}
 
-	// Only assigneeID changes -- nothing else
-	assigneeID := req.AssigneeID
-	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
-	req.AssigneeID = assigneeID
-
 	// LastEditedBy field should not change with status update
-	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
+	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *current.ID); err != nil {
 		return api.ParseDBError(err)
 	}
 
-	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
+	// Only assigneeID changes -- nothing else
+	assigneeID := req.AssigneeID
+	req.DeliveryServiceRequestV15 = current.Downgrade()
+	req.AssigneeID = assigneeID
+
+	if err = req.APIInfo().Tx.QueryRowx(selectQuery+` WHERE r.id = $1`, *req.ID).StructScan(&current); err != nil {
 		return nil, errors.New("dsr assignment querying: " + err.Error()), http.StatusInternalServerError
 	}
+
+	req.DeliveryServiceRequestV15 = current.Downgrade()
 
 	return nil, nil, http.StatusOK
 }
@@ -823,7 +860,13 @@ func (req deliveryServiceRequestAssignment) ChangeLogMessage(action string) (str
 	if req.Assignee != nil {
 		a = *req.Assignee
 	}
-	message := `Changed assignee of ‘` + req.getXMLID() + `’ ` + req.GetType() + ` to '` + a + `'`
+	XMLID := "UNKNOWN"
+	if req.XMLID != nil {
+		XMLID = *req.XMLID
+	} else if req.DeliveryService != nil && req.DeliveryService.XMLID != nil {
+		XMLID = *req.DeliveryService.XMLID
+	}
+	message := fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", XMLID, a)
 
 	return message, nil
 }
@@ -831,13 +874,44 @@ func (req deliveryServiceRequestAssignment) ChangeLogMessage(action string) (str
 ////////////////////////////////////////////////////////////////
 // Status change
 
-func GetStatusSingleton() api.CRUDer {
+func GetStatusSingleton() api.Updater {
 	return &deliveryServiceRequestStatus{}
 }
 
 // deliveryServiceRequestStatus implements interfaces needed to update the request status only
 type deliveryServiceRequestStatus struct {
-	TODeliveryServiceRequest
+	api.APIInfoImpl `json:"-"`
+	tc.DeliveryServiceRequestV15
+}
+
+func (req *deliveryServiceRequestStatus) GetAuditName() string {
+	if req != nil && req.ID != nil {
+		return strconv.Itoa(*req.ID)
+	}
+	return "UNKNOWN"
+}
+
+func (req *deliveryServiceRequestStatus) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
+}
+
+func (req *deliveryServiceRequestStatus) GetKeys() (map[string]interface{}, bool) {
+	keys := map[string]interface{}{"id": 0}
+	success := false
+	if req.ID != nil {
+		keys["id"] = *req.ID
+		success = true
+	}
+	return keys, success
+}
+
+func (req *deliveryServiceRequestStatus) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int)
+	req.ID = &i
+}
+
+func (*deliveryServiceRequestStatus) GetType() string {
+	return "deliveryservice_request"
 }
 
 func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
@@ -848,8 +922,8 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 
-	current := TODeliveryServiceRequest{}
-	err := req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
+	var current tc.DeliveryServiceRequestV30
+	err := req.APIInfo().Tx.QueryRowx(selectQuery+` WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("dsr status querying existing: " + err.Error()), http.StatusInternalServerError
 	}
@@ -860,7 +934,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 
 	// keep everything else the same -- only update status
 	st := req.Status
-	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
+	req.DeliveryServiceRequestV15 = current.Downgrade()
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
@@ -869,7 +943,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 		return api.ParseDBError(err)
 	}
 
-	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
+	if err = req.APIInfo().Tx.QueryRowx(selectQuery+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
 		return nil, errors.New("dsr status update querying: " + err.Error()), http.StatusInternalServerError
 	}
 
@@ -883,6 +957,15 @@ func (req deliveryServiceRequestStatus) Validate() error {
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
 func (req deliveryServiceRequestStatus) ChangeLogMessage(action string) (string, error) {
-	message := `Changed status of ‘` + req.getXMLID() + `’ ` + req.GetType() + ` to '` + string(*req.Status) + `'`
-	return message, nil
+	XMLID := "UNKNOWN"
+	if req.XMLID != nil {
+		XMLID = *req.XMLID
+	} else if req.DeliveryService != nil && req.DeliveryService.XMLID != nil {
+		XMLID = *req.DeliveryService.XMLID
+	}
+	status := "UNKNOWN"
+	if req.Status != nil {
+		status = req.Status.String()
+	}
+	return fmt.Sprintf("Changed status of '%s' Delivery Service Request to '%s'", XMLID, status), nil
 }
