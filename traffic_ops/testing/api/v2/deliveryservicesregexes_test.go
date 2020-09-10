@@ -114,10 +114,10 @@ func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 
 	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
 
-	alerts, reqInfo, err := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
-	fmt.Println(alerts, reqInfo.RemoteAddr, err)
+	_, reqInfo, err := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
+	fmt.Println(reqInfo.RemoteAddr, err)
 	if err == nil {
-		log.Fatalf("Expecting a 400 Bad Request but got %v", err)
+		log.Fatalf("Expected: 400 Bad Request but got: %v", err)
 	}
 }
 

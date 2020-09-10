@@ -721,7 +721,7 @@
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
-            "setNumber": 25,
+            "setNumber": 3,
             "pattern" : ""
         }
     ],
