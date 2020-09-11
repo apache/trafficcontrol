@@ -20,7 +20,7 @@ package main
  */
 
 import (
-	"bytes"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -29,6 +29,8 @@ import (
 	"os/exec"
 	"strings"
 
+	_ "github.com/lib/pq"
+	"github.com/xo/dburl"
 	"gopkg.in/yaml.v2"
 )
 
@@ -171,68 +173,73 @@ func parseDBConfig() error {
 	return nil
 }
 
+func connectAndExecute(query string, queryErrPrefix string, returnRows bool) *sql.Rows {
+	//todo prepared statements
+	//todo inspect results of executing the above query for all possible cases (db exists, db dne, db inaccessible)
+	//todo determine test coverage of this portion
+	if db, err := dburl.Open(fmt.Sprintf("pg://%s:%s@%s:%s/", DBSuperUser, DBPassword, HostIP, HostPort)); err == nil {
+		if !returnRows {
+			if _, err := db.Exec(query); err != nil {
+				die(queryErrPrefix + ":" + err.Error())
+			}
+		} else {
+			if rows, err := db.Query(query); err != nil {
+				die(queryErrPrefix + ":" + err.Error())
+			} else {
+				return rows
+			}
+		}
+	} else {
+		die("couldn't connect to pg at " + HostIP + ": " + err.Error())
+	}
+	return nil
+}
+
 func createDB() {
-	dbExistsCmd := exec.Command("psql", "-h", HostIP, "-U", DBSuperUser, "-p", HostPort, "-tAc", "SELECT 1 FROM pg_database WHERE datname='"+DBName+"'")
-	out, err := dbExistsCmd.Output()
-	if err != nil {
-		die("unable to check if DB already exists: " + err.Error())
-	}
-	if len(out) > 0 {
-		fmt.Println("Database " + DBName + " already exists")
-		return
-	}
-	createDBCmd := exec.Command("createdb", "-h", HostIP, "-p", HostPort, "-U", DBSuperUser, "-e", "--owner", DBUser, DBName)
-	out, err = createDBCmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't create db " + DBName)
-	}
+	fmt.Println("Creating database: " + DBName)
+	connectAndExecute(`CREATE DATABASE `+DBName+` OWNER `+DBUser, "Couldn't create database "+DBName, false)
 }
 
 func dropDB() {
 	fmt.Println("Dropping database: " + DBName)
-	cmd := exec.Command("dropdb", "-h", HostIP, "-p", HostPort, "-U", DBSuperUser, "-e", "--if-exists", DBName)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't drop db " + DBName)
-	}
+	connectAndExecute(`DROP DATABASE `+DBName, "Couldn't drop database:"+DBName, false)
 }
 
 func createUser() {
 	fmt.Println("Creating user: " + DBUser)
-	userExistsCmd := exec.Command("psql", "-h", HostIP, "-U", DBSuperUser, "-p", HostPort, "-tAc", "SELECT 1 FROM pg_roles WHERE rolname='"+DBUser+"'")
-	out, err := userExistsCmd.Output()
-	if err != nil {
-		die("unable to check if user already exists: " + err.Error())
-	}
-	if len(out) > 0 {
-		fmt.Println("User " + DBUser + " already exists")
-		return
-	}
-	createUserCmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-U", DBSuperUser, "-etAc", "CREATE USER "+DBUser+" WITH LOGIN ENCRYPTED PASSWORD '"+DBPassword+"'")
-	out, err = createUserCmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't create user " + DBUser)
+
+	userExistsCmd := connectAndExecute(
+		"SELECT 1 FROM pg_roles WHERE rolname='"+DBUser+"'",
+		"Unable to query for user existence "+DBUser, true)
+	var exists int
+	if userExistsCmd.Scan(&exists); exists != 1 {
+		fmt.Println("User does not exist, creating: " + DBUser)
+		connectAndExecute(
+			"CREATE USER "+DBUser+" WITH LOGIN ENCRYPTED PASSWORD '"+DBPassword+"'",
+			"Unable to create user",
+			false)
 	}
 }
 
 func dropUser() {
-	cmd := exec.Command("dropuser", "-h", HostIP, "-p", HostPort, "-U", DBSuperUser, "-i", "-e", DBUser)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't drop user " + DBUser)
-	}
+	// TODO do i need to handle owned schema before dropping?
+	connectAndExecute(`DROP ROLE `+DBUser, `Couldn't drop user `+DBUser, false)
 }
 
 func showUsers() {
-	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-U", DBSuperUser, "-ec", `\du`)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't show users")
+	rows := connectAndExecute(`
+    SELECT usename AS role_name
+	FROM pg_catalog.pg_user
+	ORDER BY role_name desc;`, `Couldn't show users`, true)
+	// todo cleaner output
+	fmt.Println("role_name    |     role_attributes")
+	var roleName, roleAttributes string
+	for rows.Next() {
+		if err := rows.Scan(&roleName, &roleAttributes); err == nil {
+			fmt.Printf("%s            | %s", roleName, roleAttributes)
+		} else {
+			fmt.Printf("Couldn't read row: %s", err.Error())
+		}
 	}
 }
 
@@ -276,14 +283,7 @@ func seed() {
 	if err != nil {
 		die("unable to read '" + DBSeedsPath + "': " + err.Error())
 	}
-	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
-	cmd.Stdin = bytes.NewBuffer(seedsBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+DBPassword)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't patch database w/ required data")
-	}
+	connectAndExecute(string(seedsBytes), "Couldn't seed database", false)
 }
 
 func loadSchema() {
@@ -292,16 +292,10 @@ func loadSchema() {
 	if err != nil {
 		die("unable to read '" + DBSchemaPath + "': " + err.Error())
 	}
-	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
-	cmd.Stdin = bytes.NewBuffer(schemaBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+DBPassword)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't create database tables")
-	}
+	connectAndExecute(string(schemaBytes), "Couldn't create tables", false)
 }
 
+//TODO remove this after perlectomy
 func reverseSchema() {
 	fmt.Fprintf(os.Stderr, "WARNING: the '%s' command will be removed with Traffic Ops Perl because it will no longer be necessary\n", CmdReverseSchema)
 	cmd := exec.Command("db/reverse_schema.pl")
@@ -319,14 +313,7 @@ func patch() {
 	if err != nil {
 		die("unable to read '" + DBPatchesPath + "': " + err.Error())
 	}
-	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
-	cmd.Stdin = bytes.NewBuffer(patchesBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+DBPassword)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't patch database w/ required data")
-	}
+	connectAndExecute(string(patchesBytes), "Couldn't patch database", false)
 }
 
 func goose(arg string) {
