@@ -371,7 +371,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodDelete, `deliveryservice_requests/?$`, dsrequest.Delete, auth.PrivLevelPortal, Authenticated, nil, 22969850253, noPerlBypass},
 
 		//Delivery service request: Actions
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryservice_requests/{id}/assign/?$`, dsrequest.GetAssignment, auth.PrivLevelReadOnly, Authenticated, nil, 270316029031, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, api.UpdateHandler(dsrequest.GetAssignmentSingleton()), auth.PrivLevelOperations, Authenticated, nil, 27031602903, noPerlBypass},
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryservice_requests/{id}/status/?$`, dsrequest.GetStatus, auth.PrivLevelReadOnly, Authenticated, nil, 26841509931, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPut, `deliveryservice_requests/{id}/status$`, api.UpdateHandler(dsrequest.GetStatusSingleton()), auth.PrivLevelPortal, Authenticated, nil, 2684150993, noPerlBypass},
 
 		//Delivery service request comment: CRUD

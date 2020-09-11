@@ -16,11 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
@@ -92,6 +93,45 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 		if len(alerts.Alerts) == 0 {
 			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
 		}
+	})
+}
+
+func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
+		if len(testData.DeliveryServiceRequests) < 1 {
+			t.Fatal("Need at least one DSR for testing")
+		}
+		dsr := testData.DeliveryServiceRequests[0]
+		me, _, err := TOSession.GetUserCurrent()
+		if err != nil {
+			t.Fatalf("Fetching current user: %v", err)
+		}
+		if me.UserName == nil {
+			t.Fatal("Current user has no username")
+		}
+		if me.ID == nil {
+			t.Fatal("Current user has no ID")
+		}
+		dsr.Assignee = *me.UserName
+		dsr.AssigneeID = *me.ID
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err != nil {
+			t.Fatalf("Creating DSR: %v", err)
+		}
+
+		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
+		if err != nil {
+			t.Fatalf("Fetching DSRs: %v", err)
+		}
+		if len(dsrs) < 1 {
+			t.Fatal("No DSRs returned after creating one")
+		}
+		d := dsrs[0]
+		if len(dsrs) > 1 {
+			t.Errorf("Too many DSRs returned after creating only one: %d", len(dsrs))
+			t.Logf("Testing will proceed with DSR: %v", d)
+		}
+
 	})
 }
 
