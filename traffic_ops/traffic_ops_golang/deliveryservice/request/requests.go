@@ -126,6 +126,33 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
 }
 
+// getOriginals fetches the Delivery Services identified in 'ids' and sets
+// them as originals on the Delivery Services to which each ID maps in
+// needOriginals. It returns a response code to use if an error occurred, in
+// which case it also returns a user error and a system error.
+func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV30) (int, error, error) {
+	if len(ids) > 0 {
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(ids)}, tx)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+
+		for _, original := range originals {
+			if original.ID == nil {
+				log.Warnf("Trying to fill in originals: found Delivery Service with no ID")
+			} else if need, ok := needOriginals[*original.ID]; ok {
+				for _, n := range need {
+					n.Original = new(tc.DeliveryServiceV30)
+					*n.Original = original
+				}
+			} else {
+				log.Warnf("Trying to fill in originals: found Delivery Service that wasn't identified by a DSR (#%d)", *original.ID)
+			}
+		}
+	}
+	return http.StatusOK, nil, nil
+}
+
 // Get is the GET handler for /deliveryservice_requests.
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -224,28 +251,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 3 {
-		if len(originalIDs) > 0 {
-			var originals []tc.DeliveryServiceV30
-			originals, userErr, sysErr, errCode = deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(originalIDs)}, inf.Tx)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-				return
-			}
-
-			for _, original := range originals {
-				if original.ID == nil {
-					log.Warnf("Trying to fill in originals: found Delivery Service with no ID")
-				} else if need, ok := needOriginals[*original.ID]; ok {
-					for _, n := range need {
-						n.Original = new(tc.DeliveryServiceV30)
-						*n.Original = original
-					}
-				} else {
-					log.Warnf("Trying to fill in originals: found Delivery Service that wasn't identified by a DSR (#%d)", *original.ID)
-				}
-			}
+		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		} else {
+			api.WriteResp(w, r, dsrs)
 		}
-		api.WriteResp(w, r, dsrs)
 		return
 	}
 
