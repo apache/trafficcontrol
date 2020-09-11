@@ -44,11 +44,11 @@ tbody tr:nth-child(odd) {
 	background: #fff;
 }
 .error {
-	background-color: #f00;
+	background-color: #f00!important;
 }
 
 .warning {
-	background-color: #f80;
+	background-color: #f80!important;
 }
 
 #cache-states td:nth-child(n+4),

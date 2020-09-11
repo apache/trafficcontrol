@@ -246,7 +246,7 @@ func processStatResults(
 	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
-	mc tc.LegacyTrafficMonitorConfigMap,
+	mc tc.TrafficMonitorConfigMap,
 	precomputedData map[tc.CacheName]cache.PrecomputedData,
 	lastResults map[tc.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
@@ -294,7 +294,7 @@ func processStatResults(
 		// Don't add errored maxes or precomputed DSStats
 		if result.Error == nil {
 			// max and precomputed always contain the latest result from each cache
-			statMaxKbpses.AddMax(result)
+			statMaxKbpses[result.ID] = uint64(result.PrecomputedData.MaxKbps)
 			// if we failed to compute the OutBytes, keep the outbytes of the last result.
 			if result.PrecomputedData.OutBytes == 0 {
 				result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
