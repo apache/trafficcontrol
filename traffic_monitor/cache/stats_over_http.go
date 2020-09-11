@@ -406,7 +406,10 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				continue
 			}
 			dsName := string(ds)
-			dsStat := precomputed.DeliveryServiceStats[dsName]
+			dsStat, ok := precomputed.DeliveryServiceStats[dsName]
+			if !ok || dsStat == nil {
+				dsStat = new(DSStat)
+			}
 
 			/* Null check this dsStat, its possible to have stats entries for a DS that does not exist
 			in the table due to errant queries. ATS will still insert them into the remap stats but
