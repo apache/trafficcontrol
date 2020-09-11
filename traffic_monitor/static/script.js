@@ -160,23 +160,13 @@ function getCacheStates() {
 	}
 
 	function parseBandwidth(server) {
-		if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps")) {
+		if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps") &&
+				Object.prototype.hasOwnProperty.call(server, "bandwidth_capacity_kbps")) {
 			const kbps = (server.bandwidth_kbps / kilobitsInMegabit).toFixed(2);
 			const max = numberStrWithCommas((server.bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
 			return `${kbps} / ${max}`;
 		} else {
 			return "N/A";
-		}
-	}
-	function parseStatusClass(server, row) {
-		if (Object.prototype.hasOwnProperty.call(server, "status")) {
-			if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
-				row.classList.add("warning");
-			} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
-				row.classList.add("error");
-			} else if (server.status.indexOf(" availableBandwidth") !== -1) {
-				row.classList.add("error");
-			}
 		}
 	}
 
@@ -207,13 +197,22 @@ function getCacheStates() {
 			const cacheRowChildren = row.children;
 			const indicatorDiv = cacheRowChildren[0].children[0];
 
+			if (Object.prototype.hasOwnProperty.call(server, "status") &&
+					Object.prototype.hasOwnProperty.call(server, "combined_available")) {
+				if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
+					row.classList.add("warning");
+				} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
+					row.classList.add("error");
+				} else if (server.status.indexOf(" availableBandwidth") !== -1) {
+					row.classList.add("error");
+				}
+			}
+
 			cacheRowChildren[1].textContent = serverName;
 			cacheRowChildren[2].textContent = server.type || "UNKNOWN";
 			cacheRowChildren[3].textContent = parseIPAvailable(server, "ipv4_available");
 			cacheRowChildren[4].textContent = parseIPAvailable(server, "ipv6_available");
 			cacheRowChildren[5].textContent = server.status || "";
-			parseStatusClass(server, row);
-
 			cacheRowChildren[6].textContent = server.load_average || "";
 			cacheRowChildren[7].textContent = server.query_time_ms || "";
 			cacheRowChildren[8].textContent = server.health_time_ms || "";
@@ -251,7 +250,11 @@ function getCacheStates() {
 					cells[4].textContent = parseBandwidth(stat);
 					cells[5].textContent = stat.connection_count || "N/A";
 
-					parseStatusClass(stat, interfaceRow);
+					if (Object.prototype.hasOwnProperty.call(stat, "available")) {
+					    if (stat.available === false) {
+							interfaceRow.classList.add("error");
+						}
+					}
 
 					interfaceBody.prepend(interfaceRow);
 				}
