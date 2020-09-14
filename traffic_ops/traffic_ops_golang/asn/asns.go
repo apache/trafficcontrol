@@ -49,8 +49,8 @@ func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
 func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"asn":            dbhelpers.WhereColumnInfo{"a.asn", nil},
-		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", nil},
+		"asn":            dbhelpers.WhereColumnInfo{"a.asn", api.IsInt},
+		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", api.IsInt},
 		"id":             dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
 		"cachegroupName": dbhelpers.WhereColumnInfo{"c.name", nil},
 	}
@@ -115,11 +115,11 @@ func (asn TOASNV11) Validate() error {
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
 	}
-	err := asn.HasSameNumberAndCachegroup()
-	if err != nil {
-		return err
+	if errs["asn"] != nil || errs["cachegroupId"] != nil {
+		return util.JoinErrs(tovalidate.ToErrors(errs))
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	err := asn.HasSameNumberAndCachegroup()
+	return err
 }
 
 func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
