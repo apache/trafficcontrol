@@ -160,7 +160,6 @@ public class TrafficRouterTest {
         String ip = "1.2.3.4";
         Track track = new Track();
         Geolocation geolocation = mock(Geolocation.class);
-
         when(trafficRouter.getClientLocation(ip, deliveryService, null, track)).thenReturn(geolocation);
         when(geolocation.isDefaultLocation()).thenReturn(true);
         when(geolocation.getCountryCode()).thenReturn("US");
@@ -172,6 +171,7 @@ public class TrafficRouterTest {
         Cache cache = mock(Cache.class);
         List<Cache> list = new ArrayList<>();
         list.add(cache);
+        when(deliveryService.getMissLocation()).thenReturn(defaultUSLocation);
         when(trafficRouter.getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track)).thenReturn(list);
         when(trafficRouter.selectCachesByGeo(ip, deliveryService, null, track)).thenCallRealMethod();
         List<Cache> result = trafficRouter.selectCachesByGeo(ip, deliveryService, null, track);

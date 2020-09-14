@@ -491,9 +491,7 @@ public class TrafficRouter {
 	 * extracted based on the client's location.
 	 * @param track The {@link #Track} object that tracks how requests are served
 	 */
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
-		boolean useDSDefaults = false;
 		Geolocation clientLocation = null;
 
 		try {
@@ -515,12 +513,13 @@ public class TrafficRouter {
 			}
 		}
 
+		track.setResult(ResultType.GEO);
 		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
 			if (deliveryService.getMissLocation() != null) {
 				clientLocation = deliveryService.getMissLocation();
-				useDSDefaults = true;
+				track.setResult(ResultType.GEO_DS);
 			} else {
-				clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+				clientLocation = getDefaultGeoLocationsOverride().get(clientLocation.getCountryCode());
 			}
 		}
 
@@ -528,12 +527,6 @@ public class TrafficRouter {
 
 		if (caches == null || caches.isEmpty()) {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
-		}
-
-		if (useDSDefaults) {
-			track.setResult(ResultType.GEO_DS);
-		} else {
-			track.setResult(ResultType.GEO);
 		}
 		return caches;
 	}
