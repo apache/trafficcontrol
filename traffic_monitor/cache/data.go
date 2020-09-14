@@ -75,18 +75,14 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[tc.CacheName]map[string]AvailableStatus
+type AvailableStatuses map[string]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[tc.CacheName]map[string]AvailableStatus{})
-	for cacheName, interfaces := range a {
-		interfaceStats := make(map[string]AvailableStatus)
-		for interfaceName, status := range interfaces {
-			interfaceStats[interfaceName] = status
-		}
-		b[cacheName] = interfaceStats
+	b := AvailableStatuses(make(map[string]AvailableStatus, len(a)))
+	for cacheName, status := range a {
+		b[cacheName] = status
 	}
 	return b
 }
@@ -171,29 +167,33 @@ type ResultInfoHistory map[tc.CacheName][]ResultInfo
 // ResultInfo contains all the non-stat result info. This includes the cache ID,
 // any errors, the time of the poll, the request time duration, Astats System
 // (Vitals), Poll ID, and Availability.
+// TODO: Determine why this exists, it doesn't seem to differ from Result in any
+// meaningful way.
 type ResultInfo struct {
-	Available   bool
-	Error       error
-	ID          string
-	PollID      uint64
-	RequestTime time.Duration
-	Statistics  Statistics
-	Time        time.Time
-	UsingIPv4   bool
-	Vitals      Vitals
+	Available       bool
+	Error           error
+	ID              string
+	PollID          uint64
+	RequestTime     time.Duration
+	Statistics      Statistics
+	Time            time.Time
+	UsingIPv4       bool
+	Vitals          Vitals
+	InterfaceVitals map[string]Vitals
 }
 
 func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
-		Available:   r.Available,
-		Error:       r.Error,
-		ID:          r.ID,
-		PollID:      r.PollID,
-		RequestTime: r.RequestTime,
-		Statistics:  r.Statistics,
-		Time:        r.Time,
-		UsingIPv4:   r.UsingIPv4,
-		Vitals:      r.Vitals,
+		Available:       r.Available,
+		Error:           r.Error,
+		ID:              r.ID,
+		PollID:          r.PollID,
+		RequestTime:     r.RequestTime,
+		Statistics:      r.Statistics,
+		Time:            r.Time,
+		UsingIPv4:       r.UsingIPv4,
+		Vitals:          r.Vitals,
+		InterfaceVitals: r.InterfaceVitals,
 	}
 }
 
@@ -222,17 +222,14 @@ func (a ResultInfoHistory) Add(r Result, limit uint64) {
 	a[tc.CacheName(r.ID)] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[tc.CacheName(r.ID)]...), limit)
 }
 
-// Kbpses is the kbps values of each cache.
-type Kbpses map[tc.CacheName]int64
+// Kbpses is the kbps values of each interface of a cache server.
+type Kbpses map[string]uint64
 
+// Copy returns a deep copy of the Kbpses.
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}
 	for k, v := range a {
 		b[k] = v
 	}
 	return b
-}
-
-func (a Kbpses) AddMax(r Result) {
-	a[tc.CacheName(r.ID)] = r.PrecomputedData.MaxKbps
 }
