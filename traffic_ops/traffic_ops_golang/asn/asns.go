@@ -20,6 +20,7 @@ package asn
  */
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -90,10 +91,33 @@ func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
+func (asn TOASNV11) HasSameNumberAndCachegroup() error {
+	if asn.APIInfo() == nil || asn.APIInfo().Tx == nil {
+		return errors.New("couldn't perform check to see if same number and cachegroup exist already")
+	}
+	if asn.ASN == nil || asn.CachegroupID == nil {
+		return errors.New("no asn or cachegroup ID specified")
+	}
+	query := `SELECT id from asn where asn=$1 AND cachegroup=$2`
+	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN, *asn.CachegroupID)
+	if err != nil {
+		return errors.New("selecting asns: " + err.Error())
+	}
+	defer rows.Close()
+	if rows.Next() {
+		return errors.New("an asn with the specified number and cachegroup already exists")
+	}
+	return nil
+}
+
 func (asn TOASNV11) Validate() error {
 	errs := validation.Errors{
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
+	}
+	err := asn.HasSameNumberAndCachegroup()
+	if err != nil {
+		return err
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
