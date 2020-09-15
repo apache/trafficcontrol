@@ -25,7 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // Handler handles peer Traffic Monitor data, taking a raw reader, parsing the data, and passing a result object to the ResultChannel. This fulfills the common `Handler` interface.
@@ -50,7 +50,7 @@ type Result struct {
 }
 
 // Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
-func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, usingIPv4 bool, pollCtx interface{}, pollFinished chan<- uint64) {
 	result := Result{
 		ID:           tc.TrafficMonitorName(id),
 		Available:    false,

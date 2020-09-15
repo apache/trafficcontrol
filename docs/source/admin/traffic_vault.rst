@@ -18,7 +18,7 @@ Traffic Vault Administration
 ****************************
 Installing Traffic Vault
 ========================
-In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <http://docs.basho.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <http://docs.basho.com/riak/latest/ops/building/installing/>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
+In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <https://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <https://docs.riak.com/riak/kv/latest/setup/installing/index.html>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
 
 Configuring Traffic Vault
 =========================
@@ -29,7 +29,7 @@ Self Signed Certificate configuration
 .. note:: Self-signed certificates are not recommended for production use. Intended for development or learning purposes only. Modify subject as necessary.
 
 .. code-block:: shell
-    :caption: Self-Signed Certificate Configuration
+	:caption: Self-Signed Certificate Configuration
 
 	cd ~
 	mkdir certs
@@ -64,15 +64,20 @@ The following steps need to be performed on each Riak server in the cluster:
 	- ``ssl.keyfile = /etc/riak/certs/server.key``
 	- ``ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt``
 
-#. Add a line at the bottom of the :file:`riak.conf` for TLSv1 by setting ``tls_protocols.tlsv1 = on``
+.. _tv-admin-enable-tlsv1.1:
+
+Enabling TLS 1.1 (required)
+"""""""""""""""""""""""""""
+
+#. Add a line at the bottom of the :file:`riak.conf` for TLSv1.1 by setting ``tls_protocols.tlsv1.1 = on``
 #. Once the configuration file has been updated restart Riak
-#. Consult the `Riak documentation <http://docs.basho.com/riak/kv/2.2.3/setup/installing/verify/>`_ for instructions on how to verify the installed service
+#. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
 ``riak-admin`` Configuration
 ----------------------------
 ``riak-admin`` is a command line utility used to configure Riak that needs to be run as root on a server in the Riak cluster.
 
-.. seealso:: `The riak-admin documentation <http://docs.basho.com/riak/kv/2.2.3/using/admin/riak-admin/>`_
+.. seealso:: `The riak-admin documentation <https://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
 
 .. code-block:: shell
 	:caption: Traffic Vault Setup with ``riak-admin``
@@ -104,8 +109,7 @@ The following steps need to be performed on each Riak server in the cluster:
 	riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default url_sig_keys to keysusers
 	riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default cdn_uri_sig_keys to keysusers
 
-.. seealso:: For more information on security in Riak, see the `Riak Security documentation <http://docs.basho.com/riak/2.0.4/ops/advanced/security/>`_.
-.. seealso:: For more information on authentication and authorization in Riak, see the `Riak Authentication and Authorization documentation <http://docs.basho.com/riak/2.0.4/ops/running/authz/>`_.
+.. seealso:: For more information on security in Riak, see the `Riak Security documentation <https://docs.riak.com/riak/kv/latest/using/security/index.html>`_.
 
 
 Traffic Ops Configuration
@@ -114,7 +118,7 @@ Before a fully set-up Traffic Vault instance may be used, it must be added as a 
 
 Configuring Riak Search
 =======================
-In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, Traffic Vault uses `Riak search <http://docs.basho.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <http://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
+In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, Traffic Vault uses `Riak search <https://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <https://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
 
 Riak Configuration
 ------------------
@@ -178,7 +182,7 @@ After Riak has been configured to use Riak Search, permissions still need need t
 		# Upload the schema to the Riak server using its API
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/schema/sslkeys" -H "Content-Type: application/xml" -d @sslkeys.xml
+		curl --tlsv1.1 --tls-max 1.1 -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/schema/sslkeys" -H "Content-Type: application/xml" -d @sslkeys.xml
 
 #. Add the search index to Riak.
 
@@ -187,47 +191,30 @@ After Riak has been configured to use Riak Search, permissions still need need t
 
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/index/sslkeys" -H 'Content-Type: application/json' -d '{"schema":"sslkeys"}'
+		curl --tlsv1.1 --tls-max 1.1 -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/index/sslkeys" -H 'Content-Type: application/json' -d '{"schema":"sslkeys"}'
 
-4. Associate the ``sslkeys`` index to the ``ssl`` bucket in Riak
+#. Associate the ``sslkeys`` index to the ``ssl`` bucket in Riak
 
 	.. code-block:: bash
 		:caption: Using the Riak API to Create an Index-to-Bucket Association for ``sslkeys``
 
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvs -XPUT "https://admin:pass@trafficvault.infra.ciab.test:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'
+		curl --tlsv1.1 --tls-max 1.1 -kvs -XPUT "https://admin:pass@trafficvault.infra.ciab.test:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'
 
-Adding Newly Indexed Fields to Existing Records
-"""""""""""""""""""""""""""""""""""""""""""""""
-Riak Search (using Apache Solr) will now index all **new** records that are added to the ``ssl`` bucket. The ``cdn``, ``deliveryservice``, and ``hostname`` fields are indexed. When a search is performed Riak will return the indexed fields along with the certificate and key values for a SSL record. In order to add the indexed fields to current records and to get the current records added, the :file:`traffic_ops/app/script/update_riak_for_search.pl` script needs to be run. This does not need to be done on new installs. The following explains how to run the script.
+#. To validate the search is working run a query against the Riak database server, or use the Traffic Ops API endpoint: :ref:`to-api-cdns-name-name-sslkeys`
 
-.. code-block:: bash
-	:caption: Example Usage of :file:`traffic_ops/app/script/update_riak_for_search.pl`
+	.. code-block:: bash
+		:caption: Validate Riak Search is Working
 
-	### Note that the following steps should be done on the Traffic VAULT server ###
+		# Note that the assumptions made here are that the "admin" user's password is
+		# "pass", the Traffic Vault server's Riak database is accessible at port 8088 on
+		# the hostname "trafficvault.infra.ciab.test", $COOKIE contains a valid
+		# Mojolicious cookie for a Traffic Ops user with proper permissions, and the
+		# Traffic Ops server is available at the hostname "trafficops.infra.ciab.test"
 
-	# Obtain the script - in this example by downloading it from GitHub
-	wget https://raw.githubusercontent.com/apache/trafficcontrol/master/traffic_ops/app/script/update_riak_for_search.pl
+		# Verify by querying Riak directly
+		curl --tlsv1.1 --tls-max 1.1 -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
 
-	# Assuming Traffic Ops is hosted at trafficops.infra.ciab.test, with username 'admin' and password 'twelve!'
-	# the script should be run like so:
-
-	./update_riak_for_search.pl -to_url=https://trafficops.infra.ciab.test -to_un=admin -to_pw="twelve!"
-
-To validate the search is working run a query against the Riak database server, or use the Traffic Ops API endpoint: :ref:`to-api-cdns-name-name-sslkeys`
-
-.. code-block:: bash
-	:caption: Validate Riak Search is Working
-
-	# Note that the assumptions made here are that the "admin" user's password is
-	# "pass", the Traffic Vault server's Riak database is accessible at port 8088 on
-	# the hostname "trafficvault.infra.ciab.test", $COOKIE contains a valid
-	# Mojolicious cookie for a Traffic Ops user with proper permissions, and the
-	# Traffic Ops server is available at the hostname "trafficops.infra.ciab.test"
-
-	# Verify by querying Riak directly
-	curl -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
-
-	# Verify using the Traffic Ops API
-	curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/1.4/cdns/name/mycdn/sslkeys
+		# Verify using the Traffic Ops API
+		curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/2.0/cdns/name/mycdn/sslkeys

@@ -89,7 +89,7 @@ sub generate {
 
 		return $self->render( data => $response->{iso} );
 	} else {
-		return $self->success( $response, "Generate ISO was successful." );
+		return $self->with_deprecation_with_custom_message("Generate ISO was successful.", "success", 200, "Non streaming ISO generation is deprecated.")
 	}
 
 }

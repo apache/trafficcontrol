@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 
 	"golang.org/x/sys/unix"
 
@@ -43,7 +44,7 @@ import (
 // Start starts the poller and handler goroutines
 //
 func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
-	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, cfg.CRConfigHistoryCount, cfg))
+	toSession := towrap.NewTrafficOpsSessionThreadsafe(nil, nil, cfg.CRConfigHistoryCount, cfg)
 
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
@@ -53,12 +54,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData)
+	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData)
+	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData)
+	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -68,7 +69,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
-	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
+	peerStates := peer.NewCRStatesPeersThreadsafe(cfg.PeerOptimisticQuorumMin) // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
@@ -125,7 +126,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		toSession,
 		toData,
 		[]chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel},
-		[]chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel},
+		[]chan<- towrap.TrafficOpsSessionThreadsafe{monitorConfigPoller.SessionChannel},
 		localStates,
 		peerStates,
 		combinedStates,
@@ -199,4 +200,14 @@ func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, erro
 			f(ioutil.ReadFile(filename))
 		}
 	}()
+}
+
+// ipv6CIDRStrToAddr takes an IPv6 CIDR string, e.g. `2001:DB8::1/32` returns `2001:DB8::1`.
+// It does not verify cidr is a valid CIDR or IPv6. It only removes the first slash and everything after it, for performance.
+func ipv6CIDRStrToAddr(cidr string) string {
+	i := strings.Index(cidr, `/`)
+	if i == -1 {
+		return cidr
+	}
+	return cidr[:i]
 }

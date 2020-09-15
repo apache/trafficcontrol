@@ -22,7 +22,6 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -33,40 +32,6 @@ import (
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
-
-func randStrArr() []string {
-	num := int(rand.Int63n(10))
-	s := []string{}
-	for i := 0; i < num; i++ {
-		s = append(s, *randStr())
-	}
-	return s
-}
-
-func randMatchlistArr() []tc.MatchList {
-	num := int(rand.Int63n(10))
-	arr := []tc.MatchList{}
-	for i := 0; i < num; i++ {
-		arr = append(arr, tc.MatchList{
-			Regex:     *randStr(),
-			MatchType: *randStr(),
-		})
-	}
-	return arr
-}
-
-func randMatchsetArr() []*tc.MatchSet {
-	num := int(rand.Int63n(10))
-	httpStr := "HTTP"
-	arr := []*tc.MatchSet{}
-	for i := 0; i < num; i++ {
-		arr = append(arr, &tc.MatchSet{
-			Protocol:  httpStr,
-			MatchList: randMatchlistArr(),
-		})
-	}
-	return arr
-}
 
 func randDS() tc.CRConfigDeliveryService {
 	// truePtr := true
@@ -82,9 +47,11 @@ func randDS() tc.CRConfigDeliveryService {
 	ttlNS := "3600"
 	ttlSOA := "86400"
 	geoProviderStr := GeoProviderMaxmindStr
+	ecsEnabled := false
 	return tc.CRConfigDeliveryService{
-		AnonymousBlockingEnabled: &falseStrPtr,
-		CoverageZoneOnly:         false,
+		AnonymousBlockingEnabled:  &falseStrPtr,
+		CoverageZoneOnly:          false,
+		ConsistentHashQueryParams: []string{},
 		Dispersion: &tc.CRConfigDispersion{
 			Limit:    42,
 			Shuffled: true,
@@ -101,9 +68,10 @@ func randDS() tc.CRConfigDeliveryService {
 			AcceptHTTPS:     false,
 			RedirectOnHTTPS: false,
 		},
-		RegionalGeoBlocking: &falseStrPtr,
-		ResponseHeaders:     nil,
-		RequestHeaders:      nil,
+		RegionalGeoBlocking:  &falseStrPtr,
+		ResponseHeaders:      nil,
+		RequestHeaders:       nil,
+		RequiredCapabilities: randStrArray(),
 		Soa: &tc.SOA{
 			Admin:          &ttlAdmin,
 			ExpireSeconds:  &ttlExpire,
@@ -112,6 +80,8 @@ func randDS() tc.CRConfigDeliveryService {
 			RetrySeconds:   &ttlRetry,
 		},
 		SSLEnabled: false,
+		EcsEnabled: &ecsEnabled,
+		Topology:   randStr(),
 		TTL:        ttl,
 		TTLs: &tc.CRConfigTTL{
 			ASeconds:    &ttlStr,
@@ -154,12 +124,73 @@ func ExpectedMakeDSes() map[string]tc.CRConfigDeliveryService {
 }
 
 func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string) {
-	// select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
-
-	rows := sqlmock.NewRows([]string{"xml_id", "miss_lat", "miss_long", "protocol", "ttl", "routing_name", "geo_provider", "type", "geo_limit", "geo_limit_countries", "geeo_limit_redirect_url", "initial_dispersion", "regional_geo_blocking", "tr_response_headers", "max_dns_answers", "profile", "dns_bypass_ip", "dns_bypass_ip6", "dns_bypass_ttl", "dns_bypass_cname", "http_bypass_fqdn", "ipv6_routing_enabled", "deep_caching_type", "tr_request_headers", "tr_response_headers", "anonymous_blocking_enabled", "consistent_hash_regex"})
+	rows := sqlmock.NewRows([]string{
+		"anonymous_blocking_enabled",
+		"consistent_hash_regex",
+		"deep_caching_type",
+		"initial_dispersion",
+		"dns_bypass_cname",
+		"dns_bypass_ip",
+		"dns_bypass_ip6",
+		"dns_bypass_ttl",
+		"query_keys",
+		"routing_name",
+		"ttl",
+		"ecs_enabled",
+		"regional_geo_blocking",
+		"geo_limit",
+		"geo_limit_countries",
+		"geeo_limit_redirect_url",
+		"geo_provider",
+		"http_bypass_fqdn",
+		"ipv6_routing_enabled",
+		"max_dns_answers",
+		"miss_lat",
+		"miss_long",
+		"profile",
+		"protocol",
+		"required_capabilities",
+		"topology",
+		"tr_request_headers",
+		"tr_response_headers",
+		"tr_response_headers",
+		"type",
+		"xml_id"})
 
 	for dsName, ds := range expected {
-		rows = rows.AddRow(dsName, ds.MissLocation.Lat, ds.MissLocation.Lon, 0, *ds.TTL, *ds.RoutingName, 0, "HTTP", 0, "", "", 42, false, "", nil, "", "", "", 0, "", *ds.BypassDestination["HTTP"].FQDN, *ds.IP6RoutingEnabled, nil, "", "", false, "")
+		queryParams := "{" + strings.Join(ds.ConsistentHashQueryParams, ",") + "}"
+		rows = rows.AddRow(
+			false,
+			"",
+			nil,
+			42,
+			"",
+			"",
+			"",
+			0,
+			queryParams,
+			*ds.RoutingName,
+			*ds.TTL,
+			*ds.EcsEnabled,
+			false,
+			0,
+			"",
+			"",
+			0,
+			*ds.BypassDestination["HTTP"].FQDN,
+			*ds.IP6RoutingEnabled,
+			nil,
+			ds.MissLocation.Lat,
+			ds.MissLocation.Lon,
+			"",
+			0,
+			"{"+strings.Join(ds.RequiredCapabilities, ",")+"}",
+			ds.Topology,
+			"",
+			"",
+			"",
+			"HTTP",
+			dsName)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 }

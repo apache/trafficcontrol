@@ -22,5 +22,11 @@
     "regionalGeoBlocking": false,
     "routingName": "video",
     "anonymousBlockingEnabled": false,
-    "signingAlgorithm": null
+    "signingAlgorithm": null,
+    "consistentHashQueryParams": [
+        "zyx",
+        "xxx",
+        "pdq",
+        "abc"
+    ]
 }

@@ -73,7 +73,12 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
+	my $alt = "GET /asns with the 'id' parameter";
+
 	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => ['cachegroup'] } );
+	if ( !defined($rs_data) ) {
+		return $self->with_deprecation("Resource not found", "error", 404, $alt);
+	}
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -86,7 +91,7 @@ sub show {
 			}
 		);
 	}
-	$self->success( \@data );
+	$self->deprecation(200, $alt, \@data);
 }
 
 sub update {

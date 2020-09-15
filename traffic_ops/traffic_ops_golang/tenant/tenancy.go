@@ -58,6 +58,18 @@ func GetDeliveryServiceTenantInfo(xmlID string, tx *sql.Tx) (*DeliveryServiceTen
 	return &ds, nil
 }
 
+func GetDeliveryServiceTenantInfoID(tx *sql.Tx, dsID int) (*DeliveryServiceTenantInfo, error) {
+	ds := DeliveryServiceTenantInfo{}
+	ds.ID = util.IntPtr(dsID)
+	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, &ds.ID).Scan(&ds.TenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return &ds, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+		}
+		return nil, errors.New("querying tenant id from delivery service: " + err.Error())
+	}
+	return &ds, nil
+}
+
 // Check checks that the given user has access to the given XMLID. Returns a user error, system error,
 // and the HTTP status code to be returned to the user if an error occurred. On success, the user error
 // and system error will both be nil, and the error code should be ignored.
@@ -79,7 +91,9 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
-// CheckID checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
+// CheckID checks that the given user has access to the given delivery service. Returns a user error,
+// a system error, and an HTTP error code. If both the user and system error are nil, the error
+// code should be ignored.
 func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	dsTenantID, ok, err := getDSTenantIDByIDTx(tx, dsID)
 	if err != nil {

@@ -1,0 +1,190 @@
+#! /usr/bin/python
+
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#	 http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+#
+
+from __future__ import print_function
+
+import inspect
+import json
+import logging
+import optparse
+import os
+import sys
+
+import storage.fs_adapter
+import vault.db
+
+if sys.version_info >= (3, 0):
+	#python 3
+	from configparser import ConfigParser
+else:	
+	#python 2
+	from ConfigParser import ConfigParser
+
+
+def main():
+	progPath = inspect.stack()[-1][1]
+	progAbsPath = os.path.abspath( progPath )
+	progAbsPath = os.path.dirname(os.path.normpath(progAbsPath))
+
+	confDir = os.path.join(progAbsPath, "conf")
+	confFile = os.path.join(confDir, "cfg.ini")
+	try:
+		config = ConfigParser()
+		config.read(confFile)
+	except IOError as e:
+		print("Failed to read configuration - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
+		return 1
+	except Exception as e:
+		print("Failed to read configuration: {0}".format(e), file=sys.stderr)
+		return 1
+
+	generalCfg = dict(config.items("general")) if config.has_section("general") else {}
+	logDir = generalCfg.get("log-dir", os.path.join(progAbsPath, "var/log"))
+	debugLogFile = os.path.join(logDir, "traffic-ops-vault-debug.log")
+	mainLogFile = os.path.join(logDir, "traffic-ops-vault.log")
+	try:
+		if not os.path.exists(logDir):
+			os.makedirs(logDir)
+	except IOError as e:
+		print("Failed to create log dir - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
+		return 1
+	except Exception as e:
+		print("Failed to create log dir: {0}".format(e), file=sys.stderr)
+		return 1
+
+	global logger
+	logger = logging.getLogger(__name__)
+	logger.setLevel(logging.INFO)
+	# create file handler which logs even debug messages
+	fhd = logging.FileHandler(debugLogFile)
+	fhd.setLevel(logging.DEBUG)
+	fhm = logging.FileHandler(mainLogFile)
+	fhm.setLevel(logging.INFO)
+	#TODO Set based on command line
+	verbose = logging.StreamHandler(sys.stdout)
+	verbose.setLevel(logging.INFO)   
+	# create formatter and add it to the handlers
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	fhm.setFormatter(formatter)
+	fhd.setFormatter(formatter)
+	verbose.setFormatter(formatter)
+	# add the handlers to the logger
+	logger.addHandler(fhm)
+	logger.addHandler(fhd)
+	logger.addHandler(verbose)
+	
+	parser = optparse.OptionParser()
+	operationModeGroup = optparse.OptionGroup(parser, "Operation mode options",
+											  "The vault script may work in one of the following modes.")
+	parser.add_option_group(operationModeGroup)
+
+	operationModeGroup.add_option("--ping",
+								  action="store_true", dest="ping", default=False, help="Ping")
+
+	operationModeGroup.add_option("--get-parameter",
+								  action="store_true", dest="getParameter", default=False, 
+								  help="Get parameter. Parameter relative path should be provided.")
+
+	operationModeGroup.add_option("--set-parameter",
+								  action="store_true", dest="setParameter", default=False, 
+								  help="Set parameter. Parameter relative path should be provided.")
+
+	operationModeGroup.add_option("--delete-parameter",
+								  action="store_true", dest="deleteParameter", default=False, 
+								  help="Delete parameter. Parameter relative path should be provided.")
+
+	operationModeGroup.add_option("--search-parameters",
+								  action="store_true", dest="searchParameters", default=False, 
+								  help="Search parameter. Parameter relative path should be provided.")
+
+	(options, args) = parser.parse_args()
+
+	storageAdapterType = generalCfg.get("storage-adapter-type")
+	if not storageAdapterType:
+		logger.error("Missing storage adapter type cfg")
+		return 1
+	elif storageAdapterType == "fs":
+		storageAdapter = storage.fs_adapter.FsAdapter(logger=logger)
+	else:
+		logger.error("Invalid storage adapter type '%s'", storageAdapterType)
+		return 1
+
+
+	if not storageAdapter.init_cfg(config):
+		logger.error("Failed storage adapter initialization")
+		return 1		
+	if not storageAdapter.init():
+		logger.error("Failed storage adaper initialization")
+		return 1		
+
+	global db
+	db = vault.db.Db(logger, storageAdapter)
+
+	if options.ping:
+		if len(args) != 0:
+			parser.error("Command should get no arguments.")
+		success, value = adapter.ping()
+		if not success:
+			return 1
+		print(value)
+		return 0
+
+	if options.getParameter:
+		if len(args) != 1:
+			parser.error("Command should get a single argument - parameter key.")
+		success, value = db.getParameter(args[0])
+		if not success:
+			return 1
+		if value is None:
+			return 1
+		print(value)
+		return 0
+
+	if options.searchParameters:
+		if len(args) != 1:
+			parser.error("Command should get a single argument - parameter key.")
+		success, value = db.searchParameters(args[0], keyFilters={}, filters={})
+		if not success:
+			return 1
+		print(json.dumps(value))
+		return 0
+
+	if options.setParameter:
+		if len(args) != 2:
+			parser.error("Command should get 2 arguments - parameter key and value.")
+		success = db.setParameter(args[0], args[1])
+		if not success:
+			return 1
+		return 0
+
+	if options.deleteParameter:
+		if len(args) != 1:
+			parser.error("Command should get a single argument - parameter key.")
+		success = db.deleteParameter(args[0])
+		if not success:
+			return 1
+		return 0
+
+	logger.error("Operation is not set")
+	parser.print_help()
+	parser.error("No operation mode specified")
+	return 1
+
+if __name__ == '__main__':
+	sys.exit(main())

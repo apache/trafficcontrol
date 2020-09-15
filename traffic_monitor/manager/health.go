@@ -165,7 +165,7 @@ func processHealthResult(
 	for i, healthResult := range results {
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistoryCopy[healthResult.ID]
+		healthResultHistory := healthHistoryCopy[tc.CacheName(healthResult.ID)]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -181,21 +181,23 @@ func processHealthResult(
 			maxHistory = 1
 		}
 
-		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
+		healthHistoryCopy[tc.CacheName(healthResult.ID)] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[tc.CacheName(healthResult.ID)]...), maxHistory)
 	}
 
-	health.CalcAvailability(results, "health", monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	pollerName := "health"
+	statResultHistoryNil := (*threadsafe.ResultStatHistory)(nil) // health poller doesn't have stats
+	health.CalcAvailability(results, pollerName, statResultHistoryNil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events, cfg.CachePollingProtocol)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here
 
 	lastHealthDurations := threadsafe.CopyDurationMap(lastHealthDurationsThreadsafe.Get())
 	for _, healthResult := range results {
-		if lastHealthStart, ok := lastHealthEndTimes[healthResult.ID]; ok {
+		if lastHealthStart, ok := lastHealthEndTimes[tc.CacheName(healthResult.ID)]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations[healthResult.ID] = d
+			lastHealthDurations[tc.CacheName(healthResult.ID)] = d
 		}
-		lastHealthEndTimes[healthResult.ID] = time.Now()
+		lastHealthEndTimes[tc.CacheName(healthResult.ID)] = time.Now()
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }

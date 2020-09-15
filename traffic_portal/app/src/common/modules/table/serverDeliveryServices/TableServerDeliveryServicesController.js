@@ -22,6 +22,8 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
+	let serverDeliveryServicesTable;
+
 	var removeDeliveryService = function(dsId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
 			.then(
@@ -31,7 +33,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			);
 	};
 
-	$scope.server = server;
+	$scope.server = server[0];
 
 	// adds some items to the base delivery services context menu
 	$scope.contextMenuItems.splice(2, 0,
@@ -48,66 +50,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 
 	$scope.isEdge = serverUtils.isEdge;
 
-	$scope.cloneDsAssignments = function() {
-		var params = {
-			title: 'Clone Delivery Service Assignments',
-			message: "Please select an edge cache to assign these " + deliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
-			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				},
-				collection: function(serverService) {
-					return serverService.getServers({ type: 'EDGE', orderby: 'hostName' });
-				}
-			}
-		});
-		modalInstance.result.then(function(selectedServer) {
-			var dsIds = _.pluck(deliveryServices, 'id');
-			serverService.assignDeliveryServices(selectedServer, dsIds, true, true)
-				.then(
-					function() {
-						locationUtils.navigateToPath('/servers/' + selectedServer.id + '/delivery-services');
-					}
-				);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	$scope.selectDeliveryServices = function() {
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/serverDeliveryServices/table.assignDeliveryServices.tpl.html',
-			controller: 'TableAssignDeliveryServicesController',
-			size: 'lg',
-			resolve: {
-				server: function() {
-					return server;
-				},
-				deliveryServices: function(deliveryServiceService) {
-					return deliveryServiceService.getDeliveryServices({ cdn: server.cdnId });
-				},
-				assignedDeliveryServices: function() {
-					return deliveryServices;
-				}
-			}
-		});
-		modalInstance.result.then(function(selectedDsIds) {
-			serverService.assignDeliveryServices(server, selectedDsIds, true, false)
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
-		}, function () {
-			// do nothing
-		});
-	};
+	$scope.isOrigin = serverUtils.isOrigin;
 
 	$scope.confirmRemoveDS = function(ds, $event) {
 		if ($event) {
@@ -135,14 +78,100 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
+	$scope.cloneDsAssignments = function() {
+		var params = {
+			title: 'Clone Delivery Service Assignments',
+			message: "Please select another " + $scope.server.type + " cache to assign these " + deliveryServices.length + " delivery services to." +
+				"<br>" +
+				"<br>" +
+				"<strong>WARNING THIS CANNOT BE UNDONE</strong> - Any delivery services currently assigned to the selected cache will be lost and replaced with these " + deliveryServices.length + " delivery service assignments.",
+			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(serverService) {
+					return serverService.getServers({ type: $scope.server.type, orderby: 'hostName', cdn: $scope.server.cdnId }).then(function(xs){return xs.filter(function(x){return x.id!=$scope.server.id})}, function(err){throw err});
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServer) {
+			var dsIds = _.pluck(deliveryServices, 'id');
+			serverService.assignDeliveryServices(selectedServer, dsIds, true, true)
+				.then(
+					function() {
+						locationUtils.navigateToPath('/servers/' + selectedServer.id + '/delivery-services');
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.selectDeliveryServices = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverDeliveryServices/table.assignDeliveryServices.tpl.html',
+			controller: 'TableAssignDeliveryServicesController',
+			size: 'lg',
+			resolve: {
+				server: function() {
+					return $scope.server;
+				},
+				deliveryServices: function(deliveryServiceService) {
+					return deliveryServiceService.getDeliveryServices({ cdn: $scope.server.cdnId });
+				},
+				assignedDeliveryServices: function() {
+					return deliveryServices;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedDsIds) {
+			serverService.assignDeliveryServices($scope.server, selectedDsIds, true, false)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.toggleVisibility = function(colName) {
+		const col = serverDeliveryServicesTable.column(colName + ':name');
+		col.visible(!col.visible());
+		serverDeliveryServicesTable.rows().invalidate().draw();
+	};
+
+	$scope.columnFilterFn = function(column) {
+		if (column.name === 'Action') {
+			return false;
+		}
+		return true;
+	};
+
 	angular.element(document).ready(function () {
-		$('#serverDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		serverDeliveryServicesTable = $('#serverDeliveryServicesTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"aaSorting": [],
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
+				{ 'orderable': false, 'targets': 55 }
 			],
-			"aaSorting": []
+			"columns": $scope.columns.concat([{ "name": "Action", "visible": true, "searchable": false }]),
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_serverDeliveryServicesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_serverDeliveryServicesTable_/):", e);
+				}
+			}
 		});
 	});
 

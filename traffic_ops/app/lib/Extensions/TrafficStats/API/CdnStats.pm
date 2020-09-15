@@ -52,10 +52,10 @@ sub get_usage_overview {
 
 	my ( $rc, $result ) = $cstats->get_usage_overview();
 	if ( $rc == SUCCESS ) {
-		return $self->success($result);
+		return $self->deprecation_with_no_alternative(200, $result);
 	}
 	else {
-		return $self->alert($result);
+		return $self->deprecation_with_no_alternative(400, $result);
 	}
 }
 

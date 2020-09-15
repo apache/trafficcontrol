@@ -35,6 +35,9 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
+			if (ds.topology) {
+				return ds;
+			}
 			if (visibleDSIds.includes(ds.id)) {
 				ds['selected'] = selected;
 			}
@@ -57,6 +60,13 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 		}
 		return ds;
 	});
+
+	$scope.toggleRow = function(ds) {
+		if (!ds.topology) {
+			ds.selected = !ds.selected;
+			$scope.onChange();
+		}
+	};
 
 	$scope.selectAll = function($event) {
 		var checkbox = $event.target;

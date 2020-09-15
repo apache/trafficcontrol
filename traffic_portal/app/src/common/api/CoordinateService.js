@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,66 +17,60 @@
  * under the License.
  */
 
-var CoordinateService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var CoordinateService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCoordinates = function(queryParams) {
-        return Restangular.all('coordinates').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'coordinates', {params: queryParams}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.createCoordinate = function(coordinate) {
-        var request = $q.defer();
-
-        $http.post(ENV.api['root'] + "coordinates", coordinate)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    locationUtils.navigateToPath('/coordinates');
-                    request.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false)
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.post(ENV.api['root'] + "coordinates", coordinate).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                locationUtils.navigateToPath('/coordinates');
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false)
+                throw err;
+            }
+        );
     };
 
     this.updateCoordinate = function(id, coordinate) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "coordinates?id=" + id, coordinate)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, false);
-                    request.resolve();
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject();
-                }
-            );
-        return request.promise;
+        return $http.put(ENV.api['root'] + "coordinates", coordinate, {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, false);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteCoordinate = function(id) {
-        var deferred = $q.defer();
-
-        $http.delete(ENV.api['root'] + "coordinates?id=" + id)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    deferred.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    deferred.reject(fault);
-                }
-            );
-        return deferred.promise;
+        return $http.delete(ENV.api['root'] + "coordinates", {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
 };
 
-CoordinateService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+CoordinateService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = CoordinateService;

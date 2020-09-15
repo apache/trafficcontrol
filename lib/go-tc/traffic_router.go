@@ -23,6 +23,8 @@ import (
 	"time"
 )
 
+// SOA (Start of Authority record) defines the SOA record for the CDN's
+// top-level domain.
 type SOA struct {
 	Admin              *string   `json:"admin,omitempty"`
 	AdminTime          time.Time `json:"-"`
@@ -128,20 +130,159 @@ type StaticDNS struct {
 	Type  string `json:"type"`
 }
 
-// TrafficServer ...
-type TrafficServer struct {
-	Profile          string              `json:"profile"`
-	IP               string              `json:"ip"`
-	ServerStatus     string              `json:"status"`
+// LegacyTrafficServer ...
+type LegacyTrafficServer struct {
 	CacheGroup       string              `json:"cacheGroup"`
+	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	FQDN             string              `json:"fqdn"`
+	HashID           string              `json:"hashId"`
+	HostName         string              `json:"hostName"`
+	HTTPSPort        int                 `json:"httpsPort,omitempty"`
+	InterfaceName    string              `json:"interfaceName"`
+	IP               string              `json:"ip"`
 	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`
-	HostName         string              `json:"hostName"`
-	FQDN             string              `json:"fqdn"`
-	InterfaceName    string              `json:"interfaceName"`
+	Profile          string              `json:"profile"`
+	ServerStatus     string              `json:"status"`
 	Type             string              `json:"type"`
-	HashID           string              `json:"hashId"`
-	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+}
+
+// Upgrade upgrades the LegacyTrafficServer into its modern-day equivalent.
+//
+// Note that the DeliveryServices slice is a "shallow" copy of the original, so
+// making changes to the original slice will affect the upgraded copy.
+func (s LegacyTrafficServer) Upgrade() TrafficServer {
+	upgraded := TrafficServer{
+		CacheGroup:       s.CacheGroup,
+		DeliveryServices: s.DeliveryServices,
+		FQDN:             s.FQDN,
+		HashID:           s.HashID,
+		HostName:         s.HostName,
+		HTTPSPort:        s.HTTPSPort,
+		Interfaces: []ServerInterfaceInfo{
+			{
+				MaxBandwidth: nil,
+				MTU:          nil,
+				Monitor:      false,
+				Name:         s.InterfaceName,
+				IPAddresses:  []ServerIPAddress{},
+			},
+		},
+		Port:         s.Port,
+		Profile:      s.Profile,
+		ServerStatus: s.ServerStatus,
+		Type:         s.Type,
+	}
+
+	if s.IP != "" {
+		upgraded.Interfaces[0] = ServerInterfaceInfo{
+			MaxBandwidth: nil,
+			MTU:          nil,
+			Monitor:      false,
+			Name:         s.InterfaceName,
+			IPAddresses: []ServerIPAddress{
+				{
+					Address:        s.IP,
+					Gateway:        nil,
+					ServiceAddress: true,
+				},
+			},
+		}
+	}
+
+	if s.IP6 != "" {
+		upgraded.Interfaces[0] = ServerInterfaceInfo{
+			MaxBandwidth: nil,
+			MTU:          nil,
+			Monitor:      false,
+			Name:         s.InterfaceName,
+			IPAddresses: append(upgraded.Interfaces[0].IPAddresses, ServerIPAddress{
+				Address:        s.IP6,
+				Gateway:        nil,
+				ServiceAddress: true,
+			}),
+		}
+	}
+
+	return upgraded
+}
+
+// GetVIPInterface returns the primary interface specified by the `Monitor` property of an Interface. First interface marked as `Monitor` is returned.
+func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
+	for _, interf := range ts.Interfaces {
+		if interf.Monitor {
+			return interf
+		}
+	}
+	return ServerInterfaceInfo{}
+}
+
+// ToLegacyServer converts a TrafficServer to LegacyTrafficServer.
+func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
+	vipInterface := GetVIPInterface(*ts)
+	ipv4, ipv6 := vipInterface.GetDefaultAddress()
+
+	return LegacyTrafficServer{
+		Profile:          ts.Profile,
+		IP:               ipv4,
+		ServerStatus:     ts.ServerStatus,
+		CacheGroup:       ts.CacheGroup,
+		IP6:              ipv6,
+		Port:             ts.Port,
+		HTTPSPort:        ts.HTTPSPort,
+		HostName:         ts.HostName,
+		FQDN:             ts.FQDN,
+		InterfaceName:    vipInterface.Name,
+		Type:             ts.Type,
+		HashID:           ts.HashID,
+		DeliveryServices: ts.DeliveryServices,
+	}
+}
+
+// TrafficServer represents a cache server for use by Traffic Monitor and
+// Traffic Router instances.
+type TrafficServer struct {
+	CacheGroup       string                `json:"cacheGroup"`
+	DeliveryServices []tsdeliveryService   `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	FQDN             string                `json:"fqdn"`
+	HashID           string                `json:"hashId"`
+	HostName         string                `json:"hostName"`
+	HTTPSPort        int                   `json:"httpsPort,omitempty"`
+	Interfaces       []ServerInterfaceInfo `json:"interfaces"`
+	Port             int                   `json:"port"`
+	Profile          string                `json:"profile"`
+	ServerStatus     string                `json:"status"`
+	Type             string                `json:"type"`
+}
+
+// IPv4 gets the server's IPv4 address if one exists, otherwise an empty
+// string.
+//
+// Note: This swallows errors from the legacy data conversion process.
+func (ts *TrafficServer) IPv4() string {
+	if ts == nil {
+		return ""
+	}
+	lid, err := InterfaceInfoToLegacyInterfaces(ts.Interfaces)
+	if err != nil || lid.IPAddress == nil {
+		return ""
+	}
+	return *lid.IPAddress
+}
+
+// IPv6 gets the server's IPv6 address if one exists, otherwise an empty
+// string.
+//
+// Note: This swallows errors from the legacy data conversion process.
+func (ts *TrafficServer) IPv6() string {
+	if ts == nil {
+		return ""
+	}
+	lid, err := InterfaceInfoToLegacyInterfaces(ts.Interfaces)
+	if err != nil || lid.IP6Address == nil {
+		return ""
+	}
+	return *lid.IP6Address
 }
 
 type tsdeliveryService struct {

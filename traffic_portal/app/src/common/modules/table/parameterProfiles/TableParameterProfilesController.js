@@ -22,6 +22,8 @@ var TableParameterProfilesController = function(parameter, profiles, $controller
 	// extends the TableProfilesController to inherit common methods
 	angular.extend(this, $controller('TableProfilesController', { profiles: profiles, $scope: $scope }));
 
+	let parameterProfilesTable;
+
 	var removeProfile = function(profileId) {
 		profileParameterService.unlinkProfileParameter(profileId, parameter.id)
 			.then(
@@ -146,14 +148,43 @@ var TableParameterProfilesController = function(parameter, profiles, $controller
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = parameterProfilesTable.column(colName + ':name');
+		col.visible(!col.visible());
+		parameterProfilesTable.rows().invalidate().draw();
+	};
+
+	$scope.columnFilterFn = function(column) {
+		if (column.name === 'Action') {
+			return false;
+		}
+		return true;
+	};
+
 	angular.element(document).ready(function () {
-		$('#parameterProfilesTable').dataTable({
+		parameterProfilesTable = $('#parameterProfilesTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 2 }
+				{ 'orderable': false, 'targets': 5 }
 			],
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": [
+				{ "name": "Name", "visible": true, "searchable": true },
+				{ "name": "Type", "visible": true, "searchable": true },
+				{ "name": "Routing Disabled", "visible": true, "searchable": true },
+				{ "name": "Description", "visible": true, "searchable": true },
+				{ "name": "CDN", "visible": true, "searchable": true },
+				{ "name": "Action", "visible": true, "searchable": false }
+			],
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_parameterProfilesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_parameterProfilesTable_/):", e);
+				}
+			}
 		});
 	});
 

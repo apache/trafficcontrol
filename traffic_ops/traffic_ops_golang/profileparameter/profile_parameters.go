@@ -23,6 +23,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -44,8 +45,10 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
-func (v *TOProfileParameter) NewReadObj() interface{} { return &tc.ProfileParametersNullable{} }
-func (v *TOProfileParameter) SelectQuery() string     { return selectQuery() }
+// AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
+func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
+func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
+func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
@@ -152,8 +155,18 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read() ([]interface{}, error, error, int) { return api.GenericRead(pp) }
-func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
+func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, pp, useIMS)
+}
+func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
+func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(pp.last_updated) as t FROM profile_parameter pp
+JOIN profile prof ON prof.id = pp.profile
+JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='profile_parameter') as res`
+}
 
 func selectQuery() string {
 
@@ -164,17 +177,6 @@ prof.name profile
 FROM profile_parameter pp
 JOIN profile prof ON prof.id = pp.profile
 JOIN parameter param ON param.id = pp.parameter`
-	return query
-}
-
-func updateQuery() string {
-	query := `UPDATE
-profile_parameter SET
-profile=:profile_id,
-parameter=:parameter_id
-WHERE profile=:profile_id AND
-      parameter = :parameter_id
-      RETURNING last_updated`
 	return query
 }
 

@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,18 +34,24 @@ import (
 )
 
 func GetMatches(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use /deliveryservices_regexes instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
 	matches, err := getUserDSMatches(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service matches: "+err.Error()))
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, fmt.Errorf("getting delivery service matches: %v", err))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteResp(w, r, matches)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, matches)
 }
 
 func getUserDSMatches(tx *sql.Tx, userTenantID int) ([]tc.DeliveryServicePatterns, error) {

@@ -13,12 +13,14 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-monitor:
+
 ***************
 Traffic Monitor
 ***************
 Introduction
 ============
-Traffic Monitor is an HTTP service application that monitors :term:`cache server`\ s, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which :term:`cache server`\ s are available on the CDN.
+Traffic Monitor is an HTTP service application that monitors :term:`cache servers`, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which :term:`cache servers` are available on the CDN.
 
 Software Requirements
 =====================
@@ -43,7 +45,7 @@ Project Tree Overview
 	* ``monitorconfig.go`` - Monitor configuration manager. Gets data from the monitor configuration poller, which polls Traffic Ops for changes to which caches are monitored and how.
 	* ``opsconfig.go`` - Ops configuration manager. Gets data from the ops configuration poller, which polls Traffic Ops for changes to monitoring settings.
 	* ``peer.go`` - Peer manager. Gets data from the peer poller -> fetcher -> handler and aggregates it into the shared thread-safe objects.
-	* ``stat.go`` - Stat request manager. Processes stat results, from the stat poller -> fetcher -> manager. The stat poll is the large statistics poll, containing all stats (such as HTTP response status codes, transactions, :term:`Delivery Service`\ statistics, and more). Data is aggregated and inserted into shared thread-safe objects.
+	* ``stat.go`` - Stat request manager. Processes stat results, from the stat poller -> fetcher -> manager. The stat poll is the large statistics poll, containing all stats (such as HTTP response status codes, transactions, :term:`Delivery Service` statistics, and more). Data is aggregated and inserted into shared thread-safe objects.
 	* ``statecombiner.go`` - Manager for combining local and peer states, into a single combined states thread-safe object, for serving the CrStates endpoint.
 
 * ``datareq/`` - HTTP routing, which has thread-safe health and stat objects populated by stat and health managers.
@@ -51,7 +53,7 @@ Project Tree Overview
 * ``srvhttp/`` - HTTP(S) service. Given a map of endpoint functions, which are lambda closures containing aggregated data objects. If HTTPS, the HTTP service will redirect to HTTPS.
 * ``static/`` - Web interface files (markup, styling and scripting)
 * ``threadsafe/`` - Thread-safe objects for storing aggregated data needed by multiple goroutines (typically the aggregator and HTTP server)
-* ``trafficopsdata/`` - Data structure for fetching and storing Traffic Ops data needed from the CDN :term:`Snapshot`. This is primarily mappings, such as :term:`Delivery Service`\ servers, and server types.
+* ``todata/`` - Data structure for fetching and storing Traffic Ops data needed from the CDN :term:`Snapshot`. This is primarily mappings, such as :term:`Delivery Service` servers, and server types.
 * ``trafficopswrapper/`` - Thread-safe wrapper around the Traffic Ops client. The client used to not be thread-safe, however, it mostly (possibly entirely) is now. But, the wrapper also serves to overwrite the Traffic Ops :file:`monitoring.json` values, which are live, with values from the CDN :term:`Snapshot`.
 
 Architecture
@@ -97,7 +99,7 @@ fetcher
 handler
 	``traffic_monitor/cache/cache.go:Handler.Handle()``\ . Takes the given result and does all data computation possible with the single result. Currently, this computation primarily involves processing the de-normalized :abbr:`ATS (Apache Trafficserver)` data into Go ``struct``\ s, and processing System data into 'OutBytes', :abbr:`Kbps (kilobits per second)`, etc. Precomputed data is then passed to its result channel, which is picked up by the Manager.
 manager
-	``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are :term:`Delivery Service`\ statistics, and :term:`cache server` availability data. See `Aggregated Stat Data`_ and `Aggregated Availability Data`_.
+	``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are :term:`Delivery Service` statistics, and :term:`cache server` availability data. See `Aggregated Stat Data`_ and `Aggregated Availability Data`_.
 
 
 Health Pipeline
@@ -147,7 +149,7 @@ Monitor Config Pipeline
 poller
 	``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Configuration poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
 manager
-	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new :term:`Delivery Service`\ s and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
+	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new :term:`Delivery Services` and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
 
 
 Ops Config Pipeline
@@ -175,7 +177,7 @@ The State Combiner is a microthread started in ``traffic_monitor/manager/manager
 
 Aggregated Stat Data
 --------------------
-The Stat pipeline Manager is responsible for aggregating stats from all :term:`cache server` s, into :term:`Delivery Service`\ s statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
+The Stat pipeline Manager is responsible for aggregating stats from all :term:`cache server` s, into :term:`Delivery Services` statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
 
 Aggregated Availability Data
 ----------------------------
@@ -191,7 +193,7 @@ Processed and aggregated data must be shared between the end of the stat and hea
 
 Disk Backup
 ------------
-The Traffic Monitor configuration and CDN :term:`Snapshot` are both stored as backup files (:file:`tmconfig.backup` and :file:`crconfig.backup` or whatever you set the values to in the configuration file). This allows the monitor to come up and continue serving even if Traffic Ops is down. These files are updated any time a valid configuration is received from Traffic Ops, so if Traffic Ops goes down and Traffic Monitor is restarted it can still serve the previous data. These files can also be manually edited and the changes will be reloaded into Traffic Monitor so that if Traffic Ops is down or unreachable for an extended period of time manual updates can be done. If on initial startup Traffic Ops is unavailable then Traffic Monitor will continue through its exponential back-off until it hits the max retry interval, at that point it will create an unauthenticated Traffic Ops session and use the data from disk. It will still poll Traffic Ops for updates though and if it successfully gets through then it will login at that point.
+The :ref:`Traffic Monitor configuration <to-api-cdns-name-snapshot>` and :ref:`CDN Snapshot <to-api-cdns-name-snapshot>` (see :term:`Snapshots`) are both stored as backup files (:file:`tmconfig.backup` and :file:`crconfig.backup` or whatever you set the values to in the configuration file). This allows the monitor to come up and continue serving even if Traffic Ops is down. These files are updated any time a valid configuration is received from Traffic Ops, so if Traffic Ops goes down and Traffic Monitor is restarted it can still serve the previous data. These files can also be manually edited and the changes will be reloaded into Traffic Monitor so that if Traffic Ops is down or unreachable for an extended period of time manual updates can be done. If on initial startup Traffic Ops is unavailable then Traffic Monitor will continue through its exponential back-off until it hits the max retry interval, at that point it will create an unauthenticated Traffic Ops session and use the data from disk. It will still poll Traffic Ops for updates though and if it successfully gets through then it will login at that point.
 
 Formatting Conventions
 ======================

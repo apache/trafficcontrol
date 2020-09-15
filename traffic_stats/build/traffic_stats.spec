@@ -15,17 +15,17 @@
 #
 # RPM spec file for Traffic Stats (tm).
 #
-%define debug_package %{nil}
-Name:		traffic_stats
-Version:        %{traffic_control_version}
-Release:        %{build_number}
-Summary:	Tool to pull data from traffic monitor and store in Influxdb
-Packager:	david_neuman2 at Cable dot Comcast dot com
-Vendor:		Apache Software Foundation
-Group:		Applications/Communications
-License:	Apache License, Version 2.0
-URL:		https://github.com/apache/trafficcontrol
-Source:		%{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
+%define   debug_package %{nil}
+Name:     traffic_stats
+Version:  %{traffic_control_version}
+Release:  %{build_number}
+Summary:  Tool to pull data from traffic monitor and store in Influxdb
+Packager: david_neuman2 at Cable dot Comcast dot com
+Vendor:   Apache Software Foundation
+Group:    Applications/Communications
+License:  Apache License, Version 2.0
+URL:      https://github.com/apache/trafficcontrol
+Source:   %{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
 
 %description
 Installs traffic_stats which performs the follwing functions:
@@ -37,63 +37,19 @@ Installs traffic_stats which performs the follwing functions:
 %setup
 
 %build
-export GOPATH=$(pwd)
-# Create build area with proper gopath structure
-mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
-
-go_get_version() {
-  local src=$1
-  local version=$2
-  (
-   cd $src && \
-   git checkout $version && \
-   go get -v \
-  )
-}
-
-# build all internal go dependencies (expects package being built as argument)
-build_dependencies () {
-    IFS=$'\n'
-    array=($(go list -f '{{ join .Deps "\n" }}' | grep trafficcontrol | grep -v $1))
-    prefix=github.com/apache/trafficcontrol
-    for (( i=0; i<${#array[@]}; i++ )); do
-        curPkg=${array[i]};
-        curPkgShort=${curPkg#$prefix};
-        echo "checking $curPkg";
-        godir=$GOPATH/src/$curPkg;
-        if [ ! -d "$godir" ]; then
-          ( echo "building $curPkg" && \
-            mkdir -p "$godir" && \
-            cd "$godir" && \
-            cp -r "$TC_DIR$curPkgShort"/* . && \
-            build_dependencies "$curPkgShort" && \
-            go get -v && \
-            echo "go building $curPkgShort at $(pwd)" && \
-            go build \
-          ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
-        fi
-    done
-}
-
-#get traffic_stats client
+# copy traffic_stats client
 godir=src/github.com/apache/trafficcontrol/traffic_stats
-oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp -L -r "$TC_DIR"/traffic_stats/* . && \
-  build_dependencies traffic_stats  && \
-  go get -v && \
-  go install -v \
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+	cd "$godir" && \
+	cp -LR "$TC_DIR"/traffic_stats/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-#build influxdb_tools
+# copy influxdb_tools
 godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 ( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
-  go build sync/sync_ts_databases.go
-  go build create/create_ts_databases.go
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+	cd "$godir" && \
+	cp -R "$TC_DIR"/traffic_stats/influxdb_tools/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
@@ -108,14 +64,14 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
 src=src/github.com/apache/trafficcontrol/traffic_stats
-cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
+cp -p "$src"/traffic_stats         "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
 cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp "$src"/traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats
 cp "$src"/traffic_stats.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_stats
 cp "$src"/grafana/*.js             "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
-cp "$src"/influxdb_tools/sync_ts_databases	"${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
-cp "$src"/influxdb_tools/create_ts_databases	"${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
+cp "$src"/influxdb_tools/sync_ts_databases  "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
+cp "$src"/influxdb_tools/create_ts_databases  "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
 
 
 %pre
@@ -157,8 +113,8 @@ fi
 %files
 %defattr(644, traffic_stats, traffic_stats, 755)
 
-%config(noreplace) /opt/traffic_stats/conf/traffic_stats.cfg
-%config(noreplace) /opt/traffic_stats/conf/traffic_stats_seelog.xml
+%config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats.cfg
+%config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats_seelog.xml
 %config(noreplace) /etc/logrotate.d/traffic_stats
 
 %dir /opt/traffic_stats
@@ -172,14 +128,17 @@ fi
 %dir /usr/share/grafana/public/dashboards
 %dir /opt/traffic_stats/influxdb_tools
 
-%attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
-%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/traffic_stats
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
-%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
-%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_cachegroup.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_deliveryservice.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_scripted.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_server.js
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/create_ts_databases
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/sync_ts_databases
 
 %preun
-# args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
+# args for hooks: https://www.ibm.com/developerworks/library/l-rpm2/
 # if $1 = 0, this is an uninstallation, if $1 = 1, this is an upgrade (don't do anything)
 if [ "$1" = "0" ]; then
 	/sbin/chkconfig traffic_stats off

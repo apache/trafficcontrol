@@ -17,22 +17,13 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $controller, $scope) {
+var TableCDNServersController = function(cdn, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'cdnServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.cdn = cdn;
-
-	angular.element(document).ready(function () {
-		$('#cdnServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$controller', '$scope'];
+TableCDNServersController.$inject = ['cdn', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableCDNServersController;

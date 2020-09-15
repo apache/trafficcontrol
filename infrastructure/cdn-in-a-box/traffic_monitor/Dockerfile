@@ -23,7 +23,6 @@ FROM centos/systemd
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG RPM=traffic_monitor/traffic_monitor.rpm
-ADD $RPM /
 
 RUN yum install -y epel-release && \
     yum install -y \
@@ -35,17 +34,23 @@ RUN yum install -y epel-release && \
         bind-utils \
         openssl \
         initscripts && \
-    yum install -y  /$(basename $RPM) && \
-    rm /$(basename $RPM) && \
     yum clean all
 
+ADD $RPM /
+RUN yum install -y  /$(basename $RPM) && \
+    rm /$(basename $RPM)
+
 RUN mkdir -p /opt/traffic_monitor/conf
-ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
+ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/traffic_monitor.cfg.template
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 80
 ADD traffic_monitor/run.sh /
-ENTRYPOINT /run.sh
+CMD /run.sh

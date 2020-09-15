@@ -79,7 +79,7 @@ func (to *Connect) login(creds Creds) error {
 	}
 
 	to.Client = &http.Client{Transport: tr}
-	url := to.URL + `/api/1.3/user/login`
+	url := to.URL + `/api/2.0/user/login`
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
@@ -266,11 +266,11 @@ func handlePlainTextResponse(responses *[]result, route string) {
 		log.Printf("Identical results (%d bytes) from %s\n", len(result0), route)
 	} else {
 		writeAllResults(route,
-		                result0Str,
-		                (*responses)[0].TO,
-		                result1Str,
-		                (*responses)[1].TO,
-		                checkOrderDiffs(scrubbedResult0, scrubbedResult1))
+			result0Str,
+			(*responses)[0].TO,
+			result1Str,
+			(*responses)[1].TO,
+			checkOrderDiffs(scrubbedResult0, scrubbedResult1))
 	}
 }
 

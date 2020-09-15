@@ -229,10 +229,6 @@ For the bootstrap component:
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 ./licenses/MIT-normalize
 
-For the sorttable component:
-@traffic_monitor/static/sorttable.js
-./licenses/MIT-sorttable
-
 For the jQuery component:
 ./licenses/MIT-jquery
 
@@ -243,9 +239,22 @@ For the JSON formatter component:
 
 For the DataTables component:
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
-@traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.16.js
+@traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.19_patched.js
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
+
+For the DataTables ColReorder component:
+@traffic_portal/app/src/assets/css/colReorder.dataTables.min_1.5.1.css
+@traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
+./licenses/MIT-ColReorder
+
+For the DataTables Buttons component:
+@traffic_portal/app/src/assets/js/dataTables.buttons.min_1.5.6.js
+./licenses/MIT-datatables-buttons
+
+For the HTML5 Buttons component:
+@traffic_portal/app/src/assets/js/buttons.html5.min_1.5.6.js
+./licenses/MIT-buttons-html5
 
 For the moment.js component:
 @traffic_portal/app/src/assets/js/moment-min_2.22.1.js
@@ -263,6 +272,11 @@ For the angular-moment-picker component:
 @traffic_portal/app/src/assets/css/angular-moment-picker_0.10.2.css
 @traffic_portal/app/src/assets/js/moment-picker/angular-moment-picker.min_0.10.2.js
 ./licenses/MIT-angular_moment_picker
+
+For the angular-ui-tree component:
+@traffic_portal/app/src/assets/css/angular-ui-tree.min_2.22.6.css
+@traffic_portal/app/src/assets/js/angular-ui-tree.min_2.22.6.js
+./licenses/MIT-angular_ui_tree
 
 For the Chart.js component:
 @traffic_portal/app/src/assets/js/chartjs/Chart.min_2.7.2.js
@@ -288,10 +302,6 @@ For the underscore component:
 @traffic_portal/app/src/assets/js/underscore-min_1.8.3.js
 ./licenses/MIT-underscore
 
-For the selenium component:
-@infrastructure/test/ui/vendor/github.com/tebeka/selenium/*
-./infrastructure/test/ui/vendor/github.com/tebeka/selenium/LICENSE.txt
-
 For the stoppableListener component:
 @traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/*
 ./traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/LICENSE
@@ -306,18 +316,18 @@ For the yaml component:
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
 For the jwt-go component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
-./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
+@experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
+./experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
 
 For the pq component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
+@experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 
 For the influxdb component:
-@traffic_stats/vendor/github.com/influxdata/influxdb/*
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
+@vendor/github.com/influxdata/influxdb/*
+./vendor/github.com/influxdata/influxdb/LICENSE
+./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
 
 For the errors component:
 @traffic_stats/vendor/github.com/pkg/errors/*
@@ -396,9 +406,9 @@ The bytefmt component is used under the Apache 2.0 license:
 @grove/vendor/code.cloudfoundry.org/bytefmt/*
 ./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
-The bytefmt component is used under the MIT license:
-@grove/vendor/github.com/coreos/bbolt/*
-./grove/vendor/github.com/coreos/bbolt/LICENSE
+The bbolt component is used under the MIT license:
+@grove/vendor/go.etcd.io/bbolt/*
+./grove/vendor/go.etcd.io/bbolt/LICENSE
 
 For the siphash component:
 @grove/vendor/github.com/dchest/siphash/*
@@ -416,6 +426,10 @@ The ldap.v2 component is used under the MIT license:
 @traffic_ops/vendor/gopkg.in/ldap.v2/*
 ./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
 
+The fakeOrigin example video is used the Public Domain license:
+@test/fakeOrigin/example/video/*
+./test/fakeOrigin/example/video/LICENSE
+
 The json-iterator/go component is used under the MIT license:
 @vendor/github.com/json-iterator/go/*
 ./vendor/github.com/json-iterator/go/LICENSE
@@ -427,3 +441,39 @@ The modern-go/concurrent component is used under the Apache 2.0 license:
 The modern-go/reflect2 component is used under the Apache 2.0 license:
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
+
+For the lestrrat-go/jwx (commit e35178a) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
+
+For the dgrijalva/jwt-go (commit 5e25c22) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
+
+For the ogier/pflag (commit 45c278a) component:
+@vendor/github.com/ogier/pflag/*
+./licenses/BSD-pflag
+
+For the errors (commit 27936f6) component:
+@vendor/github.com/pkg/errors/*
+./vendor/github.com/pkg/errors/LICENSE
+
+For the GehirnInc/crypt (commit 6c0105a) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/LICENSE
+
+For the go-acme/lego (version 2.7.2) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/LICENSE
+
+For the google/uuid (version 1.1.1) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/LICENSE
+
+For the gofrs/flock component:
+@traffic_ops_ort/vendor/github.com/gofrs/flock/*
+./traffic_ops_ort/vendor/github.com/gofrs/flock/LICENSE
+
+For the pborman/getopt component:
+@traffic_ops_ort/vendor/github.com/pborman/getopt/*
+./traffic_ops_ort/vendor/github.com/pborman/getopt/LICENSE

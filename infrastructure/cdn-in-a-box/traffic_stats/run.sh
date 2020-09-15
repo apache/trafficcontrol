@@ -90,6 +90,15 @@ cat <<-EOF >$TSCONF
 }
 EOF
 
+cat <<-EOF >/opt/traffic_stats/conf/traffic_stats_seelog.xml
+<?xml version='1.0'?>
+<seelog minlevel="debug">
+    <outputs formatid="std:debug-short">
+        <file path="/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log" />
+    </outputs>
+</seelog>
+EOF
+
 touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 
 # Wait for influxdb
@@ -106,7 +115,13 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
   sleep 3
 done
 
-/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF &
+traffic_stats_command=(/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF);
+if [[ "$TS_DEBUG_ENABLE" == true ]]; then
+  dlv '--continue' '--listen=:2346' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
+    "${traffic_stats_command[0]}" -- "${traffic_stats_command[@]:1}" &
+else
+  "${traffic_stats_command[@]}" &
+fi;
 
 exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 

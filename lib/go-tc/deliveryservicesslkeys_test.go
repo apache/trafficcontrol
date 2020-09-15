@@ -22,6 +22,8 @@ package tc
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // - Perl: 2018-08-21+14:26:06
@@ -90,5 +92,22 @@ func TestCDNDNSSECGenerateReqDateUnmarshalJSON(t *testing.T) {
 	s = `{"d": 42.0}`
 	if err := json.Unmarshal([]byte(s), &obj); err == nil {
 		t.Fatalf("unmarshalling invalid float CDNDNSSECGenerateReqDate: error expected, actual nil")
+	}
+}
+
+func TestSSLKeysReqValidate(t *testing.T) {
+	req := DeliveryServiceAddSSLKeysReq{}
+	req.CDN = util.StrPtr("foo")
+	req.DeliveryService = util.StrPtr("bar")
+	req.Key = util.StrPtr("bar")
+	ver := util.JSONIntStr(1)
+	req.Version = &ver
+	cert := DeliveryServiceSSLKeysCertificate{}
+	cert.Crt = ""
+	cert.CSR = ""
+	cert.Key = ""
+	req.Certificate = &cert
+	if err := req.Validate(nil); err == nil {
+		t.Error("expected validation to return an error")
 	}
 }

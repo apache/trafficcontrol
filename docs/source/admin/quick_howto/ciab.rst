@@ -38,47 +38,54 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)`\ [2]_ from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make native`` instead of ``make`` to build the RPMs quickly. Another option is running ``make -j4`` to build 4 components at once, if your computer can handle it.
+
+.. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
 
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Service                         | Ports exposed and their usage                                | Username                              | Password                                  |
-	+=================================+==============================================================+=======================================+===========================================+
-	| DNS                             | DNS name resolution on 9353                                  | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000 | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100 | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Mock Origin Server              | Example web page served on port 9200                         | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Monitor                 | Web interface and API on port 80                             | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the  | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	|                                 | Perl API on port 60443\ [3]_                                 |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name: | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
-	|                                 | ``DB_NAME`` in `variables.env`_)                             |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Portal                  | Web interface on 443 (Javascript required)                   | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a | N/A                                   | N/A                                       |
-	|                                 | DNS service on 53 and an API on 3333                         |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Vault                   | Riak key-value store on port 8010                            | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Stats                   | N/A                                                          | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Stats Influxdb          | Influxdbd connections accepted on port 8086 (database name:  | ``INFLUXDB_ADMIN_USER`` in            | ``INFLUXDB_ADMIN_PASSWORD`` in            |
-	|                                 | ``cache_stats``, ``daily_stats`` and                         | `variables.env`_                      | `variables.env`_                          |
-	|                                 | ``deliveryservice_stats``)                                   |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Service                         | Ports exposed and their usage                                  | Username                              | Password                                  |
+	+=================================+================================================================+=======================================+===========================================+
+	| DNS                             | DNS name resolution on 9353                                    | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000   | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Mock Origin Server              | Example web page served on port 9200                           | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| SMTP Server                     | Passwordless, cleartext SMTP server on port 25 (no relay)      | N/A                                   | N/A                                       |
+	|                                 | Web interface exposed on port 4443 (port 443 in the container) |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Monitor                 | Web interface and API on port 80                               | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the    | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
+	|                                 | Perl API on port 60443\ [2]_                                   |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name:   | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
+	|                                 | ``DB_NAME`` in `variables.env`_)                               |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Portal                  | Web interface on 443 (Javascript required)                     | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a   | N/A                                   | N/A                                       |
+	|                                 | DNS service on 53 and an API on 3333 (HTTP) and 2222 (HTTPS)   |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Vault                   | Riak key-value store on port 8010                              | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats                   | N/A                                                            | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats Influxdb          | Influxdbd connections accepted on port 8086 (database name:    | ``INFLUXDB_ADMIN_USER`` in            | ``INFLUXDB_ADMIN_PASSWORD`` in            |
+	|                                 | ``cache_stats``, ``daily_stats`` and                           | `variables.env`_                      | `variables.env`_                          |
+	|                                 | ``deliveryservice_stats``)                                     |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 
 .. seealso:: :ref:`tr-api` and :ref:`tm-api`
 
@@ -91,22 +98,46 @@ While the components may be interacted with by the host using these ports, the t
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
 
+Readiness Check
+"""""""""""""""
+
+In order to check the "readiness" of your CDN, you can optionally start the Readiness Container, which will continually :manpage:`curl(1)` the :term:`Delivery Services` in your CDN until they all return successful responses before exiting successfully.
+
+.. code-block:: shell
+	:caption: Example Command to Run the Readiness Container
+
+	sudo docker-compose -f docker-compose.readiness.yml up
+
+Integration Tests
+"""""""""""""""""
+
+There also exist TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
+
+.. code-block:: shell
+	:caption: Running TP Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-portal-test.yml up
+
+.. code-block:: shell
+	:caption: Running TO Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
+
 variables.env
 """""""""""""
-.. include:: ../../../../infrastructure/cdn-in-a-box/variables.env
-	:code: shell
-	:start-line: 16
+.. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
+	:language: shell
+	:lines: 17-
 	:tab-width: 4
 
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
 
 .. [1] It is perfectly possible to build and run all containers without Docker Compose, but it's not recommended and not covered in this guide.
-.. [2] Consider ``make -j`` to build quickly, if your computer can handle multiple builds at once.
-.. [3] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
+.. [2] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
 
 X.509 SSL/TLS Certificates
 ==========================
-All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Service`\ s. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Services`. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
 
 .. _ciab-x509-certificate-list:
 .. table:: Self-Signed X.509 Certificate List
@@ -180,7 +211,7 @@ This section will be amended as functionality is added to the CDN in a Box proje
 
 The Enroller
 ------------
-The "enroller" began as an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the "admin" user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new :file:`{filename}.json` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``tenant``, follow the guidelines for ``POST api/1.4/regions``). Of note, the ``enroller`` does not require fields that reference database ids for other objects within the database.
+The "enroller" began as an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the "admin" user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new :file:`{filename}.json` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``region``, follow the guidelines for ``POST api/2.0/regions``). Of note, the ``enroller`` does not require fields that reference database ids for other objects within the database.
 
 .. program::enroller
 
@@ -197,13 +228,13 @@ The "enroller" began as an efficient way for Traffic Ops to be populated with da
 	The name of a file which will be created in the :option:`--dir` directory when given, indicating service was started (default: "enroller-started").
 
 
-The enroller runs within CDN in a Box using :option:`--dir` which provides the above behavior. It can also be run using :option:`--http` to instead have it listen on the indicated port. In this case, it accepts only ``POST`` requests with the JSON provided in the request payload, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``. CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
+The enroller runs within CDN in a Box using :option:`--dir` which provides the above behavior. It can also be run using :option:`--http` to instead have it listen on the indicated port. In this case, it accepts only ``POST`` requests with the JSON provided in the request payload, e.g. ``curl -X POST https://enroller/api/2.0/regions -d @newregion.json``. CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
 
 Auto Snapshot/Queue-Updates
 ---------------------------
-An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
+An automatic :term:`Snapshot` of the current Traffic Ops CDN configuration/topology will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled. To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_. The :term:`Snapshot` and :term:`Queue Updates` actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled. The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (:term:`Snapshot` and :term:`Queue Updates`) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
 
-.. [8] Automatic Snapshot/Queue-Updates is enabled by default in :file:`infrastructure/cdn-in-a-box/variables.env`.
+.. [8] Automatic :term:`Snapshot`/:term:`Queue Updates` is enabled by default in `variables.env`_.
 .. [9] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
 
 Mock Origin Service
@@ -247,14 +278,19 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 		:caption: CIAB Startup Using Bash Alias
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
+		alias mydc="docker-compose "` \
+			`"-f $PWD/docker-compose.yml "` \
+			`"-f $PWD/docker-compose.expose-ports.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
 		docker volume prune -f
 		mydc build
 		mydc kill
 		mydc rm -fv
 		mydc up
 
-#. Connect with a VNC client to localhost port 9080.
+
+#. Connect with a VNC client to localhost port 5909.
 #. When Traffic Portal becomes available, the Firefox within the VNC instance will subsequently be started.
 #. An xterm with bash shell is also automatically spawned and minimized for convenience.
 
@@ -428,3 +464,8 @@ There are some *scripted dashboards* can show beautiful charts. You can display 
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.
+
+Debugging
+---------
+
+See :ref:`dev-debugging-ciab`.

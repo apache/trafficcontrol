@@ -27,7 +27,15 @@ func IntPtr(i int) *int {
 	return &i
 }
 
-func UintPtr(u uint) *uint {
+func UIntPtr(u uint) *uint {
+	return &u
+}
+
+func UInt64Ptr(u uint64) *uint64 {
+	return &u
+}
+
+func Uint64Ptr(u uint64) *uint64 {
 	return &u
 }
 
@@ -41,4 +49,8 @@ func BoolPtr(b bool) *bool {
 
 func FloatPtr(f float64) *float64 {
 	return &f
+}
+
+func InterfacePtr(i interface{}) *interface{} {
+	return &i
 }

@@ -20,16 +20,19 @@ package config
  */
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
-
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 )
@@ -41,15 +44,23 @@ type Config struct {
 	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
+	ConfigTO               *ConfigTO   `json:"to"`
+	SMTP                   *ConfigSMTP `json:"smtp"`
+	ConfigPortal           `json:"portal"`
+	ConfigLetsEncrypt      `json:"lets_encrypt"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
-	RiakAuthOptions *riak.AuthOptions
-	RiakEnabled     bool
-	ConfigLDAP      *ConfigLDAP
-	LDAPEnabled     bool
-	LDAPConfPath    string `json:"ldap_conf_location"`
-	Version         string
+	RiakAuthOptions  *riak.AuthOptions
+	RiakEnabled      bool
+	ConfigLDAP       *ConfigLDAP
+	LDAPEnabled      bool
+	LDAPConfPath     string `json:"ldap_conf_location"`
+	ConfigInflux     *ConfigInflux
+	InfluxEnabled    bool
+	InfluxDBConfPath string `json:"influxdb_conf_path"`
+	Version          string
+	UseIMS           bool `json:"use_ims"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -60,6 +71,9 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
+	// Deprecated in 5.0
+	Insecure bool `json:"insecure"`
+	// end deprecated
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
 	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
@@ -75,7 +89,6 @@ type ConfigTrafficOpsGolang struct {
 	LogLocationInfo          string                     `json:"log_location_info"`
 	LogLocationDebug         string                     `json:"log_location_debug"`
 	LogLocationEvent         string                     `json:"log_location_event"`
-	Insecure                 bool                       `json:"insecure"`
 	MaxDBConnections         int                        `json:"max_db_connections"`
 	DBMaxIdleConnections     int                        `json:"db_max_idle_connections"`
 	DBConnMaxLifetimeSeconds int                        `json:"db_conn_max_lifetime_seconds"`
@@ -87,6 +100,11 @@ type ConfigTrafficOpsGolang struct {
 	ProfilingEnabled         bool                       `json:"profiling_enabled"`
 	ProfilingLocation        string                     `json:"profiling_location"`
 	RiakPort                 *uint                      `json:"riak_port"`
+	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
+	OAuthClientSecret        string                     `json:"oauth_client_secret"`
+	RoutingBlacklist         `json:"routing_blacklist"`
+	SupportedDSMetrics       []string    `json:"supported_ds_metrics"`
+	TLSConfig                *tls.Config `json:"tls_config"`
 
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
@@ -96,6 +114,48 @@ type ConfigTrafficOpsGolang struct {
 	// CRConfigEmulateOldPath is whether to emulate the legacy CRConfig request path when generating a new CRConfig. This primarily exists in the event a tool relies on the legacy path '/tools/write_crconfig'.
 	// Deprecated: will be removed in the next major version.
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
+}
+
+// RoutingBlacklist contains the list of route IDs that will be handled by TO-Perl, a list of route IDs that are disabled,
+// and whether or not to ignore unknown routes.
+type RoutingBlacklist struct {
+	IgnoreUnknownRoutes bool  `json:"ignore_unknown_routes"`
+	PerlRoutes          []int `json:"perl_routes"`
+	DisabledRoutes      []int `json:"disabled_routes"`
+}
+
+// ConfigTO contains information to identify Traffic Ops in a network sense.
+type ConfigTO struct {
+	BaseURL               *rfc.URL          `json:"base_url"`
+	EmailFrom             *rfc.EmailAddress `json:"email_from"`
+	NoAccountFoundMessage *string           `json:"no_account_found_msg"`
+}
+
+// ConfigPortal contains information that can direct users to a friendly UI
+type ConfigPortal struct {
+	BaseURL          rfc.URL          `json:"base_url"`
+	DocsURL          rfc.URL          `json:"docs_url"`
+	EmailFrom        rfc.EmailAddress `json:"email_from"`
+	PasswdResetPath  string           `json:"pass_reset_path"`
+	UserRegisterPath string           `json:"user_register_path"`
+}
+
+// ConfigSMTP contains configuration information for connecting to and authenticating with an SMTP
+// server.
+type ConfigSMTP struct {
+	Address  string `json:"address"`
+	Enabled  bool   `json:"enabled"`
+	Password string `json:"password"`
+	User     string `json:"user"`
+}
+
+// ConfigLetsEncrypt contains configuration information for integration with the Let's Encrypt certificate authority.
+type ConfigLetsEncrypt struct {
+	Email                     string `json:"user_email,omitempty"`
+	SendExpEmail              bool   `json:"send_expiration_email"`
+	ConvertSelfSigned         bool   `json:"convert_self_signed"`
+	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
+	Environment               string `json:"environment"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -118,6 +178,24 @@ type ConfigLDAP struct {
 	SearchQuery     string `json:"search_query"`
 	Insecure        bool   `json:"insecure"`
 	LDAPTimeoutSecs int    `json:"ldap_timeout_secs"`
+}
+
+type ConfigInflux struct {
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	DSDBName    string `json:"deliveryservice_stats_db_name"`
+	CacheDBName string `json:"cache_stats_db_name"`
+	Secure      *bool  `json:"secure"`
+}
+
+// NewFakeConfig returns a fake Config struct with just enough data to view Routes.
+func NewFakeConfig() Config {
+	c := Config{}
+	c.URL, _ = url.Parse("http://example.com")
+	c.Secrets = append(c.Secrets, "foo")
+	c.BackendMaxConnections = make(map[string]int, 1)
+	c.BackendMaxConnections["mojolicious"] = 42
+	return c
 }
 
 const DefaultLDAPTimeoutSecs = 60
@@ -160,6 +238,9 @@ func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
+	}
+	if cfg.SMTP == nil {
+		cfg.SMTP = &ConfigSMTP{}
 	}
 	return cfg, nil
 }
@@ -211,9 +292,23 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 				return cfg, []error{err}, BlockStartup
 			}
 		} else {
-			cfg.LDAPEnabled = false
-			return cfg, []error{}, AllowStartup // no ldap.conf, disable and allow startup
+			cfg.LDAPEnabled = false // no ldap.conf, disable and allow startup
 		}
+	}
+
+	idbPath := cfg.InfluxDBConfPath
+	if idbPath == "" {
+		idbPath = filepath.Join(filepath.Dir(cdnConfPath), "influxdb.conf")
+	}
+
+	if _, err = os.Stat(idbPath); err != nil {
+		if os.IsNotExist(err) {
+			cfg.InfluxEnabled = false
+		} else {
+			return cfg, []error{err}, BlockStartup
+		}
+	} else if cfg.InfluxEnabled, cfg.ConfigInflux, err = GetInfluxConfig(idbPath); err != nil {
+		return cfg, []error{err}, BlockStartup
 	}
 
 	return cfg, []error{}, AllowStartup
@@ -299,6 +394,20 @@ func ParseConfig(cfg Config) (Config, error) {
 		cfg.URL = &newURL
 	}
 
+	if cfg.ConfigTO == nil {
+		missings += "to, "
+	} else {
+		if cfg.ConfigTO.BaseURL == nil || cfg.ConfigTO.BaseURL.String() == "" {
+			missings += "to.base_url, "
+		}
+		if cfg.ConfigTO.EmailFrom == nil || cfg.ConfigTO.EmailFrom.String() == "<@>" {
+			missings += "to.email_from, "
+		}
+		if cfg.ConfigTO.NoAccountFoundMessage == nil || *cfg.ConfigTO.NoAccountFoundMessage == "" {
+			missings += "to.no_account_found_msg, "
+		}
+	}
+
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
 	}
@@ -312,7 +421,33 @@ func ParseConfig(cfg Config) (Config, error) {
 		return Config{}, fmt.Errorf(errStr)
 	}
 
+	if err := ValidateRoutingBlacklist(cfg.RoutingBlacklist); err != nil {
+		return Config{}, err
+	}
+
 	return cfg, nil
+}
+
+func ValidateRoutingBlacklist(blacklist RoutingBlacklist) error {
+	seenPerlIDs := make(map[int]struct{}, len(blacklist.PerlRoutes))
+	for _, id := range blacklist.PerlRoutes {
+		if _, found := seenPerlIDs[id]; !found {
+			seenPerlIDs[id] = struct{}{}
+		} else {
+			return fmt.Errorf("route ID %d is listed multiple times in perl_routes", id)
+		}
+	}
+	seenDisabledIDs := make(map[int]struct{}, len(blacklist.DisabledRoutes))
+	for _, id := range blacklist.DisabledRoutes {
+		if _, foundInPerl := seenPerlIDs[id]; foundInPerl {
+			return fmt.Errorf("route ID %d cannot be listed in both perl_routes and disabled_routes", id)
+		} else if _, found := seenDisabledIDs[id]; !found {
+			seenDisabledIDs[id] = struct{}{}
+		} else {
+			return fmt.Errorf("route ID %d is listed multiple times in disabled_routes", id)
+		}
+	}
+	return nil
 }
 
 func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
@@ -341,6 +476,43 @@ func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 	}
 
 	return true, LDAPconf, nil
+}
+
+func GetInfluxConfig(path string) (bool, *ConfigInflux, error) {
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		return false, nil, fmt.Errorf("reading InfluxDB configuration from '%s': %v", path, err)
+	}
+
+	c := ConfigInflux{}
+	if err := json.Unmarshal(raw, &c); err != nil {
+		return false, nil, fmt.Errorf("parsing InfluxDB configuration from '%s': %v", path, err)
+	}
+
+	if c.User == "" {
+		return false, &c, errors.New("InfluxDB configuration missing a username")
+	}
+
+	if c.Password == "" {
+		return false, &c, errors.New("InfluxDB configuration missing a password")
+	}
+
+	if c.DSDBName == "" {
+		log.Warnln("InfluxDB configuration does not specify a DS stats DB name - falling back on 'deliveryservice_stats'")
+		c.DSDBName = "deliveryservice_stats"
+	}
+
+	if c.CacheDBName == "" {
+		log.Warnln("InfluxDB configuration does not specify a Cache Stats DB name - falling back on 'cache_stats'")
+		c.CacheDBName = "cache_stats"
+	}
+
+	if c.Secure == nil {
+		log.Warnln("InfluxDB configuration does not specify 'secure', defaulting to 'false'")
+		c.Secure = util.BoolPtr(false)
+	}
+
+	return true, &c, nil
 }
 
 func getLDAPConf(s string) (*ConfigLDAP, error) {

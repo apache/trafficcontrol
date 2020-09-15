@@ -32,6 +32,7 @@ public class LanguidState {
 	private int port = 0;
 	private int apiPort = 0;
 	private int securePort = 0;
+	private int secureApiPort = 0;
 
 	public void init() {
 		if (trafficRouterManager == null || trafficRouterManager.getTrafficRouter() == null) {
@@ -84,6 +85,11 @@ public class LanguidState {
 		if (routerJson.has("secure.port")) {
 			setSecurePort(routerJson.get("secure.port").asInt());
 		}
+
+		if (routerJson.has("secure.api.port")) {
+			setSecureApiPort(routerJson.get("secure.api.port").asInt());
+			trafficRouterManager.setSecureApiPort(secureApiPort);
+		}
 	}
 
 	public boolean isReady() {
@@ -124,5 +130,13 @@ public class LanguidState {
 
 	public void setSecurePort(final int securePort) {
 		this.securePort = securePort;
+	}
+
+	public int getSecureApiPort() {
+		return secureApiPort;
+	}
+
+	public void setSecureApiPort(final int secureApiPort) {
+		this.secureApiPort = secureApiPort;
 	}
 }

@@ -16,10 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.xbill.DNS.DClass;
@@ -39,6 +36,7 @@ import org.xbill.DNS.Zone;
 import org.xbill.DNS.EDNSOption;
 import org.xbill.DNS.ClientSubnetOption;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 
@@ -51,6 +49,7 @@ public class NameServer {
 
 	private static final Logger LOGGER = Logger.getLogger(NameServer.class);
 	private boolean ecsEnable = false;
+	private Set<DeliveryService> ecsEnabledDses = new HashSet<>();
 	/**
 	 * 
 	 */
@@ -118,7 +117,7 @@ public class NameServer {
 			}
 			InetAddress ipaddr = null;
 			int nmask = 0;
-			if (isEcsEnable()) {
+			if (isEcsEnable(qname)) {
 				for (final EDNSOption option : list) {
 					assert (option instanceof ClientSubnetOption);
 					// If there are multiple ClientSubnetOptions in the Option RR, then
@@ -129,7 +128,7 @@ public class NameServer {
 					}
 				}
 			}
-			if ((ipaddr!= null) && (isEcsEnable())) {
+			if ((ipaddr!= null) && (isEcsEnable(qname))) {
 				builder.client(ipaddr);
 
 				LOGGER.debug("DNS: Using Client IP Address from ECS Option" + ipaddr.getHostAddress() + "/" 
@@ -142,10 +141,10 @@ public class NameServer {
 			if (response.getHeader().getRcode() == Rcode.REFUSED) {
 				return;
 			}
-			
+
 			// Check if we had incoming ClientSubnetOption in Option RR, then we need
 			// to return with the response, setting the scope subnet as well
-			if ((nmask != 0) && (isEcsEnable())) {
+			if ((nmask != 0) && (isEcsEnable(qname))) {
 				final ClientSubnetOption cso = new ClientSubnetOption(nmask, nmask, ipaddr);
 				final List<ClientSubnetOption> csoList = new ArrayList<ClientSubnetOption>(1);
 				csoList.add(cso);	
@@ -160,6 +159,30 @@ public class NameServer {
 				response.addRecord(opt, Section.ADDITIONAL);
 			}
 		}
+	}
+
+	@SuppressWarnings({"PMD.UseStringBufferForStringAppends"})
+	private boolean isDeliveryServiceEcsEnabled(final Name name) {
+		boolean isEnabled = false;
+
+		for (final DeliveryService ds : ecsEnabledDses) {
+			String domain = ds.getDomain();
+
+			if (domain == null) {
+				continue;
+			}
+
+			if (domain.endsWith("+")) {
+				domain = domain.replaceAll("\\+\\z", ".") + ZoneManager.getTopLevelDomain();
+			}
+
+			if (name.relativize(Name.root).toString().contains(domain)) {
+				isEnabled = true;
+				break;
+			}
+		}
+
+		return isEnabled;
 	}
 
 	private static void addAuthority(final Zone zone, final Message response, final int flags) {
@@ -419,12 +442,19 @@ public class NameServer {
 		ZoneManager.destroy();
 	}
 
-	public boolean isEcsEnable() {
-		return ecsEnable;
+	public boolean isEcsEnable(final Name qname) {
+		return ecsEnable || isDeliveryServiceEcsEnabled(qname);
 	}
 
 	public void setEcsEnable(final boolean ecsEnable) {
 		this.ecsEnable = ecsEnable;
 	}
 
+	public Set<DeliveryService> getEcsEnabledDses() {
+		return ecsEnabledDses;
+	}
+
+	public void setEcsEnabledDses(final Set<DeliveryService> ecsEnabledDses) {
+		this.ecsEnabledDses = ecsEnabledDses;
+	}
 }

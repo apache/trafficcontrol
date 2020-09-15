@@ -20,7 +20,7 @@ Configure Cache Group Fallbacks
 
 .. seealso:: :ref:`tp-configure-cache-groups`
 
-#. Go to 'Topology', click on :term:`Cache Group`\ s, and click on your desired :term:`Cache Group` or click the :guilabel:`+` button to create a new :term:`Cache Group`.
+#. Go to 'Topology', click on :term:`Cache Groups`, and click on your desired :term:`Cache Group` or click the :guilabel:`+` button to create a new :term:`Cache Group`.
 
 	.. figure:: cachegroup_fallback/00.png
 		:width: 60%
@@ -29,7 +29,7 @@ Configure Cache Group Fallbacks
 
 		Cache Groups Page
 
-#. Verify that the :term:`Cache Group` is of type EDGE_LOC. :term:`Cache Group` Failovers only apply to EDGE_LOC :term:`Cache Group`\ s.
+#. Verify that the :term:`Cache Group` is of type EDGE_LOC. :term:`Cache Group` Failovers only apply to EDGE_LOC :term:`Cache Groups`.
 
 	.. figure:: cachegroup_fallback/01.png
 		:width: 60%

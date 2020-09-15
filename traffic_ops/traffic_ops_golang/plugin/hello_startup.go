@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{onStartup: helloStartup})
+	AddPlugin(10000, Funcs{onStartup: helloStartup}, "example startup plugin", "1.0.0")
 }
 
 func helloStartup(d StartupData) {

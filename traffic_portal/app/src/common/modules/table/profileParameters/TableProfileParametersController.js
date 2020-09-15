@@ -17,10 +17,12 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService, messageModel) {
 
 	// extends the TableParametersController to inherit common methods
 	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
+
+	let profileParametersTable;
 
 	$scope.profile = profile;
 
@@ -45,15 +47,19 @@ var TableProfileParametersController = function(profile, parameters, $controller
 	};
 
 	var linkProfileParameters = function(paramIds) {
-		profileParameterService.linkProfileParameters(profile.id, paramIds)
+		profileParameterService.linkProfileParameters(profile, paramIds)
 			.then(
-				function() {
+				function(result) {
+					messageModel.setMessages(result.data.alerts, false);
 					$scope.refresh(); // refresh the profile parameters table
 				}
 			);
 	};
 
-	$scope.confirmRemoveParam = function(parameter) {
+	$scope.confirmRemoveParam = function(parameter, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
 			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
 				then(function(result) {
@@ -173,20 +179,42 @@ var TableProfileParametersController = function(profile, parameters, $controller
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = profileParametersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		profileParametersTable.rows().invalidate().draw();
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#profileParametersTable').dataTable({
+		profileParametersTable = $('#profileParametersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"aaSorting": [],
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 4 }
+				{ "width": "50%", "targets": 2 },
+				{ "orderable": false, "targets": 4 }
 			],
-			"aaSorting": []
+			"columns": [
+				{ "name": "Name", "visible": true, "searchable": true },
+				{ "name": "Config File", "visible": true, "searchable": true },
+				{ "name": "Value", "visible": true, "searchable": true },
+				{ "name": "Secure", "visible": true, "searchable": true },
+				{ "name": "Action", "visible": true, "searchable": false }
+			],
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_profileParametersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_profileParametersTable_/):", e);
+				}
+			}
 		});
 	});
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'messageModel'];
 module.exports = TableProfileParametersController;

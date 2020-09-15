@@ -21,7 +21,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{onStartup: helloSharedConfigStartup})
+	AddPlugin(10000, Funcs{onStartup: helloSharedConfigStartup}, "example plugin for loading and using config data for other plugins", "1.0.0")
 }
 
 func helloSharedConfigStartup(d StartupData) {

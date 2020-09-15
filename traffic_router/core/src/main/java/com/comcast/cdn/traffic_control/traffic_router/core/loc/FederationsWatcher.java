@@ -22,9 +22,10 @@ public class FederationsWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(FederationsWatcher.class);
     private FederationRegistry federationRegistry;
 
-    public static final String DEFAULT_FEDERATION_DATA_URL = "https://${toHostname}/internal/api/1.3/federations.json";
+    public static final String DEFAULT_FEDERATION_DATA_URL = "https://${toHostname}/api/2.0/federations/all";
     public FederationsWatcher() {
         setDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);
+        setDefaultDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);
     }
 
     @Override

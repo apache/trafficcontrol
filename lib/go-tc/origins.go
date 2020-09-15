@@ -19,8 +19,10 @@ package tc
  * under the License.
  */
 
+// OriginsResponse is a list of Origins as a response.
 type OriginsResponse struct {
 	Response []Origin `json:"response"`
+	Alerts
 }
 
 // OriginDetailResponse is the JSON object returned for a single origin
@@ -29,6 +31,7 @@ type OriginDetailResponse struct {
 	Alerts
 }
 
+// Origin contains information relating to an origin server.
 type Origin struct {
 	Cachegroup        *string    `json:"cachegroup" db:"cachegroup"`
 	CachegroupID      *int       `json:"cachegroupId" db:"cachegroup_id"`

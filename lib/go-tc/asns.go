@@ -19,24 +19,27 @@ package tc
  * under the License.
  */
 
-// Autonomous System Numbers
-//
-// A List of ASNs Response
+// ASNsResponse is a list of ASNs (Autonomous System Numbers) as a response.
 // swagger:response ASNsResponse
 // in: body
 type ASNsResponse struct {
 	// in: body
 	Response []ASN `json:"response"`
+	Alerts
 }
 
-// A Single ASN Response for Update and Create to depict what changed
+// ASNResponse is a single ASN response for Update and Create to depict what
+// changed.
 // swagger:response ASNResponse
 // in: body
 type ASNResponse struct {
 	// in: body
 	Response ASN `json:"response"`
+	Alerts
 }
 
+// ASN contains info relating to a single Autonomous System Number (see RFC
+// 1930).
 type ASN struct {
 	// The ASN to retrieve
 	//
@@ -62,6 +65,8 @@ type ASN struct {
 	LastUpdated string `json:"lastUpdated" db:"last_updated"`
 }
 
+// ASNNullable contains info related to a single Autonomous System Number (see
+// RFC 1930). Unlike ASN, ASNNullable's fields are nullable.
 type ASNNullable struct {
 	// The ASN to retrieve
 	//
@@ -87,6 +92,10 @@ type ASNNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
+// ASNsV11 is used for the Traffic OPS API version 1.1, which lists ASNs
+// (Autonomous System Numbers) under its own key in the response and does not
+// validate structure.
+// The Traffic Ops API uses its own TOASNV11 instead.
 type ASNsV11 struct {
 	ASNs []interface{} `json:"asns"`
 }

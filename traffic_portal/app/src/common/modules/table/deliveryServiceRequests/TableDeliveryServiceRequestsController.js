@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	var createComment = function (request, placeholder) {
 		var params = {
@@ -100,6 +100,11 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			var assigneeId = (assign) ? userModel.user.id : null;
 			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).then(function () {
 				$scope.refresh();
+				if (assign) {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was assigned' } ], false);
+				} else {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was unassigned' } ], false);
+				}
 			});
 		}, function () {
 			// do nothing
@@ -132,6 +137,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).then(function () {
 				$scope.refresh();
+				messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
 			});
 		}, function () {
 			// do nothing
@@ -141,7 +147,8 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 	$scope.rejectRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
-		if (request.assigneeId != userModel.user.id) {
+		// only the user assigned to the request can mark it as rejected (unless the user has override capabilities)
+		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as rejected'
@@ -168,6 +175,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected').then(
 				function () {
 					$scope.refresh();
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was rejected' } ], false);
 					createComment(request, 'Enter rejection reason...');
 				});
 		}, function () {
@@ -178,7 +186,8 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 	$scope.completeRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
-		if (request.assigneeId != userModel.user.id) {
+		// only the user assigned to the request can mark it as complete (unless the user has override capabilities)
+		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as complete'
@@ -204,6 +213,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 		modalInstance.result.then(function () {
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').then(function () {
 				$scope.refresh();
+				messageModel.setMessages([ { level: 'success', text: 'Delivery service request marked as complete' } ], false);
 				createComment(request, 'Enter comment...');
 			});
 		}, function () {
@@ -229,7 +239,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 		});
 		modalInstance.result.then(function () {
 			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id).then(function () {
-				messageModel.setMessages([{level: 'success', text: 'Delivery service request deleted'}], false);
+				messageModel.setMessages([{level: 'success', text: 'Delivery service request was deleted'}], false);
 				$scope.refresh();
 			});
 		}, function () {
@@ -283,5 +293,5 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;

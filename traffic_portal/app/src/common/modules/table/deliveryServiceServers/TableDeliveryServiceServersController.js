@@ -17,12 +17,12 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, filter, $controller, $scope, $uibModal, deliveryServiceService) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'deliveryServiceServers', servers: servers, filter: filter, $scope: $scope }));
 
-	var removeServer = function(serverId) {
+	let removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
 			.then(
 				function() {
@@ -32,19 +32,6 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	};
 
 	$scope.deliveryService = deliveryService;
-
-	// adds some items to the base servers context menu
-	$scope.contextMenuItems.splice(2, 0,
-		{
-			text: 'Unlink Server from Delivery Service',
-			hasTopDivider: function() {
-				return true;
-			},
-			click: function ($itemScope) {
-				$scope.confirmRemoveServer($itemScope.s);
-			}
-		}
-	);
 
 	$scope.selectServers = function() {
 		var modalInstance = $uibModal.open({
@@ -80,11 +67,11 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
 
-		var params = {
+		const params = {
 			title: 'Remove Server from Delivery Service?',
 			message: 'Are you sure you want to remove ' + server.hostName + ' from this delivery service?'
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
 			size: 'md',
@@ -101,18 +88,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
-	angular.element(document).ready(function () {
-		$('#dsServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$controller', '$scope', '$uibModal', 'deliveryServiceService'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', 'filter', '$controller', '$scope', '$uibModal', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;

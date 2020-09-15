@@ -121,8 +121,9 @@ public class PeriodicResourceUpdater {
 	private AsyncHttpClient newAsyncClient() {
 		return new AsyncHttpClient(
 				new AsyncHttpClientConfig.Builder()
-						.setConnectionTimeoutInMs(10000)
-							.build());
+						.setFollowRedirects(true)
+							.setConnectionTimeoutInMs(10000)
+								.build());
 	}
 
 	private synchronized void putCurrent() {
@@ -296,7 +297,7 @@ public class PeriodicResourceUpdater {
 	private Request getRequest(final String url) {
 		try {
 			new URI(url);
-			return asyncHttpClient.prepareGet(url).build();
+			return asyncHttpClient.prepareGet(url).setFollowRedirects(true).build();
 		} catch (URISyntaxException e) {
 			LOGGER.fatal("Cannot update database from Bad URI - " + url);
 			return null;

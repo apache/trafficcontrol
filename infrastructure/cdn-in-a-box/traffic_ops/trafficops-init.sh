@@ -45,7 +45,7 @@ waitfor() {
     local value="$3"
 
     while true; do
-        v=$(to-get "api/1.4/$endpoint?$field=$value" | jq -r --arg field "$field" '.response[][$field]')
+        v=$(to-get "api/2.0/$endpoint?$field=$value" | jq -r --arg field "$field" '.response[][$field]')
         if [[ $v == $value ]]; then
             break
         fi
@@ -81,11 +81,11 @@ load_data_from() {
     for d in $endpoints; do
         [[ -d $d ]] || continue
         # Let containers know to write out server.json
-        if [[ "$d" = "deliveryservice_servers" ]] ; then 
+        if [[ "$d" = "deliveryservice_servers" ]] ; then
            touch "$ENROLLER_DIR/initial-load-done"
            sync
-        fi 
-        for f in "$d"/*.json; do 
+        fi
+        for f in "$d"/*.json; do
             echo "Loading $f"
             delayfor "$f"
             envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
@@ -98,11 +98,26 @@ load_data_from() {
     cd -
 }
 
-# First,  load required data at the top level
-load_data_from /traffic_ops_data
+# If Traffic Router debugging is enabled, keep zone generation from timing out
+# (for 5 minutes), in case that is what you are debugging
+traffic_router_zonemanager_timeout() {
+  if [[ "$TR_DEBUG_ENABLE" != true ]]; then
+    return;
+  fi;
 
-# Copy the free MaxMind GeoLite DB to TrafficOps public directory
-tar -C /var/tmp -zxpvf /GeoLite2-City.tar.gz
-geo_dir=$(find /var/tmp -maxdepth 1 -type d -name GeoLite2-City\*)
-gzip -c "$geo_dir/GeoLite2-City.mmdb" > "$TO_DIR/public/GeoLite2-City.mmdb.gz"
-chown trafops:trafops "$TO_DIR/public/GeoLite2-City.mmdb.gz"
+  local modified_crconfig crconfig_path zonemanager_timeout;
+  crconfig_path=/traffic_ops_data/profiles/040-CCR_CIAB.json;
+  modified_crconfig="$(mktemp)";
+  # 5 minutes, which is the default zonemanager.cache.maintenance.interval value
+  zonemanager_timeout="$(( 60 * 5 ))";
+  jq \
+    --arg zonemanager_timeout $zonemanager_timeout \
+    '.params = .params + [{"configFile": "CRConfig.json", "name": "zonemanager.init.timeout", "value": $zonemanager_timeout}]' \
+    <$crconfig_path >"$modified_crconfig";
+  mv "$modified_crconfig" $crconfig_path;
+}
+
+traffic_router_zonemanager_timeout
+
+# Load required data at the top level
+load_data_from /traffic_ops_data

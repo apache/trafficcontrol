@@ -18,6 +18,7 @@
 
 # Check that env vars are set
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
+set -ex
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -38,4 +39,20 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && chmod 777 -R /junit && cat /junit/golang.test.toapi.xml
+./traffic_ops_v1_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v1.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v1 --set-exit-code > /junit/golang.test.toapi.v1.xml && find /junit -type 'f' | xargs chmod 664
+export v1=$?
+./traffic_ops_v2_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v2.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v2 --set-exit-code > /junit/golang.test.toapi.v2.xml && find /junit -type 'f' | xargs chmod 664
+export v2=$?
+./traffic_ops_v3_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v3.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v3 --set-exit-code > /junit/golang.test.toapi.v3.xml && find /junit -type 'f' | xargs chmod 664
+export v3=$?
+
+cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml /junit/golang.test.toapi.v3.xml
+
+
+if [ $v1 -eq 0 ] && [ $v2 -eq 0 ] && [ $v3 -eq 0 ]
+then
+  echo "TO API tests success"
+else
+  echo "TO API tests failed"
+  exit 1
+fi

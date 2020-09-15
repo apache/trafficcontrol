@@ -21,6 +21,7 @@ package manager
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -128,7 +129,7 @@ func StartMonitorConfigManager(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) threadsafe.TrafficMonitorConfigMap {
 	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
@@ -198,7 +199,7 @@ func monitorConfigListen(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) {
 	defer func() {
@@ -250,8 +251,8 @@ func monitorConfigListen(
 				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: false})
 			}
 
-			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-			if url == "" {
+			pollURLStr := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
+			if pollURLStr == "" {
 				log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
 				continue
 			}
@@ -268,18 +269,7 @@ func monitorConfigListen(
 				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
 			}
 
-			port := ""
-			if srv.Port != 0 {
-				port = ":" + strconv.Itoa(srv.Port)
-			}
-
-			r := strings.NewReplacer(
-				"${hostname}", srv.IP+port,
-				"${interface_name}", srv.InterfaceName,
-				"application=plugin.remap", "application=system",
-				"application=", "application=system",
-			)
-			url = r.Replace(url)
+			pollURL4Str, pollURL6Str := createServerHealthPollURLs(pollURLStr, srv)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
 			if connTimeout == 0 {
@@ -287,10 +277,11 @@ func monitorConfigListen(
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
-			r = strings.NewReplacer("application=system", "application=")
-			statURL := r.Replace(url)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURL4Str, URLv6: pollURL6Str, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+
+			statURL4 := createServerStatPollURL(pollURL4Str)
+			statURL6 := createServerStatPollURL(pollURL6Str)
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
@@ -302,14 +293,15 @@ func monitorConfigListen(
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
-			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
+			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
+			url6 := fmt.Sprintf("http://[%s]:%d/publish/CrStates?raw", ipv6CIDRStrToAddr(srv.IP6), srv.Port)
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN} // TODO determine timeout.
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
-		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, PollingProtocol: cfg.PeerPollingProtocol, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)
@@ -340,4 +332,80 @@ func monitorConfigListen(
 			}
 		}
 	}
+}
+
+// createServerHealthPollURLs takes the template pollingURLStr, and replaces
+// variables with data from srv, and returns the polling URL for srv.
+//
+// Note: `${hostname}` is replaced with the server's service IPv4 address (when
+// possible) for IPv4 polls, and its IPv6 service address (when possible) for
+// IPv6 polls - NOT the servers hostname!
+func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (string, string) {
+	lid, err := tc.InterfaceInfoToLegacyInterfaces(srv.Interfaces)
+	if err != nil {
+		log.Errorf("Failed to parse polling strings for cache server '%s': %v", srv.HostName, err)
+		return "", ""
+	}
+
+	var infName string
+	if lid.InterfaceName != nil {
+		infName = *lid.InterfaceName
+	}
+
+	var pollingURL4Str string
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
+		pollingURL4Str = strings.NewReplacer(
+			"${hostname}", *lid.IPAddress,
+			"${interface_name}", infName,
+			"application=plugin.remap", "application=system",
+			"application=", "application=system",
+		).Replace(pollingURLStr)
+
+		pollingURL4Str = insertPorts(pollingURL4Str, srv)
+	}
+
+	var pollingURL6Str string
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
+		r := strings.NewReplacer(
+			"${hostname}", "["+ipv6CIDRStrToAddr(*lid.IP6Address)+"]",
+			"${interface_name}", infName,
+			"application=plugin.remap", "application=system",
+			"application=", "application=system",
+		)
+
+		pollingURL6Str = insertPorts(r.Replace(pollingURLStr), srv)
+	}
+
+	return pollingURL4Str, pollingURL6Str
+}
+
+func insertPorts(pollingURLStr string, srv tc.TrafficServer) string {
+	if strings.HasPrefix(strings.ToLower(pollingURLStr), "https") {
+		if srv.HTTPSPort != 0 {
+			pollURL, err := url.Parse(pollingURLStr)
+			if err != nil {
+				log.Warnf("profile '%s' cache server '%s' polling URL '%s' failed to parse, may not be a valid URL! Using anyway, not using custom HTTPS Port %d!", srv.Profile, srv.FQDN, pollingURLStr, srv.HTTPSPort)
+			} else if pollURL.Port() == "" { // if there's both an HTTPS Port and a port in the polling URL, the polling URL takes precedence
+				pollURL.Host += ":" + strconv.Itoa(srv.HTTPSPort)
+				pollingURLStr = pollURL.String()
+			}
+		}
+	} else {
+		if srv.Port != 0 {
+			pollURL, err := url.Parse(pollingURLStr)
+			if err != nil {
+				log.Warnf("profile '%s' cache server '%s' polling URL '%s' failed to parse, may not be a valid URL! Using anyway, not using custom TCP Port %d!", srv.Profile, srv.FQDN, pollingURLStr, srv.Port)
+			} else if pollURL.Port() == "" { // if there's both a TCP Port and a port in the polling URL, the polling URL takes precedence
+				pollURL.Host += ":" + strconv.Itoa(srv.Port)
+				pollingURLStr = pollURL.String()
+			}
+		}
+	}
+	return pollingURLStr
+}
+
+// createServerStatPollURL takes the health polling URL string, and modifies it to be the stat poll URL.
+// Note this does not replace template variables with server values, healthPollURLStr must be the health URL for a given server, not a template.
+func createServerStatPollURL(healthPollURLStr string) string {
+	return strings.NewReplacer("application=system", "application=").Replace(healthPollURLStr)
 }

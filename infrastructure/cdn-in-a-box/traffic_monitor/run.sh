@@ -89,7 +89,7 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-until to-get "api/1.3/users?username=$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
+until to-get "api/2.0/users?username=$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
@@ -101,15 +101,34 @@ export TO_PASSWORD="$TM_PASSWORD"
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-touch /opt/traffic_monitor/var/log/traffic_monitor.log
-
-# Do not start until there is a valid CRConfig available
-until [ $(to-get "/CRConfig-Snapshots/$CDN_NAME/CRConfig.json" 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do
-	echo "Waiting on valid CRConfig..."; 
-  	sleep 3; 
+# Do not start until there a valid Snapshot has been taken
+until [ $(to-get "/api/2.0/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.response.config|length') -gt 0 ] ; do
+	echo "Waiting on valid Snapshot...";
+  	sleep 3;
 done
 
-cd /opt/traffic_monitor
-/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg &
-disown
-exec tail -f /opt/traffic_monitor/var/log/traffic_monitor.log
+if [[ "$TM_DEBUG_ENABLE" == true ]]; then
+	day_in_ms=$(( 1000 * 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
+	set -o allexport;
+	HTTP_TIMEOUT_MS=$day_in_ms
+	SERVER_READ_TIMEOUT_MS=$day_in_ms
+	SERVER_WRITE_TIMEOUT_MS=$day_in_ms
+	set +o allexport;
+else
+	set -o allexport;
+	HTTP_TIMEOUT_MS=2000
+	SERVER_READ_TIMEOUT_MS=10000
+	SERVER_WRITE_TIMEOUT_MS=10000
+	set +o allexport;
+fi;
+
+envsubst < /opt/traffic_monitor/conf/traffic_monitor.cfg.template > /opt/traffic_monitor/conf/traffic_monitor.cfg
+
+traffic_monitor_command=(/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg);
+if [[ "$TM_DEBUG_ENABLE" == true ]]; then
+  dlv '--continue' '--listen=:2344' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
+    "${traffic_monitor_command[0]}" -- "${traffic_monitor_command[@]:1}" &
+  tail -f /dev/null;
+else
+  "${traffic_monitor_command[@]}"
+fi;

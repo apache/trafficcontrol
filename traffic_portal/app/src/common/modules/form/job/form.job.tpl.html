@@ -31,7 +31,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.deliveryservice), 'has-feedback': hasError(jobForm.deliveryservice)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="deliveryservice" class="form-control" ng-model="job.dsId" ng-options="deliveryservice.id as deliveryservice.xmlId for deliveryservice in deliveryservices" required>
+                    <select name="deliveryservice" class="form-control" ng-model="job.deliveryService" ng-options="deliveryservice.id as deliveryservice.xmlId for deliveryservice in deliveryservices" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.deliveryservice, 'required')">Required</small>

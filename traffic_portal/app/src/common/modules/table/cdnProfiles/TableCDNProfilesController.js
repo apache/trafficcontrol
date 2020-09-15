@@ -22,13 +22,30 @@ var TableCDNProfilesController = function(cdn, profiles, $controller, $scope) {
 	// extends the TableProfilesController to inherit common methods
 	angular.extend(this, $controller('TableProfilesController', { profiles: profiles, $scope: $scope }));
 
+	let cdnProfilesTable;
+
 	$scope.cdn = cdn;
 
+	$scope.toggleVisibility = function(colName) {
+		const col = cdnProfilesTable.column(colName + ':name');
+		col.visible(!col.visible());
+		cdnProfilesTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#cdnProfilesTable').dataTable({
+		cdnProfilesTable = $('#cdnProfilesTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_cdnProfilesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_cdnProfilesTable_/):", e);
+				}
+			}
 		});
 	});
 

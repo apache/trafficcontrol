@@ -69,10 +69,10 @@ sub create {
 			$self->db->txn_rollback();
 			return $self->alert("Parameter with id: " . $param->{parameterId} . " doesn't exist");
 		}
-		my $cg_param = $self->db->resultset('ProfileParameter')->find( { parameter => $parameter->id, profile => $cg->id } );
+		my $cg_param = $self->db->resultset('CachegroupParameter')->find( { parameter => $parameter->id, cachegroup => $cg->id } );
 		if ( defined($cg_param) ) {
 			$self->db->txn_rollback();
-			return $self->alert("parameter: " . $param->{parameterId} . " already associated with profile: " . $param->{profileId});
+			return $self->alert("parameter: " . $param->{parameterId} . " already associated with cachegroup: " . $param->{cacheGroupId});
 		}
 		$self->db->resultset('CachegroupParameter')->create( { parameter => $parameter->id, cachegroup => $cg->id } )->insert();
 	}
@@ -81,7 +81,7 @@ sub create {
 	&log( $self, "New cache group parameter associations were created.", "APICHANGE" );
 
 	my $response = $params;
-	return $self->success($response, "Profile parameter associations were created.");
+	return $self->success($response, "Cachegroup parameter associations were created.");
 }
 
 sub delete {
@@ -112,7 +112,7 @@ sub delete {
 
 	&log( $self, "Deleted cache group parameter " . $cg->name . " <-> " . $parameter->name, "APICHANGE" );
 
-	return $self->success_message("Profile parameter association was deleted.");
+	return $self->success_message("Cachegroup parameter association was deleted.");
 }
 
 

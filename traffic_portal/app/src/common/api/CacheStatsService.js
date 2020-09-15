@@ -17,49 +17,49 @@
  * under the License.
  */
 
-var CacheStatsService = function($http, $q, httpService, ENV, messageModel) {
+var CacheStatsService = function($http, ENV, messageModel) {
 
 	this.getBandwidth = function(cdnName, start, end) {
-		var request = $q.defer();
+		const url = ENV.api['root'] + "cache_stats";
+		const params = {
+			cdnName: cdnName,
+			metricType: 'bandwidth',
+			startDate: start.seconds(0).format(),
+			endDate: end.seconds(0).format()
+		};
 
-		var url = ENV.api['root'] + "cache_stats",
-			params = { cdnName: cdnName, metricType: 'bandwidth', startDate: start.seconds(00).format(), endDate: end.seconds(00).format()};
-
-		$http.get(url, { params: params })
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.get(url, { params: params }).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.getConnections = function(cdnName, start, end) {
-		var request = $q.defer();
+		const url = ENV.api['root'] + "cache_stats";
+		const params = {
+			cdnName: cdnName,
+			metricType: 'connections',
+			startDate: start.seconds(0).format(),
+			endDate: end.seconds(0).format()
+		};
 
-		var url = ENV.api['root'] + "cache_stats",
-			params = { cdnName: cdnName, metricType: 'connections', startDate: start.seconds(00).format(), endDate: end.seconds(00).format()};
-
-		$http.get(url, { params: params })
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.get(url, { params: params }).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 };
 
-CacheStatsService.$inject = ['$http', '$q', 'httpService', 'ENV', 'messageModel'];
+CacheStatsService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = CacheStatsService;

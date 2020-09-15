@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-router:
+
 **************
 Traffic Router
 **************
@@ -40,6 +42,30 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 * Tomcat Native >= 1.2.16
 * Not Tomcat - You do not need a Tomcat installation for development. An embedded version is launched for development testing instead.
 
+.. _dev-tr-mac-jdk:
+
+Get OpenJDK 8 on macOS
+--------------------------
+If you are on macOS, OpenJDK 8 is not available from Homebrew by default, but it can still be installed using Homebrew with little effort.
+
+Using Homebrew, |AdoptOpenJDK instructions|_
+
+.. code-block:: shell
+	:caption: Install OpenJDK 8 on macOS
+
+        brew tap AdoptOpenJDK/openjdk
+        brew cask install adoptopenjdk8
+
+Next, set the JAVA_HOME environment variable. Add this line to your ``~/.bash_profile``:
+
+.. code-block:: shell
+        :caption: Set JAVA_HOME environment variable
+
+        export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+
+.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
+.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
+
 Traffic Router Project Tree Overview
 ====================================
 * ``traffic_control/traffic_traffic_router/`` - base directory for Traffic Router
@@ -58,7 +84,7 @@ Traffic Router Project Tree Overview
 			* ``resources/`` - Resources pulled in during an RPM build
 			* ``scripts/`` - Scripts used by the RPM build process
 			* ``webapp/`` - Java "webapp" resources
-                        * ``var/log/`` - location of all the Traffic Router runtime logs
+			* ``var/log/`` - location of all the Traffic Router runtime logs
 
 		* ``src/test`` - Test source directory for Traffic Router Core
 
@@ -82,11 +108,11 @@ To install the Traffic Router Developer environment:
 #. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests OR install the :file:`traffic_monitor.properties` file.
 #. Additional configuration is set using the below files:
 
-  * copy :file:`core/src/test/conf/dns.properties` from :file:`core/src/main/conf/`
-  * copy :file:`core/src/test/conf/http.properties` from :file:`core/src/main/conf/`
-  * copy :file:`core/src/test/conf/log4j.properties` from :file:`core/src/main/conf/`
-  * copy :file:`core/src/test/conf/traffic_monitor.properties` from :file:`core/src/main/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
-  * :file:`core/src/test/conf/traffic_ops.properties` holds the credentials for accessing Traffic Ops. Copy it from :file:`core/src/main/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
+  * copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
+  * copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
+  * copy :file:`core/src/main/conf/log4j.properties` to :file:`core/src/test/conf/`
+  * copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
+  * copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
   * Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`
 
   	.. note:: These values may be overridden by creating and/or modifying the property files listed in :file:`core/src/main/resources/applicationProperties.xml`
@@ -115,7 +141,7 @@ To install the Traffic Router Developer environment:
 
 		..  Note:: If an error is displayed in the Console, run ``mvn clean verify`` from the ``traffic_router`` directory
 
-Once running, the :ref:`tr-api` is available at http://localhost:3333, the HTTP routing interface is available on http://localhost:8888 and HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:53 via TCP and UDP.
+Once running, the :ref:`tr-api` is available over HTTP at http://localhost:3333 and over HTTPS at https://localhost:3443,  the HTTP routing interface is available on http://localhost:8888 and HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:53 via TCP and UDP.
 
 Manual Testing
 ==============

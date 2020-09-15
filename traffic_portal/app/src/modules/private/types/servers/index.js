@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.types.servers', [])
 							},
 							servers: function(type, serverService) {
 								return serverService.getServers({ type: type.name, orderby: 'hostName' });
+							},
+							filter: function(type) {
+								return {
+									type: {
+										filterType: "text",
+										type: "equals",
+										filter: type.name
+									}
+								}
 							}
 						}
 					}

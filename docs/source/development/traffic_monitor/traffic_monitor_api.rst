@@ -22,6 +22,8 @@ The Traffic Monitor URLs below allow certain query parameters for use in control
 
 .. note:: Unlike :ref:`Traffic Ops API endpoints <to-api>`\ , no authentication is required for any of these, and as such there can be no special role requirements for a user.
 
+.. _tm-publish-EventLog:
+
 ``/publish/EventLog``
 =====================
 Gets a log of recent changes in the availability of polled caches.
@@ -80,24 +82,101 @@ Request Structure
 	|              |         | treated as partial strings.                    |
 	+--------------+---------+------------------------------------------------+
 
+.. code-block:: http
+	:caption: Example Request
+
+	GET /publish/CacheStats HTTP/1.1
+	Accept: */*
+	Content-Type: application/json
+
 Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored :term:`cache server`\ s
+:caches: An object with keys that are the names of monitored :term:`cache servers`
 
 	:<server name>: Each server's object is a collection of keys that are the names of statistics
 
-		:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
+		:<interface name>: The name of the network interface under the same sever
 
-			:value: The statistic's value. This is *always* a string, even if that string only contains a number.
-			:time: An integer UNIX timestamp indicating the start time for this value of this statistic
-			:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
+			:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
 
-.. code-block:: json
+				:value: The statistic's value. This is *always* a string, even if that string only contains a number.
+				:time: An integer UNIX timestamp indicating the start time for this value of this statistic
+				:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
+
+.. code-block:: http
 	:caption: Example Response
 
-	{}
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Thu, 14 May 2020 15:48:55 GMT
+	Transfer-Encoding: chunked
+
+	{
+		"pp": "",
+		"date": "Thu May 14 15:48:55 UTC 2020",
+		"caches": {
+			"mid": {
+				"eth0": {
+					"ats.proxy.process.ssl.cipher.user_agent.PSK-AES256-GCM-SHA384": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				},
+				"aggregate": {
+					"ats.proxy.process.http.milestone.server_begin_write": [
+						{
+							"value": "174",
+							"time": 1589471325624,
+							"span": 1
+						}
+					]
+				},
+				"lo": {
+					"ats.proxy.node.http.transaction_counts_avg_10s.miss_changed": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				}
+			},
+			"edge": {
+				"eth0": {
+					"ats.proxy.process.ssl.cipher.user_agent.PSK-AES256-GCM-SHA384": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				},
+				"aggregate": {
+					"ats.proxy.process.http.milestone.server_begin_write": [
+						{
+							"value": "174",
+							"time": 1589471325624,
+							"span": 1
+						}
+					]
+				},
+				"lo": {
+					"ats.proxy.node.http.transaction_counts_avg_10s.miss_changed": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				}
+			}
+		}
+	}
 
 ``publish/CacheStats/{{cache}}``
 ================================
@@ -130,28 +209,76 @@ Request Structure
 	|              |         | treated as partial strings.                    |
 	+--------------+---------+------------------------------------------------+
 
+.. code-block:: http
+	:caption: Example Request
+
+	GET /api/CacheStats/mid HTTP/1.1
+	Accept: */*
+	Content-Type: application/json
+
 Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored :term:`cache server`\ s - only the cache named by the ``cache`` request path parameter will be shown
+:caches: An object with keys that are the names of monitored :term:`cache servers` - only the cache named by the ``cache`` request path parameter will be shown
 
 	:<server name>: The requested server's object is a collection of keys that are the names of statistics
 
-		:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
+		:<interface name>: The name of the network interface under the same sever
 
-			:value: The statistic's value. This is *always* a string, even if that string only contains a number.
-			:time: An integer UNIX timestamp indicating the start time for this value of this statistic
-			:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
+			:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
 
-.. code-block:: json
+				:value: The statistic's value. This is *always* a string, even if that string only contains a number.
+				:time: An integer UNIX timestamp indicating the start time for this value of this statistic
+				:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
+
+.. code-block:: http
 	:caption: Example Response
 
-	{}
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Thu, 14 May 2020 15:54:35 GMT
+	Transfer-Encoding: chunked
+
+	{
+		"pp": "",
+		"date": "Thu May 14 15:48:55 UTC 2020",
+		"caches": {
+			"mid": {
+				"eth0": {
+					"ats.proxy.process.ssl.cipher.user_agent.PSK-AES256-GCM-SHA384": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				},
+				"aggregate": {
+					"ats.proxy.process.http.milestone.server_begin_write": [
+						{
+							"value": "174",
+							"time": 1589471325624,
+							"span": 1
+						}
+					]
+				},
+				"lo": {
+					"ats.proxy.node.http.transaction_counts_avg_10s.miss_changed": [
+						{
+							"value": "0",
+							"time": 1589471325624,
+							"span": 99
+						}
+					]
+				}
+			}
+		}
+	}
 
 ``/publish/DsStats``
 ====================
-Statistics gathered for :term:`Delivery Service`\ s
+Statistics gathered for :term:`Delivery Services`
 
 ``GET``
 -------

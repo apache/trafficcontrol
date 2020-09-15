@@ -1,13 +1,27 @@
-.project
-.*.swp
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 .DS_Store
-*.bak
-*.iml
-.idea/
 cpanfile.snapshot
 rpm/build.number
 rpmbuild/
 docs/build/*
+/grove/grove
+/grove/grovetccfg/grovetccfg
 local
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
@@ -16,6 +30,7 @@ traffic_ops/app/public/CRConfig-Snapshots/*
 traffic_ops/app/public/Trafficserver-Snapshots/*
 docs/.todo_cache
 docs/_build/
+docs/source/_build/
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
 traffic_ops/**/*.log
@@ -30,3 +45,23 @@ bin/docker-compose
 /.m2
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz
+# Editor/IDE configuration files
+*.sublime-project
+*.sublime-workspace
+.vscode/
+*.pydevproject
+.idea/
+.project
+.*.swp
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.elc
+.projectile
+*.bak
+*.iml
+# built local binaries
+./traffic_ops_golang
+# Created by TP/TO docker integration tests
+junit/
+

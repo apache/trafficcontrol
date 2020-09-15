@@ -24,7 +24,7 @@ under the License.
     <h3 class="modal-title">Link Parameters to {{::cg.name}}</h3>
 </div>
 <div class="modal-body">
-    <table id="cgParamsUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
+    <table id="cgParamsUnassignedTable" class="table responsive-utilities jambo_table params" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
             <th></th>
@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="p in ::unassignedParams">
-            <td><input type="checkbox" ng-click="updateParams($event, p.id)"></td>
+        <tr ng-repeat="p in ::unassignedParams" ng-class="::{'active': p.selected}" ng-click="handleRowClick($index)">
+            <td><input id="checkbox-{{$index}}" ng-model="p.selected" type="checkbox" ng-click="updateParams($event, p.id); $event.stopPropagation()"></td>
             <td data-search="^{{::p.name}}$">{{::p.name}}</td>
             <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
             <td data-search="^{{::p.value}}$">{{::p.value}}</td>

@@ -17,22 +17,13 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $controller, $scope) {
+var TablePhysLocationServersController = function(physLocation, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'physLocationServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.physLocation = physLocation;
-
-	angular.element(document).ready(function () {
-		$('#physLocServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$controller', '$scope'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TablePhysLocationServersController;

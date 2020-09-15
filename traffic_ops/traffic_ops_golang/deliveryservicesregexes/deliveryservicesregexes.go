@@ -25,12 +25,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/lib/pq"
 )
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -40,32 +42,32 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	q := `
-SELECT ds.xml_id, ds.tenant_id, dsr.set_number, r.pattern, rt.name as type
+SELECT ds.xml_id, dsr.set_number, r.pattern, rt.name as type
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
+WHERE ds.tenant_id = ANY($1)
 `
-	rows, err := inf.Tx.Tx.Query(q)
+
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	rows, err := inf.Tx.Tx.Query(q, pq.Array(accessibleTenants))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes: "+err.Error()))
 		return
 	}
 	defer rows.Close()
 	dsRegexes := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
-	dsTenants := map[tc.DeliveryServiceName]*int{}
 	for rows.Next() {
-		// if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		// 	next;
-		// }
 		dsName := ""
-		dsTenantID := util.IntPtr(0)
 		setNumber := 0
 		pattern := ""
 		typeName := ""
-		if err = rows.Scan(&dsName, &dsTenantID, &setNumber, &pattern, &typeName); err != nil {
+		if err = rows.Scan(&dsName, &setNumber, &pattern, &typeName); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryserviceregexes: "+err.Error()))
 			return
 		}
@@ -74,12 +76,6 @@ JOIN type as rt ON r.type = rt.id
 			SetNumber: setNumber,
 			Pattern:   pattern,
 		})
-		dsTenants[tc.DeliveryServiceName(dsName)] = dsTenantID
-	}
-
-	if dsRegexes, err = filterAuthorizedDSRegexes(inf.Tx.Tx, inf.User, dsRegexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		return
 	}
 
 	respRegexes := []tc.DeliveryServiceRegexes{}
@@ -96,17 +92,36 @@ func DSGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	q := `
 SELECT ds.tenant_id, dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
-WHERE ds.ID = $1
-ORDER BY dsr.set_number ASC
 `
-	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"])
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"dsid": dbhelpers.WhereColumnInfo{"ds.ID", api.IsInt},
+		"id":   dbhelpers.WhereColumnInfo{"r.id", api.IsInt}}
+	where, _, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	if len(where) > 0 {
+		where += " AND ds.tenant_id = ANY(:tenants) "
+	} else {
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
+	}
+	queryValues["tenants"] = pq.Array(accessibleTenants)
+
+	query := q + where + " ORDER BY dsr.set_number ASC" + pagination
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes get: "+err.Error()))
 		return
@@ -124,54 +139,55 @@ ORDER BY dsr.set_number ASC
 		regexes = append(regexes, rx)
 		dsTenants[rx.ID] = dsTenantID
 	}
-	if regexes, err = filterAuthorizedDSIDRegexes(inf.Tx.Tx, inf.User, regexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		return
-	}
 	api.WriteResp(w, r, regexes)
 }
 
 func DSGetID(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use GET '/deliveryservices/{dsid}/regexes' with query parameter id instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
 
 	q := `
-SELECT ds.tenant_id, dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
+SELECT dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
-WHERE ds.ID = $1
-AND r.ID = $2
+WHERE ds.ID = $1 AND ds.tenant_id = ANY($2)
+AND r.ID = $3
 ORDER BY dsr.set_number ASC
 `
-	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], inf.IntParams["regexid"])
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], pq.Array(accessibleTenants), inf.IntParams["regexid"])
+	if err != nil {
+		userErr = api.LogErr(r, errCode, userErr, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer rows.Close()
 	regexes := []tc.DeliveryServiceIDRegex{}
-	dsTenants := map[int]*int{}
 	for rows.Next() {
-		dsTenantID := util.IntPtr(0)
 		rx := tc.DeliveryServiceIDRegex{}
-		if err = rows.Scan(&dsTenantID, &rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
+		if err = rows.Scan(&rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
+			userErr = api.LogErr(r, errCode, userErr, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
+			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+			api.WriteAlerts(w, r, errCode, alerts)
 			return
 		}
 		regexes = append(regexes, rx)
-		dsTenants[rx.ID] = dsTenantID
 	}
-	if regexes, err = filterAuthorizedDSIDRegexes(inf.Tx.Tx, inf.User, regexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		return
-	}
-	api.WriteResp(w, r, regexes)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, regexes)
 }
 
 func Post(w http.ResponseWriter, r *http.Request) {
@@ -210,6 +226,11 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	regexID := 0
 	if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting deliveryserviceregex regex: "+err.Error()))
@@ -227,6 +248,13 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID := inf.IntParams["dsid"]
+	dsName, _, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	}
+
 	respObj := tc.DeliveryServiceIDRegex{
 		ID:        regexID,
 		Pattern:   dsr.Pattern,
@@ -234,6 +262,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Created a regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -247,6 +276,14 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	dsID := inf.IntParams["dsid"]
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 	dsTenantID := 0
 	if err := tx.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
@@ -263,6 +300,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	dsr := tc.DeliveryServiceRegexPost{} // PUT uses same format as POST
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		return
+	}
+
+	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -291,12 +333,28 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Updated a regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
 func validateDSRegexType(tx *sql.Tx, typeID int) error {
 	_, err := tc.ValidateTypeID(tx, &typeID, "regex")
 	return err
+}
+
+func validateDSRegexOrder(tx *sql.Tx, dsID int, order int) error {
+	var ds int
+	if order < 0 {
+		return errors.New("cannot add regex with order < 0")
+	}
+	err := tx.QueryRow(`
+select deliveryservice from deliveryservice_regex 
+where deliveryservice = $1 and set_number = $2`,
+		dsID, order).Scan(&ds)
+	if err == nil {
+		return errors.New("cannot add regex, another regex with the same order exists")
+	}
+	return nil
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
@@ -308,6 +366,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsID := inf.IntParams["dsid"]
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 
 	count := 0
@@ -337,6 +403,26 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsrSetNumber := 0
+	if err := inf.Tx.Tx.QueryRow(`SELECT set_number FROM deliveryservice_regex WHERE regex = $1`, regexID).Scan(&dsrSetNumber); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found for this delivery service"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding set number: "+err.Error()))
+		return
+	}
+
+	dsrType, dsrPattern := 0, ""
+	if err := inf.Tx.Tx.QueryRow(`SELECT type, pattern FROM regex WHERE id = $1`, regexID).Scan(&dsrType, &dsrPattern); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding type and pattern: "+err.Error()))
+		return
+	}
+
 	result, err := inf.Tx.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice = $1 and regex = $2`, dsID, regexID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete deleting delivery service regexes: "+err.Error()))
@@ -355,40 +441,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted a regular expression ("+dsrPattern+") in position "+strconv.Itoa(dsrSetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
-}
-
-func filterAuthorizedDSRegexes(tx *sql.Tx, user *auth.CurrentUser, dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, dsTenants map[tc.DeliveryServiceName]*int) (map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, error) {
-	for ds, tenantID := range dsTenants {
-		if tenantID == nil {
-			continue
-		}
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*tenantID, user, tx)
-		if err != nil {
-			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
-		}
-		if !authorized {
-			delete(dsRegexes, ds)
-		}
-	}
-	return dsRegexes, nil
-}
-
-func filterAuthorizedDSIDRegexes(tx *sql.Tx, user *auth.CurrentUser, regexes []tc.DeliveryServiceIDRegex, dsTenants map[int]*int) ([]tc.DeliveryServiceIDRegex, error) {
-	filtered := []tc.DeliveryServiceIDRegex{}
-	for _, regex := range regexes {
-		tenantID := dsTenants[regex.ID]
-		if tenantID == nil {
-			continue
-		}
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*tenantID, user, tx)
-		if err != nil {
-			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
-		}
-		if authorized {
-			filtered = append(filtered, regex)
-		}
-	}
-	return regexes, nil
 }

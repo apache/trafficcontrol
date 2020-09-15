@@ -19,20 +19,23 @@ package tc
  * under the License.
  */
 
-// A List of Coordinates Response
+// CoordinatesResponse is a list of Coordinates as a response.
 // swagger:response CoordinatesResponse
 // in: body
 type CoordinatesResponse struct {
 	// in: body
 	Response []Coordinate `json:"response"`
+	Alerts
 }
 
-// A Single Coordinate Response for Update and Create to depict what changed
+// CoordinateResponse is a single Coordinate response for Update and Create to
+// depict what changed.
 // swagger:response CoordinateResponse
 // in: body
 type CoordinateResponse struct {
 	// in: body
 	Response Coordinate `json:"response"`
+	Alerts
 }
 
 // Coordinate ...

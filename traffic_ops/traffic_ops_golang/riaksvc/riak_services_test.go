@@ -139,6 +139,35 @@ func TestDeleteObject(t *testing.T) {
 	}
 }
 
+func TestSetTLSVersion(t *testing.T) {
+	riakConfig := &TOAuthOptions{
+		AuthOptions:   riak.AuthOptions{TlsConfig: &tls.Config{}},
+		MaxTLSVersion: nil,
+	}
+	validVersion := "1.1"
+	riakConfig.MaxTLSVersion = &validVersion
+	if err := setMaxTLSVersion(riakConfig); err != nil {
+		t.Error("expected nil but got ", err)
+	}
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 {
+		t.Errorf("expected the TlsConfig's max version to be set to %v, but instead got %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion)
+	}
+
+	invalidVersion := "1.a"
+	riakConfig.MaxTLSVersion = &invalidVersion
+	if err := setMaxTLSVersion(riakConfig); err == nil {
+		t.Error("expected error due to an invalid TLS version but got no error.")
+	}
+
+	riakConfig.TlsConfig.MaxVersion = 0
+	riakConfig.MaxTLSVersion = nil
+	_ = setMaxTLSVersion(riakConfig)
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 {
+		t.Errorf("by default, expected the TlsConfig's max version to be set to %v, but instead got %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion)
+	}
+
+}
+
 func TestGetRiakCluster(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {

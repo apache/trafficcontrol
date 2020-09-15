@@ -234,6 +234,15 @@ sub gen_crconfig_json {
             );
             my $r = $rs_param->single;
             my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
+            my $pid = $row->profile->id;
+            my $weight =
+                    defined( $param_cache{$pid}->{'weight'} )
+                ? $param_cache{$pid}->{'weight'}
+                : 0.999;
+            my $weight_multiplier =
+                    defined( $param_cache{$pid}->{'weightMultiplier'} )
+                ? $param_cache{$pid}->{'weightMultiplier'}
+                : 1000;
 
             $data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}        = $row->host_name . "." . $row->domain_name;
             $data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}      = $row->status->name;
@@ -244,6 +253,15 @@ sub gen_crconfig_json {
             $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}          = $row->ip_address;
             $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}         = ( $row->ip6_address || "" );
             $data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}     = $row->profile->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'hashCount'}   = int( $weight * $weight_multiplier );
+
+            # Add Traffic Router cache groups to edgeLocations if valid lat/long is specified (0, 0 is unlikely to be valid)
+            # This is necessary to enable localization for Traffic Router related DNS records
+            if ( defined( $row->cachegroup->latitude ) && defined( $row->cachegroup->longitude ) &&
+                ($row->cachegroup->latitude + 0) != 0 && ($row->cachegroup->longitude + 0) != 0 ) {
+                    $data_obj->{'trafficRouterLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
+                    $data_obj->{'trafficRouterLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
+            }
         }
         elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
@@ -454,6 +472,12 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geolocationProvider'} = 'maxmindGeolocationService';
         }
 
+        if ( defined( $row->max_dns_answers )
+            && $row->max_dns_answers ne "" )
+        {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'maxDnsIpsForLocation'} = $row->max_dns_answers;
+        }
+
         if ( $protocol =~ m/DNS/ ) {
 
             #$data_obj->{'deliveryServices'}->{$row->xml_id}->{'matchsets'}->[0]->{'protocol'} = 'DNS';
@@ -474,11 +498,6 @@ sub gen_crconfig_json {
                 && $row->dns_bypass_ttl ne "" )
             {
                 $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'DNS'}->{'ttl'} = $row->dns_bypass_ttl;
-            }
-            if ( defined( $row->max_dns_answers )
-                && $row->max_dns_answers ne "" )
-            {
-                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'maxDnsIpsForLocation'} = $row->max_dns_answers;
             }
         }
         elsif ( $protocol =~ m/HTTP/ ) {
@@ -713,6 +732,10 @@ sub crconfig_strings {
     }
     foreach my $ccr ( sort keys %{ $config_json->{'contentRouters'} } ) {
         my $return = &stringify_ccr( $config_json->{'contentRouters'}->{$ccr} );
+        push( @ccr_strings, $return );
+    }
+    foreach my $trafficRouterLocation ( sort keys %{ $config_json->{'trafficRouterLocations'} } ) {
+        my $return = &stringify_cachegroup( $config_json->{'trafficRouterLocations'}->{$trafficRouterLocation} );
         push( @ccr_strings, $return );
     }
 

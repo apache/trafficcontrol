@@ -7,7 +7,8 @@
                 "excludePostalCode": [
                     "V5G",
                     "M7A"
-                ]
+                ],
+                "coordinateRange": [{"minLat" : -12, "maxLat": 13, "minLon" : 55, "maxLon": 56}, {"minLat" : -13, "maxLat": 14, "minLon" : 55, "maxLon": 56}]
             },
             "urlRegex": ".*live1"
         },
@@ -49,6 +50,29 @@
                 "184.66.16.1/22"
             ],
             "urlRegex": ".*live4"
+        },
+        {
+            "redirectUrl": "https://example.com/redirect_https",
+            "deliveryServiceId": "ds-geoblock-redirect-https",
+            "geoLocation": {
+                "excludePostalCode": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "urlRegex": ".*httpsredirect"
+        },
+        {
+            "redirectUrl": "https://example.com/steering-test",
+            "deliveryServiceId": "ds-steering-1",
+            "isSteeringDS": "true",
+            "geoLocation": {
+                "excludePostalCode": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "urlRegex": ".*steering"
         }
     ],
     "customer": "CU",

@@ -26,7 +26,7 @@ under the License.
     <form name="compareForm" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12">
-                <select class="form-control" ng-model="selectedItems[0]" ng-options="item as label(item) for item in collection" required>
+                <select class="form-control" name="compareDropdown1" ng-model="selectedItems[0]" ng-options="item as label(item) for item in collection" required>
                     <option value="">Select...</option>
                 </select>
             </div>
@@ -34,7 +34,7 @@ under the License.
         <br>
         <div class="row">
             <div class="col-sm-12 col-md-12">
-                <select class="form-control" ng-model="selectedItems[1]" ng-options="item as label(item) for item in collection" required>
+                <select class="form-control" name="compareDropdown2" ng-model="selectedItems[1]" ng-options="item as label(item) for item in collection" required>
                     <option value="">Select...</option>
                 </select>
             </div>
@@ -43,5 +43,5 @@ under the License.
 </div>
 <div class="modal-footer">
     <button class="btn btn-link" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-disabled="compareForm.$invalid" ng-click="select()">Submit</button>
+    <button name="compareSubmit" class="btn btn-primary" ng-disabled="compareForm.$invalid" ng-click="select()">Submit</button>
 </div>

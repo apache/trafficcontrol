@@ -1,4 +1,4 @@
-// Package enum contains enumerations and strongly typed names.
+// enum.go contains enumerations and strongly typed names.
 //
 // These enums should be treated as enumerables, and MUST NOT be cast as anything else (integer, strings, etc). Enums MUST NOT be compared to strings or integers via casting. Enumerable data SHOULD be stored as the enumeration, not as a string or number. The *only* reason they are internally represented as strings, is to make them implicitly serialize to human-readable JSON. They should not be treated as strings. Casting or storing strings or numbers defeats the purpose of enum safety and conveniences.
 //
@@ -52,8 +52,16 @@ type CacheGroupName string
 // DeliveryServiceName is the name of a CDN delivery service.
 type DeliveryServiceName string
 
+// TopologyName is the name of a topology of cachegroups.
+type TopologyName string
+
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
+
+// InterfaceName is the name of the server interface
+type InterfaceName string
+
+const OriginLocationType = "ORG_LOC"
 
 const (
 	// CacheTypeEdge represents an edge cache.
@@ -64,11 +72,35 @@ const (
 	CacheTypeInvalid = CacheType("")
 )
 
+const AlgorithmConsistentHash = "consistent_hash"
+
 const MonitorTypeName = "RASCAL"
 const MonitorProfilePrefix = "RASCAL"
 const RouterTypeName = "CCR"
 const EdgeTypePrefix = "EDGE"
 const MidTypePrefix = "MID"
+
+const OriginTypeName = "ORG"
+
+const (
+	CacheGroupEdgeTypeName   = "EDGE_LOC"
+	CacheGroupMidTypeName    = "MID_LOC"
+	CacheGroupOriginTypeName = "ORG_LOC"
+)
+
+const GlobalProfileName = "GLOBAL"
+
+// ParameterName represents the name of a Traffic Ops parameter meant to belong in a Traffic Ops config file.
+type ParameterName string
+
+// UseRevalPendingParameterName is the name of a parameter which tells whether or not Traffic Ops should use pending revalidation jobs.
+const UseRevalPendingParameterName = ParameterName("use_reval_pending")
+
+// ConfigFileName represents the name of a Traffic Ops config file.
+type ConfigFileName string
+
+// GlobalConfigFileName is the name of the global Traffic Ops config file.
+const GlobalConfigFileName = ConfigFileName("global")
 
 func (c CacheName) String() string {
 	return string(c)
@@ -105,6 +137,17 @@ func CacheTypeFromString(s string) CacheType {
 	}
 	return CacheTypeInvalid
 }
+
+// These are prefixed "QueryStringIgnore" even though the values don't always indicate ignoring, because the database column is named "qstring_ignore"
+
+const QueryStringIgnoreUseInCacheKeyAndPassUp = 0
+const QueryStringIgnoreIgnoreInCacheKeyAndPassUp = 1
+const QueryStringIgnoreDropAtEdge = 2
+
+const RangeRequestHandlingDontCache = 0
+const RangeRequestHandlingBackgroundFetch = 1
+const RangeRequestHandlingCacheRangeRequest = 2
+const RangeRequestHandlingSlice = 3
 
 // DSTypeCategory is the Delivery Service type category: HTTP or DNS
 type DSTypeCategory string
@@ -144,6 +187,12 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 }
 
 const SigningAlgorithmURLSig = "url_sig"
+const SigningAlgorithmURISigning = "uri_signing"
+
+const DSProtocolHTTP = 0
+const DSProtocolHTTPS = 1
+const DSProtocolHTTPAndHTTPS = 2
+const DSProtocolHTTPToHTTPS = 3
 
 // CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
 type CacheStatus string
@@ -194,6 +243,75 @@ func CacheStatusFromString(s string) CacheStatus {
 	default:
 		return CacheStatusInvalid
 	}
+}
+
+// Protocol represents an ATC-supported content delivery protocol.
+type Protocol string
+
+const (
+	// ProtocolHTTP represents the HTTP/1.1 protocol as specified in RFC2616.
+	ProtocolHTTP = Protocol("http")
+	// ProtocolHTTPS represents the HTTP/1.1 protocol over a TCP connection secured by TLS
+	ProtocolHTTPS = Protocol("https")
+	// ProtocolHTTPtoHTTPS represents a redirection of unsecured HTTP requests to HTTPS
+	ProtocolHTTPtoHTTPS = Protocol("http to https")
+	// ProtocolHTTPandHTTPS represents the use of both HTTP and HTTPS
+	ProtocolHTTPandHTTPS = Protocol("http and https")
+	// ProtocolInvalid represents an invalid Protocol
+	ProtocolInvalid = Protocol("")
+)
+
+// String implements the "Stringer" interface.
+func (p Protocol) String() string {
+	switch p {
+	case ProtocolHTTP:
+		fallthrough
+	case ProtocolHTTPS:
+		fallthrough
+	case ProtocolHTTPtoHTTPS:
+		fallthrough
+	case ProtocolHTTPandHTTPS:
+		return string(p)
+	default:
+		return "INVALIDPROTOCOL"
+	}
+}
+
+// ProtocolFromString parses a string and returns the corresponding Protocol.
+func ProtocolFromString(s string) Protocol {
+	switch strings.Replace(strings.ToLower(s), "_", " ", -1) {
+	case "http":
+		return ProtocolHTTP
+	case "https":
+		return ProtocolHTTPS
+	case "http to https":
+		return ProtocolHTTPtoHTTPS
+	case "http and https":
+		return ProtocolHTTPandHTTPS
+	default:
+		return ProtocolInvalid
+	}
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (p *Protocol) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return errors.New("Protocol cannot be null")
+	}
+	s, err := strconv.Unquote(string(data))
+	if err != nil {
+		return fmt.Errorf("JSON %s not quoted: %v", data, err)
+	}
+	*p = ProtocolFromString(s)
+	if *p == ProtocolInvalid {
+		return fmt.Errorf("%s is not a (supported) Protocol", s)
+	}
+	return nil
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (p Protocol) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
 }
 
 // LocalizationMethod represents an enabled localization method for a cachegroup. The string values of this type should match the Traffic Ops values.
@@ -536,7 +654,7 @@ func (t DSType) IsLive() bool {
 	return false
 }
 
-// IsLive returns whether delivery services of this type are "national".
+// IsNational returns whether delivery services of this type are "national".
 func (t DSType) IsNational() bool {
 	switch t {
 	case DSTypeDNSLiveNational:
@@ -558,6 +676,34 @@ func (t DSType) UsesMidCache() bool {
 		return false
 	}
 	return true
+}
+
+const DSTypeLiveNationalSuffix = "_LIVE_NATNL"
+const DSTypeLiveSuffix = "_LIVE"
+
+// QStringIgnore is an entry in the delivery_service table qstring_ignore column, and represents how to treat the URL query string for requests to that delivery service.
+// This enum's String function returns the numeric representation, because it is a legacy database value, and the number should be kept for both database and API JSON uses. For the same reason, this enum has no FromString function.
+type QStringIgnore int
+
+const (
+	QStringIgnoreUseInCacheKeyAndPassUp    QStringIgnore = 0
+	QStringIgnoreIgnoreInCacheKeyAndPassUp QStringIgnore = 1
+	QStringIgnoreDrop                      QStringIgnore = 2
+)
+
+// String returns the string number of the QStringIgnore value.
+// Note this returns the number, not a human-readable value, because QStringIgnore is a legacy database sigil, and both database and API JSON uses should use the number. This also returns 'INVALID' for unknown values, to fail fast in the event of bad data.
+func (e QStringIgnore) String() string {
+	switch e {
+	case QStringIgnoreUseInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreIgnoreInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreDrop:
+		return strconv.Itoa(int(e))
+	default:
+		return "INVALID"
+	}
 }
 
 type DSMatchType string

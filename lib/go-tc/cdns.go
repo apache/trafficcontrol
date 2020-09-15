@@ -1,5 +1,9 @@
 package tc
 
+import (
+	"database/sql"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,20 +23,23 @@ package tc
  * under the License.
  */
 
-// A List of CDNs Response
+// CDNsResponse is a list of CDNs as a response.
 // swagger:response CDNsResponse
 // in: body
 type CDNsResponse struct {
 	// in: body
 	Response []CDN `json:"response"`
+	Alerts
 }
 
-// A Single CDN Response for Update and Create to depict what changed
+// CDNResponse is a single CDN response for Update and Create to depict what
+// changed.
 // swagger:response CDNResponse
 // in: body
 type CDNResponse struct {
 	// in: body
 	Response CDN `json:"response"`
+	Alerts
 }
 
 // CDN ...
@@ -113,7 +120,16 @@ type CDNSSLKeysCertificate struct {
 	Key string `json:"key"`
 }
 
+// CDNConfig includes the name and ID of a single CDN configuration.
 type CDNConfig struct {
 	Name *string `json:"name"`
 	ID   *int    `json:"id"`
+}
+
+// CDNExistsByName returns whether a cdn with the given name exists, and any error.
+// TODO move to helper package.
+func CDNExistsByName(name string, tx *sql.Tx) (bool, error) {
+	exists := false
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM cdn WHERE name = $1)`, name).Scan(&exists)
+	return exists, err
 }

@@ -24,12 +24,12 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		serverCountInterval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
-	var serverCount = {
-		ONLINE: "Loading...",
-		OFFLINE: "Loading...",
-		REPORTED: "Loading...",
-		ADMIN_DOWN: "Loading..."
-	};
+	var serverCount = new Map([
+		["ONLINE", "Loading..."],
+		["OFFLINE", "Loading..."],
+		["REPORTED", "Loading..."],
+		["ADMIN_DOWN", "Loading..."]
+	]);
 
 	var getCacheGroupHealth = function() {
 		cacheGroupService.getCacheGroupHealth()
@@ -64,9 +64,18 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 	};
 
 	var getServerCount = function() {
-		serverService.getEdgeStatusCount()
+		serverService.getServers({type: "EDGE"})
 			.then(function(result) {
-				serverCount = result;
+				serverCount.set("ONLINE", 0);
+				serverCount.set("OFFLINE", 0);
+				serverCount.set("REPORTED", 0);
+				serverCount.set("ADMIN_DOWN", 0);
+				for (let s in result) {
+					const server = result[s]; // webpack won't handle a for...of loop
+					if (serverCount.has(server.status)) {
+						serverCount.set(server.status, serverCount.get(server.status) + 1);
+					}
+				}
 			});
 	};
 
@@ -101,27 +110,19 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 	$scope.totalOffline = 'Loading...';
 
 	$scope.online = function() {
-		if (!_.has(serverCount, 'ONLINE') ) return 0; // if the key is missing it means the value is 0
-		if (_.isString(serverCount.ONLINE)) return serverCount.ONLINE;
-		return $filter('number')(serverCount.ONLINE, 0);
+		return serverCount.get("ONLINE");
 	};
 
 	$scope.offline = function() {
-		if (!_.has(serverCount, 'OFFLINE') ) return 0; // if the key is missing it means the value is 0
-		if (_.isString(serverCount.OFFLINE)) return serverCount.ONLINE;
-		return $filter('number')(serverCount.OFFLINE, 0);
+		return serverCount.get("OFFLINE");
 	};
 
 	$scope.reported = function() {
-		if (!_.has(serverCount, 'REPORTED') ) return 0; // if the key is missing it means the value is 0
-		if (_.isString(serverCount.REPORTED)) return serverCount.REPORTED;
-		return $filter('number')(serverCount.REPORTED, 0);
+		return serverCount.get("REPORTED");
 	};
 
 	$scope.adminDown = function() {
-		if (!_.has(serverCount, 'ADMIN_DOWN') ) return 0; // if the key is missing it means the value is 0
-		if (_.isString(serverCount.ADMIN_DOWN)) return serverCount.ADMIN_DOWN;
-		return $filter('number')(serverCount.ADMIN_DOWN, 0);
+		return serverCount.get("ADMIN_DOWN");
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;

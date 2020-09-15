@@ -16,7 +16,7 @@
 ********
 HTTP/1.1
 ********
-For a comprehensive look at Traffic Control, it is important to understand basic HTTP/1.1 protocol operations and how :term:`cache server`\ s function.
+For a comprehensive look at Traffic Control, it is important to understand basic HTTP/1.1 protocol operations and how :term:`cache servers` function.
 
 .. seealso:: For complete details on HTTP/1.1 see :rfc:`2616`.
 

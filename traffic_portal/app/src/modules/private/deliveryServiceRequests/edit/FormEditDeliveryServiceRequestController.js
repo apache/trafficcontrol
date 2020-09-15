@@ -17,12 +17,12 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, origin, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, origin, topologies, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	$scope.dsRequest = deliveryServiceRequest[0];
 		
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: $scope.dsRequest.deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: $scope.dsRequest.deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
 
 	$scope.changeType = $scope.dsRequest.changeType;
 
@@ -83,7 +83,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, status).
 				then(function() {
 					$state.reload();
-				});
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
+			});
 		}, function () {
 			// do nothing
 		});
@@ -99,6 +100,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.id));
 		// set the status to 'pending'
 		promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, 'pending'));
+		return promises;
 	};
 
 	$scope.fulfillRequest = function(ds) {
@@ -165,9 +167,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					deliveryServiceService.deleteDeliveryService(ds).
 						then(
 							function() {
-								updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
-								messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
-								locationUtils.navigateToPath('/delivery-service-requests');
+								let promises = updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+								$q.all(promises)
+									.then(
+										function() {
+											messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
+											locationUtils.navigateToPath('/delivery-service-requests');
+										});
 							},
 							function(fault) {
 								$anchorScroll(); // scrolls window to top
@@ -249,7 +255,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		modalInstance.result.then(function() {
 			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId).
 				then(function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was deleted' } ], true);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				});
 		}, function () {
@@ -259,5 +265,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'origin', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', '$location', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'origin', 'topologies', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', '$location', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;

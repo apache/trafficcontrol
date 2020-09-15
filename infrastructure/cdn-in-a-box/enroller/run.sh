@@ -18,7 +18,9 @@
 # under the License.
 ############################################################
 
-set -x
+set -o xtrace
+# enable job control
+set -o monitor
 . /to-access.sh
 
 set-dns.sh
@@ -62,4 +64,10 @@ fi
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
 
-/enroller -dir "$ENROLLER_DIR" || tail -f /dev/null
+/enroller -dir "$ENROLLER_DIR" &
+
+source /to-access.sh
+# Enroll with traffic ops
+TO_URL="https://$TO_FQDN:$TO_PORT"
+to-enroll enroller ALL '' 53 || (while true; do echo "enroll failed."; sleep 3 ; done)
+fg || tail -f /dev/null

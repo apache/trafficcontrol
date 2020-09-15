@@ -24,7 +24,7 @@ under the License.
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
+            <button name="diffCDNbtn" class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
             <div class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
                 <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     Queue Updates&nbsp;

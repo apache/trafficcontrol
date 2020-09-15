@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::s.id}}" class="server-row" ng-repeat="s in ::servers">
-            <td><input type="checkbox" ng-checked="s.selected" ng-model="s.selected" ng-change="onChange()"></td>
+        <tr id="{{::s.id}}" class="server-row" ng-class="::{'active': s.selected}" ng-repeat="s in ::servers" ng-click="s.selected = !s.selected; onChange()">
+            <td><input type="checkbox" ng-model="s.selected"></td>
             <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
             <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
             <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>

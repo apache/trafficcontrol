@@ -87,7 +87,9 @@ init() {
 				"serve_read_timeout_ms": 10000,
 				"serve_write_timeout_ms": 10000,
 				"http_poll_no_sleep": false,
-				"static_file_dir": "/opt/traffic_monitor/static/"
+				"static_file_dir": "/opt/traffic_monitor/static/",
+				"peer_polling_protocol": "both",
+				"cache_polling_protocol": "both"
 		}
 ENDOFMESSAGE
 

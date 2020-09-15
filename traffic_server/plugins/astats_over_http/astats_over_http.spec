@@ -18,18 +18,18 @@
 
 %global install_prefix "/opt"
 
-Name:		astats_over_http
-Version:	1.3
-Release:	1%{?dist}
-Summary:	Apache Traffic Server %{name} plugin
-Vendor:		Comcast
-Group:		Applications/Communications
-License:	Apache License, Version 2.0
-URL:		https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
-Source0:	%{name}.tar.gz
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Requires:	trafficserver = 5.2.0
-BuildRequires:	trafficserver = 5.2.0
+Name:           astats_over_http
+Version:        1.3
+Release:        1%{?dist}
+Summary:        Apache Traffic Server %{name} plugin
+Vendor:         Comcast
+Group:          Applications/Communications
+License:        Apache License, Version 2.0
+URL:            https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
+Source0:        %{name}.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Requires:       trafficserver = 5.2.0
+BuildRequires:  trafficserver = 5.2.0
 
 %description
 Apache Traffic Server plugin

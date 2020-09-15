@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+// SystemInfo can hold arbitrary system information (e.g., as a Traffic Ops
+// API response).
 type SystemInfo struct {
 	ParametersNullable map[string]string `json:"parameters"`
 }

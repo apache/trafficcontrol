@@ -19,11 +19,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.xbill.DNS.Name;
+import org.xbill.DNS.SetResponse;
+import org.xbill.DNS.Zone;
+
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
 
@@ -106,22 +110,97 @@ public class StatTracker {
 	}
 
 	public static class Track {
+		/**
+		 * RouteType represents the type of routing performed/to be performed by Traffic Router.
+		 */
 		public static enum RouteType {
-			DNS,HTTP
+			/**
+			 * This value indicates DNS routing is taking/has taken/will take place.
+			 */
+			DNS,
+			/**
+			 * This value indicates HTTP routing is taking/has taken/will take place.
+			 */
+			HTTP
 		}
 
+		/**
+		 * ResultType represents the final result of attempting to route a request.
+		 */
 		public static enum ResultType {
-			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED, RGDENY, RGALT, GEO_REDIRECT, DEEP_CZ, ANON_BLOCK
+			/**
+			 * This value indicates that an error occurred and routing could not be successfully completed.
+			 */
+			ERROR,
+			/**
+			 * This value indicates that routing was satisfied by a mapping in Coverage Zone configuration.
+			 */
+			CZ,
+			/**
+			 * This value indicates that routing was satisfied by geo-locating the client.
+			 */
+			GEO,
+			/**
+			 * This value indicates that geo-location of the client failed, and they were directed to an appropriate "miss" location.
+			 */
+			MISS,
+			/**
+			 * This value indicates that routing was satisfied by a static DNS entry configured on a Delivery Service.
+			 */
+			STATIC_ROUTE,
+			/**
+			 * 
+			 */
+			DS_REDIRECT,
+			/**
+			 * This value indicates that routing could not be performed, because no Delivery Service could be found to match
+			 * the client request.
+			 */
+			DS_MISS,
+			/**
+			 *
+			 */
+			INIT,
+			/**
+			 * This value indicates that the client was routed according to Federation mappings.
+			 */
+			FED,
+			/**
+			 * 
+			 */
+			RGDENY,
+			/**
+			 * 
+			 */
+			RGALT,
+			/**
+			 * 
+			 */
+			GEO_REDIRECT,
+			/**
+			 * This value indicates that routing was satisfied by a mapping in Deep Coverage Zone configuration.
+			 */
+			DEEP_CZ,
+			/**
+			 * This value indicates that routing was blocked in accordance with anonymous blocking configurations.
+			 */
+			ANON_BLOCK
 		}
 
 		public enum ResultDetails {
 			NO_DETAILS, DS_NOT_FOUND, DS_TLS_MISMATCH, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND,
-			REGIONAL_GEO_NO_RULE, REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE, REGIONAL_GEO_ALTERNATE_WITH_CACHE, DS_CZ_BACKUP_CG
+			REGIONAL_GEO_NO_RULE, REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE, REGIONAL_GEO_ALTERNATE_WITH_CACHE, DS_CZ_BACKUP_CG,
+			DS_INVALID_ROUTING_NAME, LOCALIZED_DNS
+		}
+
+		public enum ResultCode {
+			NO_RESULT_CODE, NXDOMAIN, NODATA
 		}
 
 		long time;
 		RouteType routeType;
 		String fqdn;
+		ResultCode resultCode = ResultCode.NO_RESULT_CODE;
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails;
 		Geolocation resultLocation;
@@ -145,6 +224,20 @@ public class StatTracker {
 		public void setRouteType(final RouteType routeType, final String fqdn) {
 			this.routeType = routeType;
 			this.fqdn = fqdn;
+		}
+		public void setResultCode(final Zone zone, final Name qname, final int qtype) {
+			if (zone == null) {
+				return;
+			}
+			final SetResponse sr = zone.findRecords(qname, qtype);
+			if (sr.isNXDOMAIN()) {
+				resultCode = ResultCode.NXDOMAIN;
+			} else if (sr.isNXRRSET()) {
+				resultCode = ResultCode.NODATA;
+			}
+		}
+		public ResultCode getResultCode() {
+			return resultCode;
 		}
 		public void setResult(final ResultType result) {
 			this.result = result;
@@ -212,6 +305,7 @@ public class StatTracker {
 
 	final private Map<String, Tallies> dnsMap = new HashMap<String, Tallies>();
 	final private Map<String, Tallies> httpMap = new HashMap<String, Tallies>();
+
 	public Map<String, Tallies> getDnsMap() {
 		return dnsMap;
 	}
@@ -264,21 +358,23 @@ public class StatTracker {
 
 		synchronized(this) {
 			Map<String,Tallies> map;
-			if(t.routeType == RouteType.DNS) {
+			final String fqdn = t.fqdn == null ? "null" : t.fqdn;
+			if (t.routeType == RouteType.DNS) {
 				totalDnsCount++;
 				totalDnsTime += t.time;
 				map = dnsMap;
+
+				if (t.resultDetails == Track.ResultDetails.LOCALIZED_DNS) {
+					return;
+				}
+
 			} else {
 				totalHttpCount++;
 				totalHttpTime += t.time;
 				map = httpMap;
 			}
-			Tallies tallies = map.get(t.fqdn);
-			if(tallies == null) {
-				tallies = new Tallies();
-				map.put((t.fqdn==null)?"null":t.fqdn, tallies);
-			}
-			incTally(t, tallies);
+			map.putIfAbsent(fqdn, new Tallies());
+			incTally(t, map.get(fqdn));
 		}
 	}
 

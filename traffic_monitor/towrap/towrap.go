@@ -1,3 +1,5 @@
+// Package towrap wraps two versions of Traffic Ops clients to give up-to-date
+// information, possibly using legacy API versions.
 package towrap
 
 /*
@@ -23,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"strconv"
 	"sync"
@@ -31,42 +34,55 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_ops/client"
+	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
-
-// ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
-type ITrafficOpsSession interface {
-	CRConfigRaw(cdn string) ([]byte, error)
-	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
-	Set(session *client.Session)
-	URL() (string, error)
-	User() (string, error)
-	Servers() ([]tc.Server, error)
-	Profiles() ([]tc.Profile, error)
-	Parameters(profileName string) ([]tc.Parameter, error)
-	DeliveryServices() ([]tc.DeliveryService, error)
-	CacheGroups() ([]tc.CacheGroupNullable, error)
-	CRConfigHistory() []CRConfigStat
-	BackupFileExists() bool
-}
 
 const localHostIP = "127.0.0.1"
 
-var ErrNilSession = fmt.Errorf("nil session")
+// ErrNilSession is the error returned by operations performed on a nil session.
+var ErrNilSession = errors.New("nil session")
 
-// TODO rename CRConfigCacheObj
+// ByteTime is a structure for associating a set of raw data with some CDN
+// Snapshot statistics, and a certain time.
 type ByteTime struct {
 	bytes []byte
 	time  time.Time
 	stats *tc.CRConfigStats
 }
 
+// ByteMapCache is a thread-access-safe map of cache server hostnames to
+// ByteTime structures.
 type ByteMapCache struct {
 	cache *map[string]ByteTime
 	m     *sync.RWMutex
+}
+
+// NewByteMapCache constructs a new, empty ByteMapCache.
+func NewByteMapCache() ByteMapCache {
+	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
+}
+
+// Set sets the entry given by 'key' to a new ByteTime structure with the given
+// raw data ('newBytes') and the given statistics ('stats') at the current time.
+func (c ByteMapCache) Set(key string, newBytes []byte, stats *tc.CRConfigStats) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	(*c.cache)[key] = ByteTime{bytes: newBytes, stats: stats, time: time.Now()}
+}
+
+// Get retrieves the raw data, associated time, and statistics of the entry
+// given by 'key'.
+func (c ByteMapCache) Get(key string) ([]byte, time.Time, *tc.CRConfigStats) {
+	c.m.RLock()
+	defer c.m.RUnlock()
+	if byteTime, ok := (*c.cache)[key]; !ok {
+		return nil, time.Time{}, nil
+	} else {
+		return byteTime.bytes, byteTime.time, byteTime.stats
+	}
 }
 
 func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
@@ -78,48 +94,58 @@ func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
 	return false
 }
 
-func NewByteMapCache() ByteMapCache {
-	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
+// CRConfigStat represents a set of statistics from a CDN Snapshot requested at
+// a particular time.
+type CRConfigStat struct {
+	// Err contains any error that may have occurred when obtaining the
+	// statistics.
+	Err error `json:"error"`
+	// ReqAddr is the network address from which the statistics were requested.
+	ReqAddr string `json:"request_address"`
+	// ReqTime is the time at which the request for statistics was made.
+	ReqTime time.Time `json:"request_time"`
+	// Stats contains the actual statistics.
+	Stats tc.CRConfigStats `json:"stats"`
 }
 
-func (c ByteMapCache) Set(key string, newBytes []byte, stats *tc.CRConfigStats) {
-	c.m.Lock()
-	defer c.m.Unlock()
-	(*c.cache)[key] = ByteTime{bytes: newBytes, stats: stats, time: time.Now()}
-}
-
-func (c ByteMapCache) Get(key string) ([]byte, time.Time, *tc.CRConfigStats) {
-	c.m.RLock()
-	defer c.m.RUnlock()
-	if byteTime, ok := (*c.cache)[key]; !ok {
-		return nil, time.Time{}, nil
-	} else {
-		return byteTime.bytes, byteTime.time, byteTime.stats
-	}
+// CopyCRConfigStat makes a deep copy of a slice of CRConfigStats.
+func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
+	newStats := make([]CRConfigStat, len(old))
+	copy(newStats, old)
+	return newStats
 }
 
 // CRConfigHistoryThreadsafe stores history in a circular buffer.
 type CRConfigHistoryThreadsafe struct {
-	hist  *[]CRConfigStat
-	m     *sync.RWMutex
-	limit *uint64
-	len   *uint64
-	pos   *uint64
+	hist   *[]CRConfigStat
+	m      *sync.RWMutex
+	limit  *uint64
+	length *uint64
+	pos    *uint64
 }
 
+// NewCRConfigHistoryThreadsafe constructs a new, empty
+// CRConfigHistoryThreadsafe - this is the ONLY way to safely create a
+// CRConfigHistoryThreadsafe, using the zero value of the structure will cause
+// all operations to encounter segmentation faults, and there is no way to
+// preempt this.
+//
+// 'limit' indicates the size of the circular buffer - effectively the number of
+// entries it will be capable of storing.
 func NewCRConfigHistoryThreadsafe(limit uint64) CRConfigHistoryThreadsafe {
 	hist := make([]CRConfigStat, limit, limit)
-	len := uint64(0)
+	length := uint64(0)
 	pos := uint64(0)
-	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, len: &len, pos: &pos}
+	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, length: &length, pos: &pos}
 }
 
-// Add adds the given stat to the history. Does not add new additions with the same remote address and CRConfig Date as the previous.
+// Add adds the given stat to the history. Does not add new additions with the
+// same remote address and CRConfig Date as the previous.
 func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 	h.m.Lock()
 	defer h.m.Unlock()
 
-	if *h.len != 0 {
+	if *h.length != 0 {
 		last := (*h.hist)[(*h.pos-1)%*h.limit]
 		datesEqual := (i.Stats.DateUnixSeconds == nil && last.Stats.DateUnixSeconds == nil) || (i.Stats.DateUnixSeconds != nil && last.Stats.DateUnixSeconds != nil && *i.Stats.DateUnixSeconds == *last.Stats.DateUnixSeconds)
 		cdnsEqual := (i.Stats.CDNName == nil && last.Stats.CDNName == nil) || (i.Stats.CDNName != nil && last.Stats.CDNName != nil && *i.Stats.CDNName == *last.Stats.CDNName)
@@ -131,59 +157,114 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 
 	(*h.hist)[*h.pos] = *i
 	*h.pos = (*h.pos + 1) % *h.limit
-	if *h.len < *h.limit {
-		*h.len++
+	if *h.length < *h.limit {
+		*h.length++
 	}
 }
 
+// Get retrieves the stored history of CRConfigStat entries.
 func (h CRConfigHistoryThreadsafe) Get() []CRConfigStat {
 	h.m.RLock()
 	defer h.m.RUnlock()
-	if *h.len < *h.limit {
-		return CopyCRConfigStat((*h.hist)[:*h.len])
+	if *h.length < *h.limit {
+		return CopyCRConfigStat((*h.hist)[:*h.length])
 	}
-	new := make([]CRConfigStat, *h.limit)
-	copy(new, (*h.hist)[*h.pos:])
-	copy(new[*h.len-*h.pos:], (*h.hist)[:*h.pos])
-	return new
+	newStats := make([]CRConfigStat, *h.limit)
+	copy(newStats, (*h.hist)[*h.pos:])
+	copy(newStats[*h.length-*h.pos:], (*h.hist)[:*h.pos])
+	return newStats
 }
 
-func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
-	new := make([]CRConfigStat, len(old))
-	copy(new, old)
-	return new
+// Len gives the number of currently stored items in the buffer.
+//
+// An uninitialized buffer has zero length.
+func (h CRConfigHistoryThreadsafe) Len() uint64 {
+	if h.length == nil {
+		return 0
+	}
+	return *h.length
 }
 
-type CRConfigStat struct {
-	ReqTime time.Time        `json:"request_time"`
-	ReqAddr string           `json:"request_address"`
-	Stats   tc.CRConfigStats `json:"stats"`
-	Err     error            `json:"error"`
-}
-
-// TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
+// TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe
+// for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
 	session            **client.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
+	legacySession      **legacyClient.Session
 	m                  *sync.Mutex
 	lastCRConfig       ByteMapCache
 	crConfigHist       CRConfigHistoryThreadsafe
+	useLegacy          bool
 	CRConfigBackupFile string
 	TMConfigBackupFile string
 }
 
-// NewTrafficOpsSessionThreadsafe returns a new threadsafe TrafficOpsSessionThreadsafe wrapping the given `Session`.
-func NewTrafficOpsSessionThreadsafe(s *client.Session, crConfigHistoryLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache(), crConfigHist: NewCRConfigHistoryThreadsafe(crConfigHistoryLimit), CRConfigBackupFile: cfg.CRConfigBackupFile, TMConfigBackupFile: cfg.TMConfigBackupFile}
+// NewTrafficOpsSessionThreadsafe returns a new threadsafe
+// TrafficOpsSessionThreadsafe wrapping the given `Session`.
+func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *legacyClient.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
+	return TrafficOpsSessionThreadsafe{
+		CRConfigBackupFile: cfg.CRConfigBackupFile,
+		crConfigHist:       NewCRConfigHistoryThreadsafe(histLimit),
+		lastCRConfig:       NewByteMapCache(),
+		m:                  &sync.Mutex{},
+		session:            &s,
+		legacySession:      &ls,
+		TMConfigBackupFile: cfg.TMConfigBackupFile,
+		useLegacy:          false,
+	}
 }
 
-// Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
-func (s TrafficOpsSessionThreadsafe) Set(session *client.Session) {
+// Initialized tells whether or not the TrafficOpsSessionThreadsafe has been
+// properly initialized (by calling 'Update').
+func (s TrafficOpsSessionThreadsafe) Initialized() bool {
+	if s.useLegacy {
+		return s.legacySession != nil && *s.legacySession != nil
+	}
+	return s.session != nil && *s.session != nil
+}
+
+// Update updates the TrafficOpsSessionThreadsafe's connection information with
+// the provided information. It's safe for calling by multiple goroutines, being
+// aware that they will race.
+func (s *TrafficOpsSessionThreadsafe) Update(
+	url string,
+	username string,
+	password string,
+	insecure bool,
+	userAgent string,
+	useCache bool,
+	timeout time.Duration,
+) error {
+	if s == nil {
+		return errors.New("cannot update nil session")
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	*s.session = session
+
+	session, _, err := client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
+	if err != nil {
+		log.Errorf("Error logging in using up-to-date client: %v", err)
+		legacySession, _, err := legacyClient.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
+		if err != nil || legacySession == nil {
+			err = fmt.Errorf("logging in using legacy client: %v", err)
+			return err
+		}
+		*s.legacySession = legacySession
+		s.useLegacy = true
+	} else {
+		*s.session = session
+		s.useLegacy = false
+	}
+
+	return nil
 }
 
-// getThreadsafeSession is used internally to get a copy of the session pointer, or nil if it doesn't exist. This should not be used outside TrafficOpsSessionThreadsafe, and never stored, because part of the purpose of TrafficOpsSessionThreadsafe is to store a pointer to the Session pointer, so it can be updated by one goroutine and immediately used by another. This should only be called immediately before using the session, since someone else may update it concurrently.
+// getThreadsafeSession is used internally to get a copy of the session pointer,
+// or nil if it doesn't exist. This should not be used outside
+// TrafficOpsSessionThreadsafe, and never stored, because part of the purpose of
+// rafficOpsSessionThreadsafe is to store a pointer to the Session pointer, so
+// it can be updated by one goroutine and immediately used by another. This
+// should only be called immediately before using the session, since someone
+// else may update it concurrently.
 func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -193,27 +274,28 @@ func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	return *s.session
 }
 
-func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
+func (s TrafficOpsSessionThreadsafe) getLegacy() *legacyClient.Session {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.legacySession == nil || *s.legacySession == nil {
+		return nil
 	}
-	return ss.URL, nil
+	return *s.legacySession
 }
 
-func (s TrafficOpsSessionThreadsafe) User() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
-	}
-	return ss.UserName, nil
-}
-
+// CRConfigHistory gets all of the stored, historical data about CRConfig
+// Snapshots' Stats sections.
 func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
 	return s.crConfigHist.Get()
 }
 
+// CRConfigValid checks if the passed tc.CRConfig structure is valid, and
+// ensures that it is from the same CDN as the last CRConfig Snapshot, as well
+// as that it is newer than the last CRConfig Snapshot.
 func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string) error {
+	if crc == nil {
+		return errors.New("CRConfig is nil")
+	}
 	if crc.Stats.CDNName == nil {
 		return errors.New("CRConfig.Stats.CDN missing")
 	}
@@ -221,7 +303,8 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 		return errors.New("CRConfig.Stats.Date missing")
 	}
 
-	// Note this intentionally takes intended CDN, rather than trusting crc.Stats
+	// Note this intentionally takes intended CDN, rather than trusting
+	// crc.Stats
 	lastCrc, lastCrcTime, lastCrcStats := s.lastCRConfig.Get(cdn)
 
 	if lastCrc == nil {
@@ -244,100 +327,87 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-func MonitorConfigValid(cfg *tc.TrafficMonitorConfigMap) error {
-	if cfg == nil {
-		return errors.New("MonitorConfig is nil")
-	}
-	if len(cfg.TrafficServer) == 0 {
-		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
-	}
-	if len(cfg.CacheGroup) == 0 {
-		return errors.New("MonitorConfig.CacheGroup empty")
-	}
-	if len(cfg.TrafficMonitor) == 0 {
-		return errors.New("MonitorConfig.TrafficMonitor empty")
-	}
-	// TODO uncomment this, when TO is fixed to include DeliveryServices.
-	// See https://github.com/apache/trafficcontrol/issues/3528
-	// if len(cfg.DeliveryService) == 0 {
-	// 	return errors.New("MonitorConfig.DeliveryService empty")
-	// }
-	if len(cfg.Profile) == 0 {
-		return errors.New("MonitorConfig.Profile empty")
-	}
-
-	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
-	}
-
-	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
-	}
-
-	return nil
-}
-
-// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
+// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for
+// multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
-	ss := s.get()
-
 	var remoteAddr string
+	var err error
+	var data []byte
 
-	if ss == nil {
-		return nil, ErrNilSession
+	if s.useLegacy {
+		ss := s.getLegacy()
+		if ss == nil {
+			return nil, ErrNilSession
+		}
+		b, reqInf, e := ss.GetCRConfig(cdn)
+		err = e
+		data = b
+		remoteAddr = reqInf.RemoteAddr.String()
+	} else {
+		ss := s.get()
+		if ss == nil {
+			return nil, ErrNilSession
+		}
+		b, reqInf, e := ss.GetCRConfig(cdn)
+		err = e
+		data = b
+		remoteAddr = reqInf.RemoteAddr.String()
 	}
 
-	b, reqInf, err := ss.GetCRConfig(cdn)
 	if err == nil {
-		remoteAddr = reqInf.RemoteAddr.String()
-		ioutil.WriteFile(s.CRConfigBackupFile, b, 0644)
+		ioutil.WriteFile(s.CRConfigBackupFile, data, 0644)
 	} else {
 		if s.BackupFileExists() {
-			b, err = ioutil.ReadFile(s.CRConfigBackupFile)
+			data, err = ioutil.ReadFile(s.CRConfigBackupFile)
 			if err != nil {
-				err = errors.New("file Read Error: " + err.Error())
-				return nil, err
+				return nil, fmt.Errorf("file Read Error: %v", err)
 			}
 			remoteAddr = localHostIP
 			log.Errorln("Error getting CRConfig from traffic_ops, backup file exists, reading from file")
 			err = nil
 		} else {
-			return nil, ErrNilSession
+			return nil, fmt.Errorf("Failed to get CRConfig from Traffic Ops (%v), and there is no backup file", err)
 		}
 	}
 
-	hist := &CRConfigStat{time.Now(), remoteAddr, tc.CRConfigStats{}, err}
+	hist := &CRConfigStat{
+		Err:     err,
+		ReqAddr: remoteAddr,
+		ReqTime: time.Now(),
+		Stats:   tc.CRConfigStats{},
+	}
 	defer s.crConfigHist.Add(hist)
 
+	// TODO: per the above logic, I don't think this is possible
 	if err != nil {
-		return b, err
+		return data, err
 	}
 
 	crc := &tc.CRConfig{}
 	json := jsoniter.ConfigFastest
-	if err = json.Unmarshal(b, crc); err != nil {
+	if err = json.Unmarshal(data, crc); err != nil {
 		err = errors.New("invalid JSON: " + err.Error())
 		hist.Err = err
-		return b, err
+		return data, err
 	}
 	hist.Stats = crc.Stats
 
 	if err = s.CRConfigValid(crc, cdn); err != nil {
 		err = errors.New("invalid CRConfig: " + err.Error())
 		hist.Err = err
-		return b, err
+		return data, err
 	}
 
-	s.lastCRConfig.Set(cdn, b, &crc.Stats)
-	return b, nil
+	s.lastCRConfig.Set(cdn, data, &crc.Stats)
+	return data, nil
 }
 
-// LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the time it was returned. This is designed to be used in conjunction with a poller which regularly calls CRConfigRaw. If no last CRConfig exists, because CRConfigRaw has never been called successfully, this calls CRConfigRaw once to try to get the CRConfig from Traffic Ops.
+// LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the
+// time it was returned. This is designed to be used in conjunction with a
+// poller which regularly calls CRConfigRaw. If no last CRConfig exists, because
+// CRConfigRaw has never been called successfully, this calls CRConfigRaw once
+// to try to get the CRConfig from Traffic Ops.
 func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
 	crConfig, crConfigTime, _ := s.lastCRConfig.Get(cdn)
 	if crConfig == nil {
@@ -347,17 +417,51 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
-// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `TrafficMonitorConfigMap`. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+func (s TrafficOpsSessionThreadsafe) fetchTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	configMap, _, err := ss.GetTrafficMonitorConfigMap(cdn)
+	m, _, e := ss.GetTrafficMonitorConfig(cdn)
+	return m, e
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
+	ss := s.getLegacy()
+	if ss == nil {
+		return nil, ErrNilSession
+	}
+
+	m, _, e := ss.GetTrafficMonitorConfig(cdn)
+	return m.Upgrade(), e
+}
+
+// trafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
+// Traffic Ops, directly from the monitoring.json endpoint. This is not usually
+// what is needed, rather monitoring needs the snapshotted CRConfig data, which
+// is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
+// goroutines.
+func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+	var config *tc.TrafficMonitorConfig
+	var configMap *tc.TrafficMonitorConfigMap
+	var err error
+
+	if s.useLegacy {
+		config, err = s.fetchLegacyTMConfig(cdn)
+	} else {
+		config, err = s.fetchTMConfig(cdn)
+	}
+
+	if config == nil {
+		if err != nil {
+			return nil, fmt.Errorf("getting Traffic Monitor configuration map: %v", err)
+		}
+		return nil, errors.New("nil configMap after fetching")
+	}
 
 	if err == nil {
-		err = MonitorConfigValid(configMap)
+		configMap, err = tc.TrafficMonitorTransformToMap(config)
 	}
 
 	if err != nil {
@@ -373,14 +477,15 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
-		if err := json.Unmarshal(b, &configMap); err != nil {
+		var tmConfig tc.TrafficMonitorConfig
+		if err := json.Unmarshal(b, &tmConfig); err != nil {
 			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
 		}
-		return configMap, err
+		return tc.TrafficMonitorTransformToMap(&tmConfig)
 	}
 
 	json := jsoniter.ConfigFastest
-	data, err := json.Marshal(*configMap)
+	data, err := json.Marshal(*config)
 	if err == nil {
 		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
 	}
@@ -388,7 +493,8 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	return configMap, err
 }
 
-// TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
+// TrafficMonitorConfigMap returns the Traffic Monitor config map from the
+// Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
@@ -414,66 +520,124 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	return mc, nil
 }
 
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
-	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.TrafficServer{}
-	for name, srv := range crConfig.ContentServers {
-		s := tc.TrafficServer{}
-		if srv.Profile != nil {
-			s.Profile = *srv.Profile
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
-		}
-		if srv.Ip != nil {
-			s.IP = *srv.Ip
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing IP field\n", name)
-		}
-		if srv.ServerStatus != nil {
-			s.ServerStatus = string(*srv.ServerStatus)
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
-		}
-		if srv.CacheGroup != nil {
-			s.CacheGroup = *srv.CacheGroup
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing CacheGroup field\n", name)
-		}
-		if srv.Ip6 != nil {
-			s.IP6 = *srv.Ip6
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing IP6 field\n", name)
-		}
-		if srv.Port != nil {
-			s.Port = *srv.Port
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Port field\n", name)
-		}
-		s.HostName = name
-		if srv.Fqdn != nil {
-			s.FQDN = *srv.Fqdn
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing FQDN field\n", name)
-		}
-		if srv.InterfaceName != nil {
-			s.InterfaceName = *srv.InterfaceName
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing InterfaceName field\n", name)
-		}
-		if srv.ServerType != nil {
-			s.Type = *srv.ServerType
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Type field\n", name)
-		}
-		if srv.HashId != nil {
-			s.HashID = *srv.HashId
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
-		}
-		mc.TrafficServer[name] = s
+func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerNullable, error) {
+	ss := s.get()
+	if ss == nil {
+		return tc.ServerNullable{}, ErrNilSession
 	}
 
-	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
+	params := url.Values{}
+	params.Set("hostName", hostName)
+	resp, _, err := ss.GetServersWithHdr(&params, nil)
+	if err != nil {
+		return tc.ServerNullable{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+	}
+
+	respLen := len(resp.Response)
+	if respLen < 1 {
+		return tc.ServerNullable{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+	}
+
+	var server tc.ServerNullable
+	var num int
+	found := false
+	for i, srv := range resp.Response {
+		num = i
+		if srv.CDNName != nil && srv.HostName != nil && *srv.HostName == hostName {
+			server = srv
+			found = true
+			break
+		}
+	}
+	if !found {
+		return tc.ServerNullable{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+	}
+
+	if respLen > 1 {
+		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
+	}
+
+	return server, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerNullable, error) {
+	ss := s.getLegacy()
+	if ss == nil {
+		return tc.ServerNullable{}, ErrNilSession
+	}
+
+	resp, _, err := ss.GetServerByHostName(hostName)
+	if err != nil {
+		return tc.ServerNullable{}, fmt.Errorf("fetching legacy server by hostname '%s': %v", hostName, err)
+	}
+
+	respLen := len(resp)
+	if respLen < 1 {
+		return tc.ServerNullable{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+	}
+
+	var server tc.ServerNullableV2
+	var num int
+	found := false
+	for i, srv := range resp {
+		num = i
+		if srv.CDNName != "" && srv.HostName == hostName {
+			server = srv.ToNullable()
+			found = true
+			break
+		}
+
+	}
+	if !found {
+		return tc.ServerNullable{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-empty CDN", hostName)
+	}
+	if respLen > 1 {
+		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
+	}
+
+	ret, err := server.Upgrade()
+	if err != nil {
+		return ret, fmt.Errorf("coercing legacy server to new format: %v", err)
+	}
+
+	return ret, nil
+}
+
+// MonitorCDN returns the name of the CDN of a Traffic Monitor with the given
+// hostName.
+func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error) {
+	var server tc.ServerNullable
+	var err error
+
+	if s.useLegacy {
+		server, err = s.fetchLegacyServerByHostname(hostName)
+	} else {
+		server, err = s.fetchServerByHostname(hostName)
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("getting monitor CDN: %v", err)
+	}
+
+	// nil-dereference checks done already in each 'fetch' method; they'll just
+	// return an error in that case
+	return *server.CDNName, nil
+}
+
+// CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
+// Traffic Monitors and Delivery Services found in a CDN Snapshot, and wipe out
+// all of those that already existed in the configuration map.
+func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
+	// For unknown reasons, this function used to overwrite the passed set of
+	// TrafficServer objects. That was problematic, tc.CRConfig structures don't
+	// contain the same amount of information about their "equivalent"
+	// ContentServers.
+	// TODO: This is still overwriting TM instances found in the monitoring
+	// config - why? It's also doing that for Delivery Services, but that's
+	// necessary until issue #3528 is resolved.
+
+	// Dump the "live" monitoring.json monitors, and populate with the
+	// "snapshotted" CRConfig
 	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
 	for name, mon := range crConfig.Monitors {
 		// monitorProfile = *mon.Profile
@@ -517,13 +681,15 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		mc.TrafficMonitor[name] = m
 	}
 
-	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
-	// But keep using the monitoring.json thresholds, because they're not in the CRConfig.
+	// Dump the "live" monitoring.json DeliveryServices, and populate with the
+	// "snapshotted" CRConfig but keep using the monitoring.json thresholds,
+	// because they're not in the CRConfig.
 	rawDeliveryServices := mc.DeliveryService
 	mc.DeliveryService = map[string]tc.TMDeliveryService{}
 	for name, _ := range crConfig.DeliveryServices {
 		if rawDS, ok := rawDeliveryServices[name]; ok {
-			// use the raw DS if it exists, because the CRConfig doesn't have thresholds or statuses
+			// use the raw DS if it exists, because the CRConfig doesn't have
+			// thresholds or statuses
 			mc.DeliveryService[name] = rawDS
 		} else {
 			mc.DeliveryService[name] = tc.TMDeliveryService{
@@ -535,49 +701,4 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		}
 	}
 	return mc, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) Servers() ([]tc.Server, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	servers, _, error := ss.GetServers()
-	return servers, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Profiles() ([]tc.Profile, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	profiles, _, error := ss.GetProfiles()
-	return profiles, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]tc.Parameter, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	parameters, _, error := ss.GetParametersByProfileName(profileName)
-	return parameters, error
-}
-
-func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryService, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	deliveryServices, _, error := ss.GetDeliveryServices()
-	return deliveryServices, error
-}
-
-func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]tc.CacheGroupNullable, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	cacheGroups, _, error := ss.GetCacheGroupsNullable()
-	return cacheGroups, error
 }

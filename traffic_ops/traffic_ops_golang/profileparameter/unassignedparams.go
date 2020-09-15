@@ -35,11 +35,17 @@ import (
 func GetUnassigned(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, nil)
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getUnassignedParametersByProfileID(inf.Tx.Tx, inf.IntParams["id"]))
+
+	result, err := getUnassignedParametersByProfileID(inf.Tx.Tx, inf.IntParams["id"])
+	if err != nil {
+		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, nil)
+		return
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), result)
 }
 
 func getUnassignedParametersByProfileID(tx *sql.Tx, profileID int) ([]tc.ProfileParameterByName, error) {

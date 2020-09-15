@@ -40,6 +40,9 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 	const oldTrafficRouterCacheGroups = currentSnapshot.trafficRouterLocations,
 		newTrafficRouterCacheGroups = newSnapshot.trafficRouterLocations;
 
+	const oldTopologies = currentSnapshot.topologies,
+		newTopologies = newSnapshot.topologies;
+
 	const oldStats = currentSnapshot.stats,
 		newStats = newSnapshot.stats;
 
@@ -126,6 +129,13 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		templateUrl: 'tlPopoverTemplate.html'
 	};
 
+	$scope.topologiesCount = {
+		added: 0,
+		removed: 0,
+		updated: 0,
+		templateUrl: 'topPopoverTemplate.html'
+	};
+
 	$scope.statsCount = {
 		added: 0,
 		removed: 0,
@@ -155,6 +165,14 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		});
 	};
 
+	$scope.tabSelected = function() {
+		// issue 3863 - adjust column headers when tab is selected and data table is visible. hacky...sorry...
+		window.setTimeout(function() {
+			$($.fn.dataTable.tables(true)).DataTable()
+				.columns.adjust();
+			},100);
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -166,6 +184,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			"language": {
 				"emptyTable": "No pending changes"
 			},
+			"buttons": [],
 			"columnDefs": [
 				{ 'orderable': false, 'targets': [2, 3] }
 			]
@@ -181,6 +200,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		performDiff(oldDeliveryServices, newDeliveryServices, 'deliveryServices');
 		performDiff(oldEdgeCacheGroups, newEdgeCacheGroups, 'edgeLocations');
 		performDiff(oldTrafficRouterCacheGroups, newTrafficRouterCacheGroups, 'trLocations');
+		performDiff(oldTopologies, newTopologies, 'topologies');
 		performDiff(oldStats, newStats, 'stats');
 	};
 	init();

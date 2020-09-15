@@ -17,14 +17,14 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $controller, $scope, $state, $uibModal, cacheGroupService) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, filter, $controller, $scope, $state, $uibModal, cacheGroupService) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'cacheGroupServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.cacheGroup = cacheGroup;
 
-	var queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
+	let queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -33,7 +33,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 			);
 	};
 
-	var clearCacheGroupServerUpdates = function(cacheGroup, cdnId) {
+	let clearCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -43,11 +43,11 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 	};
 
 	$scope.confirmCacheGroupQueueServerUpdates = function(cacheGroup) {
-		var params = {
+		const params = {
 			title: 'Queue Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 			controller: 'DialogSelectController',
 			size: 'md',
@@ -68,11 +68,11 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 	};
 
 	$scope.confirmCacheGroupClearServerUpdates = function(cacheGroup) {
-		var params = {
+		const params = {
 			title: 'Clear Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 			controller: 'DialogSelectController',
 			size: 'md',
@@ -92,15 +92,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 		});
 	};
 
-	angular.element(document).ready(function () {
-		$('#cacheGroupServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', 'filter', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
 module.exports = TableCacheGroupsServersController;

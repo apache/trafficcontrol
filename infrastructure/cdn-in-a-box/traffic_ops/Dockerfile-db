@@ -22,8 +22,17 @@
 FROM postgres:9.6-alpine
 
 ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-RUN apk add bind-tools
+RUN apk add bind-tools \
+	# to-access dependencies
+	jq gettext
 COPY traffic_ops/initdb.d /docker-entrypoint-initdb.d
 COPY traffic_ops/run-db.sh /
+COPY traffic_ops/to-access.sh /
+COPY enroller/server_template.json /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 RUN chmod -R a+rx /run-db.sh /docker-entrypoint-initdb.d
 ENTRYPOINT /run-db.sh

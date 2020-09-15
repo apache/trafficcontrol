@@ -25,9 +25,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -36,8 +33,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
-
 	"github.com/lib/pq"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 // TOTenant provides a local type against which to define methods
@@ -48,7 +47,13 @@ type TOTenant struct {
 
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
-func (v *TOTenant) NewReadObj() interface{}       { return &tc.TenantNullable{} }
+func (v *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` q ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+func (v *TOTenant) NewReadObj() interface{} { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)
 }
@@ -122,14 +127,14 @@ func (ten TOTenant) Validate() error {
 
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
-func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
-		return nil, nil, nil, http.StatusOK
+		return nil, nil, nil, http.StatusOK, nil
 	}
 
-	tenants, userErr, sysErr, errCode := api.GenericRead(ten)
+	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	tenantNames := map[int]*string{}
@@ -146,7 +151,7 @@ func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
 		p := *tenantNames[*t.ParentID]
 		t.ParentName = &p // copy
 	}
-	return tenants, nil, nil, http.StatusOK
+	return tenants, nil, nil, errCode, maxTime
 }
 
 // IsTenantAuthorized implements the Tenantable interface for TOTenant

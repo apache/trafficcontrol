@@ -19,50 +19,55 @@ package tc
  * under the License.
  */
 
+// ErrorConstant is used for error messages.
 type ErrorConstant string
 
+// Error converts ErrorConstants to a string.
 func (e ErrorConstant) Error() string { return string(e) }
 
+// DBError is an error message for database errors.
 const DBError = ErrorConstant("database access error")
+
+// NilTenantError can used when a Tenantable object finds that TentantID in the
+// request is nil.
 const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is nil")
+
+// TenantUserNotAuthError is used when a user does not have access to a
+// requested resource tenant.
 const TenantUserNotAuthError = ErrorConstant("user not authorized for requested tenant")
+
+// TenantDSUserNotAuthError is used when a user does not have access to a
+// requested resource tenant for a delivery service.
 const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
+const NeedsAtLeastOneIPError = ErrorConstant("both IP and IP6 addresses are empty")
+const EmptyAddressCannotBeAServiceAddressError = ErrorConstant("an empty IP or IPv6 address cannot be marked as a service address")
+const NeedsAtLeastOneServiceAddressError = ErrorConstant("at least one address must be marked as a service address")
 
-const ApplicationJson = "application/json"
-const Gzip = "gzip"
-const ContentType = "Content-Type"
-const ContentEncoding = "Content-Encoding"
-const ContentTypeTextPlain = "text/plain"
-
+// AlertLevel is used for specifying or comparing different levels of alerts.
 type AlertLevel int
 
 const (
+	// SuccessLevel indicates that an action is successful.
 	SuccessLevel AlertLevel = iota
+
+	// InfoLevel indicates that the message is supplementary and is not directly
+	// the result of the user's request.
 	InfoLevel
+
+	// WarnLevel indicates dangerous but non-failing conditions.
 	WarnLevel
+
+	// ErrorLevel indicates that the request failed.
 	ErrorLevel
 )
 
 var alertLevels = [4]string{"success", "info", "warning", "error"}
 
+// String returns the string representation of an AlertLevel.
 func (a AlertLevel) String() string {
 	return alertLevels[a]
 }
 
-type ApiErrorType int
-
-const (
-	NoError ApiErrorType = iota
-	SystemError
-	DataConflictError
-	DataMissingError
-	ForbiddenError
-)
-
-var apiErrorTypes = []string{"noError", "systemError", "dataConflictError", "dataMissingError", "forbiddenError"}
-
-func (a ApiErrorType) String() string {
-	return apiErrorTypes[a]
-}
-
+// CachegroupCoordinateNamePrefix is a string that all cache group coordinate
+// names are prefixed with.
 const CachegroupCoordinateNamePrefix = "from_cachegroup_"

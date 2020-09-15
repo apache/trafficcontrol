@@ -22,9 +22,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"gopkg.in/yaml.v2"
 	"flag"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -243,7 +243,6 @@ func paramsMatch(matcher Parameter, param Parameter, ignoreValue bool) bool {
 	nameRe := regexp.MustCompile(matcher.Name)
 	cfgRe := regexp.MustCompile(matcher.ConfigFile)
 	valueRe := regexp.MustCompile(matcher.Value)
-
 
 	if nil != nameRe.FindStringIndex(param.Name) &&
 		nil != cfgRe.FindStringIndex(param.ConfigFile) {
