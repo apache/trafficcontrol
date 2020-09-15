@@ -78,23 +78,67 @@ under the License.
 				<table>
 					<thead>
 						<tr>
-							<th>Server</th>
-							<th>Type</th>
-							<th>IPv4</th>
-							<th>IPv6</th>
-							<th>Status</th>
-							<th>Load Average</th>
-							<th>Query Time (ms)</th>
-							<th>Health Time (ms)</th>
-							<th>Stat Time (ms)</th>
-							<th>Health Span (ms)</th>
-							<th>Stat Span (ms)</th>
-							<th>Bandwidth (mbps)</th>
-							<th>Connection Count</th>
+							<th></th>
+							<th class="text-entry">Server</th>
+							<th class="text-entry">Type</th>
+							<th class="text-entry">IPv4</th>
+							<th class="text-entry">IPv6</th>
+							<th class="text-entry">Status</th>
+							<th class="number-entry">Load Average</th>
+							<th class="number-entry">Query Time (ms)</th>
+							<th class="number-entry">Health Time (ms)</th>
+							<th class="number-entry">Stat Time (ms)</th>
+							<th class="number-entry">Health Span (ms)</th>
+							<th class="number-entry">Stat Span (ms)</th>
+							<th class="number-entry">Bandwidth (mbps)</th>
+							<th class="number-entry">Connection Count</th>
 						</tr>
 					</thead>
 					<tbody id="cache-states"></tbody>
 				</table>
+				<template id="interface-template" >
+					<table class="sub-table">
+						<thead>
+						<tr>
+							<th class="text-entry">Interface</th>
+							<th class="text-entry">IPv4</th>
+							<th class="text-entry">IPv6</th>
+							<th class="text-entry">Status</th>
+							<th class="number-entry">Bandwidth (mbps)</th>
+							<th class="number-entry">Connection Count</th>
+						</tr>
+						</thead>
+						<tbody class="interface-content"></tbody>
+					</table>
+				</template>
+				<template id="cache-status-row-template">
+				<tr class="server-status">
+						<td> <div class="sub-table-indicator right"></div> </td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+					</tr>
+				</template>
+				<template id="interface-row-template">
+					<tr>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="text-entry"></td>
+						<td class="number-entry"></td>
+						<td class="number-entry"></td>
+					</tr>
+				</template>
 			</div>
 		</li>
 
