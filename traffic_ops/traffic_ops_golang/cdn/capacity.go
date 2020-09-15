@@ -149,7 +149,7 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 					log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 					continue
 				}
-				cacheStats = monitorhlp.ConvertLegacyStats(legacyCacheStats)
+				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 			}
 
 			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds, tx)

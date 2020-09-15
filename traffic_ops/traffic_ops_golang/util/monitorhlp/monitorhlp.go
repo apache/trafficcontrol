@@ -122,6 +122,8 @@ func GetCRConfig(monitorFQDN string, client *http.Client) (tc.CRConfig, error) {
 	return crs, nil
 }
 
+// GetCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get;
+// if stats is empty or nil, all stats are fetched.
 func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.Stats, error) {
 	path := `/publish/CacheStats2?hc=1`
 	if len(stats) > 0 {
@@ -139,7 +141,8 @@ func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.
 	return cacheStats, nil
 }
 
-// GetLegacyCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get; if stats is empty or nil, all stats are fetched.
+// GetLegacyCacheStats gets the pre ATCv5.0 cache stats from the given monitor. The stats parameters is which stats to
+// get; if stats is empty or nil, all stats are fetched.
 func GetLegacyCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.LegacyStats, error) {
 	path := `/publish/CacheStats?hc=1`
 	if len(stats) > 0 {
@@ -157,9 +160,9 @@ func GetLegacyCacheStats(monitorFQDN string, client *http.Client, stats []string
 	return cacheStats, nil
 }
 
-// ConvertLegacyStats will take LegacyStats and transform them to Stats. It assumes all stats go in
+// UpgradeLegacyStats will take LegacyStats and transform them to Stats. It assumes all stats that go in
 // Stats.Caches[cacheName] exist in Stats and not Interfaces
-func ConvertLegacyStats(legacyStats tc.LegacyStats) tc.Stats {
+func UpgradeLegacyStats(legacyStats tc.LegacyStats) tc.Stats {
 	stats := tc.Stats{
 		CommonAPIData: legacyStats.CommonAPIData,
 		Caches:        make(map[string]tc.ServerStats, len(legacyStats.Caches)),

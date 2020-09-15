@@ -119,7 +119,7 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 		if err != nil {
 			return CapacityResp{}, errors.New("getting CacheStats for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
 		}
-		cacheStats = monitorhlp.ConvertLegacyStats(legacyCacheStats)
+		cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 	}
 	cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
 	if cap.Capacity == 0 {
