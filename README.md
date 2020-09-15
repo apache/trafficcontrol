@@ -18,7 +18,7 @@
 -->
 
 ![Build Status](https://github.com/apache/trafficcontrol/workflows/CDN-in-a-Box%20CI/badge.svg)
-![Weasel License checks](https://github.com/apache/trafficcontrol/workflows/Weasel%20License%20checks/badge.svg)
+![Weasel License Checks](https://github.com/apache/trafficcontrol/workflows/Weasel%20License%20checks/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 # Apache Traffic Control
