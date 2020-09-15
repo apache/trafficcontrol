@@ -22,7 +22,6 @@ package cdn
 import (
 	"crypto/tls"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -245,23 +244,6 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 		profileThresholds[profile] = thresh
 	}
 	return profileThresholds, nil
-}
-
-// getCacheStats gets the cache stats from the given monitor. It takes stats, a slice of stat names; and cacheStats, an object to deserialize stats into. The cacheStats type must be of the form struct {caches map[tc.CacheName]struct{statName []struct{value float64}}} with the desired stats, with appropriate member names or tags.
-func getCacheStats(monitorFQDN string, client *http.Client, stats []string, cacheStats interface{}) error {
-	path := `/publish/CacheStats`
-	if len(stats) > 0 {
-		path += `?stats=` + strings.Join(stats, `,`)
-	}
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(cacheStats); err != nil {
-		return errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return nil
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
