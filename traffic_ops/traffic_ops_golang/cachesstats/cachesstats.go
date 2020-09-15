@@ -21,7 +21,6 @@ package cachesstats
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -77,7 +76,7 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 				continue
 			}
 
-			cacheStats, err := getCacheStats(monitorFQDN, client)
+			cacheStats, err := monitorhlp.GetCacheStats(monitorFQDN, client, []string{"ats.proxy.process.http.current_client_connections", "bandwidth"})
 			if err != nil {
 				errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 				continue
@@ -128,49 +127,22 @@ func addTotals(data []CacheData) []CacheData {
 	return data
 }
 
-// CRStates contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
-}
-
-type CacheStat struct {
-	BandwidthKBPS []CacheStatData `json:"bandwidth"`
-	Connections   []CacheStatData `json:"ats.proxy.process.http.current_client_connections"`
-}
-
-type CacheStatData struct {
-	Value int64 `json:"value,string"`
-}
-
-func getCacheStats(monitorFQDN string, client *http.Client) (CacheStats, error) {
-	path := `/publish/CacheStats?stats=ats.proxy.process.http.current_client_connections,bandwidth`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CacheStats{}, errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	cs := CacheStats{}
-	if err := json.NewDecoder(resp.Body).Decode(&cs); err != nil {
-		return CacheStats{}, errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return cs, nil
-}
-
-func addStats(cacheData []CacheData, stats CacheStats) []CacheData {
+func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 	if stats.Caches == nil {
 		return cacheData // TODO warn?
 	}
 	for i, cache := range cacheData {
-		stat, ok := stats.Caches[cache.HostName]
+		stat, ok := stats.Caches[string(cache.HostName)]
 		if !ok {
 			continue
 		}
-		if len(stat.BandwidthKBPS) > 0 {
-			cache.KBPS = uint64(stat.BandwidthKBPS[0].Value)
+		bandwidth, ok := stat.Stats["bandwidth"]
+		if ok && len(bandwidth) > 0 {
+			cache.KBPS = bandwidth[0].Val.(uint64)
 		}
-		if len(stat.Connections) > 0 {
-			cache.Connections = uint64(stat.Connections[0].Value)
+		connections, ok := stat.Stats["ats.proxy.process.http.current_client_connections"]
+		if ok && len(connections) > 0 {
+			cache.Connections = connections[0].Val.(uint64)
 		}
 		cacheData[i] = cache
 	}

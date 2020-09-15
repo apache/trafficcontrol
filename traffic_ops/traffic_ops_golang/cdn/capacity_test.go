@@ -1,9 +1,9 @@
 package cdn
 
 import (
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 /*
@@ -25,57 +25,20 @@ import (
  * under the License.
  */
 
-func TestGetServiceInterfaces(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-	cols := []string{"host_name", "interface"}
-	rows := sqlmock.NewRows(cols)
-	rows = rows.AddRow(
-		"host1",
-		"eth1",
-	)
-	rows = rows.AddRow(
-		"host2",
-		"eth2",
-	)
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	mock.ExpectCommit()
-
-	m, err := getServiceInterfaces(db.MustBegin().Tx)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err.Error())
-	}
-	if len(m) != 2 {
-		t.Errorf("Expected a result of length %v, got %v instead", 2, len(m))
-	}
-	if m["host1"] != "eth1" {
-		t.Errorf("Expected host1 to have service interface eth1, got %v instead", m["host1"])
-	}
-	if m["host2"] != "eth2" {
-		t.Errorf("Expected host2 to have service interface eth2, got %v instead", m["host2"])
-	}
-}
-
 func TestGetStatsFromServiceInterface(t *testing.T) {
-	var data1 []CacheStatData
-	var data2 []CacheStatData
-	kbpsData := CacheStatData{Value: 24.5}
-	maxKbpsData := CacheStatData{Value: 66.8}
-	data1 = append(data1, kbpsData)
-	data2 = append(data2, maxKbpsData)
-
-	c := CacheStat{
-		KBPS:    data1,
-		MaxKBPS: data2,
+	data1 := tc.ServerStats{
+		Interfaces: nil,
+		Stats: map[string][]tc.ResultStatVal{
+			"kbps": {
+				{Val: 24.5},
+			},
+			"maxKbps": {
+				{Val: 66.8},
+			},
+		},
 	}
-	kbps, maxKbps, err := getStatsFromServiceInterface(c)
+
+	kbps, maxKbps, err := getStatsFromServiceInterface(data1)
 	if err != nil {
 		t.Errorf("Expected no error, but got %v", err.Error())
 	}

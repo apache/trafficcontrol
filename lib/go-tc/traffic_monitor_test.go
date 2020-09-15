@@ -23,7 +23,138 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
+
+func makeFakeStats(text string) map[string][]ResultStatVal {
+	return map[string][]ResultStatVal{
+		text + "stat1": {
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+		},
+		text + "stat2": {
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+		},
+		text + "stat3": {
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+			{
+				Span: 50,
+				Time: time.Now(),
+				Val:  50,
+			},
+		},
+	}
+}
+
+func makeFakeInterfaces() map[string]map[string][]ResultStatVal {
+	return map[string]map[string][]ResultStatVal{
+		"interface1": makeFakeStats("interf"),
+		"interface2": makeFakeStats("interf"),
+		"interface3": makeFakeStats("interf"),
+	}
+}
+func TestLegacyStatsConversion(t *testing.T) {
+	stats := Stats{
+		CommonAPIData: CommonAPIData{},
+		Caches:        make(map[string]ServerStats),
+	}
+	config := TrafficMonitorConfigMap{
+		TrafficServer: make(map[string]TrafficServer),
+	}
+	for _, cacheName := range []string{"cache1", "cache2", "cache3"} {
+		stats.Caches[cacheName] = ServerStats{
+			Interfaces: makeFakeInterfaces(),
+			Stats:      makeFakeStats(""),
+		}
+		interfaces := []ServerInterfaceInfo{}
+		for name, _ := range stats.Caches[cacheName].Interfaces {
+			interfaces = append(interfaces, ServerInterfaceInfo{
+				IPAddresses: []ServerIPAddress{
+					{
+						Address:        "192.168.0.8",
+						Gateway:        util.StrPtr("192.168.0.1"),
+						ServiceAddress: true,
+					},
+				},
+				MaxBandwidth: util.Uint64Ptr(1500),
+				Monitor:      false,
+				MTU:          util.UInt64Ptr(1500),
+				Name:         name,
+			})
+		}
+		interfaces[0].Monitor = true
+		config.TrafficServer[cacheName] = TrafficServer{
+			Interfaces: interfaces,
+		}
+	}
+
+	issues, legacyStats := stats.ToLegacy(config)
+
+	if len(issues) != 0 {
+		t.Error("expect no issues")
+	}
+
+	if legacyStats.CommonAPIData != stats.CommonAPIData {
+		t.Error("expected CommonAPIData to be the same")
+	}
+
+	if len(legacyStats.Caches) != len(stats.Caches) {
+		t.Errorf("expected %v caches, got %v", len(stats.Caches), len(legacyStats.Caches))
+	}
+
+	for cacheName, legacyCache := range legacyStats.Caches {
+		cache, ok := stats.Caches[string(cacheName)]
+		if !ok {
+			t.Errorf("new interface %v found", cacheName)
+		}
+		interf := cache.Interfaces["interface1"]
+		if len(interf)+len(cache.Stats) != len(legacyCache) {
+			t.Errorf("expected %v stats, got %v", len(interf)+len(cache.Stats), len(legacyCache))
+		}
+	}
+}
+
+func TestLegacyStatsNilConversion(t *testing.T) {
+	stats := Stats{
+		CommonAPIData: CommonAPIData{},
+		Caches:        nil,
+	}
+	config := TrafficMonitorConfigMap{
+		TrafficServer: nil,
+	}
+	issues, legacyStats := stats.ToLegacy(config)
+
+	if legacyStats.CommonAPIData != stats.CommonAPIData {
+		t.Error("expected CommonAPIData to be the samee")
+	}
+
+	if len(issues) != 0 {
+		t.Error("expect no issues")
+	}
+}
 
 func TestLegacyMonitorConfigValid(t *testing.T) {
 	mc := (*LegacyTrafficMonitorConfigMap)(nil)

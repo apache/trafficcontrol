@@ -25,6 +25,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // ThresholdPrefix is the prefix of all Names of Parameters used to define
@@ -149,6 +152,127 @@ type TrafficMonitorConfigMap struct {
 	DeliveryService map[string]TMDeliveryService
 	// Profile is a map of Profile Names to TMProfile objects.
 	Profile map[string]TMProfile
+}
+
+func (s *Stats) ToLegacy(monitorConfig TrafficMonitorConfigMap) ([]string, LegacyStats) {
+	legacyStats := LegacyStats{
+		CommonAPIData: s.CommonAPIData,
+		Caches:        make(map[CacheName]map[string][]ResultStatVal, len(s.Caches)),
+	}
+	skippedCaches := []string{}
+
+	for cacheName, cache := range s.Caches {
+		ts, ok := monitorConfig.TrafficServer[cacheName]
+		if !ok {
+			skippedCaches = append(skippedCaches, "Cache "+cacheName+" does not exist in the "+
+				"TrafficMonitorConfigMap")
+			continue
+		}
+		legacyInterface, err := InterfaceInfoToLegacyInterfaces(ts.Interfaces)
+		if err != nil {
+			skippedCaches = append(skippedCaches, "Cache "+cacheName+": unable to convert to legacy "+
+				"interfaces: "+err.Error())
+			continue
+		}
+		if legacyInterface.InterfaceName == nil {
+			skippedCaches = append(skippedCaches, "Cache "+cacheName+": computed legacy interface "+
+				"does not have a name")
+			continue
+		}
+		monitorInterfaceStats, ok := cache.Interfaces[*legacyInterface.InterfaceName]
+		if !ok {
+			skippedCaches = append(skippedCaches, "Cache "+cacheName+" does not contain interface "+
+				*legacyInterface.InterfaceName)
+			continue
+		}
+		length := len(monitorInterfaceStats) + len(cache.Stats)
+		legacyStats.Caches[CacheName(cacheName)] = make(map[string][]ResultStatVal, length)
+		for statName, stat := range cache.Stats {
+			legacyStats.Caches[CacheName(cacheName)][statName] = stat
+		}
+		for statName, stat := range monitorInterfaceStats {
+			legacyStats.Caches[CacheName(cacheName)][statName] = stat
+		}
+	}
+
+	return skippedCaches, legacyStats
+}
+
+// ServerStats is a representation of cache server statistics as present in the
+// TM API.
+type ServerStats struct {
+	// Interfaces contains statistics specific to each monitored interface
+	// of the cache server.
+	Interfaces map[string]map[string][]ResultStatVal `json:"interfaces"`
+	// Stats contains statistics regarding the cache server in general.
+	Stats map[string][]ResultStatVal `json:"stats"`
+}
+
+// Stats is designed for returning via the API. It contains result history
+// for each cache, as well as common API data.
+type Stats struct {
+	CommonAPIData
+	// Caches is a map of cache server hostnames to groupings of statistics
+	// regarding each cache server and all of its separate network interfaces.
+	Caches map[string]ServerStats `json:"caches"`
+}
+
+type LegacyStats struct {
+	CommonAPIData
+	Caches map[CacheName]map[string][]ResultStatVal `json:"caches"`
+}
+
+// CommonAPIData contains generic data common to most endpoints.
+type CommonAPIData struct {
+	QueryParams string `json:"pp"`
+	DateStr     string `json:"date"`
+}
+
+// ResultStatVal is the value of an individual stat returned from a poll.
+// JSON values are all strings, for the TM1.0 /publish/CacheStats API.
+type ResultStatVal struct {
+	// Span is the number of polls this stat has been the same. For example,
+	// if History is set to 100, and the last 50 polls had the same value for
+	// this stat (but none of the previous 50 were the same), this stat's map
+	// value slice will actually contain 51 entries, and the first entry will
+	// have the value, the time of the last poll, and a Span of 50.
+	// Assuming the poll time is every 8 seconds, users will then know, looking
+	// at the Span, that the value was unchanged for the last 50*8=400 seconds.
+	Span uint64 `json:"span"`
+	// Time is the time this stat was returned.
+	Time time.Time   `json:"time"`
+	Val  interface{} `json:"value"`
+}
+
+func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
+	v := struct {
+		Val  string `json:"value"`
+		Time int64  `json:"time"`
+		Span uint64 `json:"span"`
+	}{
+		Val:  fmt.Sprintf("%v", t.Val),
+		Time: t.Time.UnixNano() / 1000000, // ms since the epoch
+		Span: t.Span,
+	}
+	json := jsoniter.ConfigFastest // TODO make configurable
+	return json.Marshal(&v)
+}
+
+func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
+	v := struct {
+		Val  string `json:"value"`
+		Time int64  `json:"time"`
+		Span uint64 `json:"span"`
+	}{}
+	json := jsoniter.ConfigFastest // TODO make configurable
+	err := json.Unmarshal(data, &v)
+	if err != nil {
+		return err
+	}
+	t.Time = time.Unix(0, v.Time*1000000)
+	t.Val = v.Val
+	t.Span = v.Span
+	return nil
 }
 
 // Valid returns a non-nil error if the configuration map is invalid.

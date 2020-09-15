@@ -25,7 +25,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -150,25 +149,6 @@ type Vitals struct {
 type Stat struct {
 	Time  int64       `json:"time"`
 	Value interface{} `json:"value"`
-}
-
-// ServerStats is a representation of cache server statistics as present in the
-// TM API.
-type ServerStats struct {
-	// Interfaces contains statistics specific to each monitored interface
-	// of the cache server.
-	Interfaces map[string]map[string][]ResultStatVal `json:"interfaces"`
-	// Stats contains statistics regarding the cache server in general.
-	Stats map[string][]ResultStatVal `json:"stats"`
-}
-
-// Stats is designed for returning via the API. It contains result history
-// for each cache, as well as common API data.
-type Stats struct {
-	srvhttp.CommonAPIData
-	// Caches is a map of cache server hostnames to groupings of statistics
-	// regarding each cache server and all of its separate network interfaces.
-	Caches map[string]ServerStats `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.

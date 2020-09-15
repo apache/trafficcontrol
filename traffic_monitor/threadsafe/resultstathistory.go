@@ -129,9 +129,9 @@ type interfaceStat struct {
 // a single stat for a single network interface to its historical values and do
 // the appropriate appending and management of the history to ensure it never
 // exceeds `limit`.
-func compareAndAppendStatForInterface(history []cache.ResultStatVal, errs strings.Builder, limit uint64, stat interfaceStat) []cache.ResultStatVal {
+func compareAndAppendStatForInterface(history []tc.ResultStatVal, errs strings.Builder, limit uint64, stat interfaceStat) []tc.ResultStatVal {
 	if history == nil {
-		history = make([]cache.ResultStatVal, 0, limit)
+		history = make([]tc.ResultStatVal, 0, limit)
 	}
 
 	ok, err := newStatEqual(history, stat.Stat)
@@ -149,13 +149,13 @@ func compareAndAppendStatForInterface(history []cache.ResultStatVal, errs string
 		if uint64(len(history)) > limit {
 			history = history[:limit]
 		} else if uint64(len(history)) < limit {
-			history = append(history, cache.ResultStatVal{})
+			history = append(history, tc.ResultStatVal{})
 		}
 
 		for i := len(history) - 1; i >= 1; i-- {
 			history[i] = history[i-1]
 		}
-		history[0] = cache.ResultStatVal{
+		history[0] = tc.ResultStatVal{
 			Val:  stat.Stat,
 			Time: stat.Time,
 			Span: 1,
@@ -180,7 +180,7 @@ func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 	for statName, statVal := range r.Miscellaneous {
 		statHistory := cacheHistory.Stats.Load(statName)
 		if statHistory == nil {
-			statHistory = make([]cache.ResultStatVal, 0, limit)
+			statHistory = make([]tc.ResultStatVal, 0, limit)
 		}
 
 		ok, err := newStatEqual(statHistory, statVal)
@@ -201,13 +201,13 @@ func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 			if uint64(len(statHistory)) > limit {
 				statHistory = statHistory[:limit]
 			} else if uint64(len(statHistory)) < limit {
-				statHistory = append(statHistory, cache.ResultStatVal{})
+				statHistory = append(statHistory, tc.ResultStatVal{})
 			}
 
 			for i := len(statHistory) - 1; i >= 1; i-- {
 				statHistory[i] = statHistory[i-1]
 			}
-			statHistory[0] = cache.ResultStatVal{
+			statHistory[0] = tc.ResultStatVal{
 				Val:  statVal,
 				Time: r.Time,
 				Span: 1,
@@ -271,19 +271,19 @@ func NewResultStatValHistory() ResultStatValHistory { return ResultStatValHistor
 
 // Load returns the []ResultStatVal for the given stat. If the given stat does
 // not exist, nil is returned.
-func (h ResultStatValHistory) Load(stat string) []cache.ResultStatVal {
+func (h ResultStatValHistory) Load(stat string) []tc.ResultStatVal {
 	i, ok := h.Map.Load(stat)
 	if !ok {
 		return nil
 	}
-	return i.([]cache.ResultStatVal)
+	return i.([]tc.ResultStatVal)
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if
 // f returns false, the iteration is stopped.
-func (h ResultStatValHistory) Range(f func(stat string, val []cache.ResultStatVal) bool) {
+func (h ResultStatValHistory) Range(f func(stat string, val []tc.ResultStatVal) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(string), v.([]cache.ResultStatVal))
+		return f(k.(string), v.([]tc.ResultStatVal))
 	})
 }
 
@@ -293,7 +293,7 @@ func (h ResultStatValHistory) Range(f func(stat string, val []cache.ResultStatVa
 // writer could Store() underneath it, and the first writer would then Store()
 // having lost values. To safely use ResultStatValHistory with multiple writers,
 // a CompareAndSwap method would have to be added.
-func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
+func (h ResultStatValHistory) Store(stat string, vals []tc.ResultStatVal) {
 	h.Map.Store(stat, vals)
 }
 
@@ -322,7 +322,7 @@ func NewCacheStatHistory() CacheStatHistory {
 // history. If len(history)==0, this returns false without error. If the given
 // stat is not a JSON primitive (string, number, bool), this returns an error.
 // We explicitly refuse to compare arrays and objects, for performance.
-func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error) {
+func newStatEqual(history []tc.ResultStatVal, stat interface{}) (bool, error) {
 	if len(history) == 0 {
 		return false, nil // if there's no history, it's "not equal", i.e. store this new history
 	}
@@ -347,13 +347,7 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 	return stat == history[0].Val, nil
 }
 
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each
-// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
-// given stats are encoded. If `wildcard` is true, stats which contain the text
-// in each statsToUse are returned, instead of exact stat names. If cacheType is
-// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
-// not empty, only the given hosts are returned.
-func StatsMarshall(
+func generateStats(
 	statResultHistory ResultStatHistory,
 	statInfo cache.ResultInfoHistory,
 	combinedStates tc.CRStates,
@@ -361,10 +355,10 @@ func StatsMarshall(
 	statMaxKbpses cache.Kbpses,
 	filter cache.Filter,
 	params url.Values,
-) ([]byte, error) {
-	stats := cache.Stats{
+) tc.Stats {
+	stats := tc.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[string]cache.ServerStats{},
+		Caches:        map[string]tc.ServerStats{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -380,13 +374,13 @@ func StatsMarshall(
 
 		cacheStatResultHistory := statResultHistory.LoadOrStore(cacheId)
 		if _, ok := stats.Caches[cacheId]; !ok {
-			stats.Caches[cacheId] = cache.ServerStats{
-				Interfaces: make(map[string]map[string][]cache.ResultStatVal),
-				Stats:      make(map[string][]cache.ResultStatVal),
+			stats.Caches[cacheId] = tc.ServerStats{
+				Interfaces: make(map[string]map[string][]tc.ResultStatVal),
+				Stats:      make(map[string][]tc.ResultStatVal),
 			}
 		}
 
-		cacheStatResultHistory.Stats.Range(func(stat string, vals []cache.ResultStatVal) bool {
+		cacheStatResultHistory.Stats.Range(func(stat string, vals []tc.ResultStatVal) bool {
 			stat = "ats." + stat // legacy reasons
 			if !filter.UseStat(stat) {
 				return true
@@ -398,7 +392,7 @@ func StatsMarshall(
 					break
 				}
 				if _, ok := stats.Caches[cacheId].Stats[stat]; !ok {
-					stats.Caches[cacheId].Stats[stat] = []cache.ResultStatVal{val}
+					stats.Caches[cacheId].Stats[stat] = []tc.ResultStatVal{val}
 				} else {
 					stats.Caches[cacheId].Stats[stat] = append(stats.Caches[cacheId].Stats[stat], val)
 				}
@@ -409,7 +403,7 @@ func StatsMarshall(
 		})
 
 		for interfaceName, interfaceHistory := range cacheStatResultHistory.Interfaces {
-			interfaceHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
+			interfaceHistory.Range(func(stat string, vals []tc.ResultStatVal) bool {
 				if !filter.UseInterfaceStat(stat) {
 					return true
 				}
@@ -420,7 +414,7 @@ func StatsMarshall(
 						break
 					}
 					if _, ok := stats.Caches[cacheId].Interfaces[interfaceName]; !ok {
-						stats.Caches[cacheId].Interfaces[interfaceName] = map[string][]cache.ResultStatVal{}
+						stats.Caches[cacheId].Interfaces[interfaceName] = map[string][]tc.ResultStatVal{}
 					}
 					stats.Caches[cacheId].Interfaces[interfaceName][stat] = append(stats.Caches[cacheId].Interfaces[interfaceName][stat], val)
 					historyCount += val.Span
@@ -450,7 +444,7 @@ func StatsMarshall(
 				if !filter.UseStat(stat) {
 					continue
 				}
-				rv := cache.ResultStatVal{
+				rv := tc.ResultStatVal{
 					Span: 1,
 					Time: t,
 					Val:  statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache),
@@ -460,11 +454,57 @@ func StatsMarshall(
 		}
 	}
 
+	return stats
+}
+
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each
+// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
+// given stats are encoded. If `wildcard` is true, stats which contain the text
+// in each statsToUse are returned, instead of exact stat names. If cacheType is
+// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
+// not empty, only the given hosts are returned.
+func StatsMarshall(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses cache.Kbpses,
+	filter cache.Filter,
+	params url.Values,
+) ([]byte, error) {
+	stats := generateStats(statResultHistory, statInfo, combinedStates, monitorConfig, statMaxKbpses, filter, params)
+
 	json := jsoniter.ConfigFastest // TODO make configurable
 	return json.Marshal(stats)
 }
 
-func pruneStats(history []cache.ResultStatVal, limit uint64) []cache.ResultStatVal {
+// LegacyStatsMarshall encodes the stats in JSON, encoding up to historyCount of each
+// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
+// given stats are encoded. If `wildcard` is true, stats which contain the text
+// in each statsToUse are returned, instead of exact stat names. If cacheType is
+// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
+// not empty, only the given hosts are returned.
+func LegacyStatsMarshall(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses cache.Kbpses,
+	filter cache.Filter,
+	params url.Values,
+) ([]byte, error) {
+
+	stats := generateStats(statResultHistory, statInfo, combinedStates, monitorConfig, statMaxKbpses, filter, params)
+	skippedCaches, legacyStats := stats.ToLegacy(monitorConfig)
+	if len(skippedCaches) > 0 {
+		log.Errorln(strings.Join(skippedCaches, "\n"))
+	}
+
+	json := jsoniter.ConfigFastest // TODO make configurable
+	return json.Marshal(legacyStats)
+}
+
+func pruneStats(history []tc.ResultStatVal, limit uint64) []tc.ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]
 	}

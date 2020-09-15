@@ -129,7 +129,7 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 		for _, monitorFQDN := range monitorFQDNs {
 			crStates := tc.CRStates{}
 			crConfig := tc.CRConfig{}
-			cacheStats := CacheStats{}
+			cacheStats := tc.Stats{}
 			if crStates, err = monitorhlp.GetCRStates(monitorFQDN, client); err != nil {
 				err = errors.New("getting CRStates for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 				log.Warnln("getCapacity failed to get CRStates from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
@@ -140,10 +140,16 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 				log.Warnln("getCapacity failed to get CRConfig from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
 			}
-			if err := getCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"}, &cacheStats); err != nil {
+			if cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"}); err != nil {
 				err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
-				log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
-				continue
+				log.Warnln("getCapacity failed to get CacheStats2 from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying CacheStats" + err.Error())
+				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"})
+				if err != nil {
+					err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
+					log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
+					continue
+				}
+				cacheStats = monitorhlp.ConvertLegacyStats(legacyCacheStats)
 			}
 
 			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds, tx)
@@ -156,14 +162,9 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 	return cap, nil
 }
 
-func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64, tx *sql.Tx) CapData {
-	serviceInterfaces, err := getServiceInterfaces(tx)
-	if err != nil {
-		log.Errorf("couldn't get the service interfaces for servers. err: %v", err.Error())
-		return cap
-	}
+func addCapacity(cap CapData, cacheStats tc.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64, tx *sql.Tx) CapData {
 	for cacheName, stats := range cacheStats.Caches {
-		cache, ok := crConfig.ContentServers[string(cacheName)]
+		cache, ok := crConfig.ContentServers[(cacheName)]
 		if !ok {
 			continue
 		}
@@ -174,17 +175,13 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		if _, ok := serviceInterfaces[string(cacheName)]; !ok {
-			log.Errorf("no service interface found for server with host name %v", cacheName)
-			continue
-		}
-		kbps, maxKbps, err := getStatsFromServiceInterface(stats[tc.InterfaceName(serviceInterfaces[string(cacheName)])])
+		kbps, maxKbps, err := getStatsFromServiceInterface(stats)
 		if err != nil {
 			log.Errorf("couldn't get service interface stats for %v. err: %v", cacheName, err.Error())
 			continue
 		}
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
-			if crStates.Caches[cacheName].IsAvailable {
+			if crStates.Caches[tc.CacheName(cacheName)].IsAvailable {
 				cap.Available += kbps
 			} else {
 				cap.Unavailable += kbps
@@ -199,42 +196,21 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 	return cap
 }
 
-func getStatsFromServiceInterface(stats CacheStat) (float64, float64, error) {
-	var kbps, maxKbps float64
-	if len(stats.KBPS) < 1 ||
-		len(stats.MaxKBPS) < 1 {
-		return kbps, maxKbps, errors.New("no kbps/ maxKbps stats to return")
+func getStatsFromServiceInterface(stats tc.ServerStats) (float64, float64, error) {
+	kbps, ok := stats.Stats["kbps"]
+	if !ok {
+		return 0, 0, errors.New("no kbps stats")
 	}
-	kbps = stats.KBPS[0].Value
-	maxKbps = stats.MaxKBPS[0].Value
-	return kbps, maxKbps, nil
-}
+	maxKbps, ok := stats.Stats["maxKbps"]
+	if !ok {
+		return 0, 0, errors.New("no maxKbps stats")
 
-func getServiceInterfaces(tx *sql.Tx) (map[string]string, error) {
-	query := `
-SELECT s.host_name, i.interface FROM ip_address i
-JOIN server s ON s.id = i.server
-WHERE i.service_address=true
-`
-	rows, err := tx.Query(query)
-	if err != nil {
-		log.Errorf("couldn't get service interfaces %v", err.Error())
-		return nil, err
 	}
-	defer rows.Close()
-
-	resultMap := make(map[string]string)
-	for rows.Next() {
-		hostname := ""
-		serviceinterface := ""
-		err = rows.Scan(&hostname, &serviceinterface)
-		if err != nil {
-			log.Errorf("error unmarshalling response %v", err.Error())
-			continue
-		}
-		resultMap[hostname] = serviceinterface
+	if len(kbps) < 1 ||
+		len(maxKbps) < 1 {
+		return 0, 0, errors.New("no kbps/ maxKbps stats to return")
 	}
-	return resultMap, nil
+	return kbps[0].Val.(float64), maxKbps[0].Val.(float64), nil
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {
@@ -269,20 +245,6 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 		profileThresholds[profile] = thresh
 	}
 	return profileThresholds, nil
-}
-
-// CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CacheStats struct {
-	Caches map[tc.CacheName]map[tc.InterfaceName]CacheStat `json:"caches"`
-}
-
-type CacheStat struct {
-	KBPS    []CacheStatData `json:"kbps"`
-	MaxKBPS []CacheStatData `json:"maxKbps"`
-}
-
-type CacheStatData struct {
-	Value float64 `json:"value,string"`
 }
 
 // getCacheStats gets the cache stats from the given monitor. It takes stats, a slice of stat names; and cacheStats, an object to deserialize stats into. The cacheStats type must be of the form struct {caches map[tc.CacheName]struct{statName []struct{value float64}}} with the desired stats, with appropriate member names or tags.

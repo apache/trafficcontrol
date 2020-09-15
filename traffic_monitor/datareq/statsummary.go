@@ -78,7 +78,7 @@ type CacheStatSummary struct {
 
 type StatSummary struct {
 	Caches map[string]CacheStatSummary `json:"caches"`
-	srvhttp.CommonAPIData
+	tc.CommonAPIData
 }
 
 func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory) ([]byte, int) {
@@ -107,7 +107,7 @@ func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter ca
 		var cacheStats CacheStatSummary
 
 		ssStats := map[string]StatSummaryStat{}
-		stats.Stats.Range(func(statName string, statHistory []cache.ResultStatVal) bool {
+		stats.Stats.Range(func(statName string, statHistory []tc.ResultStatVal) bool {
 			if !filter.UseStat(statName) || len(statHistory) == 0 {
 				return true
 			}
@@ -162,7 +162,7 @@ func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter ca
 			}
 			infStatMap := map[string]StatSummaryStat{}
 
-			infStatHistory.Range(func(statName string, statHistory []cache.ResultStatVal) bool {
+			infStatHistory.Range(func(statName string, statHistory []tc.ResultStatVal) bool {
 				if !filter.UseInterfaceStat(statName) || len(statHistory) == 0 {
 					return true
 				}
