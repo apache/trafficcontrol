@@ -174,11 +174,25 @@ public class TrafficRouterTest {
         when(deliveryService.getMissLocation()).thenReturn(defaultUSLocation);
         when(trafficRouter.getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track)).thenReturn(list);
         when(trafficRouter.selectCachesByGeo(ip, deliveryService, null, track)).thenCallRealMethod();
+        when(trafficRouter.isValidMissLocation(deliveryService)).thenCallRealMethod();
         List<Cache> result = trafficRouter.selectCachesByGeo(ip, deliveryService, null, track);
         verify(trafficRouter).getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track);
         assertThat(result.size(), equalTo(1));
         assertThat(result.get(0), equalTo(cache));
         assertThat(track.getResult(), equalTo(Track.ResultType.GEO_DS));
+    }
+
+    @Test
+    public void itChecksMissLocation() throws Exception {
+        Geolocation defaultUSLocation = new Geolocation(37.751,-97.822);
+        when(deliveryService.getMissLocation()).thenReturn(defaultUSLocation);
+        when(trafficRouter.isValidMissLocation(deliveryService)).thenCallRealMethod();
+        boolean result = trafficRouter.isValidMissLocation(deliveryService);
+        assertThat(result, equalTo(true));
+        defaultUSLocation = new Geolocation(0,0);
+        when(deliveryService.getMissLocation()).thenReturn(defaultUSLocation);
+        result = trafficRouter.isValidMissLocation(deliveryService);
+        assertThat(result, equalTo(false));
     }
 
     @Test

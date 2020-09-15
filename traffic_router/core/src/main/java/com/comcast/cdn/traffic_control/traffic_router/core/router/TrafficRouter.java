@@ -484,6 +484,17 @@ public class TrafficRouter {
 	}
 
 	/**
+	 * Returns whether or not a Delivery Service has a valid miss location.
+	 * @param deliveryService The Delivery Service being served.
+	 */
+	public boolean isValidMissLocation(final DeliveryService deliveryService) {
+		if (deliveryService.getMissLocation() != null && deliveryService.getMissLocation().getLatitude() != 0.0 && deliveryService.getMissLocation().getLongitude() != 0.0) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Selects {@link Cache}s to serve a request for a Delivery Service based on a given location.
 	 * @param clientIp The requesting client's IP address - as a String.
 	 * @param deliveryService The Delivery Service being served.
@@ -515,7 +526,7 @@ public class TrafficRouter {
 
 		track.setResult(ResultType.GEO);
 		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
-			if (deliveryService.getMissLocation() != null) {
+			if (isValidMissLocation(deliveryService)) {
 				clientLocation = deliveryService.getMissLocation();
 				track.setResult(ResultType.GEO_DS);
 			} else {
