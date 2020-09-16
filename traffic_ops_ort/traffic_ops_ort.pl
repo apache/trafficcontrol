@@ -1395,8 +1395,9 @@ sub replace_cfg_file {
 			. $cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'}
 			. "\n";
 		system("/bin/mv $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} "
-				. "$cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'}.new");
-		# The return value is the exit status of the program as returned by the wait call. To get the actual exit value, shift right by eight (see below).
+			   . "$cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'}.new");
+		# The return value is the exit status of the program as returned by the wait call.
+		# To get the actual exit value, shift right by eight (see below).
 		# https://perldoc.perl.org/functions/system.html
 		if ( ($? >> 8) != 0 ){
 			( $log_level >> $ERROR )
@@ -1404,7 +1405,7 @@ sub replace_cfg_file {
 				. $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to "
 				. $cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'} . ".new"
 				. "\n";
-			# todo should I die()?
+			# todo should I die()? i'm not sure what to do in this case
 			die();
 		}else {
 			system("/bin/mv $cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'} "
@@ -1416,7 +1417,7 @@ sub replace_cfg_file {
 					&& print "ERROR Failed swapping " . $cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'}
 					. " out for new config at ". $cfg_file_tracker->{$cfg_file}->{'headers'}->{'path'} . ".new"
 					. "\n";
-				# todo should I die()?
+				# todo should I die()? i'm not sure what to do in this case
 				die();
 			}
 		}
