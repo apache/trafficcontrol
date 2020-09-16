@@ -747,7 +747,7 @@
     ipAddress: "{{ hostvars[item].ansible_default_ipv4.address | default(hostvars[item].ansible_host) }}"
     ipNetmask: "{{ hostvars[item].ansible_default_ipv4.netmask | default('255.255.255.0') }}"
     ipGateway: "{{ hostvars[item].ansible_default_ipv4.gateway | default('127.0.0.0') }}"
-    ip6Address: "{{ not_autoconf_default_ipv6_address | default(hostvars[item].ansible_default_ipv6.address) | default(omit) }}"
+    ip6Address: "{{ hostvars[item].not_autoconf_default_ipv6_address | default(hostvars[item].ansible_default_ipv6.address) | default(omit) }}"
     ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
     interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
