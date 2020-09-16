@@ -114,7 +114,7 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 		}
 		dsr.Assignee = *me.UserName
 		dsr.AssigneeID = *me.ID
-		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		_, _, err = TOSession.CreateDeliveryServiceRequest(dsr)
 		if err != nil {
 			t.Fatalf("Creating DSR: %v", err)
 		}
