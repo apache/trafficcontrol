@@ -76,10 +76,16 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 				continue
 			}
 
-			cacheStats, err := monitorhlp.GetCacheStats(monitorFQDN, client, []string{"ats.proxy.process.http.current_client_connections", "bandwidth"})
+			var cacheStats tc.Stats
+			stats := []string{"ats.proxy.process.http.current_client_connections", "bandwidth"}
+			cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
 			if err != nil {
-				errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
-				continue
+				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
+				if err != nil {
+					errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+					continue
+				}
+				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 			}
 
 			cacheData = addHealth(cacheData, crStates)
