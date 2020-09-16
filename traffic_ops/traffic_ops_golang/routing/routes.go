@@ -374,7 +374,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryservice_requests/{id}/assign/?$`, dsrequest.GetAssignment, auth.PrivLevelReadOnly, Authenticated, nil, 270316029031, noPerlBypass},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, dsrequest.PutAssignment, auth.PrivLevelOperations, Authenticated, nil, 27031602903, noPerlBypass},
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryservice_requests/{id}/status/?$`, dsrequest.GetStatus, auth.PrivLevelReadOnly, Authenticated, nil, 26841509931, noPerlBypass},
-		{api.Version{Major: 3, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/status$`, api.UpdateHandler(dsrequest.GetStatusSingleton()), auth.PrivLevelPortal, Authenticated, nil, 2684150993, noPerlBypass},
+		{api.Version{Major: 3, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/status$`, dsrequest.PutStatus, auth.PrivLevelPortal, Authenticated, nil, 2684150993, noPerlBypass},
 
 		//Delivery service request comment: CRUD
 		{api.Version{3, 0}, http.MethodGet, `deliveryservice_request_comments/?$`, api.ReadHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelReadOnly, Authenticated, nil, 20326507373, noPerlBypass},
@@ -744,7 +744,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Delivery service request: Actions
 		{api.Version{Major: 2, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, dsrequest.PutAssignment, auth.PrivLevelOperations, Authenticated, nil, 2703160290, noPerlBypass},
-		{api.Version{Major: 2, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/status$`, api.UpdateHandler(dsrequest.GetStatusSingleton()), auth.PrivLevelPortal, Authenticated, nil, 268415099, noPerlBypass},
+		{api.Version{Major: 2, Minor: 0}, http.MethodPut, `deliveryservice_requests/{id}/status$`, dsrequest.PutStatus, auth.PrivLevelPortal, Authenticated, nil, 268415099, noPerlBypass},
 
 		//Delivery service request comment: CRUD
 		{api.Version{2, 0}, http.MethodGet, `deliveryservice_request_comments/?$`, api.ReadHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelReadOnly, Authenticated, nil, 2032650737, noPerlBypass},
@@ -1146,7 +1146,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Delivery service request: Actions
 		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, dsrequest.PutAssignment, auth.PrivLevelOperations, Authenticated, nil, 1703160290, noPerlBypass},
-		{api.Version{1, 3}, http.MethodPut, `deliveryservice_requests/{id}/status$`, api.UpdateHandler(dsrequest.GetStatusSingleton()), auth.PrivLevelPortal, Authenticated, nil, 668415099, noPerlBypass},
+		{api.Version{1, 3}, http.MethodPut, `deliveryservice_requests/{id}/status$`, dsrequest.PutStatus, auth.PrivLevelPortal, Authenticated, nil, 668415099, noPerlBypass},
 
 		//Delivery service request comment: CRUD
 		{api.Version{1, 3}, http.MethodGet, `deliveryservice_request_comments/?(\.json)?$`, api.ReadHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelReadOnly, Authenticated, nil, 1032650737, noPerlBypass},
