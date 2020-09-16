@@ -102,7 +102,7 @@ func (s *statusChangeRequest) Validate(*sql.Tx) error {
 const updateStatusQuery = `
 UPDATE deliveryservice_request
 SET status = $1
-WHERE id = $3
+WHERE id = $2
 RETURNING last_updated
 `
 
