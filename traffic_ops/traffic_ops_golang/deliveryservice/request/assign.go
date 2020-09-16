@@ -92,19 +92,52 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 }
 
 type assignmentRequest struct {
-	AssigneeID *int `json:"assigneeId"`
+	AssigneeID *int    `json:"assigneeId"`
+	Assignee   *string `json:"assignee"`
 }
 
-func (assignmentRequest) Validate(*sql.Tx) error {
+func (*assignmentRequest) Validate(*sql.Tx) error {
 	return nil
 }
 
 const assignDSRQuery = `
 UPDATE deliveryservice_request
-SET assignee_id = $3
+SET assignee_id = $1
 WHERE id = $2
 RETURNING last_updated
 `
+
+func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, error, error) {
+	if r == nil || tx == nil {
+		return "", http.StatusInternalServerError, nil, errors.New("nil transaction or assignment request")
+	}
+
+	var message string
+	if r.AssigneeID != nil {
+		r.Assignee = new(string)
+		if err := tx.QueryRow(`SELECT username FROM tm_user WHERE id = $1`, *r.AssigneeID).Scan(r.Assignee); err == sql.ErrNoRows {
+			userErr := fmt.Errorf("no such user #%d", *r.AssigneeID)
+			return "", http.StatusConflict, userErr, nil
+		} else if err != nil {
+			sysErr := fmt.Errorf("getting username for assignee ID (#%d): %v", *r.AssigneeID, err)
+			return "", http.StatusInternalServerError, nil, sysErr
+		}
+		message = fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", xmlID, *r.Assignee)
+	} else if r.Assignee != nil {
+		r.AssigneeID = new(int)
+		if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *r.Assignee).Scan(r.AssigneeID); err == sql.ErrNoRows {
+			userErr := fmt.Errorf("no such user '%s'", *r.Assignee)
+			return "", http.StatusConflict, userErr, nil
+		} else if err != nil {
+			sysErr := fmt.Errorf("getting user ID for assignee (%s): %v", *r.Assignee, err)
+			return "", http.StatusInternalServerError, nil, sysErr
+		}
+		message = fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", xmlID, *r.Assignee)
+	} else {
+		message = fmt.Sprintf("Unassigned '%s' Delivery Service Request", xmlID)
+	}
+	return message, http.StatusOK, nil, nil
+}
 
 func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -116,7 +149,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	var req assignmentRequest
-	if err := api.Parse(r.Body, tx, req); err != nil {
+	if err := api.Parse(r.Body, tx, &req); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -126,6 +159,11 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	if version == nil {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
 		return
+	}
+
+	// Don't accept "assignee" in lieu of "assigneeId" in API version < 3.0
+	if version.Major < 3 {
+		req.Assignee = nil
 	}
 
 	var dsr tc.DeliveryServiceRequestV30
@@ -147,6 +185,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
+	dsr.SetXMLID()
 
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
@@ -158,24 +197,18 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	message, errCode, userErr, sysErr := getAssignee(&req, dsr.XMLID, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
 	if err := tx.QueryRow(assignDSRQuery, req.AssigneeID, *dsr.ID).Scan(&dsr.LastUpdated); err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-
-	var message string
-	if req.AssigneeID != nil {
-		var assignee string
-		if err := tx.QueryRow(`SELECT username FROM tm_user WHERE id = $1`, *req.AssigneeID).Scan(&assignee); err != nil {
-			sysErr = fmt.Errorf("getting username for assignee ID (#%d)", *req.AssigneeID)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-		message = fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", dsr.XMLID, assignee)
-	} else {
-		message = fmt.Sprintf("Unassigned '%s' Delivery Service Request", dsr.XMLID)
-	}
+	dsr.Assignee = req.Assignee
+	dsr.AssigneeID = req.AssigneeID
 
 	var resp interface{}
 	if inf.Version.Major >= 3 {
@@ -189,5 +222,5 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	// references the DSR's ID three times and names the affected table
 	// twice. Lotta redundancy - so might be worth changing?
 	message = fmt.Sprintf("Delivery Service Request: %d, ID: %d, ACTION: %s deliveryservice_request, keys: {id:%d }", *dsr.ID, *dsr.ID, message, *dsr.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, message, inf.User, tx)
+	inf.CreateChangeLog(message)
 }
