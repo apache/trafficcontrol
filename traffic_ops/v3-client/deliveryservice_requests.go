@@ -32,6 +32,8 @@ const (
 )
 
 // CreateDeliveryServiceRequest creates a Delivery Service Request.
+//
+// Deprecated: Please use versioned client methods from now on - in this case, CreateDeliveryServiceRequestV30
 func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
@@ -110,7 +112,88 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetDeliveryServiceRequestsWithHdr(header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+// CreateDeliveryServiceRequestV30 creates a Delivery Service Request.
+func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequestV30, header http.Header) (tc.Alerts, ReqInf, error) {
+	var alerts tc.Alerts
+	var remoteAddr net.Addr
+	if dsr.AssigneeID == nil && dsr.Assignee != nil {
+		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee)
+		if err != nil {
+			return alerts, reqInf, err
+		}
+		if len(res) == 0 {
+			return alerts, reqInf, fmt.Errorf("no user with name '%s'", *dsr.Assignee)
+		}
+		dsr.AssigneeID = res[0].ID
+	}
+
+	if dsr.AuthorID == nil && dsr.Author != "" {
+		res, reqInf, err := to.GetUserByUsername(dsr.Author)
+		if err != nil {
+			return alerts, reqInf, err
+		}
+		if len(res) == 0 {
+			return alerts, reqInf, fmt.Errorf("no user with name '%s'", dsr.Author)
+		}
+		dsr.AuthorID = res[0].ID
+	}
+
+	if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil {
+		if dsr.Original.TypeID == nil && dsr.Original.Type != nil {
+			ty, reqInf, err := to.GetTypeByName(dsr.Original.Type.String())
+			if err != nil || len(ty) == 0 {
+				return alerts, reqInf, fmt.Errorf("no type named '%s'", dsr.Original.Type)
+			}
+			dsr.Original.TypeID = &ty[0].ID
+		}
+
+		if dsr.Original.CDNID == nil && dsr.Original.CDNName != nil {
+			cdns, reqInf, err := to.GetCDNByName(*dsr.Original.CDNName)
+			if err != nil || len(cdns) == 0 {
+				return alerts, reqInf, fmt.Errorf("no CDN named '%s'", *dsr.Original.CDNName)
+			}
+			dsr.Original.CDNID = &cdns[0].ID
+		}
+
+		if dsr.Original.ProfileID == nil && dsr.Original.ProfileName != nil {
+			profiles, reqInf, err := to.GetProfileByName(*dsr.Original.ProfileName)
+			if err != nil || len(profiles) == 0 {
+				return alerts, reqInf, fmt.Errorf("no Profile named '%s'", *dsr.Original.ProfileName)
+			}
+			dsr.Original.ProfileID = &profiles[0].ID
+		}
+
+		if dsr.Original.TenantID == nil && dsr.Original.Tenant != nil {
+			ten, reqInf, err := to.TenantByName(*dsr.Original.Tenant)
+			if err != nil || ten == nil {
+				return alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *dsr.Original.Tenant)
+			}
+			dsr.Original.TenantID = &ten.ID
+		}
+	}
+
+	reqBody, err := json.Marshal(dsr)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_DS_REQUESTS, reqBody, header)
+	defer resp.Body.Close()
+
+	if err == nil {
+		body, readErr := ioutil.ReadAll(resp.Body)
+		if readErr != nil {
+			return alerts, reqInf, readErr
+		}
+		if err = json.Unmarshal(body, &alerts); err != nil {
+			return alerts, reqInf, err
+		}
+	}
+
+	return alerts, reqInf, err
+}
+
+func (to *Session) GetDeliveryServiceRequestsV30(header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, header)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -136,7 +219,8 @@ func (to *Session) GetDeliveryServiceRequestsWithHdr(header http.Header) ([]tc.D
 }
 
 // GetDeliveryServiceRequests retrieves all deliveryservices available to session user.
-// Deprecated: GetDeliveryServiceRequests will be removed in 6.0. Use GetDeliveryServiceRequestsWithHdr.
+//
+// Deprecated: GetDeliveryServiceRequests will be removed in 6.0. Use GetDeliveryServiceRequestsV30.
 func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	return to.GetDeliveryServiceRequestsWithHdr(nil)
 }
