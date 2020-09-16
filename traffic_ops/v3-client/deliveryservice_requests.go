@@ -196,7 +196,11 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 // GetDeliveryServiceRequestsV30 retrieves DSRs based on the given HTTP header
 // and query string parameters.
 func (to *Session) GetDeliveryServiceRequestsV30(header http.Header, params url.Values) ([]tc.DeliveryServiceRequestV30, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, header)
+	route := API_DS_REQUESTS
+	if len(params) > 0 {
+		route = fmt.Sprintf("%s?%s", route, params.Encode())
+	}
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -337,4 +341,53 @@ func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, 
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// GetDeliveryServiceRequestAssignment gets the name of the user assigned to
+// the DSR with the given ID (or nil if it is unassigned).
+func (to *Session) GetDeliveryServiceRequestAssignment(id int, header http.Header) (*string, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/assign", API_DS_REQUESTS, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
+
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return new(string), reqInf, nil
+		}
+	}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response *string `json:"response"`
+	}{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, err
+}
+
+// GetDeliveryServiceRequestStatus gets the status of the DSR with the given ID.
+func (to *Session) GetDeliveryServiceRequestStatus(id int, header http.Header) (string, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/status", API_DS_REQUESTS, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
+
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return "", reqInf, nil
+		}
+	}
+	if err != nil {
+		return "", reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response string `json:"response"`
+	}{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, err
 }

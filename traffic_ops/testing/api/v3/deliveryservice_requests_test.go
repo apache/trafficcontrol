@@ -49,8 +49,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 }
 
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
-	dsr := testData.DeliveryServiceRequests[dsrGood]
-	_, reqInf, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	// dsr := testData.DeliveryServiceRequests[dsrGood]
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestsV30(header, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -61,7 +61,7 @@ func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Head
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	_, reqInf, err = TOSession.GetDeliveryServiceRequestsV30(header, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -175,7 +175,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 
 		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
-			t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
 		}
 		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
 		if err != nil {
@@ -289,8 +289,8 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	dsr := testData.DeliveryServiceRequests[dsrGood]
-	_, reqInf, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	// dsr := testData.DeliveryServiceRequests[dsrGood]
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestsV30(header, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -347,8 +347,8 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by id: %v - %v", dsr.DeliveryService.XMLID, err)
+	if err != nil || len(resp) < 1 {
+		t.Fatalf("cannot GET DeliveryServiceRequest by XMLID: %v - %v", dsr.DeliveryService.XMLID, err)
 	}
 	respDSR := resp[0]
 	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
