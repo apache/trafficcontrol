@@ -48,6 +48,10 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 		requestMatchers.add(new RequestMatcher(type, string, target));
 	}
 
+	public List<RequestMatcher> getRequestMatchers() {
+		return new ArrayList<>(this.requestMatchers);
+	}
+
 	public boolean matches(final Request request) {
 		for (final RequestMatcher matcher : requestMatchers) {
 			if (!matcher.matches(request)) {

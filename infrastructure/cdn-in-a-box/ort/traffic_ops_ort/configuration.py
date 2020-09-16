@@ -112,13 +112,18 @@ class Configuration():
 		self.retries = args.retries if args.retries > 0 else 0
 		self.rev_proxy_disable = args.rev_proxy_disable
 		self.verify = not args.insecure
+		self.timeout = args.timeout
 
 		setLogLevel(args.log_level)
 
 		logging.info("Distribution detected as: '%s'", DISTRO)
 
-		self.hostname = (platform.node().split('.')[0], platform.node())
-		logging.info("Hostname detected as: '%s'", self.fullHostname)
+		if not args.hostname:
+			self.hostname = (platform.node().split('.')[0], platform.node())
+			logging.info("Hostname detected as: '%s'", self.fullHostname)
+		else:
+			self.hostname = (args.hostname, args.hostname)
+			logging.info("Hostname set to: '%s'", self.fullHostname)
 
 		try:
 			self.mode = Configuration.Modes[args.Mode.upper()]

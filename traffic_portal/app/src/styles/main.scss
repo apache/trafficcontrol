@@ -92,8 +92,27 @@ body.nav-sm .container.body .main-content {
 }
 
 .dropdown-menu-right {
+  min-width: 200px;
   left: auto !important; // Reset the default from `.dropdown-menu`
   right: 0 !important;
+
+  button {
+    color: #333333;
+    text-decoration: none;
+    display: block;
+    clear: both;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: inherit;
+    padding: 3px 20px;
+
+    &[disabled] {
+      color: gray;
+      background-color: #f5f5f5;
+    }
+  }
+
 }
 
 .input-error {
@@ -119,14 +138,24 @@ body.nav-sm .container.body .main-content {
     background-color: white;
     border-radius: 0;
     font-size: 24px;
+    small {
+      font-size: medium;
+    }
   }
 
-  button {
-    margin: 8px 6px 4px 0;
+  .input-group-addon > label {
+    color: gray;
+    font-weight: normal;
+    margin-bottom: 0;
   }
 
-  .btn-group {
-    margin-top: -4px;
+  .text-input {
+    margin: 5px 6px 4px 0;
+
+    #pageSize {
+      width: 85px;
+    }
+
   }
 
 }
@@ -183,6 +212,47 @@ table {
   margin-right: 5px;
 }
 
+input[type="checkbox"].dirty {
+  -moz-box-shadow:    0 0 10px 5px blue;
+  -webkit-box-shadow: 0 0 10px 5px blue;
+  box-shadow:         0 0 10px 5px blue;
+}
 
+#tree-root {
 
+  .tree-node-content {
+    height: 45px;
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 10px;
+    small {
+      font-size: 65%;
+    }
+    .error-msg {
+      display: inline;
+      font-style: italic;
+    }
+  }
 
+  .tree-node.origin {
+    color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff;
+  }
+  .tree-node.mid {
+    color: #383d41;
+    background-color: #e2e3e5;
+    border-color: #d6d8db;
+  }
+  .tree-node.error {
+    color: #721c24;
+    background-color: #f2dede;
+    border-color: #f5c6cb;
+  }
+  .tree-node.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+  }
+
+}

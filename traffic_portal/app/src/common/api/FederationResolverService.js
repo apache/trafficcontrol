@@ -17,42 +17,45 @@
  * under the License.
  */
 
-var FederationResolverService = function(Restangular, $http, $q, ENV, locationUtils, messageModel) {
+var FederationResolverService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getFederationResolvers = function(queryParams) {
-		return Restangular.all('federation_resolvers').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'federation_resolvers', {params: queryParams}).then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 	this.createFederationResolver = function(fedResolver) {
-		var deferred = $q.defer();
-
-		$http.post(ENV.api['root'] + 'federation_resolvers', fedResolver)
-			.then(
-				function(result) {
-					deferred.resolve(result);
-				},
-				function(fault) {
-					deferred.reject(fault);
-				}
-			);
-
-		return deferred.promise;
+		return $http.post(ENV.api['root'] + 'federation_resolvers', fedResolver).then(
+			function(result) {
+				return result;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
 	this.assignFederationResolvers = function(fedId, fedResIds, replace) {
-		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/federation_resolvers', { fedResolverIds: fedResIds, replace: replace })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: fedResIds.length + ' resolver(s) assigned to federation' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/federation_resolvers', { fedResolverIds: fedResIds, replace: replace }).then(
+			function(result) {
+				messageModel.setMessages([ { level: 'success', text: fedResIds.length + ' resolver(s) assigned to federation' } ], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 
 };
 
-FederationResolverService.$inject = ['Restangular', '$http', '$q', 'ENV', 'locationUtils', 'messageModel'];
+FederationResolverService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = FederationResolverService;

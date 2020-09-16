@@ -22,7 +22,7 @@ base_data_dir="/traffic_ops_data"
 servers_dir="${base_data_dir}/servers"
 profiles_dir="${base_data_dir}/profiles"
 
-service_names='db trafficops trafficops-perl trafficportal trafficmonitor trafficvault trafficrouter edge mid origin enroller socksproxy client vnc dns'
+service_names='db trafficops trafficops-perl trafficportal trafficmonitor trafficvault trafficrouter enroller dns'
 
 service_domain='infra.ciab.test'
 
@@ -38,11 +38,22 @@ done
 
 service_ips="${gateway_ip}"
 service_ip6s="${gateway_ip6}"
+INTERFACE=$(ip link | awk '/\<UP\>/ && !/LOOPBACK/ {sub(/@.*/, "", $2); print $2}')
+NETMASK=$(route | awk -v INTERFACE=$INTERFACE '$8 ~ INTERFACE && $1 !~ "default"  {print $3}')
+DIG_IP_RETRY=10
 
 for service_name in $service_names; do
 	service_fqdn="${service_name}.${service_domain}"
 
-	service_ip="$(dig +short ${service_fqdn} A)"
+	for (( i=1; i<=DIG_IP_RETRY; i++ )); do
+		service_ip="$(dig +short ${service_fqdn} A)"
+		if [ -z "${service_ip}" ]; then
+			printf "service \"${service_fqdn}\" not found in dns, count=$i, waiting ...\n"
+			sleep 3
+		else
+			break
+		fi
+	done
 
   #
 	# TODO add a way to determine if a service wasn't built in the Compose,
@@ -54,6 +65,7 @@ for service_name in $service_names; do
 	if [ -z "${service_ip}" ]; then
 		# TODO sleep and try again? Up to n times?
 		printf "setting ips from dns: service \"${service_fqdn}\" not found in dns, skipping!\n"
+		continue
 	fi
 
 	service_ip6="$(dig +short $service_name AAAA)"
@@ -65,12 +77,13 @@ for service_name in $service_names; do
 
 	# not all services have server files
 	printf "setting ips from dns: checking file for dir '${servers_dir}' service '${service_name}'\n"
-	service_file="$(ls ${servers_dir}/*${service_name}* 2>/dev/null)"
+	service_file="$(ls ${servers_dir}/*-${service_name}* 2>/dev/null)"
 	printf "setting ips from dns: trying service file '${service_file}'\n"
 	if [ -n "${service_file}" ]; then
 		printf "setting ips from dns: service file '${service_file}' exists, adding IPs\n"
 		cat "${service_file}" | jq '. + {"ipAddress":"'"${service_ip}"'"}' > "${service_file}.tmp" && mv "${service_file}.tmp" "${service_file}"
 		cat "${service_file}" | jq '. + {"ipGateway":"'"${gateway_ip}"'"}' > "${service_file}.tmp" && mv "${service_file}.tmp" "${service_file}"
+		cat "${service_file}" | jq '. + {"ipNetmask":"'"${NETMASK}"'"}' > "${service_file}.tmp" && mv "${service_file}.tmp" "${service_file}"
 		if [ -n "${service_ip6}" ]; then
 			cat "${service_file}" | jq '. + {"ip6Address":"'"${service_ip6}"'"}' > "${service_file}.tmp" && mv "${service_file}.tmp" "${service_file}"
 		fi

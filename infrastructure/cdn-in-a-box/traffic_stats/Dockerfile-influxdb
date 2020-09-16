@@ -18,12 +18,22 @@
 FROM influxdb:1.7.3
 
 RUN apt-get update && \
-    apt-get install -y dnsutils net-tools gettext-base netcat && \
+    apt-get install -y \
+		dnsutils \
+		gettext-base \
+		# server enrollment uses jq
+		jq \
+		netcat \
+		net-tools && \
     rm -rf /var/lib/apt/lists/*
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     traffic_stats/run-influxdb.sh \
     /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 ENTRYPOINT ["/run-influxdb.sh"]

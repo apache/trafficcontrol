@@ -89,6 +89,7 @@ sub index_trimmed {
 sub get_profiles_by_paramId {
 	my $self    	= shift;
 	my $param_id	= $self->param('id');
+	my $alt         = "GET /profiles";
 
 	my $param_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $param_id }, { prefetch => [ 'profile' ] } );
 
@@ -105,19 +106,19 @@ sub get_profiles_by_paramId {
 			}
 		);
 	}
-
-	return $self->success( \@data );
+	return $self->deprecation(200, $alt, \@data);
 }
 
 sub get_unassigned_profiles_by_paramId {
 	my $self    	= shift;
 	my $param_id	= $self->param('id');
+	my $alt         = "GET /profiles";
 
 	my %criteria;
 	if ( defined $param_id ) {
 		$criteria{'parameter.id'} = $param_id;
 	} else {
-		return $self->alert("Parameter ID is required");
+		return $self->with_deprecation("Parameter ID is required", "error", 400, $alt);
 	}
 
 	my @assigned_profiles =
@@ -139,7 +140,7 @@ sub get_unassigned_profiles_by_paramId {
 			}
 		);
 	}
-	$self->success( \@data );
+	return $self->deprecation(200, $alt, \@data);
 }
 
 sub show {

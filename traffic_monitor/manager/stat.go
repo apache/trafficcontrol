@@ -98,7 +98,7 @@ func StartStatHistoryManager(
 		if haveCachesChanged() {
 			unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 		}
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState, cfg.CachePollingProtocol)
 	}
 
 	go func() {
@@ -254,6 +254,7 @@ func processStatResults(
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	overrideMap map[tc.CacheName]bool,
 	combineState func(),
+	pollingProtocol config.PollingProtocol,
 ) {
 	if len(results) == 0 {
 		return
@@ -278,7 +279,7 @@ func processStatResults(
 		}
 
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		if lastResult, ok := lastResults[result.ID]; ok && result.Error == nil {
+		if lastResult, ok := lastResults[tc.CacheName(result.ID)]; ok && result.Error == nil {
 			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
 			if result.Error == nil {
 				results[i] = result
@@ -293,15 +294,15 @@ func processStatResults(
 		// Don't add errored maxes or precomputed DSStats
 		if result.Error == nil {
 			// max and precomputed always contain the latest result from each cache
-			statMaxKbpses.AddMax(result)
+			statMaxKbpses[result.ID] = uint64(result.PrecomputedData.MaxKbps)
 			// if we failed to compute the OutBytes, keep the outbytes of the last result.
 			if result.PrecomputedData.OutBytes == 0 {
-				result.PrecomputedData.OutBytes = precomputedData[result.ID].OutBytes
+				result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
 			}
-			precomputedData[result.ID] = result.PrecomputedData
+			precomputedData[tc.CacheName(result.ID)] = result.PrecomputedData
 
 		}
-		lastResults[result.ID] = result
+		lastResults[tc.CacheName(result.ID)] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
@@ -318,17 +319,18 @@ func processStatResults(
 		lastStats.Set(*lastStatsCopy)
 	}
 
-	health.CalcAvailabilityWithStats(results, "stat", statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	pollerName := "stat"
+	health.CalcAvailability(results, pollerName, &statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events, pollingProtocol)
 	combineState()
 
 	endTime := time.Now()
 	lastStatDurations := threadsafe.CopyDurationMap(lastStatDurationsThreadsafe.Get())
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
+		if lastStatStart, ok := lastStatEndTimes[tc.CacheName(result.ID)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[result.ID] = d
+			lastStatDurations[tc.CacheName(result.ID)] = d
 		}
-		lastStatEndTimes[result.ID] = endTime
+		lastStatEndTimes[tc.CacheName(result.ID)] = endTime
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
 	unpolledCaches.SetPolled(results, lastStats.Get())

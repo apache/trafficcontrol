@@ -41,8 +41,8 @@ var ChangeLogModel = function($rootScope, $interval, changeLogService, userModel
 
 	var getNewLogCount = function() {
 		changeLogService.getNewLogCount()
-			.then(function(result) {
-				newLogCount = result.data.response.newLogcount;
+			.then(function(response) {
+				newLogCount = response.newLogcount;
 			});
 	};
 

@@ -6,7 +6,7 @@
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,11 +60,11 @@ elsif ( $args{a} eq 'add' ) {
 	open( FILE, $args{f} ) or die "Couldn't open file: $!";
 	my $json_text = <FILE>;
 	close FILE;
-	$econ->post_json( '/api/1.1/to_extensions', $json_text );
+	$econ->post_json( '/api/2.0/to_extensions', $json_text );
 }
 elsif ( $args{a} eq 'delete' ) {
 	my $json_text = encode_json( { id => $args{i} } );
-	$econ->post_json( '/api/1.1/to_extensions/delete', $json_text );
+	$econ->post_json( '/api/2.0/to_extensions/delete', $json_text );
 }
 else {
 	ERROR "Use -a list|add|delete";
@@ -74,7 +74,7 @@ my ( $f1_id, $f1_name, $f1_type, $f1_colnames, $f1_version );
 
 sub mainlist {
 	my $econ     = shift;
-	my $ext_list = $econ->get('/api/1.1/to_extensions.json');
+	my $ext_list = $econ->get('/api/2.0/to_extensions.json');
 	foreach my $extension ( @{$ext_list} ) {
 
 		$f1_id       = $extension->{id};

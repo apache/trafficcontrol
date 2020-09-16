@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -37,7 +38,8 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := tc.CDNName(inf.Params["name"])
-	if ok, err := cdnExists(inf.Tx.Tx, cdnName); err != nil {
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, cdnName)
+	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
 		return
 	} else if !ok {
@@ -51,11 +53,12 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
 		return
 	}
-	if err := deleteCDNByName(inf.Tx.Tx, tc.CDNName(cdnName)); err != nil {
+	if err := deleteCDNByName(inf.Tx.Tx, cdnName); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
 }
 
 func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
@@ -63,17 +66,6 @@ func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
 		return errors.New("deleting cdns: " + err.Error())
 	}
 	return nil
-}
-
-func cdnExists(tx *sql.Tx, name tc.CDNName) (bool, error) {
-	id := 0
-	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		return false, errors.New("querying cdn existence: " + err.Error())
-	}
-	return true, nil
 }
 
 func cdnUnused(tx *sql.Tx, name tc.CDNName) (bool, error) {

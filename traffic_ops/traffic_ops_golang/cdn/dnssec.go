@@ -23,11 +23,13 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -57,6 +59,15 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+
 	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, tc.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("create DNSSEC keys: getting CDN domain: "+err.Error()))
@@ -70,6 +81,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
@@ -249,6 +261,8 @@ func generateStoreDNSSECKeys(
 	return nil
 }
 
+const API_DNSSECKEYS = "DELETE /cdns/name/:name/dnsseckeys"
+
 type CDNDS struct {
 	Name        string
 	Protocol    *int
@@ -288,25 +302,67 @@ WHERE cdn.name = $1
 }
 
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
+	deleteDNSSECKeys(w, r, false)
+}
+
+func DeleteDNSSECKeysDeprecated(w http.ResponseWriter, r *http.Request) {
+	deleteDNSSECKeys(w, r, true)
+}
+
+func writeError(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
+	if deprecated {
+		api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, util.StrPtr(API_DNSSECKEYS))
+	} else {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+	}
+}
+
+func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		writeError(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
 		return
 	}
 	defer inf.Close()
 
 	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()), deprecated)
 		return
 	}
 
 	key := inf.Params["name"]
-
-	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
+	if err != nil {
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()), deprecated)
+		return
+	} else if !ok {
+		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Deleted DNSSEC keys for CDN "+key, inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
+
+	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()), deprecated)
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
+	successMsg := "Successfully deleted " + CDNDNSSECKeyType + " for " + key
+	if deprecated {
+		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_DNSSECKEYS)), successMsg)
+	} else {
+		api.WriteResp(w, r, successMsg)
+
+	}
+}
+
+// getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
+func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return id, true, nil
 }

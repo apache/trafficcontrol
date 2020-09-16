@@ -19,43 +19,43 @@ under the License.
 
 <div class="col-md-4 col-sm-6 col-xs-12">
     <div class="col-md-6 col-sm-12 col-xs-12 tile_stats_count current">
-        <span class="count_top">Current Bandwidth</span>
-        <div class="count">{{totalBandwidth}}</div>
+        <label for="totalBandwidth" class="count_top">Current Bandwidth</label>
+        <output id="totalBandwidth" class="count">{{totalBandwidth}}</output>
     </div>
     <div class="col-md-6 col-sm-12 col-xs-12 tile_stats_count current">
-        <span class="count_top">Current Connections</span>
-        <div class="count">{{totalConnections}}</div>
+        <label for="totalConnections" class="count_top">Current Connections</label>
+        <output id="totalConnections" class="count">{{totalConnections}}</output>
     </div>
 </div>
 <div class="col-md-8 col-sm-6 col-xs-12">
     <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
         <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Healthy Caches</a></span>
-            <div class="count green">{{totalOnline}}</div>
+            <label for="totalOnline" class="count_top"><a ng-click="navigateToPath('/cache-stats')">Healthy Caches</a></label>
+            <output id="totalOnline" class="count green">{{totalOnline}}</output>
         </div>
         <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Unhealthy Caches</a></span>
-            <div class="count red">{{totalOffline}}</div>
-        </div>
-    </div>
-    <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
-        <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top">Online Caches</span>
-            <div class="count">{{online()}}</div>
-        </div>
-        <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top">Reported Caches</span>
-            <div class="count">{{reported()}}</div>
+            <label for="totaloffline" class="count_top"><a ng-click="navigateToPath('/cache-stats')">Unhealthy Caches</a></label>
+            <output id="totalOffline" class="count red">{{totalOffline}}</output>
         </div>
     </div>
     <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
         <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top">Offline Caches</span>
-            <div class="count">{{offline()}}</div>
+            <label for="online-caches" class="count_top">Online Caches</label>
+            <output id="online-caches" class="count">{{online()}}</output>
         </div>
         <div class="col-md-6 col-sm-6 col-xs-6">
-            <span class="count_top">Admin Down Caches</span>
-            <div class="count">{{adminDown()}}</div>
+            <label class="count_top">Reported Caches</label>
+            <output class="count">{{reported()}}</output>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
+        <div class="col-md-6 col-sm-6 col-xs-6">
+            <label class="count_top">Offline Caches</label>
+            <output class="count">{{offline()}}</output>
+        </div>
+        <div class="col-md-6 col-sm-6 col-xs-6">
+            <label class="count_top">Admin Down Caches</label>
+            <output class="count">{{adminDown()}}</output>
         </div>
     </div>
 </div>

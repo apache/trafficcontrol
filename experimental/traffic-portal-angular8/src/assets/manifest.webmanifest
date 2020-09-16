@@ -1,0 +1,20 @@
+{
+	"background_color": "#2A3F54",
+	"description": "A user-friendly interface for managing Apache Traffic Control CDNs",
+	"dir": "ltr",
+	"display": "standalone",
+	"icons": [
+		{
+			"sizes": "192x192 512x512",
+			"src": "/assets/logo.svg",
+			"type": "image/svg+xml"
+		}
+	],
+	"lang": "en-US",
+	"name": "Traffic Portal",
+	"orientation": "portrait",
+	"scope": "/",
+	"short_name": "TP",
+	"start_url": "/",
+	"theme_color": "#2A3F54"
+}

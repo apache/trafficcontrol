@@ -40,8 +40,9 @@ type OpsConfig struct {
 	HttpsListener string `json:"httpsListener"`
 	CertFile      string `json:"certFile"`
 	KeyFile       string `json:"keyFile"`
+	UsingDummyTO  bool   `json:"usingDummyTO"`
 }
 
 type Handler interface {
-	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, chan<- uint64)
+	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, bool, interface{}, chan<- uint64)
 }

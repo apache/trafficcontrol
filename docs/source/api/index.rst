@@ -20,19 +20,42 @@ Traffic Ops API
 ***************
 The Traffic Ops API provides programmatic access to read and write Traffic Control data which allows for the monitoring of CDN performance and configuration of Traffic Control settings and parameters.
 
-API Routes
-==========
+API V1 Routes
+=============
+Documents all API version 1 routes.
 
 .. toctree::
 	:maxdepth: 4
 	:hidden:
 	:glob:
 
-	*
+	v1/*
+
+API V2 Routes
+=============
+Documents all API version 2 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v2/*
+
+API V3 Routes
+=============
+Documents all API version 3 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v3/*
 
 How to Read this Documentation
 ==============================
-Each endpoint is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4. All endpoints are documented as though they were being used in version 1.4. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
+Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 1.5 in the version 1 documentation and version 2.0 in the version 2 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
 
 Every endpoint is documented with a section for each method, containing the subsections "Request Structure" and "Response Structure" which identify all properties and structure of the Request to and Response from the endpoint. Before these subsections, three key pieces of information will be provided:
 
@@ -79,6 +102,17 @@ Object
 ``undefined``
 	No ``response`` object is present in the response payload. Unless the format is otherwise noted, this means that there should be no field list in the "Response Structure" subsection.
 
+Summary
+-------
+The top-level ``summary`` object is used to provide summary statistics about object collections. In general the use of ``summary`` is left to be defined by API endpoints (subject to some restrictions). When an endpoint uses the ``summary`` object, its fields will be explained in a subsection of the "Response Structure" named "Summary Fields".
+
+The following, reserved properties of ``summary`` are guaranteed to always have their herein-described meaning.
+
+.. _reserved-summary-fields:
+
+``count``
+	``count`` contains an unsigned integer that defines the total number of results that could possibly be returned given the non-pagination query parameters supplied by the client.
+
 Using API Endpoints
 ===================
 #. Authenticate with valid Traffic Control user account credentials (the same used by Traffic Portal).
@@ -88,15 +122,15 @@ Using API Endpoints
 
 #. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint.
 
-.. note:: Many endpoints support a ``.json`` suffix. This should be avoided at all costs, because there's no real consistency regarding when it may be used, and the output of API endpoints, in general, are not capable of representing POSIX-compliant files (as a 'file extension' might imply).
+.. note:: Although many endpoints in API version 1.x supported a ``.json`` suffix, API version 2.x does not support it at all. Even when using API version 1.x using the ``.json`` suffix should be avoided at all costs, because there's no real consistency regarding when it may be used, and the output of API endpoints, in general, are not capable of representing POSIX-compliant files (as a 'file extension' might imply).
 
 Example Session
 ---------------
-A user makes a request to the ``/api/1.1/asns`` endpoint.
+A user makes a request to the ``/api/2.0/asns`` endpoint.
 
 .. code-block:: http
 
-	GET /api/1.1/asns HTTP/1.1
+	GET /api/2.0/asns HTTP/1.1
 	Accept: application/json
 	Host: trafficops.infra.ciab.test
 	User-Agent: example
@@ -117,11 +151,11 @@ The response JSON indicates an authentication error.
 		}
 	]}
 
-To authenticate, the user sends a POST request containing their login information to the ``/api/1.3/user/login`` endpoint.
+To authenticate, the user sends a POST request containing their login information to the ``/api/2.0/user/login`` endpoint.
 
 .. code-block:: http
 
-	POST /api/1.1/user/login HTTP/1.1
+	POST /api/2.0/user/login HTTP/1.1
 	User-Agent: example
 	Host: trafficops.infra.ciab.test
 	Accept: application/json
@@ -136,7 +170,7 @@ Traffic Ops responds with a Mojolicious cookie to be used for future requests, a
 	Connection: keep-alive
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 02 Oct 2018 19:03:18 GMT; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:53:32 GMT
 	Access-Control-Allow-Credentials: true
@@ -150,11 +184,11 @@ Traffic Ops responds with a Mojolicious cookie to be used for future requests, a
 		}
 	]}
 
-Using this cookie, the user can now access their original target - the ``/api/1.1/asns`` endpoint...
+Using this cookie, the user can now access their original target - the ``/api/2.0/asns`` endpoint...
 
 .. code-block:: http
 
-	GET /api/1.1/asns HTTP/1.1
+	GET /api/2.0/asns HTTP/1.1
 	Accept: application/json
 	Cookie: mojolicious=...;
 	Host: trafficops.infra.ciab.test
@@ -174,7 +208,7 @@ Using this cookie, the user can now access their original target - the ``/api/1.
 	Content-Length: 48
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:55:57 GMT
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-SHA512: u+Q5X7z/DMTc/VzRGaFlJBA8btA8EC…dnA85HCYTm8vVwsQCvle+uVc1nA==
 	X-Server-Name: traffic_ops_golang/
 
@@ -244,20 +278,25 @@ The most common errors returned by Traffic Ops are:
 		Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 		Content-Type: text/html;charset=UTF-8
 		Date: Tue, 02 Oct 2018 13:58:56 GMT
-		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=...; expires=Tue, 02 Oct 2018 17:58:56 GMT; path=/; HttpOnly
+		X-Server-Name: traffic_ops_golang/
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: Ff5hO8ZUNUMbwCW0mBuUlsvrSmm/Giijpq7O3uLivLZ6VOu6eGom4Jag6UqlBbbDBnP6AG7l1Szdt74TT6NidA==
 		Transfer-Encoding: chunked
 
-		The content of this response will be the Legacy UI login page (which is omitted because it's huge)
+		{ "alerts": [
+			{
+				"level": "error",
+				"text": "Resource not found."
+			}
+		]}
 
 
 500 Internal Server Error
-	When a server-side error occurs, the Perl API will return a ``500 INTERNAL SERVER ERROR`` response (the below example request will result in a ``400 BAD REQUEST`` response if using the v1.3 API instead - as this will use the Go server's API)
+	When a server-side error occurs, the API will return a ``500 INTERNAL SERVER ERROR`` response.
 
 	.. code-block:: http
-		:caption: Example Response to ``GET /api/1.1/servers/hostname/jj/details.json`` ('jj' doesn't exist)
+		:caption: Example Response to ``GET /api/2.0/servers``. (when a server error such as a postgres failure occured)
 
 		HTTP/1.1 500 Internal Server Error
 		Access-Control-Allow-Credentials: true
@@ -267,8 +306,8 @@ The most common errors returned by Traffic Ops are:
 		Content-Length: 93
 		Content-Type: application/json
 		Date: Tue, 02 Oct 2018 17:29:42 GMT
-		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=..; expires=Sun, 19 Apr 2015 00:45:06 GMT; path=/; HttpOnly
+		X-Server-Name: traffic_ops_golang/
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: gFa4NYFmofCbV7YqgwyFRzKk90+KNgoZu6p2Nx98J4Gy7/2j55tYknvk53WXuMdMKKrgYMop4uiYOla1k1ozQQ==
 

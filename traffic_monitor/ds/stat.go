@@ -259,8 +259,9 @@ func addLastDSStatTotals(lastStat *dsdata.LastDSStat, cachesReporting map[tc.Cac
 	lastStat.Total = total
 }
 
-// addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures.
-// Note this mutates both dsStats and lastStats, adding the per-second stats to them.
+// addDSPerSecStats calculates and adds the per-second delivery service stats to
+// both the Stats and LastStats structures. Note this mutates both dsStats and
+// lastStats, adding the per-second stats to them.
 func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName tc.DeliveryServiceName, stat *dsdata.Stat, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) {
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
@@ -342,8 +343,10 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 	lastStat.Available = stat.CommonStats.IsAvailable.Value
 }
 
-// latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
-func latestBytes(p cache.PrecomputedData) (int64, time.Time, error) {
+// latestBytes returns the most recent OutBytes from the given cache results,
+// and the time of that result. It assumes zero results are not valid, but
+// nonzero results with errors are valid.
+func latestBytes(p cache.PrecomputedData) (uint64, time.Time, error) {
 	if p.OutBytes == 0 {
 		return 0, time.Time{}, fmt.Errorf("no valid results")
 	}
@@ -362,21 +365,24 @@ func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, pr
 		lastStat = &dsdata.LastStatsData{}
 		lastStats.Caches[cacheName] = lastStat
 	}
-	if err = addLastStat(&lastStat.Bytes, outBytes, outBytesTime); err != nil {
+	if err = addLastStat(&lastStat.Bytes, int64(outBytes), outBytesTime); err != nil {
 		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
 	}
 }
 
-// addPerSecStats adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
+// addPerSecStats adds Kbps fields to the NewStats, based on the previous
+// out_bytes in the oldStats, and the time difference.
 //
-// Traffic Server only updates its data every N seconds. So, often we get a new Stats with the same OutBytes as the previous one,
-// So, we must record the last changed value, and the time it changed. Then, if the new OutBytes is different from the previous,
-// we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
+// Traffic Server only updates its data every N seconds. So, often we get a new
+// Stats with the same OutBytes as the previous one, so, we must record the last
+// changed value, and the time it changed. Then, if the new OutBytes is
+// different from the previous, we set the (new - old) / lastChangedTime as the
+// KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
 //
-// Note this mutates both dsStats and lastStats, adding the per-second stats to them.
-//
+// Note this mutates both dsStats and lastStats, adding the per-second stats to
+// them.
 func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats *dsdata.Stats, lastStats *dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) {
 	for dsName, stat := range dsStats.DeliveryService {
 		addDSPerSecStats(lastStats, dsStats, dsName, stat, serverCachegroups, serverTypes, mc, events, precomputed, states)
@@ -420,10 +426,10 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 				continue
 			}
 
-			httpDsStat, hadHttpDsStat := dsStats.DeliveryService[ds]
+			httpDsStat, hadHttpDsStat := dsStats.DeliveryService[tc.DeliveryServiceName(ds)]
 			if !hadHttpDsStat {
 				httpDsStat = dsdata.NewStat() // TODO sync.Pool?
-				dsStats.DeliveryService[ds] = httpDsStat
+				dsStats.DeliveryService[tc.DeliveryServiceName(ds)] = httpDsStat
 			}
 
 			httpDsStatCg := httpDsStat.CacheGroups[cachegroup]
@@ -448,7 +454,7 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 			SumDSAstats(httpDsStatCg, resultStat)
 			SumDSAstats(httpDsStatType, resultStat)
 			SumDSAstats(httpDsStatCache, resultStat)
-			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats // TODO verify whether this should be a sum
+			httpDsStat.CommonStats = dsStats.DeliveryService[tc.DeliveryServiceName(ds)].CommonStats // TODO verify whether this should be a sum
 		}
 	}
 
@@ -468,7 +474,7 @@ func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, moni
 	return nil
 }
 
-func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.AStat) {
+func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.DSStat) {
 	ds.OutBytes.Value += int64(cacheStat.OutBytes)
 	ds.InBytes.Value += float64(cacheStat.InBytes)
 	ds.Status2xx.Value += int64(cacheStat.Status2xx)

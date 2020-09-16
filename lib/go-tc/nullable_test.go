@@ -40,7 +40,6 @@ func TestNullStructs(t *testing.T) {
 	compareWithNullable(t, DeliveryServiceRequestComment{}, DeliveryServiceRequestCommentNullable{})
 	compareWithNullable(t, DeliveryServiceRequest{}, DeliveryServiceRequestNullable{})
 	compareWithNullable(t, DeliveryService{}, DeliveryServiceNullable{})
-	compareWithNullable(t, DeliveryServiceV12{}, DeliveryServiceNullableV12{})
 	compareWithNullable(t, DeliveryServiceV11{}, DeliveryServiceNullableV11{})
 	compareWithNullable(t, Division{}, DivisionNullable{})
 	compareWithNullable(t, Domain{}, DomainNullable{})

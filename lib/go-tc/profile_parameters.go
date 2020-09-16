@@ -22,14 +22,17 @@ package tc
 // ProfileParametersResponse ...
 type ProfileParametersResponse struct {
 	Response []ProfileParameter `json:"response"`
+	Alerts
 }
 
-// A Single ProfileParameter Response for Create to depict what changed
+// ProfileParameterResponse is a single ProfileParameter response for Create to
+// depict what changed.
 // swagger:response ProfileParameterResponse
 // in: body
 type ProfileParameterResponse struct {
 	// in: body
 	Response ProfileParameter `json:"response"`
+	Alerts
 }
 
 // ProfileParameter ...

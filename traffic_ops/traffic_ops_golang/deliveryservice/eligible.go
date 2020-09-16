@@ -22,12 +22,16 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/lib/pq"
 )
 
 func GetServersEligible(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +42,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	dsTenantID, ok, err := GetDSTenantIDByIDTx(inf.Tx.Tx, inf.IntParams["id"])
+	dsTenantID, ok, err := getDSTenantIDByID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
@@ -60,15 +64,48 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting eligible servers: "+err.Error()))
 		return
 	}
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.DSServerV11{}
+		for _, srv := range servers {
+			v11server := tc.DSServerV11{}
+			v11server.DSServerBase = srv.DSServerBase
+
+			interfaces := *srv.ServerInterfaces
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.WriteResp(w, r, v11ServerList)
+		return
+	}
 	api.WriteResp(w, r, servers)
 }
 
-const JumboFrameBPS = 9000
-
 func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
-	q := `
+	queryFormatString := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
+s.id
+%s
+FROM server s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+%s`
+	queryWhereClause := `
+WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
+	AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
+`
+	dataFetchQuery := `, 
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
@@ -77,19 +114,11 @@ s.domain_name,
 s.guid,
 s.host_name,
 s.https_port,
-s.id,
 s.ilo_ip_address,
 s.ilo_ip_gateway,
 s.ilo_ip_netmask,
 s.ilo_password,
 s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
 s.last_updated,
 s.mgmt_ip_address,
 s.mgmt_ip_gateway,
@@ -108,18 +137,30 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.upd_pending as upd_pending
-FROM server s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
-AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
+s.upd_pending as upd_pending,
+ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
+ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 `
-	rows, err := tx.Query(q, dsID)
+	idRows, err := tx.Query(fmt.Sprintf(queryFormatString, "", queryWhereClause), dsID)
+	if err != nil {
+		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
+	}
+	defer idRows.Close()
+	var serverIDs []int
+	for idRows.Next() {
+		var serverID *int
+		err := idRows.Scan(&serverID)
+		if err != nil {
+			return nil, errors.New("querying delivery service eligible server ids: " + err.Error())
+		}
+		serverIDs = append(serverIDs, *serverID)
+	}
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
+	if err != nil {
+		return nil, errors.New("unable to get server interfaces: " + err.Error())
+	}
+
+	rows, err := tx.Query(fmt.Sprintf(queryFormatString, dataFetchQuery, queryWhereClause), dsID)
 	if err != nil {
 		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}
@@ -129,6 +170,7 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 	for rows.Next() {
 		s := tc.DSServer{}
 		err := rows.Scan(
+			&s.ID,
 			&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -137,19 +179,11 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.GUID,
 			&s.HostName,
 			&s.HTTPSPort,
-			&s.ID,
 			&s.ILOIPAddress,
 			&s.ILOIPGateway,
 			&s.ILOIPNetmask,
 			&s.ILOPassword,
 			&s.ILOUsername,
-			&s.InterfaceMtu,
-			&s.InterfaceName,
-			&s.IP6Address,
-			&s.IP6Gateway,
-			&s.IPAddress,
-			&s.IPGateway,
-			&s.IPNetmask,
 			&s.LastUpdated,
 			&s.MgmtIPAddress,
 			&s.MgmtIPGateway,
@@ -169,11 +203,35 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.Type,
 			&s.TypeID,
 			&s.UpdPending,
+			pq.Array(&s.ServerCapabilities),
+			pq.Array(&s.DeliveryServiceCapabilities),
 		)
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
-		servers = append(servers, s)
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		if interfacesMap, ok := serversMap[*s.ID]; ok {
+			for _, interfaceInfo := range interfacesMap {
+				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+			}
+		}
+		if len(*s.ServerInterfaces) == 0 {
+			return nil, errors.New(fmt.Sprintf("no interfaces found on eligible server"))
+		}
+
+		eligible := true
+
+		if !strings.HasPrefix(s.Type, "ORG") {
+			for _, dsc := range s.DeliveryServiceCapabilities {
+				if !util.ContainsStr(s.ServerCapabilities, dsc) {
+					eligible = false
+				}
+			}
+		}
+
+		if eligible {
+			servers = append(servers, s)
+		}
 	}
 	return servers, nil
 }

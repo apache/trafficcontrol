@@ -20,17 +20,26 @@ package api
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 )
 
 type CRUDer interface {
 	Create() (error, error, int)
-	Read() ([]interface{}, error, error, int)
+	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
 	Update() (error, error, int)
 	Delete() (error, error, int)
 	APIInfoer
 	Identifier
 	Validator
+}
+
+type AlertsResponse interface {
+	// GetAlerts retrieves an array of alerts that were generated over the course of handling an endpoint.
+	GetAlerts() tc.Alerts
 }
 
 type Identifier interface {
@@ -58,9 +67,14 @@ type Creator interface {
 	Validator
 }
 
+// MultipleCreator indicates whether an object using the shared handlers allows an array of objects in the POST
+type MultipleCreator interface {
+	AllowMultipleCreates() bool
+}
+
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read() ([]interface{}, error, error, int)
+	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
 	APIInfoer
 }
 
@@ -77,6 +91,16 @@ type Deleter interface {
 	Delete() (error, error, int)
 	APIInfoer
 	Identifier
+}
+
+// OptionsDeleter calls the OptionsDelete() generic CRUD function, unlike Deleter, which calls Delete().
+type OptionsDeleter interface {
+	// OptionsDelete returns any user error, any system error, and the HTTP error code to be returned if there was an
+	// error.
+	OptionsDelete() (error, error, int)
+	APIInfoer
+	Identifier
+	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 type Validator interface {

@@ -57,8 +57,7 @@ sub get_host_stats {
 	}
 	$self->add_em_up( $big_obj, \%aadata, \$master_i );
 	###################### Main flow #####################
-
-	$self->render( json => \%aadata );
+	return $self->deprecation_with_no_alternative(200, \%aadata);
 }
 
 sub get_crstates {

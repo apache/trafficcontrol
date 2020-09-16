@@ -784,7 +784,7 @@ sub totals {
 		);
 	}
 
-	return $self->success( \@data );
+	return $self->success_deprecate( \@data );
 
 }
 

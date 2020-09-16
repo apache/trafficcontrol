@@ -23,14 +23,14 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func randResultStatHistory() ResultStatHistory {
@@ -67,7 +67,6 @@ func randResultStatVal() cache.ResultStatVal {
 }
 
 func randResultInfoHistory() cache.ResultInfoHistory {
-	// type ResultInfoHistory map[tc.CacheName][]ResultInfo
 	hist := cache.ResultInfoHistory{}
 
 	num := 5
@@ -83,7 +82,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 
 func randResultInfo() cache.ResultInfo {
 	return cache.ResultInfo{
-		ID:          tc.CacheName(randStr()),
+		ID:          randStr(),
 		Error:       fmt.Errorf(randStr()),
 		Time:        time.Now(),
 		RequestTime: time.Millisecond * time.Duration(rand.Int()),
@@ -96,8 +95,8 @@ func randResultInfo() cache.ResultInfo {
 func randVitals() cache.Vitals {
 	return cache.Vitals{
 		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Int63(),
-		BytesIn:    rand.Int63(),
+		BytesOut:   rand.Uint64(),
+		BytesIn:    rand.Uint64(),
 		KbpsOut:    rand.Int63(),
 		MaxKbpsOut: rand.Int63(),
 	}
@@ -120,15 +119,19 @@ func randBool() bool {
 type DummyFilterNever struct {
 }
 
-func (f DummyFilterNever) UseStat(name string) bool {
+func (DummyFilterNever) UseStat(string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
+func (DummyFilterNever) UseInterfaceStat(string) bool {
 	return false
 }
 
-func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
+func (DummyFilterNever) UseCache(tc.CacheName) bool {
+	return false
+}
+
+func (DummyFilterNever) WithinStatHistoryMax(uint64) bool {
 	return false
 }
 
@@ -143,9 +146,6 @@ func TestStatsMarshall(t *testing.T) {
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
 	}
-	// if len(bytes) > 0 {
-	// 	t.Errorf("expected empty bytes, actual: %v", string(bytes))
-	// }
 
 	stats := cache.Stats{}
 	json := jsoniter.ConfigFastest // TODO make configurable
@@ -166,5 +166,113 @@ func TestStatsMarshall(t *testing.T) {
 	}
 	if len(stats.Caches) > 0 {
 		t.Errorf(`unmarshalling stats.Caches expected empty, actual %+v`, stats.Caches)
+	}
+}
+
+func TestSystemComputedStats(t *testing.T) {
+	stats := cache.ComputedStats()
+
+	for stat, function := range stats {
+		if strings.HasPrefix(stat, "system.") {
+			computedStat := function(cache.ResultInfo{}, tc.TrafficServer{}, tc.TMProfile{}, tc.IsAvailable{})
+			_, err := newStatEqual([]cache.ResultStatVal{{Val: float64(0)}}, computedStat)
+			if err != nil {
+				t.Errorf("expected no errors from newStatEqual: %s", err)
+			}
+		}
+	}
+}
+
+func TestcompareAndAppendStatForInterface(t *testing.T) {
+	var errs strings.Builder
+	var limit uint64 = 1
+	stat := interfaceStat{
+		InterfaceName: "test",
+		Stat:          uint64(5),
+		StatName:      "test",
+		Time:          time.Now(),
+	}
+
+	history := compareAndAppendStatForInterface(nil, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result := history[0]
+	if result.Span != 1 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 1, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
+	}
+
+	errs.Reset()
+
+	history = compareAndAppendStatForInterface(history, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result = history[0]
+	if result.Span != 2 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 2, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
+	}
+
+	errs.Reset()
+	stat.Stat = uint64(6)
+
+	history = compareAndAppendStatForInterface(history, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result = history[0]
+	if result.Span != 1 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 1, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
 	}
 }

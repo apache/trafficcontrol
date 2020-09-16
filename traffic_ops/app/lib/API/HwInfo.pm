@@ -119,7 +119,7 @@ sub data {
 	my %itotal_records = ( iTotalDisplayRecords => $total_records );
 	%data = %{ merge( \%data, \%itotal_records ) };
 
-	$self->render( json => \%data );
+	$self->deprecation_with_no_alternative(200, json => \%data );
 }
 
 1;

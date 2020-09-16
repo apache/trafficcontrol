@@ -1,0 +1,30 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<tp-header title="{{deliveryservice ? deliveryservice.displayName : 'Loading'}} - Content Invalidation Jobs"></tp-header>
+<ul>
+	<li *ngFor="let j of jobs" [hidden]="endDate(j) < now"><code>{{j.assetUrl}}</code> (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time></li>
+</ul>
+<button type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob($event)">+</button>
+
+<dialog openable [toggle]="showDialog">
+	<h2>New Content Invalidation Job</h2>
+	<form method="dialog" (ngSubmit)="submitDialog($event)" ngNativeValidate>
+		<label for="regexp">Content Pattern to Invalidate</label><input type="text" name="regexp" id="regexp" [formControl]="regexp" required title="A regular expression. Matching request paths will be invalidated" customvalidity [validity]='regexpIsValid'/>
+		<label for="ttl">Time To Live (hours)</label><input type="number" name="ttl" id="ttl" [formControl]="ttl" min="1" step="1" required/>
+		<label for="startdate">Scheduled Start Date</label><input type="date" name="startdate" id="startdate" [formControl]="startDate" required/>
+		<label for="starttime">Scheduled Start Time</label><input type="time" name="starttime" id="starttime" [formControl]="startTime"/>
+		<button type="button" (click)="closeDialog($event)" id="cancel">Cancel</button>
+		<button id="submit">Submit</button>
+	</form>
+</dialog>

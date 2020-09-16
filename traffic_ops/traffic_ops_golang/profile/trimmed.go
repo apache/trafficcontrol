@@ -29,13 +29,20 @@ import (
 )
 
 func Trimmed(w http.ResponseWriter, r *http.Request) {
+	alt := "GET /profiles"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, &alt)
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getTrimmedProfiles(inf.Tx.Tx))
+	trimmed, err := getTrimmedProfiles(inf.Tx.Tx)
+	if err != nil {
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, &alt)
+		return
+	}
+	alerts := api.CreateDeprecationAlerts(&alt)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, trimmed)
 }
 
 func getTrimmedProfiles(tx *sql.Tx) ([]tc.ProfileTrimmed, error) {

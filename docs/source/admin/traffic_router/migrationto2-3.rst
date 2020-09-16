@@ -22,7 +22,7 @@ Traffic Router - Migrating to 3.0
 
 Release Notes v3.0
 ==================
-* Replaced custom Java :abbr:`SNI (Server Name Indication)` implementation with a native implementation using tomcat-native, :abbr:`APR (Apache Portable Runtime)` and OpenSSL. This should significantly improve the performance of routing HTTPS :term:`Delivery Service`\ s.
+* Replaced custom Java :abbr:`SNI (Server Name Indication)` implementation with a native implementation using tomcat-native, :abbr:`APR (Apache Portable Runtime)` and OpenSSL. This should significantly improve the performance of routing HTTPS :term:`Delivery Services`.
 
 	.. seealso:: `The Server Name Indication Wikipedia page <https://en.wikipedia.org/wiki/Server_Name_Indication>`_, `The Apache Portable Runtime project site <https://apr.apache.org/>`_ and/or `the OpenSSL project site <https://www.openssl.org/>`_
 

@@ -18,9 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -30,17 +32,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
@@ -51,7 +57,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
-@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals", "PMD.ExcessivePublicCount"})
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -69,7 +75,13 @@ public class DeliveryService {
 	@JsonIgnore
 	private final JsonNode staticDnsEntries;
 	@JsonIgnore
-	private final JsonNode domains;
+	private final String domain;
+	@JsonIgnore
+	private final String tld;
+	@JsonIgnore
+	// Matches the beginning of a HOST_REGEXP pattern with or without confighandler.regex.superhack.enabled.
+	// ^\(\.\*\\\.\|\^\)|^\.\*\\\.|\\\.\.\*
+	private final Pattern wildcardPattern = Pattern.compile("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*");
 	@JsonIgnore
 	private final JsonNode bypassDestination;
 	@JsonIgnore
@@ -78,6 +90,8 @@ public class DeliveryService {
 	private final JsonNode props;
 	private boolean isDns;
 	private final String routingName;
+	private String topology;
+	private final Set<String> requiredCapabilities;
 	private final boolean shouldAppendQueryString;
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
@@ -96,6 +110,8 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
+	private final Set<String> consistentHashQueryParams;
+	private boolean ecsEnabled;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -121,9 +137,46 @@ public class DeliveryService {
 		this.staticDnsEntries = dsJo.get("staticDnsEntries");
 		this.bypassDestination = dsJo.get("bypassDestination");
 		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
-		this.domains = dsJo.get("domains");
+		this.domain = getDomainFromJson(dsJo.get("domains"));
+		this.tld = this.domain != null
+                ? this.domain.replaceAll("^.*?\\.", "")
+				: null;
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
+		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
+
+		if (dsJo.has("topology")) {
+			this.topology = JsonUtils.optString(dsJo, "topology");
+		}
+		this.requiredCapabilities = new HashSet<>();
+		if (dsJo.has("requiredCapabilities")) {
+			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
+			if (!requiredCapabilitiesNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed requiredCapabilities. Disregarding.");
+			} else {
+				requiredCapabilitiesNode.forEach((requiredCapabilityNode) -> {
+					final String requiredCapability = requiredCapabilityNode.asText();
+					if (!requiredCapability.isEmpty()) {
+						this.requiredCapabilities.add(requiredCapability);
+					}
+				});
+			}
+		}
+
+		this.consistentHashQueryParams = new HashSet<String>();
+		if (dsJo.has("consistentHashQueryParams")) {
+			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
+			if (!cqpNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
+			} else {
+				for (final JsonNode n : cqpNode) {
+					final String s = n.asText();
+					if (!s.isEmpty()) {
+						this.consistentHashQueryParams.add(s);
+					}
+				}
+			}
+		}
 
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");
@@ -163,6 +216,17 @@ public class DeliveryService {
 		} finally {
 			this.deepCache = dct;
 		}
+	}
+
+	private String getDomainFromJson(final JsonNode domains) {
+		if (domains == null) {
+			return null;
+		}
+		return domains.get(0).asText();
+	}
+
+	public Set<String> getConsistentHashQueryParams() {
+		return this.consistentHashQueryParams;
 	}
 
 	public String getId() {
@@ -322,6 +386,16 @@ public class DeliveryService {
 		uri.append(getPortString(request, cache));
 		uri.append(alternatePath);
 		return uri.toString();
+	}
+
+	public String getRemap(final String dsPattern) {
+		if (!dsPattern.contains(".*")) {
+			return dsPattern;
+		}
+		final String host = wildcardPattern.matcher(dsPattern).replaceAll("") + "." + tld;
+		return this.isDns()
+				? this.routingName + "." + host
+				: host;
 	}
 
 	private String getFQDN(final Cache cache) {
@@ -518,7 +592,7 @@ public class DeliveryService {
 		return isAvailable;
 	}
 
-	public boolean isLocationAvailable(final CacheLocation cl) {
+	public boolean isLocationAvailable(final Location cl) {
 		if(cl==null) {
 			return false;
 		}
@@ -549,13 +623,20 @@ public class DeliveryService {
 		return staticDnsEntries;
 	}
 
-	@JsonIgnore
-	public JsonNode getDomains() {
-		return domains;
+	public String getDomain() {
+		return domain;
 	}
 
 	public String getRoutingName() {
 		return routingName;
+	}
+
+	public String getTopology() {
+		return topology;
+	}
+
+	public boolean hasRequiredCapabilities(final Set<String> serverCapabilities) {
+		return serverCapabilities.containsAll(requiredCapabilities);
 	}
 
 	public Dispersion getDispersion() {
@@ -657,5 +738,61 @@ public class DeliveryService {
 
 	public void setConsistentHashRegex(final String consistentHashRegex) {
 		this.consistentHashRegex = consistentHashRegex;
+	}
+
+	/**
+	 * Extracts the significant parts of a request's query string based on this
+	 * Delivery Service's Consistent Hashing Query Parameters
+	 * @param r The request from which to extract query parameters
+	 * @return The parts of the request's query string relevant to consistent
+	 *	hashing. The result is URI-decoded - if decoding fails it will return
+	 *	a blank string instead.
+	 */
+	public String extractSignificantQueryParams(final HTTPRequest r) {
+		if (r.getQueryString() == null || r.getQueryString().isEmpty() || this.getConsistentHashQueryParams().isEmpty()) {
+			return "";
+		}
+
+		final SortedSet<String> qparams = new TreeSet<String>();
+		try {
+			for (final String qparam : r.getQueryString().split("&")) {
+				if (qparam.isEmpty()) {
+					continue;
+				}
+
+				String[] parts = qparam.split("=");
+				for (short i = 0; i < parts.length; ++i) {
+					parts[i] = URLDecoder.decode(parts[i], "UTF-8");
+				}
+
+				if (this.getConsistentHashQueryParams().contains(parts[0])) {
+					qparams.add(String.join("=", parts));
+				}
+			}
+
+		} catch (UnsupportedEncodingException e) {
+			final StringBuffer err = new StringBuffer();
+			err.append("Error decoding query parameters - ");
+			err.append(this.toString());
+			err.append(" - Exception: ");
+			err.append(e.toString());
+			LOGGER.error(err.toString());
+			return "";
+		}
+
+		final StringBuilder s = new StringBuilder();
+		for (final String q : qparams) {
+			s.append(q);
+		}
+
+		return s.toString();
+	}
+
+	public boolean isEcsEnabled() {
+		return ecsEnabled;
+	}
+
+	public void setEcsEnabled(final boolean ecsEnabled) {
+		this.ecsEnabled = ecsEnabled;
 	}
 }

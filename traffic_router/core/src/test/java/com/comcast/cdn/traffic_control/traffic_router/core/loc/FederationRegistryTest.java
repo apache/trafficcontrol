@@ -15,7 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ComparableTreeSet;
 import org.junit.Before;

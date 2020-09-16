@@ -50,7 +50,7 @@ public class DeliveryServicesController {
 		}
 
 		final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
-		final DeliveryService deliveryService = trafficRouter.getCacheRegister().getDeliveryService(new HTTPRequest(request, decodedUrl), true);
+		final DeliveryService deliveryService = trafficRouter.getCacheRegister().getDeliveryService(new HTTPRequest(request, decodedUrl));
 
 		if (deliveryService == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

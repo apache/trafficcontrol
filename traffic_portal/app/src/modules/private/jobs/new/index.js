@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.jobs.new', [])
 						controller: 'FormNewJobController',
 						resolve: {
 							job: function() {
-								return { startTime: moment().utc().format('YYYY-MM-DD HH:mm:ss') };
+								return { startTime: (new Date((new Date()).getTime() + 5*1000*60)).toISOString() };
 							}
 						}
 					}

@@ -29,33 +29,33 @@ sub delete {
     my $user_id	    = $self->param('userId');
 
     if ( !&is_oper($self) ) {
-        return $self->forbidden();
+        return $self->with_deprecation_with_no_alternative("Forbidden", "error", 403);
     }
 
     my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
     if ( !defined($user) ) {
-        return $self->not_found();
+        return $self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
     }
     my $tenant_utils = Utils::Tenant->new($self);
     my $tenants_data = $tenant_utils->create_tenants_data_from_db();
     if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
         #no access to resource tenant
-        return $self->forbidden("Forbidden. User tenant is not available to the working user.");
+        return $self->with_deprecation_with_no_alternative("Forbidden. User tenant is not available to the working user.", "error", 403);
     }
 
     my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
     if ( !defined($ds) ) {
-        return $self->not_found();
+        return $self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
     }
     if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-        return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+        return $self->with_deprecation_with_no_alternative("Forbidden. Delivery-service tenant is not available to the user.", "error", 403);
     }
 
     #not checking DS tenancy on deletion - we manage the user here - we remove permissions to touch a DS
 
     my $ds_user = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $user_id }, { prefetch => [ 'deliveryservice', 'tm_user' ] } );
     if ( $ds_user->count == 0 ) {
-        return $self->not_found();
+        return $self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
     }
 
     my $row = $ds_user->next;
@@ -63,10 +63,9 @@ sub delete {
     if ($rs) {
         my $msg = "User [ " . $row->tm_user->username . " ] unlinked from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].";
         &log( $self, $msg, "APICHANGE" );
-        return $self->success_message($msg);
+        return $self->with_deprecation_with_no_alternative($msg, "success", 200);
     }
-
-    return $self->alert( "Failed to unlink user from delivery service." );
+    return $self->with_deprecation_with_no_alternative("Failed to unlink user from delivery service.", "error", 400);
 }
 
 1;

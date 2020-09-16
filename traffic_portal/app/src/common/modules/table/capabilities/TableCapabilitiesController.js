@@ -21,14 +21,6 @@ var TableCapabilitiesController = function(capabilities, $scope, $state, locatio
 
 	$scope.capabilities = capabilities;
 
-	$scope.editCapability = function(name) {
-		locationUtils.navigateToPath('/capabilities/' + name);
-	};
-
-	$scope.createCapability = function() {
-		locationUtils.navigateToPath('/capabilities/new');
-	};
-
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};

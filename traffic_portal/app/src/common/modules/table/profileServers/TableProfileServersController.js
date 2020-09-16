@@ -17,22 +17,13 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $controller, $scope) {
+var TableProfileServersController = function(profile, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'profileServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.profile = profile;
-
-	angular.element(document).ready(function () {
-		$('#profileServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$controller', '$scope'];
+TableProfileServersController.$inject = ['profile', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableProfileServersController;

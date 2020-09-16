@@ -17,9 +17,13 @@
  * under the License.
  */
 
-var FormRoleController = function(roles, $scope, formUtils, locationUtils) {
+var FormRoleController = function(roles, $scope, $location, formUtils, locationUtils) {
 
 	$scope.role = roles[0];
+
+	$scope.viewUsers = function() {
+		$location.path($location.path() + '/users');
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -29,5 +33,5 @@ var FormRoleController = function(roles, $scope, formUtils, locationUtils) {
 
 };
 
-FormRoleController.$inject = ['roles', '$scope', 'formUtils', 'locationUtils'];
+FormRoleController.$inject = ['roles', '$scope', '$location', 'formUtils', 'locationUtils'];
 module.exports = FormRoleController;

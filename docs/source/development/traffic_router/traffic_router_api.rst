@@ -18,9 +18,19 @@
 ******************
 Traffic Router API
 ******************
-By default, Traffic Router serves its API via HTTP (not HTTPS) on port 3333. This can be configured in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.
+By default, Traffic Router serves its API via HTTP (not HTTPS) on port 3333. This can be configured in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` with the :ref:`parameter-name` "api.port", and the :ref:`parameter-config-file` "server.xml" on the Traffic Router's :term:`Profile`.
+
+The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``secure.api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.  The post install script will generate self signed certificates at ``/opt/traffic_router/conf/``, create a new Java Keystore named :file:`/opt/traffic_router/conf/keyStore.jks`, and add the new certificate to the Keystore.  The password for the Java Keystore and the Keystore location are stored in :file:`/opt/traffic_router/conf/https.properties`.
+To override the self signed certificates with new ones from a certificate authority, update the properties for the Keystore location and password at :file:`/opt/traffic_router/conf/https.properties`.
+
+
+The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``secure.api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.  When ``systemctl start traffic_router`` is run, it will generate self signed certificates at ``/opt/traffic_router/conf/``, create a new Java Keystore named :file:`/opt/traffic_router/conf/keyStore.jks`, and add the new certificate to the Keystore.  The password for the Java Keystore and the Keystore location are stored in :file:`/opt/traffic_router/conf/https.properties`.
+To override the self signed certificates with new ones from a certificate authority, either replace the Java Keystore in the default location or update the properties for the new Keystore location and password at :file:`/opt/traffic_router/conf/https.properties` and then restart the Traffic Router using ``systemctl``.
+
 
 Traffic Router API endpoints only respond to ``GET`` requests.
+
+.. _tr-api-crs-stats:
 
 ``/crs/stats``
 ==============
@@ -95,6 +105,8 @@ Response Structure
 		}
 	}}
 
+.. _tr-api-crs-stats-ip-ip:
+
 ``/crs/stats/ip/{{IP}}``
 ================================
 Geolocation information for an IPv4 or IPv6 address.
@@ -141,9 +153,11 @@ Response Structure
 	"locationByCoverageZone": "not found"
 	}
 
+.. _tr-api-crs-locations:
+
 ``/crs/locations``
 ==================
-A list of configured :term:`Cache Group`\ s to which the Traffic Router is capable of routing client traffic.
+A list of configured :term:`Cache Groups` to which the Traffic Router is capable of routing client traffic.
 
 Request Structure
 -----------------
@@ -157,7 +171,7 @@ Request Structure
 
 Response Structure
 ------------------
-:locations: An array of the names of :term:`Cache Group`\ s to which this Traffic Router is capable of routing client traffic
+:locations: An array of strings that are the :ref:`Names of Cache Groups <cache-group-name>` to which this Traffic Router is capable of routing client traffic
 
 .. code-block:: http
 	:caption: Response Example
@@ -170,6 +184,8 @@ Response Structure
 	{ "locations": [
 		"CDN_in_a_Box_Edge"
 	]}
+
+.. _tr-api-crs-locations-caches:
 
 ``/crs/locations/caches``
 =========================
@@ -216,19 +232,21 @@ Response Structure
 		]
 	}}
 
+.. _tr-api-crs-locations-cachegroup-caches:
+
 ``/crs/locations/{{cachegroup}}/caches``
 ========================================
-A list of :term:`cache server`\ s for this :term:`Cache Group` only.
+A list of :term:`cache servers` for this :term:`Cache Group` only.
 
 Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------+------------------------------------------------------------------------------------------------------------+
-	| Name       | Description                                                                                                |
-	+============+============================================================================================================+
-	| cachegroup | The name of a :term:`Cache Group` of which a list of constituent :term:`cache server`\ s will be retrieved |
-	+------------+------------------------------------------------------------------------------------------------------------+
+	+------------+------------------------------------------------------------------------------------------------------------------------------+
+	| Name       | Description                                                                                                                  |
+	+============+==============================================================================================================================+
+	| cachegroup | The :ref:`Name of a Cache Group <cache-group-name>` of which a list of constituent :term:`cache servers` will be retrieved   |
+	+------------+------------------------------------------------------------------------------------------------------------------------------+
 
 
 .. code-block:: http
@@ -268,6 +286,7 @@ Response Structure
 		}
 	]}
 
+.. _tr-api-crs-consistenthash-cache-coveragezone:
 
 ``/crs/consistenthash/cache/coveragezone``
 ===========================================
@@ -291,6 +310,8 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-consistenthash-cache-deep-coveragezone:
+
 ``/crs/consistenthash/cache/deep/coveragezone``
 ===============================================
 The resulting cache of the consistent hash using deep coverage zone file (deep caching) for a given client IP, :term:`Delivery Service`, and request path.
@@ -312,6 +333,8 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+.. _tr-api-crs-consistenthash-cache-geolocation:
 
 ``/crs/consistenthash/cache/geolocation``
 =========================================
@@ -335,9 +358,11 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-consistenthash-deliveryservice:
+
 ``/crs/consistenthash/deliveryservice/``
 ========================================
-The resulting :term:`Delivery Service` of the consistent hash for a given :term:`Delivery Service` and request path -- used to test STEERING :term:`Delivery Service`\ s.
+The resulting :term:`Delivery Service` of the consistent hash for a given :term:`Delivery Service` and request path -- used to test STEERING :term:`Delivery Services`.
 
 Request Structure
 -----------------
@@ -412,6 +437,8 @@ Response Structure
 	"available": true
 	}
 
+.. _tr-api-crs-coveragezone-caches:
+
 ``/crs/coveragezone/caches``
 ============================
 A list of caches for a given :term:`Delivery Service` and :term:`Cache Group`.
@@ -420,13 +447,13 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
-	| Name              | Required | Description                                                                                                  |
-	+===================+==========+==============================================================================================================+
-	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
-	| cacheLocationId   | yes      | The name of a :term:`Cache Group` to which this Traffic Router is capable of routing client traffic          |
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                                    |
+	+===================+==========+================================================================================================================================+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router                   |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	| cacheLocationId   | yes      | The :ref:`Name of a Cache Group <cache-group-name>` to which this Traffic Router is capable of routing client traffic          |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -452,9 +479,11 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-deepcoveragezone-cachelocation:
+
 ``/crs/deepcoveragezone/cachelocation``
 =======================================
-The resulting :term:`Cache Group` using deep coverage zone file (deep caching) for a given client IP and :term:`Delivery Service`.
+The resulting :term:`Cache Group` using the :term:`Deep Coverage Zone File` (deep caching) for a given client IP and :term:`Delivery Service`.
 
 Request Structure
 -----------------
@@ -471,6 +500,8 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+.. _tr-api-crs-consistenthash-patternbased-regex:
 
 ``/crs/consistenthash/patternbased/regex``
 ==========================================
@@ -512,6 +543,8 @@ Response Structure
 	"requestPath":"/text1234/name/asset.m3u8"
 	}
 
+.. _tr-api-crs-consistenthash-patternbased-deliveryservice:
+
 ``/crs/consistenthash/patternbased/deliveryservice``
 ====================================================
 The resulting path that will be used for consistent hashing for the given delivery service and the given request path.
@@ -551,6 +584,8 @@ Response Structure
 	"deliveryServiceId":"asdf",
 	"requestPath":"/sometext1234/stream_name/asset_name.m3u8"
 	}
+
+.. _tr-api-crs-consistenthash-cache-coveragezone-steering:
 
 ``/crs/consistenthash/cache/coveragezone/steering``
 ===================================================

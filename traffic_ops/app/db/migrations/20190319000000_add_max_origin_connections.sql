@@ -20,4 +20,3 @@ ALTER TABLE deliveryservice ADD COLUMN max_origin_connections bigint NOT NULL DE
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE deliveryservice DROP COLUMN max_origin_connections;
-

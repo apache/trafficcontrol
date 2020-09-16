@@ -35,6 +35,7 @@ sub new {
 	my $class    = shift;
 	my $ccr_host = shift;
 	my $ccr_port = shift || 80;
+	my $is_secure_port = shift || 0;
 
 	if ( !defined($ccr_host) ) {
 		confess("First constructor argument must be the CCR host");
@@ -43,10 +44,11 @@ sub new {
 		confess("Second constructor argument must be the port number of the CCR host");
 	}
 
-	$self->{CCR_HOST}   = $ccr_host;
-	$self->{CCR_PORT}   = $ccr_port;
-	$self->{USER_AGENT} = Mojo::UserAgent->new;
-	$self->{FWD_PROXY}  = undef;
+	$self->{CCR_HOST}          = $ccr_host;
+	$self->{CCR_PORT}          = $ccr_port;
+	$self->{USER_AGENT}        = Mojo::UserAgent->new;
+	$self->{FWD_PROXY}         = undef;
+	$self->{IS_SECURE_PORT}    = $is_secure_port;
 
 	return ( bless( $self, $class ) );
 }
@@ -77,10 +79,21 @@ sub get_port {
 	return ( $self->{CCR_PORT} );
 }
 
+sub get_is_secure_port {
+	my $self = shift || confess("Call on an instance of Utils::CCR");
+	return ( $self->{IS_SECURE_PORT} );
+}
+
 sub get_url {
 	my $self = shift || confess("Call on an instance of Utils::CCR");
-	my $url = "http://" . $self->get_host() . ":" . $self->get_port();
-	return ($url);
+
+	my $protocol = "http";
+	if ( $self->get_is_secure_port() ) {
+	    $protocol = "https";
+	}
+
+	my $url = "$protocol://" . $self->get_host() . ":" . $self->get_port();
+	return ( $url );
 }
 
 sub get_location {

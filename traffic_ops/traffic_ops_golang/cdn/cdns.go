@@ -20,8 +20,10 @@ package cdn
  */
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -37,6 +39,13 @@ import (
 type TOCDN struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CDNNullable
+}
+
+func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -123,7 +132,9 @@ func (cdn *TOCDN) Create() (error, error, int) {
 	return api.GenericCreate(cdn)
 }
 
-func (cdn *TOCDN) Read() ([]interface{}, error, error, int) { return api.GenericRead(cdn) }
+func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, cdn, useIMS)
+}
 
 func (cdn *TOCDN) Update() (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)

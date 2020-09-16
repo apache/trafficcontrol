@@ -30,8 +30,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::c.name}}" class="cap-row" ng-repeat="c in ::selectedCapabilities">
-            <td><input type="checkbox" ng-checked="c.selected" ng-model="c.selected" ng-change="onChange()"></td>
+        <tr id="{{::c.name}}" class="cap-row" ng-class="::{'active': c.selected}" ng-repeat="c in ::selectedCapabilities" ng-click="c.selected = !c.selected; onChange()">
+            <td><input type="checkbox" ng-model="c.selected"></td>
             <td data-search="^{{::c.name}}$">{{::c.name}}</td>
         </tr>
         </tbody>

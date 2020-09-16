@@ -23,13 +23,13 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/basho/riak-go-client"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/basho/riak-go-client"
 )
 
 const (
@@ -111,6 +111,11 @@ const (
 		"read_header_timeout" : 60,
 		"write_timeout" : 60,
 		"idle_timeout" : 60,
+		"routing_blacklist": {
+			"ignore_unknown_routes": true,
+			"perl_routes": [1, 2, 3],
+			"disabled_routes": [4, 5, 6]
+		},
 		"log_location_error": "stderr",
 		"log_location_warning": "stdout",
 		"log_location_info": "stdout",
@@ -157,6 +162,7 @@ const (
 	   {
 	       "user": "riakuser",
 	       "password": "password",
+	       "MaxTLSVersion": "1.1",
 	       "tlsConfig": {
 	           "insecureSkipVerify": true
 	       }
@@ -244,7 +250,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
 	}
 
-	expectedRiak := riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}}
+	expectedRiak := riaksvc.TOAuthOptions{AuthOptions: riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11}}}
 
 	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
 		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))
@@ -260,5 +266,77 @@ func TestLoadConfig(t *testing.T) {
 
 	if cfg.KeyPath != "/etc/pki/tls/private/localhost.key" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
+	}
+}
+
+func TestValidateRoutingBlacklist(t *testing.T) {
+	type testCase struct {
+		Input     RoutingBlacklist
+		ExpectErr bool
+	}
+	testCases := []testCase{
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     nil,
+				DisabledRoutes: nil,
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     nil,
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{4, 5, 6},
+				DisabledRoutes: nil,
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 1, 3},
+				DisabledRoutes: []int{2, 2, 4},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 1, 3},
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{4, 4, 6},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{1, 4, 5},
+			},
+			ExpectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		if err := ValidateRoutingBlacklist(tc.Input); err != nil && !tc.ExpectErr {
+			t.Errorf("Expected: no error, actual: %v", err)
+		} else if err == nil && tc.ExpectErr {
+			t.Errorf("Expected: non-nil error, actual: nil")
+		}
 	}
 }

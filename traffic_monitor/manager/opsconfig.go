@@ -20,12 +20,9 @@ package manager
  */
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/http"
-	"net/http/cookiejar"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -41,7 +38,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
 
 	"github.com/json-iterator/go"
 )
@@ -50,10 +46,10 @@ import (
 // Note the OpsConfigManager is in charge of the httpServer, because ops config changes trigger server changes. If other things needed to trigger server restarts, the server could be put in its own goroutine with signal channels
 func StartOpsConfigManager(
 	opsConfigFile string,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 	opsConfigChangeSubscribers []chan<- handler.OpsConfig,
-	toChangeSubscribers []chan<- towrap.ITrafficOpsSession,
+	toChangeSubscribers []chan<- towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
@@ -156,7 +152,6 @@ func StartOpsConfigManager(
 		// TODO config? parameter?
 		useCache := false
 		trafficOpsRequestTimeout := time.Second * time.Duration(10)
-		var realToSession *to.Session
 		var toAddr net.Addr
 		var toLoginCount uint64
 
@@ -169,7 +164,7 @@ func StartOpsConfigManager(
 			backoff = util.NewConstantBackoff(util.ConstantBackoffDuration)
 		}
 		for {
-			realToSession, toAddr, err = to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
+			err = toSession.Update(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
 				duration := backoff.BackoffDuration()
@@ -177,34 +172,21 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
-					jar, err := cookiejar.New(nil)
-					if err != nil {
-						log.Errorf("Err getting cookiejar")
-						continue
-					}
-
-					realToSession = to.NewSession(newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Url, staticAppData.UserAgent, &http.Client{
-						Timeout: trafficOpsRequestTimeout,
-						Transport: &http.Transport{
-							TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-						},
-						Jar: jar,
-					}, useCache)
-					toSession.Set(realToSession)
-					// At this point we have a valid 'dummy' session. This will allow us to pull from disk but will also retry when TO comes up
 					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
+					newOpsConfig.UsingDummyTO = true
 					break
 				}
 
 				toLoginCount++
 				continue
 			} else {
-				toSession.Set(realToSession)
+				newOpsConfig.UsingDummyTO = false
 				break
 			}
 		}
+		opsConfig.Set(newOpsConfig)
 
-		if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
+		if cdn, err := toSession.MonitorCDN(staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
 		} else {
 			if newOpsConfig.CdnName != "" && newOpsConfig.CdnName != cdn {
@@ -233,7 +215,7 @@ func StartOpsConfigManager(
 			go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
 		}
 		for _, subscriber := range toChangeSubscribers {
-			go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+			go func(s chan<- towrap.TrafficOpsSessionThreadsafe) { s <- toSession }(subscriber)
 		}
 	}
 
@@ -246,21 +228,4 @@ func StartOpsConfigManager(
 	startSignalFileReloader(opsConfigFile, unix.SIGHUP, onChange)
 
 	return opsConfig, nil
-}
-
-// getMonitorCDN returns the CDN of a given Traffic Monitor.
-// TODO change to get by name, when Traffic Ops supports querying a single server.
-func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
-	servers, _, err := toc.GetServers()
-	if err != nil {
-		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
-	}
-
-	for _, server := range servers {
-		if server.HostName != monitorHostname {
-			continue
-		}
-		return server.CDNName, nil
-	}
-	return "", fmt.Errorf("no monitor named %v found in Traffic Ops", monitorHostname)
 }

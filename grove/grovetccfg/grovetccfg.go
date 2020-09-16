@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	"github.com/apache/trafficcontrol/grove/config"
 	"github.com/apache/trafficcontrol/grove/remap"
@@ -158,24 +158,29 @@ func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 
 // hasUpdatePending returns whether an update is pending, the revalPending status (which will be needed later in the clear update POST), and any error.
 func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
-	upd, _, err := toc.GetUpdate(hostname)
+	upd, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
 		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
+	} else if len(upd) != 1 {
+		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(upd))
 	}
-	return upd.UpdatePending, upd.RevalPending, nil
+	return upd[0].UpdPending, upd[0].RevalPending, nil
 }
 
 // clearUpdatePending clears the given host's update pending flag in Traffic Ops. It takes the host to clear, and the old revalPending flag to send.
 func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
-	revalPendingPostVal := 0
-	if revalPending == false {
-		revalPendingPostVal = to.UpdateStatusClear
-	} else {
-		revalPendingPostVal = to.UpdateStatusPending
-	}
-	_, err := toc.SetUpdate(hostname, to.UpdateStatusClear, revalPendingPostVal)
+	srv, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
-		return errors.New("setting update pending on Traffic Ops: " + err.Error())
+		return fmt.Errorf("Failed to update reval_pending: %v", err)
+	} else if len(srv) != 1 {
+		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
+	}
+
+	srv[0].RevalPending = revalPending
+	srv[0].UpdPending = false
+	alerts, _, err := toc.UpdateServerByID(srv[0].ID, srv[0])
+	if err != nil {
+		return fmt.Errorf("setting update pending on Traffic Ops: %v (Alerts: %+v)", err, alerts.Alerts)
 	}
 	return nil
 }
@@ -232,7 +237,7 @@ func main() {
 	var profiles map[string]tc.Profile
 	var servers map[string]tc.Server
 
-	serversArr, err := toc.Servers()
+	serversArr, _, err := toc.GetServers()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
 		os.Exit(ExitError)
@@ -361,7 +366,7 @@ func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, err
 		}
 	}
 
-	serverParameters, err := toc.Parameters(server.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(server.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + server.HostName + "' profile '" + server.Profile + "': " + err.Error())
 		return false, currCfg, err
@@ -451,7 +456,7 @@ func setConfigParameter(cfg *config.Config, name string, value string) error {
 }
 
 func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map[string]tc.Server) (remap.RemapRules, error) {
-	cachegroupsArr, err := toc.CacheGroups()
+	cachegroupsArr, _, err := toc.GetCacheGroupsNullable()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Cachegroups: " + err.Error())
 		os.Exit(1)
@@ -464,27 +469,27 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 		os.Exit(1)
 	}
 
-	deliveryservices, err := toc.DeliveryServicesByServer(hostServer.ID)
+	deliveryservices, _, err := toc.GetDeliveryServicesByServer(hostServer.ID)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservices: " + err.Error())
 		os.Exit(1)
 	}
 
-	deliveryserviceRegexArr, err := toc.DeliveryServiceRegexes()
+	deliveryserviceRegexArr, _, err := toc.GetDeliveryServiceRegexes()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservice Regexes: " + err.Error())
 		os.Exit(1)
 	}
 	deliveryserviceRegexes := makeDeliveryserviceRegexMap(deliveryserviceRegexArr)
 
-	cdnsArr, err := toc.CDNs()
+	cdnsArr, _, err := toc.GetCDNs()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops CDNs: " + err.Error())
 		os.Exit(1)
 	}
 	cdns := makeCDNMap(cdnsArr)
 
-	serverParameters, err := toc.Parameters(hostServer.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(hostServer.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + hostServer.Profile + "': " + err.Error())
 		os.Exit(1)
@@ -510,7 +515,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 	parents = filterParents(parents, sameCDN)
 	parents = filterParents(parents, serverAvailable)
 
-	cdnSSLKeys, err := toc.CDNSSLKeys(hostServer.CDNName)
+	cdnSSLKeys, _, err := toc.GetCDNSSLKeys(hostServer.CDNName)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + hostServer.CDNName + "' SSL keys: " + err.Error())
 		os.Exit(1)
@@ -658,26 +663,12 @@ func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 	return m
 }
 
-func makeCachegroupsNameMap(cgs []tc.CacheGroup) map[string]tc.CacheGroup {
-	m := map[string]tc.CacheGroup{}
+func makeCachegroupsNameMap(cgs []tc.CacheGroupNullable) map[string]tc.CacheGroupNullable {
+	m := map[string]tc.CacheGroupNullable{}
 	for _, cg := range cgs {
-		m[cg.Name] = cg
-	}
-	return m
-}
-
-func makeDeliveryservicesXMLIDMap(dses []tc.DeliveryService) map[string]tc.DeliveryService {
-	m := map[string]tc.DeliveryService{}
-	for _, ds := range dses {
-		m[ds.XMLID] = ds
-	}
-	return m
-}
-
-func makeDeliveryservicesIDMap(dses []tc.DeliveryService) map[int]tc.DeliveryService {
-	m := map[int]tc.DeliveryService{}
-	for _, ds := range dses {
-		m[ds.ID] = ds
+		if cg.Name != nil {
+			m[*cg.Name] = cg
+		}
 	}
 	return m
 }
@@ -706,36 +697,7 @@ func makeDSCertMap(sslKeys []tc.CDNSSLKeys) map[string]tc.CDNSSLKeys {
 	return m
 }
 
-func getServerDeliveryservices(hostname string, servers map[string]tc.Server, dssrvs []tc.DeliveryServiceServer, dses []tc.DeliveryService) ([]tc.DeliveryService, error) {
-	server, ok := servers[hostname]
-	if !ok {
-		return nil, fmt.Errorf("server %v not found in Traffic Ops Servers", hostname)
-	}
-	serverID := server.ID
-	dsByID := makeDeliveryservicesIDMap(dses)
-	serverDses := []tc.DeliveryService{}
-	for _, dssrv := range dssrvs {
-		if dssrv.Server == nil {
-			fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" getServerDeliveryservices: DeliveryServiceServer Server is nil!\n")
-			continue
-		}
-		if dssrv.DeliveryService == nil {
-			fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" getServerDeliveryservices: DeliveryServiceServer DeliveryService is nil!\n")
-			continue
-		}
-		if *dssrv.Server != serverID {
-			continue
-		}
-		ds, ok := dsByID[*dssrv.DeliveryService]
-		if !ok {
-			return nil, fmt.Errorf("delivery service ID %v not found in Traffic Ops DeliveryServices", dssrv.DeliveryService)
-		}
-		serverDses = append(serverDses, ds)
-	}
-	return serverDses, nil
-}
-
-func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroup) ([]tc.Server, error) {
+func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroupNullable) ([]tc.Server, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
@@ -748,7 +710,7 @@ func getParents(hostname string, servers map[string]tc.Server, cachegroups map[s
 
 	parents := []tc.Server{}
 	for _, server := range servers {
-		if server.Cachegroup == cachegroup.ParentName {
+		if cachegroup.ParentName != nil && server.Cachegroup == *cachegroup.ParentName {
 			parents = append(parents, server)
 		}
 	}
@@ -835,8 +797,12 @@ const DeliveryServiceQueryStringCacheAndRemap = 0
 const DeliveryServiceQueryStringNoCacheRemap = 1
 const DeliveryServiceQueryStringNoCacheNoRemap = 2
 
-func getQueryStringRule(dsQstringIgnore int) (remapdata.QueryStringRule, error) {
-	switch dsQstringIgnore {
+func getQueryStringRule(dsQstringIgnore *int) (remapdata.QueryStringRule, error) {
+	val := 0
+	if dsQstringIgnore != nil {
+		val = *dsQstringIgnore
+	}
+	switch val {
 	case DeliveryServiceQueryStringCacheAndRemap:
 		return remapdata.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheRemap:
@@ -890,7 +856,7 @@ func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 
 func createRulesOld(
 	hostname string,
-	dses []tc.DeliveryService,
+	dses []tc.DeliveryServiceNullable,
 	parents []tc.Server,
 	dsRegexes map[string][]tc.DeliveryServiceRegex,
 	cdns map[string]tc.CDN,
@@ -910,15 +876,15 @@ func createRulesOld(
 	parentSelection := DefaultRuleParentSelection
 
 	for _, ds := range dses {
-		protocol := ds.Protocol
+		protocol := *ds.Protocol
 		queryStringRule, err := getQueryStringRule(ds.QStringIgnore)
 		if err != nil {
 			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
 		}
 
-		cdn, ok := cdns[ds.CDNName]
+		cdn, ok := cdns[*ds.CDNName]
 		if !ok {
-			return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' CDN '%v' not found", ds.XMLID, ds.CDNName)
+			return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' CDN '%v' not found", *ds.XMLID, *ds.CDNName)
 		}
 
 		protocolStrs := []ProtocolStr{}
@@ -935,41 +901,50 @@ func createRulesOld(
 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
 		}
 
-		cert, hasCert := dsCerts[ds.XMLID]
+		cert, hasCert := dsCerts[*ds.XMLID]
 		if protocol != ProtocolHTTP {
 			if !hasCert {
-				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service: "+ds.XMLID+" has no certificate!\n")
+				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service: "+*ds.XMLID+" has no certificate!\n")
 			} else if err := createCertificateFiles(cert, certDir); err != nil {
-				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service "+ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
+				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service "+*ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
 			}
 		}
 
-		dsType := strings.ToLower(string(ds.Type))
+		dsType := strings.ToLower(string(*ds.Type))
 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
-			fmt.Printf(time.Now().Format(time.RFC3339Nano)+" createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
+			fmt.Printf(time.Now().Format(time.RFC3339Nano)+" createRules skipping deliveryservice %v - unknown type %v", *ds.XMLID, *ds.Type)
 			continue
 		}
 
 		toClientHeaders, toOriginHeaders, err := makeModHdrs(ds.EdgeHeaderRewrite, ds.RemapText)
 		if err != nil {
-			return remap.RemapRules{}, errors.New("Making headers for delivery service '" + ds.XMLID + "':" + err.Error())
+			return remap.RemapRules{}, errors.New("Making headers for delivery service '" + *ds.XMLID + "':" + err.Error())
 		}
-		acl, err := makeACL(ds.RemapText)
+		dsRemap := ""
+		if ds.RemapText != nil {
+			dsRemap = *ds.RemapText
+		}
+		acl, err := makeACL(dsRemap)
 		if err != nil {
-			fmt.Println(time.Now().Format(time.RFC3339Nano) + " createRules skipping deliveryservice '" + ds.XMLID + "' - unsupported ACL " + ds.RemapText)
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " createRules skipping deliveryservice '" + *ds.XMLID + "' - unsupported ACL " + dsRemap)
 			continue
 		}
 
+		orgServerFQDN := ""
+		if ds.OrgServerFQDN != nil {
+			orgServerFQDN = *ds.OrgServerFQDN
+		}
+
 		for _, protocolStr := range protocolStrs {
-			regexes, ok := dsRegexes[ds.XMLID]
+			regexes, ok := dsRegexes[*ds.XMLID]
 			if !ok {
-				return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", ds.XMLID)
+				return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", *ds.XMLID)
 			}
 
 			for _, dsRegex := range regexes {
 				rule := remapdata.RemapRule{}
 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex.Pattern)
-				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
+				rule.Name = fmt.Sprintf("%s.%s.%s.%s", *ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, hostname, dsType, cdn.DomainName)
 
 				if protocolStr.From == "https" && hasCert {
@@ -985,11 +960,11 @@ func createRulesOld(
 					var proxyURLStr = ""
 					proxyURL, err := url.Parse(proxyURLStr)
 					if err != nil {
-						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v proxy_url: %v", ds.XMLID, proxyURLStr)
+						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v proxy_url: %v", *ds.XMLID, proxyURLStr)
 					}
 					ruleTo := remapdata.RemapRuleTo{
 						RemapRuleToBase: remapdata.RemapRuleToBase{
-							URL:      ds.OrgServerFQDN,
+							URL:      orgServerFQDN,
 							Weight:   &weight,
 							RetryNum: &retryNum,
 						},
@@ -1002,23 +977,23 @@ func createRulesOld(
 					rule.Timeout = &timeout
 					rule.RetryCodes = DefaultRetryCodes()
 					rule.QueryString = queryStringRule
-					rule.DSCP = ds.DSCP
+					rule.DSCP = *ds.DSCP
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.Allow = acl
 					rule.Plugins = map[string]interface{}{}
 					rule.Plugins["modify_headers"] = toClientHeaders
 					rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
-					remapTextJSON, err := json.Marshal(ds.RemapText)
+					remapTextJSON, err := json.Marshal(dsRemap)
 					if err != nil {
-						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
+						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", *ds.XMLID, dsRemap, err)
 					}
 					rule.PluginsShared[web.RemapTextKey] = remapTextJSON
 				} else {
 					for _, parent := range parents {
-						to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
+						to, proxyURLStr := buildTo(parent, protocolStr.To, orgServerFQDN, dsType)
 						proxyURL, err := url.Parse(proxyURLStr)
 						if err != nil {
-							return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+							return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", *ds.XMLID, parent.HostName, proxyURLStr)
 						}
 
 						ruleTo := remapdata.RemapRuleTo{
@@ -1037,16 +1012,16 @@ func createRulesOld(
 						rule.Timeout = &timeout
 						rule.RetryCodes = DefaultRetryCodes()
 						rule.QueryString = queryStringRule
-						rule.DSCP = ds.DSCP
+						rule.DSCP = *ds.DSCP
 						rule.ConnectionClose = DefaultRuleConnectionClose
 						rule.ParentSelection = &parentSelection
 						rule.Allow = acl
 						rule.Plugins = map[string]interface{}{}
 						rule.Plugins["modify_headers"] = toClientHeaders
 						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
-						remapTextJSON, err := json.Marshal(ds.RemapText)
+						remapTextJSON, err := json.Marshal(dsRemap)
 						if err != nil {
-							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
+							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", *ds.XMLID, dsRemap, err)
 						}
 						rule.PluginsShared[web.RemapTextKey] = remapTextJSON
 					}
@@ -1158,8 +1133,16 @@ func makeACL(remapTxt string) ([]*net.IPNet, error) {
 
 // makeModHdrs is a pretty nasty hack to take the very ATS/TrafficControl specific config stuff from Traffic Ops and turn it into header manipulation rules for grove.
 // Returns the client header modifications, the origin header modifications, and any error.
-func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, error) {
+func makeModHdrs(edgeHRWin *string, remapTXTin *string) (web.ModHdrs, web.ModHdrs, error) {
 
+	edgeHRW := ""
+	remapTXT := ""
+	if edgeHRWin != nil {
+		edgeHRW = *edgeHRWin
+	}
+	if remapTXTin != nil {
+		remapTXT = *remapTXTin
+	}
 	if edgeHRW == "" && remapTXT == "" {
 		return web.ModHdrs{}, web.ModHdrs{}, nil
 	}

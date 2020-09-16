@@ -2,13 +2,14 @@
   "hostName": "$MY_HOSTNAME",
   "domainName": "$MY_DOMAINNAME",
   "cachegroup": "$MY_CACHE_GROUP",
-  "interfaceName": "eth0",
-  "ipAddress": "$MY_IP",
-  "ipNetmask": "$MY_NETMASK",
-  "ipGateway": "$MY_GATEWAY",
-  "ip6Address": "$MY_IP6_ADDRESS",
-  "ip6Gateway": "$MY_IP6_GATEWAY",
-  "interfaceMtu": 1500,
+  "interfaces": [
+      {
+        "ipAddresses": [],
+        "monitor": true,
+        "mtu": 1500,
+        "name": "eth0"
+      }
+  ],
   "type": "$MY_TYPE",
   "physLocation": "Apachecon North America 2018",
   "profile": "$MY_PROFILE",

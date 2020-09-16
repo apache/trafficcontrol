@@ -22,12 +22,13 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 )
 
 func randBool() bool {
@@ -48,27 +49,16 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
+		cacheName := randStr()
+		a[cacheName] = AvailableStatus{
+			Available: AvailableTuple{
+				IPv4: randBool(),
+				IPv6: randBool(),
+			},
+			Status: randStr(),
+		}
 	}
 	return a
-}
-
-func TestAvailableStatusesCopy(t *testing.T) {
-	num := 100
-	for i := 0; i < num; i++ {
-		a := randAvailableStatuses()
-		b := a.Copy()
-
-		if !reflect.DeepEqual(a, b) {
-			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
-		}
-
-		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
-		if reflect.DeepEqual(a, b) {
-			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
-		}
-	}
 }
 
 func randStrIfaceMap() map[string]interface{} {
@@ -80,32 +70,35 @@ func randStrIfaceMap() map[string]interface{} {
 	return m
 }
 
-func randAstats() Astats {
-	return Astats{
-		Ats:    randStrIfaceMap(),
-		System: randAstatsSystem(),
-	}
+func randStats() (Statistics, map[string]interface{}) {
+	return randStatistics(), randStrIfaceMap()
 }
 
-func randAstatsSystem() AstatsSystem {
-	return AstatsSystem{
-		InfName:           randStr(),
-		InfSpeed:          rand.Int(),
-		ProcNetDev:        randStr(),
-		ProcLoadavg:       randStr(),
-		ConfigLoadRequest: rand.Int(),
-		LastReloadRequest: rand.Int(),
-		ConfigReloads:     rand.Int(),
-		LastReload:        rand.Int(),
-		AstatsLoad:        rand.Int(),
+func randStatistics() Statistics {
+	return Statistics{
+		Loadavg: Loadavg{
+			One:              rand.Float64(),
+			Five:             rand.Float64(),
+			Fifteen:          rand.Float64(),
+			CurrentProcesses: rand.Uint64(),
+			TotalProcesses:   rand.Uint64(),
+			LatestPID:        rand.Int63(),
+		},
+		Interfaces: map[string]Interface{
+			randStr(): Interface{
+				Speed:    rand.Int63(),
+				BytesIn:  rand.Uint64(),
+				BytesOut: rand.Uint64(),
+			},
+		},
 	}
 }
 
 func randVitals() Vitals {
 	return Vitals{
 		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Int63(),
-		BytesIn:    rand.Int63(),
+		BytesOut:   rand.Uint64(),
+		BytesIn:    rand.Uint64(),
 		KbpsOut:    rand.Int63(),
 		MaxKbpsOut: rand.Int63(),
 	}
@@ -151,8 +144,8 @@ func randStatCommon() dsdata.StatCommon {
 	}
 }
 
-func randAStat() *AStat {
-	return &AStat{
+func randAStat() *DSStat {
+	return &DSStat{
 		InBytes:   rand.Uint64(),
 		OutBytes:  rand.Uint64(),
 		Status2xx: rand.Uint64(),
@@ -162,11 +155,11 @@ func randAStat() *AStat {
 	}
 }
 
-func randDsStats() map[tc.DeliveryServiceName]*AStat {
+func randDsStats() map[string]*DSStat {
 	num := 5
-	a := map[tc.DeliveryServiceName]*AStat{}
+	a := map[string]*DSStat{}
 	for i := 0; i < num; i++ {
-		a[tc.DeliveryServiceName(randStr())] = randAStat()
+		a[randStr()] = randAStat()
 	}
 	return a
 }
@@ -185,7 +178,7 @@ func randErrs() []error {
 func randPrecomputedData() PrecomputedData {
 	return PrecomputedData{
 		DeliveryServiceStats: randDsStats(),
-		OutBytes:             rand.Int63(),
+		OutBytes:             rand.Uint64(),
 		MaxKbps:              rand.Int63(),
 		Errors:               randErrs(),
 		Reporting:            randBool(),
@@ -193,10 +186,11 @@ func randPrecomputedData() PrecomputedData {
 }
 
 func randResult() Result {
+	stats, misc := randStats()
 	return Result{
-		ID:              tc.CacheName(randStr()),
+		ID:              randStr(),
 		Error:           fmt.Errorf(randStr()),
-		Astats:          randAstats(),
+		Statistics:      stats,
 		Time:            time.Now(),
 		RequestTime:     time.Millisecond * time.Duration(rand.Int()),
 		Vitals:          randVitals(),
@@ -204,6 +198,7 @@ func randResult() Result {
 		PollFinished:    make(chan uint64),
 		PrecomputedData: randPrecomputedData(),
 		Available:       randBool(),
+		Miscellaneous:   misc,
 	}
 }
 
@@ -239,6 +234,31 @@ func TestResultHistoryCopy(t *testing.T) {
 		a[tc.CacheName(randStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
+		}
+	}
+}
+
+func TestAvailableStatusesCopy(t *testing.T) {
+	num := 100
+	for i := 0; i < num; i++ {
+		a := randAvailableStatuses()
+		b := a.Copy()
+
+		if !reflect.DeepEqual(a, b) {
+			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
+		}
+
+		cacheName := randStr()
+		a[cacheName] = AvailableStatus{
+			Available: AvailableTuple{
+				randBool(),
+				randBool(),
+			},
+			Status: randStr(),
+		}
+
+		if reflect.DeepEqual(a, b) {
+			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}
 	}
 }

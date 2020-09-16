@@ -81,6 +81,11 @@
       "value": "3333"
     },
     {
+      "configFile": "server.xml",
+      "name": "secure.api.port",
+      "value": "3443"
+    },
+    {
       "configFile": "CRConfig.json",
       "name": "api.cache-control.max-age",
       "value": "10"
@@ -88,7 +93,7 @@
     {
       "configFile": "CRConfig.json",
       "name": "federationmapping.polling.url",
-      "value": "https://${toHostname}/internal/api/1.3/federations.json"
+      "value": "https://${toHostname}/api/2.0/federations/all"
     },
     {
       "configFile": "CRConfig.json",
@@ -154,26 +159,6 @@
       "configFile": "CRConfig.json",
       "name": "tld.ttls.SOA",
       "value": "86400"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.dns.limit",
-      "value": "6"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.http.limit",
-      "value": "6"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.dns.routing",
-      "value": "true"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.http.routing",
-      "value": "true"
     }
   ]
 }

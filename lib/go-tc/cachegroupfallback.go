@@ -1,6 +1,5 @@
 package tc
 
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,7 +19,7 @@ package tc
  * under the License.
  */
 
-// A List of CacheGroupFallbacks Response
+// CacheGroupFallbacksResponse is a list of CacheGroupFallbacks as a response.
 // swagger:response CacheGroupFallbacksResponse
 // in: body
 type CacheGroupFallbacksResponse struct {
@@ -28,7 +27,8 @@ type CacheGroupFallbacksResponse struct {
 	Response []CacheGroupFallback `json:"response"`
 }
 
-// A Single CacheGroupFallback Response for Update and Create to depict what changed
+// CacheGroupFallbackResponse is a single CacheGroupFallback response for Update
+// and Create to depict what changed.
 // swagger:response CacheGroupFallbackResponse
 // in: body
 type CacheGroupFallbackResponse struct {
@@ -38,18 +38,14 @@ type CacheGroupFallbackResponse struct {
 
 // CacheGroupFallback ...
 type CacheGroupFallback struct {
-
 	PrimaryCgId int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  int `json:"backupId" db:"backup_cg"`
 	SetOrder    int `json:"setOrder" db:"set_order"`
-
 }
 
 // CacheGroupFallbackNullable ...
 type CacheGroupFallbackNullable struct {
-
 	PrimaryCgId *int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  *int `json:"backupId" db:"backup_cg"`
 	SetOrder    *int `json:"setOrder" db:"set_order"`
 }
-

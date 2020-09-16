@@ -21,6 +21,7 @@ package api
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
@@ -66,7 +67,7 @@ func TestCreateChangeLog(t *testing.T) {
 	i := testIdentifier{}
 
 	keys, _ := i.GetKeys()
-	expectedMessage := Created + " " + i.GetType() + ": " + i.GetAuditName() + " keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
+	expectedMessage := strings.ToUpper(i.GetType()) + ": " + i.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Created + " " + i.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))

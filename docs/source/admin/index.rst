@@ -27,7 +27,7 @@ When installing a complete CDN from scratch, a sample recommended order is:
 #. Fake Origin [Optional]
 #. Traffic Ops
 #. Traffic Portal
-#. Initial Traffic Ops Dataset Setup
+#. Initial Traffic Ops Dataset Setup [if applicable]
 #. Traffic Monitor
 #. Apache Traffic Server Mid-Tier Caches
 #. Apache Traffic Server Edge-Tier Caches

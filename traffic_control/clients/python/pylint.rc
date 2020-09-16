@@ -67,13 +67,13 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=R0205,C0330,W0612
+disable=R0205,C0330,W0612,R0913,R0914,R0911,R0904,R0901,R0902,C0302,R0916,E1101
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
-enable=c-extension-no-member
+enable=all
 
 
 [REPORTS]
@@ -116,14 +116,14 @@ never-returning-functions=sys.exit,exit
 [BASIC]
 
 # Naming style matching correct argument names.
-argument-naming-style=any
+argument-naming-style=snake_case
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style.
 #argument-rgx=
 
 # Naming style matching correct attribute names.
-attr-naming-style=any
+attr-naming-style=snake_case
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style.
@@ -138,7 +138,7 @@ bad-names=foo,
           tata
 
 # Naming style matching correct class attribute names.
-class-attribute-naming-style=any
+class-attribute-naming-style=snake_case
 
 # Regular expression matching correct class attribute names. Overrides class-
 # attribute-naming-style.
@@ -163,7 +163,7 @@ const-naming-style=UPPER_CASE
 docstring-min-length=1
 
 # Naming style matching correct function names.
-function-naming-style=any
+function-naming-style=snake_case
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style.
@@ -174,6 +174,11 @@ good-names=i,
            j,
            k,
            ex,
+           e,
+           n,
+           x,
+           y,
+           z,
            _
 
 # Include a hint for the correct naming format with invalid-name.
@@ -184,10 +189,10 @@ inlinevar-naming-style=any
 
 # Regular expression matching correct inline iteration names. Overrides
 # inlinevar-naming-style.
-#inlinevar-rgx=
+inlinevar-rgx=[a-z]+
 
 # Naming style matching correct method names.
-method-naming-style=any
+method-naming-style=snake_case
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style.
@@ -214,7 +219,7 @@ no-docstring-rgx=^_
 property-classes=abc.abstractproperty,property
 
 # Naming style matching correct variable names.
-variable-naming-style=any
+variable-naming-style=snake_case
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style.
@@ -346,8 +351,7 @@ ignore-long-lines=^\s*(# )?<?https?://\S+>?$|^\s*:\w+: .+$
 # Number of spaces of indent required inside a hanging or continued line.
 indent-after-paren=-1
 
-# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
-# tab).
+# String used as indentation unit.
 indent-string='\t'
 
 # Maximum number of characters on a single line.
@@ -426,42 +430,16 @@ known-third-party=enchant
 
 
 [DESIGN]
-
-# Maximum number of arguments for function / method.
-max-args=5
-
-# Maximum number of attributes for a class (see R0902).
-max-attributes=7
-
-# Maximum number of boolean expressions in an if statement.
-max-bool-expr=5
-
 # Maximum number of branch for function / method body.
 max-branches=15
 
-# Maximum number of locals for function / method body.
-max-locals=15
-
-# Maximum number of parents for a class (see R0901).
-max-parents=7
-
-# Maximum number of public methods for a class (see R0904).
-max-public-methods=20
-
-# Maximum number of return / yield for function / method body.
-max-returns=6
-
 # Maximum number of statements in function / method body.
-max-statements=50
-
-# Minimum number of public methods for a class (see R0903).
-min-public-methods=2
-
+max-statements=80
 
 [CLASSES]
 
 # List of method names used to declare (i.e. assign) instance attributes.
-defining-attr-methods=__init__,__new__,login,create
+defining-attr-methods=__init__,__new__,__enter__,login,create
 
 # List of member names, which should be excluded from the protected access
 # warning.

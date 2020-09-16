@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -35,30 +36,30 @@ import (
 	"github.com/miekg/dns"
 )
 
-func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string, exampleURLs []string) error {
+func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string, exampleURLs []string) (error, error, int) {
 	keys, ok, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort)
 	if err != nil {
-		return errors.New("getting DNSSec keys from Riak: " + err.Error())
+		return nil, errors.New("getting DNSSec keys from Riak: " + err.Error()), http.StatusInternalServerError
 	} else if !ok {
-		return errors.New("getting DNSSec keys from Riak: no DNSSec keys found")
+		return fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName), nil, http.StatusBadRequest
 	}
 	cdnKeys, ok := keys[cdnName]
 	// TODO warn and continue?
 	if !ok {
-		return errors.New("getting DNSSec keys from Riak: no DNSSec keys for CDN")
+		return fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName), nil, http.StatusBadRequest
 	}
 	kExp := getKeyExpiration(cdnKeys.KSK, dnssecDefaultKSKExpiration)
 	zExp := getKeyExpiration(cdnKeys.ZSK, dnssecDefaultZSKExpiration)
 	overrideTTL := false
 	dsKeys, err := CreateDNSSECKeys(tx, cfg, xmlID, exampleURLs, cdnKeys, kExp, zExp, dnssecDefaultTTL, overrideTTL)
 	if err != nil {
-		return errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error())
+		return nil, errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error()), http.StatusInternalServerError
 	}
 	keys[xmlID] = dsKeys
 	if err := riaksvc.PutDNSSECKeys(keys, cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting Riak DNSSEC keys: " + err.Error())
+		return nil, errors.New("putting Riak DNSSEC keys: " + err.Error()), http.StatusInternalServerError
 	}
-	return nil
+	return nil, nil, http.StatusOK
 }
 
 // CreateDNSSECKeys creates DNSSEC keys for the given delivery service, updating existing keys if they exist. The overrideTTL parameter determines whether to reuse existing key TTLs if they exist, or to override existing TTLs with the ttl parameter's value.

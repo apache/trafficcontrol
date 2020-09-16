@@ -21,12 +21,13 @@ under the License.
     <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
             <div class="x_title">
-                <h2>Login</h2>
+                <h2 ng-if="!oAuthEnabled">Login</h2>
+                <h2 ng-if="oAuthEnabled">Login With Single Sign On</h2>
                 <div class="clearfix"></div>
             </div>
             <div class="x_content">
                 <br>
-                <form name="loginForm" role="form" class="form-horizontal form-label-left" novalidate>
+                <form name="loginForm" role="form" class="form-horizontal form-label-left" novalidate ng-if="!oAuthEnabled">
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loginUsername">Username <span class="required">*</span></label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
@@ -44,6 +45,13 @@ under the License.
                         <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
                             <button name="loginSubmit" type="submit" class="btn btn-primary" ng-disabled="loginForm.$invalid" ng-click="login($event, credentials)">Log in &nbsp;&nbsp;<i class="fa fa-chevron-circle-right"></i></button>
                             <button type="button" class="btn btn-link" ng-click="resetPassword()">Reset Password</button>
+                        </div>
+                    </div>
+                </form>
+                <form name="ssoLoginForm" role="form" class="form-horizontal form-label-left" novalidate ng-if="oAuthEnabled">
+                    <div class="form-group">
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <button name="loginOauthSubmit" type="button" class="btn btn-primary" ng-click="loginOauth()">Log in &nbsp;&nbsp;<i class="fa fa-chevron-circle-right"></i></button>
                         </div>
                     </div>
                 </form>

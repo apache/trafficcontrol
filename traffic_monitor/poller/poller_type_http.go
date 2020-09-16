@@ -43,8 +43,9 @@ func httpGlobalInit(cfg config.Config, appData config.StaticAppData) interface{}
 		Timeout:   cfg.HTTPTimeout,
 	}
 	return &HTTPPollGlobalCtx{
-		UserAgent: appData.UserAgent,
-		Client:    sharedClient,
+		UserAgent:    appData.UserAgent,
+		Client:       sharedClient,
+		FormatAccept: cfg.HTTPPollingFormat,
 	}
 }
 
@@ -71,27 +72,33 @@ func httpInit(cfg PollerConfig, globalCtxI interface{}) interface{} {
 	}
 
 	return &HTTPPollCtx{
-		Client:      gctx.Client,
-		UserAgent:   gctx.UserAgent,
-		NoKeepAlive: cfg.NoKeepAlive,
-		URL:         cfg.URL,
-		Host:        cfg.Host,
-		PollerID:    cfg.PollerID,
+		Client:       gctx.Client,
+		UserAgent:    gctx.UserAgent,
+		NoKeepAlive:  cfg.NoKeepAlive,
+		URL:          cfg.URL,
+		URLv6:        cfg.URLv6,
+		Host:         cfg.Host,
+		PollerID:     cfg.PollerID,
+		FormatAccept: gctx.FormatAccept,
 	}
 }
 
 type HTTPPollGlobalCtx struct {
-	Client    *http.Client
-	UserAgent string
+	Client       *http.Client
+	UserAgent    string
+	FormatAccept string
 }
 
 type HTTPPollCtx struct {
-	Client      *http.Client
-	UserAgent   string
-	NoKeepAlive bool
-	URL         string
-	Host        string
-	PollerID    string
+	Client       *http.Client
+	UserAgent    string
+	NoKeepAlive  bool
+	URL          string
+	URLv6        string
+	Host         string
+	PollerID     string
+	HTTPHeader   http.Header
+	FormatAccept string
 }
 
 func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte, time.Time, time.Duration, error) {
@@ -104,24 +111,32 @@ func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte,
 	if !ctx.NoKeepAlive {
 		req.Header.Set("Connection", "keep-alive")
 	}
+
+	req.Header.Set("Accept", ctx.FormatAccept)
 	req.Host = host
 	startReq := time.Now()
 	resp, err := ctx.Client.Do(req)
-	reqEnd := time.Now()
-	reqTime := reqEnd.Sub(startReq) // note this is essentially the roundtrip, not the body transfer time.
 	if err != nil {
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: %v", ctx.PollerID, url, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: bad HTTP status: %v", ctx.PollerID, url, resp.StatusCode)
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: reading body: %v", ctx.PollerID, url, err)
 	}
-
+	reqEnd := time.Now()
+	reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
+	ctx.HTTPHeader = resp.Header.Clone()
 	return bts, reqEnd, reqTime, nil
 }

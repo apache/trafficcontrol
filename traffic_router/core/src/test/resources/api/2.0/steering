@@ -1,0 +1,114 @@
+{
+  "response": [
+    {
+      "deliveryService": "steering-test-1",
+      "targets": [
+        {
+          "deliveryService": "steering-target-1",
+          "weight": "1000"
+        },
+        {
+          "deliveryService": "steering-target-2",
+          "weight": "9000"
+        }
+      ],
+      "filters" :[
+        { "pattern" : ".*/force-to-target-1/.*", "deliveryService" : "steering-target-1"},
+        { "pattern" : ".*/force-to-target-2/.*", "deliveryService" : "steering-target-2"}
+      ]
+    },
+    {
+      "deliveryService": "steering-test-2",
+      "targets": [
+        {
+          "deliveryService": "steering-target-3",
+          "weight": "60000"
+        },
+        {
+          "deliveryService": "steering-target-4",
+          "weight": "45000"
+        }
+      ]
+    },
+    {
+      "deliveryService": "client-steering-test-1",
+      "targets": [
+        {
+          "deliveryService": "client-steering-target-1",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "client-steering-target-2",
+          "weight": "5000"
+        }
+      ],
+      "clientSteering": true
+    },
+    {
+      "deliveryService": "client-steering-diversity-test",
+      "targets": [
+        {
+          "deliveryService": "csd-target-1",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-2",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-3",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-4",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-5",
+          "weight": "5000"
+        }
+      ],
+      "clientSteering": true
+    },
+    {
+      "deliveryService": "client-steering-test-2",
+      "targets": [
+        {
+          "deliveryService": "steering-target-1",
+          "order": -100
+        },
+        {
+          "deliveryService": "steering-target-2",
+          "order": "-101",
+          "weight": "0"
+        },
+        {
+          "deliveryService": "client-steering-target-1",
+          "weight": "0",
+          "order": "1"
+        },
+        {
+          "deliveryService": "client-steering-target-2",
+          "order": "-1"
+        },
+        {
+          "deliveryService": "client-steering-target-3",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "client-steering-target-4",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "steering-target-3",
+          "order": "6000"
+        },
+        {
+          "deliveryService": "steering-target-4",
+          "order": "5001"
+        }
+      ],
+      "clientSteering": true
+    }
+  ]
+}

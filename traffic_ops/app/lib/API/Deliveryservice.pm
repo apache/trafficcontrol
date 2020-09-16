@@ -1131,7 +1131,7 @@ sub get_deliveryservices_by_userId {
 					"geoProvider"          => $row->geo_provider,
 					"globalMaxMbps"        => $row->global_max_mbps,
 					"globalMaxTps"         => $row->global_max_tps,
-					"fqPacingRate"         => $row->fq_pacing_rate,    
+					"fqPacingRate"         => $row->fq_pacing_rate,
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"id"                   => $row->id,
 					"infoUrl"              => $row->info_url,
@@ -1280,7 +1280,7 @@ sub state {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+				return $self->with_deprecation_with_no_alternative("Forbidden. Delivery-service tenant is not available to the user.", "error", 403);
 			}
 			my $cdn_name    = $result->cdn->name;
 			my $ds_name     = $result->xml_id;
@@ -1348,15 +1348,14 @@ sub state {
 					}
 				}
 			}
-
-			$self->success($data);
+			$self->deprecation_with_no_alternative(200, $data);
 		}
 		else {
-			$self->forbidden("Forbidden. Delivery service not assigned to user.");
+			$self->with_deprecation_with_no_alternative("Forbidden. Delivery service not assigned to user.", "error", 403);
 		}
 	}
 	else {
-		$self->not_found();
+		$self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
 	}
 }
 

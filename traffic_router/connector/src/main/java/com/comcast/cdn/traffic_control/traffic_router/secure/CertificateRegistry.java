@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import com.comcast.cdn.traffic_control.traffic_router.utils.HttpsProperties;
 import org.apache.log4j.Logger;
 import sun.security.tools.keytool.CertAndKeyGen;
 import sun.security.util.ObjectIdentifier;
@@ -25,7 +26,16 @@ import sun.security.x509.CertificateExtensions;
 import sun.security.x509.ExtendedKeyUsageExtension;
 import sun.security.x509.KeyUsageExtension;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -33,7 +43,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import sun.security.x509.X500Name;
-import java.security.cert.X509Certificate;
 import java.util.Date;
 
 public class CertificateRegistry {
@@ -43,10 +52,16 @@ public class CertificateRegistry {
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
 	final private Map<String, CertificateData> previousData = new HashMap<>();
+	public String defaultAlias;
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 	private CertificateRegistry() {
+		try {
+			defaultAlias = InetAddress.getLocalHost().getHostName();
+		} catch (Exception e) {
+			log.error("Error getting hostname");
+		}
 	}
 
 	public static CertificateRegistry getInstance() {
@@ -97,11 +112,47 @@ public class CertificateRegistry {
 	}
 
 	public Map<String, HandshakeData> getHandshakeData() {
-	    return handshakeDataMap;
-    }
+		return handshakeDataMap;
+	}
 
 	public void setEndPoint(final RouterNioEndpoint routerNioEndpoint) {
 		sslEndpoint = routerNioEndpoint;
+	}
+
+	private HandshakeData createApiDefaultSsl() {
+		try {
+			final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
+
+			final KeyStore ks = KeyStore.getInstance("JKS");
+			final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");
+			if (new File(selfSignedKeystoreFile).exists()) {
+				final String password = httpsProperties.get("https.password");
+				final InputStream readStream = new FileInputStream(selfSignedKeystoreFile);
+				ks.load(readStream, password.toCharArray());
+				readStream.close();
+				final Certificate[] certs = ks.getCertificateChain(defaultAlias);
+				final List<X509Certificate> x509certs = new ArrayList<>();
+
+				for (final Certificate cert : certs) {
+					final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					final ByteArrayInputStream bais = new ByteArrayInputStream(cert.getEncoded());
+					final X509Certificate x509cert = (X509Certificate) cf.generateCertificate(bais);
+					x509certs.add(x509cert);
+				}
+
+				X509Certificate[] x509CertsArray = new X509Certificate[x509certs.size()];
+				x509CertsArray = x509certs.toArray(x509CertsArray);
+
+				final HandshakeData handshakeData = new HandshakeData(defaultAlias, defaultAlias,
+						x509CertsArray, (PrivateKey) ks.getKey(defaultAlias, password.toCharArray()));
+
+				return handshakeData;
+			}
+		} catch (Exception e) {
+			log.error("Failed to load default certificate. Received " + e.getClass() + " with message: " + e.getMessage());
+			return null;
+		}
+		return null;
 	}
 
 	@SuppressWarnings("PMD.AccessorClassGeneration")
@@ -137,13 +188,11 @@ public class CertificateRegistry {
 			}
 		}
 		// find CertificateData which has been removed
-		for (final String alias : previousData.keySet())
-		{
-			if (!master.containsKey(alias) && sslEndpoint != null)
-			{
+		for (final String alias : previousData.keySet()) {
+			if (!master.containsKey(alias) && sslEndpoint != null) {
 				final String hostname = previousData.get(alias).getHostname();
 				sslEndpoint.removeSslHostConfig(hostname);
-			    log.warn("Removed handshake data with hostname " + hostname);
+				log.warn("Removed handshake data with hostname " + hostname);
 			}
 		}
 
@@ -166,16 +215,36 @@ public class CertificateRegistry {
 				final HandshakeData defaultHd = createDefaultSsl();
 				if (defaultHd == null){
 					log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
-							"certificate.  Returning the Certificate Registry without a default.");
+							"certificate. Returning the Certificate Registry without a default.");
 					return;
 				}
 				master.put(DEFAULT_SSL_KEY, defaultHd);
 			}
 		}
+
+		if (!master.containsKey(defaultAlias)) {
+			if (handshakeDataMap.containsKey(defaultAlias)) {
+				master.put(defaultAlias, handshakeDataMap.get(defaultAlias));
+			} else {
+				final HandshakeData apiDefault = createApiDefaultSsl();
+				if (apiDefault == null) {
+					log.error("Failed to initialize the API Default certificate.");
+				} else {
+					master.put(apiDefault.getHostname(), apiDefault);
+				}
+			}
+		}
 		handshakeDataMap = master;
 
-		if (sslEndpoint != null) {
-			sslEndpoint.replaceSSLHosts(changes);
+		// This will update the SSLHostConfig objects stored in the server
+		// if any of those updates fail then we need to be sure to remove them
+		// from the previousData list so that we will try to update them again
+		// next time we import certificates
+		if (sslEndpoint != null && !changes.isEmpty()) {
+			final List<String> failedUpdates = sslEndpoint.reloadSSLHosts(changes);
+			failedUpdates.forEach(alias-> {
+				previousData.remove(alias);
+			});
 		}
 	}
 

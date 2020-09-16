@@ -33,6 +33,7 @@ sub register {
 
 			my $hostname = undef;
 			my $port     = undef;
+			my $secure_port = undef;
 
 			if ( exists( $args->{cdn} ) ) {
 				my $cdn                = $args->{cdn};
@@ -47,24 +48,41 @@ sub register {
 			}
 			elsif ( exists $args->{hostname} ) {
 				$hostname = $args->{hostname};
-
 			}
 			else {
 				confess("Supply a cdn or host in the argument hashref");
 			}
+
+			my $traffic_router_connection = undef;
+
 			if ( defined( $args->{port} ) ) {
 				$port = $args->{port};
 			}
 			else {
 				my $hostonly = ( split( /\./, $hostname ) )[0];
 				my $server = $self->db->resultset('Server')->search( { host_name => $hostonly } )->single();
-				my $pp =
+
+				my $pp_secure_api_port =
 					$self->db->resultset('ProfileParameter')
-					->search( { -and => [ 'profile.id' => $server->profile->id, 'parameter.name' => 'api.port', 'parameter.config_file' => 'server.xml' ] },
-					{ prefetch => [ 'parameter', 'profile' ] } )->single();
-				$port = $pp->parameter->value;
+						->search( { -and => [ 'profile.id' => $server->profile->id, 'parameter.name' => 'secure.api.port', 'parameter.config_file' => 'server.xml' ] },
+						{ prefetch => [ 'parameter', 'profile' ] } )->single();
+					if ( defined($pp_secure_api_port) ) {
+						$secure_port = $pp_secure_api_port->parameter->value;
+					}
+
+				if ( defined( $secure_port ) ) {
+					$port = $secure_port;
+					$traffic_router_connection = new Utils::CCR( $hostname, $port, 1 );
+				}
+				else {
+					my $pp_api_port =
+						$self->db->resultset('ProfileParameter')
+							->search( { -and => [ 'profile.id' => $server->profile->id, 'parameter.name' => 'api.port', 'parameter.config_file' => 'server.xml' ] },
+							{ prefetch => [ 'parameter', 'profile' ] } )->single();
+						$port = $pp_api_port->parameter->value;
+					$traffic_router_connection = new Utils::CCR( $hostname, $port);
+				}
 			}
-			my $traffic_router_connection = new Utils::CCR( $hostname, $port );
 			my $proxy_param =
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.traffic_rtr_fwd_proxy', config_file => 'global' ] } )->single();
 			if ( defined($proxy_param) ) {

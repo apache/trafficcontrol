@@ -20,33 +20,109 @@ package cache
  */
 
 import (
-	"fmt"
+	"bytes"
 	"io/ioutil"
 	"math/rand"
-	"strconv"
+	"net/http"
+	"os"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-
-	"github.com/json-iterator/go"
 )
 
-func TestAstats(t *testing.T) {
-	t.Log("Running Astats Tests")
+func TestAstatsJson(t *testing.T) {
+	file, err := os.Open("astats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	text, err := ioutil.ReadFile("astats.json")
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	_, _, err = astatsParse("testCache", file, ctx)
+
 	if err != nil {
-		t.Log(err)
+		t.Error(err)
 	}
-	aStats := Astats{}
-	json := jsoniter.ConfigFastest
-	err = json.Unmarshal(text, &aStats)
-	fmt.Printf("aStats ---> %v\n", aStats)
+}
+
+func TestAstatsAppJson(t *testing.T) {
+	file, err := os.Open("astats.json")
 	if err != nil {
-		t.Log(err)
+		t.Fatal(err)
 	}
-	fmt.Printf("Found %v key/val pairs in ats\n", len(aStats.Ats))
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "application/json")
+	_, _, err = astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAstatsCSV(t *testing.T) {
+	file, err := os.Open("astats.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	_, _, err = astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkAstatsJson(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkAstatsCSV(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.csv")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Reset benchmark timer to not include reading the file
+	b.ResetTimer()
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
 }
 
 func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {
@@ -77,19 +153,25 @@ func getMockRawStats(cacheName string, dsNameFQDNs map[tc.DeliveryServiceName]st
 	return st
 }
 
-func getMockSystem(infSpeed int, outBytes int) AstatsSystem {
+func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
 	infName := randStr()
-	return AstatsSystem{
-		InfName:           infName,
-		InfSpeed:          9876554433210,
-		ProcNetDev:        infName + ":12234567 8901234    1    2    3     4          5   12345 " + strconv.Itoa(outBytes) + " 923412341234    6    7    8     9       10          11",
-		ProcLoadavg:       "1.2 2.34 5.67 1/876 1234",
-		ConfigLoadRequest: rand.Int(),
-		LastReloadRequest: rand.Int(),
-		ConfigReloads:     rand.Int(),
-		LastReload:        rand.Int(),
-		AstatsLoad:        rand.Int(),
-		NotAvailable:      randBool(),
+	return Statistics{
+		Loadavg: Loadavg{
+			One:              1.2,
+			Five:             2.34,
+			Fifteen:          5.67,
+			CurrentProcesses: 1,
+			TotalProcesses:   876,
+			LatestPID:        1234,
+		},
+		Interfaces: map[string]Interface{
+			infName: Interface{
+				Speed:    infSpeed,
+				BytesOut: outBytes,
+				BytesIn:  12234567,
+			},
+		},
+		NotAvailable: randBool(),
 	}
 
 }
@@ -99,24 +181,24 @@ func TestAstatsPrecompute(t *testing.T) {
 	toData := getMockTOData(dsNameFQDNs)
 	cacheName := "cache0"
 	rawStats := getMockRawStats(cacheName, dsNameFQDNs)
-	outBytes := 987655443321
-	infSpeedMbps := 9876554433210
-	system := getMockSystem(infSpeedMbps, outBytes)
+	outBytes := uint64(987655443321)
+	infSpeedMbps := int64(9876554433210)
+	stats := getMockStatistics(infSpeedMbps, outBytes)
 
-	prc := astatsPrecompute(tc.CacheName(cacheName), toData, rawStats, system)
+	prc := astatsPrecompute(cacheName, toData, stats, rawStats)
 
 	if len(prc.Errors) != 0 {
 		t.Fatalf("astatsPrecompute Errors expected 0, actual: %+v\n", prc.Errors)
 	}
-	if prc.OutBytes != int64(outBytes) {
+	if prc.OutBytes != outBytes {
 		t.Fatalf("astatsPrecompute OutBytes expected 987655443321, actual: %+v\n", prc.OutBytes)
 	}
-	if prc.MaxKbps != int64(infSpeedMbps*1000) {
+	if prc.MaxKbps != infSpeedMbps*1000 {
 		t.Fatalf("astatsPrecompute MaxKbps expected 9876554433210000, actual: %+v\n", prc.MaxKbps)
 	}
 
 	for dsName, dsFQDN := range dsNameFQDNs {
-		dsStat, ok := prc.DeliveryServiceStats[dsName]
+		dsStat, ok := prc.DeliveryServiceStats[string(dsName)]
 		if !ok {
 			t.Fatalf("astatsPrecompute DeliveryServiceStats expected %+v, actual: missing\n", dsName)
 		}

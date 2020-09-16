@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.servers.deliveryServices'
 						controller: 'TableServerDeliveryServicesController',
 						resolve: {
 							server: function($stateParams, serverService) {
-								return serverService.getServer($stateParams.serverId);
+								return serverService.getServers({id: $stateParams.serverId});
 							},
 							deliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getServerDeliveryServices($stateParams.serverId);

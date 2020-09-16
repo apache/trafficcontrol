@@ -33,10 +33,10 @@ func expectNearest(lat float64, lon float64, expected DataT, qt *Quadtree, t *te
 		t.Errorf("Nearest %f,%f expected '%v', actual '%v'", lat, lon, expected.Obj, d.Obj)
 	}
 	if d.Lat != expected.Lat {
-		t.Errorf("Nearest %f,%s expected latitude '%f', actual '%f'", lat, lon, expected.Lat, d.Lat)
+		t.Errorf("Nearest %f,%f expected latitude '%f', actual '%f'", lat, lon, expected.Lat, d.Lat)
 	}
 	if d.Lon != expected.Lon {
-		t.Errorf("Nearest %f,%s expected longitude '%f', actual '%f'", lat, lon, expected.Lon, d.Lon)
+		t.Errorf("Nearest %f,%f expected longitude '%f', actual '%f'", lat, lon, expected.Lon, d.Lon)
 	}
 }
 

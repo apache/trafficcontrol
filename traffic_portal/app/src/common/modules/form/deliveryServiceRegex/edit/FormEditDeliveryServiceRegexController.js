@@ -37,7 +37,7 @@ var FormEditDeliveryServiceRegexController = function(deliveryService, regex, $s
 	};
 
 	$scope.save = function(dsId, regex) {
-		deliveryServiceRegexService.updateDeliveryServiceRegex(regex).
+		deliveryServiceRegexService.updateDeliveryServiceRegex(dsId, regex).
 			then(function() {
 				$scope.regexPattern = angular.copy(regex.pattern);
 				$anchorScroll(); // scrolls window to top

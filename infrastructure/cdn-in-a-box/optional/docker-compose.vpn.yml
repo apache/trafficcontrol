@@ -51,8 +51,6 @@ services:
     env_file:
       - variables.env
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - ./optional/vpn/vpnca:/vpnca
       - shared:/shared
 

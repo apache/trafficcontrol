@@ -52,9 +52,15 @@ sub index {
 	$self->success( \@data );
 }
 
-sub renderResults {
-	my $self    = shift;
-	my $rs_data = shift;
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+	my $alt = "GET /api_capabilities";
+
+	my $rs_data = $self->db->resultset("ApiCapability")->search( 'me.id' => $id );
+	if ( !defined($rs_data) ) {
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
+	}
 
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
@@ -68,18 +74,7 @@ sub renderResults {
 			}
 		);
 	}
-	$self->success( \@data );
-}
-
-sub show {
-	my $self = shift;
-	my $id   = $self->param('id');
-
-	my $rs_data = $self->db->resultset("ApiCapability")->search( 'me.id' => $id );
-	if ( !defined($rs_data) ) {
-		return $self->not_found();
-	}
-	$self->renderResults($rs_data);
+	$self->deprecation(200, $alt, \@data );
 }
 
 sub is_mapping_valid {
@@ -168,6 +163,7 @@ sub create {
 
 	my $insert = $self->db->resultset('ApiCapability')->create($values);
 	my $rs     = $insert->insert();
+	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities.html#post]";
 	if ($rs) {
 		my $response;
 		$response->{id}          = $rs->id;
@@ -180,10 +176,10 @@ sub create {
 			"Created API-Capability mapping: '$response->{httpMethod}', '$response->{httpRoute}', '$response->{capability}' for id: " . $response->{id},
 			"APICHANGE" );
 
-		return $self->success( $response, "API-Capability mapping was created." );
+		return $self->with_deprecation("API-Capability mapping was created.", "success", 200, $alt);
 	}
 	else {
-		return $self->alert("API-Capability mapping creation failed.");
+		return $self->with_deprecation("API-Capability mapping creation failed.", "error", 500, $alt);
 	}
 }
 
@@ -191,13 +187,14 @@ sub update {
 	my $self   = shift;
 	my $id     = $self->param('id');
 	my $params = $self->req->json;
+	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#put]";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	if ( !defined($params) ) {
-		return $self->alert("Parameters must be in JSON format.");
+		return $self->with_deprecation("Parameters must be in JSON format.", "error", 400, $alt);
 	}
 
 	my $http_method = $params->{httpMethod} if defined( $params->{httpMethod} );
@@ -206,12 +203,12 @@ sub update {
 
 	my $mapping = $self->db->resultset('ApiCapability')->find( { id => $id } );
 	if ( !defined($mapping) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 
 	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $http_route, $capability );
 	if ( !$is_valid ) {
-		return $self->alert($errStr);
+		return $self->with_deprecation($errStr, "error", 400, $alt);
 	}
 
 	my $values = {
@@ -232,33 +229,33 @@ sub update {
 		&log( $self,
 			"Updated API-Capability mapping: '$response->{httpMethod}', '$response->{httpRoute}', '$response->{capability}' for id: " . $response->{id},
 			"APICHANGE" );
-
-		return $self->success( $response, "API-Capability mapping was updated." );
+		return $self->with_deprecation("API-Capability mapping was updated.", "success", 200, $alt, $response);
 	}
 	else {
-		return $self->alert("API-Capability mapping update failed.");
+		return $self->with_deprecation("API-Capability mapping update failed.", "error", 400, $alt);
 	}
 }
 
 sub delete {
 	my $self = shift;
 	my $id   = $self->param('id');
+	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#delete]";
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	my $mapping = $self->db->resultset('ApiCapability')->find( { id => $id } );
 	if ( !defined($mapping) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 
 	my $rs = $mapping->delete();
 	if ($rs) {
-		return $self->success_message("API-capability mapping deleted.");
+		return $self->with_deprecation("API-Capability mapping deleted.", "success", 200, $alt);
 	}
 	else {
-		return $self->alert("API-capability mapping deletion failed.");
+		return $self->with_deprecation("API-Capability mapping deletion failed.", "error", 400, $alt);
 	}
 }
 
