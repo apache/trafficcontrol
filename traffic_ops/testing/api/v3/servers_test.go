@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -358,6 +359,39 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if !foundTopDs {
 		t.Fatalf("unable to find deliveryservice %s", topDsXmlId)
 	}
+
+	/* Create a deliveryservice server assignment that should not show up in the
+	 * client.GetServersWithHdr() response because ds-top is topology-based
+	 */
+	const otherServerHostname = "topology-edge-02"
+	serverResponse, _, err := TOSession.GetServersWithHdr(&url.Values{"hostName": []string{otherServerHostname}}, nil)
+	if err != nil {
+		t.Fatalf("getting server by hostname %s: %s", otherServerHostname, err)
+	}
+	if len(serverResponse.Response) != 1 {
+		t.Fatalf("unable to find server with hostname %s", otherServerHostname)
+	}
+	otherServer := serverResponse.Response[0]
+
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	/* language=SQL */
+	query := fmt.Sprintf(`
+		INSERT INTO  deliveryservice_server (
+			 deliveryservice,
+			 server,
+			 last_updated
+		 ) VALUES (
+			%d,
+		    %d,
+		    NOW()
+		 )
+`, *ds.ID, *otherServer.ID)
+	execSQL(db, query)
+	defer log.Close(db, "unable to close connection to db: %s")
+
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3": true,
