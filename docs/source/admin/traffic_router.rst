@@ -517,6 +517,8 @@ GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
 	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the :term:`Delivery Service`
+GEO_DS
+	The request was redirected to the Miss Location configured on the :term:`Delivery Service`, because CZF couldn't resolve the client IP, and Maxmind returned the default coordinates of the country code of the client IP
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT

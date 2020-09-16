@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
 - Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
+- Added functionality in TR, so that it uses the default miss location of the DS, in case the location(for the  client IP) returned was the default location of the country.
 - Added ability to set DNS Listening IPs in dns.properties
 - Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
 - Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data. Using the new `stats_over_http` `health.polling.format` value that allows monitoring of multiple interfaces will first require that *all* Traffic Monitors monitoring the affected cache server be upgraded.
@@ -80,6 +81,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - The `/servers` and `/servers/{{ID}}}` TO API endpoints have been updated to use and reflect multi-interface servers.
     - Updated `/cdns/{{name}}/configs/monitoring` TO API endpoint to return multi-interface data.
     - CDN Snapshots now use a server's "service addresses" to provide its IP addresses.
+    - Changed the `Cache States` tab of the Traffic Monitor UI to properly handle multiple interfaces.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
     - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
 
