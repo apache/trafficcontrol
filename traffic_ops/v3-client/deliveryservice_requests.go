@@ -193,14 +193,16 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetDeliveryServiceRequestsV30(header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+// GetDeliveryServiceRequestsV30 retrieves DSRs based on the given HTTP header
+// and query string parameters.
+func (to *Session) GetDeliveryServiceRequestsV30(header http.Header, params url.Values) ([]tc.DeliveryServiceRequestV30, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, header)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.DeliveryServiceRequest{}, reqInf, nil
+			return []tc.DeliveryServiceRequestV30{}, reqInf, nil
 		}
 	}
 	if err != nil {
@@ -209,7 +211,7 @@ func (to *Session) GetDeliveryServiceRequestsV30(header http.Header) ([]tc.Deliv
 	defer resp.Body.Close()
 
 	data := struct {
-		Response []tc.DeliveryServiceRequest `json:"response"`
+		Response []tc.DeliveryServiceRequestV30 `json:"response"`
 	}{}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
@@ -222,12 +224,7 @@ func (to *Session) GetDeliveryServiceRequestsV30(header http.Header) ([]tc.Deliv
 //
 // Deprecated: GetDeliveryServiceRequests will be removed in 6.0. Use GetDeliveryServiceRequestsV30.
 func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	return to.GetDeliveryServiceRequestsWithHdr(nil)
-}
-
-func (to *Session) GetDeliveryServiceRequestByXMLIDWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, url.QueryEscape(XMLID))
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, nil)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -252,14 +249,39 @@ func (to *Session) GetDeliveryServiceRequestByXMLIDWithHdr(XMLID string, header 
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
-// Deprecated: GetDeliveryServiceRequestByXMLID will be removed in 6.0. Use GetDeliveryServiceRequestByXMLIDWithHdr.
+//
+// Deprecated: GetDeliveryServiceRequestByXMLID will be removed in 6.0. Use GetDeliveryServiceRequestsV30.
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	return to.GetDeliveryServiceRequestByXMLIDWithHdr(XMLID, nil)
+	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, url.QueryEscape(XMLID))
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequest{}, reqInf, nil
+		}
+	}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.DeliveryServiceRequest `json:"response"`
+	}{}
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
-func (to *Session) GetDeliveryServiceRequestByIDWithHdr(id int, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+// GET a DeliveryServiceRequest by the DeliveryServiceRequest id
+// Deprecated: GetDeliveryServiceRequestByID will be removed in 6.0. Use GetDeliveryServiceRequestByIDWithHdr.
+func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -280,12 +302,6 @@ func (to *Session) GetDeliveryServiceRequestByIDWithHdr(id int, header http.Head
 	}
 
 	return data.Response, reqInf, nil
-}
-
-// GET a DeliveryServiceRequest by the DeliveryServiceRequest id
-// Deprecated: GetDeliveryServiceRequestByID will be removed in 6.0. Use GetDeliveryServiceRequestByIDWithHdr.
-func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	return to.GetDeliveryServiceRequestByIDWithHdr(id, nil)
 }
 
 // Update a DeliveryServiceRequest by ID
