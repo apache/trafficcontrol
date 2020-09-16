@@ -734,6 +734,24 @@ type DeliveryServiceRequestV30 struct {
 	XMLID string `json:"-"`
 }
 
+// SetXMLID sets the XMLID correctly from the "Original" or "Requested"
+// Delivery Service's XMLID according to the DSR's change type. Leaves it
+// unset if the appropriate DS property is nil, or if said DS's XMLID is nil.
+func (dsr *DeliveryServiceRequestV30) SetXMLID() {
+	if dsr == nil {
+		return
+	}
+
+	if dsr.ChangeType == DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.XMLID != nil {
+		dsr.XMLID = *dsr.Original.XMLID
+		return
+	}
+
+	if dsr.Requested != nil && dsr.Requested.XMLID != nil {
+		dsr.XMLID = *dsr.Requested.XMLID
+	}
+}
+
 // IsOpen returns whether or not the Delivery Service Request is still "open" -
 // i.e. has not been rejected or completed.
 func (dsr DeliveryServiceRequestV30) IsOpen() bool {
