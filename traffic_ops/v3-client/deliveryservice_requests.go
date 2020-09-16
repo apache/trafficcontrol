@@ -238,39 +238,3 @@ func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, 
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
-
-/*
-
-// Returns a list of DeliveryServiceRequests
-func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.DeliveryServiceRequestsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
-}
-
-// GET a DeliveryServiceRequest by the DeliveryServiceRequest assignee
-func (to *Session) GetDeliveryServiceRequestByAssignee(assignee string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	url := fmt.Sprintf("%s/assignee/%s", API_DS_REQUESTS, assignee)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.DeliveryServiceRequestsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-*/
