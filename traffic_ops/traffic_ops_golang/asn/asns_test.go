@@ -155,7 +155,7 @@ func TestValidateSameAsnAndCachegroup(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(),}
+	reqInfo := api.APIInfo{Tx: db.MustBegin()}
 	asnNum := 2
 	cachegroupID := 10
 	asn := TOASNV11{
