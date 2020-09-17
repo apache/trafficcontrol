@@ -179,17 +179,25 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		"id":         {Column: "r.id", Checker: api.IsInt},
 		"status":     {Column: "r.status"},
 	}
-	if version.Major < 3 {
-		queryParamsToQueryCols["xmlId"] = dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"}
-		if _, ok := inf.Params["orderby"]; !ok {
-			inf.Params["orderby"] = "xmlId"
-		}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "xmlId"
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return
+	}
+
+	// TODO: add this functionality to the query builder in dbhelpers
+	if xmlID, ok := inf.Params["xmlId"]; ok {
+		queryValues["xmlId"] = xmlID
+		if where != "" {
+			where += " AND "
+		} else {
+			where = "WHERE "
+		}
+		where += "(r.deliveryservice->>'xmlId' = :xmlId OR r.original->>'xmlId' = :xmlId)"
 	}
 
 	maxTime := new(time.Time)
