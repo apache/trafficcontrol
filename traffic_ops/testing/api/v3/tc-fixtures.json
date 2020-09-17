@@ -268,7 +268,7 @@
     "deliveryServiceRequests": [
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "active": true,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
@@ -290,7 +290,7 @@
         },
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "active": true,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
@@ -311,7 +311,7 @@
         },
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Bad Test Case CDN",
@@ -333,7 +333,7 @@
         },
         {
             "changeType": "update",
-            "deliveryService": {
+            "requested": {
                 "active": false,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
@@ -428,7 +428,11 @@
             "cacheurl": "cacheUrl2",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
+            "consistentHashQueryParams": [
+                "fmt",
+                "limit",
+                "somethingelse"
+            ],
             "deepCachingType": "NEVER",
             "displayName": "d s 1",
             "dnsBypassCname": null,
@@ -622,7 +626,11 @@
             "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["a", "b", "c"],
+            "consistentHashQueryParams": [
+                "a",
+                "b",
+                "c"
+            ],
             "consistentHashRegex": "foo",
             "deepCachingType": "ALWAYS",
             "displayName": "ds-test-minor-versions",
@@ -1073,13 +1081,13 @@
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 2,
-            "pattern" : "\\d+"
+            "pattern": "\\d+"
         },
         {
             "dsName": "ds2",
@@ -4027,7 +4035,10 @@
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [0, 1]
+                    "parents": [
+                        0,
+                        1
+                    ]
                 }
             ]
         },
@@ -4631,7 +4642,7 @@
             "ttl": 2160
         },
         {
-            "deliveryService":  "ds2",
+            "deliveryService": "ds2",
             "regex": "\\/some-path?.+\\.jpg",
             "startTime": "2100-06-19T13:57:51-06:00",
             "ttl": 2.1

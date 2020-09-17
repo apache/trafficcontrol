@@ -17,11 +17,11 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -49,8 +49,8 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
-	if paramResp == nil {
-		t.Fatal("Parameter response should not be nil")
+	if len(paramResp) < 1 {
+		t.Fatal("Parameter response should not be empty")
 	}
 
 	// Assign Parameter to Cache Group

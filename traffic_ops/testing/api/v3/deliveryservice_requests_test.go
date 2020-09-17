@@ -74,7 +74,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 	t.Log("CreateTestDeliveryServiceRequests")
 
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	respDSR, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 	t.Log("Response: ", respDSR)
 	if err != nil {
 		t.Errorf("could not CREATE DeliveryServiceRequests: %v", err)
@@ -85,7 +85,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err != nil {
 			t.Errorf("Error occurred %v", err)
 		}
@@ -112,9 +112,9 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 		if me.ID == nil {
 			t.Fatal("Current user has no ID")
 		}
-		dsr.Assignee = *me.UserName
-		dsr.AssigneeID = *me.ID
-		_, _, err = TOSession.CreateDeliveryServiceRequest(dsr)
+		dsr.Assignee = me.UserName
+		dsr.AssigneeID = me.ID
+		_, _, err = TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err != nil {
 			t.Fatalf("Creating DSR: %v", err)
 		}
@@ -143,11 +143,11 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 		displayName := strings.Repeat("X", 49)
 
 		dsr := testData.DeliveryServiceRequests[dsrGood]
-		dsr.DeliveryService.DisplayName = displayName
-		dsr.DeliveryService.RoutingName = routingName
-		dsr.DeliveryService.XMLID = XMLID
+		dsr.Requested.DisplayName = &displayName
+		dsr.Requested.RoutingName = &routingName
+		dsr.Requested.XMLID = &XMLID
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err != nil {
 			t.Errorf("Error occurred %v", err)
 		}
@@ -161,7 +161,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrBadTenant]
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err != nil {
 			t.Errorf("Error occurred %v", err)
 		}
@@ -173,9 +173,9 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 
 		utils.Compare(t, expected, alerts.ToStrings())
 
-		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
 		if len(dsrs) != 1 {
-			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", *dsr.Requested.XMLID, len(dsrs))
 		}
 		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
 		if err != nil {
@@ -194,7 +194,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		}
 		src.Status = s
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
 		if err != nil {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
@@ -223,7 +223,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 		// Create a draft request
 		src := testData.DeliveryServiceRequests[dsrDraft]
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
 		if err != nil {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
@@ -232,7 +232,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 		utils.Compare(t, expected, alerts.ToStrings())
 
 		// Create a duplicate request -- should fail because xmlId is the same
-		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
+		alerts, _, err = TOSession.CreateDeliveryServiceRequestV30(src, nil)
 		if err != nil {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
@@ -301,7 +301,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by XMLID: %v - %v", err, resp)
 	}
@@ -311,9 +311,9 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", dsr.DeliveryService.XMLID, err)
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", *dsr.Requested.XMLID, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("Length of GET DeliveryServiceRequest is 0")
@@ -346,9 +346,9 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
 	if err != nil || len(resp) < 1 {
-		t.Fatalf("cannot GET DeliveryServiceRequest by XMLID: %v - %v", dsr.DeliveryService.XMLID, err)
+		t.Fatalf("cannot GET DeliveryServiceRequest by XMLID: %v - %v", *dsr.Requested.XMLID, err)
 	}
 	respDSR := resp[0]
 	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
@@ -358,11 +358,11 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	}
 
 	// Retrieve the DeliveryServiceRequest to see if it got deleted
-	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
 	if err != nil {
 		t.Errorf("error deleting DeliveryServiceRequest name: %s", err.Error())
 	}
 	if len(dsrs) > 0 {
-		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted", dsr.DeliveryService.XMLID)
+		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted", *dsr.Requested.XMLID)
 	}
 }

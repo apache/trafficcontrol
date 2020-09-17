@@ -64,14 +64,14 @@ func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header ht
 func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
-	dsr := testData.DeliveryServiceRequests[0].DeliveryService
+	dsr := testData.DeliveryServiceRequests[0].Requested
 
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
 	}
 	if len(resp) != 1 {
-		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)
+		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, *dsr.XMLID)
 	}
 
 	respDSR := resp[0]
