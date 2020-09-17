@@ -1,12 +1,5 @@
 package deliveryservicesregexes
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"testing"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,6 +18,13 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"testing"
+)
 
 func TestValidateDSRegexOrderExisting(t *testing.T) {
 	expected := `'setNumber' cannot add regex, another regex with the same order exists`
@@ -55,7 +55,7 @@ func TestValidateDSRegexOrderExisting(t *testing.T) {
 	tx := db.MustBegin().Tx
 	err = validateDSRegex(tx, regex, 1)
 	if err == nil {
-		t.Fatalf("Expected error %v but got none", expected)
+		t.Fatalf("Expected error '%v' but got none", expected)
 	}
 }
 

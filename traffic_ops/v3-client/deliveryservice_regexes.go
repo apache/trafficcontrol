@@ -26,8 +26,7 @@ import (
 
 const (
 	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
-	API_DS_REGEXES      = apiBase + "/deliveryservices/%v/regexes"
-	API_DS_POST_REGEXES = apiBase + "/deliveryservices/%v/regexes"
+	API_DS_REGEXES = apiBase + "/deliveryservices/%v/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
@@ -53,9 +52,11 @@ func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryS
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, fmt.Sprintf(API_DS_POST_REGEXES, dsID), reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPost, fmt.Sprintf(API_DS_REGEXES, dsID), reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
-	reqInf.StatusCode = resp.StatusCode
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return alerts, reqInf, err
 	}
