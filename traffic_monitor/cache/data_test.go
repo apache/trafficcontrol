@@ -49,9 +49,14 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		cacheName := tc.CacheName(randStr())
-		a[cacheName] = make(map[string]AvailableStatus)
-		a[cacheName][randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		cacheName := randStr()
+		a[cacheName] = AvailableStatus{
+			Available: AvailableTuple{
+				IPv4: randBool(),
+				IPv6: randBool(),
+			},
+			Status: randStr(),
+		}
 	}
 	return a
 }
@@ -243,10 +248,15 @@ func TestAvailableStatusesCopy(t *testing.T) {
 			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
 		}
 
-		cacheName := tc.CacheName(randStr())
-		a[cacheName] = make(map[string]AvailableStatus)
-		// verify a and b don't point to the same map
-		a[cacheName][randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		cacheName := randStr()
+		a[cacheName] = AvailableStatus{
+			Available: AvailableTuple{
+				randBool(),
+				randBool(),
+			},
+			Status: randStr(),
+		}
+
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}

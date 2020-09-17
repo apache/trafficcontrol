@@ -43,7 +43,6 @@ import (
 )
 
 func init() {
-	// AddStatsType("astats", astatsParse, astatsPrecompute)
 	registerDecoder("astats", astatsParse, astatsPrecompute)
 }
 
@@ -80,7 +79,7 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 
 	ctype := ctx.HTTPHeader.Get("Content-Type")
 
-	if ctype == "text/json" || ctype == "text/javascript" || ctype == "" {
+	if ctype == "text/json" || ctype == "text/javascript" || ctype == "application/json" || ctype == "" {
 		var astats Astats
 		json := jsoniter.ConfigFastest
 		if err := json.NewDecoder(rdr).Decode(&astats); err != nil {

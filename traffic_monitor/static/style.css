@@ -29,7 +29,7 @@ body {
 /*****************/
 table {
 	border-collapse: separate;
-	border-spacing: 0px 0;
+	border-spacing: 0 0;
 	width: 100%;
 }
 
@@ -37,22 +37,78 @@ th, td {
 	padding:5px 20px 5px 5px;
 }
 
-tbody tr:nth-child(even) {
-	background: #ced;
+tbody#cache-states tr.server-status:nth-child(4n+3) {
+	background: #adb;
 }
-tbody tr:nth-child(odd) {
-	background: #fff;
+
+tbody#cache-states tr.server-status:nth-child(odd) td {
+	border-top: 1px ridge black;
 }
+
+tbody.interface-content tr {
+	background: white;
+}
+
+tbody.interface-content tr:nth-child(even) {
+	background: #acd;
+}
+
+table.sub-table {
+	border: 1px solid black;
+	border-radius: 3px;
+
+	width: 80%;
+	min-width: 300px;
+	margin: auto;
+	text-align: center
+}
+
+div.sub-table-indicator {
+	border: solid black;
+	border-width: 0 4px 4px 0;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+
+	transition-duration: 0.4s;
+	transform: rotate(-45deg);
+}
+
+div.sub-table-indicator.hidden {
+	display: none;
+}
+
+div.sub-table-indicator.down {
+	transform: rotate(45deg);
+}
+
 .error {
-	background-color: #f00;
+	background-color: #f00!important;
 }
 
 .warning {
-	background-color: #f80;
+	background-color: #f80!important;
 }
 
-#cache-states td:nth-child(n+4),
-#cache-states-content td:nth-child(n+4),
+#cache-states .text-entry {
+	text-align: left;
+}
+#cache-states .number-entry {
+	text-align: right;
+}
+
+tr.encompassing-row {
+	visibility: collapse;
+    opacity: 0;
+
+	transition: opacity 0.30s ease-in;
+}
+
+tr.encompassing-row.visible {
+    visibility: visible;
+	opacity: 1;
+}
+
 #event-log td:last-child,
 #deliveryservice-stats td:nth-child(n+3),
 #deliveryservice-stats-content th:nth-child(n+3) {
