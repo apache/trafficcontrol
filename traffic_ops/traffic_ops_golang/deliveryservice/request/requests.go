@@ -409,6 +409,16 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		return
 	}
 
+	if ok, err = dbhelpers.DSRExistsWithXMLID(dsr.XMLID, tx); err != nil {
+		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", dsr.XMLID)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	} else if ok {
+		userErr := fmt.Errorf("An open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
+		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+		return
+	}
+
 	errCode, userErr, sysErr := insert(&dsr, inf)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
