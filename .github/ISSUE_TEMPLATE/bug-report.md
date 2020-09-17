@@ -1,20 +1,21 @@
+---
+name: Bug report
+
+about: Report an issue with the current behavior of Traffic Control
+
+labels: bug
+
+---
+
 <!--
 ************ STOP!! ************
 If this issue identifies a security vulnerability, DO NOT submit it! Instead, contact
-the Apache Software Foundation Security Team at security@trafficcontrol.apache.org and follow the
+the Apache Traffic Control Security Team at security@trafficcontrol.apache.org and follow the
 guidelines at https://www.apache.org/security/ regarding vulnerability disclosure.
 
-- For *SUPPORT QUESTIONS*, use the
-[Traffic Control slack channels](https://traffic-control-cdn.slack.com) or [Traffic Control mailing lists](http://trafficcontrol.apache.org/mailing_lists/).
+- For *SUPPORT QUESTIONS*, use the Traffic Control slack channels (https://s.apache.org/atc-slack)
+or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_lists).
 - Before submitting, please **SEARCH GITHUB** for a similar issue or PR. -->
-
-## I'm submitting a ...
-<!-- delete all those that don't apply -->
-<!--- security vulnerability (STOP!! - see above)-->
--  bug report
--  new feature / enhancement request
--  improvement request (usability, performance, tech debt, etc.)
--  other <!--(Please do not submit support requests here - see above)-->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
@@ -29,22 +30,24 @@ guidelines at https://www.apache.org/security/ regarding vulnerability disclosur
 -  Traffic Router
 -  Traffic Stats
 -  Traffic Vault
+-  CI tests
 -  unknown
 
 ## Current behavior:
-<!-- Describe how the bug manifests / how the current features are insufficient. -->
+<!-- Describe how the bug manifests -->
 
-## Expected / new behavior:
-<!-- Describe what the behavior would be without the bug / how the feature would improve Traffic Control -->
+## Expected behavior:
+<!-- Describe what the behavior would be without the bug -->
 
 ## Minimal reproduction of the problem with instructions:
 <!--
-If the current behavior is a bug or you can illustrate your feature request better with an example,
-please provide the *STEPS TO REPRODUCE* and include the applicable TC version.
+If the current behavior is a bug, please provide the *STEPS TO REPRODUCE* and
+include the applicable TC version.
 -->
 
 ## Anything else:
-<!-- e.g. stacktraces, related issues, suggestions how to fix -->
+<!-- e.g. stacktraces, related issues, suggestions how to fix (feel free to
+delete this section) -->
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
@@ -55,7 +58,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
