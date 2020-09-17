@@ -21,9 +21,31 @@ package tc
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
+
+func TestInvalidationJobGetTTL(t *testing.T) {
+	job := InvalidationJob{
+		Parameters: nil,
+	}
+	ttl := job.GetTTL()
+	if ttl != 0 {
+		t.Error("expected 0 when no parameters")
+	}
+	job.Parameters = util.StrPtr("TTL:24h,x:asdf")
+	ttl = job.GetTTL()
+	if ttl != 0 {
+		t.Error("expected 0 when invalid parameters")
+	}
+
+	job.Parameters = util.StrPtr("TTL:24h")
+	ttl = job.GetTTL()
+	if ttl != 24 {
+		t.Errorf("expected ttl to be 24, got %v", ttl)
+	}
+}
 
 func ExampleInvalidationJobInput_TTLHours_duration() {
 	j := InvalidationJobInput{nil, nil, nil, util.InterfacePtr("121m"), nil, nil}
