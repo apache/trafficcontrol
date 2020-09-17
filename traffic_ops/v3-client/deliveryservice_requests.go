@@ -215,6 +215,7 @@ func (to *Session) GetDeliveryServiceRequestsV30(header http.Header, params url.
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 		if reqInf.StatusCode == http.StatusNotModified {
+			reqInf.CacheHitStatus = CacheHitStatusHit
 			return []tc.DeliveryServiceRequestV30{}, reqInf, nil
 		}
 	}
@@ -291,7 +292,8 @@ func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.Delivery
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest id
-// Deprecated: GetDeliveryServiceRequestByID will be removed in 6.0. Use GetDeliveryServiceRequestByIDWithHdr.
+//
+// Deprecated: GetDeliveryServiceRequestByID will be removed in 6.0. Use GetDeliveryServiceRequestsV30.
 func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
@@ -318,6 +320,8 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 }
 
 // Update a DeliveryServiceRequest by ID
+//
+// Deprecated: Please use the 'versioned' client methods when possible - in this case: UpdateDeliveryServiceRequest
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
@@ -329,6 +333,28 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 		return tc.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// UpdateDeliveryServiceRequest replaces the existing DSR that has the given
+// ID with the DSR passed.
+func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV30, header http.Header) (tc.Alerts, ReqInf, error) {
+
+	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(dsr)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
