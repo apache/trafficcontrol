@@ -17,6 +17,8 @@ package v3
 
 import (
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -207,9 +209,9 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 
 // TestDeliveryServiceRequestWorkflow tests that transitions of Status are
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
+	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
 		// test empty request table
-		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, nil)
 		if err != nil {
 			t.Errorf("Error getting empty list of DeliveryServiceRequests %v++", err)
 		}
@@ -222,6 +224,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		// Create a draft request
 		src := testData.DeliveryServiceRequests[dsrDraft]
+		src.SetXMLID()
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
 		if err != nil {
@@ -233,14 +236,18 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequestV30(src, nil)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		if err == nil {
+			t.Error("Expected an error creating duplicate request - didn't get one")
+		} else {
+			t.Logf("Received expected error creating Delivery Service Request: %v", err)
 		}
 
 		expected = []string{`An active request exists for delivery service 'test-transitions'`}
 		utils.Compare(t, expected, alerts.ToStrings())
 
-		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
+		params := url.Values{}
+		params.Set("xmlId", src.XMLID)
+		dsrs, _, err = TOSession.GetDeliveryServiceRequestsV30(nil, params)
 		if len(dsrs) != 1 {
 			t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
 			if len(dsrs) == 0 {
@@ -249,29 +256,43 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 		}
 
 		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
-
-		expected = []string{
-			"deliveryservice_request was updated.",
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error-level alert: %s", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "updated") {
+				found = true
+			}
 		}
 
-		utils.Compare(t, expected, alerts.ToStrings())
+		if !found {
+			t.Error("Didn't find success-level alert after updating")
+		}
+
 		if dsr.Status != tc.RequestStatus("submitted") {
 			t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
 		}
 	})
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
-	ID := dsr.ID
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequestV30, newstate string) (tc.Alerts, tc.DeliveryServiceRequestV30) {
+	if dsr.ID == nil {
+		t.Error("Cannot update DSR with no ID")
+		return tc.Alerts{}, tc.DeliveryServiceRequestV30{}
+	}
+
+	ID := *dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
-	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr)
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequest(ID, dsr, nil)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request: %v", err)
 		return alerts, dsr
 	}
 
-	d, _, err := TOSession.GetDeliveryServiceRequestByID(ID)
+	params := url.Values{}
+	params.Set("id", strconv.Itoa(ID))
+	d, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, params)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request %d: %v", ID, err)
 		return alerts, dsr
