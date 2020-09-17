@@ -112,6 +112,41 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	return alerts, reqInf, err
 }
 
+func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
+	if ds.TypeID == nil && ds.Type != nil {
+		ty, reqInf, err := to.GetTypeByName(ds.Type.String())
+		if err != nil || len(ty) == 0 {
+			return reqInf, fmt.Errorf("no type named '%s'", ds.Type)
+		}
+		ds.TypeID = &ty[0].ID
+	}
+
+	if ds.CDNID == nil && ds.CDNName != nil {
+		cdns, reqInf, err := to.GetCDNByName(*ds.CDNName)
+		if err != nil || len(cdns) == 0 {
+			return reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
+		}
+		ds.CDNID = &cdns[0].ID
+	}
+
+	if ds.ProfileID == nil && ds.ProfileName != nil {
+		profiles, reqInf, err := to.GetProfileByName(*ds.ProfileName)
+		if err != nil || len(profiles) == 0 {
+			return reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
+		}
+		ds.ProfileID = &profiles[0].ID
+	}
+
+	if ds.TenantID == nil && ds.Tenant != nil {
+		ten, reqInf, err := to.TenantByName(*ds.Tenant)
+		if err != nil || ten == nil {
+			return reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
+		}
+		ds.TenantID = &ten.ID
+	}
+	return ReqInf{}, nil
+}
+
 // CreateDeliveryServiceRequestV30 creates a Delivery Service Request.
 func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequestV30, header http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
@@ -139,37 +174,11 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	}
 
 	if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil {
-		if dsr.Original.TypeID == nil && dsr.Original.Type != nil {
-			ty, reqInf, err := to.GetTypeByName(dsr.Original.Type.String())
-			if err != nil || len(ty) == 0 {
-				return alerts, reqInf, fmt.Errorf("no type named '%s'", dsr.Original.Type)
-			}
-			dsr.Original.TypeID = &ty[0].ID
+		if reqInf, err := to.setupDS(dsr.Original); err != nil {
+			return tc.Alerts{}, reqInf, err
 		}
-
-		if dsr.Original.CDNID == nil && dsr.Original.CDNName != nil {
-			cdns, reqInf, err := to.GetCDNByName(*dsr.Original.CDNName)
-			if err != nil || len(cdns) == 0 {
-				return alerts, reqInf, fmt.Errorf("no CDN named '%s'", *dsr.Original.CDNName)
-			}
-			dsr.Original.CDNID = &cdns[0].ID
-		}
-
-		if dsr.Original.ProfileID == nil && dsr.Original.ProfileName != nil {
-			profiles, reqInf, err := to.GetProfileByName(*dsr.Original.ProfileName)
-			if err != nil || len(profiles) == 0 {
-				return alerts, reqInf, fmt.Errorf("no Profile named '%s'", *dsr.Original.ProfileName)
-			}
-			dsr.Original.ProfileID = &profiles[0].ID
-		}
-
-		if dsr.Original.TenantID == nil && dsr.Original.Tenant != nil {
-			ten, reqInf, err := to.TenantByName(*dsr.Original.Tenant)
-			if err != nil || ten == nil {
-				return alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *dsr.Original.Tenant)
-			}
-			dsr.Original.TenantID = &ten.ID
-		}
+	} else if reqInf, err := to.setupDS(dsr.Requested); err != nil {
+		return tc.Alerts{}, reqInf, err
 	}
 
 	reqBody, err := json.Marshal(dsr)
