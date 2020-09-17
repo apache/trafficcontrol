@@ -437,6 +437,34 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	return caps, nil
 }
 
+const dsrExistsQuery = `
+SELECT EXISTS(
+	SELECT id
+	FROM deliveryservice_request
+	WHERE status <> 'complete' AND
+		status <> 'rejected' AND
+		(
+			(change_type = 'delete' AND original->>'xmlId' = $1)
+			OR
+			(change_type <> 'delete' AND deliveryservice->>'xmlId' = $1)
+		)
+)
+`
+
+// DSRExistsWithXMLID returns whether or not an **open** Delivery Service
+// Request with the given xmlid exists, and any error that occurred.
+func DSRExistsWithXMLID(xmlid string, tx *sql.Tx) (bool, error) {
+	if tx == nil {
+		return false, errors.New("checking for DSR with nil transaction")
+	}
+
+	var exists bool
+	if err := tx.QueryRow(dsrExistsQuery, xmlid).Scan(&exists); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 	var caps []string
