@@ -76,6 +76,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed Traffic Portal to use the more performant and powerful ag-grid for all server tables.
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
 - Changed ORT to find the local ATS config directory and use it when location Parameters don't exist for many required configs, including all Delivery Service files (Header Rewrites, Regex Remap, URL Sig, URI Signing).
+- Changed ORT to not update ip_allow.config but log an error if it needs updating in syncds mode, and only actually update in badass mode.
+    - ATS has a known bug, where reloading when ip_allow.config has changed blocks arbitrary addresses. This will break things by not allowing any new necessary servers, but prevents breaking the Mid server. There is no solution that doesn't break something, until ATS fixes the bug, and breaking an Edge is better than breaking a Mid.
 - Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
 - Changed Traffic Monitor's `tmconfig.backup` to store the result of `GET /api/2.0/cdns/{{name}}/configs/monitoring` instead of a transformed map
 - [Multiple Interface Servers](https://github.com/apache/trafficcontrol/blob/master/blueprints/multi-interface-servers.md)

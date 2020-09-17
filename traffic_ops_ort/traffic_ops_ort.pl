@@ -412,6 +412,15 @@ sub process_cfg_file {
 		}
 	}
 
+	if ($change_needed && $cfg_file eq "ip_allow.config") {
+		if ($script_mode == $BADASS) {
+			$trafficserver_restart_needed++;
+		} else {
+			( $log_level >> $ERROR ) && print "ERROR Not in badass mode, but ip_allow.config changed! Changing that file will cause ATS to break the next time it Reloads! Ignoring file!! This will cause this server to reject any new servers! ORT must be run in badass mode to get the ip_allow.config change and permit the necessary client!\n";
+			$change_needed = undef;
+		}
+	}
+
 	if ( $change_needed ) {
 		$cfg_file_tracker->{$cfg_file}{'change_needed'}++;
 		( $log_level >> $ERROR ) && print "ERROR $file needs updated.\n";
