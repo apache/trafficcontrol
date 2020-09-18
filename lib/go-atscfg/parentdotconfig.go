@@ -109,9 +109,20 @@ type ParentInfos map[OriginHost]ParentInfo
 
 type ParentInfoSortByRank []ParentInfo
 
-func (s ParentInfoSortByRank) Len() int           { return len(([]ParentInfo)(s)) }
-func (s ParentInfoSortByRank) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s ParentInfoSortByRank) Less(i, j int) bool { return s[i].Rank < s[j].Rank }
+func (s ParentInfoSortByRank) Len() int      { return len(([]ParentInfo)(s)) }
+func (s ParentInfoSortByRank) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s ParentInfoSortByRank) Less(i, j int) bool {
+	if s[i].Rank != s[j].Rank {
+		return s[i].Rank < s[j].Rank
+	} else if s[i].Host != s[j].Host {
+		return s[i].Host < s[j].Host
+	} else if s[i].Domain != s[j].Domain {
+		return s[i].Domain < s[j].Domain
+	} else if s[i].Port != s[j].Port {
+		return s[i].Port < s[j].Port
+	}
+	return s[i].IP < s[j].IP
+}
 
 type ParentConfigDSTopLevelSortByName []ParentConfigDSTopLevel
 
@@ -370,8 +381,6 @@ func getParentStrs(ds ParentConfigDSTopLevel, parentInfos []ParentInfo, atsMajor
 
 	parents := ""
 	secondaryParents := "" // "secparents" in Perl
-	sort.Sort(sort.StringSlice(parentInfo))
-	sort.Sort(sort.StringSlice(secondaryParentInfo))
 
 	if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
 		parents = `parent="` + strings.Join(parentInfo, "") + `"`
