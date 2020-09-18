@@ -57,6 +57,7 @@ func Validate(reqObj tc.TopologiesQueueUpdateRequest, topologyName tc.TopologyNa
 	return util.JoinErrs(tovalidate.ToErrors(errorMap))
 }
 
+// QueueUpdateHandler queues server updates for all servers in all cachegroups included in a given topology.
 func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, []string{})
 	if userErr != nil || sysErr != nil {

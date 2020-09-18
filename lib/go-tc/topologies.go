@@ -55,14 +55,14 @@ type TopologiesQueueUpdateRequest struct {
 	CDNID  int64  `json:"cdnId"`
 }
 
-// TopologiesQueueUpdate encodes the response data for the POST
+// TopologiesQueueUpdateResponse encodes the response data for the POST
 // topologies/{{name}}/queue_update endpoint.
 type TopologiesQueueUpdateResponse struct {
 	TopologiesQueueUpdate `json:"response"`
 	Alerts
 }
 
-// TopologiesQueueUpdate encodes the response data for the POST
+// TopologiesQueueUpdate decodes the update data from the POST
 // topologies/{{name}}/queue_update endpoint.
 type TopologiesQueueUpdate struct {
 	Action   string       `json:"action"`
