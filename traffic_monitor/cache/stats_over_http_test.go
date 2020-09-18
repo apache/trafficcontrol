@@ -19,8 +19,10 @@ package cache
  * under the License.
  */
 
-import "os"
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestStatsOverHTTPParse(t *testing.T) {
 	fd, err := os.Open("stats_over_http.json")
@@ -28,7 +30,7 @@ func TestStatsOverHTTPParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stats, misc, err := statsOverHTTPParse("test", fd)
+	stats, misc, err := statsOverHTTPParse("test", fd, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

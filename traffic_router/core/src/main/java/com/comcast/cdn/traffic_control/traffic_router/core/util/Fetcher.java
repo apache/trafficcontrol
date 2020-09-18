@@ -47,8 +47,11 @@ public class Fetcher {
 	protected static final String UTF8_STR = "UTF-8";
 	protected static final int DEFAULT_TIMEOUT = 10000;
 	private static final String GZIP_ENCODING_STRING = "gzip";
+	private static final String CONTENT_TYPE_STRING = "Content-Type";
+	protected static final String CONTENT_TYPE_JSON = "application/json";
 	protected int timeout = DEFAULT_TIMEOUT; // override if you want something different
 	protected final Map<String, String> requestProps = new HashMap<String, String>();
+
 
 	static {
 		try {
@@ -72,6 +75,11 @@ public class Fetcher {
 	}
 
 	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod, final long lastFetchTime) throws IOException {
+		return getConnection(url, data, requestMethod, lastFetchTime, null);
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod, final long lastFetchTime, final String contentType) throws IOException {
 		HttpURLConnection http = null;
 		try {
 			String method = GET_STR;
@@ -110,6 +118,10 @@ public class Fetcher {
 
 			for (final String key : requestProps.keySet()) {
 				http.addRequestProperty(key, requestProps.get(key));
+			}
+
+			if (contentType != null) {
+				http.addRequestProperty(CONTENT_TYPE_STRING, contentType);
 			}
 
 			if (method.equals(POST_STR) && data != null) {

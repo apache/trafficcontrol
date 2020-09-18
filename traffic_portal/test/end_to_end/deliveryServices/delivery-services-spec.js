@@ -219,7 +219,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.moreBtn.click();
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
-		pageData.selectServersBtn.click();
+		pageData.moreBtn.click();
+		pageData.selectServersMenuItem.click();
 		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
 		pageData.selectAllCB.click();
 		pageData.selectFormSubmitButton.click();
@@ -263,7 +264,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should populate and submit the delivery service form', function() {
-		console.log('Creating a HTTP DS for ' + mockVals.dnsXmlId);
+		console.log('Creating a HTTP DS with a topology for ' + mockVals.httpXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=HTTP");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
@@ -287,6 +288,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
+		// set topology
+		commonFunctions.selectDropdownbyNum(pageData.topology, 1);
 		pageData.createButton.click();
 	});
 
@@ -352,6 +355,16 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		element.all(by.css('tbody tr')).then(function(totalRows) {
 			expect(totalRows.length).toBe(1);
 		});
+	});
+
+	it('should navigate back to the HTTP delivery service and view all servers utilized per the assigned topology', function() {
+		console.log('Viewing all servers utilized by ' + mockVals.httpXmlId);
+		pageData.dsLink.click();
+		pageData.moreBtn.click();
+		pageData.manageServersMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
+		console.log('The ability to assign servers is disabled for ' + mockVals.httpXmlId);
+		expect(pageData.selectServersBtn.isEnabled()).toBe(false);
 	});
 
 	it('should navigate back to the HTTP delivery service and delete it', function() {

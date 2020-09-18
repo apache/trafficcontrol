@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -36,6 +38,8 @@ func GetConfigFileProfileDropQStringDotConfig(toData *config.TOData) (string, st
 		dropQStringVal = &param.Value
 		break
 	}
-
-	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, atscfg.LineCommentDropQStringDotConfig, nil
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("this server missing Profile")
+	}
+	return atscfg.MakeDropQStringDotConfig(*toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, atscfg.LineCommentDropQStringDotConfig, nil
 }

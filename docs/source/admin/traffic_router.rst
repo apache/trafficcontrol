@@ -116,6 +116,10 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.tcp.backlog                           | Maximum length of the queue for incoming TCP connection requests                 | ``0``                                              |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.tcp.host                              | IP Address Traffic Router will listen on for incoming TCP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.udp.host                              | IP Address Traffic Router will listen on for incoming UDP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.udp.port                              | UDP port that Traffic Router will use for incoming DNS requests                  | ``53``                                             |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.max-threads                           | Maximum number of threads used to process incoming DNS requests                  | ``1000``                                           |
@@ -513,6 +517,8 @@ GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
 	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the :term:`Delivery Service`
+GEO_DS
+	The request was redirected to the Miss Location configured on the :term:`Delivery Service`, because CZF couldn't resolve the client IP, and Maxmind returned the default coordinates of the country code of the client IP
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT

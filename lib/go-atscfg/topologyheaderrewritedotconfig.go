@@ -44,19 +44,28 @@ func LastHeaderRewriteConfigFileName(dsName string) string {
 }
 
 func MakeTopologyHeaderRewriteDotConfig(
-	server tc.Server,
+	server *tc.ServerNullable,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	ds tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
 	cacheGroupArr []tc.CacheGroupNullable,
-	servers []tc.Server,
+	servers []tc.ServerNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[ServerCapability]struct{},
 ) string {
-	text := GenericHeaderComment(server.HostName, toToolName, toURL)
+	if server.HostName == nil {
+		return "ERROR: server missing HostName"
+	} else if server.Cachegroup == nil {
+		return "ERROR: server missing Cachegroup"
+	}
 
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	text := GenericHeaderComment(*server.HostName, toToolName, toURL)
+
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		log.Errorln("making topology header rewrite config, config will be malformed! : " + err.Error())
+	}
 
 	if ds.Topology == nil || *ds.Topology == "" {
 		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' with no Topology! This should never be called, a DS with no topology should never have a First, Inner, or Last Header Rewrite config in the list of config files! Returning blank config!")
@@ -70,10 +79,10 @@ func MakeTopologyHeaderRewriteDotConfig(
 		return text
 	}
 
-	log.Errorf("DEBUG topo MakeTopologyHeaderRewriteDotConfig calling getTopologyPlacement cg '" + server.Cachegroup + "'\n")
-	serverPlacement := getTopologyPlacement(tc.CacheGroupName(server.Cachegroup), topology, cacheGroups)
+	log.Errorf("DEBUG topo MakeTopologyHeaderRewriteDotConfig calling getTopologyPlacement cg '" + *server.Cachegroup + "'\n")
+	serverPlacement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
 	if !serverPlacement.InTopology {
-		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + server.HostName + "' is not in the DS's topology! Returning blank config!")
+		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' is not in the DS's topology! Returning blank config!")
 		return text
 	}
 
@@ -86,12 +95,12 @@ func MakeTopologyHeaderRewriteDotConfig(
 	case TopologyCacheTierLast:
 		headerRewrite = ds.LastHeaderRewrite
 	default:
-		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + server.HostName + "' got unknown topology cache tier '" + string(serverPlacement.CacheTier) + "'! Returning blank config!")
+		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' got unknown topology cache tier '" + string(serverPlacement.CacheTier) + "'! Returning blank config!")
 		return text
 	}
 
 	if serverPlacement.CacheTier == TopologyCacheTierLast && ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0 {
-		lastTierCacheCount := GetTopologyDSServerCount(dsRequiredCapabilities, tc.CacheGroupName(server.Cachegroup), servers, serverCapabilities)
+		lastTierCacheCount := GetTopologyDSServerCount(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), servers, serverCapabilities)
 
 		maxOriginConnectionsPerServer := int(math.Round(float64(*ds.MaxOriginConnections) / float64(lastTierCacheCount)))
 		if maxOriginConnectionsPerServer < 1 {
@@ -117,16 +126,27 @@ func MakeTopologyHeaderRewriteDotConfig(
 // This should only be used for DSes with Topologies.
 // It returns all servers in CG with the Capabilities of ds in cg.
 // It will not be the number of servers for Delivery Services not using Topologies, which use DeliveryService-Server assignments instead.
-func GetTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []tc.Server, serverCapabilities map[int]map[ServerCapability]struct{}) int {
+func GetTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []tc.ServerNullable, serverCapabilities map[int]map[ServerCapability]struct{}) int {
 	count := 0
 	for _, sv := range servers {
-		if sv.Cachegroup != string(cg) {
+		if sv.Cachegroup == nil {
+			log.Errorln("TO Servers had nil cachegroup, skipping!")
+			continue
+		} else if sv.Status == nil {
+			log.Errorln("TO Servers had nil status, skipping!")
+			continue
+		} else if sv.ID == nil {
+			log.Errorln("TO Servers had nil id, skipping!")
 			continue
 		}
-		if sv.Status != string(tc.CacheStatusReported) && sv.Status != string(tc.CacheStatusOnline) {
+
+		if *sv.Cachegroup != string(cg) {
 			continue
 		}
-		if !HasRequiredCapabilities(serverCapabilities[sv.ID], dsRequiredCapabilities) {
+		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
+			continue
+		}
+		if !HasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
 			continue
 		}
 		count++

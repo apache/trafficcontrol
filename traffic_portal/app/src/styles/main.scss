@@ -95,6 +95,24 @@ body.nav-sm .container.body .main-content {
   min-width: 200px;
   left: auto !important; // Reset the default from `.dropdown-menu`
   right: 0 !important;
+
+  button {
+    color: #333333;
+    text-decoration: none;
+    display: block;
+    clear: both;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: inherit;
+    padding: 3px 20px;
+
+    &[disabled] {
+      color: gray;
+      background-color: #f5f5f5;
+    }
+  }
+
 }
 
 .input-error {
@@ -120,6 +138,9 @@ body.nav-sm .container.body .main-content {
     background-color: white;
     border-radius: 0;
     font-size: 24px;
+    small {
+      font-size: medium;
+    }
   }
 
   .input-group-addon > label {

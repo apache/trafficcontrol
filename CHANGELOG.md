@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/deliveryservices` to return all delivery services that employ a given topology.
+    - Traffic Ops: Added support for `dsId` query parameter for `GET /api/3.0/servers` for topology-based delivery services.
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Portal: Added the ability to assign topologies to delivery services.
     - Traffic Portal: Added the ability to view all delivery services and cache groups associated with a topology.
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
+    - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.
     - Traffic Router: Added support for topology-based delivery services
     - Traffic Monitor: Added the ability to mark topology-based delivery services as available
@@ -36,8 +38,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
+- Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
+- Added functionality in TR, so that it uses the default miss location of the DS, in case the location(for the  client IP) returned was the default location of the country.
+- Added ability to set DNS Listening IPs in dns.properties
+- Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
+- Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data. Using the new `stats_over_http` `health.polling.format` value that allows monitoring of multiple interfaces will first require that *all* Traffic Monitors monitoring the affected cache server be upgraded.
 
 ### Fixed
+- Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal.
+- Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
 - Fixed #3400 - Allow "0" as a TTL value for Static DNS entries
 - Fixed #4743 - Validate absolute DNS name requirement on Static DNS entry for CNAME type [Related github issue](https://github.com/apache/trafficcontrol/issues/4743)
 - Fixed #4848 - `GET /api/x/cdns/capacity` gives back 500, with the message `capacity was zero`
@@ -60,18 +69,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added Delivery Service Raw Remap `__RANGE_DIRECTIVE__` directive to allow inserting the Range Directive after the Raw Remap text. This allows Raw Remaps which manipulate the Range.
 - Added an option for `coordinateRange` in the RGB configuration file, so that in case a client doesn't have a postal code, we can still determine if it should be allowed or not, based on whether or not the latitude/ longitude of the client falls within the supplied ranges. [Related github issue](https://github.com/apache/trafficcontrol/issues/4372)
 - Fixed #3548 - Prevents DS regexes with non-consecutive order from generating invalid CRconfig/snapshot.
+- Fixed #4680 - Change Content-Type to application/json for TR auth calls
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 - Changed Traffic Portal to use Traffic Ops API v3
+- Changed Traffic Portal to use the more performant and powerful ag-grid for all server tables.
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
 - Changed ORT to find the local ATS config directory and use it when location Parameters don't exist for many required configs, including all Delivery Service files (Header Rewrites, Regex Remap, URL Sig, URI Signing).
 - Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
+- Changed Traffic Monitor's `tmconfig.backup` to store the result of `GET /api/2.0/cdns/{{name}}/configs/monitoring` instead of a transformed map
 - [Multiple Interface Servers](https://github.com/apache/trafficcontrol/blob/master/blueprints/multi-interface-servers.md)
     - Interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
     - The `/servers` and `/servers/{{ID}}}` TO API endpoints have been updated to use and reflect multi-interface servers.
     - Updated `/cdns/{{name}}/configs/monitoring` TO API endpoint to return multi-interface data.
     - CDN Snapshots now use a server's "service addresses" to provide its IP addresses.
+    - Changed the `Cache States` tab of the Traffic Monitor UI to properly handle multiple interfaces.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
     - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
 

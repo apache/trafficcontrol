@@ -25,7 +25,7 @@ import (
 	"github.com/json-iterator/go"
 )
 
-func srvAPICRConfigHist(toc towrap.ITrafficOpsSession) ([]byte, error) {
+func srvAPICRConfigHist(toc towrap.TrafficOpsSessionThreadsafe) ([]byte, error) {
 	json := jsoniter.ConfigFastest
 	return json.Marshal(toc.CRConfigHistory())
 }

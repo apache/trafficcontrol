@@ -22,7 +22,7 @@ module.exports = function(){
 	this.viewStaticCapabilitiesMenuItem=element(by.css('a[ng-click*=viewStaticDnsEntries]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.manageServersMenuItem=element(by.css('a[ng-click*=viewServers]'));
-	this.selectServersBtn=element(by.name('selectServersBtn'));
+	this.selectServersMenuItem=element(by.name('selectServersMenuItem'));
 	this.selectAllCB=element(by.id('selectAllCB'));
 	this.dsLink=element(by.name('dsLink'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));
@@ -35,6 +35,7 @@ module.exports = function(){
 	this.cdn=element(by.name('cdn'));
 	this.orgServerFqdn=element(by.name('orgServerFqdn'));
 	this.protocol=element(by.name('protocol'));
+	this.topology=element(by.name('topology'));
 	this.longDesc=element(by.name('longDesc'));
 	this.remapText=element(by.name('remapText'));
 	this.createButton=element(by.buttonText('Create'));

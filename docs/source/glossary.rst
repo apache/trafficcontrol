@@ -422,6 +422,14 @@ Glossary
 	Tenancies
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
+	Topology Node
+	Topology Nodes
+	Parent Topology Node
+	Parent Topology Nodes
+	Child Topology Node
+	Child Topology Nodes
+		Each :dfn:`Topology Node` is associated with a particular :term:`Cache Group`. In addition, the Topology Node has 0, 1, or 2 Parent Topology Nodes and has 0, 1, or 2 Child Topology Nodes, according to your configuration.
+
 	Topology
 	Topologies
 		A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
