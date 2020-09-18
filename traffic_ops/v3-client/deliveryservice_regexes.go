@@ -16,7 +16,10 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -38,4 +41,26 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 		return []tc.DeliveryServiceIDRegex{}, reqInf, err
 	}
 	return response.Response, reqInf, nil
+}
+
+func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, ReqInf, error) {
+	var alerts tc.Alerts
+	var remoteAddr net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqBody, err := json.Marshal(regex)
+	if err != nil {
+		return alerts, reqInf, err
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodPost, fmt.Sprintf(API_DS_REGEXES, dsID), reqBody, nil)
+	reqInf.RemoteAddr = remoteAddr
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	return alerts, reqInf, nil
 }
