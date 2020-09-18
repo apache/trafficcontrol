@@ -24,13 +24,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"net/http"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	validation "github.com/go-ozzo/ozzo-validation"
-	"net/http"
 )
 
 func Validate(reqObj tc.TopologiesQueueUpdateRequest, topologyName tc.TopologyName, tx *sql.Tx) error {

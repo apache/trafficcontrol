@@ -20,11 +20,12 @@ package v3
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type topologiesQueueUpdateTestCase struct {
