@@ -15,7 +15,8 @@ guidelines at https://www.apache.org/security/ regarding vulnerability disclosur
 
 - For *SUPPORT QUESTIONS*, use the Traffic Control slack (https://s.apache.org/atc-slack)
 or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_lists).
-- Before submitting, please **SEARCH GITHUB** for a similar issue or PR. -->
+- Before submitting, please **SEARCH GITHUB** for a similar issue or PR.
+-->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
@@ -46,8 +47,10 @@ include the applicable TC version.
 -->
 
 ## Anything else:
-<!-- e.g. stacktraces, related issues, suggestions how to fix (feel free to
-delete this section) -->
+<!--
+e.g. stacktraces, related issues, suggestions how to fix (feel free to delete
+this section)
+-->
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one

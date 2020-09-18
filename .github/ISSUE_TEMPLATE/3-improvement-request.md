@@ -11,7 +11,8 @@ labels: improvement
 ************ STOP!! ************
 - For *SUPPORT QUESTIONS*, use the Traffic Control slack (https://s.apache.org/atc-slack)
 or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_lists).
-- Before submitting, please **SEARCH GITHUB** for a similar issue or PR. -->
+- Before submitting, please **SEARCH GITHUB** for a similar issue or PR.
+-->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
@@ -43,8 +44,10 @@ If not, feel free to delete this section.
 -->
 
 ## Anything else:
-<!-- e.g. additional context, related issues, suggestions about how to approach
-(feel free to delete this section) -->
+<!--
+e.g. additional context, related issues, suggestions about how to approach (feel
+free to delete this section)
+-->
 
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
