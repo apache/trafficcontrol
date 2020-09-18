@@ -9,7 +9,7 @@ labels: enhancement
 
 <!--
 ************ STOP!! ************
-- For *SUPPORT QUESTIONS*, use the Traffic Control slack channels (https://s.apache.org/atc-slack)
+- For *SUPPORT QUESTIONS*, use the Traffic Control slack (https://s.apache.org/atc-slack)
 or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_lists).
 - Before submitting, please **SEARCH GITHUB** for a similar issue or PR. -->
 
