@@ -91,7 +91,7 @@ UPDATE server s
 SET upd_pending = $1
 FROM cachegroup c, topology_cachegroup tc, cdn
 WHERE s.cachegroup = c.id
-AND c."name" = tc.cachegroup
+AND c.name = tc.cachegroup
 AND tc.topology = $2
 AND s.cdn_id = $3
 `
