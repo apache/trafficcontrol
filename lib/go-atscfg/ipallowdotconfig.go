@@ -65,10 +65,23 @@ type IPAllowServer struct {
 	IP6Address string
 }
 
+type IPAllowServerWithName struct {
+	HostName tc.CacheName
+	IPAllowServer
+}
+
 const DefaultCoalesceMaskLenV4 = 24
 const DefaultCoalesceNumberV4 = 5
 const DefaultCoalesceMaskLenV6 = 48
 const DefaultCoalesceNumberV6 = 5
+
+type ServersSortByName []IPAllowServerWithName
+
+func (ss ServersSortByName) Len() int      { return len(ss) }
+func (ss ServersSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss ServersSortByName) Less(i, j int) bool {
+	return ss[i].HostName < ss[j].HostName
+}
 
 // MakeIPAllowDotConfig creates the ip_allow.config ATS config file.
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
@@ -166,7 +179,16 @@ func MakeIPAllowDotConfig(
 
 		ips := []*net.IPNet{}
 		ip6s := []*net.IPNet{}
+
+		childServersArr := []IPAllowServerWithName{}
 		for serverName, server := range childServers {
+			childServersArr = append(childServersArr, IPAllowServerWithName{HostName: serverName, IPAllowServer: server})
+		}
+		// sort servers, to guarantee things like IP coalescing are deterministic
+		sort.Sort(ServersSortByName(childServersArr))
+		for _, serverWithName := range childServersArr {
+			serverName := serverWithName.HostName
+			server := serverWithName.IPAllowServer
 
 			if ip := net.ParseIP(server.IPAddress).To4(); ip != nil {
 				// got an IP - convert it to a CIDR and add it to the list
