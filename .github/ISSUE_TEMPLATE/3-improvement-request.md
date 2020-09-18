@@ -1,7 +1,7 @@
 ---
-name: Feature request
+name: Improvement request
 
-about: Suggest how to improve Traffic Control with something new
+about: Suggest how to improve an existing Traffic Control feature
 
 labels: enhancement
 
