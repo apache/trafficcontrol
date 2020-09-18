@@ -35,7 +35,7 @@ func TestJobs(t *testing.T) {
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
-		VerifyUniqueJobTest(t)
+		VerifyCreateUniqueJobTest(t)
 	})
 }
 
@@ -67,7 +67,7 @@ func CreateTestJobs(t *testing.T) {
 	}
 }
 
-func VerifyUniqueJobTest(t *testing.T) {
+func VerifyCreateUniqueJobTest(t *testing.T) {
 	startTime := tc.Time{
 		Time:  time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC),
 		Valid: true,
@@ -97,6 +97,12 @@ func VerifyUniqueJobTest(t *testing.T) {
 	_, _, err = TOSession.CreateInvalidationJob(newJob)
 	if err == nil {
 		t.Fatal("expected invalidation job create to fail")
+	}
+
+	newTime.Time = startTime.Time.Add(time.Hour * 10)
+	_, _, err = TOSession.CreateInvalidationJob(newJob)
+	if err != nil {
+		t.Fatal("expected to able to create invalidation job")
 	}
 }
 
