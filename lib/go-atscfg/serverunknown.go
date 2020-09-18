@@ -83,3 +83,21 @@ func SortParams(params map[string][]string) []Param {
 	sort.Sort(Params(sortedParams))
 	return sortedParams
 }
+
+// GetServerUnknownConfigCommentType takes the same data as MakeUnknownConfig and returns the comment type for that config.
+// In particular, it returns # unless there is a 'header' parameter, in which case it returns an empty string.
+// Wwe don't actually know that the first characters of a custom header are a comment, or how many characters it might be.
+func GetServerUnknownConfigCommentType(
+	serverName tc.CacheName,
+	serverDomain string,
+	toToolName string,
+	toURL string,
+	params map[string][]string,
+) string {
+	for name, _ := range params {
+		if name == "header" {
+			return ""
+		}
+	}
+	return LineCommentHash
+}

@@ -109,10 +109,7 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 		}
 	}
 
-	scopeParams := map[string]string{}
-	for _, param := range toData.ScopeParams {
-		scopeParams[param.ConfigFile] = param.Value
-	}
+	scopeParams := ParamsToMap(toData.ScopeParams)
 
 	locationParams := map[string]atscfg.ConfigProfileParams{}
 	for _, param := range toData.ServerParams {

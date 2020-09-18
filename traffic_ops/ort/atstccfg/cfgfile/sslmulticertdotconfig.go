@@ -25,8 +25,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNSSLMultiCertDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileCDNSSLMultiCertDotConfig(toData *config.TOData) (string, string, string, error) {
 	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
 
-	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, nil
+	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, atscfg.LineCommentSSLMultiCertDotConfig, nil
 }

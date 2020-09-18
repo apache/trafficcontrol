@@ -24,6 +24,7 @@ import (
 )
 
 const ContentTypeATSDotRules = ContentTypeTextASCII
+const LineCommentATSDotRules = LineCommentHash
 
 func MakeATSDotRules(
 	profileName string,

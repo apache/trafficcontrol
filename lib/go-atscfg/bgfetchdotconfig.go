@@ -24,6 +24,7 @@ import (
 )
 
 const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
+const LineCommentBGFetchDotConfig = LineCommentHash
 
 func MakeBGFetchDotConfig(
 	cdnName tc.CDNName,

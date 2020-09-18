@@ -32,6 +32,7 @@ import (
 const CacheURLParameterConfigFile = "cacheurl.config"
 const CacheKeyParameterConfigFile = "cachekey.config"
 const ContentTypeRemapDotConfig = ContentTypeTextASCII
+const LineCommentRemapDotConfig = LineCommentHash
 
 type RemapConfigDSData struct {
 	ID                       int

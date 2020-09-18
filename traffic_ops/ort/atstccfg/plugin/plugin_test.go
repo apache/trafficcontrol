@@ -34,6 +34,7 @@ func TestPlugin(t *testing.T) {
 			fi := config.ATSConfigFile{}
 			fi.Text = "testfile\n"
 			fi.ContentType = "text/plain"
+			fi.LineComment = ""
 			fi.FileNameOnDisk = "testfile.txt"
 			fi.Location = "/opt/trafficserver/etc/trafficserver/"
 			d.Files = append(d.Files, fi)

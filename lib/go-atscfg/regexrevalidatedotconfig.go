@@ -41,6 +41,7 @@ const JobKeywordPurge = "PURGE"
 const RegexRevalidateMinTTL = time.Hour
 
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
+const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
 type Job struct {
 	AssetURL string
@@ -71,6 +72,7 @@ func MakeRegexRevalidateDotConfig(
 
 	maxDays := DefaultMaxRevalDurationDays
 	if maxDaysStrs := params[RegexRevalidateMaxRevalDurationDaysParamName]; len(maxDaysStrs) > 0 {
+		sort.Strings(maxDaysStrs)
 		if maxDays, err = strconv.Atoi(maxDaysStrs[0]); err != nil { // just use the first, if there were multiple params
 			log.Warnln("making regex revalidate config: max days param '" + maxDaysStrs[0] + "' is not an integer, using default value!")
 			maxDays = DefaultMaxRevalDurationDays

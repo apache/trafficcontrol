@@ -21,12 +21,13 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 const ATSDotRulesFileName = StorageFileName
 
-func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {
@@ -36,7 +37,15 @@ func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, err
 		if param.Name == "location" {
 			continue
 		}
+		if val, ok := paramData[param.Name]; ok {
+			if val < param.Value {
+				log.Errorln("data error: making ats.rules: parameter '" + param.Name + "' had multiple values, ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("data error: making ats.rules: parameter '" + param.Name + "' had multiple values, ignoring '" + val + "'")
+			}
+		}
 		paramData[param.Name] = param.Value
 	}
-	return atscfg.MakeATSDotRules(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeATSDotRules, nil
+	return atscfg.MakeATSDotRules(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeATSDotRules, atscfg.LineCommentATSDotRules, nil
 }

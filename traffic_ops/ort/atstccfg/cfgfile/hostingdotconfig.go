@@ -31,7 +31,7 @@ import (
 const ServerHostingDotConfigMidIncludeInactive = false
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
-func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.HostingConfigParamConfigFile, "", "", ""))
 
 	cdnServers := map[tc.CacheName]tc.Server{}
@@ -59,7 +59,7 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 	dsServerMap := map[int]map[int]struct{}{} // set[dsID][serverID]
 	for _, dss := range dsServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
-			return "", "", errors.New("deliveryserviceservers returned dss with nil values")
+			return "", "", "", errors.New("deliveryserviceservers returned dss with nil values")
 		}
 		if _, ok := dsServerMap[*dss.DeliveryService]; !ok {
 			dsServerMap[*dss.DeliveryService] = map[int]struct{}{}
@@ -121,5 +121,5 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		origins = append(origins, origin)
 	}
 
-	return atscfg.MakeHostingDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, fileParams, origins), atscfg.ContentTypeHostingDotConfig, nil
+	return atscfg.MakeHostingDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, fileParams, origins), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
 }

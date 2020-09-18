@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, string, error) {
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range toData.Servers {
 		if sv.Profile != toData.Server.Profile {
@@ -65,5 +65,5 @@ func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, 
 		profileDSes = append(profileDSes, atscfg.ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
 	}
 
-	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), atscfg.ContentTypeCacheDotConfig, nil
+	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), atscfg.ContentTypeCacheDotConfig, atscfg.LineCommentCacheDotConfig, nil
 }
