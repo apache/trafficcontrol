@@ -275,10 +275,10 @@ under the License.
                         <ul>
                             <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
                                 <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
-                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/24" />
+                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/27" />
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
-                                <small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR < 27 or IPv6 with CIDR < 64 can be problematic</small>
+                                <small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR &lt; 27 or IPv6 with CIDR &lt; 64 can be problematic</small>
                                 <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
                                 <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small>
