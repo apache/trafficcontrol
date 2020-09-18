@@ -41,6 +41,7 @@ my $rev_proxy_disable = 0;
 my $skip_os_check = 0;
 my $override_hostname_short = '';
 my $to_timeout_ms = 30000;
+my $syncds_updates_ipallow = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -50,6 +51,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "skip_os_check=i" => \$skip_os_check,
             "override_hostname_short=s" => \$override_hostname_short,
             "to_timeout_ms=i" => \$to_timeout_ms,
+            "syncds_updates_ipallow=i" => \$syncds_updates_ipallow,
           );
 
 if ( $#ARGV < 1 ) {
@@ -320,6 +322,7 @@ sub usage {
 	print "\t   skip_os_check=<0|1>            => bypass the check for a supported CentOS version. Default = 0.\n";
 	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
 	print "\t   to_timeout_ms=<time>           => the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds).\n";
+	print "\t   syncds_updates_ipallow=<0|1>   => Update ip_allow.config in syncds mode, which may trigger an ATS bug blocking random addresses on load! Default = 0, only update on badass and restart.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -384,6 +387,15 @@ sub process_cfg_file {
 				# all lines accounted for
 				$change_needed = undef;
 			}
+		}
+	}
+
+	if ($change_needed && $cfg_file eq "ip_allow.config" && $syncds_updates_ipallow != 1) {
+		if ($script_mode == $BADASS) {
+			$trafficserver_restart_needed++;
+		} else {
+			( $log_level >> $ERROR ) && print "ERROR Not in badass mode, but ip_allow.config changed! Changing that file will cause ATS to break the next time it Reloads! Ignoring file!! This will cause this server to reject any new servers! ORT must be run in badass mode to get the ip_allow.config change and permit the necessary client!\n";
+			$change_needed = undef;
 		}
 	}
 
