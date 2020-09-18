@@ -3,7 +3,7 @@ name: Improvement request
 
 about: Suggest how to improve an existing Traffic Control feature
 
-labels: enhancement
+labels: improvement
 
 ---
 
