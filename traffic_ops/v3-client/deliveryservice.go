@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // These are the API endpoints used by the various Delivery Service-related client methods.
@@ -74,6 +75,10 @@ const (
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_sslkeys.html
 	API_DELIVERY_SERVICE_XMLID_SSL_KEYS = API_DELIVERY_SERVICES + "/xmlid/%s/sslkeys"
+
+	// API_DELIVERY_SERVICE_GENERATE_SSL_KEYS is the API path on which Traffic Ops will generate new SSL keys
+	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_sslkeys_generate.html
+	API_DELIVERY_SERVICE_GENERATE_SSL_KEYS = API_DELIVERY_SERVICES + "/sslkeys/generate"
 
 	// API_DELIVERY_SERVICE_URI_SIGNING_KEYS is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URI-signing keys used by a Delivery Service identified
@@ -495,6 +500,46 @@ func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.De
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GenerateSSLKeysForDS generates ssl keys for a given cdn
+func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields tc.SSLKeyRequestFields) (string, ReqInf, error) {
+	version := util.JSONIntStr(1)
+	request := tc.DeliveryServiceSSLKeysReq{
+		BusinessUnit:    sslFields.BusinessUnit,
+		CDN:             util.StrPtr(CDNName),
+		City:            sslFields.City,
+		Country:         sslFields.Country,
+		DeliveryService: util.StrPtr(XMLID),
+		HostName:        sslFields.HostName,
+		Key:             util.StrPtr(XMLID),
+		Organization:    sslFields.Organization,
+		State:           sslFields.State,
+		Version:         &version,
+	}
+	jsonReq, err := json.Marshal(request)
+	if err != nil {
+		return "", ReqInf{}, err
+	}
+	response := struct {
+		Response string `json:"response"`
+	}{}
+	reqInf, err := post(to, API_DELIVERY_SERVICE_GENERATE_SSL_KEYS, jsonReq, &response)
+	if err != nil {
+		return "", reqInf, err
+	}
+	return response.Response, reqInf, nil
+}
+
+func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, ReqInf, error) {
+	resp := struct {
+		Response string `json:"resposne"`
+	}{}
+	reqInf, err := del(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &resp)
+	if err != nil {
+		return "", reqInf, err
+	}
+	return resp.Response, reqInf, nil
 }
 
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery

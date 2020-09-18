@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -766,8 +766,9 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 
 	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	oldHostName := ""
+	oldCDNName := ""
 	if dsType.HasSSLKeys() {
-		oldHostName, err = getOldHostName(*ds.ID, tx)
+		oldHostName, oldCDNName, err = getOldDetails(*ds.ID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
 		}
@@ -896,15 +897,17 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 
 	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	newHostName := ""
+	newCDNName := ""
 	if dsType.HasSSLKeys() {
+		newCDNName, err = getCDNName(*ds.CDNID, tx)
 		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
 		}
 	}
 
-	if newDSType.HasSSLKeys() && oldHostName != newHostName {
-		if err := updateSSLKeys(ds, newHostName, tx, cfg); err != nil {
+	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName) {
+		if err := updateSSLKeys(ds, newHostName, newCDNName, tx, cfg); err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
 		}
 	}
@@ -1070,9 +1073,9 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldHostName(id int, tx *sql.Tx) (string, error) {
+func getOldDetails(id int, tx *sql.Tx) (string, string, error) {
 	q := `
-SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name
+SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name
 FROM  deliveryservice as ds
 JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
@@ -1083,30 +1086,31 @@ WHERE ds.id=$1
 	dsTypeStr := ""
 	routingName := ""
 	cdnDomain := ""
-	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain); err != nil {
-		return "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
+	cdnName := ""
+	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain, &cdnName); err != nil {
+		return "", "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
 	}
 	dsType := tc.DSTypeFromString(dsTypeStr)
 	if dsType == tc.DSTypeInvalid {
-		return "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
+		return "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
 	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
-		return "", errors.New("getting delivery services matchlist: " + err.Error())
+		return "", "", errors.New("getting delivery services matchlist: " + err.Error())
 	}
 	matchList, ok := matchLists[xmlID]
 	if !ok {
-		return "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
+		return "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
 	}
 	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
 	if err != nil {
-		return "", errors.New("getting hostname: " + err.Error())
+		return "", "", errors.New("getting hostname: " + err.Error())
 	}
-	return host, nil
+	return host, cdnName, nil
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
-	// TODO combine with getOldHostName, to only make one query?
+	// TODO combine with getOldDetails, to only make one query?
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM type WHERE id = $1`, id).Scan(&name); err != nil {
 		return "", fmt.Errorf("querying type ID %v: "+err.Error()+"\n", id)
@@ -1320,7 +1324,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	return dses, nil, nil, http.StatusOK
 }
 
-func updateSSLKeys(ds *tc.DeliveryServiceNullableV30, hostName string, tx *sql.Tx, cfg *config.Config) error {
+func updateSSLKeys(ds *tc.DeliveryServiceNullableV30, hostName string, cdnName string, tx *sql.Tx, cfg *config.Config) error {
 	if ds.XMLID == nil {
 		return errors.New("delivery services has no XMLID!")
 	}
@@ -1333,6 +1337,7 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullableV30, hostName string, tx *sql.T
 	}
 	key.DeliveryService = *ds.XMLID
 	key.Hostname = hostName
+	key.CDN = cdnName
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(key, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		return errors.New("putting updated SSL key: " + err.Error())
 	}
@@ -1365,6 +1370,15 @@ func getHostName(dsProtocol *int, dsType tc.DSType, dsRoutingName string, dsMatc
 		}
 	}
 	return host, nil
+}
+
+func getCDNName(cdnID int, tx *sql.Tx) (string, error) {
+	q := `SELECT cdn.name FROM cdn where cdn.id = $1`
+	cdnName := ""
+	if err := tx.QueryRow(q, cdnID).Scan(&cdnName); err != nil {
+		return "", fmt.Errorf("getting CDN name with id '%v': %v", cdnID, err)
+	}
+	return cdnName, nil
 }
 
 func getCDNDomain(dsID int, tx *sql.Tx) (string, error) {
