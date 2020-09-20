@@ -65,3 +65,5 @@ COPY dns/set-dns.sh \
 WORKDIR /opt/traffic_ops/app
 EXPOSE  443
 CMD     /run-go.sh
+HEALTHCHECK --interval=10s --timeout=1s \
+    CMD bash -c 'source /to-access.sh && [[ "$(curl -s "https://${TO_FQDN}/api/${TO_API_VERSION}/ping" | jq .ping)" == \"pong\" ]]'
