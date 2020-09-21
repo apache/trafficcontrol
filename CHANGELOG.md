@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - ORT: Added Topologies to Config Generation.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
     - Traffic Portal: Added the ability to assign topologies to delivery services.
-    - Traffic Portal: Added the ability to view all delivery services and cache groups associated with a topology.
+    - Traffic Portal: Added the ability to view all delivery services, cache groups and servers associated with a topology.
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
     - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.
