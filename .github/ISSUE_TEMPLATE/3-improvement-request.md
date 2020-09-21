@@ -9,6 +9,10 @@ labels: improvement
 
 <!--
 ************ STOP!! ************
+If this issue identifies a security vulnerability, DO NOT submit it! Instead, contact
+the Apache Traffic Control Security Team at security@trafficcontrol.apache.org and follow the
+guidelines at https://www.apache.org/security/ regarding vulnerability disclosure.
+
 - For *SUPPORT QUESTIONS*, use the Traffic Control slack (https://s.apache.org/atc-slack)
 or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_lists).
 - Before submitting, please **SEARCH GITHUB** for a similar issue or PR.
