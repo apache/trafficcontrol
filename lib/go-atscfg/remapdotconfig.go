@@ -163,7 +163,15 @@ func GetServerConfigRemapDotConfigForMid(
 				log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
 			}
 			midRemap += ` @plugin=cachekey.so`
+
+			dsProfileCacheKeyParams := []KeyVal{}
 			for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
+				dsProfileCacheKeyParams = append(dsProfileCacheKeyParams, KeyVal{Key: name, Val: val})
+			}
+			sort.Sort(KeyVals(dsProfileCacheKeyParams))
+			for _, nameVal := range dsProfileCacheKeyParams {
+				name := nameVal.Key
+				val := nameVal.Val
 				midRemap += ` @pparam=--` + name + "=" + val
 			}
 		}
@@ -709,4 +717,20 @@ func makeDSRegexMap(regexes []tc.DeliveryServiceRegexes) map[tc.DeliveryServiceN
 		dsRegexMap[tc.DeliveryServiceName(dsRegex.DSName)] = dsRegex.Regexes
 	}
 	return dsRegexMap
+}
+
+type KeyVal struct {
+	Key string
+	Val string
+}
+
+type KeyVals []KeyVal
+
+func (ks KeyVals) Len() int      { return len(ks) }
+func (ks KeyVals) Swap(i, j int) { ks[i], ks[j] = ks[j], ks[i] }
+func (ks KeyVals) Less(i, j int) bool {
+	if ks[i].Key != ks[j].Key {
+		return ks[i].Key < ks[j].Key
+	}
+	return ks[i].Val < ks[j].Val
 }

@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"bytes"
 	"errors"
 	"net/url"
 	"regexp"
@@ -110,9 +111,71 @@ type ParentInfos map[OriginHost]ParentInfo
 
 type ParentInfoSortByRank []ParentInfo
 
-func (s ParentInfoSortByRank) Len() int           { return len(([]ParentInfo)(s)) }
-func (s ParentInfoSortByRank) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s ParentInfoSortByRank) Less(i, j int) bool { return s[i].Rank < s[j].Rank }
+func (s ParentInfoSortByRank) Len() int      { return len(([]ParentInfo)(s)) }
+func (s ParentInfoSortByRank) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s ParentInfoSortByRank) Less(i, j int) bool {
+	if s[i].Rank != s[j].Rank {
+		return s[i].Rank < s[j].Rank
+	} else if s[i].Host != s[j].Host {
+		return s[i].Host < s[j].Host
+	} else if s[i].Domain != s[j].Domain {
+		return s[i].Domain < s[j].Domain
+	} else if s[i].Port != s[j].Port {
+		return s[i].Port < s[j].Port
+	}
+	return s[i].IP < s[j].IP
+}
+
+type ServerWithParams struct {
+	tc.ServerNullable
+	Params ProfileCache
+}
+
+type ServersWithParamsSortByRank []ServerWithParams
+
+func (ss ServersWithParamsSortByRank) Len() int      { return len(ss) }
+func (ss ServersWithParamsSortByRank) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss ServersWithParamsSortByRank) Less(i, j int) bool {
+	if ss[i].Params.Rank != ss[j].Params.Rank {
+		return ss[i].Params.Rank < ss[j].Params.Rank
+	}
+
+	if ss[i].HostName == nil {
+		if ss[j].HostName != nil {
+			return true
+		}
+	} else if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName != ss[j].HostName {
+		return *ss[i].HostName < *ss[j].HostName
+	}
+
+	if ss[i].DomainName == nil {
+		if ss[j].DomainName != nil {
+			return true
+		}
+	} else if ss[j].DomainName == nil {
+		return false
+	} else if ss[i].DomainName != ss[j].DomainName {
+		return *ss[i].DomainName < *ss[j].DomainName
+	}
+
+	if ss[i].Params.Port != ss[j].Params.Port {
+		return ss[i].Params.Port < ss[j].Params.Port
+	}
+
+	iIP := GetServerIPAddress(&ss[i].ServerNullable)
+	jIP := GetServerIPAddress(&ss[j].ServerNullable)
+
+	if iIP == nil {
+		if jIP != nil {
+			return true
+		}
+	} else if jIP == nil {
+		return false
+	}
+	return bytes.Compare(iIP, jIP) <= 0
+}
 
 type ParentConfigDSTopLevelSortByName []ParentConfigDSTopLevel
 
@@ -729,8 +792,7 @@ func serverParentageParams(sv *tc.ServerNullable, params []ParameterWithProfiles
 	return profileCache
 }
 
-func serverParentStr(sv *tc.ServerNullable, params []ParameterWithProfilesMap) (string, error) {
-	svParams := serverParentageParams(sv, params)
+func serverParentStr(sv *tc.ServerNullable, svParams ProfileCache) (string, error) {
 	if svParams.NotAParent {
 		return "", nil
 	}
@@ -804,7 +866,17 @@ func GetTopologyParents(
 
 	parentStrs := []string{}
 	secondaryParentStrs := []string{}
+
+	serversWithParams := []ServerWithParams{}
 	for _, sv := range servers {
+		serversWithParams = append(serversWithParams, ServerWithParams{
+			ServerNullable: sv,
+			Params:         serverParentageParams(&sv, parentConfigParams),
+		})
+	}
+	sort.Sort(ServersWithParamsSortByRank(serversWithParams))
+
+	for _, sv := range serversWithParams {
 		if sv.ID == nil {
 			log.Errorln("TO Servers server had nil ID, skipping")
 			continue
@@ -820,7 +892,7 @@ func GetTopologyParents(
 			continue
 		}
 		if *sv.Cachegroup == parentCG {
-			parentStr, err := serverParentStr(&sv, parentConfigParams)
+			parentStr, err := serverParentStr(&sv.ServerNullable, sv.Params)
 			if err != nil {
 				return nil, nil, errors.New("getting server parent string: " + err.Error())
 			}
@@ -829,13 +901,14 @@ func GetTopologyParents(
 			}
 		}
 		if *sv.Cachegroup == secondaryParentCG {
-			parentStr, err := serverParentStr(&sv, parentConfigParams)
+			parentStr, err := serverParentStr(&sv.ServerNullable, sv.Params)
 			if err != nil {
 				return nil, nil, errors.New("getting server parent string: " + err.Error())
 			}
 			secondaryParentStrs = append(secondaryParentStrs, parentStr)
 		}
 	}
+
 	return parentStrs, secondaryParentStrs, nil
 }
 
@@ -893,8 +966,6 @@ func getParentStrs(
 
 	parents := ""
 	secondaryParents := "" // "secparents" in Perl
-	sort.Sort(sort.StringSlice(parentInfo))
-	sort.Sort(sort.StringSlice(secondaryParentInfo))
 
 	if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
 		parents = `parent="` + strings.Join(parentInfo, "") + `"`
