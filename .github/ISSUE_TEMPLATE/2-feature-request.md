@@ -18,6 +18,12 @@ or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_list
 - Before submitting, please **SEARCH GITHUB** for a similar issue or PR.
 -->
 
+## I'm submitting a ...
+<!-- delete all those that don't apply -->
+<!--- security vulnerability (STOP!! - see above)-->
+-  new feature / enhancement request
+-  other <!--(Please do not submit support requests here - see above)-->
+
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
 -  CDN in a Box
