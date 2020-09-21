@@ -347,7 +347,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	foundTopDs := false
-	const topDsXmlId = "ds-top"
+	const (
+		topDsXmlId = "ds-top"
+		topology   = "my-topology"
+	)
 	for _, ds = range dses {
 		if ds.XMLID == nil || *ds.XMLID != topDsXmlId {
 			continue
@@ -366,18 +369,32 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s", err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsXmlId, err)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s", err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsXmlId, err)
 	}
 	for _, server := range response.Response {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
 		}
 	}
-
 	params.Del("dsId")
+
+	params.Add("topology", topology)
+	response, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers belonging to cachegroups in topology %s: %s", topology, err)
+	}
+	if len(response.Response) == 0 {
+		t.Fatalf("Did not find any servers belonging to cachegroups in topology %s: %s", topology, err)
+	}
+	for _, server := range response.Response {
+		if _, exists := expectedHostnames[*server.HostName]; !exists {
+			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
+		}
+	}
+	params.Del("topology")
 
 	resp, _, err := TOSession.GetServersWithHdr(nil, nil)
 	if err != nil {

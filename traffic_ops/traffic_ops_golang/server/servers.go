@@ -772,6 +772,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"physLocation":     dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
 		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
+		"topology":         dbhelpers.WhereColumnInfo{"tc.topology", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
@@ -813,6 +814,13 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
+	}
+
+	if _, ok := params[`topology`]; ok {
+		/* language=SQL */
+		queryAddition += `
+			JOIN topology_cachegroup tc ON cg."name" = tc.cachegroup
+`
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
