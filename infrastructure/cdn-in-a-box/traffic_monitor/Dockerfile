@@ -55,4 +55,4 @@ EXPOSE 80
 ADD traffic_monitor/run.sh /
 CMD /run.sh
 HEALTHCHECK --interval=10s --timeout=1s \
-    CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "https://${TO_FQDN}:${TO_PORT}" ]]'
+    CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "$TO_URL" ]]'
