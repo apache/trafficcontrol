@@ -1,7 +1,7 @@
 ---
 name: Improvement request
 
-about: Suggest how to improve an existing Traffic Control feature
+about: Suggest how to improve Traffic Control. Examples include usability, performance, tech debt, etc.
 
 labels: improvement
 
