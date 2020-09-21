@@ -18,10 +18,17 @@
  */
 
 module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.topLink=element(by.name('topLink'));
+	this.searchFilter=element(by.id('topologiesTable_filter')).element(by.css('label input'));
 	this.name=element(by.name('name'));
 	this.description=element(by.id('description'));
 	this.addChildCacheGroupBtn=element(by.css('.add-child-cg-btn'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));
 	this.selectAllCB=element(by.id('selectAllCB'));
+	this.updateButton=element(by.buttonText('Update'));
 	this.createButton=element(by.buttonText('Create'));
+	this.viewDeliveryServicesMenuItem=element(by.name('viewDeliveryServicesMenuItem'));
+	this.viewCacheGroupsMenuItem=element(by.name('viewCacheGroupsMenuItem'));
+	this.viewServersMenuItem=element(by.name('viewServersMenuItem'));
 };
