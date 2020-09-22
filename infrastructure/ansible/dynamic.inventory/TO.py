@@ -41,7 +41,7 @@ class AnsibleInventory():
         server_vars = {}
         server_vars['hosts'] = []
         server_vars['vars'] = {}
-        profile = api.get_profile_by_id(profile_id=profile_id)[0]
+        profile = api.get_profiles(id=profile_id)[0]
         server_vars['vars']['server_profile_description'] = profile[0]['description']
         server_vars['vars']['server_profile_type'] = profile[0]['type']
         server_vars['vars']['server_profile_routingDisabled'] = profile[0]['routingDisabled']
@@ -64,7 +64,7 @@ class AnsibleInventory():
                                                    'secondary_parent_group_name'])
         var_data['hosts'] = []
         var_data['vars'] = {}
-        cachegroup = api.get_cachegroup_by_id(cache_group_id=cachegroup_id)[0]
+        cachegroup = api.get_cachegroups(id=cachegroup_id)[0]
         var_data['vars']['cachegroup_name'] = cachegroup[0]['name']
         var_data['vars']['cachegroup_shortName'] = cachegroup[0]['shortName']
         var_data['vars']['cachegroup_parentCachegroupName'] = \
