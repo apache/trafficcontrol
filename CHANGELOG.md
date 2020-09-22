@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [4.1.1] - 2020-09-22
+### Added
+- Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
+
+### Deprecated
+- Deprecated the `insecure` option in `traffic_ops_golang` in favor of `"tls_config": { "InsecureSkipVerify": <bool> }`
+
 ## [4.1.0] - 2020-04-23
 ### Added
 - Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
