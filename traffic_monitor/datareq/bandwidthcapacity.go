@@ -20,16 +20,15 @@
 package datareq
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 )
 
 func srvAPIBandwidthCapacityKbps(statMaxKbpses threadsafe.CacheKbpses) []byte {
-	maxKbpses := statMaxKbpses.Get()
-	cap := int64(0)
-	for _, kbps := range maxKbpses {
-		cap += kbps
+	var capacity uint64 = 0
+	for _, kbps := range statMaxKbpses.Get() {
+		capacity += kbps
 	}
-	return []byte(fmt.Sprintf("%d", cap))
+	return []byte(strconv.FormatUint(capacity, 10))
 }

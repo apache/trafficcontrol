@@ -1341,6 +1341,19 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
+	}
+
 	if err := validateV1(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
@@ -1395,6 +1408,19 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	str := uuid.New().String()
@@ -1453,6 +1479,19 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	str := uuid.New().String()

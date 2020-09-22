@@ -48,6 +48,22 @@ func TestAstatsJson(t *testing.T) {
 	}
 }
 
+func TestAstatsAppJson(t *testing.T) {
+	file, err := os.Open("astats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "application/json")
+	_, _, err = astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestAstatsCSV(t *testing.T) {
 	file, err := os.Open("astats.csv")
 	if err != nil {

@@ -27,9 +27,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 )
 
-func srvTRConfig(opsConfig threadsafe.OpsConfig, toSession towrap.ITrafficOpsSession) ([]byte, time.Time, error) {
+func srvTRConfig(opsConfig threadsafe.OpsConfig, toSession towrap.TrafficOpsSessionThreadsafe) ([]byte, time.Time, error) {
 	cdnName := opsConfig.Get().CdnName
-	if toSession == nil {
+	if !toSession.Initialized() {
 		return nil, time.Time{}, fmt.Errorf("Unable to connect to Traffic Ops")
 	}
 	if cdnName == "" {

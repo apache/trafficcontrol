@@ -134,15 +134,18 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 const StatNameKBPS = "kbps"
 const StatNameMaxKBPS = "maxKbps"
 
-func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
-	for cacheName, interfaces := range cacheStats.Caches {
-		if _, ok := interfaces[tc.CacheInterfacesAggregate]; !ok {
-			log.Warnf("No %s interface on cache server %s", tc.CacheInterfacesAggregate, cacheName)
-			continue
-		}
-		cache, ok := crConfig.ContentServers[string(cacheName)]
+func addCapacity(
+	cap CapData,
+	ds tc.DeliveryServiceName,
+	cacheStats tmcache.Stats,
+	crStates tc.CRStates,
+	crConfig tc.CRConfig,
+	thresholds map[string]float64,
+) CapData {
+	for cacheName, statsCache := range cacheStats.Caches {
+		cache, ok := crConfig.ContentServers[cacheName]
 		if !ok {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' in CacheStats but not CRConfig, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' in CacheStats but not CRConfig, skipping")
 			continue
 		}
 
@@ -153,32 +156,32 @@ func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stat
 			continue
 		}
 
-		stat := interfaces[tc.CacheInterfacesAggregate]
+		stat := statsCache.Stats
 		if len(stat[StatNameKBPS]) < 1 || len(stat[StatNameMaxKBPS]) < 1 {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats has no kbps or maxKbps, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats has no kbps or maxKbps, skipping")
 			continue
 		}
 
 		kbps, err := statToFloat(stat[StatNameKBPS][0].Val)
 		if err != nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats kbps is not a number, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats kbps is not a number, skipping")
 			continue
 		}
 		maxKBPS, err := statToFloat(stat[StatNameMaxKBPS][0].Val)
 		if err != nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats maxKps is not a number, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats maxKps is not a number, skipping")
 			continue
 		}
 		if cache.ServerStatus == nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CRConfig Status is nil, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CRConfig Status is nil, skipping")
 			continue
 		}
 		if cache.Profile == nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CRConfig Profile is nil, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CRConfig Profile is nil, skipping")
 			continue
 		}
 		if tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusReported || tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusOnline {
-			if crStates.Caches[cacheName].IsAvailable {
+			if crStates.Caches[tc.CacheName(cacheName)].IsAvailable {
 				cap.Available += kbps
 			} else {
 				cap.Unavailable += kbps

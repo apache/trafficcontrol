@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -97,6 +99,30 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
+// GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
+func (i *ServerInterfaceInfo) GetDefaultAddress() (string, string) {
+	var ipv4 string
+	var ipv6 string
+	for _, ip := range i.IPAddresses {
+		if ip.ServiceAddress {
+			address, _, err := net.ParseCIDR(ip.Address)
+			if err != nil || address == nil {
+				continue
+			}
+			if address.To4() != nil {
+				ipv4 = ip.Address
+			} else if address.To16() != nil {
+				ipv6 = ip.Address
+			}
+
+			if ipv4 != "" && ipv6 != "" {
+				break
+			}
+		}
+	}
+	return ipv4, ipv6
+}
+
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
@@ -181,6 +207,76 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 	return []ServerInterfaceInfo{iface}, nil
 }
 
+// String implements the fmt.Stringer interface.
+func (lid LegacyInterfaceDetails) String() string {
+	var b strings.Builder
+	b.Write([]byte("LegacyInterfaceDetails(InterfaceMtu="))
+
+	if lid.InterfaceMtu == nil {
+		b.Write([]byte("nil"))
+	} else {
+		b.WriteString(strconv.FormatInt(int64(*lid.InterfaceMtu), 10))
+	}
+
+	b.Write([]byte(", InterfaceName="))
+	if lid.InterfaceName != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.InterfaceName)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IP6Address="))
+	if lid.IP6Address != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IP6Address)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IP6Gateway="))
+	if lid.IP6Gateway != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IP6Gateway)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPAddress="))
+	if lid.IPAddress != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPAddress)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPGateway="))
+	if lid.IPGateway != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPGateway)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPNetmask="))
+	if lid.IPNetmask != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPNetmask)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.WriteRune(')')
+
+	return b.String()
+}
+
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
 // equivalent LegacyInterfaceDetails structure. It does this by creating the
 // IP address fields using the "service" interface's IP addresses. All others
@@ -190,10 +286,14 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 
 	for _, intFace := range serverInterfaces {
 
+		foundServiceInterface := false
+
 		for _, addr := range intFace.IPAddresses {
 			if !addr.ServiceAddress {
 				continue
 			}
+
+			foundServiceInterface = true
 
 			address := addr.Address
 			gateway := addr.Gateway
@@ -226,17 +326,26 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
 			}
 
-			legacyDetails.InterfaceName = &intFace.Name
+			// This should no longer matter now that short-circuiting is better,
+			// but this temporary variable is necessary because the 'intFace'
+			// variable is referential, so taking '&intFace.Name' would cause
+			// problems when intFace is reassigned.
+			name := intFace.Name
+			legacyDetails.InterfaceName = &name
 
 			// we can jump out here since servers can only legally have one
 			// IPv4 and one IPv6 service address
 			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
-				return legacyDetails, nil
+				break
 			}
+		}
+
+		if foundServiceInterface {
+			return legacyDetails, nil
 		}
 	}
 
-	return legacyDetails, nil
+	return legacyDetails, errors.New("no service addresses found")
 }
 
 type Server struct {
@@ -394,6 +503,101 @@ type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
+}
+
+// ToNullable converts the Server to an equivalent, "nullable" structure.
+//
+// Note that "zero" values (e.g. the empty string "") are NOT coerced to actual
+// null values. In particular, the only fields that will possibly be nil are
+// FQDN - if the original server had a nil FQDN - and DeliveryServices - which
+// will actually be a pointer to a nil map if the original server had a nil
+// DeliveryServices map.
+// Further note that this makes "shallow" copies of member properties; if
+// reference types (map, slice, pointer etc.) are altered on the original after
+// conversion, the changes WILL affect the nullable copy.
+func (s Server) ToNullable() ServerNullableV2 {
+	return ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: CommonServerProperties{
+				Cachegroup:       &s.Cachegroup,
+				CachegroupID:     &s.CachegroupID,
+				CDNID:            &s.CDNID,
+				CDNName:          &s.CDNName,
+				DeliveryServices: &s.DeliveryServices,
+				DomainName:       &s.DomainName,
+				FQDN:             s.FQDN,
+				FqdnTime:         s.FqdnTime,
+				GUID:             &s.GUID,
+				HostName:         &s.HostName,
+				HTTPSPort:        &s.HTTPSPort,
+				ID:               &s.ID,
+				ILOIPAddress:     &s.ILOIPAddress,
+				ILOIPGateway:     &s.ILOIPGateway,
+				ILOIPNetmask:     &s.ILOIPNetmask,
+				ILOPassword:      &s.ILOPassword,
+				ILOUsername:      &s.ILOUsername,
+				LastUpdated:      &s.LastUpdated,
+				MgmtIPAddress:    &s.MgmtIPAddress,
+				MgmtIPGateway:    &s.MgmtIPGateway,
+				MgmtIPNetmask:    &s.MgmtIPNetmask,
+				OfflineReason:    &s.OfflineReason,
+				PhysLocation:     &s.PhysLocation,
+				PhysLocationID:   &s.PhysLocationID,
+				Profile:          &s.Profile,
+				ProfileDesc:      &s.ProfileDesc,
+				ProfileID:        &s.ProfileID,
+				Rack:             &s.Rack,
+				RevalPending:     &s.RevalPending,
+				RouterHostName:   &s.RouterHostName,
+				RouterPortName:   &s.RouterPortName,
+				Status:           &s.Status,
+				StatusID:         &s.StatusID,
+				TCPPort:          &s.TCPPort,
+				Type:             s.Type,
+				TypeID:           &s.TypeID,
+				UpdPending:       &s.UpdPending,
+				XMPPID:           &s.XMPPID,
+				XMPPPasswd:       &s.XMPPPasswd,
+			},
+			LegacyInterfaceDetails: LegacyInterfaceDetails{
+				InterfaceMtu:  &s.InterfaceMtu,
+				InterfaceName: &s.InterfaceName,
+				IPAddress:     &s.IPAddress,
+				IPGateway:     &s.IPGateway,
+				IPNetmask:     &s.IPNetmask,
+				IP6Address:    &s.IP6Address,
+				IP6Gateway:    &s.IP6Gateway,
+			},
+		},
+		IPIsService:  &s.IPIsService,
+		IP6IsService: &s.IP6IsService,
+	}
+}
+
+// Upgrade upgrades the ServerNullableV2 to the new ServerNullable structure.
+//
+// Note that this makes "shallow" copies of all underlying data, so changes to
+// the original will affect the upgraded copy.
+func (s ServerNullableV2) Upgrade() (ServerNullable, error) {
+	ipv4IsService := false
+	if s.IPIsService != nil {
+		ipv4IsService = *s.IPIsService
+	}
+	ipv6IsService := false
+	if s.IP6IsService != nil {
+		ipv6IsService = *s.IP6IsService
+	}
+
+	upgraded := ServerNullable{
+		CommonServerProperties: s.CommonServerProperties,
+	}
+
+	infs, err := s.LegacyInterfaceDetails.ToInterfaces(ipv4IsService, ipv6IsService)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
 }
 
 // ServerNullable represents an ATC server, as returned by the TO API.

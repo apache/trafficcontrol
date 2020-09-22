@@ -72,13 +72,19 @@ func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.S
 	return alerts, reqInf, nil
 }
 
-// GetServiceCategories gets a list of service categories by the passed in url values.
-func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategory, ReqInf, error) {
+// GetServiceCategoriesWithHdr gets a list of service categories by the passed in url values and http headers.
+func (to *Session) GetServiceCategoriesWithHdr(values *url.Values, header http.Header) ([]tc.ServiceCategory, ReqInf, error) {
 	url := fmt.Sprintf("%s?%s", API_SERVICE_CATEGORIES, values.Encode())
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
+	}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ServiceCategory{}, reqInf, nil
+		}
 	}
 	defer resp.Body.Close()
 
@@ -88,6 +94,11 @@ func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategor
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetServiceCategories gets a list of service categories by the passed in url values.
+func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategory, ReqInf, error) {
+	return to.GetServiceCategoriesWithHdr(values, nil)
 }
 
 // DeleteServiceCategoryByName deletes a service category by the service

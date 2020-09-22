@@ -368,7 +368,7 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Retrives a location for a given client being served a given Delivery Service.
+	 * Retrieves a location for a given client being served a given Delivery Service.
 	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
 	 * an IP address, but trailing port number specifications are stripped.
 	 * @param deliveryService The Delivery Service being served to the client.
@@ -484,6 +484,17 @@ public class TrafficRouter {
 	}
 
 	/**
+	 * Returns whether or not a Delivery Service has a valid miss location.
+	 * @param deliveryService The Delivery Service being served.
+	 */
+	public boolean isValidMissLocation(final DeliveryService deliveryService) {
+		if (deliveryService.getMissLocation() != null && deliveryService.getMissLocation().getLatitude() != 0.0 && deliveryService.getMissLocation().getLongitude() != 0.0) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Selects {@link Cache}s to serve a request for a Delivery Service based on a given location.
 	 * @param clientIp The requesting client's IP address - as a String.
 	 * @param deliveryService The Delivery Service being served.
@@ -513,8 +524,14 @@ public class TrafficRouter {
 			}
 		}
 
-		if (clientLocation.isDefaultLocation() && defaultGeolocationsOverride.containsKey(clientLocation.getCountryCode())) {
-			clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+		track.setResult(ResultType.GEO);
+		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
+			if (isValidMissLocation(deliveryService)) {
+				clientLocation = deliveryService.getMissLocation();
+				track.setResult(ResultType.GEO_DS);
+			} else {
+				clientLocation = getDefaultGeoLocationsOverride().get(clientLocation.getCountryCode());
+			}
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
@@ -522,8 +539,6 @@ public class TrafficRouter {
 		if (caches == null || caches.isEmpty()) {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
-
-		track.setResult(ResultType.GEO);
 		return caches;
 	}
 
@@ -1985,5 +2000,9 @@ public class TrafficRouter {
 		}
 
 		return edgeHTTPRoutingLimit;
+	}
+
+	public Map<String, Geolocation> getDefaultGeoLocationsOverride() {
+		return defaultGeolocationsOverride;
 	}
 }
