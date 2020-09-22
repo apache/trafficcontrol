@@ -168,13 +168,19 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		TLSConfig:         &tls.Config{InsecureSkipVerify: cfg.Insecure},
+		TLSConfig:         cfg.TLSConfig,
 		ReadTimeout:       time.Duration(cfg.ReadTimeout) * time.Second,
 		ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeout) * time.Second,
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 		ErrorLog:          log.Error,
 	}
+	if server.TLSConfig == nil {
+		server.TLSConfig = &tls.Config{}
+	}
+	// Deprecated in 5.0
+	server.TLSConfig.InsecureSkipVerify = cfg.Insecure
+	// end deprecated block
 
 	go func() {
 		if cfg.KeyPath == "" {
