@@ -353,6 +353,48 @@ func (to *Session) request(method, path string, body []byte, header http.Header)
 	return to.ErrUnlessOKOrNotModified(r, remoteAddr, err, path)
 }
 
+// requestWithoutClosingBody makes a request to Traffic Ops, trying to refresh
+// the cookie if it is expired - but only once. It determines a cookie is
+// expired not by examining the cookie itself, but by recognizing a
+// 401 Unauthorized response status code from the server. It returns, in order,
+// a pointer to an HTTP response - which, if there is no error, contains a
+// non-nil Body the caller is expected to close -, the remote address of the
+// Traffic Ops server used to service the request, and any error that occurred.
+// Note that any response code greater than or equal to 400 will result in an
+// error - and that means that it cannot be assumed that the response object is
+// nil if there is an error! This is to provide greater visibility to
+// HTTP-level errors while still giving back as much information as possible.
+func (to *Session) requestWithoutClosingBody(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
+	r, remoteAddr, err := to.RawRequestWithHdr(method, path, body, header)
+	if err != nil {
+		return r, remoteAddr, err
+	}
+	if r.StatusCode < 400 {
+		return r, remoteAddr, nil
+	}
+	if r.StatusCode != http.StatusUnauthorized {
+		if r.StatusCode == http.StatusNotImplemented {
+			return r, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+		}
+		return r, remoteAddr, fmt.Errorf("Traffic Ops server returned HTTP Status Code %d %s", r.StatusCode, http.StatusText(r.StatusCode))
+	}
+	if _, lerr := to.login(); lerr != nil {
+		return r, remoteAddr, lerr
+	}
+
+	r, remoteAddr, err = to.RawRequestWithHdr(method, path, body, header)
+	if err != nil {
+		return r, remoteAddr, err
+	}
+	if r.StatusCode < 400 {
+		return r, remoteAddr, nil
+	}
+	if r.StatusCode == http.StatusNotImplemented {
+		return r, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+	}
+	return r, remoteAddr, fmt.Errorf("Traffic Ops server returned HTTP Status Code %d %s", r.StatusCode, http.StatusText(r.StatusCode))
+}
+
 func (to *Session) RawRequestWithHdr(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
 	url := to.getURL(path)
 
