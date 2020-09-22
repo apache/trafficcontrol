@@ -38,7 +38,7 @@ make; # All RPMs should have already been built
 
 docker images;
 logged_services='trafficrouter readiness';
-other_services='dns edge enroller mid origin trafficmonitor trafficops trafficops-perl trafficstats trafficvault';
+other_services='dns edge enroller mid-01 mid-02 origin trafficmonitor trafficops trafficops-perl trafficstats trafficvault';
 docker_compose='docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml';
 time $docker_compose build --parallel $logged_services $other_services;
 $docker_compose up -d $logged_services $other_services;
