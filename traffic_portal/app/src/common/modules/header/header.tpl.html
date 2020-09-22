@@ -17,10 +17,10 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="header" class="nav_menu">
+<div id="header" class="nav_menu" ng-class="{ 'prod': isProd }">
     <nav role="navigation">
         <div class="nav toggle">
-            <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+            <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
         </div>
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>

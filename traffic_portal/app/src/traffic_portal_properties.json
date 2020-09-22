@@ -2,6 +2,7 @@
   "_comment": "These are the default properties for Traffic Portal. Customize these values to fit your needs.",
   "properties": {
     "name": "Traffic Portal",
+    "isProd": false,
     "api": {
       "_comment": "This should have the same value found in /etc/traffic_portal/conf/config.js",
       "baseUrl": "https://localhost:8444/api/"
