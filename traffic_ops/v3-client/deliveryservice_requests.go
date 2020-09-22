@@ -186,16 +186,17 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	if err != nil {
 		return alerts, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_DS_REQUESTS, reqBody, header)
+	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPost, API_DS_REQUESTS, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	defer resp.Body.Close()
-
-	if err == nil {
-		body, readErr := ioutil.ReadAll(resp.Body)
-		if readErr != nil {
-			return alerts, reqInf, readErr
-		}
-		if err = json.Unmarshal(body, &alerts); err != nil {
-			return alerts, reqInf, err
+	jerr := json.NewDecoder(resp.Body).Decode(&alerts)
+	if jerr != nil {
+		if err != nil {
+			err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
+		} else {
+			err = fmt.Errorf("decoding response: %v", jerr)
 		}
 	}
 
@@ -349,19 +350,27 @@ func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRe
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 
 	var remoteAddr net.Addr
+	var alerts tc.Alerts
 	reqBody, err := json.Marshal(dsr)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
+	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	jerr := json.NewDecoder(resp.Body).Decode(&alerts)
+	if jerr != nil {
+		if err != nil {
+			err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
+		} else {
+			err = fmt.Errorf("decoding response: %v", jerr)
+		}
+	}
+
+	return alerts, reqInf, err
 }
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
