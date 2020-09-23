@@ -135,8 +135,8 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-func TestValidateSameAsnAndCachegroup(t *testing.T) {
-	expected := `an asn with the specified number and cachegroup already exists`
+func TestValidateASNExists(t *testing.T) {
+	expected := `an asn with the specified number already exists`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -162,7 +162,7 @@ func TestValidateSameAsnAndCachegroup(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID},
 	}
-	err = asn.HasSameNumberAndCachegroup()
+	err = asn.ASNExists()
 	if err == nil {
 		t.Fatalf("expected no error but got %v", err.Error())
 	}

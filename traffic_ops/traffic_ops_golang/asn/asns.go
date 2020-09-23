@@ -91,21 +91,21 @@ func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
-func (asn TOASNV11) HasSameNumberAndCachegroup() error {
+func (asn TOASNV11) ASNExists() error {
 	if asn.APIInfo() == nil || asn.APIInfo().Tx == nil {
-		return errors.New("couldn't perform check to see if same number and cachegroup exist already")
+		return errors.New("couldn't perform check to see if asn number exists already")
 	}
 	if asn.ASN == nil || asn.CachegroupID == nil {
 		return errors.New("no asn or cachegroup ID specified")
 	}
-	query := `SELECT id from asn where asn=$1 AND cachegroup=$2`
-	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN, *asn.CachegroupID)
+	query := `SELECT id from asn where asn=$1`
+	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN)
 	if err != nil {
 		return errors.New("selecting asns: " + err.Error())
 	}
 	defer rows.Close()
 	if rows.Next() {
-		return errors.New("an asn with the specified number and cachegroup already exists")
+		return errors.New("an asn with the specified number already exists")
 	}
 	return nil
 }
@@ -118,7 +118,7 @@ func (asn TOASNV11) Validate() error {
 	if errs["asn"] != nil || errs["cachegroupId"] != nil {
 		return util.JoinErrs(tovalidate.ToErrors(errs))
 	}
-	err := asn.HasSameNumberAndCachegroup()
+	err := asn.ASNExists()
 	return err
 }
 
