@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -317,7 +316,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(nil)
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -373,24 +372,21 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	otherServer := serverResponse.Response[0]
 
-	db, err := OpenConnection()
+	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
 	if err != nil {
-		t.Fatal("cannot open db")
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
 	}
-	/* language=SQL */
-	query := fmt.Sprintf(`
-		INSERT INTO  deliveryservice_server (
-			 deliveryservice,
-			 server,
-			 last_updated
-		 ) VALUES (
-			%d,
-		    %d,
-		    NOW()
-		 )
-`, *ds.ID, *otherServer.ID)
-	execSQL(db, query)
-	defer log.Close(db, "unable to close connection to db: %s")
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
+	if err != nil {
+		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
+	}
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
+	}
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
