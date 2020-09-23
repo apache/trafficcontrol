@@ -23,7 +23,7 @@ under the License.
             <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
         </div>
         <div class="navbar enviro-banner" ng-class="{ 'prod': environment == 'production' }">
-            <span class="enviro_name">{{environment}}</span>
+            <span class="enviro_name" ng-class="{ 'prod': environment == 'production' }">{{environment}}</span>
         </div>
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>

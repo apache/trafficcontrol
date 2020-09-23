@@ -302,7 +302,7 @@ li.current-page a {
   text-overflow: ellipsis;
   overflow: hidden;
   font-weight: 400;
-  font-size: 22px;
+  font-size: 18px;
   width: 100%;
   color: #777 !important;
   margin-left: 0 !important;
@@ -312,6 +312,10 @@ li.current-page a {
   margin: 0;
   padding-left: 10px;
   text-transform: uppercase;
+}
+
+.enviro_name.prod {
+  color: #ECF0F1 !important;
 }
 
 .site_title:hover,
