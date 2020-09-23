@@ -1,6 +1,11 @@
 {
   "_comment": "These are the default properties for Traffic Portal. Customize these values to fit your needs.",
   "properties": {
+    "_comments": {
+      "name": "Customize the name of Traffic Portal if desired.",
+      "isProd": "If true, header will be bright red with the label 'PRODUCTION' added.",
+      "enforceCapabilities": "Not currently supported. Must be false."
+    },
     "name": "Traffic Portal",
     "isProd": false,
     "api": {
