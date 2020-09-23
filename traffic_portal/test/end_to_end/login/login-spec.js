@@ -21,13 +21,17 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Login Test Suite', function() {
 	const commonFunctions = new cfunc();
-	// browser.get(browser.baseUrl);
 
 	beforeEach(function() {
 		browser.get(browser.baseUrl + '/#!/cdns');
 		browser.wait(function() {
 			return element(by.name('loginUsername')).isPresent();
 		}, 5000);
+	});
+
+	it('should not show PRODUCTION banner', function() {
+		console.log('Verifying PRODUCTION banner is not displayed');
+		expect(element(by.css('.prod-banner')).isPresent()).toBe(false);
 	});
 
 	it('should fail login to Traffic Portal with bad user', function() {
