@@ -17,13 +17,64 @@
  * under the License.
  */
 
-var TableTopologyServersController = function(topologies, servers, filter, $controller, $scope) {
+var TableTopologyServersController = function(topologies, servers, filter, $controller, $scope, $uibModal, cdnService, topologyService) {
 
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { tableName: 'topologyServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.topology = topologies[0];
+
+	$scope.confirmTopologyQueueServerUpdates = function(topology) {
+		const params = {
+			title: 'Queue Server Updates: ' + topology.name,
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			topologyService.queueServerUpdates(topology.name, cdn.id).then($scope.refresh);
+		}, function () {
+			console.log('Queue server updated cancelled');
+		});
+	};
+
+	$scope.confirmTopologyClearServerUpdates = function(topology) {
+		const params = {
+			title: 'Clear Server Updates: ' + topology.name,
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			topologyService.clearServerUpdates(topology.name, cdn.id).then($scope.refresh);
+		}, function () {
+			console.log('Clear server updated cancelled');
+		});
+	};
+
 };
 
-TableTopologyServersController.$inject = ['topologies', 'servers', 'filter', '$controller', '$scope'];
+TableTopologyServersController.$inject = ['topologies', 'servers', 'filter', '$controller', '$scope', '$uibModal', 'cdnService', 'topologyService'];
 module.exports = TableTopologyServersController;

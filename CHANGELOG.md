@@ -16,13 +16,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/deliveryservices` to return all delivery services that employ a given topology.
     - Traffic Ops: Added support for `dsId` query parameter for `GET /api/3.0/servers` for topology-based delivery services.
+    - Traffic Ops: Added support for `topology` query parameter for `GET /api/3.0/servers` to return all servers whose cachegroups are in a given topology.
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
     - ORT: Added Topologies to Config Generation.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
     - Traffic Portal: Added the ability to assign topologies to delivery services.
-    - Traffic Portal: Added the ability to view all delivery services and cache groups associated with a topology.
+    - Traffic Portal: Added the ability to view all delivery services, cache groups and servers associated with a topology.
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
     - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.

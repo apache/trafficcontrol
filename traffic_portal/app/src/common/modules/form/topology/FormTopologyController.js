@@ -114,6 +114,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		$location.path('/topologies/delivery-services');
 	};
 
+	$scope.viewServers = function() {
+		$location.path('/topologies/servers');
+	};
+
 	$scope.nodeLabel = function(node) {
 		return node.cachegroup || 'TOPOLOGY';
 	};
