@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var fixturesFilePath string
@@ -48,5 +49,43 @@ func LoadFixtures(fixturesPath string) {
 // Reloads the testing fixture data from the last location from which they were
 // loaded with LoadFixtures - this MUST be called after LoadFixtures.
 func ReloadFixtures() {
+	testData = TrafficControl{
+		ASNs:                                 []tc.ASN{},
+		CDNs:                                 []tc.CDN{},
+		CacheGroups:                          []tc.CacheGroupNullable{},
+		CacheGroupParameterRequests:          []tc.CacheGroupParameterRequest{},
+		Capabilities:                         []tc.Capability{},
+		Coordinates:                          []tc.Coordinate{},
+		DeliveryServicesRegexes:              []tc.DeliveryServiceRegexesTest{},
+		DeliveryServiceRequests:              []tc.DeliveryServiceRequestV30{},
+		DeliveryServiceRequestComments:       []tc.DeliveryServiceRequestComment{},
+		DeliveryServices:                     []tc.DeliveryServiceV30{},
+		DeliveryServicesRequiredCapabilities: []tc.DeliveryServicesRequiredCapability{},
+		Divisions:                            []tc.Division{},
+		Federations:                          []tc.CDNFederation{},
+		FederationResolvers:                  []tc.FederationResolver{},
+		Origins:                              []tc.Origin{},
+		Profiles:                             []tc.Profile{},
+		Parameters:                           []tc.Parameter{},
+		ProfileParameters:                    []tc.ProfileParameter{},
+		PhysLocations:                        []tc.PhysLocation{},
+		Regions:                              []tc.Region{},
+		Roles:                                []tc.Role{},
+		Servers:                              []tc.ServerNullable{},
+		ServerServerCapabilities:             []tc.ServerServerCapability{},
+		ServerCapabilities:                   []tc.ServerCapability{},
+		ServiceCategories:                    []tc.ServiceCategory{},
+		Statuses:                             []tc.StatusNullable{},
+		StaticDNSEntries:                     []tc.StaticDNSEntry{},
+		StatsSummaries:                       []tc.StatsSummary{},
+		Tenants:                              []tc.Tenant{},
+		ServerCheckExtensions:                []tc.ServerCheckExtensionNullable{},
+		Topologies:                           []tc.Topology{},
+		Types:                                []tc.Type{},
+		SteeringTargets:                      []tc.SteeringTargetNullable{},
+		Serverchecks:                         []tc.ServercheckRequestNullable{},
+		Users:                                []tc.User{},
+		InvalidationJobs:                     []tc.InvalidationJobInput{},
+	}
 	LoadFixtures(fixturesFilePath)
 }

@@ -37,6 +37,7 @@ const (
 )
 
 func TestDeliveryServiceRequests(t *testing.T) {
+	ReloadFixtures() // resets IDs
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
 		GetTestDeliveryServiceRequestsIMS(t)
 		GetTestDeliveryServiceRequests(t)
@@ -85,23 +86,23 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
+	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
-		// alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
-		_, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err == nil {
 			t.Fatal("Expected an error creating a DSR missing required fields, but didn't get one")
 		}
 		t.Logf("Received expected error creating DSR missing required fields %v", err)
 
-		// The client method doesn't return any alerts if an error occurs...
-		// if len(alerts.Alerts) == 0 {
-		// 	t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
-		// }
+		if len(alerts.Alerts) == 0 {
+			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		}
 	})
 }
 
 func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
+	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		if len(testData.DeliveryServiceRequests) < 1 {
 			t.Fatal("Need at least one DSR for testing")
@@ -119,9 +120,9 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 		}
 		dsr.Assignee = me.UserName
 		dsr.AssigneeID = me.ID
-		_, _, err = TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
 		if err != nil {
-			t.Fatalf("Creating DSR: %v", err)
+			t.Fatalf("Creating DSR: %v - %v", err, alerts)
 		}
 
 		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
@@ -141,6 +142,7 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
+	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
 		// Test the xmlId length and form
@@ -165,6 +167,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestBad(t *testing.T) {
+	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		// try to create non-draft/submitted
 		src := testData.DeliveryServiceRequests[dsrDraft]
@@ -198,6 +201,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 
 // TestDeliveryServiceRequestWorkflow tests that transitions of Status are
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
+	ReloadFixtures()
 	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
 		// test empty request table
 		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, nil)
