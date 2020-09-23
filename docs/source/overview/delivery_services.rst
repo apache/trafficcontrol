@@ -24,6 +24,8 @@ Delivery Services are modeled several times over, in the Traffic Ops database, i
 
 .. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservices` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
 
+.. seealso:: :ref:`delivery-service-requests`.
+
 .. _ds-active:
 
 Active
