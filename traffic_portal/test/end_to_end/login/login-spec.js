@@ -29,9 +29,9 @@ describe('Traffic Portal Login Test Suite', function() {
 		}, 5000);
 	});
 
-	it('should not show PRODUCTION banner', function() {
-		console.log('Verifying PRODUCTION banner is not displayed');
-		expect(element(by.css('.prod-banner')).isPresent()).toBe(false);
+	it('should not show environment banner in prod mode', function() {
+		console.log('Verifying environment banner does not have the prod class');
+		expect(element(by.css('.enviro-banner.prod')).isPresent()).toBe(false);
 	});
 
 	it('should fail login to Traffic Portal with bad user', function() {
