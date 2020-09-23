@@ -178,16 +178,16 @@ func ComputedStats() map[string]StatComputeFunc {
 		"availableBandwidthInMbps": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
 			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000.0
 		},
-		"bandwidth": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
+		tc.StatNameBandwidth: func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
-		"kbps": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
+		tc.StatNameKBPS: func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
 		"gbps": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
 			return float64(info.Vitals.KbpsOut) / 1000000.0
 		},
-		"maxKbps": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
+		tc.StatNameMaxKBPS: func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut
 		},
 		"loadavg": func(info ResultInfo, _ tc.TrafficServer, _ tc.TMProfile, _ tc.IsAvailable) interface{} {

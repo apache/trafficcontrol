@@ -38,7 +38,7 @@ func TestGetStatsFromServiceInterface(t *testing.T) {
 		},
 	}
 
-	kbps, maxKbps, err := getStatsFromServiceInterface(data1)
+	kbps, maxKbps, err := getStats(data1)
 	if err != nil {
 		t.Errorf("Expected no error, but got %v", err.Error())
 	}

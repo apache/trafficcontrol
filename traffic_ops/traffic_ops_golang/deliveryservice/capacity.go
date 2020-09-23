@@ -134,9 +134,6 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	}, nil
 }
 
-const StatNameKBPS = "kbps"
-const StatNameMaxKBPS = "maxKbps"
-
 func addCapacity(
 	cap CapData,
 	ds tc.DeliveryServiceName,
@@ -160,17 +157,17 @@ func addCapacity(
 		}
 
 		stat := statsCache.Stats
-		if len(stat[StatNameKBPS]) < 1 || len(stat[StatNameMaxKBPS]) < 1 {
+		if len(stat[tc.StatNameKBPS]) < 1 || len(stat[tc.StatNameMaxKBPS]) < 1 {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats has no kbps or maxKbps, skipping")
 			continue
 		}
 
-		kbps, err := statToFloat(stat[StatNameKBPS][0].Val)
+		kbps, err := statToFloat(stat[tc.StatNameKBPS][0].Val)
 		if err != nil {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats kbps is not a number, skipping")
 			continue
 		}
-		maxKBPS, err := statToFloat(stat[StatNameMaxKBPS][0].Val)
+		maxKBPS, err := statToFloat(stat[tc.StatNameMaxKBPS][0].Val)
 		if err != nil {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats maxKps is not a number, skipping")
 			continue

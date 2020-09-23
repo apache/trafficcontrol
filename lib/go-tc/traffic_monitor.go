@@ -30,9 +30,14 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// ThresholdPrefix is the prefix of all Names of Parameters used to define
-// monitoring thresholds.
-const ThresholdPrefix = "health.threshold."
+const (
+	// ThresholdPrefix is the prefix of all Names of Parameters used to define
+	// monitoring thresholds.
+	ThresholdPrefix   = "health.threshold."
+	StatNameKBPS      = "kbps"
+	StatNameMaxKBPS   = "maxKbps"
+	StatNameBandwidth = "bandwidth"
+)
 
 // TMConfigResponse is the response to requests made to the
 // cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.

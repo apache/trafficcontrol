@@ -148,7 +148,7 @@ func TestLegacyStatsNilConversion(t *testing.T) {
 	issues, legacyStats := stats.ToLegacy(config)
 
 	if legacyStats.CommonAPIData != stats.CommonAPIData {
-		t.Error("expected CommonAPIData to be the samee")
+		t.Error("expected CommonAPIData to be the same")
 	}
 
 	if len(issues) != 0 {

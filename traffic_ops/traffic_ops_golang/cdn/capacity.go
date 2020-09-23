@@ -139,10 +139,11 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 				log.Warnln("getCapacity failed to get CRConfig from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
 			}
-			if cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"}); err != nil {
+			statsToFetch := []string{tc.StatNameKBPS, tc.StatNameMaxKBPS}
+			if cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch); err != nil {
 				err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 				log.Warnln("getCapacity failed to get CacheStats2 from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying CacheStats" + err.Error())
-				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"})
+				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
 				if err != nil {
 					err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 					log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
@@ -174,9 +175,9 @@ func addCapacity(cap CapData, cacheStats tc.Stats, crStates tc.CRStates, crConfi
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		kbps, maxKbps, err := getStatsFromServiceInterface(stats)
+		kbps, maxKbps, err := getStats(stats)
 		if err != nil {
-			log.Errorf("couldn't get service interface stats for %v. err: %v", cacheName, err.Error())
+			log.Errorf("couldn't get stats for %v. err: %v", cacheName, err.Error())
 			continue
 		}
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
@@ -195,21 +196,28 @@ func addCapacity(cap CapData, cacheStats tc.Stats, crStates tc.CRStates, crConfi
 	return cap
 }
 
-func getStatsFromServiceInterface(stats tc.ServerStats) (float64, float64, error) {
-	kbps, ok := stats.Stats["kbps"]
+func getStats(stats tc.ServerStats) (float64, float64, error) {
+	kbpsRaw, ok := stats.Stats[tc.StatNameKBPS]
 	if !ok {
 		return 0, 0, errors.New("no kbps stats")
 	}
-	maxKbps, ok := stats.Stats["maxKbps"]
+	maxKbpsRaw, ok := stats.Stats[tc.StatNameMaxKBPS]
 	if !ok {
-		return 0, 0, errors.New("no maxKbps stats")
-
+		return 0, 0, errors.New("no maxKbpsR stats")
 	}
-	if len(kbps) < 1 ||
-		len(maxKbps) < 1 {
-		return 0, 0, errors.New("no kbps/ maxKbps stats to return")
+	if len(kbpsRaw) < 1 ||
+		len(maxKbpsRaw) < 1 {
+		return 0, 0, errors.New("no kbps/maxKbps stats to return")
 	}
-	return kbps[0].Val.(float64), maxKbps[0].Val.(float64), nil
+	kbps, ok := kbpsRaw[0].Val.(float64)
+	if !ok {
+		return 0, 0, errors.New("unable to convert kbps to a float")
+	}
+	maxKbps, ok := maxKbpsRaw[0].Val.(float64)
+	if !ok {
+		return 0, 0, errors.New("unable to convert maxKbps to a float")
+	}
+	return kbps, maxKbps, nil
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {

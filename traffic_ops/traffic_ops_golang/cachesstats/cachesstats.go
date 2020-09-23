@@ -32,6 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
+const ATSCurrentConnectionsStat = "ats.proxy.process.http.current_client_connections"
+
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -77,7 +79,7 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 			}
 
 			var cacheStats tc.Stats
-			stats := []string{"ats.proxy.process.http.current_client_connections", "bandwidth"}
+			stats := []string{ATSCurrentConnectionsStat, tc.StatNameBandwidth}
 			cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
 			if err != nil {
 				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
@@ -142,11 +144,11 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		if !ok {
 			continue
 		}
-		bandwidth, ok := stat.Stats["bandwidth"]
+		bandwidth, ok := stat.Stats[tc.StatNameBandwidth]
 		if ok && len(bandwidth) > 0 {
 			cache.KBPS = bandwidth[0].Val.(uint64)
 		}
-		connections, ok := stat.Stats["ats.proxy.process.http.current_client_connections"]
+		connections, ok := stat.Stats[ATSCurrentConnectionsStat]
 		if ok && len(connections) > 0 {
 			cache.Connections = connections[0].Val.(uint64)
 		}
