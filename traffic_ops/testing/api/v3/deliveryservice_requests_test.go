@@ -150,38 +150,13 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 		dsr.Requested.XMLID = &XMLID
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
+		if err == nil {
+			t.Error("Expected creating DSR with fields that fail validation to fail, but it didn't")
+		} else {
+			t.Logf("Received expected error creating DSR with fields that fail validation: %v", err)
 		}
 		if len(alerts.Alerts) == 0 {
 			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
-		}
-	})
-}
-
-func TestDeliveryServiceRequestTypeFields(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters}, func() {
-		dsr := testData.DeliveryServiceRequests[dsrBadTenant]
-
-		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
-		}
-
-		expected := []string{
-			"deliveryservice_request was created.",
-			//"'xmlId' the length must be between 1 and 48",
-		}
-
-		utils.Compare(t, expected, alerts.ToStrings())
-
-		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
-		if len(dsrs) != 1 {
-			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", *dsr.Requested.XMLID, len(dsrs))
-		}
-		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
-		if err != nil {
-			t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v", dsrs[0].ID, err, alert)
 		}
 	})
 }
