@@ -85,6 +85,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an option for `coordinateRange` in the RGB configuration file, so that in case a client doesn't have a postal code, we can still determine if it should be allowed or not, based on whether or not the latitude/ longitude of the client falls within the supplied ranges. [Related github issue](https://github.com/apache/trafficcontrol/issues/4372)
 - Fixed #3548 - Prevents DS regexes with non-consecutive order from generating invalid CRconfig/snapshot.
 - Fixed #5020, #5021 - Creating an ASN with the same number and same cache group should not be allowed.
+- Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
 - Fixed #4680 - Change Content-Type to application/json for TR auth calls
 
 ### Changed
