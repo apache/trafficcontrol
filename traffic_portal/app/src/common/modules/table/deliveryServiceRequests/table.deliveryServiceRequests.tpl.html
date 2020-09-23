@@ -59,8 +59,8 @@ under the License.
                 <td data-search="^{{::request.lastEditedBy}}$">{{::request.lastEditedBy}}</td>
                 <td title="{{request.createdAt}} (UTC)" data-search="^{{::getRelativeTime(request.createdAt)}}$" data-order="{{::request.createdAt}}">{{::getRelativeTime(request.createdAt)}}</td>
                 <td style="text-align: right;">
-                    <span ng-if="fulfillable(request)"><a class="link action-link" title="Fulfill Request" ng-click="fulfillRequest(request, $event)">fulfill</a>| </span>
-                    <span ng-if="rejectable(request)"><a class="link action-link" title="Reject Request" ng-click="rejectRequest(request, $event)">reject</a>| </span>
+                    <span ng-if="fulfillable(request)"><a class="link action-link" title="Fulfill Request" ng-click="fulfillRequest(request, $event)">fulfill</a> | </span>
+                    <span ng-if="rejectable(request)"><a class="link action-link" title="Reject Request" ng-click="rejectRequest(request, $event)">reject</a> | </span>
                     <span ng-if="completeable(request)"><a class="link action-link" title="Complete Request" ng-click="completeRequest(request, $event)">complete</a></span>
                     <span ng-if="open(request)"><a class="link action-link" title="Delete Request" ng-click="deleteRequest(request, $event)">delete</a></span>
                 </td>
