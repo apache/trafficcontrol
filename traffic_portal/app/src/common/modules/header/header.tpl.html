@@ -22,6 +22,9 @@ under the License.
         <div class="nav toggle">
             <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
         </div>
+        <div class="navbar prod-banner" ng-if="isProd">
+            <span class="site_title">PRODUCTION</span>
+        </div>
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>
                 <div class="btn-group" uib-dropdown is-open="userMenu.isopen">

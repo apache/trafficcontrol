@@ -118,6 +118,15 @@ body.nav-sm .main_container .top_nav {
   font-size: 26px;
 }
 
+.prod-banner {
+  width: 230px;
+  float: left;
+  background: red;
+  border-radius: 0;
+  height: 57px;
+  text-align: center;
+}
+
 @media (max-width: 991px) {
 
   body.nav-md .container.body .top_nav {
