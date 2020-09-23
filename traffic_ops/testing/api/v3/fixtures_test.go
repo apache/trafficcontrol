@@ -27,8 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-// LoadFixtures ...
+var fixturesFilePath string
+
+// LoadFixtures loads the testing fixture data.
 func LoadFixtures(fixturesPath string) {
+	fixturesFilePath = fixturesPath
 
 	f, err := ioutil.ReadFile(fixturesPath)
 	if err != nil {
@@ -40,4 +43,10 @@ func LoadFixtures(fixturesPath string) {
 		log.Errorf("Cannot unmarshal fixtures json %v", err)
 		os.Exit(1)
 	}
+}
+
+// Reloads the testing fixture data from the last location from which they were
+// loaded with LoadFixtures - this MUST be called after LoadFixtures.
+func ReloadFixtures() {
+	LoadFixtures(fixturesFilePath)
 }
