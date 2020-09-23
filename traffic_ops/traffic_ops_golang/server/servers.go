@@ -64,24 +64,25 @@ JOIN type t ON s.type = t.id
 
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
-SELECT
-	td.id deliveryservice,
-	s.id "server"
+(SELECT
+	ARRAY_AGG(CAST(ROW(td.id, s.id, NULL) AS deliveryservice_server))
 FROM "server" s
 JOIN cachegroup c on s.cachegroup = c.id
 LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 LEFT JOIN deliveryservice td ON td.topology = tc.topology
-UNION
+),
 `
 
 /* language=SQL */
 const deliveryServiceServersJoin = `
 FULL OUTER JOIN (
-%s
-SELECT
-	dss.deliveryservice,
-	dss."server"
-FROM deliveryservice_server dss
+SELECT (dss.dss_record).deliveryservice, (dss.dss_record).server FROM (
+	SELECT UNNEST(COALESCE(
+		%s
+		(SELECT
+			ARRAY_AGG(CAST(ROW(dss.deliveryservice, dss."server", NULL) AS deliveryservice_server))
+		FROM deliveryservice_server dss)
+	)) AS dss_record) AS dss
 ) dss ON dss.server = s.id
 JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
 `

@@ -316,7 +316,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(nil)
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -361,6 +361,36 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if !foundTopDs {
 		t.Fatalf("unable to find deliveryservice %s", topDsXmlId)
 	}
+
+	/* Create a deliveryservice server assignment that should not show up in the
+	 * client.GetServersWithHdr() response because ds-top is topology-based
+	 */
+	const otherServerHostname = "topology-edge-02"
+	serverResponse, _, err := TOSession.GetServersWithHdr(&url.Values{"hostName": []string{otherServerHostname}}, nil)
+	if err != nil {
+		t.Fatalf("getting server by hostname %s: %s", otherServerHostname, err)
+	}
+	if len(serverResponse.Response) != 1 {
+		t.Fatalf("unable to find server with hostname %s", otherServerHostname)
+	}
+	otherServer := serverResponse.Response[0]
+
+	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
+	}
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
+	if err != nil {
+		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
+	}
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
+	}
+
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3": true,
