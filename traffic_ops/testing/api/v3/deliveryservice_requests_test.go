@@ -87,14 +87,17 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
-		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
+		// alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		_, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err == nil {
+			t.Fatal("Expected an error creating a DSR missing required fields, but didn't get one")
 		}
+		t.Logf("Received expected error creating DSR missing required fields %v", err)
 
-		if len(alerts.Alerts) == 0 {
-			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
-		}
+		// The client method doesn't return any alerts if an error occurs...
+		// if len(alerts.Alerts) == 0 {
+		// 	t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		// }
 	})
 }
 
@@ -172,13 +175,24 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		src.Status = s
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		if err == nil {
+			t.Error("Expected an error creating a bad DSR, but didn't get one")
+		} else {
+			t.Logf("Received expected error creating DSR: %v", err)
 		}
-		expected := []string{
-			`'status' invalid transition from draft to pending`,
+
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Unexpected success creating bad DSR: %v", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				found = true
+			}
 		}
-		utils.Compare(t, expected, alerts.ToStrings())
+
+		if !found {
+			t.Error("Didn't find an error alert when creating a bad DSR")
+		}
 	})
 }
 
@@ -217,8 +231,17 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Logf("Received expected error creating Delivery Service Request: %v", err)
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Unexpected success message creating duplicate DSR: %v", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find expected error-level alert when creating duplicate DSR")
+		}
 
 		params := url.Values{}
 		params.Set("xmlId", src.XMLID)
@@ -231,7 +254,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 		}
 
 		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
-		found := false
+		found = false
 		for _, alert := range alerts.Alerts {
 			if alert.Level == tc.ErrorLevel.String() {
 				t.Errorf("Unexpected error-level alert: %s", alert.Text)
@@ -307,33 +330,51 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(*dsr.Requested.XMLID)
+	dsr.SetXMLID()
+	params := url.Values{}
+	params.Set("xmlId", dsr.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, params)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", *dsr.Requested.XMLID, err)
+		t.Errorf("cannot GET DeliveryServiceRequest by XMLID '%s': %v - %v", dsr.XMLID, *dsr.Requested.XMLID, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("Length of GET DeliveryServiceRequest is 0")
 	}
 	respDSR := resp[0]
+	if respDSR.Requested == nil {
+		t.Fatalf("Got back DSR without 'requested' (changetype: '%s')", respDSR.ChangeType)
+	}
+	if respDSR.ID == nil {
+		t.Fatal("Got back DSR without ID")
+	}
 	expDisplayName := "new display name"
-	respDSR.DeliveryService.DisplayName = expDisplayName
+	respDSR.Requested.DisplayName = &expDisplayName
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequest(*respDSR.ID, respDSR, nil)
 	t.Log("Response: ", alert)
 	if err != nil {
-		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v", err, alert)
-		return
+		t.Fatalf("cannot UPDATE DeliveryServiceRequest by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the DeliveryServiceRequest to check DeliveryServiceRequest name got updated
-	resp, _, err = TOSession.GetDeliveryServiceRequestByID(respDSR.ID)
+	params.Del("xmlId")
+	params.Set("id", strconv.Itoa(*respDSR.ID))
+	resp, _, err = TOSession.GetDeliveryServiceRequestsV30(nil, params)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", respDSR.ID, err)
-	} else {
-		respDSR = resp[0]
-		if respDSR.DeliveryService.DisplayName != expDisplayName {
-			t.Errorf("results do not match actual: %s, expected: %s", respDSR.DeliveryService.DisplayName, expDisplayName)
-		}
+		t.Fatalf("cannot GET DeliveryServiceRequest by ID: %v - %v", respDSR.ID, err)
+	}
+	if len(resp) < 1 {
+		t.Fatalf("No DSR by ID %d after updating that DSR", *respDSR.ID)
+	}
+	respDSR = resp[0]
+	if respDSR.Requested == nil {
+		t.Fatal("Got back DSR without 'requested' after update")
+	}
+	if respDSR.Requested.DisplayName == nil {
+		t.Fatal("Got back DSR with null 'requested.displayName' after updating that field to non-null value")
+	}
+	if *respDSR.Requested.DisplayName != expDisplayName {
+		t.Errorf("results do not match actual: '%s', expected: '%s'", *respDSR.Requested.DisplayName, expDisplayName)
 	}
 
 }
