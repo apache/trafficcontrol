@@ -128,7 +128,7 @@ func TestLegacyStatsConversion(t *testing.T) {
 	for cacheName, legacyCache := range legacyStats.Caches {
 		cache, ok := stats.Caches[string(cacheName)]
 		if !ok {
-			t.Errorf("new interface %v found", cacheName)
+			t.Errorf("new interface %v found in upgraded stats, but not in legacy stats", cacheName)
 		}
 		interf := cache.Interfaces["interface1"]
 		if len(interf)+len(cache.Stats) != len(legacyCache) {
