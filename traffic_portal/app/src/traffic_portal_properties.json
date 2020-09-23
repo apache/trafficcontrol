@@ -3,11 +3,11 @@
   "properties": {
     "_comments": {
       "name": "Customize the name of Traffic Portal if desired.",
-      "isProd": "If true, header will be bright red with the label 'PRODUCTION' added.",
+      "environment": "Optionally set the environment name (production, staging, development, etc). A red header in TP will be displayed if environment=production",
       "enforceCapabilities": "Not currently supported. Must be false."
     },
     "name": "Traffic Portal",
-    "isProd": false,
+    "environment": "",
     "api": {
       "_comment": "This should have the same value found in /etc/traffic_portal/conf/config.js",
       "baseUrl": "https://localhost:8444/api/"

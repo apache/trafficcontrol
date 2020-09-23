@@ -21,7 +21,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.appName = propertiesModel.properties.name;
 
-    $scope.isProd = propertiesModel.properties.isProd;
+    $scope.environment = propertiesModel.properties.environment.toLowerCase();
 
     $scope.enforceCapabilities = propertiesModel.properties.enforceCapabilities;
 

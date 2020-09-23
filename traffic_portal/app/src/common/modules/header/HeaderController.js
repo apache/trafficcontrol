@@ -23,7 +23,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.userLoaded = userModel.loaded;
 
-    $scope.isProd = propertiesModel.properties.isProd;
+    $scope.environment = propertiesModel.properties.environment.toLowerCase();
 
     /* we don't want real time changes to the user showing up. we want the ability to revert changes
     if necessary. thus, we will only update this on save. see userModel::userUpdated event below.
