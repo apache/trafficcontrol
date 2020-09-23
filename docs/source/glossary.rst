@@ -111,8 +111,10 @@ Glossary
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
 
-	Delivery Service Request
 	DSR
+	DSRs
+	Delivery Service Request
+	Delivery Service Requests
 		A :dfn:`Delivery Service Request` is the result of attempting to modify a :term:`Delivery Service` when ``dsRequests.enabled`` is set to ``true`` in ``traffic_portal_properties.json``. See :ref:`ds_requests` for more information.
 
 	Delivery Service required capabilities
@@ -404,7 +406,7 @@ Glossary
 
     Service Category
     Service Categories
-        A :dfn:`Service Category` defines the type of content being delivered by a :dfn:`Delivery Service`. For example, a :dfn:`Service Category` could be created named "linear" and assigned to a :dfn:`Delivery Service` that delivers linear content. 
+        A :dfn:`Service Category` defines the type of content being delivered by a :dfn:`Delivery Service`. For example, a :dfn:`Service Category` could be created named "linear" and assigned to a :dfn:`Delivery Service` that delivers linear content.
 
 	Snapshot
 	Snapshots
