@@ -22,15 +22,19 @@ SET original=deliveryservice
 WHERE status = 'complete' OR status = 'rejected' OR status = 'pending' OR change_type = 'delete';
 
 ALTER TABLE deliveryservice_request
-COLUMN deliveryservice
+ALTER COLUMN deliveryservice
 DROP NOT NULL;
+
+ALTER TABLE deliveryservice_request
+ALTER COLUMN deliveryservice
+SET DEFAULT NULL;
 
 UPDATE deliveryservice_request
 SET deliveryservice=NULL
-WHERE change_type='delete'
+WHERE change_type='delete';
 
--- 'create' dsrs have no original, 'delete' dsrs have no requested, and only
--- closed 'update' dsrs have originals.
+/* 'create' dsrs have no original, 'delete' dsrs have no requested, and only*/
+/* closed 'update' dsrs have originals. */
 ALTER TABLE deliveryservice_request
 ADD CONSTRAINT appropriate_requested_and_original_for_change_type
 CHECK (
@@ -57,5 +61,20 @@ CHECK (
 );
 
 -- +goose Down
+ALTER TABLE deliveryservice_request
+DROP CONSTRAINT appropriate_requested_and_original_for_change_type;
+
+UPDATE deliveryservice_request
+SET deliveryservice = original
+WHERE deliveryservice IS NULL;
+
+ALTER TABLE deliveryservice_request
+ALTER COLUMN deliveryservice
+DROP DEFAULT;
+
+ALTER TABLE deliveryservice_request
+ALTER COLUMN deliveryservice
+SET NOT NULL;
+
 ALTER TABLE deliveryservice_request
 DROP COLUMN original;
