@@ -19,22 +19,41 @@ ADD COLUMN original jsonb DEFAULT NULL;
 
 UPDATE deliveryservice_request
 SET original=deliveryservice
-WHERE status = 'complete' OR status = 'rejected' OR change_type = 'delete';
+WHERE status = 'complete' OR status = 'rejected' OR status = 'pending' OR change_type = 'delete';
 
 ALTER TABLE deliveryservice_request
-ADD CONSTRAINT closed_has_original
-CHECK (
-	(
-		(status = 'complete' OR status = 'rejected' OR change_type = 'delete') AND
-		original IS NOT NULL
-	)
-	OR
-	(
-		(status = 'submitted' OR status = 'pending' OR status='draft') AND
-		change_type <> 'delete' AND
-		original IS NULL
-	)
+COLUMN deliveryservice
+DROP NOT NULL;
 
+UPDATE deliveryservice_request
+SET deliveryservice=NULL
+WHERE change_type='delete'
+
+-- 'create' dsrs have no original, 'delete' dsrs have no requested, and only
+-- closed 'update' dsrs have originals.
+ALTER TABLE deliveryservice_request
+ADD CONSTRAINT appropriate_requested_and_original_for_change_type
+CHECK (
+	(change_type = 'delete' AND original IS NOT NULL AND deliveryservice IS NULL)
+	OR
+	(change_type = 'create' AND original IS NULL AND deliveryservice IS NOT NULL)
+	OR (
+		change_type = 'update' AND
+		deliveryservice IS NOT NULL AND
+		(
+			(
+				(status = 'complete' OR status = 'rejected' OR status = 'pending')
+				AND
+				original IS NOT NULL
+			)
+			OR
+			(
+				(status = 'draft' OR status = 'submitted')
+				AND
+				original IS NULL
+			)
+		)
+	)
 );
 
 -- +goose Down
