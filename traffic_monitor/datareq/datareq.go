@@ -78,7 +78,7 @@ func MakeDispatchMap(
 			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, rfc.ApplicationJSON)),
-		"/publish/CacheStats2": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
 		}, rfc.ApplicationJSON)),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {

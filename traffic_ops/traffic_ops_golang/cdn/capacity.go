@@ -142,7 +142,7 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 			statsToFetch := []string{tc.StatNameKBPS, tc.StatNameMaxKBPS}
 			if cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch); err != nil {
 				err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
-				log.Warnln("getCapacity failed to get CacheStats2 from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying CacheStats" + err.Error())
+				log.Warnln("getCapacity failed to get CacheStatsNew from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying CacheStats" + err.Error())
 				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
 				if err != nil {
 					err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())

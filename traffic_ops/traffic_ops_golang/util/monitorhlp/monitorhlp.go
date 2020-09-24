@@ -125,18 +125,18 @@ func GetCRConfig(monitorFQDN string, client *http.Client) (tc.CRConfig, error) {
 // GetCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get;
 // if stats is empty or nil, all stats are fetched.
 func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.Stats, error) {
-	path := `/publish/CacheStats2?hc=1`
+	path := `/publish/CacheStatsNew?hc=1`
 	if len(stats) > 0 {
 		path += `&stats=` + strings.Join(stats, `,`)
 	}
 	resp, err := client.Get("http://" + monitorFQDN + path)
 	if err != nil {
-		return tc.Stats{}, errors.New("getting CacheStats2 from Monitor '" + monitorFQDN + "': " + err.Error())
+		return tc.Stats{}, errors.New("getting CacheStatsNew from Monitor '" + monitorFQDN + "': " + err.Error())
 	}
 	defer resp.Body.Close()
 	cacheStats := tc.Stats{}
 	if err := json.NewDecoder(resp.Body).Decode(&cacheStats); err != nil {
-		return tc.Stats{}, errors.New("decoding CacheStats2 from monitor '" + monitorFQDN + "': " + err.Error())
+		return tc.Stats{}, errors.New("decoding CacheStatsNew from monitor '" + monitorFQDN + "': " + err.Error())
 	}
 	return cacheStats, nil
 }
