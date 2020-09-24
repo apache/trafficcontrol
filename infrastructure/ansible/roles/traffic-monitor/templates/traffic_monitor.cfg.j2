@@ -1,0 +1,37 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+        "cache_health_polling_interval_ms": {{ tm_cache_health_polling_interval_ms }},
+        "cache_stat_polling_interval_ms": {{ tm_cache_stat_polling_interval_ms }},
+        "monitor_config_polling_interval_ms": {{ tm_monitor_config_polling_interval_ms }},
+        "http_timeout_ms": {{ tm_http_timeout_ms }},
+        "peer_polling_interval_ms": {{ tm_peer_polling_interval_ms }},
+        "peer_optimistic": {{ tm_peer_optimistic | lower }},
+        "max_events": {{ tm_max_events }},
+        "max_stat_history": {{ tm_max_stat_history }},
+        "max_health_history": {{ tm_max_health_history }},
+        "health_flush_interval_ms": {{ tm_health_flush_interval_ms }},
+        "stat_flush_interval_ms": {{ tm_stat_flush_interval_ms }},
+        "log_location_event": "{{ tm_log_location_event }}",
+        "log_location_error": "{{ tm_log_location_error }}",
+        "log_location_warning": "{{ tm_log_location_warning }}",
+        "log_location_info": "{{ tm_log_location_info }}",
+        "log_location_debug": "{{ tm_log_location_debug }}",
+        "serve_read_timeout_ms": {{ tm_serve_read_timeout_ms }},
+        "serve_write_timeout_ms": {{ tm_serve_write_timeout_ms }},
+        "http_poll_no_sleep": {{ tm_http_poll_no_sleep | lower }},
+        "traffic_ops_min_retry_interval_ms": {{ tm_to_min_retry_interval }},
+        "traffic_ops_max_retry_interval_ms": {{ tm_to_max_retry_interval }},
+        "static_file_dir": "{{ tm_static_file_dir }}"
+}
