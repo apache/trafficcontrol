@@ -15,7 +15,6 @@
 
 import json
 import argparse
-import logging
 import os
 import collections
 from trafficops.tosession import TOSession
