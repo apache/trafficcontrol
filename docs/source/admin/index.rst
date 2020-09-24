@@ -42,7 +42,7 @@ Once everything is installed, you will need to configure the servers to talk to 
 	:maxdepth: 3
 	:glob:
 
-  traffic_ops.rst
+	traffic_ops.rst
 	environment_creation.rst
 	traffic_portal/*
 	traffic_monitor.rst
