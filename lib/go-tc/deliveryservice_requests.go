@@ -761,7 +761,7 @@ func (dsr DeliveryServiceRequestV30) IsOpen() bool {
 // IsClosed returns whether or not the Delivery Service Request has been
 // "closed", by being either rejected or completed.
 func (dsr DeliveryServiceRequestV30) IsClosed() bool {
-	return dsr.Status == RequestStatusComplete || dsr.Status == RequestStatusRejected
+	return dsr.Status == RequestStatusComplete || dsr.Status == RequestStatusRejected || dsr.Status == RequestStatusPending
 }
 
 // Downgrade coerces the DeliveryServiceRequestV30 to the older

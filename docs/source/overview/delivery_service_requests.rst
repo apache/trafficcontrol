@@ -152,8 +152,6 @@ Status is a string that indicates the point in the :abbr:`DSR (Delivery Service 
 
 draft
 	The :abbr:`DSR (Delivery Service Request)` is not yet ready for completion or review that might result in rejection, as it is still being actively worked on.
-pending
-	The :abbr:`DSR (Delivery Service Request)` is pending approval or rejection.
 submitted
 	The :abbr:`DSR (Delivery Service Request)` has been submitted for review, but has not yet been reviewed.
 
@@ -161,6 +159,8 @@ submitted
 
 complete
 	The :abbr:`DSR (Delivery Service Request)` was approved and its declared action was taken.
+pending
+	The :abbr:`DSR (Delivery Service Request)` was approved and the changes are applied, but the new configuration is not yet disseminated to other :abbr:`ATC (Apache Traffic Control)` components - usually meaning that it cannot be considered truly complete until a :term:`Snapshot` is taken or a :term:`Queue Updates` performed.
 rejected
 	The :abbr:`DSR (Delivery Service Request)` was rejected and closed, it cannot be completed.
 
