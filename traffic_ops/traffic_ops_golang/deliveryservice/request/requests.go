@@ -243,14 +243,25 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		dsrs = append(dsrs, dsr)
-		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeDelete && dsr.Requested != nil && dsr.Requested.ID != nil {
-			id := *dsr.Requested.ID
-			if _, ok := needOriginals[id]; !ok {
-				needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsrs[len(dsrs)-1]}
-			} else {
-				needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
+
+		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+			if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+				id := *dsr.Requested.ID
+				if _, ok := needOriginals[id]; !ok {
+					needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsrs[len(dsrs)-1]}
+				} else {
+					needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
+				}
+				originalIDs = append(originalIDs, id)
+			} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+				id := *dsr.Original.ID
+				if _, ok := needOriginals[id]; !ok {
+					needOriginals[id] = []*tc.DeliveryServiceRequestV30{&dsrs[len(dsrs)-1]}
+				} else {
+					needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
+				}
+				originalIDs = append(originalIDs, id)
 			}
-			originalIDs = append(originalIDs, id)
 		}
 	}
 
@@ -769,7 +780,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if current.Status != tc.RequestStatusDraft && current.Status != tc.RequestStatusSubmitted {
+	if !current.IsOpen() {
 		userErr = fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", current.Status)
 		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
 		return

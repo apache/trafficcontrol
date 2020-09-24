@@ -154,6 +154,34 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// store the current original DS if the DSR is being closed
+	// (and isn't a "create" request)
+	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", inf.IntParams["id"], *dsr.Requested.ID)
+			}
+		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+			getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; original ID: %d", inf.IntParams["id"], *dsr.Original.ID)
+			}
+		}
+
+		if sysErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		_, err := tx.Exec(`UPDATE deliveryservice_request SET original=$1 WHERE id=$2`, dsr.Original, inf.IntParams["id"])
+		if err != nil {
+			sysErr = fmt.Errorf("updating original for dsr #%d: %v", inf.IntParams["id"], err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	}
+
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
