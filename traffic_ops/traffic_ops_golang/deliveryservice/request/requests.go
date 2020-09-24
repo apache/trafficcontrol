@@ -305,7 +305,7 @@ func isTenantAuthorized(dsr tc.DeliveryServiceRequestV30, inf *api.APIInfo) (boo
 	}
 
 	ds := dsr.Original
-	if ds == nil || dsr.ChangeType == tc.DSRChangeTypeDelete {
+	if ds == nil || dsr.ChangeType == tc.DSRChangeTypeCreate {
 		// No deliveryservice applied yet or change type doesn't require an original
 		return true, nil
 	}

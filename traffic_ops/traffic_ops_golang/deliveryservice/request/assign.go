@@ -70,11 +70,6 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	if dsr.ChangeType != tc.DSRChangeTypeDelete && dsr.IsOpen() && (dsr.Requested == nil || dsr.Requested.ID == nil) {
-		sysErr = errors.New("retrieved open, non-delete, DSR that had nil Requested or Requested.ID")
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
-	}
 
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
@@ -85,8 +80,6 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
-
-	getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
 
 	api.WriteResp(w, r, dsr.Assignee)
 }

@@ -125,7 +125,7 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 			t.Fatalf("Creating DSR: %v - %v", err, alerts)
 		}
 
-		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, nil)
 		if err != nil {
 			t.Fatalf("Fetching DSRs: %v", err)
 		}
@@ -136,6 +136,20 @@ func TestDeliveryServiceRequestGetAssignee(t *testing.T) {
 		if len(dsrs) > 1 {
 			t.Errorf("Too many DSRs returned after creating only one: %d", len(dsrs))
 			t.Logf("Testing will proceed with DSR: %v", d)
+		}
+		if d.ID == nil {
+			t.Fatal("Got DSR with no ID")
+		}
+
+		assignee, _, err := TOSession.GetDeliveryServiceRequestAssignment(*d.ID, nil)
+		if err != nil {
+			t.Errorf("Error fetching DSR assignee: %v", err)
+		}
+		if assignee == nil {
+			t.Fatal("DSR had no assignee after assigning")
+		}
+		if *assignee != *me.UserName {
+			t.Fatalf("Incorrect assignee after assignment; want: '%s', got: '%s'", *me.UserName, *assignee)
 		}
 
 	})
