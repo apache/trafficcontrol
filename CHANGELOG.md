@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
+- Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
 - Added the `Status Last Updated` field to servers, and the UI, so that we can see when the last status change took place for a server.
 - Added functionality in TR, so that it uses the default miss location of the DS, in case the location(for the  client IP) returned was the default location of the country.
