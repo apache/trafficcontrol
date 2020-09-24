@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
-            <li><a ng-click="navigateToPath('/topologies/edit?name=' + topology.name)">{{::topology.name}}</a></li>
+            <li><a name="topLink" ng-click="navigateToPath('/topologies/edit?name=' + topology.name)">{{::topology.name}}</a></li>
             <li class="active">Cache Groups</li>
         </ol>
         <div class="pull-right">
