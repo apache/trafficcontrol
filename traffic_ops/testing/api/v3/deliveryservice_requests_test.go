@@ -472,7 +472,7 @@ func TestUpdateClosedDSR(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Error("Didn't find expected error-level alert setting the status of a complete DSR")
+			t.Errorf("Didn't find expected error-level alert setting the status of a complete DSR: %+v", alerts)
 		}
 	})
 }
