@@ -435,3 +435,25 @@ func (to *Session) GetDeliveryServiceRequestStatus(id int, header http.Header) (
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, err
 }
+
+// SetDeliveryServiceRequestStatus sets the status of the DSR with the given ID
+// to the given value.
+func (to *Session) SetDeliveryServiceRequestStatus(id int, status tc.RequestStatus, header http.Header) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/status", API_DS_REQUESTS, id)
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(tc.StatusChangeRequest{Status: status})
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPut, route, reqBody, nil)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+
+}
