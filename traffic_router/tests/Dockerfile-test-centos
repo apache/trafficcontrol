@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#FROM maven:3.5.4-jdk-8-alpine
-FROM centos/systemd
+#FROM maven:3.6.1-jdk-8-alpine
+FROM centos:7
 ARG DIR=github.com/apache/trafficcontrol
 
 ADD traffic_router /go/src/$DIR/traffic_router
@@ -20,11 +20,14 @@ VOLUME ["/junit"]
 
 WORKDIR /go/src/$DIR/traffic_router
 
-RUN yum update -y
-RUN yum install -y java-1.6.0-openjdk
-RUN yum install -y maven
-RUN yum install -y epel-release
-RUN yum install -y tomcat-native
+RUN set -o errexit;\
+    yum -y update;\
+    yum -y install \
+        maven \
+        java-1.8.0-openjdk \
+        epel-release;\
+    yum -y install tomcat-native;\
+    yum -y clean all
 
 CMD bash -c 'mvn test -Djava.library.path=/usr/share/java -DoutputDirectory=/junit 2>&1 && mv core/target/surefire-reports/* /junit'
 
