@@ -180,40 +180,40 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	})
 }
 
-func TestDeliveryServiceRequestBad(t *testing.T) {
+func TestDeliveryServiceRequestBadStatusOnCreation(t *testing.T) {
 	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
-		// try to create non-draft/submitted
 		src := testData.DeliveryServiceRequests[dsrDraft]
-		s, err := tc.RequestStatusFromString("pending")
-		if err != nil {
-			t.Errorf(`unable to create Status from string "pending"`)
-		}
-		src.Status = s
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
-		if err == nil {
-			t.Error("Expected an error creating a bad DSR, but didn't get one")
-		} else {
-			t.Logf("Received expected error creating DSR: %v", err)
-		}
+		for _, s := range []tc.RequestStatus{tc.RequestStatusPending, tc.RequestStatusComplete, tc.RequestStatusRejected} {
+			src.Status = s
 
-		found := false
-		for _, alert := range alerts.Alerts {
-			if alert.Level == tc.SuccessLevel.String() {
-				t.Errorf("Unexpected success creating bad DSR: %v", alert.Text)
-			} else if alert.Level == tc.ErrorLevel.String() {
-				found = true
+			alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
+			if err == nil {
+				t.Error("Expected an error creating a bad DSR, but didn't get one")
+			} else {
+				t.Logf("Received expected error creating DSR: %v", err)
 			}
-		}
 
-		if !found {
-			t.Error("Didn't find an error alert when creating a bad DSR")
+			found := false
+			for _, alert := range alerts.Alerts {
+				if alert.Level == tc.SuccessLevel.String() {
+					t.Errorf("Unexpected success creating bad DSR: %v", alert.Text)
+				} else if alert.Level == tc.ErrorLevel.String() {
+					t.Logf("Received expected error-level alert creating bad DSR: %v", alert.Text)
+					found = true
+				}
+			}
+
+			if !found {
+				t.Error("Didn't find an error alert when creating a bad DSR")
+			}
 		}
 	})
 }
 
-// TestDeliveryServiceRequestWorkflow tests that transitions of Status are
+// TestDeliveryServiceRequestWorkflow tests that the rules governing transitions
+// of Status are properly enforced.
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	ReloadFixtures()
 	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
@@ -235,7 +235,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(src, nil)
 		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+			t.Errorf("Error creating DeliveryServiceRequest %v - %v", err, alerts)
 		}
 
 		expected := []string{`deliveryservice_request was created.`}
