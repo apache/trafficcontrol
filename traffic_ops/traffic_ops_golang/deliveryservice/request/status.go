@@ -93,8 +93,15 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 
 const updateStatusQuery = `
 UPDATE deliveryservice_request
-SET status = $1
-WHERE id = $2
+SET status = $1, last_edited_by_id = $2
+WHERE id = $3
+RETURNING last_updated
+`
+
+const updateStatusAndOriginalQuery = `
+UPDATE deliveryservice_request
+SET original=$1, status=$2, last_edited_by_id=$3
+WHERE id=$4
 RETURNING last_updated
 `
 
@@ -107,12 +114,6 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var req tc.StatusChangeRequest
-	if err := api.Parse(r.Body, tx, &req); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
 	if version == nil {
@@ -120,11 +121,25 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if inf.User == nil {
+		sysErr = errors.New("got api info with no user")
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	var req tc.StatusChangeRequest
+	if err := api.Parse(r.Body, tx, &req); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	dsrID := inf.IntParams["id"]
+
 	var dsr tc.DeliveryServiceRequestV30
-	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
+	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", dsrID).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
+			userErr = fmt.Errorf("no such Delivery Service Request: %d", dsrID)
 			sysErr = nil
 		} else {
 			errCode = http.StatusInternalServerError
@@ -146,34 +161,6 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// store the current original DS if the DSR is being closed
-	// (and isn't a "create" request)
-	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
-		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
-			if dsr.Original == nil {
-				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", inf.IntParams["id"], *dsr.Requested.ID)
-			}
-		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
-			if dsr.Original == nil {
-				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; original ID: %d", inf.IntParams["id"], *dsr.Original.ID)
-			}
-		}
-
-		if sysErr != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-
-		_, err := tx.Exec(`UPDATE deliveryservice_request SET original=$1 WHERE id=$2`, dsr.Original, inf.IntParams["id"])
-		if err != nil {
-			sysErr = fmt.Errorf("updating original for dsr #%d: %v", inf.IntParams["id"], err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-	}
-
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
@@ -184,16 +171,48 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := fmt.Sprintf("Changed status of '%s' Delivery Service Request from '%s' to '%s'", dsr.XMLID, dsr.Status, req.Status)
-	dsr.Status = req.Status
+	dsr.LastEditedBy = inf.User.UserName
+	dsr.LastEditedByID = new(int)
+	*dsr.LastEditedByID = inf.User.ID
 
-	if err := tx.QueryRow(updateStatusQuery, req.Status, *dsr.ID).Scan(&dsr.LastUpdated); err != nil {
+	// store the current original DS if the DSR is being closed
+	// (and isn't a "create" request)
+	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
+			}
+		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+			getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; original ID: %d", dsrID, *dsr.Original.ID)
+			}
+		}
+
+		if sysErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		err := tx.QueryRow(updateStatusAndOriginalQuery, dsr.Original, req.Status, dsr.LastEditedByID, dsrID).Scan(&dsr.LastUpdated)
+		if err != nil {
+			sysErr = fmt.Errorf("updating original for dsr #%d: %v", dsrID, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
+		if dsr.ChangeType != tc.DSRChangeTypeCreate {
+			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+		}
+	} else {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+	message := fmt.Sprintf("Changed status of '%s' Delivery Service Request from '%s' to '%s'", dsr.XMLID, dsr.Status, req.Status)
+	dsr.Status = req.Status
 
 	var resp interface{}
 	if inf.Version.Major >= 3 {
