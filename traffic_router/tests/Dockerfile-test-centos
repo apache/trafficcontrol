@@ -15,7 +15,6 @@
 FROM centos:7
 ARG DIR=github.com/apache/trafficcontrol
 
-ADD traffic_router /go/src/$DIR/traffic_router
 VOLUME ["/junit"]
 
 WORKDIR /go/src/$DIR/traffic_router
@@ -28,6 +27,8 @@ RUN set -o errexit;\
         epel-release;\
     yum -y install tomcat-native;\
     yum -y clean all
+
+ADD traffic_router /go/src/$DIR/traffic_router
 
 CMD bash -c 'mvn test -Djava.library.path=/usr/share/java -DoutputDirectory=/junit 2>&1 && mv core/target/surefire-reports/* /junit'
 
