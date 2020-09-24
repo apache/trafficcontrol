@@ -976,3 +976,17 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 		)),
 	)
 }
+
+// StatusChangeRequest is the form of a PUT request body to
+// /deliveryservice_requests/{{ID}}/status.
+type StatusChangeRequest struct {
+	// Status is the desired new status of the DSR.
+	Status RequestStatus `json:"status"`
+}
+
+// Validate satisfies the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
+func (*StatusChangeRequest) Validate(*sql.Tx) error {
+	return nil
+}

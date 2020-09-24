@@ -91,14 +91,6 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, dsr.Status)
 }
 
-type statusChangeRequest struct {
-	Status tc.RequestStatus `json:"status"`
-}
-
-func (s *statusChangeRequest) Validate(*sql.Tx) error {
-	return nil
-}
-
 const updateStatusQuery = `
 UPDATE deliveryservice_request
 SET status = $1
@@ -115,7 +107,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var req statusChangeRequest
+	var req tc.StatusChangeRequest
 	if err := api.Parse(r.Body, tx, &req); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
