@@ -162,6 +162,6 @@ complete
 pending
 	The :abbr:`DSR (Delivery Service Request)` was approved and the changes are applied, but the new configuration is not yet disseminated to other :abbr:`ATC (Apache Traffic Control)` components - usually meaning that it cannot be considered truly complete until a :term:`Snapshot` is taken or a :term:`Queue Updates` performed.
 rejected
-	The :abbr:`DSR (Delivery Service Request)` was rejected and closed, it cannot be completed.
+	The :abbr:`DSR (Delivery Service Request)` was rejected and closed; it cannot be completed.
 
-A "closed" :abbr:`DSR (Delivery Service Request)` cannot be edited.
+A "closed" :abbr:`DSR (Delivery Service Request)` cannot be edited - except to change a "pending" Status to "complete" or "rejected".
