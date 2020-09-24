@@ -20,7 +20,7 @@ import sys
 import json
 
 if len(sys.argv) < 3 or len(sys.argv) > 4:
-	print "{}"
+	print("{}")
 	sys.exit(0)
 
 cdn_csv_list = sys.argv[1].split(',')
@@ -44,6 +44,6 @@ for val, csvlist in out_list_normal.items():
 			out_list_denormal[i] = val
 
 if option == 'denormalize':
-	print json.dumps(out_list_denormal)
+	print(json.dumps(out_list_denormal))
 else:
-	print json.dumps(out_list_normal)
+	print(json.dumps(out_list_normal))
