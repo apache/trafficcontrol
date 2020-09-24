@@ -17,11 +17,15 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     $scope.isCollapsed = true;
 
     $scope.userLoaded = userModel.loaded;
+
+    $scope.enviroName = propertiesModel.properties.environment.name;
+
+    $scope.isProd = propertiesModel.properties.environment.isProd;
 
     /* we don't want real time changes to the user showing up. we want the ability to revert changes
     if necessary. thus, we will only update this on save. see userModel::userUpdated event below.
@@ -162,5 +166,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel'];
 module.exports = HeaderController;
