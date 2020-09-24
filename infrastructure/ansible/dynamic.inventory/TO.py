@@ -87,7 +87,7 @@ class AnsibleInventory():
                      secondary_parent_group_name=flat_second_parent_cg)
         return out
 
-    def generate_inventory_list(self, target_to):  # pylint: disable=too-many-statements
+    def generate_inventory_list(self, target_to):
         """Generate the inventory list for the specified TrafficOps instance"""
         with TOSession(self.to_url, verify_cert=self.verify_cert) as traffic_ops_api:
             traffic_ops_api.login(self.to_user, self.to_pass)
