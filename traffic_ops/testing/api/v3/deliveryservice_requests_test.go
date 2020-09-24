@@ -344,6 +344,139 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
+// verifies that closed DSRs cannot be updated - except to complete pending DSRs
+func TestUpdateClosedDSR(t *testing.T) {
+	ReloadFixtures()
+	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
+		dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+		if err != nil {
+			t.Fatalf("Failed to retrieve Delivery Services: %v", err)
+		}
+		if len(dses) < 1 {
+			t.Fatalf("Failed to retrieve Delivery Services: no DSes returned from Traffic Ops")
+		}
+		ds := dses[0]
+		if ds.ID == nil {
+			t.Fatal("DS chosen for testing has no ID")
+		}
+		if ds.Active == nil {
+			ds.Active = new(bool)
+		}
+
+		*ds.Active = !*ds.Active
+
+		me, _, err := TOSession.GetUserCurrentWithHdr(nil)
+		if err != nil {
+			t.Fatalf("Failed to get current user from Traffic Ops: %v", err)
+		}
+		if me == nil {
+			t.Fatal("Failed to get current user from Traffic Ops: user was nil")
+		}
+		if me.UserName == nil {
+			t.Fatal("Current user has no username")
+		}
+		if me.ID == nil {
+			t.Fatal("Current user has no ID")
+		}
+
+		dsr := tc.DeliveryServiceRequestV30{
+			Author:     *me.UserName,
+			ChangeType: tc.DSRChangeTypeUpdate,
+			Requested:  &ds,
+			Status:     tc.RequestStatusSubmitted,
+		}
+
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err != nil {
+			t.Fatalf("Failed to create initial DSR: %v - alerts: %v", err, alerts)
+		}
+
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, url.Values{"author": []string{*me.UserName}})
+		if err != nil {
+			t.Fatalf("Failed to fetch newly created DSR: %v", err)
+		}
+		if len(dsrs) != 1 {
+			t.Fatalf("Expected exactly one dsr to exist after creating only one; got: %d", len(dsrs))
+		}
+		dsr = dsrs[0]
+		if dsr.ID == nil {
+			t.Fatalf("Test DSR had nil ID after creation")
+		}
+
+		alerts, _, err = TOSession.SetDeliveryServiceRequestStatus(*dsr.ID, tc.RequestStatusPending, nil)
+		if err != nil {
+			t.Fatalf("Failed to close test DSR: %v - alerts: %v", err, alerts)
+		}
+
+		*dsr.Requested.Active = !*dsr.Requested.Active
+		alerts, _, err = TOSession.UpdateDeliveryServiceRequest(*dsr.ID, dsr, nil)
+		if err == nil {
+			t.Errorf("Didn't get expected error modifying a closed DSR")
+		} else {
+			t.Logf("Received expected error modifying closed DSR: %v", err)
+		}
+
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Found success message updating a closed DSR: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Found expected error-level alert: %v", alert.Text)
+				found = true
+			}
+		}
+
+		if !found {
+			t.Error("Didn't find expected error-level alert modiying a closed DSR")
+		}
+
+		alerts, _, err = TOSession.SetDeliveryServiceRequestStatus(*dsr.ID, tc.RequestStatusComplete, nil)
+		if err != nil {
+			t.Fatalf("Failed to complete the pending test DSR: %v - alerts: %v", err, alerts)
+		}
+
+		alerts, _, err = TOSession.UpdateDeliveryServiceRequest(*dsr.ID, dsr, nil)
+		if err == nil {
+			t.Errorf("Didn't get expected error modifying a closed DSR")
+		} else {
+			t.Logf("Received expected error modifying closed DSR: %v", err)
+		}
+
+		found = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Found success message updating a closed DSR: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Found expected error-level alert: %v", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find expected error-level alert modiying a closed DSR")
+		}
+
+		alerts, _, err = TOSession.SetDeliveryServiceRequestStatus(*dsr.ID, tc.RequestStatusRejected, nil)
+		if err == nil {
+			t.Error("Didn't get expected error trying to set the status of a complete DSR")
+		} else {
+			t.Logf("Received expected error setting the status of a complete DSR: %v", err)
+		}
+
+		found = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Found success message setting the status of a complete DSR: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Found expected error-level alert: %v", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find expected error-level alert setting the status of a complete DSR")
+		}
+	})
+}
+
 func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
@@ -394,7 +527,6 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	if *respDSR.Requested.DisplayName != expDisplayName {
 		t.Errorf("results do not match actual: '%s', expected: '%s'", *respDSR.Requested.DisplayName, expDisplayName)
 	}
-
 }
 
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
