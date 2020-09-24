@@ -344,6 +344,112 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
+// verifies that 'original' is a moving target until a DSR is closed
+func TestOriginalNotFixedUntilClosed(t *testing.T) {
+	ReloadFixtures()
+	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
+		dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+		if err != nil {
+			t.Fatalf("Failed to retrieve Delivery Services: %v", err)
+		}
+		if len(dses) < 1 {
+			t.Fatalf("Failed to retrieve Delivery Services: no DSes returned from Traffic Ops")
+		}
+		ds := dses[0]
+		if ds.ID == nil {
+			t.Fatal("DS chosen for testing has no ID")
+		}
+		if ds.Active == nil {
+			t.Fatal("DS chosen for testing has no Active property")
+		}
+
+		originalActive := *ds.Active
+
+		*ds.Active = !*ds.Active
+
+		me, _, err := TOSession.GetUserCurrentWithHdr(nil)
+		if err != nil {
+			t.Fatalf("Failed to get current user from Traffic Ops: %v", err)
+		}
+		if me == nil {
+			t.Fatal("Failed to get current user from Traffic Ops: user was nil")
+		}
+		if me.UserName == nil {
+			t.Fatal("Current user has no username")
+		}
+		if me.ID == nil {
+			t.Fatal("Current user has no ID")
+		}
+
+		dsr := tc.DeliveryServiceRequestV30{
+			Author:     *me.UserName,
+			ChangeType: tc.DSRChangeTypeUpdate,
+			Requested:  &ds,
+			Status:     tc.RequestStatusSubmitted,
+		}
+
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err != nil {
+			t.Fatalf("Failed to create initial DSR: %v - alerts: %v", err, alerts)
+		}
+
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, url.Values{"author": []string{*me.UserName}})
+		if err != nil {
+			t.Fatalf("Failed to fetch newly created DSR: %v", err)
+		}
+		if len(dsrs) != 1 {
+			t.Fatalf("Expected exactly one dsr to exist after creating only one; got: %d", len(dsrs))
+		}
+		dsr = dsrs[0]
+		if dsr.ID == nil {
+			t.Fatal("Test DSR had nil ID after creation")
+		}
+		if dsr.Requested == nil {
+			t.Fatal("Test DSR had no 'requested' field after creation")
+		}
+		if dsr.Original == nil {
+			t.Fatal("Test DSR had no 'original' field in GET response")
+		}
+		if dsr.Original.Active == nil {
+			t.Fatal("Test DSR's original had no 'active' field in GET response")
+		}
+
+		if *dsr.Original.Active != originalActive {
+			t.Errorf("Incorrect original.active in GET response; want: %t, got: %t", *ds.Active, *dsr.Original.Active)
+		}
+
+		_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+		if err != nil {
+			t.Fatalf("Failed to modify Delivery Service: %v", err)
+		}
+
+		dsrs, _, err = TOSession.GetDeliveryServiceRequestsV30(nil, url.Values{"author": []string{*me.UserName}})
+		if err != nil {
+			t.Fatalf("Failed to fetch DSR after original was modified: %v", err)
+		}
+		if len(dsrs) != 1 {
+			t.Fatalf("Expected exactly one dsr to exist after creating only one; got: %d", len(dsrs))
+		}
+		dsr = dsrs[0]
+		if dsr.ID == nil {
+			t.Fatal("Test DSR had nil ID after original was modified")
+		}
+		if dsr.Requested == nil {
+			t.Fatal("Test DSR had no 'requested' field after original was modified")
+		}
+		if dsr.Original == nil {
+			t.Fatal("Test DSR had no 'original' field in GET response")
+		}
+		if dsr.Original.Active == nil {
+			t.Fatal("Test DSR's original had no 'active' field in GET response")
+		}
+
+		if *dsr.Original.Active == originalActive {
+			t.Errorf("Incorrect original.active in GET response; want: %t, got: %t", !originalActive, *dsr.Original.Active)
+		}
+	})
+}
+
 // verifies that closed DSRs cannot be updated - except to complete pending DSRs
 func TestUpdateClosedDSR(t *testing.T) {
 	ReloadFixtures()
