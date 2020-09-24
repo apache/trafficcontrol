@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""A python script that converts TrafficOps information into an Ansible Inventory"""
 
 import json
 import argparse
@@ -175,6 +176,7 @@ class AnsibleInventory():
 		return out
 
 	def to_inventory(self):
+		"""A wrapper function blending the target url in"""
 		return self.generate_inventory_list(self.to_url)
 
 #
@@ -184,14 +186,14 @@ class AnsibleInventory():
 
 
 def str2bool(x):
+	"""A helper function to help with truthiness"""
 	if isinstance(x, bool):
 		return x
 	if x.lower() in ('yes', 'true', 't', 'y', '1'):
 		return True
-	elif x.lower() in ('no', 'false', 'f', 'n', '0'):
+	if x.lower() in ('no', 'false', 'f', 'n', '0'):
 		return False
-	else:
-		raise argparse.ArgumentTypeError('Boolean value expected.')
+	raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 if __name__ == "__main__":
