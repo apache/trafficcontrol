@@ -441,19 +441,27 @@ func (to *Session) GetDeliveryServiceRequestStatus(id int, header http.Header) (
 func (to *Session) SetDeliveryServiceRequestStatus(id int, status tc.RequestStatus, header http.Header) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/status", API_DS_REQUESTS, id)
 
+	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(tc.StatusChangeRequest{Status: status})
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
 	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPut, route, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	jerr := json.NewDecoder(resp.Body).Decode(&alerts)
+	if jerr != nil {
+		if err != nil {
+			err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
+		} else {
+			err = fmt.Errorf("decoding response: %v", jerr)
+		}
+	}
+
 	return alerts, reqInf, err
 
 }
