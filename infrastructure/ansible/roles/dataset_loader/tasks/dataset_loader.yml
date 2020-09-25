@@ -478,7 +478,7 @@
 
         - name: Fetch information about block without partitions and whitelisted prefixes
           set_fact:
-            eligible_cache_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
+            eligible_cache_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | to_json | from_json | json_query(eligible_device_query) | sort }}"
           vars:
             eligible_device_query: "[?({{ dl_ds_merged_cache_block_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
           with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
@@ -492,7 +492,7 @@
 
         - name: Fetch information about ram disks
           set_fact:
-            eligible_cache_ram_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
+            eligible_cache_ram_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | to_json | from_json | json_query(eligible_device_query) | sort }}"
           vars:
             eligible_device_query: "[?({{ dl_ds_merged_cache_ram_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
           with_items: "{{ dl_hosts_atsec+dl_hosts_atsmid+dl_hosts_grove }}"
