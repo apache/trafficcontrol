@@ -179,10 +179,10 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 
 	if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil {
 		if reqInf, err := to.setupDS(dsr.Original); err != nil {
-			return tc.Alerts{}, reqInf, err
+			return tc.Alerts{}, reqInf, fmt.Errorf("original: %v", err)
 		}
 	} else if reqInf, err := to.setupDS(dsr.Requested); err != nil {
-		return tc.Alerts{}, reqInf, err
+		return tc.Alerts{}, reqInf, fmt.Errorf("requested: %v", err)
 	}
 
 	reqBody, err := json.Marshal(dsr)
@@ -193,14 +193,14 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPost, API_DS_REQUESTS, reqBody, header)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
-	}
-	defer resp.Body.Close()
-	jerr := json.NewDecoder(resp.Body).Decode(&alerts)
-	if jerr != nil {
-		if err != nil {
-			err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
-		} else {
-			err = fmt.Errorf("decoding response: %v", jerr)
+		defer resp.Body.Close()
+		jerr := json.NewDecoder(resp.Body).Decode(&alerts)
+		if jerr != nil {
+			if err != nil {
+				err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
+			} else {
+				err = fmt.Errorf("decoding response: %v", jerr)
+			}
 		}
 	}
 
@@ -455,14 +455,14 @@ func (to *Session) SetDeliveryServiceRequestStatus(id int, status tc.RequestStat
 	resp, remoteAddr, err := to.requestWithoutClosingBody(http.MethodPut, route, reqBody, nil)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
-	}
-	defer resp.Body.Close()
-	jerr := json.NewDecoder(resp.Body).Decode(&alerts)
-	if jerr != nil {
-		if err != nil {
-			err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
-		} else {
-			err = fmt.Errorf("decoding response: %v", jerr)
+		defer resp.Body.Close()
+		jerr := json.NewDecoder(resp.Body).Decode(&alerts)
+		if jerr != nil {
+			if err != nil {
+				err = fmt.Errorf("while processing request error '%v', a further decoding error occurred: %v", err, jerr)
+			} else {
+				err = fmt.Errorf("decoding response: %v", jerr)
+			}
 		}
 	}
 
