@@ -22,6 +22,7 @@ package request
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -594,7 +595,13 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	var dsr tc.DeliveryServiceRequestV30
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
+		if err == sql.ErrNoRows {
+			errCode = http.StatusNotFound
+			userErr = fmt.Errorf("No such Delivery Service Request: #%d", inf.IntParams["id"])
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
