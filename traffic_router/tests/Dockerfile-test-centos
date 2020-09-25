@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#FROM maven:3.6.1-jdk-8-alpine
 FROM centos:7
 ARG DIR=github.com/apache/trafficcontrol
 
