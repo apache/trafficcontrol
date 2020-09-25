@@ -19,7 +19,53 @@
 ``deliveryservice_requests/{{ID}}/assign``
 ******************************************
 
-.. caution:: In many cases, it's much easier to simply use the ``PUT`` handler of the :ref:`to-api-deliveryservice_requests`.
+.. caution:: In many cases, it's much easier to simply use :ref:`to-api-deliveryservice_requests`.
+
+``GET``
+=======
+Retrieves the :ref:`dsr-assignee` of a particular :term:`DSR`.
+
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type: Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------------------------------------+
+	| Name | Description                                                                             |
+	+======+=========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being inspected |
+	+------+-----------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/3.0/deliveryservice_requests/6/assign HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+The response is the username of the :term:`DSR`'s :ref:`dsr-assignee`.
+
+.. code-block:: http
+	:caption: Request Example
+
+	HTTP/1.1 200 OK
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...
+	Vary: Accept-Encoding
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 25 Sep 2020 07:41:52 GMT
+	Content-Length: 45
+
+	{"response": "admin"}
 
 ``PUT``
 =======
