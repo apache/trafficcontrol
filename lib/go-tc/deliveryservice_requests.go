@@ -516,8 +516,9 @@ const (
 	RequestStatusComplete = RequestStatus("complete")
 )
 
-func (s RequestStatus) String() string {
-	return string(s)
+// String returns the string value of the Request Status.
+func (r RequestStatus) String() string {
+	return string(r)
 }
 
 // RequestStatuses -- user-visible string associated with each of the above
@@ -877,6 +878,9 @@ func (dsr DeliveryServiceRequestV30) String() string {
 	return builder.String()
 }
 
+// Validate satisfies the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 	if tx == nil {
 		return errors.New("unknown error")
