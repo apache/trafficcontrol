@@ -131,6 +131,7 @@ will be returned indicating that overlap exists.
 - Changed Spring Framework Java dependency to 4.2.5.
 - Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
 - Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
+- Closed Delivery Service Requests now keep a record of the changes they made/would have made. Refer to the docs for specifics on the new model.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
