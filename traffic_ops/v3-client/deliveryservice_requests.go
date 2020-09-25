@@ -113,6 +113,10 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 }
 
 func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
+	if ds == nil {
+		return ReqInf{}, nil
+	}
+
 	if ds.TypeID == nil && ds.Type != nil {
 		ty, reqInf, err := to.GetTypeByName(ds.Type.String())
 		if err != nil || len(ty) == 0 {
