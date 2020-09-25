@@ -632,6 +632,19 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
+		} else if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+		}
+
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
 	var resp interface{}
 	if inf.Version.Major >= 3 {
 		resp = dsr
@@ -692,6 +705,27 @@ func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
+	}
+
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+			return
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		dsr.Original = new(tc.DeliveryServiceV30)
+		*dsr.Original = originals[0]
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
@@ -803,7 +837,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !current.IsOpen() {
-		userErr = fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", current.Status)
+		userErr = fmt.Errorf("cannot change DeliveryServiceRequest in '%s' status", current.Status)
 		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
 		return
 	}
