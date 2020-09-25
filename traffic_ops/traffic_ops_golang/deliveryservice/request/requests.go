@@ -438,7 +438,7 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
-	api.WriteResp(w, r, dsr)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
 
 	result.Successful = true
 	result.Assignee = dsr.Assignee
