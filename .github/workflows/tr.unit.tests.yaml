@@ -47,4 +47,10 @@ jobs:
         if: ${{ failure() }}
         with:
           name: surefire-reports
-          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/*
+          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
+      - uses: zrhoffman/junit-report-annotations-action@master
+        with:
+          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
+          numFailures: 999 # The maximum number of test failures to annotate
+          cwd: ${{ github.workspace }}/traffic_router
+        if: always()
