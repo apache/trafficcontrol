@@ -1,0 +1,976 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Get TO Cookie
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/user/login"
+    method: POST
+    body: '{ "u":"{{ dl_to_user }}", "p":"{{ dl_to_user_password }}" }'
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+  register: dl_mojo_token
+  no_log: true
+
+- name: Collect All CDN delegations assigned to Traffic Routers
+  set_fact:
+    tmp_cdnDelegation: "{{ hostvars[item]['cdn'] }}"
+  with_items: "{{groups['traffic_router']}}"
+  register: tmp_cdnDelegation_result
+
+- name: Convert CDN Delegation facts to more usable list
+  set_fact:
+    cdnDelegationList: "{{ tmp_cdnDelegation_result.results | map(attribute='ansible_facts.tmp_cdnDelegation') | difference(excluded_cdn) | list | unique }}"
+  vars:
+    excluded_cdn: ALL
+
+- name: Get Primary CDN Delegation
+  set_fact:
+    cdnDelegationPrimary: "{{ cdnDelegationList | first }}"
+
+- name: Get All CDNs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
+    method: GET
+  register: get_all_cdns
+
+- name: Update the Primary CDN
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+    method: PUT
+    body: "{{ lookup('template', 'cdn.j2') }}"
+  vars:
+    name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
+    domainName: "{{ cdnDelegationPrimary }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+    dnssecEnabled: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].dnssecEnabled | default(false) | lower }}"
+    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary }}`) == `true`].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: update_cdn_out
+  failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
+
+- name: Create additional CDNs having delegations
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
+    method: POST
+    body: "{{ lookup('template', 'cdn.j2') }}"
+  with_items: "{{ cdnDelegationList | difference(cdnDelegationPrimary) | intersect(dl_ds_merged_cdns | list) + cdnDelegationList | difference(dl_ds_merged_cdns | list)}}"
+  vars:
+    name: "{{ item.name | default(item) }}"
+    domainName: "{{ item }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') }}"
+    dnssecEnabled: "{{ dl_ds_merged_cdns[item].dnssecEnabled | default(false) | lower }}"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cdns_out
+  failed_when: (create_cdns_out.status == 400 and create_cdns_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cdns_out.status > 400 and create_cdns_out.status < 600)
+
+- name: Get All CDNs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
+    method: GET
+  register: get_all_cdns
+
+- name: Assign fqdn to cdn
+  set_fact:
+    cdn_assignments: "{{ (cdn_assignments | default({})) | combine({ item: hostvars[item].cdn }) }}"
+  with_items: "{{ groups['all'] }}"
+
+- name: Get All Tenants
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/tenants"
+    method: GET
+  register: get_all_tenants
+
+- name: Get All Roles
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/roles"
+    method: GET
+  register: get_all_roles
+
+- name: Create Types
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/types"
+    method: POST
+    body:
+      name: "{{ item.name }}"
+      description: "{{ item.description }}"
+      useInTable: "{{ item.useInTable }}"
+  with_items: "{{ dl_ds_merged_types }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_types_out
+  failed_when: (create_types_out.status == 400 and create_types_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_types_out.status > 400 and create_types_out.status < 600)
+
+- name: Get All Types
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/types"
+    method: GET
+  register: get_all_types
+
+- name: Create Users
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/users"
+    method: POST
+    body: "{{ lookup('template', 'user.j2') }}"
+  with_items: "{{ dl_ds_merged_users }}"
+  vars:
+    role_query: "response[?name == '{{ item.role | default('read-only') }}'].id | [0]"
+    tenant_query: "response[?name == '{{ item.tenant | default('root') }}'].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    user_password: "{{ item.password | default( lookup('password', '/dev/null length=32 chars=ascii_letters') ) }}"
+    addressLine1: "{{ item.addressLine1 | default(omit) }}"
+    addressLine2: "{{ item.addressLine2 | default(omit) }}"
+    city: "{{ item.city | default(omit) }}"
+    confirmLocalPasswd: "{{ user_password }}"
+    company: "{{ item.company | default(omit) }}"
+    email: "{{ item.email }}"
+    fullName: "{{ item.fullName }}"
+    localPasswd: "{{ user_password }}"
+    newUser: "{{ item.newUser | default(omit) }}"
+    phoneNumber: "{{ item.phoneNumber | default(omit) }}"
+    postalCode: "{{ item.postalCode | default(omit) }}"
+    publicSshKey: "{{ item.publicSshKey | default(omit) }}"
+    role: "{{ get_all_roles.json | json_query(role_query) }}"
+    stateOrProvince: "{{ item.stateOrProvince | default(omit) }}"
+    tenantId: "{{ get_all_tenants.json | json_query(tenant_query) | default(omit) }}"
+    username: "{{ item.username }}"
+  register: create_user_out
+  #no_log: true
+  failed_when: (create_user_out.status == 400 and create_user_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_user_out.status > 400 and create_user_out.status < 600)
+
+- name: Create Cachegroups - Traffic Router
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: POST
+    body: "{{ lookup('template', 'cachegroup.j2') }}"
+  with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
+  vars:
+    type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
+    type_filter: "[?type == 'TR_LOC']"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cachegroup_out
+  failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+
+- name: Create Cachegroups - Infrastructure Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: POST
+    body: "{{ lookup('template', 'cachegroup.j2') }}"
+  with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
+  vars:
+    type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
+    type_filter: "[?type == 'INFRA_LOC']"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cachegroup_out
+  failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+
+- name: Create Cachegroups - Origin Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: POST
+    body: "{{ lookup('template', 'cachegroup.j2') }}"
+  with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
+  vars:
+    type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
+    type_filter: "[?type == 'ORG_LOC']"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cachegroup_out
+  failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+
+- name: Get All Cachegroups - Origin Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: GET
+  register: get_all_cachegroups
+
+- name: Create Cachegroups - Mid Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: POST
+    body: "{{ lookup('template', 'cachegroup.j2') }}"
+  with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
+  vars:
+    type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
+    parent_query: "response[?name == '{{ item.parentCachegroup }}'].id | [0]"
+    secondaryparent_query: "response[?name == '{{ item.secondaryParentCachegroup }}'].id | [0]"
+    parentCachegroupId: "{{ get_all_cachegroups.json | json_query(parent_query) | default(omit) }}"
+    secondaryparentCachegroupId: "{{ get_all_cachegroups.json | json_query(secondaryparent_query) | default(omit) }}"
+    type_filter: "[?type == 'MID_LOC']"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cachegroup_out
+  failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+
+- name: Get All Cachegroups - Mid Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: GET
+  register: get_all_cachegroups
+
+- name: Create Cachegroups - Edge Tier
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: POST
+    body: "{{ lookup('template', 'cachegroup.j2') }}"
+  with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
+  vars:
+    type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
+    parent_query: "response[?name == '{{ item.parentCachegroup }}'].id | [0]"
+    secondaryparent_query: "response[?name == '{{ item.secondaryParentCachegroup }}'].id | [0]"
+    parentCachegroupId: "{{ get_all_cachegroups.json | json_query(parent_query) | default(omit) }}"
+    secondaryparentCachegroupId: "{{ get_all_cachegroups.json | json_query(secondaryparent_query) | default(omit) }}"
+    type_filter: "[?type == 'EDGE_LOC']"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_cachegroup_out
+  failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+
+- name: Get All Cachegroups
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
+    method: GET
+  register: get_all_cachegroups
+
+- name: Associate cachegroups to phys_locations
+  command: "{{ role_path }}/files/selection.set.py {{ item | quote }} {{ dl_ds_merged_divisions | json_query(physlocation_query) | join(',') | quote }}"
+  register: cachegroup_physlocations_out
+  changed_when: false
+  with_items: "{{ dl_ds_merged_divisions | json_query(cachegroup_query) | unique }}"
+  vars:
+    cachegroup_query: "[*].regions[*].phys_locations[*].cachegroups[][][]"
+    physlocation_query: "[*].regions[*].phys_locations[?contains(cachegroups,'{{ item }}')].name[][]"
+
+- name: Massage cachegroup to phys_location mappings
+  set_fact:
+    physlocation_tmp_str: "{% for i in cachegroup_physlocations_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
+
+- name: Build temporary association of cachegroup to region
+  set_fact:
+    phys_location_tmp_dict: "{{ (phys_location_tmp_dict| default({})) | combine(item | from_json) }}"
+  with_items: "{{ physlocation_tmp_str.split('|') }}"
+
+- name: Associate origins to cachegroups
+  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'ORG_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['fakeorigin'] | union(groups['mso_parent_alias']) | join(',') | quote }}"
+  register: cachegroup_origin_out
+  changed_when: false
+
+- name: Associate edge caches to cachegroups
+  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'EDGE_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['atsec'] | union(groups['grove']) | join(',') | quote }}"
+  register: cachegroup_edge_out
+  changed_when: false
+
+- name: Associate mid caches to cachegroups
+  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'MID_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['atsmid'] | join(',') | quote }}"
+  register: cachegroup_mid_out
+  changed_when: false
+
+- name: Associate traffic routers to cachegroups
+  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'TR_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['traffic_router'] | join(',') | quote }}"
+  register: cachegroup_tr_out
+  changed_when: false
+
+# List of Map of Cachegroup to Host List
+- name: Combine cachegroup associations
+  set_fact:
+    cachegroups_merged_tmp: "{{ cachegroups_merged_tmp | default([]) + [ { 'cachegroup': item.key, 'hosts': item.value.split(',') } ] }}"
+  with_dict: "{{ (cachegroup_edge_out.stdout | from_json) | combine(cachegroup_mid_out.stdout | from_json) | combine(cachegroup_tr_out.stdout | from_json) | combine(cachegroup_origin_out.stdout | from_json) }}"
+
+# Map of hosts to cachegroups
+- name: Convert cachegroup associations to a more useful format
+  set_fact:
+    cachegroups_assignments: "{{ cachegroups_assignments | default({}) | combine({ item.1: item.0.cachegroup }) }}"
+  with_subelements:
+    - "{{ cachegroups_merged_tmp }}"
+    - hosts
+
+- name: Hold onto a copy of infrastructure hosts
+  set_fact:
+    infra_hosts: "{{ groups['all'] | difference(cachegroups_assignments.keys()) }}"
+
+- name: Add remaining hosts to the infrastructure cachegroup
+  set_fact:
+    cachegroups_assignments: "{{ cachegroups_assignments | default({}) | combine({ item: 'infrastructure' }) }}"
+  with_items: "{{ infra_hosts }}"
+
+- name: Add remaining hosts to the infrastructure physical locations
+  set_fact:
+    cachegroups_merged_tmp: "{{ cachegroups_merged_tmp | default([]) + [{ 'cachegroup': 'infrastructure', 'hosts': infra_hosts }] }}"
+
+- name: Massage cachegroup associations to a forward lookup dictionary
+  set_fact:
+    cachegroup_lookup: "{{ ( cachegroup_lookup | default({}) ) | combine({ item['cachegroup']: (item['hosts'] | join(',')) }) }}"
+  with_items: "{{ cachegroups_merged_tmp }}"
+
+- name: Associate Physical Locations to Servers
+  command: "{{ role_path }}/files/selection.set.py {{ phys_location_tmp_dict[item.key] | quote }} {{ item.value | quote }}"
+  register: physlocation_caches_out
+  changed_when: false
+  with_dict: "{{ cachegroup_lookup }}"
+
+- name: Massage phys_location to cache mappings
+  set_fact:
+    physlocation_cache_tmp_str: "{% for i in physlocation_caches_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
+
+- name: Process location map (phase 1)
+  set_fact:
+    physlocation_cache_tmp_list: "{{ physlocation_cache_tmp_list | default([]) | union( [item  | from_json] ) }}"
+  with_items: "{{ physlocation_cache_tmp_str.split('|') }}"
+
+- name: Process location map (phase 2)
+  set_fact:
+    used_locations: "{{ physlocation_cache_tmp_list | json_query(location_query) | unique }}"
+  vars:
+    location_query: "[].keys(@)[]"
+
+- name: Process location map (phase 3)
+  set_fact:
+    tmp_location_map: "{{ (tmp_location_map | default({})) | combine({ item: (physlocation_cache_tmp_list | json_query(location_query) | join(','))}) }}"
+  with_items: "{{ used_locations }}"
+  vars:
+    location_query: "[].\"{{ item }}\""
+
+- name: Assemble assignments of cache to location
+  set_fact:
+    physlocation_assignments: "{
+                              {%- for location, host_csv in tmp_location_map.items() -%}
+                              {%- set outer_loop = loop -%}
+                              {%- for i in host_csv.split(',') -%}
+                              '{{ i }}': '{{ location }}'
+                              {%- if not loop.last %},{% endif -%}
+                              {%- endfor %}
+                              {%- if not outer_loop.last %},{% endif -%}
+                              {%- endfor %}
+                              }"
+
+- name: Create Division
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/divisions"
+    method: POST
+    body:
+      name: "{{ item }}"
+  with_items: "{{ dl_ds_merged_divisions | json_query(division_query) }}"
+  vars:
+    division_query: "[].division_name"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_divisions_out
+  failed_when: (create_divisions_out.status == 400 and create_divisions_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_divisions_out.status > 400 and create_divisions_out.status < 600)
+
+- name: Get All Divisions
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/divisions"
+    method: GET
+  register: get_all_divisions
+
+- name: Assemble assignments of region to division
+  set_fact:
+    region_assignments: "{
+                        {%- for d in dl_ds_merged_divisions -%}
+                        {%- set outer_loop = loop -%}
+                        {%- for r in d.regions -%}
+                        '{{ r.region_name }}': '{{ d.division_name }}'
+                        {%- if not loop.last %},{% endif -%}
+                        {%- endfor %}
+                        {%- if not outer_loop.last %},{% endif -%}
+                        {%- endfor %}
+                        }"
+- name: Create Regions
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/divisions/{{ item.value }}/regions"
+    method: POST
+    body:
+      name: "{{ item.key }}"
+  with_dict: "{{ region_assignments }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_regions_out
+  failed_when: (create_regions_out.status == 400 and create_regions_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_regions_out.status > 400 and create_regions_out.status < 600)
+
+- name: Get All Regions
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/regions"
+    method: GET
+  register: get_all_regions
+
+- name: Constuct physLocation payload
+  set_fact:
+    physlocation_list: "[
+                        {% for d in dl_ds_merged_divisions -%}
+                        {%- set d_loop = loop -%}
+                        {%- for r in d.regions -%}
+                        {%- set r_loop = loop -%}
+                        {%- for p in r.phys_locations -%}
+                        { 'region_name': '{{ r.region_name }}',
+                          'address': '{{ p.address }}',
+                          'city': '{{ p.city }}',
+                          'comments': '{{ p.comments }}',
+                          'email': '{{ p.email }}',
+                          'name': '{{ p.name }}',
+                          'phone': '{{ p.phone }}',
+                          'poc': '{{ p.poc }}',
+                          'shortname': '{{ p.shortname }}',
+                          'state': '{{ p.state }}',
+                          'zip': '{{ p.zip }}'
+                       }
+                        {%- if not loop.last %},{% endif -%}
+                        {%- endfor %}
+                        {%- if not r_loop.last %},{% endif -%}
+                        {%- endfor %}
+                        {%- if not d_loop.last %},{% endif -%}
+                        {%- endfor %}
+                        ]"
+
+- name: Create Physical Locations
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/regions/{{ item.region_name }}/phys_locations"
+    method: POST
+    body:
+      address: "{{ item.address }}"
+      city: "{{ item.city }}"
+      comments: "{{ item.comments | default(omit) }}"
+      email: "{{ item.email | default(omit) }}"
+      name: "{{ item.name }}"
+      phone: "{{ item.phone | default(omit) }}"
+      poc: "{{ item.poc | default(omit) }}"
+      shortName: "{{ item.shortname }}"
+      state: "{{ item.state }}"
+      zip: "{{ item.zip }}"
+  with_items: "{{ physlocation_list }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_physlocation_out
+  failed_when: (create_physlocation_out.status == 400 and create_physlocation_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_physlocation_out.status > 400 and create_physlocation_out.status < 600)
+
+- name: Get All Physical Locations
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/phys_locations"
+    method: GET
+  register: get_all_physlocations
+
+- name: Assign types to servers
+  set_fact:
+    type_assignments: "{{ (type_assignments | default({})) | combine({ item: dl_ds_merged_type_ansible_component_map[hostvars[item].component] | default('UNKNOWN') }) }}"
+  with_items: "{{ groups['all'] }}"
+
+- name: Assert a default location
+  set_fact:
+    default_location: dl_ds_merged_divisions | json_query(location_query)
+  vars:
+    location_query: "[].regions[].phys_locations[].name | [0]"
+
+- name: Assert a default cachegroup
+  set_fact:
+    default_cachegroup: infrastructure
+
+- name: Get All Profiles
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+    method: GET
+  register: get_all_profiles
+
+- name: Get All Parameters from GLOBAL profile
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/GLOBAL/parameters"
+    method: GET
+  register: get_global_parameters
+
+- name: Unlink all Global Profile parameters to be recreated
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profileparameters/{{ get_all_profiles.json | to_json | from_json | json_query(profile_query) }}/{{ item }}"
+    method: DELETE
+  with_items: "{{ get_global_parameters.json.response | map(attribute='id') | list }}"
+  vars:
+    profile_query: "response[?name == 'GLOBAL'].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: unassociate_global_params
+  failed_when: (unassociate_global_params.status == 400 and unassociate_global_params.json | to_json | from_json | json_query(error_query) | length != 0) or ( unassociate_global_params.status > 400 and unassociate_global_params.status < 600)
+
+- name: Create Profiles - Global
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+    method: POST
+    body: "{{ lookup('template', 'profile.j2') }}"
+  with_items: "{{ dl_ds_merged_profiles }}"
+  vars:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    cdn: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+    type: "{{ item.type }}"
+    routingDisabled: "{{ (item.routingDisabled | default(false)) | lower }}"
+    cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_profiles_out
+  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+
+- name: Create and Associate Parameters - Global
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
+    method: POST
+    body: "{{ lookup('template', 'parameter.j2') }}"
+  with_items:
+    - "{{ dl_ds_merged_profiles }}"
+  vars:
+    cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_profiles_out
+  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+
+- name: Handle Profile & Parameter CDN Templates
+  include_tasks: parameter_loader.yml
+  vars:
+    Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+    Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
+    Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+    cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"
+    cdn_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].id | [0]"
+  with_items: "{{ cdnDelegationList }}"
+  loop_control:
+    loop_var: Target_cdn_delegation
+
+- name: Get All Profiles
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+    method: GET
+  register: get_all_profiles
+
+- name: Get All Parameters per Profile
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
+    method: GET
+  vars:
+    profile_query: "response.id"
+  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+  register: get_all_parameters_by_profile
+
+- name: Map CDN Delegation to CDN Name
+  set_fact:
+    delegation_cdnName_map: "{{ (delegation_cdnName_map | default({})) | combine({ (tmp | lower): (item.name | lower) }) }}"
+  with_items: "{{ get_all_cdns.json.response }}"
+  vars:
+    tmp: "{{ (item.domainName == '-') | ternary('ALL', (item.domainName.split('.')[0])) }}"
+
+- name: Map CDN Name to CDN Delegation
+  set_fact:
+    cdnName_delegation_map: "{{ (delegation_cdnName_map | default({})) | combine({ (item.name | lower): (tmp | lower) }) }}"
+  with_items: "{{ get_all_cdns.json.response }}"
+  vars:
+    tmp: "{{ (item.domainName == '-') | ternary('ALL', (item.domainName.split('.')[0])) }}"
+
+- name: Generate potential mappings between cdn/components and profiles
+  set_fact:
+    ccp_list: "{{ (ccp_list| default([])) +[{ 'cdnname': item.1, 'component': item.0 , 'profile_keys': profile_keys, 'compound_key': compound_key }] }}"
+  with_nested:
+    - "{{ dl_ds_merged_profile_prefix_ansible_component_map.keys() | map('lower') | list }}"
+    - "{{ lc_cdns | to_json | from_json | json_query(cdn_query) | lower }}"
+  vars:
+    lc_profiles: "{{ get_all_profiles.json.response | lower }}"
+    lc_cdns: "{{ get_all_cdns.json.response | lower }}"
+    profile_keys: "{{ lc_profiles | to_json | from_json | json_query(profile_query) }}"
+    profile_query: "[?starts_with(name,`{{ dl_ds_merged_profile_prefix_ansible_component_map[item.0] | lower }}`) {% if dl_ds_merged_profile_blacklist_ansible_component_map[item.0] != None %}{% for b in dl_ds_merged_profile_blacklist_ansible_component_map[item.0] %}&& !contains(name,`{{ b | lower }}`) {% endfor %}{% endif %}&& cdnname == `{{ item.1 }}`].name"
+    cdn_query: "[].name"
+    compound_key: "{{ item.1 }}_{{ item.0 }}"
+
+- name: Fabricate a compound_key for each host based on the cdn/component
+  set_fact:
+    host_keys_tmp: "{{ host_keys_tmp | default([]) + [{ 'host': item, 'compound_key': compound_key }] }}"
+  with_items: "{{ groups['all'] }}"
+  vars:
+    compound_key: "{{ delegation_cdnName_map[hostvars[item].cdn | lower ] }}_{{ hostvars[item].component | lower }}"
+
+- name: Produce elegible pairings of keys and hosts
+  set_fact:
+    paired_elegible_keys_hosts: "{{ paired_elegible_keys_hosts | default({}) | combine( { item: { 'hosts': hosts, 'profiles': profile_keys } } ) }}"
+  with_items: "{{ compound_keys }}"
+  vars:
+    compound_key_query: "[].compound_key"
+    host_query: "[?compound_key == '{{ item }}'].host"
+    key_query: "[?compound_key == '{{ item }}'].profile_keys[]"
+    compound_keys: "{{ host_keys_tmp | to_json | from_json | json_query(compound_key_query) | unique }}"
+    hosts: "{{ host_keys_tmp | to_json | from_json | json_query(host_query) }}"
+    profile_keys: "{{ ccp_list | to_json | from_json | json_query(key_query) }}"
+
+- name: Associate profiles to hosts
+  command: "{{ role_path }}/files/selection.set.py {{ paired_elegible_keys_hosts[item].profiles | join(',') | quote }} {{ paired_elegible_keys_hosts[item].hosts | join(',') | quote }}"
+  register: profiles_hosts_out
+  changed_when: false
+  with_items: "{{ paired_elegible_keys_hosts.keys() | list}}"
+
+- name: Massage profiles to hosts
+  set_fact:
+    profile_host_tmp_str: "{% for i in profiles_hosts_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
+
+- name: Process profile map (phase 1)
+  set_fact:
+    profile_host_tmp_list: "{{ profile_host_tmp_list | default([]) | union( [item  | from_json] ) }}"
+  with_items: "{{ profile_host_tmp_str.split('|') }}"
+
+- name: Process profile map (phase 2)
+  set_fact:
+    used_profiles: "{{ profile_host_tmp_list | json_query(profile_query) | unique }}"
+  vars:
+    profile_query: "[].keys(@)[]"
+
+- name: Process profile map (phase 3)
+  set_fact:
+    tmp_profile_map: "{{ (tmp_profile_map | default({})) | combine({ item: (profile_host_tmp_list | json_query(profile_query) | join(','))}) }}"
+  with_items: "{{ used_profiles }}"
+  vars:
+    profile_query: "[].\"{{ item }}\""
+
+- name: Assemble assignments of profiles to hosts
+  set_fact:
+    profile_assignments: "{
+                          {%- for profile, host_csv in tmp_profile_map.items() -%}
+                          {%- set outer_loop = loop -%}
+                          {%- for i in host_csv.split(',') -%}
+                          '{{ i }}': '{{ profile }}'
+                          {%- if not loop.last %},{% endif -%}
+                          {%- endfor %}
+                          {%- if not outer_loop.last %},{% endif -%}
+                          {%- endfor %}
+                          }"
+
+- name: Get All Server Statuses
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/statuses"
+    method: GET
+  register: get_all_statuses
+
+- name: Get the CDN Assignments into a more queryable form
+  set_fact:
+    cdn_assignment_reverse_tmp: "{{ cdn_assignment_reverse_tmp | default([]) + [{'host': item.key, 'cdn': item.value}] }}"
+  with_dict: "{{ cdn_assignments }}"
+
+- name: Divide TM hosts in half per CDN (Phase 1)
+  set_fact:
+    tm_status_tmp: "{{ tm_status_tmp | default([]) + [ {'onlineTM': evenTM, 'offlineTM': oddTM} ] }}"
+  with_items: "{{ delegation_cdnName_map.keys() }}"
+  vars:
+    lc_cdn_assignment_reverse_tmp: "{{ cdn_assignment_reverse_tmp | lower }}"
+    cdn_query: "[?cdn == `{{ item }}`].host"
+    cdns: "{{ lc_cdn_assignment_reverse_tmp | json_query(cdn_query) }}"
+    tm_cdns: "{{ groups['traffic_monitor'] | intersect(cdns) }}"
+    evenTM: "{{ (groups['traffic_monitor'] | intersect(cdns))[::2] }}"
+    oddTM: "{{ (groups['traffic_monitor'] | intersect(cdns))[1::2] }}"
+
+- name: Assign server status for offline traffic monitors
+  set_fact:
+    status_assignment: "{{ status_assignment | default({}) | combine({ item: 'OFFLINE' }) }}"
+  with_items: "{{ tm_status_tmp | json_query(offline_query) }}"
+  vars:
+    offline_query: "[].offlineTM[]"
+
+- name: Assign server status for online traffic monitors
+  set_fact:
+    status_assignment: "{{ status_assignment | default({}) | combine({ item: 'ONLINE' }) }}"
+  with_items: "{{ tm_status_tmp | json_query(online_query) }}"
+  vars:
+    online_query: "[].onlineTM[]"
+
+- name: Assign server status for caches
+  set_fact:
+    status_assignment: "{{ status_assignment | default({}) | combine({ item: 'REPORTED' }) }}"
+  with_items: "{{ groups['atsec'] + groups['atsmid'] + groups['grove'] }}"
+
+- name: Create Servers (Non-mso)
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
+    method: POST
+    body: "{{ lookup('template', 'server.j2') }}"
+  with_items: "{{ groups['all'] | difference(groups['mso_parent_alias']) }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    status_name: "{{ status_assignment[item] | default('ONLINE') }}"
+    status_query: "[?name == `{{ status_name }}`].id | [0]"
+    status_id: "{{ get_all_statuses.json.response | to_json | from_json | json_query(status_query) }}"
+    cachegroup_name: "{{ cachegroups_assignments[item] | default('infrastructure') }}"
+    cachegroup_query: "[?name == `{{ cachegroup_name }}`].id | [0]"
+    cachegroup_id: "{{ get_all_cachegroups.json.response | to_json | from_json | json_query(cachegroup_query) }}"
+    location_name: "{{ physlocation_assignments[item] | default('Baltimore-MD') }}"
+    location_query: "[?name == `{{ location_name }}`].id | [0]"
+    location_id: "{{ get_all_physlocations.json.response | to_json | from_json | json_query(location_query) }}"
+    type_name: "{{ type_assignments[item] | default('TRAFFIC_OPS_DB') }}"
+    type_query: "[?name == `{{ type_name }}`].id | [0]"
+    type_id: "{{ get_all_types.json.response | to_json | from_json | json_query(type_query) }}"
+    lc_profiles: "{{ get_all_profiles.json.response | lower }}"
+    profile_name: "{{ profile_assignments[item] | default('TRAFFIC_OPS_DB') }}"
+    profile_query: "[?name == `{{ profile_name }}`].id | [0]"
+    profile_id: "{{ lc_profiles | to_json | from_json | json_query(profile_query) }}"
+    lc_cdns: "{{ get_all_cdns.json.response | lower }}"
+    cdn_name: "{{ delegation_cdnName_map[cdn_assignments[item] | lower ] }}"
+    cdn_query: "[?starts_with(name,`{{ cdn_name | lower }}`)].id | [0]"
+    cdn_id: "{{ lc_cdns | to_json | from_json | json_query(cdn_query) }}"
+    hostName: "{{ item.split('.')[0] }}"
+    domainName: "{{ item.split('.')[1:] | join('.') }}"
+    cachegroupId: "{{ cachegroup_id }}"
+    statusId: "{{ status_id }}"
+    physLocationId: "{{ location_id }}"
+    typeId: "{{ type_id }}"
+    profileId: "{{ profile_id }}"
+    cdnId: "{{ cdn_id }}"
+    updPending: True
+    interfaceName: "{{ hostvars[item].ansible_default_ipv4.interface | default('eth0') }}"
+    ipAddress: "{{ hostvars[item].ansible_default_ipv4.address | default(hostvars[item].ansible_host) }}"
+    ipNetmask: "{{ hostvars[item].ansible_default_ipv4.netmask | default('255.255.255.0') }}"
+    ipGateway: "{{ hostvars[item].ansible_default_ipv4.gateway | default('127.0.0.0') }}"
+    ip6Address: "{{ hostvars[item].ansible_default_ipv6.address | default(omit) }}"
+    ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
+    interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
+    tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
+    httpsPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).httpsPort | default(omit) }}"
+    xmppId: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).xmppId | default(omit) }}"
+    xmppPasswd: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).xmppPasswd | default(omit) }}"
+    rack: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).rack | default(omit) }}"
+    mgmtIpAddress: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpAddress | default(omit) }}"
+    mgmtIpNetmask: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpNetmask | default(omit) }}"
+    mgmtIpGateway: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpGateway | default(omit) }}"
+    iloIpAddress: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpAddress | default(omit) }}"
+    iloIpNetmask: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpNetmask | default(omit) }}"
+    iloIpGateway: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpGateway | default(omit) }}"
+    iloUsername: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloUsername | default(omit) }}"
+    iloPassword: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloPassword | default(omit) }}"
+    routerHostName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerHostName | default(omit) }}"
+    routerPortName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerPortName | default(omit) }}"
+  register: create_server_out
+  failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+
+###
+# MSO servers are not guarenteed to be idempotent
+# There exists an order of execution issue with regard to doing DS creation last
+# This prevents you from knowing how to associate DS -> Eligible Server Profiles -> Servers -> MSO DS Server Assignments
+# At present you have Profiles -> Servers -> DS -> Update MSO Server Profiles (to match specified eligibility) -> MSO DS Server Assignments
+# This being said, it's only a broken idempotency so for CI/One-n-done purposes, it still works
+###
+
+- name: Create Servers (MSO)
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
+    method: POST
+    body: "{{ lookup('template', 'server.j2') }}"
+  with_items: "{{ groups['mso_parent_alias'] }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    status_name: "{{ status_assignment[item] | default('ONLINE') }}"
+    status_query: "[?name == `{{ status_name }}`].id | [0]"
+    status_id: "{{ get_all_statuses.json.response | to_json | from_json | json_query(status_query) }}"
+    cachegroup_name: "{{ cachegroups_assignments[item] | default('infrastructure') }}"
+    cachegroup_query: "[?name == `{{ cachegroup_name }}`].id | [0]"
+    cachegroup_id: "{{ get_all_cachegroups.json.response | to_json | from_json | json_query(cachegroup_query) }}"
+    location_name: "{{ physlocation_assignments[item] | default('Baltimore-MD') }}"
+    location_query: "[?name == `{{ location_name }}`].id | [0]"
+    location_id: "{{ get_all_physlocations.json.response | to_json | from_json | json_query(location_query) }}"
+    type_name: "{{ type_assignments[item] | default('TRAFFIC_OPS_DB') }}"
+    type_query: "[?name == `{{ type_name }}`].id | [0]"
+    type_id: "{{ get_all_types.json.response | to_json | from_json | json_query(type_query) }}"
+    lc_profiles: "{{ get_all_profiles.json.response | lower }}"
+    profile_name: "{{ profile_assignments[item] | default('TRAFFIC_OPS_DB') }}"
+    profile_query: "[?name == `{{ profile_name }}`].id | [0]"
+    profile_id: "{{ lc_profiles | to_json | from_json | json_query(profile_query) }}"
+    lc_cdns: "{{ get_all_cdns.json.response | lower }}"
+    cdn_name: "{{ delegation_cdnName_map[cdn_assignments[item] | lower ] }}"
+    cdn_query: "[?starts_with(name,`{{ cdn_name | lower }}`)].id | [0]"
+    cdn_id: "{{ lc_cdns | to_json | from_json | json_query(cdn_query) }}"
+    hostName: "{{ item.split('.')[0] }}"
+    domainName: "{{ item.split('.')[1:] | join('.') }}"
+    cachegroupId: "{{ cachegroup_id }}"
+    statusId: "{{ status_id }}"
+    physLocationId: "{{ location_id }}"
+    typeId: "{{ type_id }}"
+    profileId: "{{ profile_id }}"
+    cdnId: "{{ cdn_id }}"
+    updPending: True
+    interfaceName: "eth0"
+    ipAddress: "{{ hostvars[item].ansible_host }}"
+    ipNetmask: "255.255.255.0"
+    ipGateway: "127.0.0.0"
+    ip6Address: "{{ omit }}"
+    ip6Gateway: "{{ omit }}"
+    interfaceMtu: "9000"
+    tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
+    httpsPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).httpsPort | default(omit) }}"
+    xmppId: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).xmppId | default(omit) }}"
+    xmppPasswd: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).xmppPasswd | default(omit) }}"
+    rack: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).rack | default(omit) }}"
+    mgmtIpAddress: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpAddress | default(omit) }}"
+    mgmtIpNetmask: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpNetmask | default(omit) }}"
+    mgmtIpGateway: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).mgmtIpGateway | default(omit) }}"
+    iloIpAddress: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpAddress | default(omit) }}"
+    iloIpNetmask: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpNetmask | default(omit) }}"
+    iloIpGateway: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloIpGateway | default(omit) }}"
+    iloUsername: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloUsername | default(omit) }}"
+    iloPassword: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).iloPassword | default(omit) }}"
+    routerHostName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerHostName | default(omit) }}"
+    routerPortName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerPortName | default(omit) }}"
+  register: create_server_out
+  failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+
+- name: Get All Servers
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
+    method: GET
+  register: get_all_servers
+
+- name: Collect All CDN delegations assigned to Fake Origins
+  set_fact:
+    cdnDelegationList: "{{ (cdnDelegationList | default([]) ) + [hostvars[item]['cdn']] }}"
+  with_items: "{{ groups['fakeorigin'] }}"
+
+- name: Convert the CDN Delegation list into an index
+  set_fact:
+    cdnDelegationIndex: "{{ (cdnDelegationIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
+  with_indexed_items: "{{ cdnDelegationList | sort | unique }}"
+
+- name: Create Index of Fake Origins
+  set_fact:
+    foIndex: "{{ (foIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
+  with_indexed_items: "{{ groups['fakeorigin'] }}"
+
+- name: Assert we have enough Delivery Service CName records to go around
+  assert:
+    that:
+      - (hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length) >= (dl_ds_merged_ds_template | length)
+    success_msg: "Enough Delivery CNames Exist ({{ dl_ds_merged_ds_template | length }}/{{ hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length }})"
+    fail_msg: "Not enough DS CNames exist to cover all DS.  Please go and create {{ (dl_ds_merged_ds_template | length) - (hostvars[groups['fakeorigin'] | first].ds_names.split(',') | length) }} more and rerun."
+  vars:
+    Target_cdn_delegation: Invalid (just for rendering)
+
+- name: Handle Delivery Service CDN Templates
+  include_tasks: ds_loader.yml
+  vars:
+    Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+    Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
+    Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+    cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"
+    cdn_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].id | [0]"
+  with_items: "{{ cdnDelegationList }}"
+  loop_control:
+    loop_var: Target_cdn_delegation
+
+- name: Get All Delivery Services
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
+    method: GET
+  register: get_all_ds
+
+- name: Ensure SSL info directory exists
+  file:
+    state: directory
+    path: "{{ lookup('env', 'PWD') }}/out/ssl"
+
+- name: Set a default list of HTTPS DS
+  set_fact:
+    scrubbed_https_ds: []
+
+- name: Scrub the protocol out of HTTS DS URLs
+  set_fact:
+    scrubbed_https_ds: "{{ scrubbed_https_ds | default([]) + [ combined ] }}"
+  with_items: "{{ get_all_ds.json | to_json | from_json | json_query(https_query) }}"
+  vars:
+    https_query: "response[?protocol >= `2` ].{ xmlId: xmlId, exampleURLs: exampleURLs[? starts_with(@, `https`) ], cdnName: cdnName, is_http: ( contains(type, `HTTP`) ) }"
+    fqdns: "{{ item.exampleURLs | map('regex_replace', 'https://^(.*)', '\\1') | list }}"
+    base_fqdns: "{{ fqdns | map('regex_replace', '.*?\\.(.*)', 'DNS:\\1') | list }}"
+    sans: "{% if item.is_http %}{{ (fqdns | map('regex_replace', '.*?\\.(.*)', 'DNS:*.\\1') | list) + base_fqdns }}{% else %}{{ fqdns | map('regex_replace', '^(.*)', 'DNS:\\1') | list }}{% endif %}"
+    combined: "{{ item | combine( {'fqdns': fqdns, 'sans': sans} ) }}"
+
+- name: Generate DS Private keys
+  openssl_privatekey:
+    path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
+    force: yes
+  with_items: "{{ scrubbed_https_ds }}"
+
+- name: Generate DS CSRs
+  openssl_csr:
+    privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
+    subject:
+      CN: "{{ (item.sans | first).split(':')[1] }}"
+      C: US
+      ST: Colorado
+      L: Denver
+      O: Kabletown
+      OU: CDN
+      emailAddress: Ops@kabletown.invalid
+    subject_alt_name: "{{ item.sans }}"
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
+    extended_key_usage:
+      - serverAuth
+    basic_constraints:
+      - CA:FALSE
+    path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.csr"
+    force: yes
+  with_items: "{{ scrubbed_https_ds }}"
+
+- name: Generate DS Certificates
+  openssl_certificate:
+    csr_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.csr"
+    force: yes
+    issuer:
+      CN: CDNLAB.invalid
+      C: US
+      ST: Colorado
+      L: Denver
+      O: Kabletown
+      OU: CDN
+    path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.crt"
+    privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
+    provider: ownca
+    ownca_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.crt"
+    ownca_privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.key.pem"
+  with_items: "{{ scrubbed_https_ds }}"
+
+- name: Generate TO Self-signed certs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices/sslkeys/generate"
+    method: POST
+    body:
+      cdn: "{{ item.cdnName }}"
+      city: Denver
+      country: US
+      hostname: "{{ (item.sans | first).split(':')[1] }}"
+      key: "{{ item.xmlId }}"
+      organization: Kabletown
+      state: CO
+      businessUnit: CDN
+      deliveryservice: "{{ item.xmlId }}"
+      version: 1
+  with_items: "{{ scrubbed_https_ds }}"
+
+- name: Upload DS SSL Data to Traffic Ops
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices/sslkeys/add"
+    method: POST
+    body:
+      key: "{{ item.xmlId }}"
+      version: 2
+      cdn: "{{ item.cdnName }}"
+      hostname: "{{ (item.sans | first).split(':')[1] }}"
+      certificate:
+        key: "{{ lookup('file', keypath) }}"
+        csr: "{{ lookup('file', csrpath) }}"
+        crt: |
+          {{ lookup('file', crtpath) }}
+          {{ lookup('file', intcertpath) }}
+  with_items: "{{ scrubbed_https_ds }}"
+  register: create_ds_sslkeys_out
+  failed_when: (create_ds_sslkeys_out.status == 400 and create_ds_sslkeys_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_sslkeys_out.status > 400 and create_ds_sslkeys_out.status < 600)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    keypath: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
+    csrpath: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.csr"
+    crtpath: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.crt"
+    intcertpath: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.crt"
+
+- name: Snapshot all CDNs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/tools/write_crconfig/{{ item.name }}"
+    method: GET
+  with_items: "{{ get_all_cdns.json.response[1:] }}"
+  register: snapshot_out
+  failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"

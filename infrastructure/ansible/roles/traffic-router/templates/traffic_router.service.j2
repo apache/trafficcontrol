@@ -1,0 +1,44 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+# file deployed via ansible push, local edits are subject to be overwritten
+
+# Systemd unit file for starting traffic router
+[Unit]
+Description=Traffic Router
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+Environment=JAVA_HOME={{tr_java_home_dir}}
+Environment=CATALINA_PID={{tr_temp_dir}}/tomcat.pid
+Environment=CATALINA_HOME={{tr_tomcat_base_dir}}
+Environment=CATALINA_BASE={{tr_base_dir}}
+Environment=CATALINA_OUT={{tr_tomcat_logs_dir}}/catalina.log
+EnvironmentFile={{tr_conf_dir}}/startup.properties
+ExecStart={{tr_tomcat_base_dir}}/bin/startup.sh
+ExecStop={{tr_tomcat_base_dir}}/bin/shutdown.sh
+LimitNOFILE={{tr_limit_files}}
+LimitNPROC={{tr_limit_procs}}
+LimitSIGPENDING={{tr_limit_signals}}
+LimitCORE={{tr_limit_core}}
+
+User=root
+Group=root
+UMask=0007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

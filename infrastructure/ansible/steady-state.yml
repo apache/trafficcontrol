@@ -1,0 +1,318 @@
+---
+
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    lab_ssl_dir: "{{ lookup('env', 'PWD') }}/out/ssl/"
+    lab_ca_root_csr: "{{ lab_ssl_dir }}/lab.rootca.key.csr"
+    lab_ca_root_key: "{{ lab_ssl_dir }}/lab.rootca.key.pem"
+    lab_ca_root_crt: "{{ lab_ssl_dir }}/lab.rootca.crt"
+    lab_ca_int_csr: "{{ lab_ssl_dir }}/lab.intermediateca.csr"
+    lab_ca_int_key: "{{ lab_ssl_dir }}/lab.intermediateca.key.pem"
+    lab_ca_int_crt: "{{ lab_ssl_dir }}/lab.intermediateca.crt"
+    lab_csr:
+      CN: CDNLAB.invalid
+      C: US
+      ST: Colorado
+      L: Denver
+      O: ExampleCompany
+      OU: CDN
+      emailAddress: user@kabletown.invalid
+
+  tasks:
+    - name: Collect All CDN delegations assigned to Fake Origins
+      set_fact:
+        cdnDelegationList: "{{ (cdnDelegationList | default([]) ) + [hostvars[item]['cdn']] }}"
+      with_items: "{{ groups['fakeorigin'] }}"
+
+    - name: Convert the CDN Delegation list into an index
+      set_fact:
+        cdnDelegationIndex: "{{ (cdnDelegationIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
+      with_indexed_items: "{{ cdnDelegationList | sort | unique }}"
+
+    - name: Create Index of Fake Origins
+      set_fact:
+        foIndex: "{{ (foIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
+      with_indexed_items: "{{ groups['fakeorigin'] }}"
+
+    - name: Generate additional ansible inventory
+      template:
+        src: "templates/inventory.template.j2"
+        dest: "{{ lookup('env', 'PWD') }}/inventory/component.inventory"
+
+    - name: Reload ansible inventory
+      meta: refresh_inventory
+
+    - name: Ensure SSL info directory exists
+      file:
+        state: directory
+        path: "{{ lookup('env', 'PWD') }}/out/ssl"
+
+    - name: Regenerate Lab Root CA Private key
+      openssl_privatekey:
+        path: "{{ lab_ca_root_key }}"
+        force: yes
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Regenerate Lab Root CA CSR
+      openssl_csr:
+        basic_constraints:
+          - CA:TRUE
+        privatekey_path: "{{ lab_ca_root_key }}"
+        subject:
+          CN: "{{ lab_csr.CN }}"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+          emailAddress: "{{ lab_csr.emailAddress }}"
+        path: "{{ lab_ca_root_csr }}"
+        force: yes
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Regenerate Lab Root CA Certificate
+      openssl_certificate:
+        csr_path: "{{ lab_ca_root_csr }}"
+        force: yes
+        issuer:
+          CN: "{{ lab_csr.CN }}"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+        path: "{{ lab_ca_root_crt }}"
+        privatekey_path: "{{ lab_ca_root_key }}"
+        provider: selfsigned
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Generate Intermediate Signing CA Private keys
+      openssl_privatekey:
+        path: "{{ lab_ca_int_key }}"
+        force: yes
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)
+
+    - name: Generate Intermediate Signing CA CSRs
+      openssl_csr:
+        privatekey_path: "{{ lab_ca_int_key }}"
+        subject:
+          CN: "{{ lab_csr.CN }} Intermediate CA"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+          emailAddress: "{{ lab_csr.emailAddress }}"
+        key_usage:
+          - digitalSignature
+          - keyCertSign
+        basic_constraints:
+          - CA:TRUE, pathlen:0
+        path: "{{ lab_ca_int_csr }}"
+        force: yes
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)
+
+    - name: Generate Intermediate Signing CA Certificates
+      openssl_certificate:
+        csr_path: "{{ lab_ca_int_csr }}"
+        force: yes
+        issuer:
+          CN: "{{ lab_csr.CN }} Intermediate CA"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+        path: "{{ lab_ca_int_crt }}"
+        privatekey_path: "{{ lab_ca_int_key }}"
+        provider: ownca
+        ownca_path: "{{ lab_ca_root_crt }}"
+        ownca_privatekey_path: "{{ lab_ca_root_key }}"
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)
+
+    - name: Generate Server Private keys
+      openssl_privatekey:
+        path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.key.pem"
+        force: yes
+      with_items: "{{ groups['all'] | difference( groups['mso_parent_alias'] ) }}"
+
+    - name: Generate Server CSRs (non-riak)
+      openssl_csr:
+        privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.key.pem"
+        subject:
+          CN: "{{ target_additional_DNS_names | default(item) }}"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+          emailAddress: "{{ lab_csr.emailAddress }}"
+        subject_alt_name: "{{ san_arr | difference(invalid_DNS) }}"
+        path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.csr"
+        force: yes
+      with_items: "{{ groups['all'] | difference( groups['mso_parent_alias'] ) | difference( groups['riak']) | difference( groups['fakeorigin']) }}"
+      vars:
+        san_arr:
+          - "IP:{{ hostvars[item]['ansible_host'] }}"
+          - "DNS:{{ item }}"
+          - "DNS:{{ hostvars[item]['additional_dns_names'] | default('invalid.invalid') }}"
+        invalid_DNS:
+          - "DNS:invalid.invalid"
+
+    - name: Generate Server CSRs (riak)
+      openssl_csr:
+        privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.key.pem"
+        subject:
+          CN: "{{ target_additional_DNS_names | default(item) }}"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+          emailAddress: "{{ lab_csr.emailAddress }}"
+        subject_alt_name: "{{ san_arr | union(other_riaks) | union(other_riaks_ips) }}"
+        path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.csr"
+        force: yes
+      with_items: "{{ groups['riak'] }}"
+      vars:
+        san_arr:
+          - "IP:{{ hostvars[item]['ansible_host'] }}"
+          - "DNS:{{ item }}"
+        other_riaks: "{{ groups['riak'] | difference([item]) | map('regex_replace', '^(.*)', 'DNS:\\1') | list }}"
+        other_riaks_ips: "{{ groups['riak'] | difference([item]) | map('extract', hostvars, ['ansible_host']) | list | map('regex_replace', '^(.*)', 'IP:\\1') | list }}"
+
+    - name: Generate Server CSRs (origin)
+      openssl_csr:
+        privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.key.pem"
+        subject:
+          CN: "{{ target_additional_DNS_names | default(item) }}"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+          emailAddress: "{{ lab_csr.emailAddress }}"
+        subject_alt_name: "{{ san_arr | union(cnames) | difference(invalid_DNS) | flatten }}"
+        path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.csr"
+        force: yes
+      with_items: "{{ groups['fakeorigin'] }}"
+      vars:
+        san_arr:
+          - "IP:{{ hostvars[item]['ansible_host'] }}"
+          - "DNS:{{ item }}"
+        invalid_DNS:
+          - "DNS:invalid.invalid"
+        cnames:
+          - "{{ (hostvars[item]['ds_names'].split(',') | map('regex_replace', '^(.*)', 'DNS:\\1') ) | default('DNS:invalid.invalid') | list }}"
+
+    - name: Generate Server Certificates
+      openssl_certificate:
+        csr_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.csr"
+        force: yes
+        issuer:
+          CN: "{{ lab_csr.CN }} Intermediate CA"
+          C: "{{ lab_csr.C }}"
+          ST: "{{ lab_csr.ST }}"
+          L: "{{ lab_csr.L }}"
+          O: "{{ lab_csr.O }}"
+          OU: "{{ lab_csr.OU }}"
+        path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.crt"
+        privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.key.pem"
+        provider: ownca
+        ownca_path: "{{ lab_ca_int_crt }}"
+        ownca_privatekey_path: "{{ lab_ca_int_key }}"
+      with_items: "{{ groups['all'] | difference( groups['mso_parent_alias'] ) }}"
+
+    #- name: Generate Server DHParms
+    #  openssl_dhparam:
+    #    path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item }}.dhparm.pem"
+    #    size: 2048
+    #    force: yes
+    #  with_items: "{{ groups['all'] | difference( groups['mso_parent_alias'] ) }}"
+
+    - name: Save the SSL Paths around for later
+      set_fact:
+        lab_ssl_dir: "{{ lab_ssl_dir }}"
+        lab_ca_root_key: "{{ lab_ca_root_key }}"
+        lab_ca_root_crt: "{{ lab_ca_root_crt }}"
+        lab_ca_int_key: "{{ lab_ca_int_key }}"
+        lab_ca_int_crt: "{{ lab_ca_int_crt }}"
+
+- hosts: all:!mso_parent_alias
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Wait for SSH to allow sockets to connect
+      wait_for:
+        host={{ item }}
+        port=22
+        state=started
+      with_items: "{{ inventory_hostname }}"
+      delegate_to: localhost
+
+    - name: Pause for SSH to come up and the inital bootstrap to run
+      pause:
+        minutes: 5
+
+    - name: Ensure CA tools are installed
+      yum:
+        name: ca-certificates
+        state: present
+        use_backend: yum
+        enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+    - name: Deploy the Trusted Root SSL CA Certificates
+      copy:
+        src: "{{ item }}"
+        dest: /etc/pki/ca-trust/source/anchors
+        owner: root
+        group: root
+        mode: 0644
+      notify: update server trusts
+      with_items:
+        - "{{ hostvars.localhost.lab_ca_int_crt }}"
+        - "{{ hostvars.localhost.lab_ca_root_crt }}"
+
+    - name: Deploy the server cert
+      copy:
+        content: |
+          {{ lookup('file', lab_server_crt) }}
+          {{ lookup('file', hostvars.localhost.lab_ca_int_crt) }}
+        dest: /etc/pki/tls/certs/server.crt
+        owner: root
+        group: root
+        mode: 0644
+      vars:
+        lab_server_crt: "{{ hostvars.localhost.lab_ssl_dir }}/{{ inventory_hostname }}.crt"
+
+    - name: Deploy the server private key
+      copy:
+        src: "{{ hostvars.localhost.lab_ssl_dir }}/{{ inventory_hostname }}.key.pem"
+        dest: /etc/pki/tls/private/server.key.pem
+        owner: root
+        group: root
+        mode: 0700
+
+    # Perform whatever waiting and validation are required to know that the steady-state is successful and ready here
+
+  handlers:
+    - name: update server trusts
+      command: /bin/update-ca-trust

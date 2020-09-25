@@ -21,6 +21,8 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.appName = propertiesModel.properties.name;
 
+    $scope.isProd = propertiesModel.properties.environment.isProd;
+
     $scope.enforceCapabilities = propertiesModel.properties.enforceCapabilities;
 
     $scope.customMenu = propertiesModel.properties.customMenu;
