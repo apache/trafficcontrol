@@ -26,7 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 const (
@@ -245,8 +244,18 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error creating DeliveryServiceRequest %v - %v", err, alerts)
 		}
 
-		expected := []string{`deliveryservice_request was created.`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error-level alert creating DSR: %s", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() {
+				t.Logf("Received expected success-level alert creating DSR: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find success-level alert after creating a DSR")
+		}
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequestV30(src, nil)
@@ -256,7 +265,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Logf("Received expected error creating Delivery Service Request: %v", err)
 		}
 
-		found := false
+		found = false
 		for _, alert := range alerts.Alerts {
 			if alert.Level == tc.SuccessLevel.String() {
 				t.Errorf("Unexpected success message creating duplicate DSR: %v", alert.Text)
