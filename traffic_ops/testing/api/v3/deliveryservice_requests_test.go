@@ -91,6 +91,123 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 }
 
+// verifies requirements of creating a "delete" DSR
+func TestCreateDeletionRequest(t *testing.T) {
+	ReloadFixtures()
+	WithObjs(t, []TCObj{Types, CDNs, Tenants, CacheGroups, Topologies, DeliveryServices, Parameters}, func() {
+		dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+		if err != nil {
+			t.Fatalf("Failed to retrieve Delivery Services: %v", err)
+		}
+		if len(dses) < 1 {
+			t.Fatalf("Failed to retrieve Delivery Services: no DSes returned from Traffic Ops")
+		}
+		ds := dses[0]
+		if ds.ID == nil {
+			t.Fatal("DS chosen for testing has no ID")
+		}
+
+		dsr := tc.DeliveryServiceRequestV30{
+			ChangeType: tc.DSRChangeTypeDelete,
+			Requested:  &ds,
+			Status:     tc.RequestStatusDraft,
+		}
+
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err == nil {
+			t.Error("Didn't get expected error creating a 'delete' DSR with no Original")
+		} else {
+			t.Logf("Received expected error creating 'delete' DSR with no Original: %v", err)
+		}
+
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Received unexpected success-level alert creating 'delete' DSR with no Original: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Received expected error-level alert creating 'delete' DSR with no Original: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find expected error-level alert creating 'delete' DSR with no Original")
+		}
+
+		dsr.Original = &ds
+		dsr.Requested = nil
+		alerts, inf, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err != nil {
+			t.Fatalf("Failed to create 'delete' DSR: %v", err)
+		}
+		t.Logf("alerts: %+v", alerts)
+		t.Logf("status code: %d %s", inf.StatusCode, http.StatusText(inf.StatusCode))
+
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, nil)
+		t.Logf("Fetched DSRs: %+v", dsrs)
+		if err != nil {
+			t.Errorf("Failed to get DSRs after creation: %v", err)
+		} else if len(dsrs) < 1 {
+			t.Error("Expected a DSR to exist after one was created, but it didn't")
+		} else if dsrs[0].ID == nil {
+			t.Error("DSR had no ID after creation")
+		} else if alerts, _, err = TOSession.DeleteDeliveryServiceRequestByID(*dsrs[0].ID); err != nil {
+			t.Errorf("Failed to delete DSR: %v - alerts: %v", err, alerts)
+		}
+	})
+}
+
+// verifies requirements of creating a "create" DSR
+func TestCreateCreationRequest(t *testing.T) {
+	ReloadFixtures()
+	WithObjs(t, []TCObj{Types, CDNs, Tenants}, func() {
+		if len(testData.DeliveryServices) < 1 {
+			t.Fatal("Need at least one testing DS for testing")
+		}
+		ds := testData.DeliveryServices[0]
+
+		dsr := tc.DeliveryServiceRequestV30{
+			ChangeType: tc.DSRChangeTypeCreate,
+			Original:   &ds,
+			Status:     tc.RequestStatusDraft,
+		}
+
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err == nil {
+			t.Error("Didn't get expected error creating a 'create' DSR with no Requested")
+		} else {
+			t.Logf("Received expected error creating 'create' DSR with no Requested: %v", err)
+		}
+
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Received unexpected success-level alert creating 'create' DSR with no Requested: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Received expected error-level alert creating 'create' DSR with no Requested: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Error("Didn't find expected error-level alert creating 'create' DSR with no Requested")
+		}
+
+		dsr.Requested = &ds
+		dsr.Original = nil
+		alerts, _, err = TOSession.CreateDeliveryServiceRequestV30(dsr, nil)
+		if err != nil {
+			t.Errorf("Failed to create 'create' DSR: %v", err)
+		} else if dsrs, _, err := TOSession.GetDeliveryServiceRequestsV30(nil, nil); err != nil {
+			t.Errorf("Failed to get DSRs after creation: %v", err)
+		} else if len(dsrs) < 1 {
+			t.Error("Expected a DSR to exist after one was created, but it didn't")
+		} else if dsrs[0].ID == nil {
+			t.Error("DSR had no ID after creation")
+		} else if alerts, _, err = TOSession.DeleteDeliveryServiceRequestByID(*dsrs[0].ID); err != nil {
+			t.Errorf("Failed to delete DSR: %v - alerts: %v", err, alerts)
+		}
+	})
+}
+
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	ReloadFixtures()
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
