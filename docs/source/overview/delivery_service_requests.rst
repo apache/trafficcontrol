@@ -37,9 +37,9 @@ The model for a :abbr:`DSR (Delivery Service Request)` in the most recent versio
 		assignee: string | null;
 		author: string;
 		changeType: 'create' | 'delete' | 'update';
-		createdAt: Date; // RFC3339 string
-		id?: number; // not present in e.g. POST request bodies
-		lastEditedBy: string;
+		createdAt: Date; // RFC3339 string - response-only field
+		id?: number; // response-only field
+		lastEditedBy: string; // response-only field
 		lastUpdated: Date; // RFC3339 string - response-only field
 		original?: DeliveryService;
 		requested?: DeliveryService;
@@ -145,6 +145,8 @@ If this property of a :abbr:`DSR (Delivery Service Request)` exists, then it is 
 	+=================+============================================================================================+=====================================================+
 	| deliveryservice | older API versions combined the concepts of Original_ and Requested into this single field | unchanged (:term:`Delivery Service` representation) |
 	+-----------------+--------------------------------------------------------------------------------------------+-----------------------------------------------------+
+
+.. _dsr-status:
 
 Status
 ------
