@@ -36,6 +36,13 @@ const (
 	dsrDraft     = 3
 )
 
+func deleteDSR(id int, t *testing.T) {
+	alerts, _, err := TOSession.DeleteDeliveryServiceRequestByID(id)
+	if err != nil {
+		t.Errorf("Cleaning up DSR #%d: %v - alerts: %v", id, err, alerts)
+	}
+}
+
 func TestDeliveryServiceRequests(t *testing.T) {
 	ReloadFixtures() // resets IDs
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
@@ -404,6 +411,7 @@ func TestOriginalNotFixedUntilClosed(t *testing.T) {
 		if dsr.ID == nil {
 			t.Fatal("Test DSR had nil ID after creation")
 		}
+		defer deleteDSR(*dsr.ID, t)
 		if dsr.Requested == nil {
 			t.Fatal("Test DSR had no 'requested' field after creation")
 		}
@@ -508,6 +516,7 @@ func TestUpdateClosedDSR(t *testing.T) {
 		if dsr.ID == nil {
 			t.Fatalf("Test DSR had nil ID after creation")
 		}
+		defer deleteDSR(*dsr.ID, t)
 
 		alerts, _, err = TOSession.SetDeliveryServiceRequestStatus(*dsr.ID, tc.RequestStatusPending, nil)
 		if err != nil {
