@@ -53,6 +53,7 @@ tp_default_properties_template:
     api:
       _comment: This should have the same value found in /etc/traffic_portal/conf/config.js
       baseUrl: "{{ tp_to_base_url }}/api/"
+    # enforceCapabilities is not currently supported and must be false
     enforceCapabilities: false
     dashboard:
       _comments: These are configurable properties for the dashboard
