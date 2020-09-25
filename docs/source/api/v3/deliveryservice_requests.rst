@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves :ref:`ds_requests`.
+Retrieves representations of :term:`Delivery Service Requests`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,29 +34,29 @@ Request Structure
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                              |
 	+===========+==========+==========================================================================================+
-	| assignee  | no       | Filter for :ref:`ds_requests` that are assigned to the user                              |
+	| assignee  | no       | Filter for :term:`Delivery Service Requests` that are assigned to the user               |
 	|           |          | identified by this username.                                                             |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| assigneeId| no       | Filter for :ref:`ds_requests` that are assigned to the user                              |
+	| assigneeId| no       | Filter for :term:`Delivery Service Requests` that are assigned to the user               |
 	|           |          | identified by this integral, unique identifier                                           |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| author    | no       | Filter for :ref:`ds_requests` submitted by the user                                      |
+	| author    | no       | Filter for :term:`Delivery Service Requests` submitted by the user                       |
 	|           |          | identified by this username                                                              |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| authorId  | no       | Filter for :ref:`ds_requests` submitted by the user                                      |
+	| authorId  | no       | Filter for :term:`Delivery Service Requests` submitted by the user                       |
 	|           |          | identified by this integral, unique identifier                                           |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| changeType| no       | Filter for :ref:`ds_requests` of the change type specified.                              |
+	| changeType| no       | Filter for :term:`Delivery Service Requests` of the change type specified.               |
 	|           |          | Can be ``create``, ``update``, or ``delete``.                                            |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| id        | no       | Filter for the :ref:`Delivery Service Request <ds_requests>` identified by this          |
+	| id        | no       | Filter for the :term:`Delivery Service Request` identified by this                       |
 	|           |          | integral, unique identifier.                                                             |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| status    | no       | Filter for :ref:`ds_requests` whose status is the status                                 |
+	| status    | no       | Filter for :term:`Delivery Service Requests` whose status is the status                  |
 	|           |          | specified. The status can be ``draft``, ``submitted``, ``pending``, ``rejected``, or     |
 	|           |          | ``complete``.                                                                            |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| xmlId     | no       | Filter for :ref:`ds_requests` that have the given                                        |
+	| xmlId     | no       | Filter for :term:`Delivery Service Requests` that have the given                         |
 	|           |          | :ref:`ds-xmlid`.                                                                         |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 
