@@ -94,16 +94,22 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 			t.Errorf("Error occurred %v", err)
 		}
 
-		expected := []string{
-			"deliveryservice_request was created.",
-			//"'xmlId' the length must be between 1 and 48",
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "created") {
+				found = true
+			}
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error alert creating a DSR: %s", alert.Text)
+			}
 		}
-
-		utils.Compare(t, expected, alerts.ToStrings())
+		if !found {
+			t.Error("Expected a success alert creating a DSR, but didn't get one")
+		}
 
 		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
-			t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
 		}
 		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
 		if err != nil {
@@ -148,16 +154,32 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Expected no entries in DeliveryServiceRequest slice -- got %d", len(dsrs))
 		}
 
+		if len(testData.DeliveryServiceRequests) < 1 {
+			t.Fatalf("Need at least one DSR to test workflow")
+		}
+
 		// Create a draft request
 		src := testData.DeliveryServiceRequests[dsrDraft]
+		src.Status = "draft"
+		src.ChangeType = "create"
 
 		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
 		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+			t.Fatalf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected := []string{`deliveryservice_request was created.`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		success := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error when creating a Delivery Service Request: %v", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "created") {
+				success = true
+			}
+		}
+
+		if !success {
+			t.Error("Did not find success alert for creating Delivery Service Request")
+		}
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
@@ -165,10 +187,10 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
+		expected := []string{"an active request exists for Delivery Service '" + src.DeliveryService.XMLID + "'"}
 		utils.Compare(t, expected, alerts.ToStrings())
 
-		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
+		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(src.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
 			t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
 			if len(dsrs) == 0 {
@@ -178,13 +200,20 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
 
-		expected = []string{
-			"deliveryservice_request was updated.",
+		success = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Unexpected error from updating DSR status: %v", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() && strings.Contains(alert.Text, "updated") {
+				success = true
+			}
 		}
 
-		utils.Compare(t, expected, alerts.ToStrings())
-		if dsr.Status != tc.RequestStatus("submitted") {
-			t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
+		if !success {
+			t.Error("Did not find a success alert for updating DSR status")
+		}
+		if dsr.Status != tc.RequestStatusSubmitted {
+			t.Errorf("expected status=%s,  got %s", tc.RequestStatusSubmitted, dsr.Status)
 		}
 	})
 }
@@ -260,7 +289,10 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by id: %v - %v", dsr.DeliveryService.XMLID, err)
+		t.Fatalf("cannot GET DeliveryServiceRequest by id: %v - %v", dsr.DeliveryService.XMLID, err)
+	}
+	if len(resp) != 1 {
+		t.Fatalf("expected exactly 1 Delivery Service request to refer to XMLID '%s'; found %d", dsr.DeliveryService.XMLID, len(resp))
 	}
 	respDSR := resp[0]
 	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
