@@ -100,6 +100,7 @@ It is not required to send both of these; either property is sufficient to deter
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 21
+	Content-Type: application/json
 
 	{"assignee": "admin"}
 

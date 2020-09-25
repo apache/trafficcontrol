@@ -96,6 +96,7 @@ Request Structure
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 23
+	Content-Type: application/json
 
 	{"status": "submitted"}
 

@@ -286,6 +286,7 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 637
+	Content-Type: application/json
 
 	{
 		"changeType": "update",
@@ -327,7 +328,6 @@ The response will be a representation of the created :term:`Delivery Service Req
 	X-Server-Name: traffic_ops_golang/
 	Date: Fri, 25 Sep 2020 02:38:04 GMT
 	Content-Length: 1074
-
 
 	{ "alerts": [{
 		"level": "success",
@@ -536,6 +536,7 @@ The request body must be a representation of a :term:`Delivery Service Request` 
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 657
+	Content-Type: application/json
 
 	{
 		"changeType": "update",
