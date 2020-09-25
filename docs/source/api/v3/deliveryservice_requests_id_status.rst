@@ -19,9 +19,56 @@
 ``deliveryservice_requests/{{ID}}/status``
 ******************************************
 
+``GET``
+=======
+Retrives the :ref:`dsr-status` of a :term:`Delivery Service Request`.
+
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type: Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+----------------------------------------------------------------------------------------+
+	| Name | Description                                                                            |
+	+======+========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being modified |
+	+------+----------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/3.0/deliveryservice_requests/6/status HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+The response is the :ref:`dsr-status` of the :term:`DSR`.
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...
+	Vary: Accept-Encoding
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 25 Sep 2020 07:25:36 GMT
+	Content-Length: 49
+
+	{"response": "submitted"}
+
+
 ``PUT``
 =======
-Sets the status of a :term:`Delivery Service Request`.
+Sets the :ref:`dsr-status` of a :term:`Delivery Service Request`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
