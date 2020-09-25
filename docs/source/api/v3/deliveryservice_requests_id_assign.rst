@@ -31,6 +31,14 @@ Assign a :term:`Delivery Service Request` to a user.
 
 Request Structure
 -----------------
+.. table:: Request Path Parameters
+
+	+------+----------------------------------------------------------------------------------------+
+	| Name | Description                                                                            |
+	+======+========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being assigned |
+	+------+----------------------------------------------------------------------------------------+
+
 :assignee:   The username of the user to whom the :term:`Delivery Service Request` is assigned.
 :assigneeId: The integral, unique identifier assigned to the :term:`DSR`.
 
