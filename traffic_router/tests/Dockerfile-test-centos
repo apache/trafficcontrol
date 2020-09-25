@@ -29,14 +29,15 @@ RUN set -o errexit; \
 
 ADD traffic_router /go/src/$DIR/traffic_router
 
-CMD set -o errexit -o xtrace; \
-	mvn_command=(mvn); \
+CMD set -o xtrace && \
+	mvn_command=(mvn) && \
 	if [[ "$DEBUG_ENABLE" == true ]]; then\
-		set -o nounset; \
+		set -o nounset && \
 		mvn_command+=("-Dmaven.surefire.debug=-agentlib:jdwp=transport=dt_socket,server=n,suspend=n,address=$DEBUG_HOST:$DEBUG_PORT -DforkCount=0 -DreuseForks=false"); \
-	fi; \
+	fi && \
 	"${mvn_command[@]}" test -Djava.library.path=/usr/share/java -DoutputDirectory=/junit 2>&1; \
-	mv core/target/surefire-reports/* /junit
-
+	exit_code=$? && \
+	mv core/target/surefire-reports/* /junit && \
+	exit $exit_code
 #
 # vi:syntax=Dockerfile
