@@ -66,6 +66,8 @@ The model for a :abbr:`DSR (Delivery Service Request)` in the most recent versio
 		requested: DeliveryService;
 	}
 
+.. _dsr-assignee:
+
 Assignee
 --------
 Assignee is the username of the user to whom the :abbr:`DSR (Delivery Service Request)` is assigned. It may be null-typed if there is no assignee for a given :abbr:`DSR (Delivery Service Request)`.
