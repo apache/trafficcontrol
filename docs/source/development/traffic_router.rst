@@ -272,9 +272,7 @@ In order to write tests or understand why a test is failing, a developer may wan
 - Have JVM act as the debugging client and have your IDE act as the debugging server, even if you are remote debugging
 - In your IDE's debugging configuration for the Traffic Router unit tests, enable "auto restart", meaning that, once the debugging client running on JVM has disconnected because a particular test is over, your IDE's debugging server will exit (unavoidable) but will immediately restart in time for the next test.
 
-
 .. note:: If you run the tests with debugging enabled and with JVM acting as the debugging client but your IDE is not actively listening for debugging connections, the unit tests *will* fail.
-
 
 Command for running the tests with debugging enabled:
 
@@ -285,9 +283,8 @@ Command for running the tests with debugging enabled:
 
 Debugging Unit Tests in Docker
 ------------------------------
-
 In order to run the unit tests in a controlled, well-defined environment, you may prefer to run them from within Docker. A Docker environment for running the Traffic Router unit tests exists in the repository at `/traffic_router/tests <https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests>`_, and it supports debugging. In order to enable debugging, set ``DEBUG_ENABLE`` to ``'true'`` in `docker-compose.yml <https://github.com/apache/trafficcontrol/blob/master/traffic_router/tests/docker-compose.yml>`_. As mentioned in :ref:`dev-debugging-unit-tests`,
-- Have your IDE act as the debugging server. In Intellij, this debuger mode is called *Listen to remote JVM*.
+- Have your IDE act as the debugging server. In Intellij, this debug mode is called *Listen to remote JVM*.
 - Enable *auto-restart* in your IDE's debugging configuration for the Traffic Router unit tests so your IDE doesn't stop listening for connections after the first test ends
 - Set the port to 8000 (debugging port is specified in the Dockerfile)
 
@@ -301,7 +298,6 @@ Once your IDE is listening for debugging connections, start the unit tests:
 	:caption: Run the Traffic Router unit tests in Docker, with or without debugging enabled
 
 	docker-compose up
-
 
 RPM Packaging
 =============
