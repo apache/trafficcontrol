@@ -132,6 +132,8 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 	return message, http.StatusOK, nil, nil
 }
 
+// PutAssignment is the handler for PUT requsets to
+// /deliveryservice_requests/{{ID}}/assign.
 func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx

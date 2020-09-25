@@ -105,6 +105,8 @@ WHERE id=$4
 RETURNING last_updated
 `
 
+// PutStatus is the handler for PUT requests to
+// /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
