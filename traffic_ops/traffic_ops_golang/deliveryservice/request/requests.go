@@ -116,6 +116,14 @@ FROM deliveryservice_request
 WHERE id=$1
 `
 
+//TODO: figure out how to modify 'AddTenancyCheck' so this isn't necessary
+const customTenancyCheck = `(
+	CASE r.change_type
+	WHEN 'delete' THEN CAST(r.original->>'tenantId' AS bigint) = ANY(CAST(:accessibleTenants AS bigint[]))
+	ELSE CAST(r.deliveryservice->>'tenantId' AS bigint) = ANY(CAST(:accessibleTenants AS bigint[]))
+	END
+)`
+
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(r.last_updated) as t FROM deliveryservice_request r
@@ -220,7 +228,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
-	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
+
+	if where == "" {
+		where = "WHERE "
+	} else {
+		where += " AND "
+	}
+	where += customTenancyCheck
+	queryValues["accessibleTenants"] = pq.Array(tenantIDs)
 
 	query := selectQuery + where + orderBy + pagination
 	log.Debugln("Query is ", query)
