@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+This script parses git diffs and outputs a set of GitHub Action annotations where each section of
+each file is an annotation containing the diff chunk as a message. All annotations are error-level.
+"""
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
