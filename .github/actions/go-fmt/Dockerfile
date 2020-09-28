@@ -20,6 +20,5 @@ FROM golang:1.14.2-alpine
 RUN apk add --no-cache git python3
 
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT /entrypoint.sh
