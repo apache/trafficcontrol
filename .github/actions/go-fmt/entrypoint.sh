@@ -33,5 +33,5 @@ if [ -s "$DIFF_FILE" ]; then
 	rm "$DIFF_FILE";
 	exit 1;
 fi
-echo "No diff found, exiting" >&2
-exit 0;
+
+echo "No diff found"
