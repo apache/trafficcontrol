@@ -33,39 +33,54 @@ class Level(Enum):
 	Level encodes the level of an annotation.
 	"""
 
-	Error = "error"
-	Notice = "notice" # notice not implemented (yet?)
-	Warn = "warning" # warning unused - diffs are assumed errors
+	error = "error"
+	notice = "notice" # notice not implemented (yet?)
+	warn = "warning" # warning unused - diffs are assumed errors
 
 class Annotation(typing.NamedTuple):
+	"""
+	Annotation represents a GitHub Actions Annotation. To preview the GitHub Annotation string,
+	coerce it to a string value. For a fully sanitized, printable Annotation, use the sanitize
+	method.
+
+	>>> print(Annotation(level=Level.error, file='test', line=1, message='test'))
+	::error file=test,line=1::test
+	"""
 	level: Level
 	file: str
 	line: int
 	message: str
 
 	def __str__(self) -> str:
-		msg = self.message.replace("]"," %5D").replace(";", "%3B")
+		msg = self.message.replace("]", "%5D").replace(";", "%3B")
 		return f"::{self.level.value} file={self.file},line={self.line}::{msg}"
 
 	def __repr__(self) -> str:
 		return f"Annotation(level={self.level}, file='{self.file}', line={self.line})"
 
+	def sanitize(self) -> str:
+		"""
+		sanitize returns a sanitized string, suitable for GHA, but not for humans to read because
+		all newlines have been replaced with their URL percent-encoded code points.
+		"""
+		return str(self).replace("\r", "%0D").replace("\n", "%0A")
+
 CHUNK_HEADER_PATTERN = re.compile(r"^@@ -\d+,\d+ \+(\d+),(\d+) @@")
 
-def parseChunk(chunk: str, file: str) -> Annotation:
+def parse_chunk(chunk: str, file: str) -> Annotation:
 	"""
-	parseChunk parses a single diff chunk and produces a corresponding annotation.
+	parse_chunk parses a single diff chunk and produces a corresponding annotation.
 
 	>>> chunk = '''@@ -1,3 +1,3 @@
 	...  {
 	... +    "test": "quest"
 	... -    "foo": "bar"
 	...  }'''
-	>>> ann = parseChunk(chunk, "test")
+	>>> ann = parse_chunk(chunk, "test")
 	>>> ann
-	Annotation(level=Level.Error, file='test', line=2)
+	Annotation(level=Level.error, file='test', line=2)
 	>>> print(ann)
-	::error file=test,line=2::Format Error
+	::error file=test,line=2::Format error
 	```diff
 	@@ -1,3 +1,3 @@
 	 {
@@ -84,16 +99,16 @@ def parseChunk(chunk: str, file: str) -> Annotation:
 
 	line = int(match.groups()[0]) + int(match.groups()[1])//2
 
-	content = "\n".join(["Format Error", "```diff", chunk, "```"])
+	content = "\n".join(["Format error", "```diff", chunk, "```"])
 
-	return Annotation(Level.Error, file, line, content)
+	return Annotation(Level.error, file, line, content)
 
 
 FILE_HEADER_PATTERN = re.compile(r"^diff --git a/(.+) b/(.+)$")
 
-def parseFile(contents: str) -> typing.List[Annotation]:
+def parse_file(contents: str) -> typing.List[Annotation]:
 	"""
-	parseFile parses the diff for a single file and returns the corresponding annotations.
+	parse_file parses the diff for a single file and returns the corresponding annotations.
 
 	>>> file = '''diff --git a/test b/test
 	... index c9072dcb7..2b7686061 100644
@@ -118,9 +133,13 @@ def parseFile(contents: str) -> typing.List[Annotation]:
 	...         // LastUpdated
 	...         //
 	... '''
-	>>> anns = parseFile(file)
-	>>> anns
-	[Annotation(level=Level.Error, file='test', line=27), Annotation(level=Level.Error, file='test', line=88)]
+	>>> anns = parse_file(file)
+	>>> len(anns)
+	2
+	>>> anns[0]
+	Annotation(level=Level.error, file='test', line=27)
+	>>> anns[1]
+	Annotation(level=Level.error, file='test', line=88)
 	"""
 	lines = contents.splitlines()
 	if len(lines) < 5:
@@ -139,19 +158,19 @@ def parseFile(contents: str) -> typing.List[Annotation]:
 	annotations = []
 	for line in lines[1:]:
 		if CHUNK_HEADER_PATTERN.match(line):
-			annotations.append(parseChunk("\n".join(chunk), fname))
+			annotations.append(parse_chunk("\n".join(chunk), fname))
 			chunk = []
 
 		chunk.append(line)
 
 	if chunk:
-		annotations.append(parseChunk("\n".join(chunk), fname))
+		annotations.append(parse_chunk("\n".join(chunk), fname))
 
 	return annotations
 
-def parseDiff(diff: str) -> typing.List[Annotation]:
+def parse_diff(diff: str) -> typing.List[Annotation]:
 	"""
-	parseDiff parses a git diff output and returns the corresponding annotations.
+	parse_diff parses a git diff output and returns the corresponding annotations.
 
 	>>> diff= '''diff --git a/test b/test
 	... index c9072dcb7..2b7686061 100644
@@ -189,15 +208,15 @@ def parseDiff(diff: str) -> typing.List[Annotation]:
 	...
 	...  /*
 	... '''
-	>>> anns = parseDiff(diff)
+	>>> anns = parse_diff(diff)
 	>>> len(anns)
 	3
 	>>> anns[0]
-	Annotation(level=Level.Error, file='test', line=27)
+	Annotation(level=Level.error, file='test', line=27)
 	>>> anns[1]
-	Annotation(level=Level.Error, file='test', line=88)
+	Annotation(level=Level.error, file='test', line=88)
 	>>> anns[2]
-	Annotation(level=Level.Error, file='quest', line=4)
+	Annotation(level=Level.error, file='quest', line=4)
 	"""
 
 	lines = diff.splitlines()
@@ -213,16 +232,16 @@ def parseDiff(diff: str) -> typing.List[Annotation]:
 	annotations = []
 	for line in lines:
 		if FILE_HEADER_PATTERN.match(line):
-			annotations += parseFile("\n".join(file))
+			annotations += parse_file("\n".join(file))
 			file = []
 		file.append(line)
 
 	if file:
-		annotations += parseFile("\n".join(file))
+		annotations += parse_file("\n".join(file))
 
 	return annotations
 
-def main(args) -> int:
+def main() -> int:
 	"""
 	Runs the main program, based on the passed-in arguments.
 
@@ -230,14 +249,14 @@ def main(args) -> int:
 	on the presence of any error-level annotations.
 	"""
 	try:
-		print(*(str(x).replace("\r", "%0D").replace("\n", "%0A") for x in parseDiff(sys.stdin.read())), sep="\n")
+		print(*(x.sanitize() for x in parse_diff(sys.stdin.read())), sep="\n")
 		return 0
 	except ValueError as e:
-		print("Error:", e, file=sys.stderr)
+		print("error:", e, file=sys.stderr)
 		return 1
 	except OSError as e:
-		print("Error reading input:", e, file=sys.stderr)
+		print("error reading input:", e, file=sys.stderr)
 		return 2
 
 if __name__ == "__main__":
-	sys.exit(main(None))
+	sys.exit(main())
