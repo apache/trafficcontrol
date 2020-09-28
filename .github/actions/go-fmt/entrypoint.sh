@@ -29,10 +29,9 @@ DIFF_FILE="$(mktemp)"
 git --no-pager diff >"$DIFF_FILE"
 
 if [ -s "$DIFF_FILE" ]; then
-	echo "No diff found, exiting" >&2
-	exit 0
+	./misc/parse_diffs.py <"$DIFF_FILE";
+	rm "$DIFF_FILE";
+	exit 1;
 fi
-
-./misc/parse_diffs.py <"$DIFF_FILE";
-rm "$DIFF_FILE";
-exit 1
+echo "No diff found, exiting" >&2
+exit 0;
