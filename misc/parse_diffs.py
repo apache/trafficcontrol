@@ -22,7 +22,7 @@ class Annotation(typing.NamedTuple):
 	def __repr__(self) -> str:
 		return f"Annotation(level={self.level}, file='{self.file}', line={self.line})"
 
-CHUNK_HEADER_PATTERN = re.compile(r"^@@ -\d+,\d+ \+(\d+),(\d+) @@$")
+CHUNK_HEADER_PATTERN = re.compile(r"^@@ -\d+,\d+ \+(\d+),(\d+) @@")
 
 def parseChunk(chunk: str, file: str) -> Annotation:
 	"""
@@ -65,6 +65,34 @@ FILE_HEADER_PATTERN = re.compile(r"^diff --git a/(.+) b/(.+)$")
 
 def parseFile(contents: str) -> typing.List[Annotation]:
 	"""
+	parseFile parses the diff for a single file and returns the corresponding annotations.
+
+	>>> file = '''diff --git a/test b/test
+	... index c9072dcb7..2b7686061 100644
+	... --- a/test
+	... +++ b/test
+	... @@ -24,7 +24,7 @@ package tc
+	...  // in: body
+	...  type ASNsResponse struct {
+	...         // in: body
+	... -       Response []ASN `json:"response"`
+	... +Response []ASN `json:"response"`
+	...        Alerts
+	... }
+	...
+	... @@ -85,7 +85,7 @@ type ASNNullable struct {
+	...         // ID of the ASN
+	...         //
+	...         // required: true
+	... -       ID *int `json:"id" db:"id"`
+	... +ID *int `json:"id" db:"id"`
+	...
+	...         // LastUpdated
+	...         //
+	... '''
+	>>> anns = parseFile(file)
+	>>> anns
+	[Annotation(level=Level.ERROR, file='test', line=27), Annotation(level=Level.ERROR, file='test', line=88)]
 	"""
 	lines = contents.splitlines()
 	if len(lines) < 5:
