@@ -35,7 +35,8 @@ class Annotation(typing.NamedTuple):
 	message: str
 
 	def __str__(self) -> str:
-		return f"::{self.level.value} file={self.file},line={self.line}::{self.message}"
+		msg = self.message.replace("]"," %5D").replace(";", "%3B")
+		return f"::{self.level.value} file={self.file},line={self.line}::{msg}"
 
 	def __repr__(self) -> str:
 		return f"Annotation(level={self.level}, file='{self.file}', line={self.line})"
