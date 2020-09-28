@@ -24,16 +24,15 @@ mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
 cd "$SRCDIR/trafficcontrol"
 
-FILES="$(/usr/local/go/bin/go fmt ./...)"
-if [ -z "$FILES" ]; then
-	echo "No files to process, exiting" >&2
+/usr/local/go/bin/go fmt ./...
+DIFF_FILE="$(mktemp)"
+git --no-pager diff >"$DIFF_FILE"
+
+if [ -s "$DIFF_FILE" ]; then
+	echo "No diff found, exiting" >&2
 	exit 0
 fi
-echo "$FILES"
 
-for f in "$FILES"; do
-	echo "$f" >&2
-done
-
-git --no-pager diff >&2
+./misc/parse_diffs.py <"$DIFF_FILE";
+rm "$DIFF_FILE";
 exit 1
