@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -209,11 +211,11 @@ func getStats(stats tc.ServerStats) (float64, float64, error) {
 		len(maxKbpsRaw) < 1 {
 		return 0, 0, errors.New("no kbps/maxKbps stats to return")
 	}
-	kbps, ok := kbpsRaw[0].Val.(float64)
+	kbps, ok := util.ToNumeric(kbpsRaw[0].Val)
 	if !ok {
 		return 0, 0, errors.New("unable to convert kbps to a float")
 	}
-	maxKbps, ok := maxKbpsRaw[0].Val.(float64)
+	maxKbps, ok := util.ToNumeric(maxKbpsRaw[0].Val)
 	if !ok {
 		return 0, 0, errors.New("unable to convert maxKbps to a float")
 	}
