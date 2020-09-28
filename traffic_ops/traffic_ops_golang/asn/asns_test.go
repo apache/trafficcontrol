@@ -164,7 +164,7 @@ func TestValidateASNExists(t *testing.T) {
 	}
 	err = asn.ASNExists()
 	if err == nil {
-		t.Fatalf("expected no error but got %v", err.Error())
+		t.Fatalf("expected error but got none")
 	}
 	if err.Error() != expected {
 		t.Errorf("Expected error detail to be %v, got %v", expected, err.Error())
