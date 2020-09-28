@@ -220,7 +220,7 @@ def main(args) -> int:
 	on the presence of any error-level annotations.
 	"""
 	try:
-		print(*parseDiff(sys.stdin.read()), sep="\n")
+		print(*(str(x).replace("\r", "%0D").replace("\n", "%0A") for x in parseDiff(sys.stdin.read())), sep="\n")
 		return 0
 	except ValueError as e:
 		print("Error:", e, file=sys.stderr)
