@@ -26,7 +26,7 @@ cd "$SRCDIR/trafficcontrol"
 
 /usr/local/go/bin/go fmt ./...
 DIFF_FILE="$(mktemp)"
-git --no-pager diff >"$DIFF_FILE"
+git diff >"$DIFF_FILE"
 
 if [ -s "$DIFF_FILE" ]; then
 	./misc/parse_diffs.py <"$DIFF_FILE";
