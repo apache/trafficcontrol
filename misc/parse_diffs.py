@@ -152,7 +152,6 @@ def parse_file(contents: str) -> typing.List[Annotation]:
 	fname = match.groups()[1]
 
 	lines = lines[4:]
-	contents = "\n".join(lines)
 
 	chunk = [lines[0]]
 	annotations = []
