@@ -85,7 +85,7 @@ type ASNNullable struct {
 	// ID of the ASN
 	//
 	// required: true
-	ID *int `json:"id" db:"id"`
+ID *int `json:"id" db:"id"`
 
 	// LastUpdated
 	//
