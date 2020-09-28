@@ -29,9 +29,13 @@ import typing
 from enum import Enum
 
 class Level(Enum):
-	ERROR = "error"
-	NOTICE = "notice" # notice not implemented (yet?)
-	WARNING = "warning" # warning unused - diffs are assumed errors
+	"""
+	Level encodes the level of an annotation.
+	"""
+
+	Error = "error"
+	Notice = "notice" # notice not implemented (yet?)
+	Warn = "warning" # warning unused - diffs are assumed errors
 
 class Annotation(typing.NamedTuple):
 	level: Level
@@ -59,7 +63,7 @@ def parseChunk(chunk: str, file: str) -> Annotation:
 	...  }'''
 	>>> ann = parseChunk(chunk, "test")
 	>>> ann
-	Annotation(level=Level.ERROR, file='test', line=2)
+	Annotation(level=Level.Error, file='test', line=2)
 	>>> print(ann)
 	::error file=test,line=2::Format Error
 	```diff
@@ -82,7 +86,7 @@ def parseChunk(chunk: str, file: str) -> Annotation:
 
 	content = "\n".join(["Format Error", "```diff", chunk, "```"])
 
-	return Annotation(Level.ERROR, file, line, content)
+	return Annotation(Level.Error, file, line, content)
 
 
 FILE_HEADER_PATTERN = re.compile(r"^diff --git a/(.+) b/(.+)$")
@@ -116,7 +120,7 @@ def parseFile(contents: str) -> typing.List[Annotation]:
 	... '''
 	>>> anns = parseFile(file)
 	>>> anns
-	[Annotation(level=Level.ERROR, file='test', line=27), Annotation(level=Level.ERROR, file='test', line=88)]
+	[Annotation(level=Level.Error, file='test', line=27), Annotation(level=Level.Error, file='test', line=88)]
 	"""
 	lines = contents.splitlines()
 	if len(lines) < 5:
@@ -189,11 +193,11 @@ def parseDiff(diff: str) -> typing.List[Annotation]:
 	>>> len(anns)
 	3
 	>>> anns[0]
-	Annotation(level=Level.ERROR, file='test', line=27)
+	Annotation(level=Level.Error, file='test', line=27)
 	>>> anns[1]
-	Annotation(level=Level.ERROR, file='test', line=88)
+	Annotation(level=Level.Error, file='test', line=88)
 	>>> anns[2]
-	Annotation(level=Level.ERROR, file='quest', line=4)
+	Annotation(level=Level.Error, file='quest', line=4)
 	"""
 
 	lines = diff.splitlines()
