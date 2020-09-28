@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data. Using the new `stats_over_http` `health.polling.format` value that allows monitoring of multiple interfaces will first require that *all* Traffic Monitors monitoring the affected cache server be upgraded.
 
 ### Fixed
+- Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issues](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal.
 - Fixed #4981 - Cannot create routing regular expression with a blank pattern param in Delivery Service [Related github issues](https://github.com/apache/trafficcontrol/issues/4981)
 - Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
