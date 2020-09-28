@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang-alpine:1.14.2
+FROM golang:1.14.2-alpine
 
 RUN apk add --no-cache git python3
 
