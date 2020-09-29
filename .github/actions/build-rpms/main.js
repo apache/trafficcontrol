@@ -14,7 +14,7 @@
 
 "use strict";
 const child_process = require("child_process");
-const spawnArgs = {
+const spawnOptions = {
 	stdio: "inherit",
 	stderr: "inherit",
 };
@@ -30,6 +30,6 @@ dockerComposeArgs.push(atcComponent);
 const proc = child_process.spawnSync(
 	"docker-compose",
 	dockerComposeArgs,
-	spawnArgs
+	spawnOptions
 );
 process.exit(proc.status);
