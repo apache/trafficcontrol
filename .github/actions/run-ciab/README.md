@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# run-ciab Docker action
+# run-ciab JavaScript action
 
 This action runs the CDN-in-a-Box and exits with the exit code from the `readiness` service.
 
