@@ -734,7 +734,6 @@ WHERE
 
 func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	tx := inf.Tx.Tx
-	cfg := inf.Config
 	user := inf.User
 
 	if err := ds.Validate(tx); err != nil {
