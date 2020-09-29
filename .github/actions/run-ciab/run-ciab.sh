@@ -34,8 +34,8 @@ $docker_compose up -d $logged_services $other_services;
 $docker_compose logs -f $logged_services &
 
 echo 'Waiting for the readiness container to exit...';
-if ! timeout 10m $docker_compose logs -f readiness >/dev/null; then
-	echo "CDN-in-a-Box didn't become ready within 10 minutes - exiting" >&2;
+if ! timeout 12m $docker_compose logs -f readiness >/dev/null; then
+	echo "CDN-in-a-Box didn't become ready within 12 minutes - exiting" >&2;
 	exit_code=1;
 	store_ciab_logs;
 elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$exit_code" -ne 0 ]; then
