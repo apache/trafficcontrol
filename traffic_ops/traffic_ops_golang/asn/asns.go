@@ -20,6 +20,7 @@ package asn
  */
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -48,8 +49,8 @@ func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
 func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"asn":            dbhelpers.WhereColumnInfo{"a.asn", nil},
-		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", nil},
+		"asn":            dbhelpers.WhereColumnInfo{"a.asn", api.IsInt},
+		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", api.IsInt},
 		"id":             dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
 		"cachegroupName": dbhelpers.WhereColumnInfo{"c.name", nil},
 	}
@@ -90,12 +91,35 @@ func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
+func (asn TOASNV11) ASNExists() error {
+	if asn.APIInfo() == nil || asn.APIInfo().Tx == nil {
+		return errors.New("couldn't perform check to see if asn number exists already")
+	}
+	if asn.ASN == nil || asn.CachegroupID == nil {
+		return errors.New("no asn or cachegroup ID specified")
+	}
+	query := `SELECT id from asn where asn=$1`
+	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN)
+	if err != nil {
+		return errors.New("selecting asns: " + err.Error())
+	}
+	defer rows.Close()
+	if rows.Next() {
+		return errors.New("an asn with the specified number already exists")
+	}
+	return nil
+}
+
 func (asn TOASNV11) Validate() error {
 	errs := validation.Errors{
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	if errs["asn"] != nil || errs["cachegroupId"] != nil {
+		return util.JoinErrs(tovalidate.ToErrors(errs))
+	}
+	err := asn.ASNExists()
+	return err
 }
 
 func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
