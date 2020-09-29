@@ -316,7 +316,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{})
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds1"}})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -329,11 +329,15 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatal("Got Delivery Service with nil ID")
 	}
 
+	AssignTestDeliveryService(t)
 	params := url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	_, _, err = TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatalf("expected to get 1 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
@@ -344,6 +348,11 @@ func GetTestServersQueryParameters(t *testing.T) {
 	_, reqInf, _ := TOSession.GetServersWithHdr(&params, header)
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
+	}
+
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
 
 	foundTopDs := false
