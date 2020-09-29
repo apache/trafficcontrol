@@ -40,7 +40,7 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, currentTime.Format(time.RFC1123))
 
 		if includeSystemTests {
-			DeliveryServiceCDNKeyTransferTest(t)
+			SSLDeliveryServiceCDNUpdateTest(t)
 		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
@@ -84,7 +84,7 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
-func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
+func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	cdnNameOld := "sslkeytransfer"
 	oldCdn := createBlankCDN(cdnNameOld, t)
 	cdnNameNew := "sslkeytransfer1"
@@ -108,6 +108,7 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 							CDNID:                util.IntPtr(oldCdn.ID),
 							DSCP:                 util.IntPtr(0),
 							DisplayName:          util.StrPtr("asdf"),
+							RoutingName:          util.StrPtr("asdf"),
 							GeoLimit:             util.IntPtr(0),
 							GeoProvider:          util.IntPtr(0),
 							IPV6RoutingEnabled:   util.BoolPtr(false),
@@ -157,12 +158,18 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 		t.Fatalf("expected %v key, got %v", 1, len(keys))
 	}
 
-	// Change CDN
+	ds.RoutingName = util.StrPtr("anothername")
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service as it has ssl keys")
+	}
+	ds.RoutingName = util.StrPtr("asdf")
+
 	ds.CDNID = &newCdn.ID
 	ds.CDNName = &newCdn.Name
 	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service as it has ssl keys")
 	}
 
 	// Check new CDN has ssl key
@@ -170,8 +177,8 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
 	}
-	if len(keys) != 1 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
+	if len(keys) != 0 {
+		t.Fatalf("expected %v key, got %v", 0, len(keys))
 	}
 
 	// Check old CDN does not have ssl key
@@ -179,7 +186,7 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
-	if len(keys) != 0 {
+	if len(keys) != 1 {
 		t.Fatalf("expected %v key, got %v", 1, len(keys))
 	}
 

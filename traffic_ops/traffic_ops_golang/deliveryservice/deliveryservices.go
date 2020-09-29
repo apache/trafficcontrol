@@ -29,14 +29,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -907,9 +907,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	}
 
 	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName) {
-		if err := updateSSLKeys(ds, newHostName, newCDNName, tx, cfg); err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
-		}
+		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -1322,26 +1320,6 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	}
 
 	return dses, nil, nil, http.StatusOK
-}
-
-func updateSSLKeys(ds *tc.DeliveryServiceNullableV30, hostName string, cdnName string, tx *sql.Tx, cfg *config.Config) error {
-	if ds.XMLID == nil {
-		return errors.New("delivery services has no XMLID!")
-	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(*ds.XMLID, riaksvc.DSSSLKeyVersionLatest, tx, cfg.RiakAuthOptions, cfg.RiakPort)
-	if err != nil {
-		return errors.New("getting SSL key: " + err.Error())
-	}
-	if !ok {
-		return nil // no keys to update
-	}
-	key.DeliveryService = *ds.XMLID
-	key.Hostname = hostName
-	key.CDN = cdnName
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(key, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting updated SSL key: " + err.Error())
-	}
-	return nil
 }
 
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
