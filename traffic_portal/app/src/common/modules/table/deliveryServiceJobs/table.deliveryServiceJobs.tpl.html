@@ -39,6 +39,7 @@ under the License.
                 <th>Parameters</th>
                 <th>Start Time</th>
                 <th>Created By</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -47,6 +48,9 @@ under the License.
                 <td data-search="^{{::j.parameters}}$">{{::j.parameters}}</td>
                 <td data-search="^{{::j.startTime}}$">{{::j.startTime}}</td>
                 <td data-search="^{{::j.createdBy}}$">{{::j.createdBy}}</td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Delete Invalidation Request" ng-click="confirmRemoveJob(j, $event)"><i class="fa fa-sm fa-trash"></i></a>
+                </td>
             </tr>
             </tbody>
         </table>

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope, $state, $location, locationUtils) {
+var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope, $state, $location, $uibModal, locationUtils, jobService, messageModel) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -31,17 +31,52 @@ var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.confirmRemoveJob = function(job, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+		const params = {
+			title: 'Remove Invalidation Request?',
+			message: 'Are you sure you want to remove the ' + job.assetUrl + ' invalidation request?<br><br>' +
+				'NOTE: The invalidation request may have already been applied.'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			jobService.deleteJob(job.id)
+				.then(
+					function(result) {
+						messageModel.setMessages(result.data.alerts, false);
+						$scope.refresh(); // refresh the jobs table
+					}
+				);
+		});
+	};
+
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#dsJobsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ "width": "5%", "targets": 4 },
+				{ 'orderable': false, 'targets': 4 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$scope', '$state', '$location', 'locationUtils'];
+TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'jobService', 'messageModel'];
 module.exports = TableDeliveryServiceJobsController;
