@@ -30,7 +30,7 @@ function moveRPMs() {
 		.filter(item => fs.lstatSync(item).isDirectory()) // get a list of directories within dist
 		.flatMap(directory => fs.readdirSync(directory).map(item => path.join(directory, item))) // list files within those directories
 		.filter(item => /\.rpm$/.test(item)) // get a list of RPMs
-		.map(rpm => fs.renameSync(rpm, rpm.replace(new RegExp(".*/"), ""))); // move the RPMs to the dist folder
+		.map(rpm => fs.renameSync(rpm, path.basename(rpm))); // move the RPMs to the dist folder
 }
 
 function runProcess(...commandArguments) {
