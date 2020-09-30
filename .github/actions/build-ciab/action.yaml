@@ -15,12 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM docker:stable
-
-VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add make docker-compose git
-
-COPY entrypoint.sh /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
+name: build-ciab
+description: Builds CDN-in-a-Box images for the standard CiaB services and the readiness service
+runs:
+  using: node12
+  main: build-ciab.js

@@ -17,9 +17,9 @@
     under the License.
 -->
 
-# run-ciab JavaScript action
+# build-ciab JavaScript action
 
-This action runs the CDN-in-a-Box and exits with the exit code from the `readiness` service.
+This action builds the CDN-in-a-Box images. It assumes the RPMs are already built and exist in artifacts in the `dist/` directory.
 
 ## Inputs
 None
@@ -27,9 +27,9 @@ None
 ## Outputs
 ### `exit-code`
 
-Exit code of the script
+Exit code from building the images
 
 ## Example usage
 ```yaml
-uses: .github/actions/run-ciab
+uses: .github/actions/build-ciab
 ```

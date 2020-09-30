@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: 'run-ciab'
-description: 'Runs CDN-in-a-Box'
+name: run-ciab
+description: Runs CDN-in-a-Box
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: node12
+  main: run-ciab.js
