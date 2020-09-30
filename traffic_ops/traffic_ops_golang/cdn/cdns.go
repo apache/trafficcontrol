@@ -20,7 +20,6 @@ package cdn
  */
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -137,8 +136,6 @@ func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 	// sorting alphabetically by cdn name.
 	if _, ok := cdn.APIInfo().Params["orderby"]; !ok {
 		cdn.APIInfo().Params["orderby"] = "name"
-	} else {
-		return nil, fmt.Errorf("unable to sort the list"), nil, http.StatusInternalServerError, nil
 	}
 	return api.GenericRead(h, cdn, useIMS)
 }

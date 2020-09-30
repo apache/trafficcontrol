@@ -97,7 +97,7 @@ func SortTestCDNs(t *testing.T) {
 	var header http.Header
 	for _, cdn := range testData.CDNs {
 		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
-		if reqInf.StatusCode == http.StatusInternalServerError {
+		if reqInf.StatusCode != http.StatusOK {
 			t.Errorf("has issue sorting CDN list %v:", err)
 		}
 	}
