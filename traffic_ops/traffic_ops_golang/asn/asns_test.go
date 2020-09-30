@@ -135,8 +135,121 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-func TestValidateASNExists(t *testing.T) {
-	expected := `an asn with the specified number already exists`
+func TestCheckNumberForUpdate(t *testing.T) {
+	expected := `another asn exists for this number/ cachegroup`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"id"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		2,
+	)
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	asnNum := 2
+	cachegroupID := 10
+	id := 1
+	asn := TOASNV11{
+		api.APIInfoImpl{&reqInfo},
+		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
+	}
+	err = asn.ASNAndCachegroupExist()
+	if err == nil {
+		t.Fatalf("expected error but got none")
+	}
+	if err.Error() != expected {
+		t.Errorf("Expected error detail to be %v, got %v", expected, err.Error())
+	}
+}
+
+func TestCheckCachegroupIDForUpdate(t *testing.T) {
+	expected := `another asn exists for this number/ cachegroup`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"id"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		1,
+	)
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	rows = sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		2,
+	)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	asnNum := 2
+	cachegroupID := 10
+	id := 1
+	asn := TOASNV11{
+		api.APIInfoImpl{&reqInfo},
+		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
+	}
+	err = asn.ASNAndCachegroupExist()
+	if err == nil {
+		t.Fatalf("expected error but got none")
+	}
+	if err.Error() != expected {
+		t.Errorf("Expected error detail to be %v, got %v", expected, err.Error())
+	}
+}
+
+func TestCheckNumberOrCachegroupIDForUpdate(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"id"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		1,
+	)
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	asnNum := 2
+	cachegroupID := 10
+	id := 1
+	asn := TOASNV11{
+		api.APIInfoImpl{&reqInfo},
+		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
+	}
+	err = asn.ASNAndCachegroupExist()
+	if err != nil {
+		t.Errorf("expected no error but got %v", err.Error())
+	}
+}
+
+func TestASNExists(t *testing.T) {
+	expected := `an asn with the specified number/ cachegroup already exists`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)

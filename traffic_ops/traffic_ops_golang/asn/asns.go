@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/jmoiron/sqlx"
 )
 
 // ASNsPrivLevel ...
@@ -98,14 +99,14 @@ func (asn TOASNV11) ASNExists() error {
 	if asn.ASN == nil || asn.CachegroupID == nil {
 		return errors.New("no asn or cachegroup ID specified")
 	}
-	query := `SELECT id from asn where asn=$1`
-	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN)
+	query := `SELECT id from asn where asn=$1 or cachegroup=$2`
+	rows, err := asn.APIInfo().Tx.Query(query, *asn.ASN, *asn.CachegroupID)
 	if err != nil {
 		return errors.New("selecting asns: " + err.Error())
 	}
 	defer rows.Close()
 	if rows.Next() {
-		return errors.New("an asn with the specified number already exists")
+		return errors.New("an asn with the specified number/ cachegroup already exists")
 	}
 	return nil
 }
@@ -115,14 +116,16 @@ func (asn TOASNV11) Validate() error {
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
 	}
-	if errs["asn"] != nil || errs["cachegroupId"] != nil {
-		return util.JoinErrs(tovalidate.ToErrors(errs))
-	}
-	err := asn.ASNExists()
-	return err
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
+func (as *TOASNV11) Create() (error, error, int) {
+	err := as.ASNExists()
+	if err != nil {
+		return err, nil, http.StatusBadRequest
+	}
+	return api.GenericCreate(as)
+}
 func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	return api.GenericRead(h, as, useIMS)
 }
@@ -135,8 +138,54 @@ JOIN
 	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
 }
 
-func (as *TOASNV11) Update() (error, error, int) { return api.GenericUpdate(as) }
+func (as *TOASNV11) Update() (error, error, int) {
+	err := as.ASNAndCachegroupExist()
+	if err != nil {
+		return err, nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(as)
+}
+
 func (as *TOASNV11) Delete() (error, error, int) { return api.GenericDelete(as) }
+
+func CheckNumberOrCachegroupID(tx *sqlx.Tx, query string, asnOrCGID int, id int) error {
+	rows, err := tx.Query(query, asnOrCGID)
+	if err != nil {
+		return errors.New("selecting asns: " + err.Error())
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var v int
+		err = rows.Scan(&v)
+		if err != nil {
+			return errors.New("couldn't check if this number/ cachegroup combination exists")
+		}
+		if v != id {
+			return errors.New("another asn exists for this number/ cachegroup")
+		}
+	}
+	return nil
+}
+
+func (as TOASNV11) ASNAndCachegroupExist() error {
+	if as.APIInfo() == nil || as.APIInfo().Tx == nil {
+		return errors.New("couldn't perform check to see if asn number and cache group exist already")
+	}
+	if as.ASN == nil || as.CachegroupID == nil {
+		return errors.New("no asn or cachegroup ID specified")
+	}
+	query := `SELECT id from asn where asn=$1`
+	err := CheckNumberOrCachegroupID(as.APIInfo().Tx, query, *as.ASN, *as.ID)
+	if err != nil {
+		return err
+	}
+	query = `SELECT id from asn where cachegroup=$1`
+	err = CheckNumberOrCachegroupID(as.APIInfo().Tx, query, *as.CachegroupID, *as.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
