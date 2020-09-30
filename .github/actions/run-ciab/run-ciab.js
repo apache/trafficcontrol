@@ -14,22 +14,11 @@
 
 "use strict";
 const child_process = require("child_process");
+const path = require("path");
 const spawnOptions = {
 	stdio: "inherit",
 	stderr: "inherit",
 };
 
-let atcComponent = process.env.ATC_COMPONENT;
-const dockerComposeArgs = ["-f", `${process.env.GITHUB_WORKSPACE}/infrastructure/docker/build/docker-compose.yml`, "run", "--rm"];
-if (typeof atcComponent !== "string" || atcComponent.length === 0) {
-	console.error("Missing environment variable ATC_COMPONENT");
-	process.exit(1);
-}
-atcComponent += "_build";
-dockerComposeArgs.push(atcComponent);
-const proc = child_process.spawnSync(
-	"docker-compose",
-	dockerComposeArgs,
-	spawnOptions
-);
+const proc = child_process.spawnSync(path.join(__dirname, "run-ciab.sh"), [], spawnOptions);
 process.exit(proc.status);

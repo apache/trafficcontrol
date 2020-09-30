@@ -29,13 +29,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
 type APIPeerStates struct {
-	srvhttp.CommonAPIData
+	tc.CommonAPIData
 	Peers map[tc.TrafficMonitorName]map[tc.CacheName][]CacheState `json:"peers"`
 }
 

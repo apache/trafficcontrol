@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,6 +35,7 @@ func TestJobs(t *testing.T) {
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
+		VerifyUniqueJobTest(t)
 	})
 }
 
@@ -61,6 +64,39 @@ func CreateTestJobs(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE job: %v", err)
 		}
+	}
+}
+
+func VerifyUniqueJobTest(t *testing.T) {
+	startTime := tc.Time{
+		Time:  time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC),
+		Valid: true,
+	}
+	firstJob := tc.InvalidationJobInput{
+		DeliveryService: util.InterfacePtr(testData.DeliveryServices[0].XMLID),
+		Regex:           util.StrPtr(`/\.*([A-Z]0?)`),
+		TTL:             util.InterfacePtr(8),
+		StartTime:       &startTime,
+	}
+	_, _, err := TOSession.CreateInvalidationJob(firstJob)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newTime := tc.Time{
+		Time:  startTime.Time.Add(time.Hour),
+		Valid: true,
+	}
+	newJob := tc.InvalidationJobInput{
+		DeliveryService: firstJob.DeliveryService,
+		Regex:           firstJob.Regex,
+		TTL:             firstJob.TTL,
+		StartTime:       &newTime,
+	}
+
+	_, _, err = TOSession.CreateInvalidationJob(newJob)
+	if err == nil {
+		t.Fatal("expected invalidation job create to fail")
 	}
 }
 
