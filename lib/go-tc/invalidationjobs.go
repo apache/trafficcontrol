@@ -30,9 +30,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/go-ozzo/ozzo-validation/is"
-
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 )
 
 // MaxTTL is the maximum value of TTL representable as a time.Duration object, which is used
@@ -121,46 +120,6 @@ type UserInvalidationJob struct {
 	Username   *string `json:"username"`
 }
 
-// TTLHours gets the number of hours of the job's TTL - rounded down to the nearest natural number,
-// or an error if it is an invalid value.
-func (j *InvalidationJobInput) TTLHours() (uint, error) {
-	if j.ttl != nil {
-		return uint((*j.ttl).Hours()), nil
-	}
-	if j.TTL == nil {
-		return 0, errors.New("Attempted to convert a nil TTL into hours")
-	}
-
-	var ret uint
-	switch t := (*j.TTL).(type) {
-	case float64:
-		v := (*j.TTL).(float64)
-		if v < 0 {
-			return 0, errors.New("TTL cannot be negative!")
-		}
-		if v >= MaxTTL {
-			return 0, fmt.Errorf("TTL cannot exceed %d hours!", MaxTTL)
-		}
-		ttl := time.Duration(int64(v * 3600000000000))
-		j.ttl = &ttl
-		ret = uint(ttl.Hours())
-
-	case string:
-		d, err := time.ParseDuration((*j.TTL).(string))
-		if err != nil || d.Hours() < 1 {
-			return 0, fmt.Errorf("Invalid duration entered for TTL! Must be at least one hour, but no more than %d hours!", MaxTTL)
-		}
-		j.ttl = &d
-		ret = uint(d.Hours())
-
-	default:
-		log.Errorf("unsupported TTL key type: %T\n", t)
-		return 0, errors.New("Unknown error occurred")
-	}
-
-	return ret, nil
-}
-
 // DSID gets the integral, unique identifier of the Delivery Service identified by
 // InvalidationJobInput.DeliveryService
 //
@@ -240,9 +199,8 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 		errs = append(errs, err.Error())
 	}
 
-	var dsID uint
 	if job.DeliveryService != nil {
-		if dsID, err = job.DSID(tx); err != nil {
+		if _, err = job.DSID(tx); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
@@ -276,16 +234,11 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 		return errors.New(strings.Join(errs, ", "))
 	}
 
-	errs = job.ValidateUniqueness(tx, dsID)
-	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, ", "))
-	}
-
 	return nil
 }
 
-func (job *InvalidationJobInput) ValidateUniqueness(tx *sql.Tx, dsID uint) []string {
-	errors := []string{}
+func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL string, ttlHours uint) []string {
+	var errs []string
 
 	const readQuery = `
 SELECT job.id,
@@ -298,45 +251,83 @@ WHERE job.job_deliveryservice = $1
 `
 	rows, err := tx.Query(readQuery, dsID)
 	if err != nil {
-		errors = append(errors, fmt.Sprintf("unable to query for other invalidation jobs"))
-		return errors
-	}
-
-	defer rows.Close()
-	jobStart := job.StartTime.Time
-	for rows.Next() {
-		testJob := InvalidationJob{}
-		err = rows.Scan(&testJob.ID, &testJob.Keyword, &testJob.Parameters, &testJob.AssetURL, &testJob.StartTime)
-		if err != nil {
-			continue
-		}
-		if !strings.HasSuffix(*testJob.AssetURL, *job.Regex) {
-			continue
-		}
-		testJobTTL := testJob.GetTTL()
-		if testJobTTL == 0 {
-			continue
-		}
-		testJobStart := testJob.StartTime.Time
-		testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJobTTL))
-		jobTTLHours, _ := job.TTLHours()
-		jobEnd := jobStart.Add(time.Hour * time.Duration(jobTTLHours))
-		// jobStart in testJob range
-		if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
-			// jobEnd in testJob range
-			(testJobStart.Before(jobEnd) && jobEnd.Before(testJobEnd)) ||
-			// job range encaspulates testJob range
-			(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
-			errors = append(errors, fmt.Sprintf("job already has an invalidation job that overlaps, start:%v end:%v", testJobStart, testJobEnd))
+		errs = append(errs, fmt.Sprintf("unable to query for other invalidation jobs"))
+	} else {
+		defer rows.Close()
+		jobStart := startTime
+		for rows.Next() {
+			testJob := InvalidationJob{}
+			err = rows.Scan(&testJob.ID, &testJob.Keyword, &testJob.Parameters, &testJob.AssetURL, &testJob.StartTime)
+			if err != nil {
+				continue
+			}
+			if !strings.HasSuffix(*testJob.AssetURL, assetURL) {
+				continue
+			}
+			testJobTTL := testJob.TTLHours()
+			if testJobTTL == 0 {
+				continue
+			}
+			testJobStart := testJob.StartTime.Time
+			testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJobTTL))
+			jobEnd := jobStart.Add(time.Hour * time.Duration(ttlHours))
+			// jobStart in testJob range
+			if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
+				// jobEnd in testJob range
+				(testJobStart.Before(jobEnd) && jobEnd.Before(testJobEnd)) ||
+				// job range encaspulates testJob range
+				(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
+				errs = append(errs, fmt.Sprintf("job/request already has a job that exists for %v, start:%v end:%v", *testJob.AssetURL, testJobStart, testJobEnd))
+			}
 		}
 	}
 
-	return errors
+	return errs
 }
 
-// GetTTL will parse job.Parameters to find TTL, returns an int representing number of hours. Returns 0
+// TTLHours gets the number of hours of the job's TTL - rounded down to the nearest natural number,
+// or an error if it is an invalid value.
+func (j *InvalidationJobInput) TTLHours() (uint, error) {
+	if j.ttl != nil {
+		return uint((*j.ttl).Hours()), nil
+	}
+	if j.TTL == nil {
+		return 0, errors.New("Attempted to convert a nil TTL into hours")
+	}
+
+	var ret uint
+	switch t := (*j.TTL).(type) {
+	case float64:
+		v := (*j.TTL).(float64)
+		if v < 0 {
+			return 0, errors.New("TTL cannot be negative!")
+		}
+		if v >= MaxTTL {
+			return 0, fmt.Errorf("TTL cannot exceed %d hours!", MaxTTL)
+		}
+		ttl := time.Duration(int64(v * 3600000000000))
+		j.ttl = &ttl
+		ret = uint(ttl.Hours())
+
+	case string:
+		d, err := time.ParseDuration((*j.TTL).(string))
+		if err != nil || d.Hours() < 1 {
+			return 0, fmt.Errorf("Invalid duration entered for TTL! Must be at least one hour, but no more than %d hours!", MaxTTL)
+		}
+		j.ttl = &d
+		ret = uint(d.Hours())
+
+	default:
+		log.Errorf("unsupported TTL key type: %T\n", t)
+		return 0, errors.New("Unknown error occurred")
+	}
+
+	return ret, nil
+}
+
+// TTLHours will parse job.Parameters to find TTL, returns an int representing number of hours. Returns 0
 // in case of issue (0 is an invalid TTL)
-func (job *InvalidationJob) GetTTL() uint {
+func (job *InvalidationJob) TTLHours() uint {
 	if job.Parameters == nil {
 		return 0
 	}
