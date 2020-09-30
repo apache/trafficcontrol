@@ -103,6 +103,7 @@ func (typ *TOType) Validate() error {
 }
 
 func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.Sort(tp.APIInfo(), "name")
 	return api.GenericRead(h, tp, useIMS)
 }
 

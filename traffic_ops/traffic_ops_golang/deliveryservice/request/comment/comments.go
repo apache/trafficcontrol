@@ -109,6 +109,7 @@ func (comment *TODeliveryServiceRequestComment) Create() (error, error, int) {
 }
 
 func (comment *TODeliveryServiceRequestComment) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.Sort(comment.APIInfo(), "xmlID")
 	return api.GenericRead(h, comment, useIMS)
 }
 

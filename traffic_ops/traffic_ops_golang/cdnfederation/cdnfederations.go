@@ -165,6 +165,7 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
 	}
 
+	api.Sort(fed.APIInfo(), "cname")
 	federations, userErr, sysErr, errCode, maxTime := api.GenericRead(h, fed, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
