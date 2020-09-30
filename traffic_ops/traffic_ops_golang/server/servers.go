@@ -68,8 +68,9 @@ const dssTopologiesJoinSubquery = `
 	ARRAY_AGG(CAST(ROW(td.id, s.id, NULL) AS deliveryservice_server))
 FROM "server" s
 JOIN cachegroup c on s.cachegroup = c.id
-LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
-LEFT JOIN deliveryservice td ON td.topology = tc.topology
+JOIN topology_cachegroup tc ON c.name = tc.cachegroup
+JOIN deliveryservice td ON td.topology = tc.topology
+WHERE td.id = :dsId
 ),
 `
 
