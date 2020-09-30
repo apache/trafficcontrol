@@ -18,13 +18,11 @@ const fs = require("fs");
 const path = require("path");
 const spawnOptions = {
 	stdio: "inherit",
-	stderr: "inherit",
-	env: Object.assign({
-		DOCKER_BUILDKIT: "1",
-		COMPOSE_DOCKER_CLI_BUILD: "1",
-	}, process.env),
+	stderr: "inherit"
 };
 const dockerCompose = ["docker-compose", "-f", "docker-compose.yml", "-f", "docker-compose.readiness.yml"];
+process.env.DOCKER_BUILDKIT = 1;
+process.env.COMPOSE_DOCKER_CLI_BUILD = 1;
 
 function moveRPMs() {
 	process.chdir(`${process.env.GITHUB_WORKSPACE}/dist`);
@@ -45,7 +43,7 @@ function runProcess(...commandArguments) {
 	if (proc.status === 0) {
 		return;
 	}
-	console.error(`Child process ${commandArguments.join(" ")} exited with status code ${proc.status}!`);
+	console.error("Child process", ...commandArguments, "exited with status code", proc.status, "!");
 	process.exit(proc.status);
 }
 
