@@ -102,12 +102,11 @@ func SortTestCDNs(t *testing.T) {
 		sortedList = append(sortedList, resp[i].Name)
 	}
 
-	res1 := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
 		return sortedList[p] < sortedList[q]
 	})
-
-	if res1 != true {
-		t.Errorf("Slice is not sorted by their names")
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

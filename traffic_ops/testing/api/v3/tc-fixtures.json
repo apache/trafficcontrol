@@ -206,13 +206,13 @@
     "cdns": [
         {
             "dnssecEnabled": false,
-            "domainName": "test.cdn2.net",
-            "name": "cdn2"
+            "domainName": "test.cdn1.net",
+            "name": "cdn1"
         },
         {
             "dnssecEnabled": false,
-            "domainName": "test.cdn1.net",
-            "name": "cdn1"
+            "domainName": "test.cdn2.net",
+            "name": "cdn2"
         },
         {
             "dnssecEnabled": false,
