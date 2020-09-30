@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableJobsController = function(jobs, $scope, $state, locationUtils) {
+var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel) {
 
 	$scope.jobs = jobs;
 
@@ -29,15 +29,49 @@ var TableJobsController = function(jobs, $scope, $state, locationUtils) {
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.confirmRemoveJob = function(job, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+		const params = {
+			title: 'Remove Invalidation Request?',
+			message: 'Are you sure you want to remove the ' + job.assetUrl + ' invalidation request?<br><br>' +
+				'NOTE: The invalidation request may have already been applied.'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			jobService.deleteJob(job.id)
+				.then(
+					function(result) {
+						messageModel.setMessages(result.data.alerts, false);
+						$scope.refresh(); // refresh the jobs table
+					}
+				);
+		});
+	};
+
 	angular.element(document).ready(function () {
 		$('#jobsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ "width": "5%", "targets": 5 },
+				{ 'orderable': false, 'targets': 5 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableJobsController.$inject = ['jobs', '$scope', '$state', 'locationUtils'];
+TableJobsController.$inject = ['jobs', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel'];
 module.exports = TableJobsController;
