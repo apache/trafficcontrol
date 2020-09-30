@@ -184,7 +184,13 @@ public class StatTracker {
 			/**
 			 * This value indicates that routing was blocked in accordance with anonymous blocking configurations.
 			 */
-			ANON_BLOCK
+			ANON_BLOCK,
+			/**
+			 * This value indicates that routing was based on the default lat/long of the delivery service, because maxmind
+			 * returned the centre of the country as the client location, due to the CZF not being able to resolve the client IP
+			 * to a valid location.
+			 */
+			GEO_DS
 		}
 
 		public enum ResultDetails {

@@ -20,12 +20,9 @@ package cache
  */
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 // AvailableStatusReported is the status string returned by caches set to
@@ -75,18 +72,14 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[tc.CacheName]map[string]AvailableStatus
+type AvailableStatuses map[string]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[tc.CacheName]map[string]AvailableStatus{})
-	for cacheName, interfaces := range a {
-		interfaceStats := make(map[string]AvailableStatus)
-		for interfaceName, status := range interfaces {
-			interfaceStats[interfaceName] = status
-		}
-		b[cacheName] = interfaceStats
+	b := AvailableStatuses(make(map[string]AvailableStatus, len(a)))
+	for cacheName, status := range a {
+		b[cacheName] = status
 	}
 	return b
 }
@@ -110,54 +103,7 @@ func (a ResultHistory) Copy() ResultHistory {
 	return b
 }
 
-// ResultStatVal is the value of an individual stat returned from a poll.
-// JSON values are all strings, for the TM1.0 /publish/CacheStats API.
-type ResultStatVal struct {
-	// Span is the number of polls this stat has been the same. For example,
-	// if History is set to 100, and the last 50 polls had the same value for
-	// this stat (but none of the previous 50 were the same), this stat's map
-	// value slice will actually contain 51 entries, and the first entry will
-	// have the value, the time of the last poll, and a Span of 50.
-	// Assuming the poll time is every 8 seconds, users will then know, looking
-	// at the Span, that the value was unchanged for the last 50*8=400 seconds.
-	Span uint64 `json:"span"`
-	// Time is the time this stat was returned.
-	Time time.Time   `json:"time"`
-	Val  interface{} `json:"value"`
-}
-
-func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
-	v := struct {
-		Val  string `json:"value"`
-		Time int64  `json:"time"`
-		Span uint64 `json:"span"`
-	}{
-		Val:  fmt.Sprintf("%v", t.Val),
-		Time: t.Time.UnixNano() / 1000000, // ms since the epoch
-		Span: t.Span,
-	}
-	json := jsoniter.ConfigFastest // TODO make configurable
-	return json.Marshal(&v)
-}
-
-func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
-	v := struct {
-		Val  string `json:"value"`
-		Time int64  `json:"time"`
-		Span uint64 `json:"span"`
-	}{}
-	json := jsoniter.ConfigFastest // TODO make configurable
-	err := json.Unmarshal(data, &v)
-	if err != nil {
-		return err
-	}
-	t.Time = time.Unix(0, v.Time*1000000)
-	t.Val = v.Val
-	t.Span = v.Span
-	return nil
-}
-
-func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
+func pruneStats(history []tc.ResultStatVal, limit uint64) []tc.ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]
 	}
@@ -171,29 +117,33 @@ type ResultInfoHistory map[tc.CacheName][]ResultInfo
 // ResultInfo contains all the non-stat result info. This includes the cache ID,
 // any errors, the time of the poll, the request time duration, Astats System
 // (Vitals), Poll ID, and Availability.
+// TODO: Determine why this exists, it doesn't seem to differ from Result in any
+// meaningful way.
 type ResultInfo struct {
-	Available   bool
-	Error       error
-	ID          string
-	PollID      uint64
-	RequestTime time.Duration
-	Statistics  Statistics
-	Time        time.Time
-	UsingIPv4   bool
-	Vitals      Vitals
+	Available       bool
+	Error           error
+	ID              string
+	PollID          uint64
+	RequestTime     time.Duration
+	Statistics      Statistics
+	Time            time.Time
+	UsingIPv4       bool
+	Vitals          Vitals
+	InterfaceVitals map[string]Vitals
 }
 
 func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
-		Available:   r.Available,
-		Error:       r.Error,
-		ID:          r.ID,
-		PollID:      r.PollID,
-		RequestTime: r.RequestTime,
-		Statistics:  r.Statistics,
-		Time:        r.Time,
-		UsingIPv4:   r.UsingIPv4,
-		Vitals:      r.Vitals,
+		Available:       r.Available,
+		Error:           r.Error,
+		ID:              r.ID,
+		PollID:          r.PollID,
+		RequestTime:     r.RequestTime,
+		Statistics:      r.Statistics,
+		Time:            r.Time,
+		UsingIPv4:       r.UsingIPv4,
+		Vitals:          r.Vitals,
+		InterfaceVitals: r.InterfaceVitals,
 	}
 }
 
@@ -222,17 +172,14 @@ func (a ResultInfoHistory) Add(r Result, limit uint64) {
 	a[tc.CacheName(r.ID)] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[tc.CacheName(r.ID)]...), limit)
 }
 
-// Kbpses is the kbps values of each cache.
-type Kbpses map[tc.CacheName]int64
+// Kbpses is the kbps values of each interface of a cache server.
+type Kbpses map[string]uint64
 
+// Copy returns a deep copy of the Kbpses.
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}
 	for k, v := range a {
 		b[k] = v
 	}
 	return b
-}
-
-func (a Kbpses) AddMax(r Result) {
-	a[tc.CacheName(r.ID)] = r.PrecomputedData.MaxKbps
 }

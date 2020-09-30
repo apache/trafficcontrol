@@ -24,8 +24,31 @@ under the License.
             <li class="active">{{::topologyName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button type="button" class="btn btn-primary" title="View Cache Groups" ng-click="viewCacheGroups(topology)">View Cache Groups</button>
-            <button type="button" class="btn btn-primary" title="View Delivery Services" ng-click="viewDeliveryServices(topology)">View Delivery Services</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem">
+                        <button type="button" name="viewDeliveryServicesMenuItem" title="View Delivery Services" ng-click="viewDeliveryServices()">View Delivery Services</button>
+                    </li>
+                    <li class="divider"></li>
+                    <li role="menuitem">
+                        <button type="button" name="viewCacheGroupsMenuItem" title="View Cache Groups" ng-click="viewCacheGroups()">View Cache Groups</button>
+                    </li>
+                    <li role="menuitem">
+                        <button type="button" name="viewServersMenuItem" title="View Servers" ng-click="viewServers()">View Servers</button>
+                    </li>
+                    <li class="divider"></li>
+                    <li role="menuitem">
+                        <button type="button" title="Queue Server Updates for {{::topology.name}} Topology" ng-click="confirmTopologyQueueServerUpdates(topology)">Queue Server Updates</button>
+                    </li>
+                    <li role="menuitem">
+                        <button type="button" title="Clear Server Updates for {{::topology.name}} Topology" ng-click="confirmTopologyClearServerUpdates(topology)">Clear Server Updates</button>
+                    </li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

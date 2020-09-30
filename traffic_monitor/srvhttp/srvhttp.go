@@ -32,21 +32,16 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/hydrogen18/stoppableListener"
 )
 
 // GetCommonAPIData calculates and returns API data common to most endpoints
-func GetCommonAPIData(params url.Values, t time.Time) CommonAPIData {
-	return CommonAPIData{
+func GetCommonAPIData(params url.Values, t time.Time) tc.CommonAPIData {
+	return tc.CommonAPIData{
 		QueryParams: ParametersStr(params),
 		DateStr:     DateStr(t),
 	}
-}
-
-// CommonAPIData contains generic data common to most endpoints.
-type CommonAPIData struct {
-	QueryParams string `json:"pp"`
-	DateStr     string `json:"date"`
 }
 
 // Server is a re-runnable HTTP server. Server.Run() may be called repeatedly, and

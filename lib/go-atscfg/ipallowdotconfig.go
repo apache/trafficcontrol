@@ -70,6 +70,19 @@ const DefaultCoalesceNumberV4 = 5
 const DefaultCoalesceMaskLenV6 = 48
 const DefaultCoalesceNumberV6 = 5
 
+type ServersSortByName []tc.ServerNullable
+
+func (ss ServersSortByName) Len() int      { return len(ss) }
+func (ss ServersSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss ServersSortByName) Less(i, j int) bool {
+	if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName == nil {
+		return true
+	}
+	return *ss[i].HostName < *ss[j].HostName
+}
+
 // MakeIPAllowDotConfig creates the ip_allow.config ATS config file.
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
@@ -195,6 +208,8 @@ func MakeIPAllowDotConfig(
 			}
 		}
 
+		// sort servers, to guarantee things like IP coalescing are deterministic
+		sort.Sort(ServersSortByName(servers))
 		for _, childServer := range servers {
 			if childServer.Cachegroup == nil {
 				log.Errorln("Servers had server with nil Cachegroup, skipping!")

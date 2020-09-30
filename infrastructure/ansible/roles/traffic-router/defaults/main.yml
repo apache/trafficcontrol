@@ -1,0 +1,173 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_traffic_router: False
+tr_pkg_name: "{% if tr_version is defined and tr_version != omit %}{{ 'traffic_router-'+tr_version }}{% else %}traffic_router{% endif %}"
+tomcat_pkg_name: "{% if tr_version is defined and tr_version != omit %}tomcat-{{ tr_version|regex_replace('[^-]+-.*(-.*)', '8.5.0\\1') }}{% else %}tomcat{% endif %}"
+
+# Traffic Router installation information
+tr_base_dir: '/opt/traffic_router'
+tr_conf_dir: "{{ tr_base_dir }}/conf"
+tr_temp_dir: "{{ tr_base_dir }}/temp"
+tr_log_dir: "{{ tr_base_dir }}/var/log"
+tr_db_dir: "{{ tr_base_dir }}/db"
+tr_tomcat_base_dir: '/opt/tomcat'
+tr_tomcat_logs_dir: "{{ tr_tomcat_base_dir }}/logs"
+
+# JAVA_HOME to use in order to specify the desired JRE
+tr_java_home_dir: '/usr/lib/jvm/jre'
+
+# Remove any locally cached copy of a CRConfig
+tr_purge_crconfig_cache: False
+
+# traffic_ops.properties
+tr_traffic_ops_username:
+tr_traffic_ops_password:
+
+# traffic_monitor.properties
+tr_tm_bootstrap_hosts: [] # Supply an array of tm fqdn that should be used
+tr_tm_bootstrap_local: false
+tr_tm_properties_file: "{{tr_conf_dir}}/traffic_monitor.properties"
+tr_tm_properties_reload_period_ms: 60000
+
+#traffic_router.service
+tr_limit_files: 500000
+tr_limit_signals: 773537
+tr_limit_procs: 1031613
+tr_limit_core: infinity
+
+# startup.properties
+## the minimum value of the following is used to determine the following
+tr_java_heap_max_percent: 65
+tr_java_heap_max_mb: 32768
+tr_catalina_opts:
+  - "-server"
+  - "-Xms2g"
+  - "-Xmx{{ [(ansible_memtotal_mb * (tr_java_heap_max_percent/100))|int, tr_java_heap_max_mb]|min }}m"
+  - "-Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties"
+  - "-Djava.library.path=/usr/lib64"
+  - "-Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false"
+  - "-XX:+UseG1GC"
+  - "-XX:+UnlockExperimentalVMOptions"
+  - "-XX:InitiatingHeapOccupancyPercent=30"
+tr_java_opts:
+  - "-Djava.awt.headless=true"
+  - "-Djava.security.egd=file:/dev/./urandom"
+
+# server.xml
+tr_connector_default:
+  protocol: 'com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol'
+  maxThreads: 10000
+  connectionTimeout: 10000
+  mbeanPath: 'traffic-router:name=languidState'
+  readyAttribute: 'Ready'
+
+tr_connectors:
+  - port: 80
+    protocol: "{{tr_connector_default.protocol}}"
+    maxThreads: "{{tr_connector_default.maxThreads}}"
+    connectionTimeout: "{{tr_connector_default.connectionTimeout}}"
+    mbeanPath: "{{tr_connector_default.mbeanPath}}"
+    readyAttribute: "{{tr_connector_default.readyAttribute}}"
+    portAttribute: 'Port'
+    sendReasonPhrase: true
+    backlog: 65535
+  - port: 3333
+    protocol: "{{tr_connector_default.protocol}}"
+    maxThreads: "{{tr_connector_default.maxThreads}}"
+    connectionTimeout: "{{tr_connector_default.connectionTimeout}}"
+    mbeanPath: "{{tr_connector_default.mbeanPath}}"
+    readyAttribute: "{{tr_connector_default.readyAttribute}}"
+    portAttribute: 'ApiPort'
+  - port: 443
+    protocol: "{{tr_connector_default.protocol}}"
+    maxThreads: "{{tr_connector_default.maxThreads}}"
+    connectionTimeout: "{{tr_connector_default.connectionTimeout}}"
+    mbeanPath: "{{tr_connector_default.mbeanPath}}"
+    readyAttribute: "{{tr_connector_default.readyAttribute}}"
+    portAttribute: 'SecurePort'
+    sendReasonPhrase: true
+    backlog: 65535
+    scheme: 'https'
+    secure: true
+    SSLEnabled: true
+    clientAuth: false
+    sslProtocol: 'TLS'
+    sslImplementationName: 'com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation'
+
+# dns.properties
+tr_dns_tcp_port: 53
+tr_dns_tcp_backlog: 65535
+tr_dns_udp_port: 53
+tr_dns_max_threads: 10000
+tr_dns_zones_dir: "{{tr_base_dir}}/var/auto-zones"
+
+# cache.properties
+tr_cache_geolocation_database: "{{tr_db_dir}}/GeoIP2-City.mmdb"
+tr_cache_geolocation_refresh_period: 604800000
+tr_cache_czmap_database: "{{tr_db_dir}}/czmap.json"
+tr_cache_czmap_database_refresh_period: 10800000
+tr_cache_dczmap_database: "{{tr_db_dir}}/dczmap.json"
+tr_cache_dczmap_database_refresh_period: 10800000
+tr_cache_health_json: "{{tr_db_dir}}/health.json"
+tr_cache_health_json_refresh_period: 1000
+tr_cache_config_json: "{{tr_db_dir}}/cr-config.json"
+tr_cache_config_json_refresh_period: 60000
+
+# log4j.properties
+tr_log4j_opts:
+  - "# ACCESS is set to be a Syslog Appender"
+  - log4j.appender.ACCESS=org.apache.log4j.RollingFileAppender
+  - "log4j.appender.ACCESS.File={{tr_log_dir}}/access.log"
+  - log4j.appender.ACCESS.MaxFileSize=200MB
+  - log4j.appender.ACCESS.MaxBackupIndex=10
+  -
+  - "# ACCESS uses PatternLayout."
+  - log4j.appender.ACCESS.layout=org.apache.log4j.PatternLayout
+  - log4j.appender.ACCESS.layout.ConversionPattern=%m%n
+  - log4j.appender.ACCESS.threshold=INFO
+  -
+  - log4j.appender.A1=org.apache.log4j.RollingFileAppender
+  - "log4j.appender.A1.file={{tr_log_dir}}/traffic_router.log"
+  - log4j.appender.A1.maxFileSize=100MB
+  -
+  - "# A1 uses PatternLayout."
+  - log4j.appender.A1.layout=org.apache.log4j.PatternLayout
+  - log4j.appender.A1.layout.ConversionPattern=%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n
+  - log4j.appender.A1.threshold=ALL
+  -
+  - "# Set root logger level to DEBUG and its only appender to A1."
+  - "# Valid levels are: ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE"
+  - log4j.rootLogger=WARN, A1
+  -
+  - "# Set application logger levels"
+  - log4j.logger.com.comcast.cdn.traffic_control.traffic_router=INFO
+  - log4j.logger.com.comcast.cdn.traffic_control.traffic_router.core.access=INFO, ACCESS
+  - log4j.additivity.com.comcast.cdn.traffic_control.traffic_router.core.access=false
+
+# logging.properties
+tr_logging_opts:
+  - handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.juli.AsyncFileHandler
+  - .handlers = 1catalina.org.apache.juli.AsyncFileHandler
+  -
+  - "############################################################"
+  - "# Handler specific properties."
+  - "# Describes specific configuration info for Handlers."
+  - "############################################################"
+  -
+  - 1catalina.org.apache.juli.AsyncFileHandler.level = INFO
+  - "1catalina.org.apache.juli.AsyncFileHandler.directory = {{tr_tomcat_logs_dir}}"
+  - 1catalina.org.apache.juli.AsyncFileHandler.prefix = catalina.
+  - 1catalina.org.apache.juli.AsyncFileHandler.rotatable = true
+  - 1catalina.org.apache.juli.AsyncFileHandler.maxDays = 30

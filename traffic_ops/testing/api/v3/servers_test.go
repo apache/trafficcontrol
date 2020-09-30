@@ -316,7 +316,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullableWithHdr(nil)
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds1"}})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -329,11 +329,15 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatal("Got Delivery Service with nil ID")
 	}
 
+	AssignTestDeliveryService(t)
 	params := url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	_, _, err = TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatalf("expected to get 1 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
@@ -346,8 +350,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+
 	foundTopDs := false
-	const topDsXmlId = "ds-top"
+	const (
+		topDsXmlId = "ds-top"
+		topology   = "my-topology"
+	)
 	for _, ds = range dses {
 		if ds.XMLID == nil || *ds.XMLID != topDsXmlId {
 			continue
@@ -358,26 +370,70 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if !foundTopDs {
 		t.Fatalf("unable to find deliveryservice %s", topDsXmlId)
 	}
+
+	/* Create a deliveryservice server assignment that should not show up in the
+	 * client.GetServersWithHdr() response because ds-top is topology-based
+	 */
+	const otherServerHostname = "topology-edge-02"
+	serverResponse, _, err := TOSession.GetServersWithHdr(&url.Values{"hostName": []string{otherServerHostname}}, nil)
+	if err != nil {
+		t.Fatalf("getting server by hostname %s: %s", otherServerHostname, err)
+	}
+	if len(serverResponse.Response) != 1 {
+		t.Fatalf("unable to find server with hostname %s", otherServerHostname)
+	}
+	otherServer := serverResponse.Response[0]
+
+	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
+	}
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
+	if err != nil {
+		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
+	}
+	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
+	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
+	}
+
 	params.Set("dsId", strconv.Itoa(*ds.ID))
-	expectedHostnames := map[string]bool {
+	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3": true,
 		"edge2-cdn1-cg3": true,
 		"atlanta-mid-16": true,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s", err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsXmlId, err)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s", err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsXmlId, err)
 	}
 	for _, server := range response.Response {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
 		}
 	}
-
 	params.Del("dsId")
+
+	params.Add("topology", topology)
+	response, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers belonging to cachegroups in topology %s: %s", topology, err)
+	}
+	if len(response.Response) == 0 {
+		t.Fatalf("Did not find any servers belonging to cachegroups in topology %s: %s", topology, err)
+	}
+	for _, server := range response.Response {
+		if _, exists := expectedHostnames[*server.HostName]; !exists {
+			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
+		}
+	}
+	params.Del("topology")
 
 	resp, _, err := TOSession.GetServersWithHdr(nil, nil)
 	if err != nil {

@@ -812,6 +812,20 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int) (tc.CacheGroupName, bool, error
 	return tc.CacheGroupName(name), true, nil
 }
 
+func TopologyExists(tx *sql.Tx, topologyName tc.TopologyName) (bool, error) {
+	q := `
+SELECT COUNT("name")
+FROM topology
+WHERE name = $1
+`
+	var count int
+	var err error
+	if err = tx.QueryRow(q, topologyName).Scan(&count); err != nil {
+		err = fmt.Errorf("querying topologies: %s", err)
+	}
+	return count > 0, err
+}
+
 // GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
 // list that have a topology assigned. An error indicates unexpected errors that occurred when querying.
 func GetDeliveryServicesWithTopologies(tx *sql.Tx, dsIDs []int) ([]int, error) {

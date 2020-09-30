@@ -708,7 +708,8 @@ Data Source Extensions work in much the same way as `Check Extensions`_, but are
 
 Example Cron File
 -----------------
-The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system.
+The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system. 
+Edit $TO_USER and $TO_PASS to match ORT input parameters.
 
 .. code-block:: shell
 	:caption: Example Cron File
@@ -753,5 +754,5 @@ The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` a
 	20 * * * * root /opt/traffic_ops/app/bin/checks/ToCDUCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"CDU\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
 
 	# ORT
-	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
-	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"syslog_facility\": \"local0\"}" > /dev/null 2>&1
+	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"to_user\":\"$TO_USER\", \"to_pass\": \"$TO_PASS\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
+	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"syslog_facility\": \"local0\", \"to_user\":\"$TO_USER\", \"to_pass\": \"$TO_PASS\"}" > /dev/null 2>&1

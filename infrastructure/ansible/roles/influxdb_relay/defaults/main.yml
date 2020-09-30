@@ -1,0 +1,31 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_influxdb_relay: False
+influxdb_relay_pkg_name: "{% if influxdb_relay_version is defined %}{{ 'influxdb-relay-'+influxdb_relay_version }}{% else %}influxdb-relay{% endif %}"
+influxdb_relay_conf_dir: '/etc/influxdb-relay'
+
+# Local OS User to run the influxdb-relay process
+influxdb_relay_user: influxdb-relay
+influxdb_relay_group: influxdb-relay
+
+# Influxdb-relay configuration
+influxdb_relay_conf:
+  - type: http
+    conf_object:
+      name: InfluxDB-relay_Traffic-Stats
+      bind-addr: "{{ ansible_fqdn }}:9086"
+      output:
+        - name: influxdb-hostname
+          location: http://influxdb-hostname.kabletown.invalid:8086/write

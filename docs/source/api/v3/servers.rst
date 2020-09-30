@@ -52,6 +52,8 @@ Request Structure
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| type       | no       | Return only servers of this :term:`Type`                                                                          |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| topology   | no       | Return only servers who belong to cachegroups assigned to the :term:`Topology` identified by this name            |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| limit      | no       | Choose the maximum number of results to return                                                                    |

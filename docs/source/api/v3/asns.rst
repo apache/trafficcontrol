@@ -107,6 +107,8 @@ Response Structure
 ========
 Creates a new :abbr:`ASN (Autonomous System Number)`.
 
+.. note:: There cannot be two different ASN object with the same ``asn``.
+
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Response Type: Object

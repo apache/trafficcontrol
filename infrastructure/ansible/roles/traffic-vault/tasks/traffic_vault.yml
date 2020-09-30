@@ -1,0 +1,200 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: Install dependencies
+  yum:
+    state: present
+    name:
+      - java-1.8.0-openjdk
+      - python-wheel
+      - python2-pip
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+    lock_timeout: 300
+  retries: 5
+  delay: 5
+  become: yes
+
+- name: Install riak
+  yum:
+    state: present
+    name: "{{ riak_pkg_name }}"
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+    lock_timeout: 300
+  retries: 5
+  delay: 5
+  become: yes
+
+- name: Install self-signed SSL cert if a real cert not defined
+  block:
+    - name: Create certificate dir
+      file:
+        path: "{{ riak_platform_etc_dir }}/{{ item }}"
+        state: directory
+      with_items:
+        - certs
+        - csr
+      become: yes
+
+    - name: Install python-pyOpenSSL module
+      pip:
+        name: pyopenssl
+
+    - name: Generate an OpenSSL private key
+      openssl_privatekey:
+        path: "{{ riak_ssl_keyfile }}"
+
+    - name: Generate an OpenSSL CSR
+      openssl_csr:
+        path: "{{ riak_SSL_csr_path }}"
+        privatekey_path: "{{ riak_ssl_keyfile }}"
+        common_name: "{{ ansible_hostname }}"
+
+    - name: Generate self signed certificate
+      openssl_certificate:
+        path: "{{ riak_ssl_certfile }}"
+        privatekey_path: "{{ riak_ssl_keyfile }}"
+        csr_path: "{{ riak_SSL_csr_path }}"
+        provider: selfsigned
+      when: generate_ssl
+  when: riak_generate_ssl
+  become: yes
+
+- name: Copy riak.conf
+  template:
+    src: riak.conf.j2
+    dest: "{{ riak_platform_etc_dir }}/riak.conf"
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart riak
+  become: yes
+
+- name: force all notified handlers to run at this point, not waiting for normal sync points
+  meta: flush_handlers
+
+- name: Make sure riak is started
+  service:
+    name: riak
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Wait for Riak to respond to pings
+  riak:
+    command: ping
+
+- name: Setup Security
+  block:
+    - name: Enable security
+      shell: "riak-admin security enable"
+      become: yes
+
+    - name: Add groups
+      shell: "riak-admin security add-group {{ item }}"
+      with_items:
+        - admins
+        - keysusers
+        - readonly
+      become: yes
+
+    - name: Create users
+      shell: "{{ item }}"
+      with_items:
+        - "riak-admin security add-user {{ riak_admin_user }} password={{ riak_admin_passwd }} groups=admins"
+        - "riak-admin security add-user {{ riak_user_user }} password={{ riak_user_passwd }} groups=keysusers"
+        - "riak-admin security add-user {{ riak_ro_user }} password={{ riak_ro_passwd }} groups=readonly"
+      become: yes
+      no_log: true
+
+    - name: Grant source user access
+      shell: "riak-admin security add-source {{ item }} 0.0.0.0/0 password"
+      with_items:
+        - "{{ riak_admin_user }}"
+        - "{{ riak_user_user }}"
+        - "{{ riak_ro_user }}"
+      become: yes
+
+    - name: Grant privs to groups
+      shell: "{{ item }}"
+      with_items:
+        - "riak-admin security grant riak_kv.get,riak_kv.delete,riak_kv.list_buckets,riak_kv.put,riak_kv.list_keys on any to admins"
+        - "riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default ssl to keysusers"
+        - "riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default dnssec to keysusers"
+        - "riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default url_sig_keys to keysusers"
+        - "riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default cdn_uri_sig_keys  to keysusers"
+        - "riak-admin security grant riak_kv.get on default ssl to readonly"
+        - "riak-admin security grant riak_kv.get on default dnssec to readonly"
+        - "riak-admin security grant riak_kv.get on default url_sig_keys to readonly"
+        - "riak-admin security grant riak_kv.get on default cdn_uri_sig_keys to readonly"
+        - "riak-admin security grant riak_kv.list_buckets,riak_kv.list_keys on any to readonly"
+      become: yes
+
+    - name: Grant privs users
+      shell: "{{ item }}"
+      with_items:
+        - "riak-admin security grant search.query on index sslkeys to {{ riak_admin_user }}"
+        - "riak-admin security grant search.admin on schema to {{ riak_admin_user }}"
+        - "riak-admin security grant search.query,search.admin on index to {{ riak_admin_user }}"
+        - "riak-admin security grant riak_core.set_bucket,riak_kv.list_buckets,riak_kv.list_keys on any to {{ riak_admin_user }}"
+        - "riak-admin security grant search.query on index sslkeys to {{ riak_user_user }}"
+        - "riak-admin security grant search.query on any to {{ riak_user_user }}"
+        - "riak-admin security grant search.query on index sslkeys to {{ riak_ro_user }}"
+        - "riak-admin security grant search.query on any to {{ riak_ro_user }}"
+      become: yes
+  when: ringleader_ip == localnode_ip
+  vars:
+    ringleader_ip: "{{ riak_ringleader.split('@')[1] }}"
+    localnode_ip: "{{ riak_nodename.split('@')[1] }}"
+
+- name: Build the riak cluster
+  block:
+    - name: Join's a Riak node to another node
+      riak:
+        command: join
+        target_node: "{{ riak_ringleader }}"
+
+  when: ringleader_ip != localnode_ip and localnode_ip != '127.0.0.1' and ringleader_ip != '127.0.0.1'
+  vars:
+    ringleader_ip: "{{ riak_ringleader.split('@')[1] }}"
+    localnode_ip: "{{ riak_nodename.split('@')[1] }}"
+
+- name: Commit the riak cluster
+  block:
+    - name: Check Riak Ring
+      command: 'riak-admin cluster status'
+      register: riak_ring_status
+
+    - name: Wait for ring consensus to finish.
+      riak:
+        command: plan
+        wait_for_ring: 600
+      when: riak_ring_status.stdout.find('joining') > 0
+
+    - name: Wait for handoffs to finish.
+      riak:
+        command: commit
+        wait_for_handoffs: 600
+      when: riak_ring_status.stdout.find('joining') > 0
+
+    - name: Wait for riak_kv service to startup
+      riak:
+        wait_for_service: kv
+
+    - name: Run a KV service check
+      riak:
+        command: kv_test
+  when: ringleader_ip == localnode_ip
+  vars:
+    ringleader_ip: "{{ riak_ringleader.split('@')[1] }}"
+    localnode_ip: "{{ riak_nodename.split('@')[1] }}"

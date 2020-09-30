@@ -64,24 +64,26 @@ JOIN type t ON s.type = t.id
 
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
-SELECT
-	td.id deliveryservice,
-	s.id "server"
+(SELECT
+	ARRAY_AGG(CAST(ROW(td.id, s.id, NULL) AS deliveryservice_server))
 FROM "server" s
 JOIN cachegroup c on s.cachegroup = c.id
-LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
-LEFT JOIN deliveryservice td ON td.topology = tc.topology
-UNION
+JOIN topology_cachegroup tc ON c.name = tc.cachegroup
+JOIN deliveryservice td ON td.topology = tc.topology
+WHERE td.id = :dsId
+),
 `
 
 /* language=SQL */
 const deliveryServiceServersJoin = `
 FULL OUTER JOIN (
-%s
-SELECT
-	dss.deliveryservice,
-	dss."server"
-FROM deliveryservice_server dss
+SELECT (dss.dss_record).deliveryservice, (dss.dss_record).server FROM (
+	SELECT UNNEST(COALESCE(
+		%s
+		(SELECT
+			ARRAY_AGG(CAST(ROW(dss.deliveryservice, dss."server", NULL) AS deliveryservice_server))
+		FROM deliveryservice_server dss)
+	)) AS dss_record) AS dss
 ) dss ON dss.server = s.id
 JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
 `
@@ -772,6 +774,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"physLocation":     dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
 		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
+		"topology":         dbhelpers.WhereColumnInfo{"tc.topology", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
@@ -813,6 +816,13 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
+	}
+
+	if _, ok := params[`topology`]; ok {
+		/* language=SQL */
+		queryAddition += `
+			JOIN topology_cachegroup tc ON cg."name" = tc.cachegroup
+`
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1329,6 +1339,19 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
+	}
+
 	if err := validateV1(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
@@ -1383,6 +1406,19 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	str := uuid.New().String()
@@ -1441,6 +1477,19 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	str := uuid.New().String()

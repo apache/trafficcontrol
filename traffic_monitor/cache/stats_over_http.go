@@ -354,7 +354,10 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 			}
 
 			dsName := string(ds)
-			dsStat := precomputed.DeliveryServiceStats[dsName]
+			dsStat, ok := precomputed.DeliveryServiceStats[dsName]
+			if !ok || dsStat == nil {
+				dsStat = new(DSStat)
+			}
 
 			parsedStat, err := parseNumericStat(value)
 			if err != nil {

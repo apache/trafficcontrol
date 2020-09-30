@@ -1,0 +1,173 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: Create DS Profiles
+  include_tasks: create_ds_profiles_params.yml
+  with_items: "{{ dl_ds_merged_ds_template }}"
+  loop_control:
+    loop_var: Target_ds
+
+- name: Get All Profiles
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+    method: GET
+  register: get_all_profiles
+
+- name: Get All Parameters per Profile
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
+    method: GET
+  vars:
+    profile_query: "response.id"
+  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+
+- name: Create Delivery Services
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
+    method: POST
+    body: "{{ lookup('template', 'deliveryservice.j2') }}"
+  with_indexed_items: "{{ dl_ds_merged_ds_template }}"
+  register: create_ds_out
+  failed_when: (create_ds_out.status == 400 and create_ds_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_out.status > 400 and create_ds_out.status < 600)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    profile_query: "[?type == `DS_PROFILE` && cdn == `{{ Target_cdn_id }}` && {% if (item.1.profileName | default(dl_ds_default_ds.profileName) | default(omit) ) != omit %}{{ profile_name_subquery }}{% else %}{{ profile_suffix_subquery }}{% endif %}].id | [0]"
+    profile_name_subquery: "name == `{{ item.1.profileName | default(dl_ds_default_ds.profileName) | default() }}`"
+    profile_suffix_subquery: "ends_with(name,`{{ item.1.profileNameSuffix | default(dl_ds_default_ds.profileNameSuffix) | default(omit) }}`) ==`true`"
+    profile_id: "{{ get_all_profiles.json.response | to_json | from_json | json_query(profile_query) }}"
+    tenant_query: "[?name == `{{ item.1.tenantName | default(dl_ds_default_ds.tenantName) | default(omit) }}`].id | [0]"
+    tenant_id: "{{ get_all_tenants.json.response | json_query(tenant_query) }}"
+    type_query: "[?useInTable == `deliveryservice` && name == `{{ item.1.typeName | default(dl_ds_default_ds.typeName) | default(omit) }}`].id | [0]"
+    type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+    computed_origin_url: "http://ds{{ item.0 }}-{{ groups['fakeorigin'] | first }}"
+    computed_xmlid: "{{ item.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
+    target_xmlId: "{{ item.1.xmlId | default(computed_xmlid) }}"
+    has_mso_server_profiles: "{{ (item.1.eligible_mso_server_profile_names | default(dl_ds_default_ds.eligible_mso_server_profile_names)) | length > 0 }}"
+    targetds:
+      active: "{{ item.1.active | default(dl_ds_default_ds.active) | default(omit) }}"
+      anonymousBlockingEnabled: "{{ item.1.anonymousBlockingEnabled | default(dl_ds_default_ds.anonymousBlockingEnabled) | default(omit) }}"
+      ccrDnsTtl: "{{ item.1.ccrDnsTtl | default(dl_ds_default_ds.ccrDnsTtl) | default(omit) }}"
+      cdnId: "{{ Target_cdn_id | default(omit, true) }}"
+      checkPath: "{{ item.1.checkPath | default(dl_ds_default_ds.checkPath) | default(omit) }}"
+      deepCachingType: "{{ item.1.deepCachingType | default(dl_ds_default_ds.deepCachingType) | default(omit) }}"
+      displayName: "{{ item.1.displayName | default(dl_ds_default_ds.displayName) | default(omit) }}"
+      dnsBypassCname: "{{ item.1.dnsBypassCname | default(dl_ds_default_ds.dnsBypassCname) | default(omit) }}"
+      dnsBypassIp: "{{ item.1.dnsBypassIp | default(dl_ds_default_ds.dnsBypassIp) | default(omit) }}"
+      dnsBypassIp6: "{{ item.1.dnsBypassIp6 | default(dl_ds_default_ds.dnsBypassIp6) | default(omit) }}"
+      dnsBypassTtl: "{{ item.1.dnsBypassTtl | default(dl_ds_default_ds.dnsBypassTtl) | default(omit) }}"
+      dscp: "{{ item.1.dscp | default(dl_ds_default_ds.dscp) | default(omit) }}"
+      edgeHeaderRewrite: "{{ item.1.edgeHeaderRewrite | default(dl_ds_default_ds.edgeHeaderRewrite) | default(omit) }}"
+      fqPacingRate: "{{ item.1.fqPacingRate | default(dl_ds_default_ds.fqPacingRate) | default(omit) }}"
+      geoLimit: "{{ dl_ds_lookup_geolimit[ item.1.geoLimitName | default(dl_ds_default_ds.geoLimitName) ] | default(0) }}"
+      geoLimitCountries: "{{ item.1.geoLimitCountries | default(dl_ds_default_ds.geoLimitCountries) | default(omit) }}"
+      geoLimitRedirectUrl: "{{ item.1.geoLimitRedirectUrl | default(dl_ds_default_ds.geoLimitRedirectUrl) | default(omit) }}"
+      geoProvider: "{{ dl_ds_lookup_geoProvider[ item.1.geoProviderName | default(dl_ds_default_ds.geoProviderName) ] | default(0) }}"
+      globalMaxMbps: "{{ item.1.globalMaxMbps | default(dl_ds_default_ds.globalMaxMbps) | default(omit) }}"
+      globalMaxTps: "{{ item.1.globalMaxTps | default(dl_ds_default_ds.globalMaxTps) | default(omit) }}"
+      httpBypassFqdn: "{{ item.1.httpBypassFqdn | default(dl_ds_default_ds.httpBypassFqdn) | default(omit) }}"
+      infoUrl: "{{ item.1.infoUrl | default(dl_ds_default_ds.infoUrl) | default(omit) }}"
+      initialDispersion: "{{ item.1.initialDispersion | default(dl_ds_default_ds.initialDispersion) | default(omit) }}"
+      ipv6RoutingEnabled: "{{ item.1.ipv6RoutingEnabled | default(dl_ds_default_ds.ipv6RoutingEnabled) | default(omit) }}"
+      logsEnabled: "{{ item.1.logsEnabled | default(dl_ds_default_ds.logsEnabled) | default(omit) }}"
+      longDesc: "{{ item.1.longDesc | default(dl_ds_default_ds.longDesc) | default(omit) }}"
+      longDesc1: "{{ item.1.longDesc1 | default(dl_ds_default_ds.longDesc1) | default(omit) }}"
+      longDesc2: "{{ item.1.longDesc2 | default(dl_ds_default_ds.longDesc2) | default(omit) }}"
+      maxDnsAnswers: "{{ item.1.maxDnsAnswers | default(dl_ds_default_ds.maxDnsAnswers) | default(omit) }}"
+      midHeaderRewrite: "{{ item.1.midHeaderRewrite | default(dl_ds_default_ds.midHeaderRewrite) | default(omit) }}"
+      missLat: "{{ item.1.missLat | default(dl_ds_default_ds.missLat) | default(omit) }}"
+      missLong: "{{ item.1.missLong | default(dl_ds_default_ds.missLong) | default(omit) }}"
+      multiSiteOrigin: "{{ item.1.multiSiteOrigin | default(has_mso_server_profiles) | default(omit) }}"
+      orgServerFqdn: "{{ item.1.orgServerFqdn | default(computed_origin_url) }}"
+      originShield: "{{ item.1.originShield | default(dl_ds_default_ds.originShield) | default(omit) }}"
+      profileId: "{{ profile_id | default(omit, true) }}"
+      protocol: "{{ dl_ds_lookup_protocol[ item.1.protocolName | default(dl_ds_default_ds.protocolName) ] | default(0) }}"
+      qstringIgnore: "{{ dl_ds_lookup_qstringIgnore[ item.1.qstringIgnoreName | default(dl_ds_default_ds.qstringIgnoreName) ] | default(0) }}"
+      rangeRequestHandling: "{{ dl_ds_lookup_rangeRequestHandling[ item.1.rangeRequestHandlingName | default(dl_ds_default_ds.rangeRequestHandlingName) ] | default(0) }}"
+      regexRemap: "{{ item.1.regexRemap | default(dl_ds_default_ds.regexRemap) | default(omit) }}"
+      regionalGeoBlocking: "{{ item.1.regionalGeoBlocking | default(dl_ds_default_ds.regionalGeoBlocking) | default(omit) }}"
+      remapText: "{{ item.1.remapText | default(dl_ds_default_ds.remapText) | default(omit) }}"
+      routingName: "{{ item.1.routingName | default(dl_ds_default_ds.routingName) | default(omit) }}"
+      signed: "{{ item.1.signed | default(dl_ds_default_ds.signed) | default(omit) }}"
+      signingAlgorithm: "{{ item.1.signingAlgorithm | default(dl_ds_default_ds.signingAlgorithm) | default(omit) }}"
+      sslKeyVersion: "{{ item.1.sslKeyVersion | default(dl_ds_default_ds.sslKeyVersion) | default(omit) }}"
+      tenantId: "{{ tenant_id | default(omit, true) }}"
+      trRequestHeaders: "{{ item.1.trRequestHeaders | default(dl_ds_default_ds.trRequestHeaders) | default(omit) }}"
+      trResponseHeaders: "{{ item.1.trResponseHeaders | default(dl_ds_default_ds.trResponseHeaders) | default(omit) }}"
+      typeId: "{{ type_id | default(omit, true) }}"
+      xmlId: "{{ item.1.xmlId | default(computed_xmlid) }}"
+
+- name: Get All Delivery Services for CDN
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
+    method: GET
+    body:
+      cdn: Target_cdn_id
+  register: get_all_ds_cdn
+
+- name: you have to call get once for Riak/TO to work right before you can add certs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys.json"
+    method: GET
+
+- name: Assign Servers to Delivery Services - Grove
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices/{{ computed_xmlid }}/servers"
+    method: POST
+    body:
+      serverNames: "{{ get_all_servers.json.response | to_json | from_json | json_query(server_query) }}"
+  with_indexed_items: "{{ dl_ds_merged_ds_template }}"
+  when: serveFromGrove
+  register: create_ds_assignment_out
+  failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"
+    computed_xmlid: "{{ item.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
+    serveFromGrove: "{{ item.1.serveFromGrove | default(dl_ds_default_ds.serveFromGrove) | default(false) }}"
+    profile_query: "[?type == `GROVE_PROFILE` && cdn == `{{ Target_cdn_id }}`].id"
+    profile_list: "{{ get_all_profiles.json.response | json_query(profile_query) }}"
+    profile_filter: "{{ profile_list | map('regex_replace', '^(.*)', 'profileId == `\\1`') | list | join(' || ') }}"
+
+- name: Assign Servers to Delivery Services - ATS
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices/{{ computed_xmlid }}/servers"
+    method: POST
+    body:
+      serverNames: "{{ get_all_servers.json.response | to_json | from_json | json_query(server_query) }}"
+  with_indexed_items: "{{ dl_ds_merged_ds_template }}"
+  when: serveFromATS
+  register: create_ds_assignment_out
+  failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"
+    computed_xmlid: "{{ item.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
+    serveFromATS: "{{ item.1.serveFromATS | default(dl_ds_default_ds.serveFromATS) | default(false) }}"
+    profile_query: "[?type == `ATS_PROFILE` && cdn == `{{ Target_cdn_id }}`].id"
+    profile_list: "{{ get_all_profiles.json.response | json_query(profile_query) }}"
+    profile_filter: "{{ profile_list | map('regex_replace', '^(.*)', 'profileId == `\\1`') | list | join(' || ') }}"
+
+- name: Handle MSO Parent Servers
+  include_tasks: update_mso_servers.yml
+  with_indexed_items: "{{ dl_ds_merged_ds_template }}"
+  when: Target_mso_ds.1.eligible_mso_server_profile_names is defined and Target_mso_ds.1.eligible_mso_server_profile_names | length > 0
+  loop_control:
+    loop_var: Target_mso_ds
+
+- name: Handle Steering Targets
+  include_tasks: assign_steering_targets.yml
+  with_indexed_items: "{{ dl_ds_merged_ds_template }}"
+  when: Target_steering_ds.1.assigned_steering_targets is defined and Target_steering_ds.1.assigned_steering_targets | length > 0
+  loop_control:
+    loop_var: Target_steering_ds

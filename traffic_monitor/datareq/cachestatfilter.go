@@ -31,12 +31,13 @@ import (
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
 type CacheStatFilter struct {
-	historyCount int
-	statsToUse   map[string]struct{}
-	wildcard     bool
-	cacheType    tc.CacheType
-	hosts        map[tc.CacheName]struct{}
-	cacheTypes   map[tc.CacheName]tc.CacheType
+	historyCount        uint64
+	statsToUse          map[string]struct{}
+	interfaceStatsToUse map[string]struct{}
+	wildcard            bool
+	cacheType           tc.CacheType
+	hosts               map[tc.CacheName]struct{}
+	cacheTypes          map[tc.CacheName]tc.CacheType
 }
 
 // UseCache returns whether the given cache is in the filter.
@@ -67,8 +68,25 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 	return false
 }
 
-// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
-func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
+func (f *CacheStatFilter) UseInterfaceStat(statName string) bool {
+	if len(f.interfaceStatsToUse) == 0 {
+		return true
+	}
+	if !f.wildcard {
+		_, ok := f.interfaceStatsToUse[statName]
+		return ok
+	}
+	for stat := range f.interfaceStatsToUse {
+		if strings.Contains(statName, stat) {
+			return true
+		}
+	}
+	return false
+}
+
+// WithinStatHistoryMax returns whether the given history index is less than the
+// max history of this filter.
+func (f *CacheStatFilter) WithinStatHistoryMax(n uint64) bool {
 	if f.historyCount == 0 {
 		return true
 	}
@@ -86,12 +104,13 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `type` is empty, all cache types are returned.
 func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheName]tc.CacheType) (cache.Filter, error) {
 	validParams := map[string]struct{}{
-		"hc":       struct{}{},
-		"stats":    struct{}{},
-		"wildcard": struct{}{},
-		"type":     struct{}{},
-		"hosts":    struct{}{},
-		"cache":    struct{}{},
+		"hc":             struct{}{},
+		"stats":          struct{}{},
+		"interfaceStats": struct{}{},
+		"wildcard":       struct{}{},
+		"type":           struct{}{},
+		"hosts":          struct{}{},
+		"cache":          struct{}{},
 	}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
@@ -102,9 +121,9 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheN
 		}
 	}
 
-	historyCount := 1
+	var historyCount uint64 = 1
 	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
-		v, err := strconv.Atoi(paramHc[0])
+		v, err := strconv.ParseUint(paramHc[0], 10, 64)
 		if err == nil {
 			historyCount = v
 		}
@@ -115,6 +134,15 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheN
 		commaStats := strings.Split(paramStats[0], ",")
 		for _, stat := range commaStats {
 			statsToUse[stat] = struct{}{}
+		}
+	}
+
+	interfaceStatsToUse := map[string]struct{}{}
+	if paramStats, exists := params["interfaceStats"]; exists {
+		for _, paramStat := range paramStats {
+			for _, stat := range strings.Split(paramStat, ",") {
+				interfaceStatsToUse[stat] = struct{}{}
+			}
 		}
 	}
 
