@@ -203,16 +203,6 @@ func checkTopologyBasedDSRequiredCapabilities(ssc *TOServerServerCapability, acc
 			serverIDToCapabilities[serverID][c] = struct{}{}
 		}
 	}
-	var dsStrings []string
-	dsStrings = make([]string, 0, len(xmlidToTopology))
-	if len(serverIDToCapabilities) == 0 {
-		for ds, top := range xmlidToTopology {
-			if _, ok := accessibleTenants[xmlidToTenantID[ds]]; ok {
-				dsStrings = append(dsStrings, "(xml_id = "+ds+", topology = "+top+")")
-			}
-		}
-		return fmt.Errorf("this capability is required by delivery services, but there are no other servers in this server's cachegroup to satisfy them %s", strings.Join(dsStrings, ", ")), nil, http.StatusBadRequest
-	}
 
 	unsatisfiedDSes := []string{}
 	for ds, dsReqCaps := range xmlidToReqCaps {
@@ -238,7 +228,7 @@ func checkTopologyBasedDSRequiredCapabilities(ssc *TOServerServerCapability, acc
 		return nil, nil, http.StatusOK
 	}
 
-	dsStrings = make([]string, 0, len(unsatisfiedDSes))
+	dsStrings := make([]string, 0, len(unsatisfiedDSes))
 	for _, ds := range unsatisfiedDSes {
 		if _, ok := accessibleTenants[xmlidToTenantID[ds]]; ok {
 			dsStrings = append(dsStrings, "(xml_id = "+ds+", topology = "+xmlidToTopology[ds]+")")
@@ -383,15 +373,15 @@ SELECT
   ds.xml_id,
   ds.topology,
   ds.tenant_id,
-  array_agg(dsrc.required_capability) as req_caps
+  ARRAY_AGG(dsrc.required_capability) AS req_caps
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 JOIN deliveryservice ds ON ds.topology = tc.topology
-JOIN deliveryservices_required_capability dsrc on dsrc.deliveryservice_id = ds.id
+JOIN deliveryservices_required_capability dsrc ON dsrc.deliveryservice_id = ds.id
 WHERE s.id = $1
 GROUP BY ds.xml_id, ds.tenant_id, ds.topology
-HAVING $2 = ANY(array_agg(dsrc.required_capability))
+HAVING $2 = ANY(ARRAY_AGG(dsrc.required_capability))
 `
 }
 
@@ -399,16 +389,15 @@ HAVING $2 = ANY(array_agg(dsrc.required_capability))
 // that have a given capability
 func getServerCapabilitiesOfCachegoupQuery() string {
 	return `
-SELECT s.id, array_agg(ssc.server_capability) as capabilities
+SELECT s.id, ARRAY_AGG(ssc.server_capability) AS capabilities
 FROM server s
-JOIN cachegroup c ON c.id = s.cachegroup
+JOIN cachegroup c ON c.id = s.cachegroup AND c.id = (SELECT cachegroup FROM server WHERE server.id = $1)
 JOIN server_server_capability ssc ON ssc.server = s.id
 WHERE
-  c.id = (SELECT cachegroup FROM server WHERE server.id = $1)
-  AND s.cdn_id = (SELECT cdn_id FROM server WHERE server.id = $1)
+  s.cdn_id = (SELECT cdn_id FROM server WHERE server.id = $1)
   AND s.id != $1
 GROUP BY s.id
-HAVING $2 = ANY(array_agg(ssc.server_capability));
+HAVING $2 = ANY(ARRAY_AGG(ssc.server_capability));
 `
 }
 
