@@ -35,7 +35,7 @@ func TestJobs(t *testing.T) {
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
-		VerifyUniqueJobTest(t)
+		JobCollisionWarningTest(t)
 	})
 }
 
