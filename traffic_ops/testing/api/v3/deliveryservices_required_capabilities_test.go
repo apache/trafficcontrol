@@ -17,13 +17,13 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -144,7 +144,7 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability)
+			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
 			if err != nil {
 				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
@@ -206,6 +206,20 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 				t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 			}
 		})
+	}
+}
+func CreateTestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
+	for _, td := range testData.TopologyBasedDeliveryServicesRequiredCapabilities {
+
+		c := tc.DeliveryServicesRequiredCapability{
+			DeliveryServiceID:  helperGetDeliveryServiceID(t, td.XMLID),
+			RequiredCapability: td.RequiredCapability,
+		}
+
+		_, _, err := TOSession.CreateDeliveryServicesRequiredCapability(c)
+		if err != nil {
+			t.Fatalf("cannot create delivery service required capability: %v", err)
+		}
 	}
 }
 
@@ -301,7 +315,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Tests that a capability cannot be made required if the DS's services do not have it assigned
 
 	// Get Delivery Capability for a DS
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("ds1"), nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 	}
@@ -313,7 +327,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// TODO: DON'T hard-code hostnames!
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
@@ -389,7 +403,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -445,7 +459,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if xmlID == nil {
 		t.Fatal("xml id must not be nil")
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*xmlID)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(*xmlID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
