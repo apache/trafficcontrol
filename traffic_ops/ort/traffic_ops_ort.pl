@@ -30,7 +30,7 @@ chomp($date);
 print "$date\n";
 
 # supported redhat/centos releases
-my %supported_el_release = ( "EL6" => 1, "EL7" => 1, "EL8" = 1);
+my %supported_el_release = ( "EL6" => 1, "EL7" => 1, "EL8" => 1);
 
 my $dispersion = 300;
 my $retries = 5;
