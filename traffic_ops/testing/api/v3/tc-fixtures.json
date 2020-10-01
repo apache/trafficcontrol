@@ -3172,6 +3172,10 @@
             "serverCapability": "disk"
         },
         {
+            "serverHostName": "dtrc-edge-01",
+            "serverCapability": "foo"
+        },
+        {
             "serverHostName": "dtrc-edge-02",
             "serverCapability": "ram"
         },
