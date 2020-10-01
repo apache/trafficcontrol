@@ -177,7 +177,7 @@ The State Combiner is a microthread started in ``traffic_monitor/manager/manager
 
 Aggregated Stat Data
 --------------------
-The Stat pipeline Manager is responsible for aggregating stats from all :term:`cache server` s, into :term:`Delivery Services` statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
+The Stat pipeline Manager is responsible for aggregating stats from all :term:`Edge-tier cache servers`, into :term:`Delivery Services` statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
 
 Aggregated Availability Data
 ----------------------------
