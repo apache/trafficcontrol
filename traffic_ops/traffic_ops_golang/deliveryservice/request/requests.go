@@ -22,7 +22,6 @@ package request
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"time"
@@ -34,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -274,7 +274,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, error, int) {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 
-	st := tc.RequestStatus(0)
+	st := tc.RequestStatusInvalid
 	if err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *req.ID).Scan(&st); err != nil {
 		return nil, errors.New("dsr delete querying status: " + err.Error()), http.StatusBadRequest
 	}

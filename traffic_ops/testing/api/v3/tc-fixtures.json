@@ -223,6 +223,11 @@
             "dnssecEnabled": false,
             "domainName": "test.cdn4.net",
             "name": "cdn4"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.bar.net",
+            "name": "bar"
         }
     ],
     "deliveryServiceRequestComments": [
