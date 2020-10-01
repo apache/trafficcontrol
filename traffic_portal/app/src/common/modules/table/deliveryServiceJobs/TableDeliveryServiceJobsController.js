@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope, $state, $location, $uibModal, locationUtils, jobService, messageModel) {
+var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope, $state, $location, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
 
 	$scope.deliveryService = deliveryService;
 
 	$scope.dsJobs = jobs;
+
+	$scope.getHourOffsetDate = dateUtils.getHourOffsetDate;
 
 	$scope.createJob = function() {
 		$location.path($location.path() + '/new');
@@ -61,7 +63,6 @@ var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope,
 		});
 	};
 
-
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -78,5 +79,5 @@ var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope,
 
 };
 
-TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'jobService', 'messageModel'];
+TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'jobService', 'messageModel', 'dateUtils'];
 module.exports = TableDeliveryServiceJobsController;

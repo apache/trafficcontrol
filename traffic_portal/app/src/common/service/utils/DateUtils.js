@@ -131,6 +131,10 @@ var DateUtils = function() {
 		return moment(date).fromNow();
 	}
 
+	this.getHourOffsetDate = function(date, hourOffset) {
+		return moment(date).add(hourOffset, 'hours').utc();
+	}
+
 };
 
 DateUtils.$inject = [];

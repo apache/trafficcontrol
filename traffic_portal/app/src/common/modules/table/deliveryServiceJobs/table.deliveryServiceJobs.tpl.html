@@ -37,7 +37,8 @@ under the License.
             <tr class="headings">
                 <th>Asset URL</th>
                 <th>Parameters</th>
-                <th>Start Time</th>
+                <th>Start</th>
+                <th>Expires</th>
                 <th>Created By</th>
                 <th></th>
             </tr>
@@ -46,7 +47,8 @@ under the License.
             <tr ng-repeat="j in ::dsJobs">
                 <td data-search="^{{::j.assetUrl}}$">{{::j.assetUrl}}</td>
                 <td data-search="^{{::j.parameters}}$">{{::j.parameters}}</td>
-                <td data-search="^{{::j.startTime}}$">{{::j.startTime}}</td>
+                <td>{{getHourOffsetDate(j.startTime, 0)}}</td>
+                <td>{{getHourOffsetDate(j.startTime, j.parameters.slice('TTL:'.length, j.parameters.length-1))}}</td>
                 <td data-search="^{{::j.createdBy}}$">{{::j.createdBy}}</td>
                 <td style="text-align: right;">
                     <a class="link action-link" title="Delete Invalidation Request" ng-click="confirmRemoveJob(j, $event)"><i class="fa fa-sm fa-trash"></i></a>

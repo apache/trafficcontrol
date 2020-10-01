@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel) {
+var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
 
 	$scope.jobs = jobs;
+
+	$scope.getHourOffsetDate = dateUtils.getHourOffsetDate;
 
 	$scope.createJob = function() {
 		locationUtils.navigateToPath('/jobs/new');
@@ -64,8 +66,8 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
-				{ "width": "5%", "targets": 5 },
-				{ 'orderable': false, 'targets': 5 }
+				{ "width": "5%", "targets": 6 },
+				{ 'orderable': false, 'targets': 6 }
 			],
 			"aaSorting": []
 		});
@@ -73,5 +75,5 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 
 };
 
-TableJobsController.$inject = ['jobs', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel'];
+TableJobsController.$inject = ['jobs', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel', 'dateUtils'];
 module.exports = TableJobsController;
