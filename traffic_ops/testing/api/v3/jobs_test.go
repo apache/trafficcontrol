@@ -97,7 +97,7 @@ func JobCollisionWarningTest(t *testing.T) {
 
 	alerts, _, err := TOSession.CreateInvalidationJob(newJob)
 	if err != nil {
-		t.Fatal("expected invalidation job create to succeed")
+		t.Fatal("expected invalidation job create to succeed: %v", err)
 	}
 
 	if len(alerts.Alerts) != 2 {
@@ -120,7 +120,7 @@ func JobCollisionWarningTest(t *testing.T) {
 		StartTime:       &newTime,
 	})
 	if err != nil {
-		t.Fatal("expected invalidation job update to succeed")
+		t.Fatalf("expected invalidation job update to succeed: %v", err)
 	}
 
 	if len(alerts.Alerts) != 2 {
