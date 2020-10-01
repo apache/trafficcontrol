@@ -83,6 +83,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
+- When creating invalidation jobs through TO/TP, if an identical regex is detected that overlaps its time, then warnings
+will be returned indicating that overlap exists.
 - Changed Traffic Portal to use Traffic Ops API v3
 - Changed Traffic Portal to use the more performant and powerful ag-grid for all server tables.
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
