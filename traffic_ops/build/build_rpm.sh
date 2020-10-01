@@ -89,6 +89,7 @@ function initBuildArea() {
 	to_ort_dest=$(createSourceDir traffic_ops_ort)
 	cp -p ort/traffic_ops_ort.pl "$to_ort_dest"
 	cp -p ort/supermicro_udev_mapper.pl "$to_ort_dest"
+	cp -p build/atstccfg.logrotate "$to_ort_dest"
 	mkdir -p "${to_ort_dest}/atstccfg"
 	cp -R -p ort/atstccfg/* "${to_ort_dest}/atstccfg"
 

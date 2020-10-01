@@ -55,7 +55,7 @@ cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUIL
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
 src=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
-cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
 touch ${RPM_BUILD_ROOT}/var/log/ort/atstccfg.log
 cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 
