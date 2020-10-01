@@ -18,6 +18,7 @@ package v3
 import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ func TestCDNs(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestCDNs(t)
 		UpdateTestCDNs(t)
 		GetTestCDNs(t)
 		GetTestCDNsIMSAfterChange(t, header)
@@ -90,6 +92,22 @@ func CreateTestCDNs(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestCDNs(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, _ := TOSession.GetCDNsWithHdr(header)
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestCDNs(t *testing.T) {
