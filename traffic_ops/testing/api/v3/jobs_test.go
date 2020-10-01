@@ -69,7 +69,7 @@ func CreateTestJobs(t *testing.T) {
 
 func JobCollisionWarningTest(t *testing.T) {
 	startTime := tc.Time{
-		Time:  time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC),
+		Time:  time.Now().Add(time.Hour),
 		Valid: true,
 	}
 	firstJob := tc.InvalidationJobInput{
@@ -112,13 +112,30 @@ func JobCollisionWarningTest(t *testing.T) {
 		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
 	}
 
+	jobs, _, err := TOSession.GetInvalidationJobs(util.InterfacePtr(*testData.DeliveryServices[0].XMLID), nil)
+	if err != nil {
+		t.Fatalf("unable to get invalidation jobs: %v", err)
+	}
+
+	var realJob *tc.InvalidationJob
+	for i, job := range jobs {
+		d := (*newJob.DeliveryService)
+		y := d.(*string)
+		diff := newJob.StartTime.Time.Sub(newJob.StartTime.Time)
+		if *job.DeliveryService == *y && *job.CreatedBy == "admin" &&
+			diff.Seconds() == 0 {
+			realJob = &jobs[i]
+			break
+		}
+	}
+
+	if realJob == nil || *realJob.ID == 0 {
+		t.Fatal("could not find new job")
+	}
+
 	newTime.Time = startTime.Time.Add(time.Hour * 2)
-	alerts, _, err = TOSession.UpdateInvalidationJob(tc.InvalidationJob{
-		AssetURL:        newJob.Regex,
-		CreatedBy:       util.StrPtr("admin"),
-		DeliveryService: testData.DeliveryServices[0].XMLID,
-		StartTime:       &newTime,
-	})
+	realJob.StartTime = &newTime
+	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob)
 	if err != nil {
 		t.Fatalf("expected invalidation job update to succeed: %v", err)
 	}

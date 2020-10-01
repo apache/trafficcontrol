@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope, $controller, jobService, messageModel, locationUtils) {
+var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope, $controller, jobService, messageModel, locationUtils, serverUtils) {
 
 	// extends the FormDeliveryServiceJobController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceJobController', { deliveryService: deliveryService, job: job, $scope: $scope }));
@@ -34,8 +34,8 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 		job.deliveryService = deliveryService.xmlId;
 		jobService.createJob(job)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery Service Invalidation Request Created' } ], true);
+				function(result) {
+					messageModel.setMessages(serverUtils.convertResponseToMessages(result), true);
 					locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/jobs');
 				},
 				function(fault) {
@@ -46,5 +46,5 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 
 };
 
-FormNewDeliveryServiceJobController.$inject = ['deliveryService', 'job', '$scope', '$controller', 'jobService', 'messageModel', 'locationUtils'];
+FormNewDeliveryServiceJobController.$inject = ['deliveryService', 'job', '$scope', '$controller', 'jobService', 'messageModel', 'locationUtils', 'serverUtils'];
 module.exports = FormNewDeliveryServiceJobController;
