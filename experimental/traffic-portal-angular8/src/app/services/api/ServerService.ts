@@ -42,7 +42,7 @@ export class ServerService extends APIService {
 	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
 	 */
 	public getServerChecks(id?: number): Observable<Servercheck | Servercheck[]> {
-		const path = `/api/${this.API_VERSION}/servers/checks`;
+		const path = `/api/${this.API_VERSION}/servercheck`;
 		return this.get(path).pipe(map(
 			r => {
 				const response = r.body.response as Servercheck[];
