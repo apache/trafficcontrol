@@ -49,14 +49,14 @@ func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegr
 			log.Infof("CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
 		}
-		deliveryServices, ok := serverDs[cache]
-		if !ok {
-			log.Infof("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
-			continue
-		}
 		cacheType, ok := serverTypes[cache]
 		if !ok {
 			log.Infof("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
+			continue
+		}
+		deliveryServices, ok := serverDs[cache]
+		if !ok && cacheType != tc.CacheTypeMid {
+			log.Infof("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
 
