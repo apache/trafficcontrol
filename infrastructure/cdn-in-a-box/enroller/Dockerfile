@@ -15,7 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2 AS enroller-builder
+FROM debian:buster AS enroller-builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        wget && \
+    apt-get clean
+
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go.tar.gz
+ENV GOPATH=/go
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
@@ -27,9 +42,7 @@ COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/inf
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
 RUN go clean && go get -v && go build
 
-
-
-FROM debian:stretch
+FROM debian:buster
 
 RUN apt-get update && apt-get install -y \
         netcat curl dnsutils net-tools \
