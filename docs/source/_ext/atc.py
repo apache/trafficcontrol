@@ -57,14 +57,15 @@ from docutils.parsers.rst.states import Inliner
 from typing import Tuple, List
 
 def atc_go_version(unused_typ: str,
-               unused_rawtext: str,
-               unused_text: str,
-               unused_lineno: int,
-               unused_inliner: Inliner,
-               options=None,
-               content=None) -> Tuple[List[strong], list]:
+                   unused_rawtext: str,
+                   unused_text: str,
+                   unused_lineno: int,
+                   unused_inliner: Inliner,
+                   options=None,
+                   content=None) -> Tuple[List[strong], list]:
 	go_version_file = os.path.join(os.path.dirname(__file__), '../../../GO_VERSION')
-	go_version = open(file=go_version_file).read()
+	with open(file=go_version_file) as go_version_file:
+		go_version = go_version_file.read()
 	major_minor_version = re.match(pattern=r'\d+\.\d+', string=go_version).group()
 	strong_node = nodes.strong(major_minor_version, major_minor_version)
 	return [strong_node], []
