@@ -96,10 +96,10 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			tooltip: defaultTooltip
 		},
 		rowClassRules: {
-			'active': function(params) {
+			'active-job': function(params) {
 				return new Date(params.data.expires) > new Date();
 			},
-			'expired': function(params) {
+			'expired-job': function(params) {
 				return new Date(params.data.expires) <= new Date();
 			}
 		},

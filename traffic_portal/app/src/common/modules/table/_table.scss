@@ -209,11 +209,11 @@ div.dropdown button.menu-item-button {
     }
 }
 
-.ag-theme-alpine {
-  .ag-row.active {
+.jobs-table {
+  .ag-row.active-job {
     background-color: #dff0d8;
   }
-  .ag-row.expired {
+  .ag-row.expired-job {
     background-color: #fcfcfc;
     .ag-cell {
       text-decoration: line-through;
