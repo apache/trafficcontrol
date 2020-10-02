@@ -132,7 +132,6 @@ func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 	if err != nil {
 		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest, nil
 	}
-	//api.Sort(v.APIInfo(), "username")
 	_, exists, err := getFedNameByID(v.APIInfo().Tx.Tx, fedID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError, nil

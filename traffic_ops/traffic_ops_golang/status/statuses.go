@@ -101,7 +101,7 @@ func (status TOStatus) Validate() error {
 
 func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	errCode := http.StatusOK
-	api.Sort(st.APIInfo(), "name")
+	api.DefaultSort(st.APIInfo(), "name")
 	readVals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, st, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil

@@ -110,7 +110,7 @@ func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]in
 		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
 	}
 
-	api.Sort(serviceCategory.APIInfo(), "name")
+	api.DefaultSort(serviceCategory.APIInfo(), "name")
 	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil

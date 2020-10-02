@@ -169,7 +169,7 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 }
 
 func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.Sort(v.APIInfo(), "xmlId")
+	api.DefaultSort(v.APIInfo(), "xmlId")
 	return api.GenericRead(h, v, useIMS)
 }
 

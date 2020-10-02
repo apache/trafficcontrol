@@ -156,7 +156,7 @@ func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.Sort(pp.APIInfo(), "parameter")
+	api.DefaultSort(pp.APIInfo(), "parameter")
 	return api.GenericRead(h, pp, useIMS)
 }
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }

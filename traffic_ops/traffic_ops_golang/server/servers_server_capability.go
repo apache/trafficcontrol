@@ -126,7 +126,7 @@ func (ssc *TOServerServerCapability) Update() (error, error, int) {
 }
 
 func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.Sort(ssc.APIInfo(), "server")
+	api.DefaultSort(ssc.APIInfo(), "server")
 	return api.GenericRead(h, ssc, useIMS)
 }
 func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {

@@ -17,15 +17,18 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"sort"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
+		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
 	})
@@ -61,6 +64,29 @@ func CreateTestCDNFederations(t *testing.T) {
 		} else {
 			fedIDs = append(fedIDs, *data.Response.ID)
 		}
+	}
+}
+
+func SortTestCDNFederations(t *testing.T) {
+	//var header http.Header
+	var sortedList []string
+
+	//fmt.Println(testData.CDNs[0].Name)
+	//TODO: Fix this
+	//for i, f := range fedIDs {
+	//	fmt.Println(testData.CDNs[i].Name, f)
+	//	resp, _, err := TOSession.GetCDNFederationsByNameWithHdr(testData.CDNs[i].Name, header)
+	//if err != nil {
+	//	t.Fatalf("Expected no error, but got %v", err.Error())
+	//}
+	//	sortedList = append(sortedList, *resp.Response[0].CName)
+	//}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

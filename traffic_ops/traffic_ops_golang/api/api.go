@@ -995,8 +995,8 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	}
 }
 
-// Sorting alphabetically for a given readertype (eg: TOCDN, TODeliveryService, TOOrigin etc).
-func Sort(readerType *APIInfo, param string) {
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
 	if _, ok := readerType.Params["orderby"]; !ok {
 		readerType.Params["orderby"] = param
 	}

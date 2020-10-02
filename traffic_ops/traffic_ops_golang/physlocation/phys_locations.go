@@ -101,7 +101,7 @@ func (pl *TOPhysLocation) Validate() error {
 }
 
 func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.Sort(pl.APIInfo(), "name")
+	api.DefaultSort(pl.APIInfo(), "name")
 	return api.GenericRead(h, pl, useIMS)
 }
 func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {

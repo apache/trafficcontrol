@@ -102,7 +102,7 @@ func (v *TOServerCapability) Validate() error {
 }
 
 func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.Sort(v.APIInfo(), "name")
+	api.DefaultSort(v.APIInfo(), "name")
 	return api.GenericRead(h, v, useIMS)
 }
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {

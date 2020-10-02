@@ -131,7 +131,7 @@ func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, err
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK, nil
 	}
-	api.Sort(ten.APIInfo(), "name")
+	api.DefaultSort(ten.APIInfo(), "name")
 	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
