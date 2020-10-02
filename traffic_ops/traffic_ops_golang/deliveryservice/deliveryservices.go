@@ -266,6 +266,14 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
+	if ds.Topology != nil {
+		if ok, err := dbhelpers.TopologyExistsString(tx, *ds.Topology); err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking topology existence: %v", err)
+		} else if !ok {
+			return nil, http.StatusConflict, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+		}
+	}
+
 	resultRows, err := tx.Query(insertQuery(),
 		&ds.Active,
 		&ds.AnonymousBlockingEnabled,
