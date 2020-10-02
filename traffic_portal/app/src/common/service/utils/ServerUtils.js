@@ -67,24 +67,6 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 		);
 	};
 
-	// Takes a response object from TO and converts all of its alerts to messages acceptable by the messageModel
-	this.convertResponseToMessages = function(response) {
-		let messages = [];
-		if (response.data !== undefined && response.data.alerts !== undefined) {
-			for (let i = 0; i < response.data.alerts.length; ++i) {
-				let text = response.data.alerts[i].text;
-				text = text.charAt(0).toUpperCase() + text.slice(1);
-				messages.push({
-					level: response.data.alerts[i].level,
-					text: text
-				});
-			}
-		} else {
-			console.warn("Malformed response object: " + response);
-		}
-		return messages;
-	};
-
 	/**
 	 * Converts a server's interfaces into legacy IP information. (primarily
 	 * for use in tables)
