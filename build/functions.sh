@@ -107,6 +107,14 @@ getBuildNumber() {
 }
 
 # ---------------------------------------
+getGoVersion() {
+	local directory="$1"
+	local go_version_file="$directory/GO_VERSION"
+	[ -r "$go_version_file" ] || { echo "Could not read $go_version_file: $!"; return 1; }
+	cat "$go_version_file"
+}
+
+# ---------------------------------------
 getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
@@ -171,13 +179,14 @@ checkEnvironment() {
 	TC_VERSION='' BUILD_NUMBER='' RHEL_VERSION='' RPMBUILD='' DIST=''
 	TC_VERSION="$(getVersion "$TC_DIR")"
 	BUILD_NUMBER="$(getBuildNumber)"
+	GO_VERSION="$(getGoVersion "$TC_DIR")"
 	RHEL_VERSION="$(getRhelVersion)"
 	WORKSPACE="${WORKSPACE:-$TC_DIR}"
 	RPMBUILD="$WORKSPACE/rpmbuild"
 	GOOS="${GOOS:-linux}"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	DIST="$WORKSPACE/dist"
-	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD GOOS RPM_TARGET_OS DIST
+	export TC_VERSION BUILD_NUMBER GO_VERSION RHEL_VERSION WORKSPACE RPMBUILD GOOS RPM_TARGET_OS DIST
 
 	mkdir -p "$DIST" || { echo "Could not create ${DIST}: ${?}"; return 1; }
 
@@ -220,6 +229,7 @@ buildRpm() {
 		(cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
 				--define "traffic_control_version $TC_VERSION" \
+				--define "go_version $GO_VERSION" \
 				--define "commit $(getCommit)" \
 				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				--define "_target_os $RPM_TARGET_OS" \
