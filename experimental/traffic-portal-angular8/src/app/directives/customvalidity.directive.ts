@@ -28,7 +28,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * the input changes. An empty string signifies "valid", whereas any other
 	 * string should be a description of why the input is invalid.
 	 */
-	@Input("validity") public validity: Observable<string>;
+	@Input() public validity: Observable<string>;
 
 	private subscription: Subscription;
 

@@ -14,7 +14,7 @@
 
 /**
  * This file is for modeling and functionality related to Server objects
-*/
+ */
 
 /** IPAddress is a single IP address of a single network interface of a server. */
 export interface IPAddress {
@@ -130,21 +130,41 @@ export interface Server {
 
 }
 
+/**
+ * Servercheck models the data returned by the /servercheck API endpoint.
+ */
 export interface Servercheck {
-	profile: string;
-	cacheGroup: string;
-	checks?: {[key:string]: number};
-	updPending: boolean;
-	revalPending: boolean;
-	hostName: string;
+	/** contains the server's Status */
 	adminState: string;
+	/** the name of the Cache Group to which the server belongs */
+	cacheGroup: string;
+	/**
+	 * Checks emulates a map of check names to their numbers. All values are
+	 * numbers, but some may express boolean concepts; for example, the ORT
+	 * check uses 1 to represent "true" and any other value indicates "false".
+	 */
+	checks?: Record<string, number>;
+	/** the server's hostname */
+	hostName: string;
+	/** the server's ID */
 	id: number;
+	/** the name of the server's Profile */
+	profile: string;
+	/** whether or not the server has pending revalidations */
+	revalPending: boolean;
+	/** the name of the server's Type */
 	type: string;
+	/** whether or not the server has updates pending */
+	updPending: boolean;
 
-	checkMap(): Map<string, number|boolean>;
+	/** Builds a true Map from the Servercheck's "checks" property */
+	checkMap(): Map<string, number | boolean>;
 }
 
-export function checkMap(this: Servercheck): Map<string, number|boolean> {
+/**
+ * Builds a true Map from the Servercheck's "checks" property.
+ */
+export function checkMap(this: Servercheck): Map<string, number | boolean> {
 	const ret = new Map();
 	if (!this.checks) {
 		return ret;
@@ -158,6 +178,7 @@ export function checkMap(this: Servercheck): Map<string, number|boolean> {
 			case "10G6":
 			case "MTU":
 				ret.set(key, value === 1);
+				break;
 			default:
 				ret.set(key, value);
 				break;

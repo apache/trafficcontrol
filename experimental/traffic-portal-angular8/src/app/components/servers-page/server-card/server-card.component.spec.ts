@@ -11,11 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { ServerCardComponent } from './server-card.component';
+import { ServerCardComponent } from "./server-card.component";
 
-describe('ServerCardComponent', () => {
+describe("ServerCardComponent", () => {
 	let component: ServerCardComponent;
 	let fixture: ComponentFixture<ServerCardComponent>;
 
@@ -32,7 +32,7 @@ describe('ServerCardComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
 });

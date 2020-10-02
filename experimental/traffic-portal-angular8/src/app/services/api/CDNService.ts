@@ -11,16 +11,20 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
 
-import { APIService } from './apiservice';
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
-import { CDN } from '../../models';
+import { APIService } from "./apiservice";
 
-@Injectable({providedIn: 'root'})
+import { CDN } from "../../models";
+
+/**
+ * CDNService expose API functionality relating to CDNs.
+ */
+@Injectable({providedIn: "root"})
 export class CDNService extends APIService {
 	/**
 	 * Gets one or all CDNs from Traffic Ops
@@ -28,11 +32,11 @@ export class CDNService extends APIService {
 	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
-	*/
-	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN> {
-		const path = '/api/' + this.API_VERSION + '/cdns';
+	 */
+	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN | undefined> {
+		const path = `/api/${this.API_VERSION}/cdns`;
 		if (id) {
-			return this.get(path + '?id=' + String(id)).pipe(map(
+			return this.get(`${path}?id=${id}`).pipe(map(
 				r => {
 					for (const c of (r.body.response as Array<CDN>)) {
 						if (c.id === id) {

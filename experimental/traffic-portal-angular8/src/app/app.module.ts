@@ -24,9 +24,6 @@ import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { Routes, RouterModule } from "@angular/router";
 
-import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
-
-
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { AlertComponent } from "./components/alert/alert.component";
@@ -38,21 +35,22 @@ import { InvalidationJobsComponent } from "./components/invalidation-jobs/invali
 import { LoadingComponent } from "./components/loading/loading.component";
 import { LoginComponent } from "./components/login/login.component";
 import { NewDeliveryServiceComponent } from "./components/new-delivery-service/new-delivery-service.component";
+import { ServerCardComponent } from "./components/servers-page/server-card/server-card.component";
+import { ServersPageComponent } from "./components/servers-page/servers-page.component";
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
+import { SSHCellRendererComponent } from "./components/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TpHeaderComponent } from "./components/tp-header/tp-header.component";
 import { UserCardComponent } from "./components/user-card/user-card.component";
 import { UsersComponent } from "./components/users/users.component";
-import { ServersPageComponent } from "./components/servers-page/servers-page.component";
-import { ServerCardComponent } from "./components/servers-page/server-card/server-card.component";
 import { CustomvalidityDirective } from "./directives/customvalidity.directive";
 import { LinechartDirective } from "./directives/linechart.directive";
 import { OpenableDirective } from "./directives/openable.directive";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
 import { Chart } from "chart.js";
-import { SSHCellRendererComponent } from './components/table-components/ssh-cell-renderer/ssh-cell-renderer.component';
 
 Chart.plugins.register({
 	beforeDraw: (chartInstance: any) => {

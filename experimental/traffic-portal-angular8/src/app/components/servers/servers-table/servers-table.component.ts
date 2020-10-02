@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Observable } from "rxjs";
 
-import { Subscription } from "rxjs";
 
 import { Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
@@ -30,11 +30,16 @@ import { SSHCellRendererComponent } from "../../table-components/ssh-cell-render
 // 	}
 // }
 
+interface UpdateCellRendererOptions {
+	/** the value being rendered */
+	value: boolean;
+}
+
 class UpdateCellRenderer {
 	private eGui: HTMLElement;
 
 	/** Input parameters used to set up the element that will be returned. */
-	public init(params: {value: boolean}): void {
+	public init(params: UpdateCellRendererOptions): void {
 		this.eGui = document.createElement("I");
 		this.eGui.setAttribute("aria-hidden", "true");
 		this.eGui.setAttribute("title", String(params.value));
@@ -59,209 +64,212 @@ class UpdateCellRenderer {
 export class ServersTableComponent implements OnInit, OnDestroy {
 
 	/** All of the servers which should appear in the table. */
-	public servers: Array<Server>;
+	public servers: Observable<Array<Server>>;
+	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
-			headerName: "Cache Group",
 			field: "cachegroup",
+			headerName: "Cache Group",
 			hide: false
 		},
 		{
-			headerName: "CDN",
 			field: "cdnName",
+			headerName: "CDN",
 			hide: false
 		},
 		{
-			headerName: "Domain",
 			field: "domainName",
+			headerName: "Domain",
 			hide: false
 		},
 		{
-			headerName: "Host",
 			field: "hostName",
+			headerName: "Host",
 			hide: false
 		},
 		{
-			headerName: "HTTPS Port",
 			field: "httpsPort",
+			filter: "agNumberColumnFilter",
+			headerName: "HTTPS Port",
 			hide: true,
-			filter: "agNumberColumnFilter"
 		},
 		{
-			headerName: "Hash ID",
 			field: "xmppId",
+			headerName: "Hash ID",
 			hide: true
 		},
 		{
-			headerName: "ID",
 			field: "id",
+			filter: "agNumberColumnFilter",
+			headerName: "ID",
 			hide: true,
-			filter: "agNumberColumnFilter"
 		},
 		{
-			headerName: "ILO IP Address",
+			cellRenderer: "sshCellRenderer",
 			field: "iloIpAddress",
+			headerName: "ILO IP Address",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
 			onCellClicked: null
 		},
 		{
-			headerName: "ILO IP Gateway",
+			cellRenderer: "sshCellRenderer",
 			field: "iloIpGateway",
+			headerName: "ILO IP Gateway",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
 			onCellClicked: null
 		},
 		{
-			headerName: "ILO IP Netmask",
 			field: "iloIpNetmask",
+			headerName: "ILO IP Netmask",
 			hide: true
 		},
 		{
-			headerName: "ILO Username",
 			field: "iloUsername",
+			headerName: "ILO Username",
 			hide: true
 		},
 		{
-			headerName: "Interface Name",
 			field: "interfaceName",
+			headerName: "Interface Name",
 			hide: true
 		},
 		{
-			headerName: "IPv6 Address",
 			field: "ip6Address",
+			headerName: "IPv6 Address",
 			hide: false
 		},
 		{
-			headerName: "IPv6 Gateway",
 			field: "ip6Gateway",
+			headerName: "IPv6 Gateway",
 			hide: true
 		},
 		{
-			headerName: "Last Updated",
 			field: "lastUpdated",
+			filter: "agDateColumnFilter",
+			headerName: "Last Updated",
 			hide: true,
-			filter: "agDateColumnFilter"
 		},
 		{
-			headerName: "Mgmt IP Address",
 			field: "mgmtIpAddress",
+			headerName: "Mgmt IP Address",
 			hide: true
 		},
 		{
-			headerName: "Mgmt IP Gateway",
+			cellRenderer: "sshCellRenderer",
 			field: "mgmtIpGateway",
-			hide: true,
 			filter: true,
-			cellRenderer: "sshCellRenderer",
+			headerName: "Mgmt IP Gateway",
+			hide: true,
 			onCellClicked: null
 		},
 		{
-			headerName: "Mgmt IP Netmask",
+			cellRenderer: "sshCellRenderer",
 			field: "mgmtIpNetmask",
-			hide: true,
 			filter: true,
-			cellRenderer: "sshCellRenderer",
+			headerName: "Mgmt IP Netmask",
+			hide: true,
 			onCellClicked: null
 		},
 		{
-			headerName: "Network Gateway",
+			cellRenderer: "sshCellRenderer",
 			field: "ipGateway",
-			hide: true,
 			filter: true,
-			cellRenderer: "sshCellRenderer",
+			headerName: "Network Gateway",
+			hide: true,
 			onCellClicked: null
 		},
 		{
-			headerName: "Network IP",
+			cellRenderer: "sshCellRenderer",
 			field: "ipAddress",
-			hide: false,
 			filter: true,
-			cellRenderer: "sshCellRenderer",
+			headerName: "Network IP",
+			hide: false,
 			onCellClicked: null
 		},
 		{
-			headerName: "Network MTU",
 			field: "interfaceMtu",
+			filter: "agNumberColumnFilter",
+			headerName: "Network MTU",
 			hide: true,
-			filter: "agNumberColumnFilter"
 		},
 		{
-			headerName: "Network Subnet",
 			field: "ipNetmask",
+			headerName: "Network Subnet",
 			hide: true
 		},
 		{
-			headerName: "Offline Reason",
 			field: "offlineReason",
+			headerName: "Offline Reason",
 			hide: true
 		},
 		{
-			headerName: "Phys Location",
 			field: "physLocation",
+			headerName: "Phys Location",
 			hide: true
 		},
 		{
-			headerName: "Profile",
 			field: "profile",
+			headerName: "Profile",
 			hide: false
 		},
 		{
-			headerName: "Rack",
 			field: "rack",
+			headerName: "Rack",
 			hide: true
 		},
 		{
-			headerName: "Reval Pending",
+			cellRenderer: "updateCellRenderer",
 			field: "revalPending",
+			filter: true,
+			headerName: "Reval Pending",
 			hide: true,
-			filter: true,
-			cellRenderer: "updateCellRenderer"
 		},
 		{
-			headerName: "Router Hostname",
 			field: "routerHostName",
+			headerName: "Router Hostname",
 			hide: true
 		},
 		{
-			headerName: "Router Port Name",
 			field: "routerPortName",
+			headerName: "Router Port Name",
 			hide: true
 		},
 		{
-			headerName: "Status",
 			field: "status",
+			headerName: "Status",
 			hide: false
 		},
 		{
-			headerName: "TCP Port",
 			field: "tcpPort",
+			headerName: "TCP Port",
 			hide: true
 		},
 		{
-			headerName: "Type",
 			field: "type",
+			headerName: "Type",
 			hide: false
 		},
 		{
-			headerName: "Update Pending",
+			cellRenderer: "updateCellRenderer",
 			field: "updPending",
-			hide: false,
 			filter: true,
-			cellRenderer: "updateCellRenderer"
+			headerName: "Update Pending",
+			hide: false,
 		}
 	];
 
+	/** Passed as components to the ag-grid API */
 	public components = {
 		sshCellRenderer: SSHCellRendererComponent,
 		// updateCellRenderer: new UpdateCellRenderer()
 	};
 
-	public get filteredServers(): Array<Server> {
-		return this.servers.filter(x=>this.fuzzControl.value === "" || x.hostName.includes(this.fuzzControl.value));
-	}
+	/** a list of all servers that match the current filter */
+	// public get filteredServers(): Array<Server> {
+	// 	return this.servers.filter(x=>this.fuzzControl.value === "" || x.hostName.includes(this.fuzzControl.value));
+	// }
 
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl;
@@ -269,17 +277,18 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 	// private userSubscription: Subscription;
 
 	constructor (private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
-		this.servers = [];
+		// this.servers = [];
 		this.fuzzControl = new FormControl("");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.api.getServers().subscribe(
-			(r: Array<Server>) => {
-				this.servers = r || [];
-			}
-		);
+		this.servers = this.api.getServers();
+		// this.api.getServers().subscribe(
+		// 	(r: Array<Server>) => {
+		// 		this.servers = r || [];
+		// 	}
+		// );
 
 		// this.userSubscription = this.auth.currentUser.subscribe(
 		// 	u => {

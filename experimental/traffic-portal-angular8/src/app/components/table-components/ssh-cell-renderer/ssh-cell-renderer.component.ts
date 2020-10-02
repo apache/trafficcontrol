@@ -1,9 +1,18 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
+import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 
 import { Subscription } from "rxjs";
 
 import { AuthenticationService } from "../../../services";
 
+interface InitParams {
+	/** the cell's value */
+	value: string;
+}
+
+/**
+ * SSHCellRendererComponent is an AG-Grid cell renderer that provides ssh:// links as content.
+ */
 @Component({
 	selector: "ssh-cell-renderer",
 	styleUrls: ["./ssh-cell-renderer.component.scss"],
@@ -15,23 +24,30 @@ export class SSHCellRendererComponent implements OnInit, OnDestroy {
 	private username = "";
 
 	/** The IP address or hostname to which the SSH link will point. */
-	public value = "";
+	public get value(): string {
+		return this.val;
+	}
+	private val = "";
 
 	/** The SSH URL to use. */
-	public get href(): string {
-		return `ssh://${this.username}@${this.value}`;
+	public get href(): SafeUrl {
+		const url = `ssh://${this.username}@${this.value}`;
+		return this.sanitizer.bypassSecurityTrustUrl(url);
 	}
 
-	constructor(private readonly auth: AuthenticationService) { }
+	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) { }
 
-	public init(params: {value: string}): void {
-		this.value = params.value;
+	/** Called by the AG-Grid API at initalization */
+	public init(params: InitParams): void {
+		this.val = params.value;
 	}
 
-	public agInit(params) {
-		console.info(params);
+	/** called after ag-grid is initalized */
+	public agInit(params: unknown): void {
+		console.log(params);
 	}
 
+	/** Called when the Angular view is initialized, sets up the username for the SSH links */
 	public ngOnInit(): void {
 		this.user = this.auth.currentUser.subscribe(
 			u => {
@@ -43,6 +59,7 @@ export class SSHCellRendererComponent implements OnInit, OnDestroy {
 		);
 	}
 
+	/** Cleans up resources when the component is no longer rendered. */
 	public ngOnDestroy(): void {
 		this.user.unsubscribe();
 	}

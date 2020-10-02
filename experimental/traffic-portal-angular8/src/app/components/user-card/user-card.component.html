@@ -18,7 +18,7 @@ limitations under the License.
 			<h2>{{user.fullName ? user.fullName : user.username}}&nbsp;({{user.id}})</h2>
 			<p *ngIf="user.fullName">{{user.username}}</p>
 			<p>{{user.roleName}}&nbsp;({{user.role}})</p>
-			<p><time dateTime="{{user.lastUpdated.toISOString()}}">{{user.lastUpdated.toLocaleString()}}</time></p>
+			<p *ngIf="user.lastUpdated"><time dateTime="{{user.lastUpdated.toISOString()}}">{{user.lastUpdated.toLocaleString()}}</time></p>
 			<details *ngIf="user.publicSshKey">
 				<summary>Public SSH Key</summary>
 				<pre>

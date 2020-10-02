@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import { Observable, of } from "rxjs";
@@ -21,18 +21,15 @@ import { map, mergeAll, reduce } from "rxjs/operators";
 import { APIService } from "./apiservice";
 
 import {
-	Capability,
 	CDN,
 	DataPoint,
 	DataSet,
 	DataSetWithSummary,
 	DeliveryService,
 	InvalidationJob,
-	Role,
 	Server,
 	TPSData,
-	Type,
-	User
+	Type
 } from "../../models";
 
 function constructDataSetFromResponse (r: any): DataSetWithSummary {
@@ -84,7 +81,9 @@ function constructDataSetFromResponse (r: any): DataSetWithSummary {
 	} as DataSetWithSummary;
 }
 
-
+/**
+ * DeliveryServiceService exposes API functionality related to Delivery Services.
+ */
 @Injectable({providedIn: "root"})
 export class DeliveryServiceService extends APIService {
 

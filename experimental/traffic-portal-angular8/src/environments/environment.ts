@@ -15,6 +15,6 @@
 
 /** The execution environment - development flavor. */
 export const environment = {
+	APIVersion: "3.0",
 	production: false,
-	APIVersion: "2.0"
 };

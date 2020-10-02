@@ -12,35 +12,43 @@
 * limitations under the License.
 */
 
-import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient, HttpResponse, HttpHeaders } from "@angular/common/http";
 
-import { environment } from '../../../environments/environment';
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
+import { environment } from "../../../environments/environment";
+
+/**
+ * This is the base class from which all other API classes inherit.
+ */
 export class APIService {
-	public API_VERSION: string = '2.0';
+	/**
+	 * The API version used by the service(s) - this will be overridden by the
+	 * environment if a different API version is therein found.
+	 */
+	public API_VERSION = "2.0";
 
 	protected delete (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('delete', path, data);
+		return this.do("delete", path, data);
 	}
 	protected get (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('get', path, data);
+		return this.do("get", path, data);
 	}
 	protected head (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('head', path, data);
+		return this.do("head", path, data);
 	}
 	protected options (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('options', path, data);
+		return this.do("options", path, data);
 	}
 	protected patch (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('patch', path, data);
+		return this.do("patch", path, data);
 	}
 	protected post (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('post', path, data);
+		return this.do("post", path, data);
 	}
 	protected push (path: string, data?: any): Observable<HttpResponse<any>> {
-		return this.do('push', path, data);
+		return this.do("push", path, data);
 	}
 
 	protected do (method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
@@ -58,7 +66,7 @@ export class APIService {
 		}));
 	}
 
-	constructor(private readonly http: HttpClient){
+	constructor(private readonly http: HttpClient) {
 		if (environment.APIVersion) {
 			this.API_VERSION = environment.APIVersion;
 		}

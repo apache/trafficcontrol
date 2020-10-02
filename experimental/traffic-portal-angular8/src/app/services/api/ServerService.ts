@@ -12,28 +12,48 @@
 * limitations under the License.
 */
 
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
 
-import { APIService } from './apiservice';
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
-import { Server, Servercheck, checkMap } from '../../models';
+import { APIService } from "./apiservice";
 
-@Injectable({providedIn: 'root'})
+import { Server, Servercheck, checkMap } from "../../models";
+
+/**
+ * ServerService exposes API functionality related to Servers.
+ */
+@Injectable({providedIn: "root"})
 export class ServerService extends APIService {
+	/**
+	 * Retrieves all servers.
+	 */
 	public getServers(): Observable<Array<Server>> {
-		let path = `/api/${this.API_VERSION}/servers`;
+		const path = `/api/${this.API_VERSION}/servers`;
 		return this.get(path).pipe(map(
 			r => {
-				return r.body.response as Array<Server>;
+				const servers = r.body.response as Array<Server>;
+				return (r.body.response as Array<Server>).map(
+					s => {
+						if (s.lastUpdated) {
+							// Our dates are actually strings since JSON doesn't provide a native date type.
+							// TODO: rework to use an interceptor
+							const dateStr = (s.lastUpdated as unknown) as string;
+							s.lastUpdated = new Date(dateStr.replace(" ", "T").replace(/\+00$/, "Z"));
+						}
+						return s;
+					}
+				);
 			}
 		));
 	}
 
-	public getServerChecks(): Observable<Servercheck[]>
-	public getServerChecks(id: number): Observable<Servercheck>
+	/** Fetches all server checks */
+	public getServerChecks(): Observable<Servercheck[]>;
+	/** Fetches only the server checks for the Server with the given ID */
+	public getServerChecks(id: number): Observable<Servercheck>;
 	/**
 	 * Fetches server "check" stats from Traffic Ops.
 	 * Because the filter is not implemented on the server-side, the returned

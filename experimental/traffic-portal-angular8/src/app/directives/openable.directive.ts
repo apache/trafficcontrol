@@ -24,7 +24,7 @@ import { Observable, Subscription } from "rxjs";
 })
 export class OpenableDirective implements AfterViewInit, OnDestroy {
 	/** An Observable that emits toggle states for the dialog. */
-	@Input("toggle") public toggle: Observable<boolean>;
+	@Input() public toggle: Observable<boolean>;
 
 	private subscription: Subscription;
 

@@ -12,35 +12,60 @@
 * limitations under the License.
 */
 
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
 
-import { APIService } from './apiservice';
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
-import { DeliveryService, InvalidationJob, User } from '../../models';
+import { APIService } from "./apiservice";
 
-@Injectable({providedIn: 'root'})
+import { DeliveryService, InvalidationJob, User } from "../../models";
+
+interface JobOpts {
+	/** return only the Jobs that operate on this Delivery Service */
+	deliveryService?: DeliveryService;
+	/** return only the Jobs that operate on the Delivery Service with this ID */
+	dsID?: number;
+	/** return only the Job that has this ID */
+	id?: number;
+	/** return only the Jobs that were created by this user */
+	user?: User;
+	/** return only the Jobs that were created by the user that has this ID */
+	userId?: number;
+}
+
+/**
+ * InvalidationJobService exposes API functionality related to Content Invalidation Jobs.
+ */
+@Injectable({providedIn: "root"})
 export class InvalidationJobService extends APIService {
-	public getInvalidationJobs (opts?: {id: number} |
-	                                   {userId: number} |
-	                                   {user: User} |
-	                                   {dsId: number} |
-	                                   {deliveryService: DeliveryService}): Observable<Array<InvalidationJob>> {
-		let path = '/api/' + this.API_VERSION + '/jobs';
+
+	/**
+	 * Fetches all invalidation jobs that match the passed criteria.
+	 */
+	public getInvalidationJobs (opts?: JobOpts): Observable<Array<InvalidationJob>> {
+		let path = `/api/${this.API_VERSION}/jobs`;
 		if (opts) {
-			path += '?';
-			if (opts.hasOwnProperty('id')) {
-				path += 'id=' + String((opts as {id: number}).id);
-			} else if (opts.hasOwnProperty('dsId')) {
-				path += 'dsId=' + String((opts as {dsId: number}).dsId);
-			} else if (opts.hasOwnProperty('userId')) {
-				path += 'userId=' + String((opts as {userId: number}).userId);
-			} else if (opts.hasOwnProperty('deliveryService')) {
-				path += 'dsId=' + String((opts as {deliveryService: DeliveryService}).deliveryService.id);
-			} else {
-				path += 'userId=' + String((opts as {user: User}).user.id);
+			const args = new Array<string>();
+			if (opts.id) {
+				args.push(`id=${opts.id}`);
+			}
+			if (opts.dsID) {
+				args.push(`dsId=${opts.dsID}`);
+			}
+			if (opts.userId) {
+				args.push(`userId=${opts.userId}`);
+			}
+			if (opts.deliveryService && opts.deliveryService.id) {
+				args.push(`dsId=${opts.deliveryService.id}`);
+			}
+			if (opts.user && opts.user.id) {
+				args.push(`userId=${opts.user.id}`);
+			}
+
+			if (args.length > 0) {
+				path += `?${args.join("&")}`;
 			}
 		}
 		return this.get(path).pipe(map(
@@ -50,11 +75,14 @@ export class InvalidationJobService extends APIService {
 		));
 	}
 
-	public createInvalidationJob (job: InvalidationJob): Observable<boolean> {
-		const path = '/api/' + this.API_VERSION + '/user/current/jobs';
+	/**
+	 * Creates the passed invalidation job, returning whether or not the creation was successful.
+	 */
+	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
+		const path = `/api/${this.API_VERSION}/user/current/jobs`;
 		return this.post(path, job).pipe(map(
-			r => true,
-			e => false
+			_ => true,
+			_ => false
 		));
 	}
 

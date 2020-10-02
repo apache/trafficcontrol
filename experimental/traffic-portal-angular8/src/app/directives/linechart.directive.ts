@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, OnDestroy } from "@angular/core";
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
 import { Observable, Subscription } from "rxjs";
 
@@ -46,16 +46,6 @@ export enum LineChartType {
  * ChartJS charts.
  */
 @Directive({
-	inputs: [
-		"chartTitle",
-		"chartLabels",
-		"chartDataSets",
-		"chartType",
-		"chartXAxisLabel",
-		"chartYAxisLabel",
-		"chartLabelCallback",
-		"chartDisplayLegend"
-	],
 	selector: "[linechart]",
 })
 export class LinechartDirective implements AfterViewInit, OnDestroy {
@@ -64,21 +54,21 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	private chart: Chart;
 
 	/** The title of the chart. */
-	public chartTitle?: string;
+	@Input() public chartTitle?: string;
 	/** Labels for the datasets. */
-	public chartLabels?: any[];
+	@Input() public chartLabels?: any[];
 	/** Data to be plotted by the chart. */
-	public chartDataSets: Observable<DataSet[]>;
+	@Input() public chartDataSets: Observable<DataSet[]>;
 	/** The type of the chart. */
-	public chartType?: LineChartType;
+	@Input() public chartType?: LineChartType;
 	/** A label for the X-axis of the chart. */
-	public chartXAxisLabel?: string;
+	@Input() public chartXAxisLabel?: string;
 	/** A label for the Y-axis of the chart. */
-	public chartYAxisLabel?: string;
+	@Input() public chartYAxisLabel?: string;
 	/** A callback for the label of each data point, to be optionally provided. */
-	public chartLabelCallback?: (v: any, i: number, va: any[]) => any;
+	@Input() public chartLabelCallback?: (v: any, i: number, va: any[]) => any;
 	/** Whether or not to display the chart's legend. */
-	public chartDisplayLegend?: boolean;
+	@Input() public chartDisplayLegend?: boolean;
 
 	private subscription: Subscription;
 	private opts: any;
@@ -98,7 +88,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			throw new Error("[linechart] Directive can only be used on a canvas!");
 		}
 
-		const ctx = (this.element.nativeElement as HTMLCanvasElement).getContext("2d", {alpha: false});
+		const ctx = this.element.nativeElement.getContext("2d", {alpha: false});
 		if (!ctx) {
 			console.error("Failed to get 2D context for chart canvas");
 			return;

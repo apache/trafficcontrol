@@ -12,8 +12,8 @@
 * limitations under the License.
 */
 
-export * from './CDNService';
-export * from './DeliveryServiceService';
-export * from './InvalidationJobService';
-export * from './ServerService';
-export * from './UserService';
+export * from "./CDNService";
+export * from "./DeliveryServiceService";
+export * from "./InvalidationJobService";
+export * from "./ServerService";
+export * from "./UserService";

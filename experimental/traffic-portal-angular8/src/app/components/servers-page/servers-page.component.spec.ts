@@ -1,13 +1,13 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { ServersPageComponent } from "./servers-page.component";
 
-import { ServersPageComponent } from './servers-page.component';
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
 
-describe('ServersPageComponent', () => {
+describe("ServersPageComponent", () => {
 	let component: ServersPageComponent;
 	let fixture: ComponentFixture<ServersPageComponent>;
 
@@ -33,7 +33,7 @@ describe('ServersPageComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
 });
