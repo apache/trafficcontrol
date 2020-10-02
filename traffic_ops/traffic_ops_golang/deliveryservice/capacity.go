@@ -124,7 +124,7 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	}
 	cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
 	if cap.Capacity == 0 {
-		if dsHasSever(ds, crConfig) {
+		if dsHasServer(ds, crConfig) {
 			return CapacityResp{}, errors.New("Delivery service '" + string(ds) + "' has servers, but capacity was zero!'")
 		}
 		log.Warnf("Delivery service '" + string(ds) + "' has no servers. Returning 0 capacity'")
@@ -139,8 +139,8 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	}, nil
 }
 
-// To check whether a given DS has servers.
-func dsHasSever(ds tc.DeliveryServiceName, crConfig tc.CRConfig) bool {
+// dsHasServer checks whether a given DS has servers.
+func dsHasServer(ds tc.DeliveryServiceName, crConfig tc.CRConfig) bool {
 	for _, server := range crConfig.ContentServers {
 		if _, ok := server.DeliveryServices[string(ds)]; ok {
 			return true
