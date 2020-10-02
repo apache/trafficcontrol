@@ -46,6 +46,29 @@ class ImplementationDetail(SphinxDirective):
 			impl_node.append(nodes.paragraph('', '', *(n + m)))
 		return [impl_node]
 
+# -- Go Version role --------------------------------------------------
+# Returns the value of the Go version stored in GO_VERSION to minor version
+# precision.
+import os
+import re
+
+from docutils.nodes import strong
+from docutils.parsers.rst.states import Inliner
+from typing import Tuple, List
+
+def atc_go_version(unused_typ: str,
+               unused_rawtext: str,
+               unused_text: str,
+               unused_lineno: int,
+               unused_inliner: Inliner,
+               options=None,
+               content=None) -> Tuple[List[strong], list]:
+	go_version_file = os.path.join(os.path.dirname(__file__), '../../../GO_VERSION')
+	go_version = open(file=go_version_file).read()
+	major_minor_version = re.match(pattern=r'\d+\.\d+', string=go_version).group()
+	strong_node = nodes.strong(major_minor_version, major_minor_version)
+	return [strong_node], []
+
 # -- Issue role --------------------------------------------------------------
 from docutils import utils
 
@@ -175,6 +198,7 @@ def setup(app: object) -> dict:
 	             latex=(visit_impl_node, depart_impl_node),
 	             text=(visit_impl_node, depart_impl_node))
 	app.add_directive("impl-detail", ImplementationDetail)
+	app.add_role("atc-go-version", atc_go_version)
 	app.add_role("issue", issue_role)
 	app.add_role("pr", pr_role)
 	app.add_role("pull-request", pr_role)

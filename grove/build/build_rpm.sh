@@ -47,7 +47,7 @@ checkGroveEnvironment() {
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	export GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM GOOS RPM_TARGET_OS
 
-	# grove needs to be built with go 1.14 or greater
+	# grove needs to be built with a go version greater or equal to the version in the GO_VERSION file
 	if ! verify_and_set_go_version; then
 		return $?;
 	fi;

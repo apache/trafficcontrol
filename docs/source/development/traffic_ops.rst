@@ -75,8 +75,11 @@ Most dependencies are managed by `Carton 1.0.12 <http://search.cpan.org/~miyagaw
 
 Go Implementation Requirements
 ------------------------------
-- `Go 1.14 or later <http://golang.org/doc/install>`_
+- |install-go-link|_
 - If the system's Go compiler doesn't provide it implicitly, also note that all Go code in the :abbr:`ATC (Apache Traffic Control)` repository should be formatted using `gofmt <https://golang.org/cmd/gofmt/>`_
+
+.. |install-go-link| replace:: Go :atc-go-version:`_` or later
+.. _install-go-link: http://golang.org/doc/install
 
 All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` and :atc-file:`traffic_ops/traffic_ops_golang/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
 

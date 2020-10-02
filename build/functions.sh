@@ -286,9 +286,16 @@ createDocsTarball() {
 }
 
 # ----------------------------------------
-# verify if the go compiler is version 1.14 or higher, returns 0 if if not. returns 1 if it is.
+# verify whether the minor-level version of the go compiler is greater or equal
+# to the minor-level version in the GO_VERSION file: returns 0 if if not.
+# returns 1 if it is.
 #
 verify_and_set_go_version() {
+	if [ -z "$GO_VERSION" ]; then
+		GO_VERSION="$(getGoVersion .)"
+	fi
+	local major_version="$(echo "$GO_VERSION" | awk -F. '{print $1}')"
+	local minor_version="$(echo "$GO_VERSION" | awk -F. '{print $2}')"
 	GO_VERSION="none"
 	GO="none"
 	go_in_path="$(type -p go)"
@@ -304,7 +311,7 @@ verify_and_set_go_version() {
 		if echo "$go_version" | grep -E "$version_pattern"; then
 			group_1="$(echo "$go_version" | sed -E "s/.*${version_pattern}/\1/")"
 			group_2="$(echo "$go_version" | sed -E "s/${version_pattern}/\2/")"
-			if [ ! "$group_1" -ge 1 ] || [ ! "$group_2" -ge 14 ]; then
+			if [ ! "$group_1" -ge "$major_version" ] || [ ! "$group_2" -ge "$minor_version" ]; then
 				GO_VERSION="${group_1}.${group_2}"; export GO_VERSION
 				echo "go version for $g is ${group_1}.${group_2}"
 				continue
@@ -319,7 +326,8 @@ verify_and_set_go_version() {
 	done
 
 	if [ "$GO" = none ]; then
-		echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+		echo "ERROR: this build needs go ${major_version}.${minor_version} or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+		unset GO_VERSION
 		return 1
 	fi
 }
