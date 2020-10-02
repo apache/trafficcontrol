@@ -305,14 +305,15 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
+		onRowDoubleClicked: function(params) {
+			locationUtils.navigateToPath('/servers/' + params.data.id);
+			// Event is outside the digest cycle, so we need to trigger one.
+			$scope.$apply();
+		},
 		columnDefs: columns,
+		enableCellTextSelection:true,
 		defaultColDef: {
 			filter: true,
-			onCellClicked: function(params) {
-					locationUtils.navigateToPath('/servers/' + params.data.id);
-					// Event is outside the digest cycle, so we need to trigger one.
-					$scope.$apply();
-				},
 			sortable: true,
 			resizable: true,
 			tooltip: defaultTooltip
