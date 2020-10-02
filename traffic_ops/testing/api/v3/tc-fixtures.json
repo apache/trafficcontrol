@@ -3136,6 +3136,9 @@
         },
         {
             "name": "disk"
+        },
+        {
+            "name": "asdf"
         }
     ],
     "serverServerCapabilities": [
@@ -3173,7 +3176,7 @@
         },
         {
             "serverHostName": "dtrc-edge-01",
-            "serverCapability": "foo"
+            "serverCapability": "asdf"
         },
         {
             "serverHostName": "dtrc-edge-02",

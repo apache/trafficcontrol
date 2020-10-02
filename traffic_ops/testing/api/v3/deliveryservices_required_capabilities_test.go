@@ -241,7 +241,7 @@ func CreateTestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 	invalid := tc.DeliveryServicesRequiredCapability{
 		DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-top-req-cap")),
-		RequiredCapability: util.StrPtr("foo"),
+		RequiredCapability: util.StrPtr("asdf"),
 	}
 	_, reqInf, err := TOSession.CreateDeliveryServicesRequiredCapability(invalid)
 	if err == nil {
