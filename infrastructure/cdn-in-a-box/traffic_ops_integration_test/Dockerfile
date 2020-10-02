@@ -15,7 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine3.11 AS integration-builder
+FROM alpine:3.11 AS integration-builder
+
+COPY GO_VERSION /
+RUN set -o errexit; \
+    go_version=$(cat /GO_VERSION); \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz; \
+    tar -C /usr/local -xvzf go.tar.gz; \
+    ln -s /usr/local/go/bin/go /usr/bin/go; \
+    rm go.tar.gz; \
+    architecture=$(uname -m); \
+    mkdir lib64; \
+    # Use musl libc where the go binary expects glibc
+    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2; \
+    # Test the go binary
+    go version
+ENV GOPATH=/go
 
 RUN apk add --no-cache --update git gcc
 
