@@ -17,11 +17,132 @@
  * under the License.
  */
 
-var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
+var TableJobsController = function(tableName, jobs, $document, $scope, $state, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
+
+	/**
+	 * Gets value to display a default tooltip.
+	 */
+	function defaultTooltip(params) {
+		return params.value;
+	}
+
+	function dateCellFormatter(params) {
+		return params.value.toUTCString();
+	}
+
+	columns = [
+		{
+			headerName: "Delivery Service",
+			field: "deliveryService",
+			hide: false
+		},
+		{
+			headerName: "Asset URL",
+			field: "assetUrl",
+			hide: false
+		},
+		{
+			headerName: "Parameters",
+			field: "parameters",
+			hide: false
+		},
+		{
+			headerName: "Start (UTC)",
+			field: "startTime",
+			hide: false,
+			filter: "agDateColumnFilter",
+			tooltip: dateCellFormatter,
+			valueFormatter: dateCellFormatter
+		},
+		{
+			headerName: "Expires (UTC)",
+			field: "expires",
+			hide: false,
+			filter: "agDateColumnFilter",
+			tooltip: dateCellFormatter,
+			valueFormatter: dateCellFormatter
+		},
+		{
+			headerName: "Created By",
+			field: "createdBy",
+			hide: false
+		}
+	];
+
+	/** All of the jobs - startTime fields converted to actual Dates and derived expires field from TTL */
+	$scope.jobs = jobs.map(
+		function(x) {
+			// need to convert this to a date object for ag-grid filter to work properly
+			x.startTime = new Date(x.startTime.replace("+00", "Z"));
+
+			let ttl = x.parameters.slice('TTL:'.length, x.parameters.length-1);
+			x.expires = new Date(x.startTime.getTime() + ttl*3600*1000);
+		});
 
 	$scope.jobs = jobs;
 
-	$scope.getHourOffsetDate = dateUtils.getHourOffsetDate;
+	$scope.quickSearch = '';
+
+	$scope.pageSize = 100;
+
+	/** Options, configuration, data and callbacks for the ag-grid table. */
+	$scope.gridOptions = {
+		columnDefs: columns,
+		enableCellTextSelection: true,
+		defaultColDef: {
+			filter: true,
+			sortable: true,
+			resizable: true,
+			tooltip: defaultTooltip
+		},
+		rowClassRules: {
+			'active': function(params) {
+				return new Date(params.data.expires) > new Date();
+			},
+			'expired': function(params) {
+				return new Date(params.data.expires) <= new Date();
+			}
+		},
+		rowData: jobs,
+		pagination: true,
+		paginationPageSize: $scope.pageSize,
+		rowBuffer: 0,
+		onColumnResized: function(params) {
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+		},
+		tooltipShowDelay: 500,
+		allowContextMenuWithControlKey: true,
+		preventDefaultOnContextMenu: true,
+		onCellContextMenu: function(params) {
+			$scope.showMenu = true;
+			$scope.menuStyle.left = String(params.event.pageX) + "px";
+			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.job = params.data;
+			$scope.$apply();
+		},
+		colResizeDefault: "shift"
+	};
+
+	/** This is used to position the context menu under the cursor. */
+	$scope.menuStyle = {
+		left: 0,
+		top: 0,
+	};
+
+	/** Toggles the visibility of a column that has the ID provided as 'col'. */
+	$scope.toggleVisibility = function(col) {
+		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
+		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
+	};
+
+	/** Downloads the table as a CSV */
+	$scope.exportCSV = function() {
+		const params = {
+			allColumns: true,
+			fileName: "invalidation_requests.csv",
+		};
+		$scope.gridOptions.api.exportDataAsCsv(params);
+	}
 
 	$scope.createJob = function() {
 		locationUtils.navigateToPath('/jobs/new');
@@ -32,9 +153,7 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 	};
 
 	$scope.confirmRemoveJob = function(job, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
+		$event.stopPropagation();
 		const params = {
 			title: 'Remove Invalidation Request?',
 			message: 'Are you sure you want to remove the ' + job.assetUrl + ' invalidation request?<br><br>' +
@@ -61,19 +180,99 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 		});
 	};
 
+	$scope.onQuickSearchChanged = function() {
+		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		localStorage.setItem(tableName + "_quick_search", $scope.quickSearch);
+	};
+
+	$scope.onPageSizeChanged = function() {
+		const value = Number($scope.pageSize);
+		$scope.gridOptions.api.paginationSetPageSize(value);
+		localStorage.setItem(tableName + "_page_size", value);
+	};
+
+	$scope.clearColFilters = function() {
+		$scope.gridOptions.api.setFilterModel(null);
+	};
+
+	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
-		$('#jobsTable').dataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"columnDefs": [
-				{ "width": "5%", "targets": 6 },
-				{ 'orderable': false, 'targets': 6 }
-			],
-			"aaSorting": []
+		try {
+			// need to create the show/hide column checkboxes and bind to the current visibility
+			const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
+			if (colstates) {
+				if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
+					console.error("Failed to load stored column state: one or more columns not found");
+				}
+			} else {
+				$scope.gridOptions.api.sizeColumnsToFit();
+			}
+		} catch (e) {
+			console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
+		}
+
+		try {
+			const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+			$scope.gridOptions.api.setFilterModel(filterState);
+		} catch (e) {
+			console.error("Failure to load stored filter state:", e);
+		}
+
+		$scope.gridOptions.api.addEventListener("filterChanged", function() {
+			localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
+		});
+
+		try {
+			const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
+			$scope.gridOptions.api.setSortModel(sortState);
+		} catch (e) {
+			console.error("Failure to load stored sort state:", e);
+		}
+
+		try {
+			$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
+			$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		} catch (e) {
+			console.error("Failure to load stored quick search:", e);
+		}
+
+		try {
+			const ps = localStorage.getItem(tableName + "_page_size");
+			if (ps && ps > 0) {
+				$scope.pageSize = Number(ps);
+				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
+			}
+		} catch (e) {
+			console.error("Failure to load stored page size:", e);
+		}
+
+		$scope.gridOptions.api.addEventListener("sortChanged", function() {
+			localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
+		});
+
+		$scope.gridOptions.api.addEventListener("columnMoved", function() {
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+		});
+
+		$scope.gridOptions.api.addEventListener("columnVisible", function() {
+			$scope.gridOptions.api.sizeColumnsToFit();
+			try {
+				colStates = $scope.gridOptions.columnApi.getColumnState();
+				localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
+			} catch (e) {
+				console.error("Failed to store column defs to local storage:", e);
+			}
+		});
+
+		// clicks outside the context menu will hide it
+		$document.bind("click", function(e) {
+			$scope.showMenu = false;
+			e.stopPropagation();
+			$scope.$apply();
 		});
 	});
 
 };
 
-TableJobsController.$inject = ['jobs', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel', 'dateUtils'];
+TableJobsController.$inject = ['tableName', 'jobs', '$document', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel', 'dateUtils'];
 module.exports = TableJobsController;

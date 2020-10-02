@@ -27,6 +27,9 @@ module.exports = angular.module('trafficPortal.private.jobs.list', [])
 						templateUrl: 'common/modules/table/jobs/table.jobs.tpl.html',
 						controller: 'TableJobsController',
 						resolve: {
+							tableName: function() {
+								return 'jobs';
+							},
 							jobs: function(jobService) {
 								return jobService.getJobs();
 							}

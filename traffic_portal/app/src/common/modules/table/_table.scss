@@ -208,3 +208,15 @@ div.dropdown button.menu-item-button {
         background-color: #f5f5f5;
     }
 }
+
+.ag-theme-alpine {
+  .ag-row.active {
+    background-color: #dff0d8;
+  }
+  .ag-row.expired {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}
