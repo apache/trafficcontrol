@@ -113,30 +113,10 @@ Arguments and Flags
 
 Environment Variables
 ---------------------
-If defined, :program:`toaccess` scripts will use these environment variables to define their
-connection to and authentication with the Traffic Ops server. Typically, setting these is easier
-than using the long options :option:`--to-url`, :option:`--to-user`, and :option:`--to-password` on
-every invocation.
-
-.. envvar:: TO_PASSWORD
-
-	Will be used to authenticate the user defined by either :option:`--to-user` or :envvar:`TO_USER`.
-
-.. envvar:: TO_URL
-
-	The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server to which the script
-	will connect. The format of this should be :file:`[{http or https}://]{hostname}[:{port}]`. Note
-	that this may optionally start with ``http://`` or ``https://`` (case insensitive), but
-	typically this is unnecessary. Also notice that the port number may be specified, though again
-	this isn't usually required. All :program:`toaccess` scripts will assume that port 443 should be
-	used unless otherwise specified. They will further assume that the protocol is HTTPS unless
-	:envvar:`TO_URL` (or :option:`--to-url`) starts with ``http://``, in which case the default port
-	will also be set to 80 unless otherwise specified in the URL.
-
-.. envvar:: TO_USER
-
-	The name of the user as whom to connect to the Traffic Ops server. Overriden by
-	:option:`--to-user`.
+If defined, :program:`toaccess` scripts will use the :envvar:`TO_URL`, :envvar:`TO_USER`, and
+:envvar`TO_PASSWORD` environment variables to define their connection to and authentication with the
+Traffic Ops server. Typically, setting these is easier than using the long options :option:`--to-url`,
+:option:`--to-user`, and :option:`--to-password` on every invocation.
 
 Exit Codes
 ----------
