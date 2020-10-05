@@ -76,7 +76,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			x.startTime = new Date(x.startTime.replace("+00", "Z"));
 
 			// going to derive the expires date from start + TTL (hours). Format: TTL:24h
-			let ttl = x.parameters.slice('TTL:'.length, x.parameters.length-1);
+			let ttl = parseInt(x.parameters.slice('TTL:'.length, x.parameters.length-1), 10);
 			x.expires = new Date(x.startTime.getTime() + ttl*3600*1000);
 		});
 
