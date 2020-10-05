@@ -380,7 +380,7 @@ For the protobuf component:
 
 For other parts of the protobuf component:
 @vendor/github.com/golang/protobuf/*
-./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
+./vendor/github.com/golang/protobuf/LICENSE
 
 For the sqlx component:
 @vendor/github.com/jmoiron/sqlx/*
