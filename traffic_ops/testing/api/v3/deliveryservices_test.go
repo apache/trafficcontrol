@@ -225,16 +225,35 @@ func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func PostDeliveryServiceTest(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one testing Delivery Service to test creating Delivery Services")
+	}
 	ds := testData.DeliveryServices[0]
+	if ds.XMLID == nil {
+		t.Fatal("Testing Delivery Service had no XMLID")
+	}
+	xmlid := *ds.XMLID + "-topology-test"
+
 	ds.XMLID = util.StrPtr("")
 	_, _, err := TOSession.CreateDeliveryServiceV30(ds)
 	if err == nil {
-		t.Fatal("Expected error with empty xmlid")
+		t.Error("Expected error with empty xmlid")
 	}
 	ds.XMLID = nil
 	_, _, err = TOSession.CreateDeliveryServiceV30(ds)
 	if err == nil {
-		t.Fatal("Expected error with nil xmlid")
+		t.Error("Expected error with nil xmlid")
+	}
+
+	ds.Topology = new(string)
+	ds.XMLID = &xmlid
+
+	_, reqInf, err := TOSession.CreateDeliveryServiceV30(ds)
+	if err == nil {
+		t.Error("Expected error with non-existent Topology")
+	}
+	if reqInf.StatusCode < 400 || reqInf.StatusCode >= 500 {
+		t.Errorf("Expected client-level error creating DS with non-existent Topology, got: %d", reqInf.StatusCode)
 	}
 }
 
