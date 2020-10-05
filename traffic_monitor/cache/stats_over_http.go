@@ -411,14 +411,6 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				dsStat = new(DSStat)
 			}
 
-			/* Null check this dsStat, its possible to have stats entries for a DS that does not exist
-			in the table due to errant queries. ATS will still insert them into the remap stats but
-			they will not exist our DS list and so we will have a nullptr */
-			if dsStat == nil {
-				log.Infof("ds Stats received for ds: %s, unknown DS", dsName)
-				continue
-			}
-
 			parsedStat, err := parseNumericStat(value)
 			if err != nil {
 				err = fmt.Errorf("couldn't parse numeric stat: %v", err)
