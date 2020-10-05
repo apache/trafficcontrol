@@ -85,6 +85,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #3548 - Prevents DS regexes with non-consecutive order from generating invalid CRconfig/snapshot.
 - Fixed #5020, #5021 - Creating an ASN with the same number and same cache group should not be allowed.
 - Fixed #4680 - Change Content-Type to application/json for TR auth calls
+- Fixed #4292 - Traffic Ops not looking for influxdb.conf in the right place
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
