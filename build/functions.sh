@@ -107,6 +107,14 @@ getBuildNumber() {
 }
 
 # ---------------------------------------
+getGoVersion() {
+	local directory="$1"
+	local go_version_file="$directory/GO_VERSION"
+	[ -r "$go_version_file" ] || { echo "Could not read $go_version_file: $!"; return 1; }
+	cat "$go_version_file"
+}
+
+# ---------------------------------------
 getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
@@ -171,13 +179,14 @@ checkEnvironment() {
 	TC_VERSION='' BUILD_NUMBER='' RHEL_VERSION='' RPMBUILD='' DIST=''
 	TC_VERSION="$(getVersion "$TC_DIR")"
 	BUILD_NUMBER="$(getBuildNumber)"
+	GO_VERSION="$(getGoVersion "$TC_DIR")"
 	RHEL_VERSION="$(getRhelVersion)"
 	WORKSPACE="${WORKSPACE:-$TC_DIR}"
 	RPMBUILD="$WORKSPACE/rpmbuild"
 	GOOS="${GOOS:-linux}"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	DIST="$WORKSPACE/dist"
-	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD GOOS RPM_TARGET_OS DIST
+	export TC_VERSION BUILD_NUMBER GO_VERSION RHEL_VERSION WORKSPACE RPMBUILD GOOS RPM_TARGET_OS DIST
 
 	mkdir -p "$DIST" || { echo "Could not create ${DIST}: ${?}"; return 1; }
 
@@ -220,6 +229,7 @@ buildRpm() {
 		(cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
 				--define "traffic_control_version $TC_VERSION" \
+				--define "go_version $GO_VERSION" \
 				--define "commit $(getCommit)" \
 				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				--define "_target_os $RPM_TARGET_OS" \
@@ -286,9 +296,16 @@ createDocsTarball() {
 }
 
 # ----------------------------------------
-# verify if the go compiler is version 1.14 or higher, returns 0 if if not. returns 1 if it is.
+# verify whether the minor-level version of the go compiler is greater or equal
+# to the minor-level version in the GO_VERSION file: returns 0 if if not.
+# returns 1 if it is.
 #
 verify_and_set_go_version() {
+	if [ -z "$GO_VERSION" ]; then
+		GO_VERSION="$(getGoVersion .)"
+	fi
+	local major_version="$(echo "$GO_VERSION" | awk -F. '{print $1}')"
+	local minor_version="$(echo "$GO_VERSION" | awk -F. '{print $2}')"
 	GO_VERSION="none"
 	GO="none"
 	go_in_path="$(type -p go)"
@@ -304,7 +321,7 @@ verify_and_set_go_version() {
 		if echo "$go_version" | grep -E "$version_pattern"; then
 			group_1="$(echo "$go_version" | sed -E "s/.*${version_pattern}/\1/")"
 			group_2="$(echo "$go_version" | sed -E "s/${version_pattern}/\2/")"
-			if [ ! "$group_1" -ge 1 ] || [ ! "$group_2" -ge 14 ]; then
+			if [ ! "$group_1" -ge "$major_version" ] || [ ! "$group_2" -ge "$minor_version" ]; then
 				GO_VERSION="${group_1}.${group_2}"; export GO_VERSION
 				echo "go version for $g is ${group_1}.${group_2}"
 				continue
@@ -319,7 +336,8 @@ verify_and_set_go_version() {
 	done
 
 	if [ "$GO" = none ]; then
-		echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+		echo "ERROR: this build needs go ${major_version}.${minor_version} or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+		unset GO_VERSION
 		return 1
 	fi
 }
