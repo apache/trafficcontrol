@@ -270,7 +270,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		if ok, err := dbhelpers.TopologyExists(tx, *ds.Topology); err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking topology existence: %v", err)
 		} else if !ok {
-			return nil, http.StatusConflict, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+			return nil, http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
 		}
 	}
 
