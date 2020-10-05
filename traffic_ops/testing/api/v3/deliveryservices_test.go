@@ -143,7 +143,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	ds.CDNName = &oldCdn.Name
 
-	resp, _, err := TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
+	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
 		City:         util.StrPtr("CI"),
 		Organization: util.StrPtr("OR"),
@@ -153,7 +153,6 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
-		t.Fatal(resp)
 	}
 
 	oldCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
