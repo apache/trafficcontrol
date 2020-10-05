@@ -378,17 +378,21 @@ For the protobuf component:
 @traffic_ops/vendor/github.com/golang/protobuf/*
 ./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
 
+For other parts of the protobuf component:
+@vendor/github.com/golang/protobuf/*
+./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
+
 For the sqlx component:
 @vendor/github.com/jmoiron/sqlx/*
 ./vendor/github.com/jmoiron/sqlx/LICENSE
 
 For the backoff component:
-@traffic_ops/vendor/github.com/basho/backoff/*
-./traffic_ops/vendor/github.com/basho/backoff/README.md
+@vendor/github.com/basho/backoff/*
+./vendor/github.com/basho/backoff/README.md
 
 The riak-go-client component is used under the Apache license:
-@traffic_ops/vendor/github.com/basho/riak-go-client/*
-./traffic_ops/vendor/github.com/basho/riak-go-client/LICENSE
+@vendor/github.com/basho/riak-go-client/*
+./vendor/github.com/basho/riak-go-client/LICENSE
 
 The envconfig component is used under the MIT license:
 @traffic_ops/vendor/github.com/kelseyhightower/envconfig/*
