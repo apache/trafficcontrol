@@ -209,11 +209,7 @@ Options and Arguments
 	- production
 	- test
 
-	(Default: ``development``)
-
-.. envvar:: MOJO_MODE
-
-	:program:`admin` sets this to the value of the environment as specified by :option:`--env` (Default: ``development``)
+	:program:`admin` sets :envvar:`MOJO_MODE` to the value of the environment as specified by this option. (Default: ``development``)
 
 .. option:: command
 
@@ -300,6 +296,8 @@ Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl
 - To run the Unit Tests: ``prove -qrp  app/t/``
 - To run the Integration Tests: ``prove -qrp app/t_integration/``
 
+.. _to-go-tests:
+
 Go Tests
 --------
 Many (but not all) endpoint handlers and utility packages in the Go code-base define Go unit tests that can be run with :manpage:`go-test(1)`. There are integration tests for the Traffic Ops Go client in :atc-file:`traffic_ops/testing/api/`.
@@ -343,6 +341,8 @@ Configuring the Integration Tests
 """""""""""""""""""""""""""""""""
 Configuration is mainly done through the configuration file passed as :option:`--cfg`, but is also available through the following environment variables.
 
+In addition to the variables described here, the integration tests support identifying the network location of the Traffic Ops instance via :envvar:`TO_URL`.
+
 .. envvar:: SESSION_TIMEOUT_IN_SECS
 
 	Sets the timeout of requests made to the Traffic Ops instance, in seconds.
@@ -383,10 +383,6 @@ Configuration is mainly done through the configuration file passed as :option:`-
 .. envvar:: TODB_USER
 
 	If set, defines the user as whom to authenticate with the PostgreSQL server.
-
-.. envvar:: TO_URL
-
-	If set, will define the URL at which the Traffic Ops instance is running - including port number.
 
 .. envvar:: TO_USER_ADMIN
 

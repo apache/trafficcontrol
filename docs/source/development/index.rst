@@ -22,6 +22,7 @@ Use this guide to start developing applications that consume the Traffic Control
 	:maxdepth: 2
 
 	api_guidelines
+	environment_variables
 	building
 	debugging
 	documentation_guidelines
