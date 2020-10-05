@@ -160,7 +160,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
 	if len(oldCDNKeys) < 1 {
-		t.Fatalf("expected at least 1 key, got %v", len(oldCDNKeys))
+		t.Fatal("expected at least 1 key")
 	}
 	newCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
 	if err != nil {
