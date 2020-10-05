@@ -368,6 +368,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
 	$scope.toggleVisibility = function(col) {
+		const filterModel = $scope.gridOptions.api.getFilterModel();
+		if(col in filterModel) {
+			delete filterModel[col];
+		}
+		$scope.gridOptions.api.setFilterModel(filterModel);
 		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
 		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
 	};
@@ -381,7 +386,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			fileName: "servers.csv",
 		};
 		$scope.gridOptions.api.exportDataAsCsv(params);
-	}
+	};
 
 	/**** Context menu functions ****/
 
