@@ -20,14 +20,14 @@ package dnssec_test
  */
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	// _ "github.com/onsi/ginkgo"
+	// _ "github.com/onsi/gomega"
 
 	"flag"
+	"testing"
+
 	"github.com/apache/trafficcontrol/test/router/dnssec"
 	"github.com/miekg/dns"
-	"log"
-	"testing"
 )
 
 var d *dnssec.DnssecClient
@@ -39,17 +39,32 @@ func init() {
 	flag.StringVar(&deliveryService, "ds", "changeit", "ds is used to target some dns DS and DNS queries made by traffic router")
 }
 
-var _ = BeforeSuite(func() {
+// var _ = BeforeSuite(func() {
+// 	d = &dnssec.DnssecClient{new(dns.Client)}
+// 	d.Net = "udp"
+
+// 	Expect(nameserver).ToNot(Equal("changeit"), "Pass in a ns flag with the hostname of the traffic router")
+// 	Expect(deliveryService).ToNot(Equal("changeit"), "Pass in a ds flag with the dns label for a DNS delivery service")
+// 	log.Println("Nameserver", nameserver)
+// 	log.Println("DeliveryService", deliveryService)
+// })
+
+// func TestDnssec(t *testing.T) {
+// 	RegisterFailHandler(Fail)
+// 	RunSpecs(t, "Dnssec Suite")
+// }
+
+func TestDNSSEC(t *testing.T) {
 	d = &dnssec.DnssecClient{new(dns.Client)}
 	d.Net = "udp"
 
-	Expect(nameserver).ToNot(Equal("changeit"), "Pass in a ns flag with the hostname of the traffic router")
-	Expect(deliveryService).ToNot(Equal("changeit"), "Pass in a ds flag with the dns label for a DNS delivery service")
-	log.Println("Nameserver", nameserver)
-	log.Println("DeliveryService", deliveryService)
-})
+	if nameserver == "changeit" {
+		t.Fatal("Pass in a ns flag with the hostname of th etraffic router")
+	}
+	if deliveryService == "changeit" {
+		t.Fatal("Pass in a ds flag with the dns label for a DNS delivery service")
+	}
 
-func TestDnssec(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Dnssec Suite")
+	t.Logf("Nameserver: %s", nameserver)
+	t.Logf("DeliveryService: %s", deliveryService)
 }
