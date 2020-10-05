@@ -788,6 +788,14 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
+	if ds.Topology != nil {
+		if ok, err := dbhelpers.TopologyExists(tx, *ds.Topology); err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking topology existence: %v", err)
+		} else if !ok {
+			return nil, http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+		}
+	}
+
 	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
 		&ds.CacheURL,
