@@ -812,23 +812,17 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int) (tc.CacheGroupName, bool, error
 	return tc.CacheGroupName(name), true, nil
 }
 
-// TopologyExistsString is a convenience function for checking if a Topology exists
-// when its name is an actual string instead of a github.com/apache/trafficcontrol/lib/go-tc.TopologyName
-func TopologyExistsString(tx *sql.Tx, name string) (bool, error) {
-	return TopologyExists(tx, tc.TopologyName(name))
-}
-
 // TopologyExists checks if a Topology with the given name exists.
 // Returns whether or not the Topology exists, along with any encountered error.
-func TopologyExists(tx *sql.Tx, topologyName tc.TopologyName) (bool, error) {
+func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	q := `
-SELECT COUNT("name")
-FROM topology
-WHERE name = $1
-`
+	SELECT COUNT("name")
+	FROM topology
+	WHERE name = $1
+	`
 	var count int
 	var err error
-	if err = tx.QueryRow(q, topologyName).Scan(&count); err != nil {
+	if err = tx.QueryRow(q, name).Scan(&count); err != nil {
 		err = fmt.Errorf("querying topologies: %s", err)
 	}
 	return count > 0, err
