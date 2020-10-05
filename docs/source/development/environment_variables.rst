@@ -35,6 +35,19 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 
 	:program:`admin` sets this to the value of the environment as specified by :option:`admin --env` (Default: ``development``)
 
+.. envvar:: TO_PASSWORD
+
+	This is used - typically in concert with :envvar:`TO_PASSWORD` and :envvar:`TO_USER` - to provide a password for a user as whom to authenticate with some Traffic Ops instance. This generally should not be validated, to avoid having to update validation to match the :ref:`to-api`'s own validation - because in general this will/should end up in the payload of an authentication request to :ref:`to-api-user-login`.
+
+	.. caution:: For security reasons, the contents of this environment variable should not be stored anywhere for any length of time that isn't strictly necessary.
+
+	The following list details which components/tools use this variable, how, and what, if any, restrictions they place upon its content.
+
+	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this password to authenticate the administrative-level user given by :envvar:`TO_USER`.
+	- :ref:`atstccfg` uses this variable to authenticate the user used for fetching configuration information.
+	- :ref:`compare-tool` uses this variable to specify the password of the user of the *reference* Traffic Ops instance. It will also be used to authenticate the test user if that user's password is not separately defined.
+	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
+	- The Python :ref:`ort.py` will use this variable to specify the password of the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".
 
 .. envvar:: TO_URL
 
@@ -60,17 +73,3 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 	- :ref:`compare-tool` uses this variable to specify the user of the *reference* Traffic Ops instance. It will also be used to identify the test user if that user is not separately defined.
 	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
 	- The Python :ref:`ort.py` will use this variable to specify the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".
-
-.. envvar:: TO_PASSWORD
-
-	This is used - typically in concert with :envvar:`TO_PASSWORD` and :envvar:`TO_USER` - to provide a password for a user as whom to authenticate with some Traffic Ops instance. This generally should not be validated, to avoid having to update validation to match the :ref:`to-api`'s own validation - because in general this will/should end up in the payload of an authentication request to :ref:`to-api-user-login`.
-
-	.. caution:: For security reasons, the contents of this environment variable should not be stored anywhere for any length of time that isn't strictly necessary.
-
-	The following list details which components/tools use this variable, how, and what, if any, restrictions they place upon its content.
-
-	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this password to authenticate the administrative-level user given by :envvar:`TO_USER`.
-	- :ref:`atstccfg` uses this variable to authenticate the user used for fetching configuration information.
-	- :ref:`compare-tool` uses this variable to specify the password of the user of the *reference* Traffic Ops instance. It will also be used to authenticate the test user if that user's password is not separately defined.
-	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
-	- The Python :ref:`ort.py` will use this variable to specify the password of the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".
