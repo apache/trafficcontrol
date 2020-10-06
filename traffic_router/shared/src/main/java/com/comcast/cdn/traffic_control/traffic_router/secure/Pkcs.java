@@ -15,11 +15,14 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.spec.KeySpec;
 
 @SuppressWarnings("PMD.AbstractNaming")
@@ -33,15 +36,16 @@ public abstract class Pkcs {
 	public Pkcs(final String data) throws IOException, GeneralSecurityException {
 		this.data = data;
 		keySpec = toKeySpec(data);
-		privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+		Security.addProvider(new BouncyCastleProvider());
+		privateKey = KeyFactory.getInstance("RSA", "BC").generatePrivate(keySpec);
 	}
 
 	public Pkcs(final String privateData, final String publicData) throws IOException, GeneralSecurityException {
 		this.data = privateData;
 		keySpec = toKeySpec(data);
-		privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+		privateKey = KeyFactory.getInstance("RSA", "BC").generatePrivate(keySpec);
 		publicKeySpec = toKeySpec(publicData);
-		publicKey = KeyFactory.getInstance("RSA").generatePublic(publicKeySpec);
+		publicKey = KeyFactory.getInstance("RSA", "BC").generatePublic(publicKeySpec);
 	}
 
 	public String getData() {
