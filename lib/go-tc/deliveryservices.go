@@ -608,21 +608,45 @@ func (ds *DeliveryServiceNullableV30) validateTopologyFields() error {
 	return nil
 }
 
-// Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
-func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
-	b, err := json.Marshal(d)
+func jsonValue(v interface{}) (driver.Value, error) {
+	b, err := json.Marshal(v)
 	return b, err
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
-func (d *DeliveryServiceNullable) Scan(src interface{}) error {
+func jsonScan(src interface{}, dest interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
-	return json.Unmarshal(b, d)
+	return json.Unmarshal(b, dest)
+}
+
+// NOTE: the driver.Valuer and sql.Scanner interface implementations are
+// necessary for Delivery Service Requests which store and read raw JSON
+// from the database.
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceNullable) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullable struct.
+func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
+	return jsonScan(src, ds)
+}
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceNullableV30) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullableV30 struct.
+func (ds *DeliveryServiceNullableV30) Scan(src interface{}) error {
+	return jsonScan(src, ds)
 }
 
 // DeliveryServiceMatch ...

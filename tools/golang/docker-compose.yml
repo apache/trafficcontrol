@@ -20,16 +20,16 @@ version: '2.3'
 services:
   lint:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: tools/golang/Dockerfile
       target: lint
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
 
   unit:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: tools/golang/Dockerfile
       target: unit
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol

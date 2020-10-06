@@ -1,0 +1,46 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+# file deployed via ansible push, local edits are subject to be overwritten
+
+# Add properties in here to override default values in applicationContext.xml
+
+# Full path to the local copy of the MaxMind geolocation binary database file
+cache.geolocation.database = {{tr_cache_geolocation_database}}
+
+# The interval in milliseconds which Traffic Router will poll for a new geolocation database
+cache.geolocation.database.refresh.period =	{{tr_cache_geolocation_refresh_period}}
+
+# Full path to the local copy of the coverage zone file
+cache.czmap.database = {{tr_cache_czmap_database}}
+
+# The interval in milliseconds which Traffic Router will poll for a new coverage zone file
+cache.czmap.database.refresh.period =	{{tr_cache_czmap_database_refresh_period}}
+
+# Full path to the local copy of the deep coverage zone file
+cache.dczmap.database = {{tr_cache_dczmap_database}}
+
+# The interval in milliseconds which Traffic Router will poll for a new deep coverage zone file
+cache.dczmap.database.refresh.period = {{tr_cache_dczmap_database_refresh_period}}
+
+# Full path to the local copy of the health state
+cache.health.json = {{tr_cache_health_json}}
+
+# The interval in milliseconds which Traffic Router will poll for a new health state file
+cache.health.json.refresh.period = {{tr_cache_health_json_refresh_period}}
+
+# Full path to the local copy of the CRConfig
+cache.config.json = {{tr_cache_config_json}}
+
+# The interval in milliseconds which Traffic Router will poll for a new CRConfig
+cache.config.json.refresh.period = {{tr_cache_config_json_refresh_period}}

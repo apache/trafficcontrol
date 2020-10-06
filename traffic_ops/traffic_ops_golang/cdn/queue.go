@@ -26,18 +26,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
-
-type QueueReq struct {
-	Action string `json:"action"`
-}
-
-type QueueResp struct {
-	Action string `json:"action"`
-	CDNID  int64  `json:"cdnId"`
-}
 
 func Queue(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -46,7 +39,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	reqObj := QueueReq{}
+	reqObj := tc.CDNQueueUpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
@@ -69,7 +62,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
+	api.WriteResp(w, r, tc.CDNQueueUpdateResponse{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 
 func queueUpdates(tx *sql.Tx, cdnID int64, queue bool) error {

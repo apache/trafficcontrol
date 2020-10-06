@@ -36,7 +36,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
+// TOType is a needed type alias to define functions on.
 type TOType struct {
 	api.APIInfoImpl `json:"-"`
 	tc.TypeNullable

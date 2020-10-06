@@ -19,37 +19,45 @@ import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.comcast.cdn.traffic_control.traffic_router.utils.HttpsProperties;
 import org.apache.log4j.Logger;
-import sun.security.tools.keytool.CertAndKeyGen;
-import sun.security.util.ObjectIdentifier;
-import sun.security.x509.BasicConstraintsExtension;
-import sun.security.x509.CertificateExtensions;
-import sun.security.x509.ExtendedKeyUsageExtension;
-import sun.security.x509.KeyUsageExtension;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.asn1.x509.Extension;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.InetAddress;
+import java.security.KeyPairGenerator;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.cert.CertificateFactory;
+import java.security.Security;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
-
-import sun.security.x509.X500Name;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CertificateRegistry {
 	public static final String DEFAULT_SSL_KEY = "default.invalid";
 	private static final Logger log = Logger.getLogger(CertificateRegistry.class);
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
-	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
+	volatile private Map<String, HandshakeData> handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
 	final private Map<String, CertificateData> previousData = new HashMap<>();
 	public String defaultAlias;
@@ -68,34 +76,55 @@ public class CertificateRegistry {
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
 	}
 
-	@SuppressWarnings("PMD.UseArrayListInsteadOfVector")
+	@SuppressWarnings({"PMD.UseArrayListInsteadOfVector", "PMD.AvoidUsingHardCodedIP"})
 	private static HandshakeData createDefaultSsl() {
 		try {
-			final CertificateExtensions extensions = new CertificateExtensions();
-			final KeyUsageExtension keyUsageExtension = new KeyUsageExtension();
-			keyUsageExtension.set(KeyUsageExtension.DIGITAL_SIGNATURE, true);
-			keyUsageExtension.set(KeyUsageExtension.KEY_ENCIPHERMENT, true);
-			keyUsageExtension.set(KeyUsageExtension.KEY_CERTSIGN, true);
-			extensions.set(keyUsageExtension.getExtensionId().toString(), keyUsageExtension);
-			final Vector<ObjectIdentifier> objectIdentifiers = new Vector<>();
-			objectIdentifiers.add(new ObjectIdentifier("1.3.6.1.5.5.7.3.1"));
-			objectIdentifiers.add(new ObjectIdentifier("1.3.6.1.5.5.7.3.2"));
-			final ExtendedKeyUsageExtension extendedKeyUsageExtension = new ExtendedKeyUsageExtension( true,
-					objectIdentifiers);
-			extensions.set(extendedKeyUsageExtension.getExtensionId().toString(), extendedKeyUsageExtension);
-			extensions.set(BasicConstraintsExtension.NAME, new BasicConstraintsExtension(true,
-					new BasicConstraintsExtension(true,-1).getExtensionValue()));
-			final CertAndKeyGen certGen = new CertAndKeyGen("RSA", "SHA1WithRSA", null);
-			certGen.generate(2048);
+			final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+			keyPairGenerator.initialize(2048);
+			final KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
 			//Generate self signed certificate
 			final X509Certificate[] chain = new X509Certificate[1];
-			chain[0] = certGen.getSelfCertificate(new X500Name("C=US; ST=CO; L=Denver; " +
+
+			// Select provider
+			Security.addProvider(new BouncyCastleProvider());
+
+			// Generate cert details
+			final long now = System.currentTimeMillis();
+			final Date startDate = new Date(System.currentTimeMillis());
+
+			final X500Name dnName = new X500Name("C=US; ST=CO; L=Denver; " +
 					"O=Apache Traffic Control; OU=Apache Foundation; OU=Hosted by Traffic Control; " +
-					"OU=CDNDefault; CN="+DEFAULT_SSL_KEY), new Date(System.currentTimeMillis() - 1000L * 60 ),
-					(long) 3 * 365 * 24 * 3600, extensions);
-			final PrivateKey serverPrivateKey = certGen.getPrivateKey();
-			return new HandshakeData(DEFAULT_SSL_KEY, DEFAULT_SSL_KEY, chain, serverPrivateKey);
+					"OU=CDNDefault; CN="+DEFAULT_SSL_KEY);
+			final BigInteger certSerialNumber = new BigInteger(Long.toString(now));
+
+			final Calendar calendar = Calendar.getInstance();
+			calendar.setTime(startDate);
+			calendar.add(Calendar.YEAR, 3);
+
+			final Date endDate = calendar.getTime();
+
+			// Build certificate
+			final ContentSigner contentSigner = new JcaContentSignerBuilder("SHA1WithRSA").build(keyPair.getPrivate());
+
+			final JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber, startDate, endDate, dnName, keyPair.getPublic());
+
+			// Attach extensions
+			certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
+			certBuilder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.keyCertSign));
+			certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(new KeyPurposeId[] {
+					KeyPurposeId.id_kp_clientAuth,
+					KeyPurposeId.id_kp_serverAuth
+			}));
+
+			// Generate final certificate
+			final X509CertificateHolder certHolder = certBuilder.build(contentSigner);
+
+			final JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
+			converter.setProvider(new BouncyCastleProvider());
+			chain[0] = converter.getCertificate(certHolder);
+
+			return new HandshakeData(DEFAULT_SSL_KEY, DEFAULT_SSL_KEY, chain, keyPair.getPrivate());
 		}
 		catch (Exception e) {
 			log.error("Could not generate the default certificate: "+e.getMessage(),e);

@@ -364,7 +364,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
 		console.log('The ability to assign servers is disabled for ' + mockVals.httpXmlId);
-		expect(pageData.selectServersBtn.isEnabled()).toBe(false);
+		expect(pageData.selectServersMenuItem.isEnabled()).toBe(false);
 	});
 
 	it('should navigate back to the HTTP delivery service and delete it', function() {

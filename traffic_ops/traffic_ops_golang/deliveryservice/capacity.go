@@ -29,7 +29,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	tmcache "github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -114,13 +113,22 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	if err != nil {
 		return CapacityResp{}, errors.New("getting CRConfig for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
 	}
-	cacheStats, err := monitorhlp.GetCacheStats(monitorFQDN, client, []string{"maxKbps", "kbps"})
+	statsoFetch := []string{tc.StatNameMaxKBPS, tc.StatNameKBPS}
+	cacheStats, err := monitorhlp.GetCacheStats(monitorFQDN, client, statsoFetch)
 	if err != nil {
-		return CapacityResp{}, errors.New("getting CacheStats for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
+		legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsoFetch)
+		if err != nil {
+			return CapacityResp{}, errors.New("getting CacheStats for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
+		}
+		cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 	}
 	cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
 	if cap.Capacity == 0 {
-		return CapacityResp{}, errors.New("capacity was zero!") // avoid divide-by-zero below.
+		if dsHasServer(ds, crConfig) {
+			return CapacityResp{}, errors.New("Delivery service '" + string(ds) + "' has servers, but capacity was zero!'")
+		}
+		log.Warnf("Delivery service '" + string(ds) + "' has no servers. Returning 0 capacity'")
+		return CapacityResp{}, nil // avoid divide-by-zero below.
 	}
 
 	return CapacityResp{
@@ -131,21 +139,32 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 	}, nil
 }
 
+// dsHasServer checks whether a given DS has servers.
+func dsHasServer(ds tc.DeliveryServiceName, crConfig tc.CRConfig) bool {
+	for _, server := range crConfig.ContentServers {
+		if _, ok := server.DeliveryServices[string(ds)]; ok {
+			return true
+		}
+	}
+	return false
+
+}
+
 const StatNameKBPS = "kbps"
 const StatNameMaxKBPS = "maxKbps"
 
 func addCapacity(
 	cap CapData,
 	ds tc.DeliveryServiceName,
-	cacheStats tmcache.Stats,
+	cacheStats tc.Stats,
 	crStates tc.CRStates,
 	crConfig tc.CRConfig,
 	thresholds map[string]float64,
 ) CapData {
 	for cacheName, statsCache := range cacheStats.Caches {
-		cache, ok := crConfig.ContentServers[cacheName]
+		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' in CacheStats but not CRConfig, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' in CacheStats but not CRConfig, skipping")
 			continue
 		}
 
@@ -157,27 +176,27 @@ func addCapacity(
 		}
 
 		stat := statsCache.Stats
-		if len(stat[StatNameKBPS]) < 1 || len(stat[StatNameMaxKBPS]) < 1 {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats has no kbps or maxKbps, skipping")
+		if len(stat[tc.StatNameKBPS]) < 1 || len(stat[tc.StatNameMaxKBPS]) < 1 {
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats has no kbps or maxKbps, skipping")
 			continue
 		}
 
-		kbps, err := statToFloat(stat[StatNameKBPS][0].Val)
+		kbps, err := statToFloat(stat[tc.StatNameKBPS][0].Val)
 		if err != nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats kbps is not a number, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats kbps is not a number, skipping")
 			continue
 		}
-		maxKBPS, err := statToFloat(stat[StatNameMaxKBPS][0].Val)
+		maxKBPS, err := statToFloat(stat[tc.StatNameMaxKBPS][0].Val)
 		if err != nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CacheStats maxKps is not a number, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats maxKps is not a number, skipping")
 			continue
 		}
 		if cache.ServerStatus == nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CRConfig Status is nil, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CRConfig Status is nil, skipping")
 			continue
 		}
 		if cache.Profile == nil {
-			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + cacheName + "' CRConfig Profile is nil, skipping")
+			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CRConfig Profile is nil, skipping")
 			continue
 		}
 		if tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusReported || tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusOnline {

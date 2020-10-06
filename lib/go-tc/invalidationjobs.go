@@ -19,19 +19,21 @@ package tc
  * under the License.
  */
 
-import "errors"
-import "fmt"
-import "regexp"
-import "database/sql"
-import "math"
-import "strconv"
-import "strings"
-import "time"
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"math"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/go-ozzo/ozzo-validation/is"
 
-import "github.com/go-ozzo/ozzo-validation"
-import "github.com/go-ozzo/ozzo-validation/is"
+	validation "github.com/go-ozzo/ozzo-validation"
+)
 
 // MaxTTL is the maximum value of TTL representable as a time.Duration object, which is used
 // internally by InvalidationJobInput objects to store the TTL.
@@ -238,8 +240,9 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 		errs = append(errs, err.Error())
 	}
 
+	var dsID uint
 	if job.DeliveryService != nil {
-		if _, err := job.DSID(tx); err != nil {
+		if dsID, err = job.DSID(tx); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
@@ -272,7 +275,81 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	if len(errs) > 0 {
 		return errors.New(strings.Join(errs, ", "))
 	}
+
+	errs = job.ValidateUniqueness(tx, dsID)
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+
 	return nil
+}
+
+func (job *InvalidationJobInput) ValidateUniqueness(tx *sql.Tx, dsID uint) []string {
+	errors := []string{}
+
+	const readQuery = `
+SELECT job.id,
+       keyword,
+       parameters,
+       asset_url,
+       start_time
+FROM job
+WHERE job.job_deliveryservice = $1
+`
+	rows, err := tx.Query(readQuery, dsID)
+	if err != nil {
+		errors = append(errors, fmt.Sprintf("unable to query for other invalidation jobs"))
+		return errors
+	}
+
+	defer rows.Close()
+	jobStart := job.StartTime.Time
+	for rows.Next() {
+		testJob := InvalidationJob{}
+		err = rows.Scan(&testJob.ID, &testJob.Keyword, &testJob.Parameters, &testJob.AssetURL, &testJob.StartTime)
+		if err != nil {
+			continue
+		}
+		if !strings.HasSuffix(*testJob.AssetURL, *job.Regex) {
+			continue
+		}
+		testJobTTL := testJob.GetTTL()
+		if testJobTTL == 0 {
+			continue
+		}
+		testJobStart := testJob.StartTime.Time
+		testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJobTTL))
+		jobTTLHours, _ := job.TTLHours()
+		jobEnd := jobStart.Add(time.Hour * time.Duration(jobTTLHours))
+		// jobStart in testJob range
+		if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
+			// jobEnd in testJob range
+			(testJobStart.Before(jobEnd) && jobEnd.Before(testJobEnd)) ||
+			// job range encaspulates testJob range
+			(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
+			errors = append(errors, fmt.Sprintf("job already has an invalidation job that overlaps, start:%v end:%v", testJobStart, testJobEnd))
+		}
+	}
+
+	return errors
+}
+
+// GetTTL will parse job.Parameters to find TTL, returns an int representing number of hours. Returns 0
+// in case of issue (0 is an invalid TTL)
+func (job *InvalidationJob) GetTTL() uint {
+	if job.Parameters == nil {
+		return 0
+	}
+	ttl := strings.Split(*job.Parameters, ":")
+	if len(ttl) != 2 {
+		return 0
+	}
+
+	hours, err := strconv.Atoi(ttl[1][:len(ttl[1])-1])
+	if err != nil {
+		return 0
+	}
+	return uint(hours)
 }
 
 // Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.

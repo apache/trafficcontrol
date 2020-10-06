@@ -1,0 +1,59 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+version: '2.1'
+
+services:
+  sample.driver.playbook:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/ansible/sample.lab/Ansible.Dockerfile
+    volumes:
+      - ./out:/opt/atc/infrastructure/ansible/sample.lab/out
+      - ./inventory:/opt/atc/infrastructure/ansible/sample.lab/inventory
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+    working_dir: /opt/atc/infrastructure/ansible/sample.lab
+    environment:
+      - SSH_AUTH_SOCK=/ssh-agent
+      - ANSIBLE_SSH_RETRIES=10
+      - ANSIBLE_NOCOLOR=1
+      - ANSIBLE_CONFIG=/opt/atc/infrastructure/ansible/sample.lab/ansible.cfg
+      - ANSIBLE_REMOTE_USER=myuser.on.remote.system
+      - TARGET_ANSIBLE_PLAYBOOK=/opt/atc/infrastructure/ansible/sample.driver.playbook.yml
+      - ANSIBLE_ROLES_PATH=/opt/atc/infrastructure/ansible/roles
+      - GALAXY_ROLE=some.ansible.galaxy/role
+      - ANSIBLEPASS
+    entrypoint: /bin/sh
+    command: ansible-playbook.sh
+  influxdb_relay:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/ansible/sample.lab/Ansible.Dockerfile
+    volumes:
+      - ./out:/opt/atc/infrastructure/ansible/sample.lab/out
+      - ./inventory:/opt/atc/infrastructure/ansible/sample.lab/inventory
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+    working_dir: /opt/atc/infrastructure/ansible/sample.lab
+    environment:
+      - SSH_AUTH_SOCK=/ssh-agent
+      - ANSIBLE_SSH_RETRIES=10
+      - ANSIBLE_NOCOLOR=1
+      - ANSIBLE_CONFIG=/opt/atc/infrastructure/ansible/sample.lab/ansible.cfg
+      - ANSIBLE_REMOTE_USER=myuser.on.remote.system
+      - TARGET_ANSIBLE_PLAYBOOK=/opt/atc/infrastructure/ansible/influxdb_relay.yml
+      - ANSIBLE_ROLES_PATH=/opt/atc/infrastructure/ansible/roles
+      - GALAXY_ROLE
+      - ANSIBLEPASS
+    entrypoint: /bin/sh
+    command: ansible-playbook.sh

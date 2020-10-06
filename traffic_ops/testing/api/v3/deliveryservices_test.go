@@ -56,6 +56,7 @@ func TestDeliveryServices(t *testing.T) {
 		GetTestDeliveryServicesIMSAfterChange(t, header)
 		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
 		GetTestDeliveryServices(t)
+		GetTestDeliveryServicesCapacity(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
@@ -345,6 +346,22 @@ func GetTestDeliveryServices(t *testing.T) {
 	if cnt > 2 {
 		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
 	}
+}
+
+func GetTestDeliveryServicesCapacity(t *testing.T) {
+	actualDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	actualDSMap := map[string]tc.DeliveryServiceNullableV30{}
+	for _, ds := range actualDSes {
+		actualDSMap[*ds.XMLID] = ds
+		capDS, _, err := TOSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(*ds.ID), nil)
+		if err != nil {
+			t.Errorf("cannot GET DeliveryServices: %v's Capacity: %v - %v", ds, err, capDS)
+		}
+	}
+
 }
 
 func UpdateTestDeliveryServices(t *testing.T) {

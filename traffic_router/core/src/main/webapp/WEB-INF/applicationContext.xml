@@ -344,8 +344,8 @@
 		<property name="protocolService" ref="ProtocolExecutorService" />
 		<property name="protocols">
 			<list>
-				<ref local="TCP" />
-				<ref local="UDP" />
+				<ref bean="TCP" />
+				<ref bean="UDP" />
 			</list>
 		</property>
 	</bean>

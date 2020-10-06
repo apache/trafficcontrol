@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
@@ -33,6 +34,7 @@ func TestCDNs(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestCDNs(t)
 		UpdateTestCDNs(t)
 		UpdateTestCDNsWithHeaders(t, header)
 		header = make(map[string][]string)
@@ -116,6 +118,22 @@ func CreateTestCDNs(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestCDNs(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, _ := TOSession.GetCDNsWithHdr(header)
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestCDNs(t *testing.T) {

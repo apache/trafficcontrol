@@ -68,4 +68,44 @@ describe('Traffic Portal Topologies Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies");
 	});
 
+	it('should update the topology', function() {
+		console.log('Updating the topology: ' + myNewTopology.name);
+		pageData.searchFilter.sendKeys(myNewTopology.name);
+		element.all(by.repeater('t in ::topologies')).filter(function(row){
+			return row.element(by.name('name')).getText().then(function(val){
+				return val === myNewTopology.name;
+			});
+		}).get(0).click();
+		expect(pageData.updateButton.isEnabled()).toBe(false);
+		expect(pageData.name.getAttribute('disabled')).toBe('true');
+		pageData.description.clear().then(function() {
+			pageData.description.sendKeys("Updated description");
+		});
+		expect(pageData.updateButton.isEnabled()).toBe(true);
+		pageData.updateButton.click();
+		expect(pageData.description.getText() === "Updated description");
+	});
+
+	it('should view all delivery services that utilize the topology', function() {
+		console.log('Viewing all delivery services that utilize: ' + myNewTopology.name);
+		pageData.moreBtn.click();
+		pageData.viewDeliveryServicesMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies/delivery-services");
+	});
+
+	it('should navigate back to the topology and view all cache groups utilized by the topology', function() {
+		console.log('Viewing all cache groups utilized by ' + myNewTopology.name);
+		pageData.topLink.click();
+		pageData.moreBtn.click();
+		pageData.viewCacheGroupsMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies/cache-groups");
+	});
+
+	it('should navigate back to the topology and view all servers utilized by the topology', function() {
+		console.log('Viewing all servers utilized by ' + myNewTopology.name);
+		pageData.topLink.click();
+		pageData.moreBtn.click();
+		pageData.viewServersMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies/servers");
+	});
 });

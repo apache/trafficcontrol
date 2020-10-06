@@ -37,6 +37,7 @@ func TestDeliveryServices(t *testing.T) {
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
 		GetTestDeliveryServices(t)
+		GetTestDeliveryServicesCapacity(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
@@ -100,6 +101,22 @@ func GetTestDeliveryServices(t *testing.T) {
 	if cnt > 2 {
 		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
 	}
+}
+
+func GetTestDeliveryServicesCapacity(t *testing.T) {
+	actualDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	actualDSMap := map[string]tc.DeliveryServiceNullable{}
+	for _, ds := range actualDSes {
+		actualDSMap[*ds.XMLID] = ds
+		capDS, _, err := TOSession.GetDeliveryServiceCapacity(strconv.Itoa(*ds.ID))
+		if err != nil {
+			t.Errorf("cannot GET DeliveryServices: %v's Capacity: %v - %v", ds, err, capDS)
+		}
+	}
+
 }
 
 func UpdateTestDeliveryServices(t *testing.T) {

@@ -20,12 +20,9 @@ package cache
  */
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 // AvailableStatusReported is the status string returned by caches set to
@@ -106,54 +103,7 @@ func (a ResultHistory) Copy() ResultHistory {
 	return b
 }
 
-// ResultStatVal is the value of an individual stat returned from a poll.
-// JSON values are all strings, for the TM1.0 /publish/CacheStats API.
-type ResultStatVal struct {
-	// Span is the number of polls this stat has been the same. For example,
-	// if History is set to 100, and the last 50 polls had the same value for
-	// this stat (but none of the previous 50 were the same), this stat's map
-	// value slice will actually contain 51 entries, and the first entry will
-	// have the value, the time of the last poll, and a Span of 50.
-	// Assuming the poll time is every 8 seconds, users will then know, looking
-	// at the Span, that the value was unchanged for the last 50*8=400 seconds.
-	Span uint64 `json:"span"`
-	// Time is the time this stat was returned.
-	Time time.Time   `json:"time"`
-	Val  interface{} `json:"value"`
-}
-
-func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
-	v := struct {
-		Val  string `json:"value"`
-		Time int64  `json:"time"`
-		Span uint64 `json:"span"`
-	}{
-		Val:  fmt.Sprintf("%v", t.Val),
-		Time: t.Time.UnixNano() / 1000000, // ms since the epoch
-		Span: t.Span,
-	}
-	json := jsoniter.ConfigFastest // TODO make configurable
-	return json.Marshal(&v)
-}
-
-func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
-	v := struct {
-		Val  string `json:"value"`
-		Time int64  `json:"time"`
-		Span uint64 `json:"span"`
-	}{}
-	json := jsoniter.ConfigFastest // TODO make configurable
-	err := json.Unmarshal(data, &v)
-	if err != nil {
-		return err
-	}
-	t.Time = time.Unix(0, v.Time*1000000)
-	t.Val = v.Val
-	t.Span = v.Span
-	return nil
-}
-
-func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
+func pruneStats(history []tc.ResultStatVal, limit uint64) []tc.ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]
 	}
