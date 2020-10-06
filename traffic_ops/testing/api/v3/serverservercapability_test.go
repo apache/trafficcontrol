@@ -163,7 +163,7 @@ func SortTestServerServerCapabilities(t *testing.T) {
 	for i, _ := range resp {
 		sortedList = append(sortedList, *resp[i].Server)
 	}
-	//fmt.Println(sortedList)
+
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
 		return sortedList[p] < sortedList[q]
 	})
