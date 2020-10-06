@@ -56,7 +56,7 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_ASNS, id)
+	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -119,7 +119,7 @@ func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
 
 // DELETE an ASN by asn number
 func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/asn/%d", API_ASNS, asn)
+	route := fmt.Sprintf("%s?id=%d", API_ASNS, asn)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

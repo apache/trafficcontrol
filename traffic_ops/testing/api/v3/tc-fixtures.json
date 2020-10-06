@@ -2,11 +2,11 @@
     "asns": [
         {
             "asn": 8888,
-            "cachegroupName": "mid-northeast-group"
+            "cachegroupId": 1
         },
         {
             "asn": 9999,
-            "cachegroupName": "edge_cg4"
+            "cachegroupId": 2
         }
     ],
     "cachegroups": [

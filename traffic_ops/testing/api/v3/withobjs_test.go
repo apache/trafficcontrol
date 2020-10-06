@@ -36,7 +36,8 @@ func WithObjs(t *testing.T, objs []TCObj, f func()) {
 type TCObj int
 
 const (
-	CacheGroups TCObj = iota
+	ASN TCObj = iota
+	CacheGroups
 	CacheGroupsDeliveryServices
 	CacheGroupParameters
 	CDNs
@@ -80,6 +81,7 @@ type TCObjFuncs struct {
 }
 
 var withFuncs = map[TCObj]TCObjFuncs{
+	ASN:                                   {CreateTestASNs, DeleteTestASNs},
 	CacheGroups:                           {CreateTestCacheGroups, DeleteTestCacheGroups},
 	CacheGroupsDeliveryServices:           {CreateTestCachegroupsDeliveryServices, DeleteTestCachegroupsDeliveryServices},
 	CacheGroupParameters:                  {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
