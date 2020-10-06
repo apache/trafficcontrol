@@ -42,6 +42,12 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	})
 }
 
+func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+		GetTestDeliveryServicesRequiredCapabilities(t)
+	})
+}
+
 func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, header http.Header) {
 	data := testData.DeliveryServicesRequiredCapabilities
 	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
@@ -49,32 +55,27 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 	testCases := []struct {
 		description string
 		capability  tc.DeliveryServicesRequiredCapability
-		expected    int
 	}{
 		{
 			description: "get all deliveryservices required capabilities",
-			expected:    len(testData.DeliveryServicesRequiredCapabilities),
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID: ds1,
 			},
-			expected: 1,
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
 			capability: tc.DeliveryServicesRequiredCapability{
 				XMLID: data[0].XMLID,
 			},
-			expected: 1,
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				RequiredCapability: data[0].RequiredCapability,
 			},
-			expected: 1,
 		},
 	}
 
@@ -113,32 +114,54 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	testCases := []struct {
 		description string
 		capability  tc.DeliveryServicesRequiredCapability
-		expected    int
+		expectFunc  func(tc.DeliveryServicesRequiredCapability, []tc.DeliveryServicesRequiredCapability)
 	}{
 		{
 			description: "get all deliveryservices required capabilities",
-			expected:    len(testData.DeliveryServicesRequiredCapabilities),
+			expectFunc: func(expect tc.DeliveryServicesRequiredCapability, actual []tc.DeliveryServicesRequiredCapability) {
+				if len(actual) != len(testData.DeliveryServicesRequiredCapabilities) {
+					t.Errorf("expected length: %d, actual: %d", len(testData.DeliveryServicesRequiredCapabilities), len(actual))
+				}
+			},
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID: ds1,
 			},
-			expected: 1,
+			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
+				for _, dsrc := range dsReqCaps {
+					if *dsrc.DeliveryServiceID != *dsRequiredCapability.DeliveryServiceID {
+						t.Errorf("expected: all delivery service IDs to equal %d, actual: found %d", *dsRequiredCapability.DeliveryServiceID, *dsrc.DeliveryServiceID)
+					}
+				}
+			},
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
 			capability: tc.DeliveryServicesRequiredCapability{
 				XMLID: data[0].XMLID,
 			},
-			expected: 1,
+			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
+				for _, dsrc := range dsReqCaps {
+					if *dsrc.XMLID != *dsRequiredCapability.XMLID {
+						t.Errorf("expected: all delivery service XMLIDs to equal %s, actual: found %s", *dsRequiredCapability.XMLID, *dsrc.XMLID)
+					}
+				}
+			},
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				RequiredCapability: data[0].RequiredCapability,
 			},
-			expected: 1,
+			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
+				for _, dsrc := range dsReqCaps {
+					if *dsrc.RequiredCapability != *dsRequiredCapability.RequiredCapability {
+						t.Errorf("expected: all delivery service required capabilities to equal %s, actual: found %s", *dsRequiredCapability.RequiredCapability, *dsrc.RequiredCapability)
+					}
+				}
+			},
 		},
 	}
 
@@ -148,9 +171,7 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
-			if len(capabilities) != tc.expected {
-				t.Errorf("got %d; expected %d required capabilities assigned to deliveryservices", len(capabilities), tc.expected)
-			}
+			tc.expectFunc(tc.capability, capabilities)
 		})
 	}
 }
@@ -167,32 +188,27 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 	testCases := []struct {
 		description string
 		capability  tc.DeliveryServicesRequiredCapability
-		expected    int
 	}{
 		{
 			description: "get all deliveryservices required capabilities",
-			expected:    len(testData.DeliveryServicesRequiredCapabilities),
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID: ds1,
 			},
-			expected: 1,
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
 			capability: tc.DeliveryServicesRequiredCapability{
 				XMLID: data[0].XMLID,
 			},
-			expected: 1,
 		},
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				RequiredCapability: data[0].RequiredCapability,
 			},
-			expected: 1,
 		},
 	}
 
@@ -208,6 +224,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 		})
 	}
 }
+
 func CreateTestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 	for _, td := range testData.TopologyBasedDeliveryServicesRequiredCapabilities {
 
@@ -220,6 +237,21 @@ func CreateTestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 		if err != nil {
 			t.Fatalf("cannot create delivery service required capability: %v", err)
 		}
+	}
+
+	invalid := tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-top-req-cap")),
+		RequiredCapability: util.StrPtr("asdf"),
+	}
+	_, reqInf, err := TOSession.CreateDeliveryServicesRequiredCapability(invalid)
+	if err == nil {
+		t.Fatal("when adding delivery service required capability to a delivery service with a topology that " +
+			"doesn't have cachegroups with at least one server with the required capabilities - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("when adding delivery service required capability to a delivery service with a topology that "+
+			"doesn't have cachegroups with at least one server with the required capabilities - expected status code: "+
+			"%d, actual: %d", http.StatusBadRequest, reqInf.StatusCode)
 	}
 }
 
