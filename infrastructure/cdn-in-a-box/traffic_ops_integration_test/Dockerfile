@@ -32,6 +32,7 @@ RUN set -o errexit; \
     # Test the go binary
     go version
 ENV GOPATH=/go
+ENV PATH="${PATH}:${GOPATH}/bin"
 
 RUN apk add --no-cache --update git gcc
 
