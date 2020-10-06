@@ -298,13 +298,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 
 	idbPath := cfg.InfluxDBConfPath
 	if idbPath == "" {
-		var mojoMode string
-		for _, v := range os.Environ() {
-			if strings.HasPrefix(v, "MOJO_MODE=") {
-				mojoMode = strings.TrimPrefix(v, "MOJO_MODE=")
-				break
-			}
-		}
+		mojoMode := os.Getenv("MOJO_MODE")
 
 		if cwd, err := os.Getwd(); mojoMode != "" && err != nil {
 			idbPath = filepath.Join(cwd, "conf", mojoMode, "influxdb.conf")
