@@ -218,29 +218,8 @@ Arguments and Flags
 
 Environment Variables
 ---------------------
-.. envvar:: TO_URL
-
-	Should be set to the URL of a Traffic Ops server. This doesn't need to be a full URL, an
-	:abbr:`FQDN (Fully Qualified Domain Name)` will do just as well. It may also omit the port
-	number on which the Traffic Ops server listens for incoming connections - port 443 will be
-	assumed unless :envvar:`TO_URL` is prefixed by ``http://`` (case-insensitive), in which case
-	port 80 will be assumed. The value of this environment variable will only be considered if
-	:program:`traffic_ops_ort` was invoked using the new call signature, which allows it to be
-	overridden on the command line by the value of :option:`--to_url`.
-
-.. envvar:: TO_USER
-
-	The username to use when authenticating to the Traffic Ops server. The value of this environment
-	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
-	signature, which allows it to be overridden on the command line by the value of
-	:option:`-u`/:option:`--to_user`.
-
-.. envvar:: TO_PASSWORD
-
-	The password to use when authenticating to the Traffic Ops server. The value of this environment
-	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
-	signature, which allows it to be overridden on the command line by the value of
-	:option:`-p`/:option:`--to_password`.
+:program:`traffic_ops_ort` supports authentication with a Traffic Ops instance using the environment
+variables :envvar:`TO_URL`, :envvar:`TO_USER` and :envvar:`TO_PASSWORD`.
 
 .. _ort-special-strings:
 

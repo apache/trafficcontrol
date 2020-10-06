@@ -162,17 +162,9 @@ Environment Variables
 ---------------------
 Both :program:`compare` and :program:`genConfigRoutes.py` require connection and authentication methods for two Traffic Ops instances. For ease of use, these can be provided by environment variables. Both programs are capable of using the same environment variables, so that they only need to be defined once each.
 
-.. envvar:: TO_URL
+The reference Traffic Ops instance can be authenticated with via the :envvar:`TO_URL` (overridden by :option:`genConfigRoutes.py --refURL` and :option:`compare --ref_url`), :envvar:`TO_USER` (overridden by :option:`genConfigRoutes.py --refUser` and :option:`compare --ref_user`), and :envvar:`TO_PASSWORD` (overridden by :option:`genConfigRoutes.py --refPasswd` and :option:`compare --ref_passwd`) variables.
 
-	The URL of the reference Traffic Ops instance. Overridden by :option:`genConfigRoutes.py --refURL` and :option:`compare --ref_url`.
-
-.. envvar:: TO_USER
-
-	The username to authenticate with the reference Traffic Ops instance. Overridden by :option:`genConfigRoutes.py --refUser` and :option:`compare --ref_user`.
-
-.. envvar:: TO_PASSWORD
-
-	The password to authenticate with the reference Traffic Ops instance. Overridden by :option:`genConfigRoutes.py --refPasswd` and :option:`compare --ref_passwd`.
+The testing Traffic Ops instance can be authenticated with using the environment variables described in this section.
 
 .. envvar:: TEST_URL
 

@@ -14,23 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
----
-version: '2.3'
 
-services:
-  lint:
-    build:
-      context: ../..
-      dockerfile: tools/golang/Dockerfile
-      target: lint
-    volumes:
-      - ../..:/go/src/github.com/apache/trafficcontrol
-
-  unit:
-    build:
-      context: ../..
-      dockerfile: tools/golang/Dockerfile
-      target: unit
-    volumes:
-      - ../..:/go/src/github.com/apache/trafficcontrol
-      - ./junit:/junit
+# To use this dockerignore:
+# - Set these environment variables: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1
+# - Use a docker version of 19.03.0 or higher (Docker Desktop >=2.1.0.1)
+# For more information, see:
+# - https://github.com/moby/buildkit/pull/901
+# - https://github.com/docker/compose/pull/6865
+# - https://docs.docker.com/develop/develop-images/build_enhancements/
+*
+!GO_VERSION

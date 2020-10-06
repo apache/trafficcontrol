@@ -241,6 +241,8 @@ Running
 =======
 Currently, Traffic Ops consists of two programs, as it is in the middle of a transition from one code-base to another. It is not recommended that either one be run on its own. Also, while this section contains instructions for running each piece manually, the only truly supported method is via :manpage:`systemd(8)`, e.g. :bash:`systemctl start traffic_ops` (this method also starts both programs properly and uses their default configuration file locations).
 
+.. _legacy-perl-script:
+
 .. program:: traffic_ops-perl
 
 Legacy Perl Script
@@ -253,14 +255,7 @@ The old code base was written in Perl, and is executed as a Perl script. When In
 
 The script takes no options other than the ones accepted by `Hypnotoad <https://mojolicious.org/perldoc/Mojo/Server/Hypnotoad>`_ itself, and it just expects to gets its configuration from the standard file locations (covered in Configuring_).
 
-.. envvar:: MOJO_MODE
-
-	This sets the "mode" of the Traffic Ops Mojolicious application. Effectively, this chooses the set of configuration files it will consult. The default value is "development", and the possible values are:
-
-	- development
-	- integration
-	- production
-	- test
+The operating environment of the Legacy Perl Script can be chosen by setting the :envvar:`MOJO_MODE` environment variable.
 
 .. program:: traffic_ops
 
@@ -708,7 +703,7 @@ Data Source Extensions work in much the same way as `Check Extensions`_, but are
 
 Example Cron File
 -----------------
-The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system. 
+The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system.
 Edit $TO_USER and $TO_PASS to match ORT input parameters.
 
 .. code-block:: shell

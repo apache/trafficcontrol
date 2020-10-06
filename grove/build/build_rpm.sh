@@ -47,11 +47,6 @@ checkGroveEnvironment() {
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	export GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM GOOS RPM_TARGET_OS
 
-	# grove needs to be built with go 1.14 or greater
-	if ! verify_and_set_go_version; then
-		return $?;
-	fi;
-
 	echo "=================================================="
 	echo "GO_VERSION: $GO_VERSION"
 	echo "TC_DIR: $TC_DIR"
@@ -82,8 +77,8 @@ buildRpmGrove() {
 	# build
 	ldflags='-s -w'
 	tags='osusergo netgo'
-	$GO get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
-	$GO build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" -tags "$tags" || { echo "Failed to build grove: $?" >&2; return 1; }
+	go get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
+	go build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" -tags "$tags" || { echo "Failed to build grove: $?" >&2; return 1; }
 
 	# tar
 	tar -cvzf "${RPMBUILD}/SOURCES/grove-${GROVE_VERSION}.tgz" grove conf/grove.cfg build/grove.init build/grove.logrotate || { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }

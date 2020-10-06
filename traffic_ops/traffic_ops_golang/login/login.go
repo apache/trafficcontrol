@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -239,12 +240,14 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		data := url.Values{}
 		data.Add("code", parameters.Code)
 		data.Add("client_id", parameters.ClientId)
-		data.Add("client_secret", cfg.ConfigTrafficOpsGolang.OAuthClientSecret)
 		data.Add("grant_type", "authorization_code") // Required by RFC6749 section 4.1.3
 		data.Add("redirect_uri", parameters.RedirectUri)
 
 		req, err := http.NewRequest(http.MethodPost, parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		if cfg.OAuthClientSecret != "" {
+			req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(parameters.ClientId+":"+cfg.OAuthClientSecret))) // per RFC6749 section 2.3.1
+		}
 		if err != nil {
 			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
 			return

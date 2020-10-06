@@ -104,4 +104,6 @@ Importantly, though, a statistics provider *must* respond to HTTP GET requests o
 
 - Input bytes, output bytes, and speeds for all monitored network interfaces
 
+When using the ``stats_over_http`` extension this can be provided by the ``system_stats`` plugin which will inject that information in to the ATS stats which then get returned by ``stats_over_http``. The ``system_stats`` plugin can be used with any custom implementations as it is already included and built with ATS when building with experimental-plugins enabled.
+
 There are other optional and/or :term:`Delivery Service`-related statistics that may cause Traffic Stats to not have the right information if not provided, but the above are essential for implementing :ref:`health-proto`.

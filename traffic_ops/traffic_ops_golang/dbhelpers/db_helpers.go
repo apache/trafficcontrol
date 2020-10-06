@@ -957,3 +957,28 @@ func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
 	}
 	return dsType, true, nil
 }
+
+// GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.
+func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx) (tc.DSType, []string, *string, bool, error) {
+	var dsType tc.DSType
+	var reqCap []string
+	var topology *string
+	q := `
+SELECT
+  t.name,
+  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities,
+  ds.topology
+FROM deliveryservice AS ds
+LEFT JOIN deliveryservices_required_capability AS dsrc ON dsrc.deliveryservice_id = ds.id
+JOIN type t ON ds.type = t.id
+WHERE ds.id = $1
+GROUP BY t.name, ds.topology
+`
+	if err := tx.QueryRow(q, dsID).Scan(&dsType, pq.Array(&reqCap), &topology); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DSTypeInvalid, nil, nil, false, nil
+		}
+		return tc.DSTypeInvalid, nil, nil, false, errors.New("querying type from delivery service: " + err.Error())
+	}
+	return dsType, reqCap, topology, true, nil
+}

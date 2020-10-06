@@ -201,6 +201,27 @@
             "name": "topology-mid-cg-07",
             "shortName": "tm7",
             "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "dtrc1",
+            "shortName": "dtrc1",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "dtrc2",
+            "shortName": "dtrc2",
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "dtrc3",
+            "shortName": "dtrc3",
+            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [
@@ -863,6 +884,134 @@
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
+            "displayName": "ds-top-req-cap",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds-top-req-cap\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-for-ds-req",
+            "type": "HTTP",
+            "xmlId": "ds-top-req-cap",
+            "anonymousBlockingEnabled": false
+        },
+        {
+            "active": true,
+            "cdnName": "cdn1",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "ds-top-req-cap2",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds-top-req-cap2\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-for-ds-req2",
+            "type": "HTTP",
+            "xmlId": "ds-top-req-cap2",
+            "anonymousBlockingEnabled": false
+        },
+        {
+            "active": true,
+            "cdnName": "cdn1",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
             "displayName": "ds-client-steering",
             "dnsBypassCname": null,
             "dnsBypassIp": "",
@@ -957,6 +1106,20 @@
         {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
+        }
+    ],
+    "topologyBasedDeliveryServicesRequiredCapabilities": [
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "disk"
+        },
+        {
+            "xmlID": "ds-top-req-cap2",
+            "RequiredCapability": "ram"
         }
     ],
     "divisions": [
@@ -1674,6 +1837,13 @@
             "name": "MSO",
             "routing_disabled": false,
             "type": "ORG_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "cdn2 mid description",
+            "name": "CDN2_MID",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
         }
     ],
     "regions": [
@@ -2653,6 +2823,414 @@
             "tcpPort": 80,
             "type": "MID",
             "updPending": false
+        },
+        {
+            "cachegroup": "dtrc1",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-mid-01",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::2/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.2/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc1",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-mid-02",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::3/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.3/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc1",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-mid-03",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::4/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.4/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc2",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-01",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::5/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.5/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc2",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-02",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::6/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.6/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc2",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-03",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::7/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.7/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc3",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-04",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::8/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.8/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc3",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-05",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::9/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.9/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc3",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-06",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::10/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.10/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc2",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-07",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::11/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.11/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc3",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-08",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.12/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc1",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-mid-04",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::13/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.13/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
         }
     ],
     "serverCapabilities": [
@@ -2661,6 +3239,15 @@
         },
         {
             "name": "bar"
+        },
+        {
+            "name": "ram"
+        },
+        {
+            "name": "disk"
+        },
+        {
+            "name": "asdf"
         }
     ],
     "serverServerCapabilities": [
@@ -2671,6 +3258,70 @@
         {
             "serverHostName": "atlanta-org-2",
             "serverCapability": "bar"
+        },
+        {
+            "serverHostName": "dtrc-mid-01",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-mid-01",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-mid-02",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-mid-02",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-01",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-edge-01",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-01",
+            "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "dtrc-edge-02",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-edge-02",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-04",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-edge-04",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-05",
+            "serverCapability": "ram"
+        },
+        {
+            "serverHostName": "dtrc-edge-05",
+            "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-07",
+            "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "dtrc-edge-08",
+            "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "dtrc-mid-04",
+            "serverCapability": "asdf"
         }
     ],
     "serviceCategories": [
@@ -2938,6 +3589,38 @@
                 {
                     "cachegroup": "topology-mid-cg-07",
                     "parents": []
+                }
+            ]
+        },
+        {
+            "name": "top-for-ds-req",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "dtrc1",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "dtrc2",
+                    "parents": [0]
+                },
+                {
+                    "cachegroup": "dtrc3",
+                    "parents": [0]
+                }
+            ]
+        },
+        {
+            "name": "top-for-ds-req2",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "dtrc1",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "dtrc2",
+                    "parents": [0]
                 }
             ]
         }

@@ -513,10 +513,11 @@ plugin.remap_stats.edge-cache-0.delivery.service.one.in_bytes,296728202
 plugin.remap_stats.edge-cache-0.delivery.service.one.out_bytes,292727927997
 plugin.remap_stats.edge-cache-0.delivery.service.one.status_2xx,7209
 plugin.remap_stats.edge-cache-0.delivery.service.one.status_0xx,27
+server,4.2.2
 inf.name,eth0
 inf.speed,70000
 proc.net.dev,eth0:47907832129 14601260 0 0 0  0 0790726 728207677726 10210700052 0 0 0  0 0 0
-proc.loadavg,0.30 0.12 0.21 803/863 1421
+proc.loadavg,0.30 0.12 0.21 1/863 1421
 configReloadRequests,29
 lastReloadRequest,1408789610
 configReloads,9
@@ -524,3 +525,22 @@ lastReload,4703274272
 astatsLoad,4703274272
 notAvailable,false
 something,here
+plugin.system_stats.loadavg.one,6080
+plugin.system_stats.loadavg.five,16672
+plugin.system_stats.loadavg.fifteen,41888
+plugin.system_stats.current_processes,803
+plugin.system_stats.net.docker0.collisions,0
+plugin.system_stats.net.docker0.multicast,0
+plugin.system_stats.net.docker0.rx_bytes,4363732
+plugin.system_stats.net.docker0.tx_bytes,237634637
+plugin.system_stats.net.docker0.speed,70000
+plugin.system_stats.net.docker0.rx_compressed,0
+plugin.system_stats.net.docker0.rx_crc_errors,0
+plugin.system_stats.net.docker0.rx_dropped,0
+plugin.system_stats.net.docker0.rx_errors,0
+plugin.system_stats.net.docker0.rx_fifo_errors,0
+plugin.system_stats.net.docker0.rx_frame_errors,0
+plugin.system_stats.net.docker0.rx_length_errors,0
+proxy.process.cache.volume_0.span.offline,0
+proxy.process.cache.volume_0.span.online,0
+server,10.0.0
