@@ -436,8 +436,12 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
 			ds.Topology = util.StrPtr("my-topology")
-			if _, _, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds); err == nil {
+			_, inf, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+			if err == nil {
 				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
+			}
+			if inf.StatusCode < 400 || inf.StatusCode >= 500 {
+				t.Errorf("Expected client-level error updating a DS with an invalid Topology, got: %d", inf.StatusCode)
 			}
 		}
 	}
