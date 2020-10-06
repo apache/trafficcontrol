@@ -456,7 +456,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
-	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
 	}
@@ -465,7 +465,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
-	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
 	}
