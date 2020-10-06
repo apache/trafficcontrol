@@ -432,21 +432,37 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 
 	found := false
+	var nonCSDS *tc.DeliveryServiceNullableV30
 	for _, ds := range dses {
+		if ds.Type == nil || ds.ID == nil {
+			continue
+		}
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
 			ds.Topology = util.StrPtr("my-topology")
-			_, inf, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+			_, _, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
 			if err == nil {
-				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
+				t.Error("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
 			}
-			if inf.StatusCode < 400 || inf.StatusCode >= 500 {
-				t.Errorf("Expected client-level error updating a DS with an invalid Topology, got: %d", inf.StatusCode)
-			}
+		} else if nonCSDS == nil {
+			nonCSDS = new(tc.DeliveryServiceNullableV30)
+			*nonCSDS = ds
 		}
 	}
 	if !found {
-		t.Fatalf("expected at least one CLIENT_STEERING delivery service")
+		t.Error("expected at least one CLIENT_STEERING delivery service")
+	}
+	if nonCSDS == nil {
+		t.Fatal("Expected at least on non-CLIENT_STEERING DS to exist")
+	}
+
+	nonCSDS.Topology = new(string)
+	_, inf, err := TOSession.UpdateDeliveryServiceV30(*nonCSDS.ID, *nonCSDS)
+	if err == nil {
+		t.Error("Expected an error assigning a non-existent topology")
+	}
+	if inf.StatusCode < 400 || inf.StatusCode >= 500 {
+		t.Errorf("Expected client-level error assigning a non-existent topology, got: %d", inf.StatusCode)
 	}
 }
 
