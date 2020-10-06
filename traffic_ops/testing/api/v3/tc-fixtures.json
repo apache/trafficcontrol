@@ -1833,7 +1833,35 @@
             "lastUpdated": "2018-03-02T17:27:11.813052+00:00",
             "name": "RASCAL1",
             "routing_disabled": false,
-            "type": "TM_PROFILE"
+            "type": "TM_PROFILE",
+            "params": [
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.threshold.queryTime",
+                    "secure": false,
+                    "value": "1000"
+                },
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.polling.url",
+                    "secure": false,
+                    "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
+                },
+                {
+                    "configFile": "rascal-config.txt",
+                    "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
+                    "name": "peers.polling.interval",
+                    "secure": false,
+                    "value": "60"
+                },
+                {
+                    "configFile": "rascal-config.txt",
+                    "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
+                    "name": "health.polling.interval",
+                    "secure": false,
+                    "value": "30"
+                }
+            ]
         },
         {
             "cdnName": "cdn1",
@@ -1842,6 +1870,13 @@
             "name": "MSO",
             "routing_disabled": false,
             "type": "ORG_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "cdn2 mid description",
+            "name": "CDN2_MID",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
         }
     ],
     "regions": [
@@ -2461,7 +2496,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "RASCAL1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
@@ -3127,6 +3162,108 @@
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": false
+        },
+        {
+            "cachegroup": "dtrc2",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-07",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::11/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.11/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc3",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-edge-08",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.12/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "dtrc1",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "dtrc-mid-04",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::13/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.13/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
         }
     ],
     "serverCapabilities": [
@@ -3141,6 +3278,9 @@
         },
         {
             "name": "disk"
+        },
+        {
+            "name": "asdf"
         }
     ],
     "serverServerCapabilities": [
@@ -3177,6 +3317,10 @@
             "serverCapability": "disk"
         },
         {
+            "serverHostName": "dtrc-edge-01",
+            "serverCapability": "asdf"
+        },
+        {
             "serverHostName": "dtrc-edge-02",
             "serverCapability": "ram"
         },
@@ -3199,6 +3343,18 @@
         {
             "serverHostName": "dtrc-edge-05",
             "serverCapability": "disk"
+        },
+        {
+            "serverHostName": "dtrc-edge-07",
+            "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "dtrc-edge-08",
+            "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "dtrc-mid-04",
+            "serverCapability": "asdf"
         }
     ],
     "serviceCategories": [

@@ -15,12 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine
+FROM alpine:3.12
 
-ENV CGO_ENABLED=0
+RUN architecture=$(uname -m) && \
+    mkdir lib64 && \
+    # Use musl libc where the go binary expects glibc
+    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2
+ENV GOROOT=/usr/local/go \
+    CGO_ENABLED=0
+
 RUN apk add --no-cache gettext git
 
 COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
-RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT /entrypoint.sh

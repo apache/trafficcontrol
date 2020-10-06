@@ -154,15 +154,4 @@ Options
 
 Environment Variables
 ---------------------
-
-.. envvar:: TO_USER
-
-	Defines the user as whom to authenticate with Traffic Ops. This is only used if :option:`-U`/:option:`--traffic-ops-user` is not given.
-
-.. envvar:: TO_PASSWORD
-
-	Defines the password to use when authenticating with Traffic Ops. This is only used if :option:`-P`/:option:`--traffic-ops-password` is not given.
-
-.. envvar:: TO_URL
-
-	Defines the *full* URL to be requested. This is only used if :option:`-u`/:option:`--traffic-ops-url` is not given.
+:program:`atstccfg` supports authentication with a Traffic Ops instance using the environment variables :envvar:`TO_URL` (if :option:`-u`/:option:`--traffic-ops-url` is not given), :envvar:`TO_USER` (if :option:`-U`/:option:`--traffic-ops-user` is not given), and :envvar:`TO_PASSWORD` (if :option:`-P`/:option:`--traffic-ops-password` is not given).
