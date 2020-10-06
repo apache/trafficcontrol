@@ -33,7 +33,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -420,78 +419,6 @@ func (cl *TOClient) GetJobs() ([]tc.Job, error) {
 		return nil, errors.New("getting jobs: " + err.Error())
 	}
 	return jobs, nil
-}
-
-func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
-	serverIDsStr := ""
-	if len(serverIDs) > 0 {
-		sortIDsInHash := true
-		serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
-	}
-
-	serverCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := torequtil.GetRetry(cl.NumRetries, "server_capabilities_s_"+serverIDsStr, &serverCaps, func(obj interface{}) error {
-		// TODO add list of IDs to API+Client
-		toServerCaps, reqInf, err := cl.C.GetServerServerCapabilities(nil, nil, nil)
-		if err != nil {
-			return errors.New("getting server caps from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
-		}
-		serverCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
-
-		for _, sc := range toServerCaps {
-			if sc.ServerID == nil {
-				log.Errorln("Traffic Ops returned Server Capability with nil server id! Skipping!")
-			}
-			if sc.ServerCapability == nil {
-				log.Errorln("Traffic Ops returned Server Capability with nil capability! Skipping!")
-			}
-			if _, ok := (*serverCaps)[*sc.ServerID]; !ok {
-				(*serverCaps)[*sc.ServerID] = map[atscfg.ServerCapability]struct{}{}
-			}
-			(*serverCaps)[*sc.ServerID][atscfg.ServerCapability(*sc.ServerCapability)] = struct{}{}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, errors.New("getting server server capabilities: " + err.Error())
-	}
-	return serverCaps, nil
-}
-
-func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
-	dsIDsStr := ""
-	if len(dsIDs) > 0 {
-		sortIDsInHash := true
-		dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
-	}
-
-	dsCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := torequtil.GetRetry(cl.NumRetries, "ds_capabilities_d_"+dsIDsStr, &dsCaps, func(obj interface{}) error {
-		// TODO add list of IDs to API+Client
-		toDSCaps, reqInf, err := cl.C.GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
-		if err != nil {
-			return errors.New("getting ds caps from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
-		}
-		dsCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
-
-		for _, sc := range toDSCaps {
-			if sc.DeliveryServiceID == nil {
-				log.Errorln("Traffic Ops returned Delivery Service Capability with nil ds id! Skipping!")
-			}
-			if sc.RequiredCapability == nil {
-				log.Errorln("Traffic Ops returned Delivery Service Capability with nil capability! Skipping!")
-			}
-			if (*dsCaps)[*sc.DeliveryServiceID] == nil {
-				(*dsCaps)[*sc.DeliveryServiceID] = map[atscfg.ServerCapability]struct{}{}
-			}
-			(*dsCaps)[*sc.DeliveryServiceID][atscfg.ServerCapability(*sc.RequiredCapability)] = struct{}{}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, errors.New("getting ds server capabilities: " + err.Error())
-	}
-	return dsCaps, nil
 }
 
 func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName) ([]tc.CDNSSLKeys, error) {

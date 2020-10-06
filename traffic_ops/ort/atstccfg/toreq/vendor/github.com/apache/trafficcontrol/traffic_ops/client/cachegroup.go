@@ -17,11 +17,9 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -32,45 +30,14 @@ const (
 
 // Create a CacheGroup
 func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
-	if cachegroup.TypeID == nil && cachegroup.Type != nil {
-		ty, _, err := to.GetTypeByName(*cachegroup.Type)
-		if err != nil {
-			return nil, ReqInf{}, err
-		}
-		if len(ty) == 0 {
-			return nil, ReqInf{}, errors.New("no type named " + *cachegroup.Type)
-		}
-		cachegroup.TypeID = &ty[0].ID
-	}
 
-	if cachegroup.ParentCachegroupID == nil && cachegroup.ParentName != nil {
-		p, _, err := to.GetCacheGroupByName(*cachegroup.ParentName)
-		if err != nil {
-			return nil, ReqInf{}, err
-		}
-		if len(p) == 0 {
-			return nil, ReqInf{}, errors.New("no cachegroup named " + *cachegroup.ParentName)
-		}
-		cachegroup.ParentCachegroupID = &p[0].ID
-	}
-
-	if cachegroup.SecondaryParentCachegroupID == nil && cachegroup.SecondaryParentName != nil {
-		p, _, err := to.GetCacheGroupByName(*cachegroup.SecondaryParentName)
-		if err != nil {
-			return nil, ReqInf{}, err
-		}
-		if len(p) == 0 {
-			return nil, ReqInf{}, errors.New("no cachegroup named " + *cachegroup.ParentName)
-		}
-		cachegroup.SecondaryParentCachegroupID = &p[0].ID
-	}
-
+	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, ReqInf{}, err
+		return nil, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -85,45 +52,14 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 // Create a CacheGroup
 // Deprecated: Use CreateCacheGroupNullable
 func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
-	if cachegroup.TypeID == 0 && cachegroup.Type != "" {
-		ty, _, err := to.GetTypeByName(cachegroup.Type)
-		if err != nil {
-			return tc.Alerts{}, ReqInf{}, err
-		}
-		if len(ty) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + cachegroup.Type)
-		}
-		cachegroup.TypeID = ty[0].ID
-	}
 
-	if cachegroup.ParentCachegroupID == 0 && cachegroup.ParentName != "" {
-		p, _, err := to.GetCacheGroupByName(cachegroup.ParentName)
-		if err != nil {
-			return tc.Alerts{}, ReqInf{}, err
-		}
-		if len(p) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + cachegroup.ParentName)
-		}
-		cachegroup.ParentCachegroupID = p[0].ID
-	}
-
-	if cachegroup.SecondaryParentCachegroupID == 0 && cachegroup.SecondaryParentName != "" {
-		p, _, err := to.GetCacheGroupByName(cachegroup.SecondaryParentName)
-		if err != nil {
-			return tc.Alerts{}, ReqInf{}, err
-		}
-		if len(p) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + cachegroup.ParentName)
-		}
-		cachegroup.SecondaryParentCachegroupID = p[0].ID
-	}
-
+	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, ReqInf{}, err
+		return tc.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -254,7 +190,7 @@ func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
 
 // GET a CacheGroup by the CacheGroup name
 func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -273,7 +209,7 @@ func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNull
 // GET a CacheGroup by the CacheGroup name
 // Deprecated: use GetCachegroupNullableByName
 func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

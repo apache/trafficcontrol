@@ -65,23 +65,12 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 
 // CreateTenant creates the Tenant it's passed
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
-	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.TenantByName(t.ParentName)
-		if err != nil {
-			return nil, err
-		}
-		if tenant == nil {
-			return nil, errors.New("no tenant with name " + t.ParentName)
-		}
-		t.ParentID = tenant.ID
-	}
-
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
-	_, err = post(to, tenantsEp(), jsonReq, &data)
+	err = post(to, tenantsEp(), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +86,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, tenantEp(id), jsonReq, &data)
+	err = put(to, tenantEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +97,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 // DeleteTenant deletes the Tenant matching the ID it's passed
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	_, err := del(to, tenantEp(id), &data)
+	err := del(to, tenantEp(id), &data)
 	if err != nil {
 		return nil, err
 	}

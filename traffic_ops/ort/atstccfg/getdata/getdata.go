@@ -136,7 +136,11 @@ func WritePackages(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, unsupported, err := cfg.TOClientNew.GetServerByHostName(string(cfg.CacheHostName))
+	if err == nil && unsupported {
+		log.Warnln("Traffic Ops newer than ORT, falling back to previous API ServerByHostName!")
+		server, err = cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	}
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}
@@ -168,7 +172,11 @@ func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, unsupported, err := cfg.TOClientNew.GetServerByHostName(string(cfg.CacheHostName))
+	if err == nil && unsupported {
+		log.Warnln("Traffic Ops newer than ORT, falling back to previous API ServerByHostName!")
+		server, err = cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	}
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}

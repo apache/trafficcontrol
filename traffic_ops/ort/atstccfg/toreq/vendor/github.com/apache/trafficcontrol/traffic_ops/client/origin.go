@@ -17,11 +17,9 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -30,73 +28,12 @@ const (
 	API_v13_Origins = "/api/1.3/origins"
 )
 
-func originIDs(to *Session, origin *tc.Origin) error {
-	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup)
-		if err != nil {
-			return err
-		}
-		if len(p) == 0 {
-			return errors.New("no cachegroup named " + *origin.Cachegroup)
-		}
-		origin.CachegroupID = &p[0].ID
-	}
-
-	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLID(*origin.DeliveryService)
-		if err != nil {
-			return err
-		}
-		if len(dses) == 0 {
-			return errors.New("no deliveryservice with name " + *origin.DeliveryService)
-		}
-		origin.DeliveryServiceID = &dses[0].ID
-	}
-
-	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByName(*origin.Profile)
-		if err != nil {
-			return err
-		}
-		if len(profiles) == 0 {
-			return errors.New("no profile with name " + *origin.Profile)
-		}
-		origin.ProfileID = &profiles[0].ID
-	}
-
-	if origin.CoordinateID == nil && origin.Coordinate != nil {
-		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate)
-		if err != nil {
-			return err
-		}
-		if len(coordinates) == 0 {
-			return errors.New("no coordinate with name " + *origin.Coordinate)
-		}
-		origin.CoordinateID = &coordinates[0].ID
-	}
-
-	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByName(*origin.Tenant)
-		if err != nil {
-			return err
-		}
-		origin.TenantID = &tenant.ID
-	}
-
-	return nil
-}
-
 // Create an Origin
 func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	err := originIDs(to, &origin)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
 	reqBody, err := json.Marshal(origin)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -114,15 +51,10 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 
 // Update an Origin by ID
 func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	err := originIDs(to, &origin)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
 	reqBody, err := json.Marshal(origin)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -169,7 +101,7 @@ func (to *Session) GetOriginByID(id int) ([]tc.Origin, ReqInf, error) {
 
 // GET an Origin by the Origin name
 func (to *Session) GetOriginByName(name string) ([]tc.Origin, ReqInf, error) {
-	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", url.QueryEscape(name)))
+	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", name))
 }
 
 // GET a list of Origins by Delivery Service ID

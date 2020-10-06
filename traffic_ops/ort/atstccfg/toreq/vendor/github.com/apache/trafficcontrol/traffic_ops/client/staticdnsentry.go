@@ -17,7 +17,6 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -29,49 +28,11 @@ const (
 	API_v13_StaticDNSEntries = "/api/1.3/staticdnsentries"
 )
 
-func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
-	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupByName(sdns.CacheGroupName)
-		if err != nil {
-			return err
-		}
-		if len(p) == 0 {
-			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
-		}
-		sdns.CacheGroupID = p[0].ID
-	}
-
-	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-		dses, _, err := to.GetDeliveryServiceByXMLID(sdns.DeliveryService)
-		if err != nil {
-			return err
-		}
-		if len(dses) == 0 {
-			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
-		}
-		sdns.DeliveryServiceID = dses[0].ID
-	}
-
-	if sdns.TypeID == 0 && sdns.Type != "" {
-		types, _, err := to.GetTypeByName(sdns.Type)
-		if err != nil {
-			return err
-		}
-		if len(types) == 0 {
-			return errors.New("no type with name " + sdns.Type)
-		}
-		sdns.TypeID = types[0].ID
-	}
-
-	return nil
-}
-
 // Create a StaticDNSEntry
-func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, error) {
-	// fill in missing IDs from names
-	staticDNSEntryIDs(to, &sdns)
+func (to *Session) CreateStaticDNSEntry(cdn tc.StaticDNSEntry) (tc.Alerts, ReqInf, error) {
+
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(sdns)
+	reqBody, err := json.Marshal(cdn)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -87,17 +48,16 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqI
 }
 
 // Update a StaticDNSEntry by ID
-func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
-	// fill in missing IDs from names
-	staticDNSEntryIDs(to, &sdns)
+func (to *Session) UpdateStaticDNSEntryByID(id int, cdn tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
+
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(sdns)
+	reqBody, err := json.Marshal(cdn)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
+	resp, remoteAddr, errClient := to.rawRequest(http.MethodPut, route, reqBody)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
