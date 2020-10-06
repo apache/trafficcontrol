@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #4981 - Cannot create routing regular expression with a blank pattern param in Delivery Service [Related github issues](https://github.com/apache/trafficcontrol/issues/4981)
 - Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
 - Fixed #4237 - Do not return an internal server error when delivery service's capacity is zero. [Related github issue](https://github.com/apache/trafficcontrol/issues/4237)
+- Fixed #2712 - Invalid TM logrotate configuration permissions causing TM logs to be ignored by logrotate. [Related github issue](https://github.com/apache/trafficcontrol/issues/2712)
 - Fixed #3400 - Allow "0" as a TTL value for Static DNS entries [Related github issue](https://github.com/apache/trafficcontrol/issues/3400)
 - Fixed #5050 - Allows the TP administrator to name a TP instance (production, staging, etc) and flag whether it is production or not in traffic_portal_properties.json [Related github issue](https://github.com/apache/trafficcontrol/issues/5050)
 - Fixed #4743 - Validate absolute DNS name requirement on Static DNS entry for CNAME type [Related github issue](https://github.com/apache/trafficcontrol/issues/4743)
