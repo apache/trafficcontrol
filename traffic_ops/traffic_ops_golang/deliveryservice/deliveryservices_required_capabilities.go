@@ -355,7 +355,7 @@ JOIN topology_cachegroup tc ON tc.cachegroup = c.name
 JOIN deliveryservice d ON d.topology = tc.topology
 WHERE
   d.id = $1
-  AND s.cdn_id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)
+  AND s.cdn_id = d.cdn_id
 GROUP BY s.id, c.name
 `
 	rows, err := tx.Query(q, dsID)
