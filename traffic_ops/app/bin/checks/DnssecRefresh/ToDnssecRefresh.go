@@ -1,15 +1,4 @@
 package main
-
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"io/ioutil"
-	"net/http"
-	"net/http/cookiejar"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
