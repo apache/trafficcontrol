@@ -58,9 +58,13 @@ func TestGetMonitoringServers(t *testing.T) {
 	otherCache.Type = "MID"
 	cacheID := uint64(1)
 	otherCacheID := uint64(2)
+	cache3 := createMockCache("test")
+	cache3.Type = "MID"
+	cache3.Status = string(tc.CacheStatusOffline) // should be ignored
+	cache3ID := uint64(3)
 
 	mock.ExpectBegin()
-	setupMockGetMonitoringServers(mock, monitor, router, []Cache{cache, otherCache}, []uint64{cacheID, otherCacheID}, cdn)
+	setupMockGetMonitoringServers(mock, monitor, router, []Cache{cache, otherCache, cache3}, []uint64{cacheID, otherCacheID, cache3ID}, cdn)
 
 	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
@@ -722,7 +726,7 @@ func createMockCache(interfaceName string) Cache {
 	return Cache{
 		CommonServerProperties: CommonServerProperties{
 			Profile:    "cacheProfile",
-			Status:     "cacheStatus",
+			Status:     "REPORTED",
 			Port:       8081,
 			Cachegroup: "cacheCachegroup",
 			HostName:   "cacheHost",
