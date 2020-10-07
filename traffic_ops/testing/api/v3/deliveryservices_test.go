@@ -90,6 +90,25 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
+func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV30, oldCDNID int, newCDNID int) {
+	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(oldCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(newCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	cdnNameOld := "sslkeytransfer"
 	oldCdn := createBlankCDN(cdnNameOld, t)
@@ -143,6 +162,8 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	ds.CDNName = &oldCdn.Name
 
+	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID)
+
 	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
 		City:         util.StrPtr("CI"),
@@ -155,13 +176,23 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
 	}
 
-	oldCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+	tries := 0
+	var oldCDNKeys []tc.CDNSSLKeys
+	for tries < 5 {
+		time.Sleep(time.Second)
+		oldCDNKeys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+		if err == nil && len(oldCDNKeys) > 0 {
+			break
+		}
+		tries++
+	}
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
 	if len(oldCDNKeys) < 1 {
 		t.Fatal("expected at least 1 key")
 	}
+
 	newCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
@@ -197,24 +228,6 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	if len(keys) != len(oldCDNKeys) {
 		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys))
-	}
-
-	// Clean up
-	_, _, err = TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(oldCdn.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(newCdn.ID)
-	if err != nil {
-		t.Fatal(err)
 	}
 
 }
