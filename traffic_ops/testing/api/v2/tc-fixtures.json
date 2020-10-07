@@ -1450,7 +1450,35 @@
             "lastUpdated": "2018-03-02T17:27:11.813052+00:00",
             "name": "RASCAL1",
             "routing_disabled": false,
-            "type": "TM_PROFILE"
+            "type": "TM_PROFILE",
+            "params": [
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.threshold.queryTime",
+                    "secure": false,
+                    "value": "1000"
+                },
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.polling.url",
+                    "secure": false,
+                    "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
+                },
+                {
+                    "configFile": "rascal-config.txt",
+                    "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
+                    "name": "peers.polling.interval",
+                    "secure": false,
+                    "value": "60"
+                },
+                {
+                    "configFile": "rascal-config.txt",
+                    "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
+                    "name": "health.polling.interval",
+                    "secure": false,
+                    "value": "30"
+                }
+            ]
         },
         {
             "cdnName": "cdn1",
@@ -1938,7 +1966,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "RASCAL1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
