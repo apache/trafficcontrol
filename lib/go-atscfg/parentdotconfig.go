@@ -418,6 +418,8 @@ func MakeParentDotConfig(
 
 	parentInfos := MakeParentInfo(serverParentCGData, serverCDNDomain, profileCaches, originServers)
 
+	dsOrigins := makeDSOrigins(dss, dses, servers)
+
 	for _, ds := range dses {
 		if ds.XMLID == nil || *ds.XMLID == "" {
 			log.Errorln("parent.config got ds with missing XMLID, skipping!")
@@ -498,6 +500,7 @@ func MakeParentDotConfig(
 				msoMaxSimpleRetries,
 				msoMaxUnavailableServerRetries,
 				qStringHandling,
+				dsOrigins[DeliveryServiceID(*ds.ID)],
 			)
 			if err != nil {
 				log.Errorln(err)
@@ -643,6 +646,7 @@ func GetTopologyParentConfigLine(
 	msoMaxSimpleRetries string,
 	msoMaxUnavailableServerRetries string,
 	qStringHandling string,
+	dsOrigins map[ServerID]struct{},
 ) (string, error) {
 	txt := ""
 
@@ -668,7 +672,7 @@ func GetTopologyParentConfigLine(
 	}
 	// TODO add Topology/Capabilities to remap.config
 
-	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities)
+	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
 	if err != nil {
 		return "", errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
@@ -819,6 +823,7 @@ func GetTopologyParents(
 	serverIsLastTier bool,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
+	dsOrigins map[ServerID]struct{}, // for Topology DSes, MSO still needs DeliveryServiceServer assignments.
 ) ([]string, []string, error) {
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
@@ -883,11 +888,27 @@ func GetTopologyParents(
 		} else if sv.Cachegroup == nil {
 			log.Errorln("TO Servers server had nil Cachegroup, skipping")
 			continue
+		} else if sv.CDNName == nil {
+			log.Errorln("parent.config generation: TO servers had server with missing CDNName, skipping!")
+			continue
+		} else if sv.Status == nil || *sv.Status == "" {
+			log.Errorln("parent.config generation: TO servers had server with missing Status, skipping!")
+			continue
 		}
 
 		if tc.CacheType(sv.Type) != tc.CacheTypeEdge && tc.CacheType(sv.Type) != tc.CacheTypeMid && sv.Type != tc.OriginTypeName {
 			continue // only consider edges, mids, and origins in the CacheGroup.
 		}
+		if _, dsHasOrigin := dsOrigins[ServerID(*sv.ID)]; sv.Type == tc.OriginTypeName && !dsHasOrigin {
+			continue
+		}
+		if *sv.CDNName != *server.CDNName {
+			continue
+		}
+		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
+			continue
+		}
+
 		if !HasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
@@ -1324,4 +1345,49 @@ func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*OriginUR
 		dsOrigins[*ds.ID] = &OriginURI{Scheme: scheme, Host: host, Port: port}
 	}
 	return dsOrigins, nil
+}
+
+func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, servers []tc.ServerNullable) map[DeliveryServiceID]map[ServerID]struct{} {
+	dssMap := map[DeliveryServiceID]map[ServerID]struct{}{}
+	for _, dss := range dsses {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			log.Errorln("making parent.config, got deliveryserviceserver with nil values, skipping!")
+			continue
+		}
+		dsID := DeliveryServiceID(*dss.DeliveryService)
+		serverID := ServerID(*dss.Server)
+		if dssMap[dsID] == nil {
+			dssMap[dsID] = map[ServerID]struct{}{}
+		}
+		dssMap[dsID][serverID] = struct{}{}
+	}
+
+	svMap := map[ServerID]tc.ServerNullable{}
+	for _, sv := range servers {
+		if sv.ID == nil {
+			log.Errorln("parent.config got server with missing ID, skipping!")
+		}
+		svMap[ServerID(*sv.ID)] = sv
+	}
+
+	dsOrigins := map[DeliveryServiceID]map[ServerID]struct{}{}
+	for _, ds := range dses {
+		if ds.ID == nil {
+			log.Errorln("parent.config got ds with missing ID, skipping!")
+			continue
+		}
+		dsID := DeliveryServiceID(*ds.ID)
+		assignedServers := dssMap[dsID]
+		for svID, _ := range assignedServers {
+			sv := svMap[svID]
+			if sv.Type != tc.OriginTypeName {
+				continue
+			}
+			if dsOrigins[dsID] == nil {
+				dsOrigins[dsID] = map[ServerID]struct{}{}
+			}
+			dsOrigins[dsID][svID] = struct{}{}
+		}
+	}
+	return dsOrigins
 }
