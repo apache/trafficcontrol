@@ -277,7 +277,8 @@ WHERE job.job_deliveryservice = $1
 				(testJobStart.Before(jobEnd) && jobEnd.Before(testJobEnd)) ||
 				// job range encaspulates testJob range
 				(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
-				errs = append(errs, fmt.Sprintf("job/request already has a job that exists for %v, start:%v end:%v", *testJob.AssetURL, testJobStart, testJobEnd))
+				errs = append(errs, fmt.Sprintf("Invalidation request duplicate found for %v, start:%v end:%v",
+					*testJob.AssetURL, testJobStart, testJobEnd))
 			}
 		}
 	}

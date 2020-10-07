@@ -387,7 +387,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	response.Alerts[len(conflicts)] = tc.Alert{
-		"Invalidation Job creation was successful",
+		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.Regex, job.StartTime.Time,
+			job.StartTime.Add(time.Hour*time.Duration(ttl))),
 		tc.SuccessLevel.String(),
 	}
 	resp, err := json.Marshal(response)
@@ -539,7 +540,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, input.StartTime.Time, *input.AssetURL, input.TTLHours())
+	ttlHours := input.TTLHours()
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, input.StartTime.Time, *input.AssetURL, ttlHours)
 	response := apiResponse{
 		make([]tc.Alert, len(conflicts)+1),
 		job,
@@ -551,8 +553,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	response.Alerts[len(conflicts)] = tc.Alert{
-		Text:  "Content invalidation job updated",
-		Level: tc.SuccessLevel.String(),
+		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.AssetURL, job.StartTime.Time,
+			job.StartTime.Add(time.Hour*time.Duration(ttlHours))),
+		tc.SuccessLevel.String(),
 	}
 
 	resp, err := json.Marshal(response)
