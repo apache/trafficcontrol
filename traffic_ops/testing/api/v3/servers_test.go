@@ -264,14 +264,14 @@ func CreateTestBlankFields(t *testing.T) {
 	server.HostName = util.StrPtr("")
 	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
 	if err == nil {
-		t.Fatal("should not be able to update")
+		t.Fatal("should not be able to update server with blank HostName")
 	}
 
 	server.HostName = originalHost
 	server.DomainName = util.StrPtr("")
 	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
 	if err == nil {
-		t.Fatal("should not be able to update")
+		t.Fatal("should not be able to update server with blank DomainName")
 	}
 }
 func CreateTestServerWithoutProfileId(t *testing.T) {
