@@ -312,6 +312,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		},
 		columnDefs: columns,
 		enableCellTextSelection:true,
+		suppressMenuHide: true,
 		defaultColDef: {
 			filter: true,
 			sortable: true,

@@ -90,6 +90,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 	$scope.gridOptions = {
 		columnDefs: columns,
 		enableCellTextSelection: true,
+		suppressMenuHide: true,
 		defaultColDef: {
 			filter: true,
 			sortable: true,
