@@ -99,6 +99,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Changed the `Cache States` tab of the Traffic Monitor UI to properly handle multiple interfaces.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
     - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
+- Changed Tomcat Java dependency to 8.5.57.
+- Changed Spring Framework Java dependency to 4.2.5.
+- Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
+- Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
