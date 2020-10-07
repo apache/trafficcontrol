@@ -812,15 +812,17 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int) (tc.CacheGroupName, bool, error
 	return tc.CacheGroupName(name), true, nil
 }
 
-func TopologyExists(tx *sql.Tx, topologyName tc.TopologyName) (bool, error) {
+// TopologyExists checks if a Topology with the given name exists.
+// Returns whether or not the Topology exists, along with any encountered error.
+func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	q := `
-SELECT COUNT("name")
-FROM topology
-WHERE name = $1
-`
+	SELECT COUNT("name")
+	FROM topology
+	WHERE name = $1
+	`
 	var count int
 	var err error
-	if err = tx.QueryRow(q, topologyName).Scan(&count); err != nil {
+	if err = tx.QueryRow(q, name).Scan(&count); err != nil {
 		err = fmt.Errorf("querying topologies: %s", err)
 	}
 	return count > 0, err

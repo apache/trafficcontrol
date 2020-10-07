@@ -244,6 +244,18 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	return nil, status, userErr, sysErr
 }
 
+func checkTopology(tx *sql.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+	if ds.Topology != nil {
+		if ok, err := dbhelpers.TopologyExists(tx, *ds.Topology); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("checking topology existence: %v", err)
+		} else if !ok {
+			return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
+}
+
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	user := inf.User
@@ -264,6 +276,10 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	}
+
+	if errCode, userErr, sysErr := checkTopology(tx, ds); userErr != nil || sysErr != nil {
+		return nil, errCode, userErr, sysErr
 	}
 
 	resultRows, err := tx.Query(insertQuery(),
@@ -778,6 +794,10 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	}
+
+	if errCode, userErr, sysErr := checkTopology(tx, *ds); userErr != nil || sysErr != nil {
+		return nil, errCode, userErr, sysErr
 	}
 
 	resultRows, err := tx.Query(updateDSQuery(),
