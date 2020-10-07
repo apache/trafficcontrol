@@ -41,6 +41,7 @@ func TestServers(t *testing.T) {
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		CreateTestBlankFields(t)
 		CreateTestServerWithoutProfileId(t)
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
@@ -249,6 +250,30 @@ func CreateTestServers(t *testing.T) {
 	}
 }
 
+func CreateTestBlankFields(t *testing.T) {
+	serverResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	if err != nil {
+		t.Fatalf("couldnt get servers: %v", err)
+	}
+	if len(serverResp.Response) < 1 {
+		t.Fatal("expected at least one server")
+	}
+	server := serverResp.Response[0]
+	originalHost := server.HostName
+
+	server.HostName = util.StrPtr("")
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err == nil {
+		t.Fatal("should not be able to update server with blank HostName")
+	}
+
+	server.HostName = originalHost
+	server.DomainName = util.StrPtr("")
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err == nil {
+		t.Fatal("should not be able to update server with blank DomainName")
+	}
+}
 func CreateTestServerWithoutProfileId(t *testing.T) {
 	params := url.Values{}
 	servers := testData.Servers[19]
