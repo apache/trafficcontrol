@@ -41,11 +41,11 @@ type Cfg struct {
 	LogLocationInfo  string
 	LogLocationWarn  string
 	LogLocationDebug string
-	TOInsecure		 bool
+	TOInsecure       bool
 	TOUser           string
 	TOPass           string
 	TOUrl            string
-	Tr 				 *http.Transport
+	Tr               *http.Transport
 }
 
 type ToResponse struct {
@@ -118,7 +118,7 @@ func GetCfg() (Cfg, error) {
 		LogLocationInfo:  logLocationInfo,
 		LogLocationWarn:  logLocationWarn,
 		TOInsecure:       toInsecure,
-		Tr:	              tr,
+		Tr:               tr,
 		TOUrl:            toURL,
 		TOUser:           toUser,
 		TOPass:           toPass,
