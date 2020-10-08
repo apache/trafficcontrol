@@ -375,7 +375,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, job.StartTime.Time, *job.Regex, ttl)
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, job.StartTime.Time, *result.AssetURL, ttl)
 	response := apiResponse{
 		make([]tc.Alert, len(conflicts)+1),
 		result,
@@ -387,7 +387,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	response.Alerts[len(conflicts)] = tc.Alert{
-		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.Regex, job.StartTime.Time,
+		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *result.AssetURL, job.StartTime.Time,
 			job.StartTime.Add(time.Hour*time.Duration(ttl))),
 		tc.SuccessLevel.String(),
 	}
@@ -402,7 +402,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
+	duplicate := ""
+	if len(conflicts) > 0 {
+		duplicate = "(duplicate) "
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job "+duplicate+"- ID: "+
+		strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+
+		"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
