@@ -482,14 +482,16 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 		ss := s.getLegacy()
 		if ss == nil {
 			err = ErrNilSession
+		} else {
+			servers, _, err = ss.GetServerByHostName(hostName)
 		}
-		servers, _, err = ss.GetServerByHostName(hostName)
 	} else {
 		ss := s.get()
 		if ss == nil {
 			err = ErrNilSession
+		} else {
+			servers, _, err = ss.GetServerByHostName(hostName)
 		}
-		servers, _, err = ss.GetServerByHostName(hostName)
 	}
 
 	if err != nil {
