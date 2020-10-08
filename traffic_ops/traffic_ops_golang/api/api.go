@@ -547,7 +547,7 @@ INSERT INTO log (
 	message,
 	tm_user
 ) VALUES (
-	'APICHANGE',
+	'` + ApiChange + `',
 	$1,
 	$2
 )
@@ -558,7 +558,7 @@ INSERT INTO log (
 func (inf APIInfo) CreateChangeLog(msg string) {
 	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, msg, inf.User.ID)
 	if err != nil {
-		log.Errorf("Inserting chage log level 'APICHANGE' message '%s' for user '%s': %v", msg, inf.User.UserName, err)
+		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
 	}
 }
 
