@@ -118,7 +118,7 @@ func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
 	}
 
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, reqInf, err := to.GetTypeByName(ds.Type.String())
+		ty, reqInf, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
 		if err != nil || len(ty) == 0 {
 			return reqInf, fmt.Errorf("no type named '%s'", ds.Type)
 		}
@@ -126,7 +126,7 @@ func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, reqInf, err := to.GetCDNByName(*ds.CDNName)
+		cdns, reqInf, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
 		if err != nil || len(cdns) == 0 {
 			return reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
 		}
@@ -134,7 +134,7 @@ func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByName(*ds.ProfileName)
+		profiles, reqInf, err := to.GetProfileByNameWithHdr(*ds.ProfileName, nil)
 		if err != nil || len(profiles) == 0 {
 			return reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
 		}
@@ -142,7 +142,7 @@ func (to *Session) setupDS(ds *tc.DeliveryServiceV30) (ReqInf, error) {
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, reqInf, err := to.TenantByName(*ds.Tenant)
+		ten, reqInf, err := to.TenantByNameWithHdr(*ds.Tenant, nil)
 		if err != nil || ten == nil {
 			return reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
@@ -156,7 +156,7 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
-		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee)
+		res, reqInf, err := to.GetUserByUsernameWithHdr(*dsr.Assignee, nil)
 		if err != nil {
 			return alerts, reqInf, err
 		}
@@ -167,7 +167,7 @@ func (to *Session) CreateDeliveryServiceRequestV30(dsr tc.DeliveryServiceRequest
 	}
 
 	if dsr.AuthorID == nil && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsername(dsr.Author)
+		res, reqInf, err := to.GetUserByUsernameWithHdr(dsr.Author, nil)
 		if err != nil {
 			return alerts, reqInf, err
 		}
@@ -467,5 +467,4 @@ func (to *Session) SetDeliveryServiceRequestStatus(id int, status tc.RequestStat
 	}
 
 	return alerts, reqInf, err
-
 }
