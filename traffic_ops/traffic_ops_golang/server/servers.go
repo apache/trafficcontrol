@@ -403,8 +403,8 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	errs := tovalidate.ToErrors(validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
-		"domainName":     validation.Validate(s.DomainName, validation.NotNil, noSpaces),
-		"hostName":       validation.Validate(s.HostName, validation.NotNil, noSpaces),
+		"domainName":     validation.Validate(s.DomainName, validation.Required, noSpaces),
+		"hostName":       validation.Validate(s.HostName, validation.Required, noSpaces),
 		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),

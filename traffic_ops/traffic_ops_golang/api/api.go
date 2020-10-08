@@ -427,6 +427,10 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	return params, intParams, nil, nil, 0
 }
 
+// ParseValidator objects can make use of api.Parse to handle parsing and
+// validating at the same time.
+//
+// TODO: Rework validation to be able to return system-level errors
 type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }

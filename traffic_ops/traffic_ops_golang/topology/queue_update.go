@@ -24,8 +24,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"net/http"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -48,7 +49,7 @@ func Validate(reqObj tc.TopologiesQueueUpdateRequest, topologyName tc.TopologyNa
 		errorMap["cdnId"] = fmt.Errorf("no cdn exists with id %d", reqObj.CDNID)
 	}
 
-	if topologyExists, err := dbhelpers.TopologyExists(tx, topologyName); err != nil {
+	if topologyExists, err := dbhelpers.TopologyExists(tx, string(topologyName)); err != nil {
 		errorMap["topology"] = fmt.Errorf("could not check whether topology %s exists", topologyName)
 	} else if !topologyExists {
 		errorMap["topology"] = fmt.Errorf("no topology exists by the name of %s", topologyName)

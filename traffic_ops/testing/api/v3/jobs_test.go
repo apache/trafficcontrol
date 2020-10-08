@@ -35,7 +35,7 @@ func TestJobs(t *testing.T) {
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
-		VerifyUniqueJobTest(t)
+		JobCollisionWarningTest(t)
 	})
 }
 
@@ -67,9 +67,9 @@ func CreateTestJobs(t *testing.T) {
 	}
 }
 
-func VerifyUniqueJobTest(t *testing.T) {
+func JobCollisionWarningTest(t *testing.T) {
 	startTime := tc.Time{
-		Time:  time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC),
+		Time:  time.Now().Add(time.Hour),
 		Valid: true,
 	}
 	firstJob := tc.InvalidationJobInput{
@@ -78,6 +78,7 @@ func VerifyUniqueJobTest(t *testing.T) {
 		TTL:             util.InterfacePtr(8),
 		StartTime:       &startTime,
 	}
+
 	_, _, err := TOSession.CreateInvalidationJob(firstJob)
 	if err != nil {
 		t.Fatal(err)
@@ -94,9 +95,61 @@ func VerifyUniqueJobTest(t *testing.T) {
 		StartTime:       &newTime,
 	}
 
-	_, _, err = TOSession.CreateInvalidationJob(newJob)
-	if err == nil {
-		t.Fatal("expected invalidation job create to fail")
+	alerts, _, err := TOSession.CreateInvalidationJob(newJob)
+	if err != nil {
+		t.Fatalf("expected invalidation job create to succeed: %v", err)
+	}
+
+	if len(alerts.Alerts) != 2 {
+		t.Fatalf("expected 2 alerts, got %v", len(alerts.Alerts))
+	}
+
+	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
+		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
+	}
+
+	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
+		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
+	}
+
+	jobs, _, err := TOSession.GetInvalidationJobs(util.InterfacePtr(*testData.DeliveryServices[0].XMLID), nil)
+	if err != nil {
+		t.Fatalf("unable to get invalidation jobs: %v", err)
+	}
+
+	var realJob *tc.InvalidationJob
+	for i, job := range jobs {
+		d := (*newJob.DeliveryService)
+		y := d.(*string)
+		diff := newJob.StartTime.Time.Sub(newJob.StartTime.Time)
+		if *job.DeliveryService == *y && *job.CreatedBy == "admin" &&
+			diff.Seconds() == 0 {
+			realJob = &jobs[i]
+			break
+		}
+	}
+
+	if realJob == nil || *realJob.ID == 0 {
+		t.Fatal("could not find new job")
+	}
+
+	newTime.Time = startTime.Time.Add(time.Hour * 2)
+	realJob.StartTime = &newTime
+	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob)
+	if err != nil {
+		t.Fatalf("expected invalidation job update to succeed: %v", err)
+	}
+
+	if len(alerts.Alerts) != 2 {
+		t.Fatalf("expected 2 alerts, got %v", len(alerts.Alerts))
+	}
+
+	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
+		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
+	}
+
+	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
+		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
 	}
 }
 
