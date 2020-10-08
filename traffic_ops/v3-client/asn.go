@@ -68,24 +68,40 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 }
 
 // Returns a list of ASNs
-func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_ASNS, nil, nil)
+func (to *Session) GetASNsWithHeader(header http.Header) ([]tc.ASN, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_ASNS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ASN{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.ASNsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return data.Response, reqInf, err
+	}
 	return data.Response, reqInf, nil
 }
 
 // GET a ASN by the id
-func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
+func (to *Session) GetASNByIDWithHeader(id int, header http.Header) ([]tc.ASN, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ASN{}, reqInf, nil
+		}
+	}
+
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -100,10 +116,18 @@ func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
 }
 
 // GET an ASN by the asn number
-func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
+func (to *Session) GetASNByASNWithHeader(asn int, header http.Header) ([]tc.ASN, ReqInf, error) {
 	url := fmt.Sprintf("%s?asn=%d", API_ASNS, asn)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ASN{}, reqInf, nil
+		}
+	}
+
 	if err != nil {
 		return nil, reqInf, err
 	}

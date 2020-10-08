@@ -43,7 +43,7 @@ func TestASN(t *testing.T) {
 
 func GetTestASNsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, asn := range testData.ASNs {
-		_, reqInf, err := TOSession.GetASNByASN(asn.ASN)
+		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -56,7 +56,7 @@ func GetTestASNsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, asn := range testData.ASNs {
-		_, reqInf, err := TOSession.GetASNByASN(asn.ASN)
+		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -73,7 +73,7 @@ func GetTestASNsIMS(t *testing.T) {
 		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetASNByID(asn.ID)
+		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -96,8 +96,9 @@ func CreateTestASNs(t *testing.T) {
 }
 
 func SortTestASNs(t *testing.T) {
+	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetASNs()
+	resp, _, err := TOSession.GetASNsWithHeader(header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -114,10 +115,10 @@ func SortTestASNs(t *testing.T) {
 }
 
 func UpdateTestASNs(t *testing.T) {
-
+	var header http.Header
 	firstASN := testData.ASNs[0]
 	// Retrieve the ASN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetASNByASN(firstASN.ASN)
+	resp, _, err := TOSession.GetASNByASNWithHeader(firstASN.ASN, header)
 	if err != nil {
 		t.Errorf("cannot GET ASN by name: '%v', %v", firstASN.ASN, err)
 	}
@@ -130,7 +131,7 @@ func UpdateTestASNs(t *testing.T) {
 	}
 
 	// Retrieve the ASN to check ASN name got updated
-	resp, _, err = TOSession.GetASNByID(remoteASN.ID)
+	resp, _, err = TOSession.GetASNByIDWithHeader(remoteASN.ID, header)
 	if err != nil {
 		t.Errorf("cannot GET ANS by number: '$%v', %v", firstASN.ASN, err)
 	}
@@ -148,8 +149,9 @@ func UpdateTestASNs(t *testing.T) {
 
 func GetTestASNs(t *testing.T) {
 
+	var header http.Header
 	for _, asn := range testData.ASNs {
-		resp, _, err := TOSession.GetASNByASN(asn.ASN)
+		resp, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 		if err != nil {
 			t.Errorf("cannot GET ASN by name: %v - %v", err, resp)
 		}
@@ -158,9 +160,10 @@ func GetTestASNs(t *testing.T) {
 
 func DeleteTestASNs(t *testing.T) {
 
+	var header http.Header
 	for _, asn := range testData.ASNs {
 		// Retrieve the ASN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetASNByASN(asn.ASN)
+		resp, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 		if err != nil {
 			t.Errorf("cannot GET ASN by number: %v - %v", asn.ASN, err)
 		}
@@ -173,7 +176,7 @@ func DeleteTestASNs(t *testing.T) {
 			}
 
 			// Retrieve the ASN to see if it got deleted
-			asns, _, err := TOSession.GetASNByASN(asn.ASN)
+			asns, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
 			if err != nil {
 				t.Errorf("error deleting ASN number: %s", err.Error())
 			}
