@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"strconv"
 	"sync"
@@ -306,6 +307,13 @@ func MonitorConfigValid(cfg *tc.TrafficMonitorConfigMap) error {
 	return nil
 }
 
+func MaybeIPStr(addr net.Addr) string {
+	if addr != nil {
+		return addr.String()
+	}
+	return ""
+}
+
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
@@ -321,7 +329,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		b, reqInf, e := ss.GetCRConfig(cdn)
 		err = e
 		data = b
-		remoteAddr = reqInf.RemoteAddr.String()
+		remoteAddr = MaybeIPStr(reqInf.RemoteAddr)
 	} else {
 		ss := s.get()
 		if ss == nil {
@@ -331,7 +339,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		b, reqInf, e := ss.GetCRConfig(cdn)
 		err = e
 		data = b
-		remoteAddr = reqInf.RemoteAddr.String()
+		remoteAddr = MaybeIPStr(reqInf.RemoteAddr)
 	}
 
 	if err == nil {
