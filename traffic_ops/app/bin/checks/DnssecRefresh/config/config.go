@@ -1,4 +1,5 @@
 package config
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -31,20 +32,20 @@ import (
 )
 
 type Creds struct {
-	User string `json:"u"`
+	User 	 string `json:"u"`
 	Password string `json:"p"`
 }
 
 type Cfg struct {
-	LogLocationErr  	string
-	LogLocationInfo 	string
-	LogLocationWarn 	string
-	LogLocationDebug 	string
-	TOInsecure			bool
-	TOUser              string
-	TOPass              string
-	TOUrl               string
-	Tr 					*http.Transport
+	LogLocationErr	 string
+	LogLocationInfo  string
+	LogLocationWarn  string
+	LogLocationDebug string
+	TOInsecure		 bool
+	TOUser           string
+	TOPass           string
+	TOUrl            string
+	Tr 				 *http.Transport
 }
 
 type ToResponse struct {
@@ -113,14 +114,14 @@ func GetCfg() (Cfg, error) {
 
 	cfg := Cfg{
 		LogLocationDebug: logLocationDebug,
-		LogLocationErr: logLocationError,
-		LogLocationInfo: logLocationInfo,
-		LogLocationWarn: logLocationWarn,
-		TOInsecure: toInsecure,
-		Tr:	tr,
-		TOUrl: toURL,
-		TOUser: toUser,
-		TOPass: toPass,
+		LogLocationErr:   logLocationError,
+		LogLocationInfo:  logLocationInfo,
+		LogLocationWarn:  logLocationWarn,
+		TOInsecure:       toInsecure,
+		Tr:	              tr,
+		TOUrl:            toURL,
+		TOUser:           toUser,
+		TOPass:           toPass,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {

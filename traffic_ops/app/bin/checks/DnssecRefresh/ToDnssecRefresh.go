@@ -20,14 +20,14 @@ package main
  */
 
 import (
-"bytes"
-"encoding/json"
-"fmt"
-"github.com/apache/trafficcontrol/lib/go-log"
-"github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh/config"
-"io/ioutil"
-"net/http"
-"net/http/cookiejar"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh/config"
+	"io/ioutil"
+	"net/http"
+	"net/http/cookiejar"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	log.Debugln("Including DEBUG messages in output. Config is:")
 	config.PrintConfig(cfg) // only if DEBUG logging is set.
 	body := &config.Creds{
-		User: cfg.TOUser,
+		User: 	  cfg.TOUser,
 		Password: cfg.TOPass,
 	}
 	loginUrl := fmt.Sprintf("%s%s", cfg.TOUrl, "/api/2.0/user/login")
@@ -59,6 +59,7 @@ func main() {
 
 	refresh, _ := client.Do(resp)
 	respData, _ := ioutil.ReadAll(refresh.Body)
+	defer config.Dclose(refresh.Body)
 	var response config.ToResponse
 	config.ErrCheck(json.Unmarshal(respData, &response))
 	log.Debugln(response.Response)
