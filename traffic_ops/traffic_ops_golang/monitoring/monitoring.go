@@ -302,6 +302,7 @@ AND cdn.name = $3
 		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &profile, &ttype, &hashID, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
+		cacheStatus := tc.CacheStatusFromString(status.String)
 
 		if ttype.String == tc.MonitorTypeName {
 			monitors = append(monitors, Monitor{
@@ -316,7 +317,8 @@ AND cdn.name = $3
 					},
 				},
 			})
-		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
+		} else if (strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID")) &&
+			(cacheStatus == tc.CacheStatusOnline || cacheStatus == tc.CacheStatusReported || cacheStatus == tc.CacheStatusAdminDown) {
 			var cacheInterfaces []tc.ServerInterfaceInfo
 			if _, ok := interfacesByNameAndServer[int(serverID.Int64)]; ok {
 				for _, interf := range interfacesByNameAndServer[int(serverID.Int64)] {
