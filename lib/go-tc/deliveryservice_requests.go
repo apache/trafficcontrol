@@ -653,7 +653,7 @@ func DSRChangeTypeFromString(s string) (DSRChangeType, error) {
 	case "delete":
 		return DSRChangeTypeDelete, nil
 	}
-	return DSRChangeType("INVALID"), fmt.Errorf("invalid Delivery Service Request changeType: '%s'", s)
+	return "INVALID", fmt.Errorf("invalid Delivery Service Request changeType: '%s'", s)
 }
 
 // String implements the fmt.Stringer interface, returning a textual
