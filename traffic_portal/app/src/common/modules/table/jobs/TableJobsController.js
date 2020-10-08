@@ -101,10 +101,10 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		},
 		rowClassRules: {
 			'active-job': function(params) {
-				return new Date(params.data.expires) > new Date();
+				return params.data.expires > new Date();
 			},
 			'expired-job': function(params) {
-				return new Date(params.data.expires) <= new Date();
+				return params.data.expires <= new Date();
 			}
 		},
 		rowData: jobs,

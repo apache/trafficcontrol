@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.jobs.list', [])
 								return 'jobs';
 							},
 							jobs: function(jobService) {
-								return jobService.getJobs();
+								return jobService.getJobs({ orderby: 'startTime', sortOrder: 'desc' });
 							}
 						}
 					}

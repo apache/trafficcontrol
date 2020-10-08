@@ -211,6 +211,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
 		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},
 		"assetUrl":        dbhelpers.WhereColumnInfo{"job.asset_url", nil},
+		"startTime":       dbhelpers.WhereColumnInfo{"job.start_time", nil},
 		"userId":          dbhelpers.WhereColumnInfo{"job.job_user", api.IsInt},
 		"createdBy":       dbhelpers.WhereColumnInfo{`(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`, nil},
 		"deliveryService": dbhelpers.WhereColumnInfo{`(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`, nil},
