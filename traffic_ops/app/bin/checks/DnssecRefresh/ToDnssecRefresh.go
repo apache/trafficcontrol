@@ -45,7 +45,7 @@ func main() {
 	config.ErrCheck(err)
 	req, _ := http.NewRequest("POST", loginUrl, buf)
 	jar, _ := cookiejar.New(nil)
-	client := &http.Client{Jar: jar, Transport: cfg.Tr}
+	client := &http.Client{Jar: jar, Transport: cfg.Transport}
 
 	log.Debugf("Posting to: %s", loginUrl)
 
