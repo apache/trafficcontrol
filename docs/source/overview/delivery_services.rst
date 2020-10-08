@@ -743,6 +743,20 @@ Routing Name
 ------------
 A DNS label in the Delivery Service's domain that forms the :abbr:`FQDN (Fully Qualified Domain Name)` that is used by clients to request content. All together, the constructed :abbr:`FQDN (Fully Qualified Domain Name)` looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`\ [#xmlValid]_.
 
+.. _ds-secondary-mode:
+
+Secondary Mode
+--------------
+By default, cache configuration will immediately try a Secondary Parent when the first Primary Parent fails.
+
+.. note:: Recall for Delivery Services using pre-Topology DeliveryService-Server Assignments, the Primary Parent is the Parent CacheGroup of the Edge Cache's CacheGroup, and the Secondary Parent is the Secondary CacheGroup of the Edge's Cachegroup. For Topology Delivery Services, the Primary is the first assigned Parent in the Topology, and the Secondary is the second assigned Parent in the Topology.
+
+This is typically ideal when the requested object is likely to be in the cache of all CacheGroups, since the Secondary parent is the first Primary Parent in the hash ring for its own CacheGroup. However, it is likely slightly higher latency to go to the further parent.
+
+However, if the resource is unlikely to be in cache, for example with live streaming video, it's probably ideal to try another parent in the same Primary CacheGroup.
+
+To configure a Delivery Service to retry all Primary Parents first before falling back to Secondary Parents, create a Parameter assigned to the Delivery Service's Profile with the Config File ``parent.config`` and the Name ``try_all_primaries_before_secondary``. The Parameter Value is ignored.
+
 .. _ds-servers:
 
 Servers

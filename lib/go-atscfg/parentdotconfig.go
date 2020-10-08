@@ -44,6 +44,7 @@ const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
 const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
 const ParentConfigParamAlgorithm = "algorithm"
 const ParentConfigParamQString = "qstring"
+const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
 
 const ParentConfigParamParentRetry = "parent_retry"
 const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
@@ -519,7 +520,7 @@ func MakeParentDotConfig(
 					log.Warnln("ParentInfo: delivery service " + *ds.XMLID + " has no parent servers")
 				}
 
-				parents, secondaryParents := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsRequiredCapabilities, dsParams.Algorithm)
+				parents, secondaryParents := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsRequiredCapabilities, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
 				textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 				textLine += getParentRetryStr(true, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
@@ -532,7 +533,7 @@ func MakeParentDotConfig(
 			roundRobin := `round_robin=consistent_hash`
 			goDirect := `go_direct=false`
 
-			parents, secondaryParents := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
+			parents, secondaryParents := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
 
 			text := ""
 			orgURI, err := GetOriginURI(*ds.OrgServerFQDN)
@@ -578,7 +579,8 @@ func MakeParentDotConfig(
 	if !IsTopLevelCache(serverParentCGData) {
 		invalidDS := &tc.DeliveryServiceNullableV30{}
 		invalidDS.ID = util.IntPtr(-1)
-		parents, secondaryParents := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
+		tryAllPrimariesBeforeSecondary := false
+		parents, secondaryParents := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer, tryAllPrimariesBeforeSecondary)
 		defaultDestText = `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
 			defaultDestText += secondaryParents
@@ -603,9 +605,10 @@ type ParentDSParams struct {
 	MaxSimpleRetries                string
 	MaxUnavailableServerRetries     string
 	QueryStringHandling             string
+	TryAllPrimariesBeforeSecondary  bool
 }
 
-// getDSParameters returns the Delivery Service Profile Parameters used in parent.config.
+// getDSParams returns the Delivery Service Profile Parameters used in parent.config.
 // If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
 // Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices.
 //      Topology DSes use them for all DSes, MSO and non-MSO.
@@ -671,6 +674,12 @@ func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigPara
 	if v, ok := dsParams[ParentConfigParamMaxUnavailableServerRetries]; ok {
 		params.MaxUnavailableServerRetries = v
 	}
+	if v, ok := dsParams[ParentConfigParamSecondaryMode]; ok {
+		if v != "" {
+			log.Errorln("parent.config generation: DS '" + *ds.XMLID + "' had Parameter " + ParentConfigParamSecondaryMode + " which is used if it exists, the value is ignored! Non-empty value '" + v + "' will be ignored!")
+		}
+		params.TryAllPrimariesBeforeSecondary = true
+	}
 
 	return params
 }
@@ -724,6 +733,7 @@ func GetTopologyParentConfigLine(
 	txt += ` parent="` + strings.Join(parents, `;`) + `"`
 	if len(secondaryParents) > 0 {
 		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
+		txt += getSecondaryModeStr(dsParams.TryAllPrimariesBeforeSecondary, atsMajorVer, tc.DeliveryServiceName(*ds.XMLID))
 	}
 	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
@@ -762,6 +772,17 @@ func getParentRetryStr(isLastCacheTier bool, atsMajorVer int, parentRetry string
 	}
 	txt += ` max_simple_retries=` + maxSimpleRetries + ` max_unavailable_server_retries=` + maxUnavailableServerRetries
 	return txt
+}
+
+func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVer int, ds tc.DeliveryServiceName) string {
+	if !tryAllPrimariesBeforeSecondary {
+		return ""
+	}
+	if atsMajorVer < 8 {
+		log.Errorln("Delivery Service '" + string(ds) + "' had Parameter " + ParentConfigParamSecondaryMode + " but this cache is " + strconv.Itoa(atsMajorVer) + " and secondary_mode isn't supported in ATS until 8. Not using!")
+		return ""
+	}
+	return ` secondary_mode=2` // See https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/parent.config.en.html
 }
 
 func getTopologyParentIsProxyStr(serverIsLastCacheTier bool) string {
@@ -1027,6 +1048,7 @@ func getParentStrs(
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	parentInfos []ParentInfo,
 	atsMajorVer int,
+	tryAllPrimariesBeforeSecondary bool,
 ) (string, string) {
 	parentInfo := []string{}
 	secondaryParentInfo := []string{}
@@ -1056,12 +1078,18 @@ func getParentStrs(
 	parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
 	secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
 
+	dsName := tc.DeliveryServiceName("")
+	if ds != nil && ds.XMLID != nil {
+		dsName = tc.DeliveryServiceName(*ds.XMLID)
+	}
+
 	parents := ""
 	secondaryParents := "" // "secparents" in Perl
 
 	if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
 		parents = `parent="` + strings.Join(parentInfo, "") + `"`
 		secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
+		secondaryParents += getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVer, dsName)
 	} else {
 		parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
 	}
@@ -1076,6 +1104,7 @@ func getMSOParentStrs(
 	atsMajorVer int,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	msoAlgorithm string,
+	tryAllPrimariesBeforeSecondary bool,
 ) (string, string) {
 	// TODO determine why MSO is different, and if possible, combine with getParentAndSecondaryParentStrs.
 
@@ -1118,6 +1147,11 @@ func getMSOParentStrs(
 
 	secondaryParentStr := strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "")
 
+	dsName := tc.DeliveryServiceName("")
+	if ds != nil && ds.XMLID != nil {
+		dsName = tc.DeliveryServiceName(*ds.XMLID)
+	}
+
 	// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
 	// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
 
@@ -1127,6 +1161,7 @@ func getMSOParentStrs(
 	if atsMajorVer >= 6 && msoAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
 		parents = `parent="` + strings.Join(parentInfo, "") + `"`
 		secondaryParents = ` secondary_parent="` + secondaryParentStr + `"`
+		secondaryParents += getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVer, dsName)
 	} else {
 		parents = `parent="` + strings.Join(parentInfo, "") + secondaryParentStr + `"`
 	}
