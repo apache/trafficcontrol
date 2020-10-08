@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 )
 
 func main() {
@@ -60,6 +61,10 @@ func main() {
 	refresh, _ := client.Do(resp)
 	respData, _ := ioutil.ReadAll(refresh.Body)
 	defer config.Dclose(refresh.Body)
+	if refresh.StatusCode != 200 {
+		log.Debugln(string(respData))
+		os.Exit(1)
+	}
 	var response config.ToResponse
 	config.ErrCheck(json.Unmarshal(respData, &response))
 	log.Debugln(response.Response)
