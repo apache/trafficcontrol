@@ -440,7 +440,7 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if ok {
-		userErr := fmt.Errorf("An open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
+		userErr := fmt.Errorf("an open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
 		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
 		return
 	}
@@ -596,7 +596,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("No such Delivery Service Request: #%d", inf.IntParams["id"])
+			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
 			sysErr = nil
 		} else {
 			userErr, sysErr, errCode = api.ParseDBError(err)
@@ -672,7 +672,7 @@ func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	}
 
 	if dsr.Status != tc.RequestStatusDraft && dsr.Status != tc.RequestStatusSubmitted {
-		userErr := fmt.Errorf("Cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
+		userErr := fmt.Errorf("cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
@@ -750,7 +750,7 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 	}
 
 	if *dsr.Status != tc.RequestStatusDraft && *dsr.Status != tc.RequestStatusSubmitted {
-		userErr := fmt.Errorf("Cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
+		userErr := fmt.Errorf("cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
