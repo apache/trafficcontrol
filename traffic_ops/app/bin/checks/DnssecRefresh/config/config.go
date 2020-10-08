@@ -32,12 +32,12 @@ import (
 )
 
 type Creds struct {
-	User 	 string `json:"u"`
+	User     string `json:"u"`
 	Password string `json:"p"`
 }
 
 type Cfg struct {
-	LogLocationErr	 string
+	LogLocationErr   string
 	LogLocationInfo  string
 	LogLocationWarn  string
 	LogLocationDebug string
