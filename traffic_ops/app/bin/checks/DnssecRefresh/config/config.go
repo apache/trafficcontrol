@@ -45,7 +45,7 @@ type Cfg struct {
 	TOUser           string
 	TOPass           string
 	TOUrl            string
-	Tr               *http.Transport
+	Transport        *http.Transport
 }
 
 type ToResponse struct {
@@ -92,7 +92,7 @@ func GetCfg() (Cfg, error) {
 	toURL := *toUrlPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toInsecure}}
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toInsecure}}
 	help := *helpPtr
 
 	if help {
@@ -100,16 +100,16 @@ func GetCfg() (Cfg, error) {
 		return Cfg{}, nil
 	}
 
-	missingStr := "Missing required argument"
+	missingArgStr := "Missing required argument"
 	usageStr := "\nBasic usage: ToDnssecRefresh --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass"
 	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New(missingStr + " --traffic-ops-url" + usageStr)
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-url" + usageStr)
 	}
 	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New(missingStr + " --traffic-ops-user" + usageStr)
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-user" + usageStr)
 	}
 	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New(missingStr + " --traffic-ops-password" + usageStr)
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-password" + usageStr)
 	}
 
 	cfg := Cfg{
@@ -118,7 +118,7 @@ func GetCfg() (Cfg, error) {
 		LogLocationInfo:  logLocationInfo,
 		LogLocationWarn:  logLocationWarn,
 		TOInsecure:       toInsecure,
-		Tr:               tr,
+		Transport:        transport,
 		TOUrl:            toURL,
 		TOUser:           toUser,
 		TOPass:           toPass,
