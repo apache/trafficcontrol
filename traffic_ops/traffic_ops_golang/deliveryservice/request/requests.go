@@ -118,19 +118,19 @@ WHERE id=$1
 //TODO: figure out how to modify 'AddTenancyCheck' so this isn't necessary
 const customTenancyCheck = `(
 	CASE r.change_type
-	WHEN 'delete' THEN CAST(r.original->>'tenantId' AS bigint) = ANY(CAST(:accessibleTenants AS bigint[]))
-	ELSE CAST(r.deliveryservice->>'tenantId' AS bigint) = ANY(CAST(:accessibleTenants AS bigint[]))
+	WHEN 'delete' THEN CAST(r.original->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
+	ELSE CAST(r.deliveryservice->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
 	END
 )`
 
 func selectMaxLastUpdatedQuery(where string) string {
-	return `SELECT max(t) from (
+	return `SELECT max(t) FROM (
 		SELECT max(r.last_updated) as t FROM deliveryservice_request r
 	JOIN tm_user a ON r.author_id = a.id
 	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
 	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
+	SELECT MAX(last_updated) AS t FROM last_deleted l WHERE l.table_name='deliveryservice_request') AS res`
 }
 
 // getOriginals fetches the Delivery Services identified in 'ids' and sets
