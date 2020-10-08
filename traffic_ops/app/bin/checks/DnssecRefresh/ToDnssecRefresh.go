@@ -36,7 +36,7 @@ func main() {
 	log.Debugln("Including DEBUG messages in output. Config is:")
 	config.PrintConfig(cfg) // only if DEBUG logging is set.
 	body := &config.Creds{
-		User: 	  cfg.TOUser,
+		User:     cfg.TOUser,
 		Password: cfg.TOPass,
 	}
 	loginUrl := fmt.Sprintf("%s%s", cfg.TOUrl, "/api/2.0/user/login")
