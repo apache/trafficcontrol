@@ -54,13 +54,12 @@ type ToResponse struct {
 
 func Dclose(c io.Closer) {
 	if err := c.Close(); err != nil {
-
 	}
 }
 
 func ErrCheck(err error) {
 	if err != nil {
-		fmt.Println(err)
+		log.Errorln(err)
 		os.Exit(1)
 	}
 }
