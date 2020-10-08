@@ -787,11 +787,16 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
+	var dsCDNName tc.CDNName
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
 			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
+		}
+		_, dsCDNName, _, err = dbhelpers.GetDSNameAndCDNFromID(tx.Tx, dsID)
+		if err != nil {
+			return nil, 0, errors.New("ds not found"), nil, http.StatusNotFound, nil
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
@@ -981,8 +986,13 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	returnable := make([]tc.ServerNullable, 0, len(ids))
+
 	for _, id := range ids {
 		server := servers[id]
+		// if requesting servers for a given ds, need to only include those in the same cdn
+		if len(dsCDNName) > 0 && string(dsCDNName) != *server.CDNName {
+			continue
+		}
 		for _, iface := range interfaces[id] {
 			server.Interfaces = append(server.Interfaces, iface)
 		}
