@@ -922,7 +922,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		newCDNName, err = getCDNName(*ds.CDNID, tx)
 		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
 		}
 	}
 
