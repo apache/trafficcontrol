@@ -87,7 +87,11 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+	errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
 
 	api.WriteResp(w, r, dsr.Status)
 }
@@ -182,12 +186,20 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	// (and isn't a "create" request)
 	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
 			if dsr.Original == nil {
 				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
 			}
 		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Original.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
 			if dsr.Original == nil {
 				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; original ID: %d", dsrID, *dsr.Original.ID)
 			}
@@ -206,7 +218,11 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
 		if dsr.ChangeType != tc.DSRChangeTypeCreate {
-			getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV30{*dsr.Requested.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
 		}
 	} else {
 		userErr, sysErr, errCode = api.ParseDBError(err)
