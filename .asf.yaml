@@ -21,6 +21,6 @@ github:
   labels:
   - apache
   - trafficcontrol
-  - CDN
-  - content delivery
+  - cdn
+  - contentdelivery
   - hacktoberfest

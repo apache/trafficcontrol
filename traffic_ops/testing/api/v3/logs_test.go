@@ -20,7 +20,7 @@ import (
 )
 
 func TestLogs(t *testing.T) {
-	WithObjs(t, []TCObj{}, func() {
+	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
 		GetTestLogs(t)
 		GetTestLogsByLimit(t)
 	})

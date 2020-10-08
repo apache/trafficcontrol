@@ -34,9 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -752,7 +750,6 @@ WHERE
 
 func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	tx := inf.Tx.Tx
-	cfg := inf.Config
 	user := inf.User
 
 	if err := ds.Validate(tx); err != nil {
@@ -783,8 +780,9 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	oldHostName := ""
 	oldCDNName := ""
+	oldRoutingName := ""
 	if dsType.HasSSLKeys() {
-		oldHostName, oldCDNName, err = getOldDetails(*ds.ID, tx)
+		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*ds.ID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
 		}
@@ -922,14 +920,12 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		newCDNName, err = getCDNName(*ds.CDNID, tx)
 		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
 		}
 	}
 
-	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName) {
-		if err := updateSSLKeys(ds, newHostName, newCDNName, tx, cfg); err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
-		}
+	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
+		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -1093,7 +1089,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldDetails(id int, tx *sql.Tx) (string, string, error) {
+func getOldDetails(id int, tx *sql.Tx) (string, string, string, error) {
 	q := `
 SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name
 FROM  deliveryservice as ds
@@ -1108,25 +1104,25 @@ WHERE ds.id=$1
 	cdnDomain := ""
 	cdnName := ""
 	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain, &cdnName); err != nil {
-		return "", "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
+		return "", "", "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
 	}
 	dsType := tc.DSTypeFromString(dsTypeStr)
 	if dsType == tc.DSTypeInvalid {
-		return "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
+		return "", "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
 	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
-		return "", "", errors.New("getting delivery services matchlist: " + err.Error())
+		return "", "", "", errors.New("getting delivery services matchlist: " + err.Error())
 	}
 	matchList, ok := matchLists[xmlID]
 	if !ok {
-		return "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
+		return "", "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
 	}
 	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
 	if err != nil {
-		return "", "", errors.New("getting hostname: " + err.Error())
+		return "", "", "", errors.New("getting hostname: " + err.Error())
 	}
-	return host, cdnName, nil
+	return host, cdnName, routingName, nil
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
@@ -1342,26 +1338,6 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	}
 
 	return dses, nil, nil, http.StatusOK
-}
-
-func updateSSLKeys(ds *tc.DeliveryServiceNullableV30, hostName string, cdnName string, tx *sql.Tx, cfg *config.Config) error {
-	if ds.XMLID == nil {
-		return errors.New("delivery services has no XMLID!")
-	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(*ds.XMLID, riaksvc.DSSSLKeyVersionLatest, tx, cfg.RiakAuthOptions, cfg.RiakPort)
-	if err != nil {
-		return errors.New("getting SSL key: " + err.Error())
-	}
-	if !ok {
-		return nil // no keys to update
-	}
-	key.DeliveryService = *ds.XMLID
-	key.Hostname = hostName
-	key.CDN = cdnName
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(key, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting updated SSL key: " + err.Error())
-	}
-	return nil
 }
 
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
