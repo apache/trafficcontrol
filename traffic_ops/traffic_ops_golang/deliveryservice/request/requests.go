@@ -207,8 +207,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		where += "(r.deliveryservice->>'xmlId' = :xmlId OR r.original->>'xmlId' = :xmlId)"
 	}
 
-	maxTime := new(time.Time)
+	var maxTime *time.Time
 	if inf.UseIMS(r) {
+		maxTime = new(time.Time)
 		var runSecond bool
 		runSecond, *maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
