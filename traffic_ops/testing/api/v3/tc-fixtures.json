@@ -2,11 +2,11 @@
     "asns": [
         {
             "asn": 8888,
-            "cachegroupId": 1
+            "cachegroupName": "originCachegroup"
         },
         {
             "asn": 9999,
-            "cachegroupId": 2
+            "cachegroupName": "multiOriginCachegroup"
         }
     ],
     "cachegroups": [

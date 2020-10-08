@@ -48,7 +48,7 @@ func GetTestASNsIMSAfterChange(t *testing.T, header http.Header) {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
 	currentTime := time.Now().UTC()
@@ -84,8 +84,13 @@ func GetTestASNsIMS(t *testing.T) {
 }
 
 func CreateTestASNs(t *testing.T) {
-
+	var header http.Header
+	resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*testData.CacheGroups[0].Name, header)
+	if err != nil {
+		t.Fatalf("unable to get cachgroup ID: %v", err)
+	}
 	for _, asn := range testData.ASNs {
+		asn.CachegroupID = *resp[0].ID
 		resp, _, err := TOSession.CreateASN(asn)
 		t.Log("Response: ", resp)
 		if err != nil {
@@ -125,7 +130,7 @@ func UpdateTestASNs(t *testing.T) {
 	remoteASN := resp[0]
 	remoteASN.ASN = 7777
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateASNByID(resp[0].ID, remoteASN)
+	alert, _, err = TOSession.UpdateASNByID(remoteASN.ID, remoteASN)
 	if err != nil {
 		t.Errorf("cannot UPDATE ASN by id: %v - %v", err, alert)
 	}
@@ -141,7 +146,8 @@ func UpdateTestASNs(t *testing.T) {
 	}
 
 	//Revert back to original ASN number for further functions to work correctly
-	alert, _, err = TOSession.UpdateASNByID(resp[0].ID, firstASN)
+	respASN.ASN = firstASN.ASN
+	alert, _, err = TOSession.UpdateASNByID(respASN.ID, respASN)
 	if err != nil {
 		t.Errorf("cannot UPDATE ASN by id: %v - %v", err, alert)
 	}
