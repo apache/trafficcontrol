@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://localhost:8443",
+  "baseUrl": "https://localhost:4443",
   "capabilities": {
     "acceptInsecureCerts": true,
     "browserName": "chrome"
