@@ -33,7 +33,7 @@ import (
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		var header http.Header
 		header = make(map[string][]string)
@@ -470,7 +470,9 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	}
 }
 
-// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be assigned to (CLIENT_)STEERING delivery services.
+// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be:
+// - assigned to (CLIENT_)STEERING delivery services
+// - assigned to any delivery services which have required capabilities that the topology can't satisfy
 func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
@@ -509,6 +511,49 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	if inf.StatusCode < 400 || inf.StatusCode >= 500 {
 		t.Errorf("Expected client-level error assigning a non-existent topology, got: %d", inf.StatusCode)
+	}
+
+	params := url.Values{}
+	params.Add("xmlId", "ds-top-req-cap")
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service: %v", err)
+	}
+	if len(dses) != 1 {
+		t.Fatalf("expected: 1 DS, actual: %d", len(dses))
+	}
+	ds := dses[0]
+	// unassign its topology, add a required capability that its topology
+	// can't satisfy, then attempt to reassign its topology
+	top := *ds.Topology
+	ds.Topology = nil
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("updating DS to remove topology, expected: no error, actual: %v", err)
+	}
+	reqCap := tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  ds.ID,
+		RequiredCapability: util.StrPtr("asdf"),
+	}
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	if err != nil {
+		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	ds.Topology = &top
+	_, reqInf, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err == nil {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+	_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf")
+	if err != nil {
+		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
 	}
 }
 
