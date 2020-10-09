@@ -41,7 +41,7 @@ SET search_path = public, pg_catalog;
 -- Name: on_update_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
 --
 
-CREATE FUNCTION on_update_current_timestamp_last_updated() RETURNS trigger
+CREATE OR REPLACE FUNCTION on_update_current_timestamp_last_updated() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
