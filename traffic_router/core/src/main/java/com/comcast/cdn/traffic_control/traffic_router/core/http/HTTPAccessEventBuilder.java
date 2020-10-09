@@ -119,6 +119,8 @@ public class HTTPAccessEventBuilder {
             .append(chi)
             .append(" rhi=");
 
+        final String userAgent = httpServletRequest.getHeader("User-Agent");
+
         if (!remoteIp.equals(chi)) {
             stringBuilder.append(remoteIp);
         } else {
@@ -132,6 +134,7 @@ public class HTTPAccessEventBuilder {
             .append(" rloc=\"").append(rloc)
             .append("\" rdtl=").append(resultDetails)
             .append(" rerr=\"").append(rerr)
+            .append("\" uas=\"").append(userAgent)
             .append("\" rgb=\"").append(rgb).append('"');
 
         if (httpAccessRecord.getResponseCode() != -1) {
