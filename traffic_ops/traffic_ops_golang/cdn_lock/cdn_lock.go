@@ -112,8 +112,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	cdnLock.UserName = inf.User.UserName
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, cdnLock)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()

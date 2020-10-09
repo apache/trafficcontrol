@@ -194,8 +194,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := tx.QueryRow(assignDSRQuery, req.AssigneeID, *dsr.ID).Scan(&dsr.LastUpdated); err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	dsr.Assignee = req.Assignee

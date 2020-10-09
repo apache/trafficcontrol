@@ -96,9 +96,9 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	}
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			user, userErr, sysErr, errCode := api.GetUserFromReq(w, r, a.Secret)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+			user, errs := api.GetUserFromReq(w, r, a.Secret)
+			if errs.Occurred() {
+				api.HandleErr(w, r, nil, errs.Code, errs.UserError, errs.SystemError)
 				return
 			}
 			ctx := r.Context()
@@ -305,12 +305,10 @@ func RequiredPermissionsMiddleware(requiredPerms []string) Middleware {
 
 			u := ctx.Value(auth.CurrentUserKey)
 			if u == nil {
-				var userErr error
-				var sysErr error
-				var errCode int
-				user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
-				if userErr != nil || sysErr != nil {
-					api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+				var errs api.Errors
+				user, errs = api.GetUserFromReq(w, r, cfg.Secrets[0])
+				if errs.Occurred() {
+					api.HandleErr(w, r, nil, errs.Code, errs.UserError, errs.SystemError)
 					return
 				}
 			} else {

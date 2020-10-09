@@ -220,8 +220,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 			*dsr.Original = original[0]
 		}
 	} else {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 

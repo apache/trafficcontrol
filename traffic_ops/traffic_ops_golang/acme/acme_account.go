@@ -141,8 +141,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	resultRows, err := inf.Tx.NamedQuery(createQuery, acmeAccount)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()
@@ -192,8 +191,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	resultRows, err := inf.Tx.NamedQuery(updateQuery, acmeAccount)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()

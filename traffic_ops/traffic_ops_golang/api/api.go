@@ -1130,51 +1130,65 @@ func ParseDBError(ierr error) Errors {
 
 // GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
 // This also uses the given ResponseWriter to refresh the cookie, if it was valid.
-func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
+func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, Errors) {
+	errs := Errors{
+		Code:        http.StatusUnauthorized,
+		SystemError: nil,
+		UserError:   errors.New("Unauthorized, please log in."),
+	}
+	u := auth.CurrentUser{}
 	cookie, err := r.Cookie(tocookie.Name)
 	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+		errs.SystemError = fmt.Errorf("error getting cookie: %v", err)
+		return u, errs
 	}
 
 	if cookie == nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return u, errs
 	}
 
 	oldCookie, err := tocookie.Parse(secret, cookie.Value)
 	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+		errs.SystemError = fmt.Errorf("error parsing cookie: %v", err)
+		return u, errs
 	}
 
 	username := oldCookie.AuthData
 	if username == "" {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return u, errs
 	}
+
+	errs.Code = http.StatusInternalServerError
+	errs.UserError = nil
 	db := (*sqlx.DB)(nil)
 	val := r.Context().Value(DBContextKey)
 	if val == nil {
-		return auth.CurrentUser{}, nil, errors.New("request context db missing"), http.StatusInternalServerError
+		errs.SetSystemError("request context db missing")
+		return u, errs
 	}
 	switch v := val.(type) {
 	case *sqlx.DB:
 		db = v
 	default:
-		return auth.CurrentUser{}, nil, fmt.Errorf("request context db unknown type %T", val), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("request context db unknown type %T", val)
+		return u, errs
 	}
 
 	cfg, err := GetConfig(r.Context())
 	if err != nil {
-		return auth.CurrentUser{}, nil, errors.New("request context config missing"), http.StatusInternalServerError
+		errs.SetSystemError("request context config missing")
+		return u, errs
 	}
 
-	user, userErr, sysErr, code := auth.GetCurrentUserFromDB(db, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
-	if userErr != nil || sysErr != nil {
-		return auth.CurrentUser{}, userErr, sysErr, code
+	u, errs.Code, errs.UserError, errs.SystemError = auth.GetCurrentUserFromDB(db, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+	if errs.Occurred() {
+		return u, errs
 	}
 
 	duration := tocookie.DefaultDuration
 	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
 	http.SetCookie(w, newCookie)
-	return user, nil, nil, http.StatusOK
+	return u, NewErrors()
 }
 
 func AddUserToReq(r *http.Request, u auth.CurrentUser) {

@@ -33,10 +33,10 @@ import (
 
 const readQuery = `
 SELECT cn.id,
-	cn.cdn, 
+	cn.cdn,
 	cn.last_updated,
-	cn.user, 
-	cn.notification 
+	cn.user,
+	cn.notification
 FROM cdn_notification as cn
 INNER JOIN cdn ON cdn.name = cn.cdn
 INNER JOIN tm_user ON tm_user.username = cn.user
@@ -91,12 +91,12 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	query := readQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		if sysErr != nil {
-			sysErr = fmt.Errorf("notification read query: %v", sysErr)
+		errs := api.ParseDBError(err)
+		if errs.SystemError != nil {
+			errs.SystemError = fmt.Errorf("notification read query: %w", sysErr)
 		}
 
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer rows.Close()
@@ -132,8 +132,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var resp tc.CDNNotification
 	err := tx.QueryRow(insertQuery, req.CDN, inf.User.UserName, req.Notification).Scan(&resp.ID, &resp.CDN, &resp.LastUpdated, &resp.User, &resp.Notification)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 
@@ -173,14 +172,11 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 
 	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["id"]).Scan(&result.ID, &result.CDN, &result.LastUpdated, &result.User, &result.Notification)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("No CDN Notification for %s", inf.Params["id"])
-			statusCode = http.StatusNotFound
-		} else {
-			userErr, sysErr, statusCode = api.ParseDBError(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return alert, result, fmt.Errorf("No CDN Notification for %s", inf.Params["id"]), nil, http.StatusNotFound
 		}
-
-		return alert, result, userErr, sysErr, statusCode
+		errs := api.ParseDBError(err)
+		return alert, result, errs.UserError, errs.SystemError, errs.Code
 	}
 
 	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", result.Notification, result.CDN)

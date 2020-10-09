@@ -121,7 +121,8 @@ func (rg *TORegion) Update(h http.Header) (error, error, int) { return api.Gener
 func (rg *TORegion) Create() (error, error, int) {
 	resultRows, err := rg.APIInfo().Tx.NamedQuery(rg.InsertQuery(), rg)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	defer resultRows.Close()
 

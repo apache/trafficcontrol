@@ -145,7 +145,8 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 	for rows.Next() {
 		err = rows.Scan(&v.Name, &v.LastUpdated)
 		if err != nil {
-			return api.ParseDBError(err)
+			errs := api.ParseDBError(err)
+			return errs.UserError, errs.SystemError, errs.Code
 		}
 	}
 	return nil, nil, http.StatusOK

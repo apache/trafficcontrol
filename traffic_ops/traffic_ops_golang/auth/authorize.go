@@ -95,8 +95,11 @@ type key int
 
 const CurrentUserKey key = iota
 
-// GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist, along with a user facing error, a system error to log, and an error code to return
-func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (CurrentUser, error, error, int) {
+// GetCurrentUserFromDB returns the id and privilege level of the given user
+// along with the username, or -1 as the id, - as the userName and
+// PrivLevelInvalid if the user doesn't exist, along with an error code to
+// return, a user-facing error, and a system error to log.
+func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (CurrentUser, int, error, error) {
 	qry := `
 SELECT
   r.priv_level,
@@ -113,9 +116,18 @@ WHERE
   u.username = $1
 `
 
+	u := CurrentUser{
+		UserName:     "-",
+		ID:           -1,
+		PrivLevel:    PrivLevelInvalid,
+		TenantID:     TenantIDInvalid,
+		Role:         -1,
+		Capabilities: []string{},
+	}
+
 	var currentUserInfo CurrentUser
 	if DB == nil {
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}, nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+		return u, http.StatusInternalServerError, nil, errors.New("no db provided to GetCurrentUserFromDB")
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
@@ -124,19 +136,19 @@ WHERE
 	if err != nil {
 		invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}, nil}
 		if errors.Is(err, sql.ErrNoRows) {
-			return invalidUser, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
+			return invalidUser, http.StatusUnauthorized, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user)
 		}
 		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-			return invalidUser, nil, fmt.Errorf("db access timed out: %w number of open connections: %d", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
+			return invalidUser, http.StatusServiceUnavailable, nil, fmt.Errorf("db access timed out: %w number of open connections: %d", err, DB.Stats().OpenConnections)
 		}
-		return invalidUser, nil, fmt.Errorf("checking user %v info: %w", user, err), http.StatusInternalServerError
+		return invalidUser, http.StatusInternalServerError, nil, fmt.Errorf("checking user %v info: %w", user, err)
 	}
 
 	currentUserInfo.perms = make(map[string]struct{}, len(currentUserInfo.Capabilities))
 	for _, perm := range currentUserInfo.Capabilities {
 		currentUserInfo.perms[perm] = struct{}{}
 	}
-	return currentUserInfo, nil, nil, http.StatusOK
+	return currentUserInfo, http.StatusOK, nil, nil
 }
 
 func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
