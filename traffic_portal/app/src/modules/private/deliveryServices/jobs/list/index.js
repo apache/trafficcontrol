@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.jobs.lis
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							jobs: function($stateParams, jobService) {
-								return jobService.getJobs({ dsId: $stateParams.deliveryServiceId });
+								return jobService.getJobs({ dsId: $stateParams.deliveryServiceId, orderby: 'startTime', sortOrder: 'desc' });
 							}
 						}
 					}

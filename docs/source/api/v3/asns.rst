@@ -107,7 +107,7 @@ Response Structure
 ========
 Creates a new :abbr:`ASN (Autonomous System Number)`.
 
-.. note:: There cannot be two different ASN object with the same ``asn``.
+.. note:: There cannot be two different ASN object with the same ``asn``. An ASN may only belong to one cachegroup, but a cachegroup can have zero or more ASNs.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

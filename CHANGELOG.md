@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
+- Added the ability to delete invalidation requests in Traffic Portal
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
@@ -95,7 +96,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - When creating invalidation jobs through TO/TP, if an identical regex is detected that overlaps its time, then warnings
 will be returned indicating that overlap exists.
 - Changed Traffic Portal to use Traffic Ops API v3
-- Changed Traffic Portal to use the more performant and powerful ag-grid for all server tables.
+- Changed Traffic Portal to use the more performant and powerful ag-grid for all server and invalidation request tables.
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
 - Changed ORT to find the local ATS config directory and use it when location Parameters don't exist for many required configs, including all Delivery Service files (Header Rewrites, Regex Remap, URL Sig, URI Signing).
 - Changed ORT to not update ip_allow.config but log an error if it needs updating in syncds mode, and only actually update in badass mode.
