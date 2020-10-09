@@ -459,10 +459,8 @@ func DSRExistsWithXMLID(xmlid string, tx *sql.Tx) (bool, error) {
 	}
 
 	var exists bool
-	if err := tx.QueryRow(dsrExistsQuery, xmlid).Scan(&exists); err != nil {
-		return false, err
-	}
-	return exists, nil
+	err := tx.QueryRow(dsrExistsQuery, xmlid).Scan(&exists)
+	return exists, err
 }
 
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
