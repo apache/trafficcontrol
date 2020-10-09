@@ -85,8 +85,8 @@ func InsertAsyncStatus(tx *sql.Tx, message string) (int, int, error, error) {
 
 	resultRows, err := tx.Query(insertAsyncStatusQuery, AsyncPending, message)
 	if err != nil {
-		userErr, sysErr, errCode := ParseDBError(err)
-		return 0, errCode, userErr, sysErr
+		errs := ParseDBError(err)
+		return 0, errs.Code, errs.UserError, errs.SystemError
 	}
 	defer resultRows.Close()
 

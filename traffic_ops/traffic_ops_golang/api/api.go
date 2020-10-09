@@ -507,20 +507,27 @@ func StripParamJSON(params map[string]string) map[string]string {
 
 // AllParams takes the request (in which the router has inserted context for path parameters), and an array of parameters required to be integers, and returns the map of combined parameters, and the map of int parameters; or a user or system error and the HTTP error code. The intParams may be nil if no integer parameters are required.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
-func AllParams(req *http.Request, required []string, ints []string) (map[string]string, map[string]int, error, error, int) {
+func AllParams(req *http.Request, required []string, ints []string) (map[string]string, map[string]int, Errors) {
+	errs := NewErrors()
 	params, err := GetCombinedParams(req)
 	if err != nil {
-		return nil, nil, nil, errors.New("getting combined URI parameters: " + err.Error()), http.StatusInternalServerError
+		errs.Code = http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting combined URI parameters: %v", err)
+		return nil, nil, errs
 	}
 	params = StripParamJSON(params)
 	if err := ParamsHaveRequired(params, required); err != nil {
-		return nil, nil, errors.New("required parameters missing: " + err.Error()), nil, http.StatusBadRequest
+		errs.Code = http.StatusBadRequest
+		errs.UserError = fmt.Errorf("required parameters missing: %v", err)
+		return nil, nil, errs
 	}
 	intParams, err := IntParams(params, ints)
 	if err != nil {
-		return nil, nil, errors.New("getting integer parameters: " + err.Error()), nil, http.StatusBadRequest
+		errs.Code = http.StatusBadRequest
+		errs.UserError = fmt.Errorf("getting integer parameters: %v", err)
+		return nil, nil, errs
 	}
-	return params, intParams, nil, nil, 0
+	return params, intParams, errs
 }
 
 // ParseValidator objects can make use of api.Parse to handle parsing and
@@ -611,14 +618,14 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
 	}
-	params, intParams, userErr, sysErr, errCode := AllParams(r, requiredParams, intParamNames)
-	if userErr != nil || sysErr != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
+	params, intParams, errs := AllParams(r, requiredParams, intParamNames)
+	if errs.Occurred() {
+		return &APIInfo{Tx: &sqlx.Tx{}}, errs.UserError, errs.SystemError, errs.Code
 	}
 	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, nil, fmt.Errorf("could not begin transaction: %w", err), http.StatusInternalServerError
 	}
 	return &APIInfo{
 		Config:    cfg,
