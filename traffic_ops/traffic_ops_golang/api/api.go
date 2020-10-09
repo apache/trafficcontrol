@@ -547,16 +547,16 @@ INSERT INTO log (
 	message,
 	tm_user
 ) VALUES (
-	'` + ApiChange + `',
 	$1,
-	$2
+	$2,
+	$3
 )
 `
 
 // CreateChangeLog creates a new changelog message at the APICHANGE level for
 // the current user.
 func (inf APIInfo) CreateChangeLog(msg string) {
-	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, msg, inf.User.ID)
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
 	if err != nil {
 		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
 	}
