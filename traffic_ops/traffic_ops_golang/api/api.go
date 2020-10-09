@@ -715,6 +715,16 @@ func (inf *APIInfo) Close() {
 	}
 }
 
+// HandleErrs writes the appropriate response to the client given the provided
+// errors.
+func (inf APIInfo) HandleErrs(w http.ResponseWriter, r *http.Request, e Errors) {
+	if inf.Tx == nil {
+		HandleErr(w, r, nil, e.Code, e.UserError, e.SystemError)
+		return
+	}
+	HandleErr(w, r, inf.Tx.Tx, e.Code, e.UserError, e.SystemError)
+}
+
 // SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
 func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
