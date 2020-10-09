@@ -169,16 +169,14 @@ func PostUsers(w http.ResponseWriter, r *http.Request) {
 
 	if post.Replace != nil && *post.Replace {
 		if err := deleteFedUsers(inf.Tx.Tx, fedID); err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, api.ParseDBError(err))
 			return
 		}
 	}
 
 	if len(post.IDs) > 0 {
 		if err := insertFedUsers(inf.Tx.Tx, fedID, post.IDs); err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, api.ParseDBError(err))
 			return
 		}
 	}

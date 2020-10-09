@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -166,7 +166,8 @@ func (user *TOUser) Create() (error, error, int) {
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.InsertQuery(), user)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	defer resultRows.Close()
 
@@ -346,7 +347,8 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	defer resultRows.Close()
 
@@ -860,8 +862,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	resultRows, err = inf.Tx.NamedQuery(InsertQueryV40(), userV4)
 	if err != nil {
-		userErr, sysErr, statusCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()

@@ -269,9 +269,9 @@ func TestParseRestrictFKConstraint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			t.Log("Starting test scenario: ", tc.description)
-			_, _, sc := parseRestrictFKConstraint(&tc.storageError)
-			if sc != tc.expectedReturnCode {
-				t.Errorf("code expected: %v, actual %v", tc.expectedReturnCode, sc)
+			errs := parseRestrictFKConstraint(&tc.storageError)
+			if errs.Code != tc.expectedReturnCode {
+				t.Errorf("code expected: %v, actual %v", tc.expectedReturnCode, errs.Code)
 			}
 		})
 	}

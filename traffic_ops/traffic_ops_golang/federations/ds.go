@@ -75,8 +75,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := deleteDSFeds(inf.Tx.Tx, fedID); err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, api.ParseDBError(err))
 			return
 		}
 	}
@@ -84,8 +83,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	if len(post.DSIDs) > 0 {
 		// there might be no DSes, if the user is trying to clear the assignments
 		if err := insertDSFeds(inf.Tx.Tx, fedID, post.DSIDs); err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, api.ParseDBError(err))
 			return
 		}
 	}
@@ -213,7 +211,8 @@ func (v *TOFedDSes) Delete() (error, error, int) {
 
 	// Actually delete the DS from the Federation
 	if err := deleteFedDS(v.APIInfo().Tx.Tx, *v.fedID, dsID); err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	return nil, nil, http.StatusOK

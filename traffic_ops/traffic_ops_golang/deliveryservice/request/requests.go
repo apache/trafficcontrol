@@ -340,7 +340,7 @@ func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (boo
 }
 
 // Warning: this assumes inf isn't nil, and neither is dsr, inf.Tx or inf.User or inf.Tx.Tx.
-func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, error) {
+func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) api.Errors {
 	dsr.Author = inf.User.UserName
 	dsr.LastEditedBy = inf.User.UserName
 	if dsr.ChangeType != tc.DSRChangeTypeDelete {
@@ -351,23 +351,26 @@ func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, er
 
 	dsr.ID = new(int)
 	if err := inf.Tx.Tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return errCode, userErr, sysErr
+		return api.ParseDBError(err)
 	}
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
 		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
 		if userErr != nil || sysErr != nil {
-			return errCode, userErr, sysErr
+			return api.Errors{
+				Code:        errCode,
+				UserError:   userErr,
+				SystemError: sysErr,
+			}
 		}
 		if len(originals) < 1 {
 			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			return http.StatusBadRequest, userErr, nil
+			return api.Errors{Code: http.StatusBadRequest, UserError: userErr}
 		}
 		if len(originals) > 1 {
 			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
-			return http.StatusInternalServerError, nil, sysErr
+			return api.Errors{Code: http.StatusInternalServerError, SystemError: sysErr}
 		}
 		dsr.Original = new(tc.DeliveryServiceV4)
 		*dsr.Original = originals[0]
@@ -378,7 +381,7 @@ func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, er
 			}
 		}
 	}
-	return http.StatusOK, nil, nil
+	return api.NewErrors()
 }
 
 // dsrManipulationResult encodes the result of manipulating a DSR.
@@ -476,9 +479,9 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 			dsr.Requested.TLSVersions = nil
 		}
 	}
-	errCode, userErr, sysErr := insert(&dsr, inf)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs := insert(&dsr, inf)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -552,9 +555,9 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 		return
 	}
 
-	errCode, userErr, sysErr := insert(&upgraded, inf)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs := insert(&upgraded, inf)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -629,14 +632,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
-			sysErr = nil
+		var errs api.Errors
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{
+				Code:      http.StatusNotFound,
+				UserError: fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"]),
+			}
 		} else {
-			userErr, sysErr, errCode = api.ParseDBError(err)
+			errs = api.ParseDBError(err)
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	dsr.SetXMLID()
@@ -766,16 +771,17 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		}
 	}
 	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
-		var userErr, sysErr error
-		var errCode int
-		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
-			errCode = http.StatusNotFound
-			sysErr = fmt.Errorf("running update query for Delivery Service Requests: %v", err)
+		var errs api.Errors
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{
+				Code:        http.StatusNotFound,
+				UserError:   fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"]),
+				SystemError: fmt.Errorf("running update query for Delivery Service Requests: %v", err),
+			}
 		} else {
-			userErr, sysErr, errCode = api.ParseDBError(err)
+			errs = api.ParseDBError(err)
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	dsr.SetXMLID()
@@ -860,16 +866,16 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		inf.IntParams["id"],
 	}
 	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
-		var errCode int
-		var userErr, sysErr error
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
-			sysErr = nil
+		var errs api.Errors
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{
+				Code:      http.StatusNotFound,
+				UserError: fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"]),
+			}
 		} else {
-			userErr, sysErr, errCode = api.ParseDBError(err)
+			errs = api.ParseDBError(err)
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	upgraded.SetXMLID()
@@ -915,14 +921,16 @@ func Put(w http.ResponseWriter, r *http.Request) {
 
 	var current tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", id).StructScan(&current); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
-			sysErr = nil
+		var errs api.Errors
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{
+				Code:      http.StatusNotFound,
+				UserError: fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"]),
+			}
 		} else {
-			userErr, sysErr, errCode = api.ParseDBError(err)
+			errs = api.ParseDBError(err)
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 

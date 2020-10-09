@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 //we need a type alias to define functions on
@@ -121,7 +121,8 @@ func (comment *TODeliveryServiceRequestComment) Update(h http.Header) (error, er
 	current := TODeliveryServiceRequestComment{}
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	userID := tc.IDNoMod(comment.ReqInfo.User.ID)

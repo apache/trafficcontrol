@@ -90,8 +90,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr.ID, &fr.IPAddress, &fr.Type, &fr.TypeID)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 
@@ -152,12 +151,12 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		if sysErr != nil {
-			sysErr = fmt.Errorf("federation_resolver read query: %v", sysErr)
+		errs := api.ParseDBError(err)
+		if errs.SystemError != nil {
+			errs.SystemError = fmt.Errorf("federation_resolver read query: %v", errs.SystemError)
 		}
 
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer rows.Close()
@@ -166,11 +165,11 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var resolver tc.FederationResolver
 		if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
-			userErr, sysErr, errCode = api.ParseDBError(err)
-			if sysErr != nil {
-				sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
+			errs := api.ParseDBError(err)
+			if errs.SystemError != nil {
+				errs.SystemError = fmt.Errorf("federation_resolver scanning: %v", errs.SystemError)
 			}
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 
@@ -284,7 +283,8 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 			userErr = fmt.Errorf("No federation resolver by ID %d", inf.IntParams["id"])
 			statusCode = http.StatusNotFound
 		} else {
-			userErr, sysErr, statusCode = api.ParseDBError(err)
+			errs := api.ParseDBError(err)
+			return alert, result, errs.UserError, errs.SystemError, errs.Code
 		}
 
 		return alert, result, userErr, sysErr, statusCode

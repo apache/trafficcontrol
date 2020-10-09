@@ -214,7 +214,8 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(insertQuery(), st)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	defer rows.Close()
 
@@ -275,7 +276,8 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	defer rows.Close()
 

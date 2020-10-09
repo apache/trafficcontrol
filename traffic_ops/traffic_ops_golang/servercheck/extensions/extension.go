@@ -280,7 +280,8 @@ func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
 
 	result, err := tx.NamedExec(updateQuery(), openTOExt)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {

@@ -307,7 +307,8 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		&cg.SecondaryParentName,
 	)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	coordinateID, err := cg.createCoordinate()
@@ -371,10 +372,10 @@ func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
 func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT cachegroup.id 
-FROM cachegroup 
-JOIN type on type.id = cachegroup.type 
-WHERE cachegroup.name = $1 
+SELECT cachegroup.id
+FROM cachegroup
+JOIN type on type.id = cachegroup.type
+WHERE cachegroup.name = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -389,9 +390,9 @@ AND (type.name = 'EDGE_LOC')
 func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT type.name 
-FROM type 
-WHERE type.id = $1 
+SELECT type.name
+FROM type
+WHERE type.id = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -492,8 +493,8 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 	namesPqArray := pq.Array(names)
 	rows, err := Tx.Query(query, namesPqArray)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return nil, userErr, sysErr, errCode
+		errs := api.ParseDBError(err)
+		return nil, errs.UserError, errs.SystemError, errs.Code
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	cacheGroupMap := map[string]tc.CacheGroupNullable{}
@@ -664,7 +665,8 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		&cg.LastUpdated,
 	)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	if err = cg.createLocalizationMethods(); err != nil {

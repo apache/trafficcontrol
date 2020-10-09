@@ -394,8 +394,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		&result.Parameters,
 		&result.StartTime)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 

@@ -255,8 +255,8 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
-			usrErr, sysErr, code := api.ParseDBError(err)
-			return nil, code, usrErr, sysErr
+			errs := api.ParseDBError(err)
+			return nil, errs.Code, errs.UserError, errs.SystemError
 		}
 	}
 
@@ -456,8 +456,8 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	}
 
 	if err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
+		errs := api.ParseDBError(err)
+		return nil, errs.Code, errs.UserError, errs.SystemError
 	}
 	defer resultRows.Close()
 
@@ -504,8 +504,8 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	}
 
 	if _, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
+		errs := api.ParseDBError(err)
+		return nil, errs.Code, errs.UserError, errs.SystemError
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -807,8 +807,8 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
-			usrErr, sysErr, code := api.ParseDBError(err)
-			return nil, code, usrErr, sysErr
+			errs := api.ParseDBError(err)
+			return nil, errs.Code, errs.UserError, errs.SystemError
 		}
 	}
 
@@ -1042,8 +1042,8 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	}
 
 	if err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
+		errs := api.ParseDBError(err)
+		return nil, errs.Code, errs.UserError, errs.SystemError
 	}
 	defer resultRows.Close()
 	if !resultRows.Next() {
@@ -1124,8 +1124,8 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	}
 
 	if _, err = createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
+		errs := api.ParseDBError(err)
+		return nil, errs.Code, errs.UserError, errs.SystemError
 	}
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {

@@ -1333,7 +1333,8 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx
 
 	_, err := tx.Exec(ifaceQry, ifaceArgs...)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	ipQry += strings.Join(ipQueryParts, ",")
@@ -1341,18 +1342,21 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx
 
 	_, err = tx.Exec(ipQry, ipArgs...)
 	if err != nil {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 	return nil, nil, http.StatusOK
 }
 
 func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 	if _, err := tx.Exec(deleteIPsQuery, id); err != nil && err != sql.ErrNoRows {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	if _, err := tx.Exec(deleteInterfacesQuery, id); err != nil && err != sql.ErrNoRows {
-		return api.ParseDBError(err)
+		errs := api.ParseDBError(err)
+		return errs.UserError, errs.SystemError, errs.Code
 	}
 
 	return nil, nil, http.StatusOK
@@ -1576,8 +1580,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := inf.Tx.NamedQuery(updateQuery, server)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer rows.Close()
@@ -1678,8 +1681,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()
@@ -1765,8 +1767,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()
@@ -1853,8 +1854,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	}
 	defer resultRows.Close()
@@ -2045,8 +2045,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	if result, err := tx.Exec(deleteServerQuery, id); err != nil {
 		log.Errorf("Raw error: %v", err)
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, api.ParseDBError(err))
 		return
 	} else if rowsAffected, err := result.RowsAffected(); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting rows affected by server delete: %v", err))
