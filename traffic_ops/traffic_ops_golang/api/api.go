@@ -274,6 +274,14 @@ func HandleErrOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sq
 	}
 }
 
+// HandleErrsOptionalDeprecation handles a set of API Errors. If 'deprecated'
+// is true, then a deprecation alert will be added to the response, and if
+// alternative is not nil it will be presented to the client as the replacement
+// for the deprecated route.
+func HandleErrsOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sql.Tx, errs Errors, deprecated bool, alternative *string) {
+	HandleErrOptionalDeprecation(w, r, tx, errs.Code, errs.UserError, errs.SystemError, deprecated, alternative)
+}
+
 // HandleDeprecatedErr handles an API error, adding a deprecation alert, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
 // The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
