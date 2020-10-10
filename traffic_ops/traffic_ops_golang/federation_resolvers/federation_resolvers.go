@@ -74,16 +74,16 @@ RETURNING federation_resolver.id,
 
 // Create is the handler for POST requests to /federation_resolvers.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if sysErr != nil || userErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	var fr tc.FederationResolver
-	if userErr = api.Parse(r.Body, tx, &fr); userErr != nil {
+	if userErr := api.Parse(r.Body, tx, &fr); userErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
@@ -105,10 +105,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
-	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if sysErr != nil || userErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -119,10 +118,11 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		sysErr = util.JoinErrs(errs)
-		errCode = http.StatusBadRequest
+	tx := inf.Tx.Tx
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(dbErrs) > 0 {
+		sysErr := util.JoinErrs(dbErrs)
+		errCode := http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
@@ -239,24 +239,24 @@ func SelectMaxLastUpdatedQuery(where string, tableName string) string {
 
 // Delete is the handler for DELETE requests to /federation_resolvers.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if sysErr != nil || userErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	fedID := inf.IntParams["id"]
-	cdnIDs, ok, err := dbhelpers.GetCDNIDsFromFedResolverID(fedID, inf.Tx.Tx)
+	cdnIDs, ok, err := dbhelpers.GetCDNIDsFromFedResolverID(fedID, tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
 		return
 	}
 	if ok {
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNsByID(inf.Tx.Tx, cdnIDs, inf.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNsByID(tx, cdnIDs, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 	}

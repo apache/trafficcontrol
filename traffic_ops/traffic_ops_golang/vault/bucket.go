@@ -39,15 +39,15 @@ func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"bucket", "key"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"bucket", "key"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("getting bucket key: Traffic Vault is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting bucket key: Traffic Vault is not configured"))
 		return
 	}
 

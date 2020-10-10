@@ -66,13 +66,14 @@ func InvalidStatusForDeliveryServicesAlertText(prefix, serverType string, dsIDs 
 
 // UpdateStatusHandler is the handler for PUT requests to the /servers/{{ID}}/status API endpoint.
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
+
 	reqObj := tc.ServerPutStatus{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)

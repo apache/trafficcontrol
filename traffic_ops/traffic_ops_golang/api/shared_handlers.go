@@ -181,9 +181,9 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler readSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		useIMS := false
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf, errs := NewInfo(r, nil, nil)
+		if errs.Occurred() {
+			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
 		}
 		defer inf.Close()
@@ -226,9 +226,9 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 //   *forming and writing the body over the wire
 func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf, errs := NewInfo(r, nil, nil)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		defer inf.Close()
@@ -291,7 +291,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = obj.Update(r.Header)
+		userErr, sysErr, errCode := obj.Update(r.Header)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -351,9 +351,9 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 // DeprecatedDeleteHandler always returns a deprecation alert in its response, whereas DeleteHandler does not.
 func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandler deleteSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf, errs := NewInfo(r, nil, nil)
+		if errs.Occurred() {
+			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
 		}
 		defer inf.Close()
@@ -457,9 +457,9 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 //   *forming and writing the body over the wire
 func CreateHandler(creator Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf, errs := NewInfo(r, nil, nil)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		defer inf.Close()
@@ -507,7 +507,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					}
 				}
 
-				userErr, sysErr, errCode = objElem.Create()
+				userErr, sysErr, errCode := objElem.Create()
 				if userErr != nil || sysErr != nil {
 					HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 					return
@@ -559,7 +559,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				}
 			}
 
-			userErr, sysErr, errCode = obj.Create()
+			userErr, sysErr, errCode := obj.Create()
 			if userErr != nil || sysErr != nil {
 				HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 				return

@@ -38,10 +38,10 @@ FROM capability
 `
 
 func Read(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	inf, e := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	if e.Occurred() {
+		inf.HandleErrs(w, r, e)
 		return
 	}
 	defer inf.Close()
@@ -52,8 +52,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
 	if len(errs) > 0 {
-		errCode = http.StatusBadRequest
-		userErr = util.JoinErrs(errs)
+		errCode := http.StatusBadRequest
+		userErr := util.JoinErrs(errs)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
@@ -61,8 +61,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	query := readQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil && err != sql.ErrNoRows {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("querying capabilities: %v", err)
+		errCode := http.StatusInternalServerError
+		sysErr := fmt.Errorf("querying capabilities: %v", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
@@ -72,8 +72,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		cap := tc.Capability{}
 		if err := rows.Scan(&cap.Description, &cap.LastUpdated, &cap.Name); err != nil {
-			errCode = http.StatusInternalServerError
-			sysErr = fmt.Errorf("Parsing database response: %v", err)
+			errCode := http.StatusInternalServerError
+			sysErr := fmt.Errorf("Parsing database response: %v", err)
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
 		}

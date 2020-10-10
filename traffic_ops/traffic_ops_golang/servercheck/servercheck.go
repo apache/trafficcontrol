@@ -101,9 +101,9 @@ WHERE (type.name = 'CHECK_EXTENSION_BOOL' OR
 
 // CreateUpdateServercheck handles creating or updating an existing servercheck
 func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -196,14 +196,14 @@ DO UPDATE SET %[1]s = EXCLUDED.%[1]s`, colName)
 
 // ReadServerCheck is the handler for GET requests for /servercheck
 func ReadServerCheck(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

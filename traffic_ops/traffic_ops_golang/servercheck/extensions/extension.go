@@ -35,9 +35,9 @@ import (
 
 // Create handler for creating a new servercheck extension.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -67,7 +67,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	toExt.TypeID = &typeID
 
 	successMsg := "Check Extension Loaded."
-	errCode = http.StatusInternalServerError
+	errCode := http.StatusInternalServerError
 	id, userErr, sysErr := createCheckExt(toExt, inf.Tx)
 	if userErr != nil {
 		errCode = http.StatusBadRequest
@@ -177,9 +177,9 @@ func selectQuery() string {
 
 // Get handler for getting servercheck extensions.
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -194,9 +194,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		"type":        dbhelpers.WhereColumnInfo{Column: "t.name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
-	if len(errs) > 0 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	if len(es) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(es), nil)
 		return
 	}
 
@@ -231,10 +231,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for deleting servercheck extensions.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if sysErr != nil || userErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -245,7 +244,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
-	userErr, sysErr, errCode = deleteServerCheckExtension(id, inf.Tx)
+	userErr, sysErr, errCode := deleteServerCheckExtension(id, inf.Tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

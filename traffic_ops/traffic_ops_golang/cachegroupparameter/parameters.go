@@ -218,9 +218,9 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 
 // ReadAllCacheGroupParameters reads all cachegroup parameter associations.
 func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, nil)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleDeprecatedErrs(w, r, errs, nil)
 		return
 	}
 	defer inf.Close()
@@ -273,9 +273,9 @@ func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.C
 // AddCacheGroupParameters performs a Create for cachegroup parameter associations.
 // AddCacheGroupParameters accepts data as a single association or an array of multiple.
 func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, nil)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleDeprecatedErrs(w, r, errs, nil)
 		return
 	}
 	defer inf.Close()
@@ -327,7 +327,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		}
 		cachegroups = append(cachegroups, *p.CacheGroup)
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroups(inf.Tx.Tx, cachegroups, inf.User.UserName)
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroups(inf.Tx.Tx, cachegroups, inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

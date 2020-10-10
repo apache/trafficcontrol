@@ -823,10 +823,10 @@ and p.id = $1
 // Read is the handler for GET requests to /servers.
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime *time.Time
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, errs := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -848,7 +848,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
+	servers, serverCount, userErr, sysErr, errCode, maxTime := getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		api.AddLastModifiedHdr(w, *maxTime)
 	}
@@ -1364,13 +1364,13 @@ func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 
 // Update is the handler for PUT requests to /servers.
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
@@ -1384,7 +1384,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	// Get original server
 	originals, _, userErr, sysErr, errCode, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		// TODO: I believe this is returning the wrong error code
+		api.HandleErr(w, r, tx, errs.Code, userErr, sysErr)
 		return
 	}
 	if len(originals) < 1 {
@@ -1548,7 +1549,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
+	userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx)
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1890,9 +1892,9 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 // Create is the handler for POST requests to /servers.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -1960,13 +1962,13 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 
 // Delete is the handler for DELETE requests to the /servers API endpoint.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
@@ -1987,7 +1989,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, serverInfo.Type, tx); err != nil {
-		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
+		sysErr := fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	} else if len(dsIDs) > 0 {
@@ -1999,7 +2001,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var servers []tc.ServerV40
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
+	servers, _, userErr, sysErr, errCode, _ := getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

@@ -32,14 +32,14 @@ import (
 
 func LogoutHandler(secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		tx := inf.Tx.Tx
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf, errs := api.NewInfo(r, nil, nil)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		defer inf.Close()
 
+		tx := inf.Tx.Tx
 		cookie := tocookie.GetCookie(inf.User.UserName, 0, secret)
 		http.SetCookie(w, cookie)
 		resp := struct {
@@ -48,9 +48,9 @@ func LogoutHandler(secret string) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			errCode = http.StatusInternalServerError
-			sysErr = fmt.Errorf("Marshaling response: %v", err)
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			errCode := http.StatusInternalServerError
+			sysErr := fmt.Errorf("Marshaling response: %v", err)
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
 		}
 

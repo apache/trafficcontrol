@@ -156,15 +156,18 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var req tc.UserRegistrationRequest
 	var reqV4 tc.UserRegistrationRequestV4
 	var email rfc.EmailAddress
+	var sysErr error
+	var userErr error
+	var errCode int
 
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	var tx = inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 	defer r.Body.Close()
+	tx := inf.Tx.Tx
 
 	// ToDo: uncomment this once the perm based roles and config options are implemented
 	if inf.Version.Major >= 4 {

@@ -42,9 +42,9 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	var str string
 	params := make(map[string]string, 0)
 
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -113,10 +113,10 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, cols)
-	if len(errs) > 0 {
-		errCode = http.StatusBadRequest
-		userErr = util.JoinErrs(errs)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(params, cols)
+	if len(es) > 0 {
+		errCode := http.StatusBadRequest
+		userErr = util.JoinErrs(es)
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}

@@ -301,9 +301,9 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 // Used by POST requests to `/jobs`, creates a new content invalidation job
 // from the provided request body.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -335,6 +335,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteAndLogErr(w, r, append(resp, '\n'))
 		return
 	}
+
+	var sysErr error
+	var errCode int
+	var userErr error
 
 	// Validate() would have already checked for deliveryservice existence and
 	// parsed the ttl, so if either of these throws an error now, something
@@ -447,9 +451,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
 // with the provided request body.
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -457,6 +461,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var oFQDN string
 	var dsid uint
 	var uid uint
+	var userErr error
+	var sysErr error
+	var errCode int
 	job := tc.InvalidationJob{}
 	row := inf.Tx.Tx.QueryRow(putInfoQuery, inf.Params["id"])
 	err := row.Scan(&job.ID,
@@ -624,13 +631,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	var userErr error
+	var sysErr error
+	var errCode int
 	var dsid uint
 	var createdBy uint
 	row := inf.Tx.Tx.QueryRow(`SELECT job_deliveryservice, job_user FROM job WHERE id=$1`, inf.Params["id"])

@@ -109,9 +109,9 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 
 // ReadDSSHandler is the handler for GET requests to /deliveryserviceserver.
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, []string{"limit", "page"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -346,9 +346,9 @@ func hasAvailableEdgesCurrentlyAssigned(tx *sql.Tx, dsID int) (bool, error) {
 
 // GetReplaceHandler is the handler for POST requests to the /deliveryserviceserver API endpoint.
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, []string{"limit", "page"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -449,9 +449,9 @@ type TODeliveryServiceServers tc.DeliveryServiceServers
 
 // GetCreateHandler is the handler for POST requests to /deliveryservices/{{XMLID}}/servers.
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"xml_id"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -673,9 +673,9 @@ VALUES (:id, :server )`
 
 // GetReadAssigned is the handler for GET requests to /deliveryservices/{id}/servers.
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()

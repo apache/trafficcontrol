@@ -43,47 +43,47 @@ const msg = "From: %s\r\nTo:%s\r\nContent-Type: text/html\r\nSubject: Delivery S
 // /deliveryservices/request - not to be confused with a Delivery Service
 // Request as created using the /deliveryservice_requests.
 func Request(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestRequest
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
-		userErr = fmt.Errorf("parsing request: %w", err)
-		errCode = http.StatusBadRequest
+		userErr := fmt.Errorf("parsing request: %w", err)
+		errCode := http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
 
 	if err := dsr.Validate(); err != nil {
-		errCode = http.StatusBadRequest
+		errCode := http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, err, nil)
 		return
 	}
 
 	addr, err := mail.ParseAddress(dsr.EmailTo)
 	if err != nil {
-		userErr = fmt.Errorf("'%s' is not a valid RFC5322 email address", dsr.EmailTo)
-		sysErr = fmt.Errorf("parsing submitted email address: %w", err)
-		errCode = http.StatusBadRequest
+		userErr := fmt.Errorf("'%s' is not a valid RFC5322 email address", dsr.EmailTo)
+		sysErr := fmt.Errorf("parsing submitted email address: %w", err)
+		errCode := http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
 	body, err := dsr.Details.Format()
 	if err != nil {
-		sysErr = fmt.Errorf("failed to format email body: %w", err)
-		errCode = http.StatusInternalServerError
+		sysErr := fmt.Errorf("failed to format email body: %w", err)
+		errCode := http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
 	body = fmt.Sprintf(msg, inf.Config.ConfigTO.EmailFrom, addr, dsr.Details.Customer, body)
-	errCode, userErr, sysErr = inf.SendMail(rfc.EmailAddress{Address: *addr}, []byte(body))
+	errCode, userErr, sysErr := inf.SendMail(rfc.EmailAddress{Address: *addr}, []byte(body))
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

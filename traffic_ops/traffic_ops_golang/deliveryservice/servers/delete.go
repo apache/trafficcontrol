@@ -97,17 +97,17 @@ func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx
 }
 
 func deleteDSS(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
+	inf, errs := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
 	if tx == nil {
-		errCode = http.StatusInternalServerError
-		sysErr = errors.New("nil transaction")
+		errCode := http.StatusInternalServerError
+		sysErr := errors.New("nil transaction")
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
 	}
@@ -115,7 +115,7 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 	dsID := inf.IntParams["dsid"]
 	serverID := inf.IntParams["serverid"]
 
-	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
+	userErr, sysErr, errCode := tenant.CheckID(tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

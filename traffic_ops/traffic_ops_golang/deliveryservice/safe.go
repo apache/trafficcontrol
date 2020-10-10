@@ -57,10 +57,10 @@ RETURNING id
 func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var err error
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -75,7 +75,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	}
 	dsID := inf.IntParams["id"]
 
-	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
+	userErr, sysErr, errCode := tenant.CheckID(tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

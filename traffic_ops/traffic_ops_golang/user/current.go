@@ -99,9 +99,9 @@ RETURNING address_line1,
 `
 
 func Current(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -168,14 +168,17 @@ WHERE u.id=$1
 func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	var useV4User bool
 	var userV4 tc.UserV4
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
+	var userErr error
+	var sysErr error
+	var errCode int
 	var userRequest tc.CurrentUserUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&userRequest); err != nil {
 		errCode = http.StatusBadRequest

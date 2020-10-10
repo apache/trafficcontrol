@@ -74,9 +74,9 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	deprecation := util.StrPtr(API_ACME_AUTORENEW)
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, deprecation)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError, deprecated, deprecation)
 		return
 	}
 	defer inf.Close()

@@ -74,9 +74,9 @@ RETURNING federation_resolver.ip_address
 `
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -309,28 +309,28 @@ ORDER BY
 // Confusingly, it does not create a federation, but is instead used to manipulate the resolvers
 // used by one or more particular Delivery Services for one or more particular Federations.
 func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
 	mappings, userErr, sysErr := getMappingsFromRequestBody(r.Body)
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
 	}
 
 	if err := mappings.Validate(tx); err != nil {
-		errCode = http.StatusBadRequest
+		errCode := http.StatusBadRequest
 		userErr = fmt.Errorf("validating request: %v", err)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
 
-	userErr, sysErr, errCode = addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
+	userErr, sysErr, errCode := addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -424,14 +424,14 @@ func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint
 // Confusingly, it does not delete a federation, but is instead used to remove an association
 // between all federation resolvers and all federations assigned to the authenticated user.
 func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -478,14 +478,14 @@ func removeFederationResolverMappingsForCurrentUser(tx *sql.Tx, u *auth.CurrentU
 }
 
 func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

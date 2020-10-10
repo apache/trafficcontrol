@@ -118,13 +118,13 @@ func checkForLastServerInActiveDeliveryServices(serverID int, serverType string,
 
 // AssignDeliveryServicesToServerHandler is the handler for POST requests to /servers/{{ID}}/deliveryservices.
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	dsList := []int{}
 	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
@@ -161,8 +161,8 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	// We already know the CDN exists because that's part of the serverInfo query above
 	serverCDN, _, err := dbhelpers.GetCDNNameFromID(tx, int64(serverInfo.CDNID))
 	if err != nil {
-		sysErr = fmt.Errorf("Failed to get CDN name from ID: %v", err)
-		errCode = http.StatusInternalServerError
+		sysErr := fmt.Errorf("Failed to get CDN name from ID: %v", err)
+		errCode := http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
@@ -172,7 +172,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(dsList) > 0 {
-		if errCode, userErr, sysErr = checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
+		if errCode, userErr, sysErr := checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}

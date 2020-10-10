@@ -615,39 +615,56 @@ type APIInfo struct {
 //    api.WriteResp(w, r, respObj)
 //  }
 //
-func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
+func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, Errors) {
+	inf := &APIInfo{
+		Tx: &sqlx.Tx{},
+	}
+
+	errs := Errors{
+		Code: http.StatusInternalServerError,
+	}
+
 	db, err := GetDB(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting db: %v", err)
+		return inf, errs
 	}
+
 	cfg, err := GetConfig(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting config: %v", err)
+		return inf, errs
 	}
 	tv, err := GetTrafficVault(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting TrafficVault: %w", err)
+		errs.Code = http.StatusInternalServerError
+		return inf, errs
 	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting reqID: %v", err)
+		return inf, errs
 	}
 	version := getRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting user: %v", err)
+		return inf, errs
 	}
+
 	params, intParams, errs := AllParams(r, requiredParams, intParamNames)
 	if errs.Occurred() {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errs.UserError, errs.SystemError, errs.Code
+		return inf, errs
 	}
 	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, nil, fmt.Errorf("could not begin transaction: %w", err), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, Errors{SystemError: fmt.Errorf("could not begin transaction: %w", err), Code: http.StatusInternalServerError}
 	}
-	return &APIInfo{
+
+	inf = &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
 		Version:   version,
@@ -658,7 +675,8 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		CancelTx:  cancelTx,
 		Vault:     tv,
 		request:   r,
-	}, nil, nil, http.StatusOK
+	}
+	return inf, errs
 }
 
 const createChangeLogQuery = `

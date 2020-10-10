@@ -33,17 +33,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 )
 
-type errorDetails struct {
-	userErr error
-	sysErr  error
-	errCode int
-}
-
 // CopyProfileHandler creates a new profile and parameters from an existing profile.
 func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -54,15 +48,15 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 			Name:         inf.Params["new_profile"],
 		},
 	}
-	errs := copyProfile(inf, &p.Response)
-	if errs.userErr != nil || errs.sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errs.errCode, errs.userErr, errs.sysErr)
+	errs = copyProfile(inf, &p.Response)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
 	errs = copyParameters(inf, &p.Response)
-	if errs.userErr != nil || errs.sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errs.errCode, errs.userErr, errs.sysErr)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -71,31 +65,31 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, p.Response)
 }
 
-func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
+func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 	if inf == nil || p == nil {
-		return errorDetails{
-			sysErr:  errors.New("copyProfile received nil APIInfo or ProfileCopy reference"),
-			errCode: http.StatusInternalServerError,
+		return api.Errors{
+			SystemError: errors.New("copyProfile received nil APIInfo or ProfileCopy reference"),
+			Code:        http.StatusInternalServerError,
 		}
 	}
 	if strings.Contains(p.Name, " ") {
-		return errorDetails{
-			userErr: errors.New("new Profile name cannot contain spaces"),
-			errCode: http.StatusBadRequest,
+		return api.Errors{
+			UserError: errors.New("new Profile name cannot contain spaces"),
+			Code:      http.StatusBadRequest,
 		}
 	}
 	// check if the newProfile already exists
 	ok, err := tc.ProfileExistsByName(p.Name, inf.Tx.Tx)
 	if ok {
-		return errorDetails{
-			userErr: fmt.Errorf("profile with name %s already exists", p.Name),
-			errCode: http.StatusBadRequest,
+		return api.Errors{
+			UserError: fmt.Errorf("profile with name %s already exists", p.Name),
+			Code:      http.StatusBadRequest,
 		}
 	}
 	if err != nil {
-		return errorDetails{
-			sysErr:  err,
-			errCode: http.StatusInternalServerError,
+		return api.Errors{
+			SystemError: err,
+			Code:        http.StatusInternalServerError,
 		}
 	}
 
@@ -112,46 +106,46 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 
 	profiles, userErr, sysErr, errCode, _ := toProfile.Read(nil, false)
 	if userErr != nil || sysErr != nil {
-		return errorDetails{
-			userErr: userErr,
-			sysErr:  sysErr,
-			errCode: errCode,
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
 		}
 	}
 
 	if len(profiles) == 0 {
-		return errorDetails{
-			userErr: fmt.Errorf("profile with name %s does not exist", p.ExistingName),
-			errCode: http.StatusNotFound,
+		return api.Errors{
+			UserError: fmt.Errorf("profile with name %s does not exist", p.ExistingName),
+			Code:      http.StatusNotFound,
 		}
 	} else if len(profiles) > 1 {
-		return errorDetails{
-			sysErr:  fmt.Errorf("multiple profiles with name %s returned", p.ExistingName),
-			errCode: http.StatusInternalServerError,
+		return api.Errors{
+			SystemError: fmt.Errorf("multiple profiles with name %s returned", p.ExistingName),
+			Code:        http.StatusInternalServerError,
 		}
 	}
 
 	cdnName, err := dbhelpers.GetCDNNameFromProfileName(inf.Tx.Tx, p.ExistingName)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return errorDetails{
-				userErr: errors.New("no cdn for the given profile"),
-				sysErr:  nil,
-				errCode: http.StatusBadRequest,
+			return api.Errors{
+				UserError:   errors.New("no cdn for the given profile"),
+				SystemError: nil,
+				Code:        http.StatusBadRequest,
 			}
 		}
-		return errorDetails{
-			userErr: nil,
-			sysErr:  err,
-			errCode: http.StatusInternalServerError,
+		return api.Errors{
+			UserError:   nil,
+			SystemError: err,
+			Code:        http.StatusInternalServerError,
 		}
 	}
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
-		return errorDetails{
-			userErr: userErr,
-			sysErr:  sysErr,
-			errCode: errCode,
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
 		}
 	}
 	// use existing CRUD helpers to create the new profile
@@ -159,10 +153,10 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	toProfile.ProfileNullable.Name = &p.Name
 	userErr, sysErr, errCode = api.GenericCreate(toProfile)
 	if userErr != nil || sysErr != nil {
-		return errorDetails{
-			userErr: userErr,
-			sysErr:  sysErr,
-			errCode: errCode,
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
 		}
 	}
 
@@ -170,10 +164,10 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	p.ID = *toProfile.ProfileNullable.ID
 	p.Description = *toProfile.ProfileNullable.Description
 	log.Infof("created new profile [%s] from existing profile [%s]", p.Name, p.ExistingName)
-	return errorDetails{}
+	return api.NewErrors()
 }
 
-func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
+func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 	// use existing ProfileParameter CRUD helpers to find parameters for the existing profile
 	inf.Params = map[string]string{
 		"profileId": fmt.Sprintf("%d", p.ExistingID),
@@ -187,10 +181,10 @@ func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 
 	parameters, userErr, sysErr, errCode, _ := toParam.Read(nil, false)
 	if userErr != nil || sysErr != nil {
-		return errorDetails{
-			userErr: userErr,
-			sysErr:  sysErr,
-			errCode: errCode,
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
 		}
 	}
 
@@ -204,15 +198,15 @@ func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 		toParam.ProfileParameterNullable.ParameterID = param.Parameter
 		userErr, sysErr, errCode := toParam.Create()
 		if userErr != nil || sysErr != nil {
-			return errorDetails{
-				userErr: userErr,
-				sysErr:  sysErr,
-				errCode: errCode,
+			return api.Errors{
+				UserError:   userErr,
+				SystemError: sysErr,
+				Code:        errCode,
 			}
 		}
 		newParams++
 	}
 
 	log.Infof("profile [%s] was assigned to %d parameters", p.Name, newParams)
-	return errorDetails{}
+	return api.NewErrors()
 }

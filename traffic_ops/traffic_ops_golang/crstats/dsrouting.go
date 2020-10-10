@@ -36,18 +36,17 @@ import (
 
 // GetDSRouting is the handler for getting aggregated routing percentages for a DS.
 func GetDSRouting(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
 	dsID := inf.IntParams["id"]
 
-	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
+	tx := inf.Tx.Tx
+	userErr, sysErr, errCode := tenant.CheckID(tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

@@ -144,9 +144,9 @@ func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }
 
 func PostUsers(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
