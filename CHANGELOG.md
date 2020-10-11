@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [4.1.1] - 2020-09-22
 ### Added
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
+- Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
 
 ### Deprecated
 - Deprecated the `insecure` option in `traffic_ops_golang` in favor of `"tls_config": { "InsecureSkipVerify": <bool> }`
