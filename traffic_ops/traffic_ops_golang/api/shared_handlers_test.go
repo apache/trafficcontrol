@@ -22,7 +22,6 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -30,6 +29,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/jmoiron/sqlx"
@@ -85,7 +85,6 @@ func (i *tester) Create() (error, error, int) {
 //Reader interface functions
 func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if h.Get(rfc.IfModifiedSince) != "" {
-		//var imsDate time.Time
 		if imsDate, ok := rfc.ParseHTTPDate(h.Get(rfc.IfModifiedSince)); !ok {
 			return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK, nil
 		} else {
