@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
@@ -849,7 +850,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime := getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+	if maxTime != nil && crudder.SetLastModifiedHeader(r, useIMS) {
 		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	if errCode == http.StatusNotModified {
@@ -1567,15 +1568,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if server.CDNName != nil {
-		userErr, sysErr, statusCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	} else if server.CDNID != nil {
-		userErr, sysErr, statusCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -1669,15 +1670,15 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if server.CDNName != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	} else if server.CDNID != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -1754,15 +1755,15 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.StatusLastUpdated = &currentTime
 
 	if server.CDNName != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	} else if server.CDNID != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -1841,15 +1842,15 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.StatusLastUpdated = &currentTime
 
 	if server.CDNName != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	} else if server.CDNID != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -2017,15 +2018,15 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	server := servers[0]
 	if server.CDNName != nil {
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	} else if server.CDNID != nil {
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}

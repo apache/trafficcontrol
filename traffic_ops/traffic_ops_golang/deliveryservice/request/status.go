@@ -34,10 +34,9 @@ import (
 // GetStatus is the handler for GET requests to
 // /deliveryservice_requests/{{ID}}/status.
 func GetStatus(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -48,6 +47,7 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
 		return
 	}
+	tx := inf.Tx.Tx
 
 	// This should never happen because a route doesn't exist for it
 	if version.Major < 4 {
@@ -59,16 +59,12 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
-			sysErr = nil
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{Code: http.StatusNotFound, UserError: fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])}
 		} else {
-			errCode = http.StatusInternalServerError
-			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			errs = api.NewSystemError(fmt.Errorf("looking for DSR: %w", err))
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -103,10 +99,9 @@ RETURNING last_updated
 // /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
 	var omitExtraLongDescFields bool
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -118,8 +113,9 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx := inf.Tx.Tx
 	if inf.User == nil {
-		sysErr = errors.New("got api info with no user")
+		sysErr := errors.New("got api info with no user")
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -137,16 +133,12 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", dsrID).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: %d", dsrID)
-			sysErr = nil
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{Code: http.StatusNotFound, UserError: fmt.Errorf("no such Delivery Service Request: %d", dsrID)}
 		} else {
-			errCode = http.StatusInternalServerError
-			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			errs = api.NewSystemError(fmt.Errorf("looking for DSR: %w", err))
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	dsr.SetXMLID()
@@ -172,6 +164,9 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	// store the current original DS if the DSR is being closed
 	// (and isn't a "create" request)
+	var sysErr error
+	var userErr error
+	var errCode int
 	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
 			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)

@@ -32,10 +32,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/asaskevich/govalidator"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 // we need a type alias to define functions on
@@ -53,9 +54,9 @@ func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(federation.last_updated) as t from federation 
-		join federation_deliveryservice fds on fds.federation = federation.id 
-		join deliveryservice ds on ds.id = fds.deliveryservice 
+		SELECT max(federation.last_updated) as t from federation
+		join federation_deliveryservice fds on fds.federation = federation.id
+		join deliveryservice ds on ds.id = fds.deliveryservice
 		join cdn c on c.id = ds.cdn_id ` + where + orderBy + pagination +
 		` UNION ALL
 		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
@@ -128,50 +129,50 @@ func (fed *TOCDNFederation) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
-func (fed *TOCDNFederation) CheckIfCDNAndFederationMatch(cdnName string) (error, error, int) {
+func (fed *TOCDNFederation) CheckIfCDNAndFederationMatch(cdnName string) api.Errors {
 	var cdnFromDS string
 	var err error
 	if fed.DeliveryServiceIDs != nil {
 		if fed.DsId != nil {
 			cdnNames, err := dbhelpers.GetCDNNamesFromDSIds(fed.APIInfo().Tx.Tx, []int{*fed.DsId})
 			if err != nil {
-				return nil, fmt.Errorf("getting CDN names from DS IDs: %w", err), http.StatusInternalServerError
+				return api.Errors{SystemError: fmt.Errorf("getting CDN names from DS IDs: %w", err), Code: http.StatusInternalServerError}
 			}
 			if len(cdnNames) != 1 {
-				return fmt.Errorf("%d CDNs returned for one DS ID", len(cdnNames)), nil, http.StatusBadRequest
+				return api.Errors{SystemError: fmt.Errorf("%d CDNs returned for one DS ID", len(cdnNames)), Code: http.StatusInternalServerError}
 			}
 			cdnFromDS = cdnNames[0]
 		} else if fed.XmlId != nil {
 			cdnFromDS, err = dbhelpers.GetCDNNameFromDSXMLID(fed.APIInfo().Tx.Tx, *fed.XmlId)
 			if err != nil {
-				return nil, fmt.Errorf("getting CDN name from DS XMLID: %w", err), http.StatusInternalServerError
+				return api.Errors{SystemError: fmt.Errorf("getting CDN name from DS XMLID: %w", err), Code: http.StatusInternalServerError}
 			}
 		}
 	}
 	if cdnFromDS != "" && cdnFromDS != cdnName {
-		return errors.New("cdn names in request path and payload do not match"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("cdn names in request path and payload do not match"), Code: http.StatusBadRequest}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // fedAPIInfo.Params["name"] is not used on creation, rather the cdn name
 // is connected when the federations/:id/deliveryservice links a federation
 // However, we use fedAPIInfo.Params["name"] to check whether or not another user has a hard lock on the CDN.
 // Note: cdns and deliveryservies have a 1-1 relationship
-func (fed *TOCDNFederation) Create() (error, error, int) {
+func (fed *TOCDNFederation) Create() api.Errors {
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
 		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
-			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+			return api.Errors{SystemError: fmt.Errorf("verifying CDN exists: %w", err), Code: http.StatusInternalServerError}
 		} else if !ok {
-			return errors.New("cdn not found"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("cdn not found"), Code: http.StatusNotFound}
 		}
-		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := fed.CheckIfCDNAndFederationMatch(cdn)
+		if errs.Occurred() {
+			return errs
 		}
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
 	// Deliveryservice IDs should not be included on create.
@@ -180,7 +181,7 @@ func (fed *TOCDNFederation) Create() (error, error, int) {
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-	return api.GenericCreate(fed)
+	return crudder.GenericCreate(fed)
 }
 
 // returning true indicates the data related to the given tenantID should be visible
@@ -217,7 +218,7 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 	} else if !ok {
 		return nil, errors.New("cdn not found"), nil, http.StatusNotFound, nil
 	}
-	federations, userErr, sysErr, errCode, maxTime := api.GenericRead(h, fed, useIMS)
+	federations, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, fed, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
 	}
@@ -243,24 +244,24 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 	return filteredFederations, nil, nil, errCode, maxTime
 }
 
-func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
-	userErr, sysErr, errCode := fed.isTenantAuthorized()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+func (fed *TOCDNFederation) Update(h http.Header) api.Errors {
+	errs := fed.isTenantAuthorized()
+	if errs.Occurred() {
+		return errs
 	}
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
 		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
-			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("verifying CDN exists: %w", err))
 		} else if !ok {
-			return errors.New("cdn not found"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("cdn not found"), Code: http.StatusNotFound}
 		}
-		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = fed.CheckIfCDNAndFederationMatch(cdn)
+		if errs.Occurred() {
+			return errs
 		}
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
 	// Deliveryservice IDs should not be included on update.
@@ -269,55 +270,55 @@ func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-	return api.GenericUpdate(h, fed)
+	return crudder.GenericUpdate(h, fed)
 }
 
 // Delete implements the Deleter interface for TOCDNFederation.
-func (fed *TOCDNFederation) Delete() (error, error, int) {
-	userErr, sysErr, errCode := fed.isTenantAuthorized()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+func (fed *TOCDNFederation) Delete() api.Errors {
+	errs := fed.isTenantAuthorized()
+	if errs.Occurred() {
+		return errs
 	}
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
 		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
-			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("verifying CDN exists: %w", err))
 		} else if !ok {
-			return errors.New("cdn not found"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("cdn not found"), Code: http.StatusNotFound}
 		}
-		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = fed.CheckIfCDNAndFederationMatch(cdn)
+		if errs.Occurred() {
+			return errs
 		}
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericDelete(fed)
+	return crudder.GenericDelete(fed)
 }
 
-func (fed TOCDNFederation) isTenantAuthorized() (error, error, int) {
+func (fed TOCDNFederation) isTenantAuthorized() api.Errors {
 	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.APIInfo().Tx.Tx)
 	if err != nil {
 		// If nobody has claimed a tenant, that federation is publicly visible.
 		// This logically follows /federations/:id/deliveryservices
-		if err == sql.ErrNoRows {
-			return nil, nil, http.StatusOK
+		if errors.Is(err, sql.ErrNoRows) {
+			return api.NewErrors()
 		}
-		return nil, errors.New("getting tenant id from federation: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("getting tenant id from federation: %w", err))
 	}
 
 	// TODO: use IsResourceAuthorizedToUserTx instead
 	list, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, errors.New("getting federation tenant list: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("getting federation tenant list: %w", err))
 	}
 	for _, id := range list {
 		if id == tenantID {
-			return nil, nil, http.StatusOK
+			return api.NewErrors()
 		}
 	}
-	return errors.New("unauthorized for tenant"), nil, http.StatusForbidden
+	return api.Errors{UserError: errors.New("unauthorized for tenant"), Code: http.StatusForbidden}
 }
 
 func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {

@@ -40,14 +40,14 @@ import (
 
 // RenewAcmeCertificate renews the SSL certificate for a delivery service if possible through ACME protocol.
 func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"xmlid"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -66,16 +66,16 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
 	defer cancelTx()
 
-	userErr, sysErr, statusCode = renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
+	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return

@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -157,7 +158,7 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+	if maxTime != nil && crudder.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
@@ -396,9 +397,9 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 			return
 		}
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -481,9 +482,9 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 			return
 		}
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}

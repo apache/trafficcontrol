@@ -20,7 +20,6 @@ package staticdnsentry
  */
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -30,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -140,39 +140,40 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(en.APIInfo(), "host")
-	return api.GenericRead(h, en, useIMS)
+	return crudder.GenericRead(h, en, useIMS)
 }
-func (en *TOStaticDNSEntry) Create() (error, error, int) {
+func (en *TOStaticDNSEntry) Create() api.Errors {
 	var cdnName tc.CDNName
 	var err error
 	if en.DeliveryServiceID != nil {
 		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericCreate(en)
+	return crudder.GenericCreate(en)
 }
-func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
+
+func (en *TOStaticDNSEntry) Update(h http.Header) api.Errors {
 	var cdnName tc.CDNName
 	var err error
 	if en.DeliveryServiceID != nil {
 		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericUpdate(h, en)
+	return crudder.GenericUpdate(h, en)
 }
-func (en *TOStaticDNSEntry) Delete() (error, error, int) {
+func (en *TOStaticDNSEntry) Delete() api.Errors {
 	var cdnName tc.CDNName
 	var err error
 	var dsID int
@@ -181,19 +182,20 @@ func (en *TOStaticDNSEntry) Delete() (error, error, int) {
 	} else if en.ID != nil {
 		dsID, err = dbhelpers.GetDSIDFromStaticDNSEntry(en.ReqInfo.Tx.Tx, *en.ID)
 		if err != nil {
-			return nil, errors.New("couldn't get DS ID from static dns entry ID: " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("couldn't get DS ID from static dns entry ID: %w", err))
 		}
 	}
 	_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, dsID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
-	return api.GenericDelete(en)
+	return crudder.GenericDelete(en)
 }
+
 func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(sde.last_updated) as t FROM staticdnsentry as sde

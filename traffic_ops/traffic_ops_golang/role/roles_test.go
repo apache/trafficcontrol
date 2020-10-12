@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
@@ -59,19 +60,19 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TORole{}
 
-	if _, ok := i.(api.Creator); !ok {
+	if _, ok := i.(crudder.Creator); !ok {
 		t.Errorf("role must be creator")
 	}
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("role must be reader")
 	}
-	if _, ok := i.(api.Updater); !ok {
+	if _, ok := i.(crudder.Updater); !ok {
 		t.Errorf("role must be updater")
 	}
-	if _, ok := i.(api.Deleter); !ok {
+	if _, ok := i.(crudder.Deleter); !ok {
 		t.Errorf("role must be deleter")
 	}
-	if _, ok := i.(api.Identifier); !ok {
+	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("role must be Identifier")
 	}
 }

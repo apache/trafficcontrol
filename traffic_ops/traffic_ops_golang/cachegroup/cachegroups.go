@@ -277,7 +277,7 @@ func (cg TOCacheGroup) Validate() error {
 //The TOCacheGroup implementation of the Creator interface
 //The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
 //to be added to the struct
-func (cg *TOCacheGroup) Create() (error, error, int) {
+func (cg *TOCacheGroup) Create() api.Errors {
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
@@ -307,13 +307,15 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		&cg.SecondaryParentName,
 	)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 
 	coordinateID, err := cg.createCoordinate()
 	if err != nil {
-		return nil, errors.New("cachegroup create: creating coord:" + err.Error()), http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: fmt.Errorf("cachegroup create: creating coord: %v", err),
+		}
 	}
 
 	err = cg.ReqInfo.Tx.Tx.QueryRow(
@@ -322,18 +324,26 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		cg.ID,
 	).Scan(&cg.LastUpdated)
 	if err != nil {
-		return nil, fmt.Errorf("followup update during cachegroup create: %v", err), http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: fmt.Errorf("followup update during cachegroup create: %v", err),
+		}
 	}
 
+	errs := api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	if err = cg.createLocalizationMethods(); err != nil {
-		return nil, errors.New("creating cachegroup: creating localization methods: " + err.Error()), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("creating cachegroup: creating localization methods: %v", err)
+		return errs
 	}
 
 	if err = cg.createCacheGroupFallbacks(); err != nil {
-		return nil, errors.New("creating cachegroup: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+		errs.SystemError = errors.New("creating cachegroup: creating cache group fallbacks: " + err.Error())
+		return errs
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (cg *TOCacheGroup) createLocalizationMethods() error {
@@ -618,7 +628,7 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 }
 
 //The TOCacheGroup implementation of the Updater interface
-func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
+func (cg *TOCacheGroup) Update(h http.Header) api.Errors {
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
@@ -635,17 +645,17 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
 	userErr, sysErr, errCode := api.CheckIfUnModified(h, cg.ReqInfo.Tx, *cg.ID, "cachegroup")
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 
 	// CheckIfCurrentUserCanModifyCachegroup
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(
@@ -665,19 +675,18 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		&cg.LastUpdated,
 	)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 
 	if err = cg.createLocalizationMethods(); err != nil {
-		return nil, errors.New("cachegroup update: creating localization methods: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup update: creating localization methods: %w", err))
 	}
 
 	if err = cg.createCacheGroupFallbacks(); err != nil {
-		return nil, errors.New("cachegroup update: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup update: creating cache group fallbacks: %w", err))
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
@@ -738,48 +747,48 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (cg *TOCacheGroup) Delete() (error, error, int) {
+func (cg *TOCacheGroup) Delete() api.Errors {
 	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
 	if inUse {
-		return err, nil, http.StatusBadRequest
+		return api.Errors{UserError: err, Code: http.StatusBadRequest}
 	}
 	if err != nil {
-		return nil, errors.New("cachegroup delete: checking use: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup delete: checking use: %w", err))
 	}
 
 	coordinateID, err := cg.getCoordinateID()
-	if err == sql.ErrNoRows {
-		return errors.New("no cachegroup with that id found"), nil, http.StatusNotFound
+	if errors.Is(err, sql.ErrNoRows) {
+		return api.Errors{UserError: errors.New("no cachegroup with that id found"), Code: http.StatusNotFound}
 	}
 	if err != nil {
-		return nil, errors.New("cachegroup delete: getting coord: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup delete: getting coord: %w", err))
 	}
 
 	// CheckIfCurrentUserCanModifyCachegroup
 	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 	if err = cg.deleteCoordinate(*coordinateID); err != nil {
-		return nil, errors.New("cachegroup delete: deleting coord: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup delete: deleting coord: %w", err))
 	}
 
 	result, err := cg.ReqInfo.Tx.Exec(DeleteQuery(), *cg.ID)
 	if err != nil {
-		return nil, errors.New("cachegroup delete: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("cachegroup delete: %w", err))
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, fmt.Errorf("getting rows affected: %v", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("getting rows affected: %w", err))
 	}
 
 	// In the zero case, either err != nil occurs (from the Exec) or we got sql.ErrNoRows above
 	if rowsAffected != 1 {
-		return nil, errors.New("cachegroup delete affected multiple rows"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("cachegroup delete affected multiple rows"))
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func InsertQuery() string {

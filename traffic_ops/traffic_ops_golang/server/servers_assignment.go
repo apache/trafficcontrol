@@ -166,9 +166,9 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(serverCDN), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(serverCDN), inf.User.UserName)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	if len(dsList) > 0 {
@@ -187,7 +187,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	if replace && (serverInfo.Status == tc.CacheStatusOnline.String() || serverInfo.Status == tc.CacheStatusReported.String()) {
 		currentDSIDs, err := checkForLastServerInActiveDeliveryServices(server, serverInfo.Type, dsList, tx)
 		if err != nil {
-			sysErr = fmt.Errorf("checking for deliveryservices to which server #%d is the last assigned: %v", server, err)
+			sysErr := fmt.Errorf("checking for deliveryservices to which server #%d is the last assigned: %v", server, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}

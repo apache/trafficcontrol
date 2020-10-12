@@ -150,9 +150,9 @@ func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error 
 
 // GenerateAcmeCertificates gets and saves certificates using ACME protocol from a give ACME provider.
 func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -183,7 +183,7 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
+	userErr, sysErr, errCode := tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -206,10 +206,10 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if errs.Occurred() {
 		defer cancelTx()
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -234,9 +234,9 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 
 // GenerateLetsEncryptCertificates gets and saves new certificates from Let's Encrypt.
 func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -274,14 +274,14 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if errs.Occurred() {
 		defer cancelTx()
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
-	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
+	userErr, sysErr, errCode := tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

@@ -166,9 +166,9 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 	dsName := *ds.XMLID
 
 	if ds.CDNName != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *ds.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *ds.CDNName, inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}

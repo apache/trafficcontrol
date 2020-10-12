@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -323,9 +324,9 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, errCode, userErr, sysErr
 	}
 
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*ds.CDNID), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return nil, errCode, userErr, sysErr
+	errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*ds.CDNID), inf.User.UserName)
+	if errs.Occurred() {
+		return nil, errs.Code, errs.UserError, errs.SystemError
 	}
 	var resultRows *sql.Rows
 	if omitExtraLongDescFields {
@@ -711,10 +712,9 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update: getting CDN from DS ID "+err.Error()))
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 	}
 	res, status, userErr, sysErr := updateV40(w, r, inf, &ds, true)
 	if userErr != nil || sysErr != nil {
@@ -902,8 +902,8 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing DS required capabilities: " + err.Error())
 		}
 		if len(requiredCapabilities) > 0 {
-			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
-				return nil, status, userErr, sysErr
+			if errs := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); errs.Occurred() {
+				return nil, errs.Code, errs.UserError, errs.SystemError
 			}
 		}
 
@@ -1145,52 +1145,52 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.
-func (ds *TODeliveryService) Delete() (error, error, int) {
+func (ds *TODeliveryService) Delete() api.Errors {
 	if ds.ID == nil {
-		return errors.New("missing id"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("missing id"), Code: http.StatusBadRequest}
 	}
 
 	xmlID, ok, err := GetXMLID(ds.ReqInfo.Tx.Tx, *ds.ID)
 	if err != nil {
-		return nil, errors.New("ds delete: getting xmlid: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("ds delete: getting xmlid: %w", err))
 	} else if !ok {
-		return errors.New("delivery service not found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("delivery service not found"), Code: http.StatusNotFound}
 	}
 	ds.XMLID = &xmlID
 
 	if ds.CDNID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(ds.APIInfo().Tx.Tx, int64(*ds.CDNID), ds.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(ds.APIInfo().Tx.Tx, int64(*ds.CDNID), ds.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	} else if ds.CDNName != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, *ds.CDNName, ds.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, *ds.CDNName, ds.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	} else {
 		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(ds.ReqInfo.Tx.Tx, *ds.ID)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't get cdn name for DS: %v", err), http.StatusBadRequest
+			return api.Errors{UserError: fmt.Errorf("couldn't get cdn name for DS: %w", err), Code: http.StatusBadRequest}
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, string(cdnName), ds.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, string(cdnName), ds.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
 	// Note ds regexes MUST be deleted before the ds, because there's a ON DELETE CASCADE on deliveryservice_regex (but not on regex).
 	// Likewise, it MUST happen in a transaction with the later DS delete, so they aren't deleted if the DS delete fails.
 	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM regex WHERE id IN (SELECT regex FROM deliveryservice_regex WHERE deliveryservice=$1)`, *ds.ID); err != nil {
-		return nil, errors.New("TODeliveryService.Delete deleting regexes for delivery service: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("TODeliveryService.Delete deleting regexes for delivery service: %w", err))
 	}
 
 	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, *ds.ID); err != nil {
-		return nil, errors.New("TODeliveryService.Delete deleting delivery service regexes: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("TODeliveryService.Delete deleting delivery service regexes: %w", err))
 	}
 
-	userErr, sysErr, errCode := api.GenericDelete(ds)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := crudder.GenericDelete(ds)
+	if errs.Occurred() {
+		return errs
 	}
 
 	paramConfigFilePrefixes := []string{"hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_"}
@@ -1200,10 +1200,10 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 	}
 
 	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(configFiles)); err != nil {
-		return nil, errors.New("TODeliveryService.Delete deleting delivery service parameteres: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("TODeliveryService.Delete deleting delivery service parameteres: %w", err))
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (v *TODeliveryService) DeleteQuery() string {

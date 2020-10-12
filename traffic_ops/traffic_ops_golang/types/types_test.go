@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -107,19 +108,19 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOType{}
 
-	if _, ok := i.(api.Creator); !ok {
+	if _, ok := i.(crudder.Creator); !ok {
 		t.Errorf("Type must be Creator")
 	}
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("Type must be Reader")
 	}
-	if _, ok := i.(api.Updater); !ok {
+	if _, ok := i.(crudder.Updater); !ok {
 		t.Errorf("Type must be Updater")
 	}
-	if _, ok := i.(api.Deleter); !ok {
+	if _, ok := i.(crudder.Deleter); !ok {
 		t.Errorf("Type must be Deleter")
 	}
-	if _, ok := i.(api.Identifier); !ok {
+	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("Type must be Identifier")
 	}
 }
@@ -146,11 +147,11 @@ func createDummyType(field string) *TOType {
 
 func TestUpdateInvalidType(t *testing.T) {
 	invalidUpdateType := createDummyType("test")
-	err, _, statusCode := invalidUpdateType.Update(nil)
-	if err == nil {
+	errs := invalidUpdateType.Update(nil)
+	if errs.UserError == nil {
 		t.Fatalf("expected update type tp have an error")
 	}
-	if statusCode != http.StatusBadRequest {
+	if errs.Code != http.StatusBadRequest {
 		t.Fatalf("expected update to return a 400 error")
 	}
 }
@@ -158,11 +159,11 @@ func TestUpdateInvalidType(t *testing.T) {
 func TestDeleteInvalidType(t *testing.T) {
 	invalidDeleteType := createDummyType("other")
 
-	err, _, statusCode := invalidDeleteType.Delete()
-	if err == nil {
+	errs := invalidDeleteType.Delete()
+	if errs.UserError == nil {
 		t.Fatalf("expected delete type to have an error")
 	}
-	if statusCode != http.StatusBadRequest {
+	if errs.Code != http.StatusBadRequest {
 		t.Fatalf("expected delete type to return a %v error", http.StatusBadRequest)
 	}
 }
@@ -170,12 +171,12 @@ func TestDeleteInvalidType(t *testing.T) {
 func TestCreateInvalidType(t *testing.T) {
 	invalidCreateType := createDummyType("test")
 
-	err, _, statusCode := invalidCreateType.Create()
-	if err == nil {
-		t.Fatalf("expected create type to have an error")
+	errs := invalidCreateType.Create()
+	if !errs.Occurred() {
+		t.Error("expected create type to have an error")
 	}
-	if statusCode != http.StatusBadRequest {
-		t.Fatalf("expected create type to return a %v error", http.StatusBadRequest)
+	if errs.Code != http.StatusBadRequest {
+		t.Errorf("expected create type to return a %v error", http.StatusBadRequest)
 	}
 }
 

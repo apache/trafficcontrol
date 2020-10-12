@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -144,7 +145,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 
 	query := selectProfilesQuery()
 	// Narrow down if the query parameter is 'param'
-	// TODO add generic where clause to api.GenericRead
+	// TODO add generic where clause to crudder.GenericRead
 	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
 		if len(paramValue) > 0 {
 			query += " LEFT JOIN profile_parameter pp ON prof.id = pp.profile"
@@ -269,7 +270,7 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
+func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() api.Errors {
 	var cdnName string
 	if pr.CDNName != nil {
 		cdnName = *pr.CDNName
@@ -277,57 +278,53 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 		if pr.CDNID != nil {
 			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
 			if err != nil {
-				return nil, err, http.StatusInternalServerError
+				return api.NewSystemError(err)
 			} else if !ok {
-				return nil, nil, http.StatusNotFound
+				return api.Errors{Code: http.StatusNotFound}
 			}
 			cdnName = string(cdn)
 		} else {
-			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
+			return api.Errors{UserError: errors.New("no cdn found for this profile"), Code: http.StatusBadRequest}
 		}
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
-	}
-	return nil, nil, http.StatusOK
+	return dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
 }
 
-func (pr *TOProfile) Update(h http.Header) (error, error, int) {
+func (pr *TOProfile) Update(h http.Header) api.Errors {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
+		errs := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericUpdate(h, pr)
+	return crudder.GenericUpdate(h, pr)
 }
 
-func (pr *TOProfile) Create() (error, error, int) {
+func (pr *TOProfile) Create() api.Errors {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
+		errs := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericCreate(pr)
+	return crudder.GenericCreate(pr)
 }
 
-func (pr *TOProfile) Delete() (error, error, int) {
+func (pr *TOProfile) Delete() api.Errors {
 	if pr.CDNName == nil && pr.CDNID == nil {
 		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pr.APIInfo().Tx.Tx, *pr.ID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
 		pr.CDNName = util.StrPtr(string(cdnName))
 	}
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
+		errs := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericDelete(pr)
+	return crudder.GenericDelete(pr)
 }
 
 func updateQuery() string {

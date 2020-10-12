@@ -126,6 +126,26 @@ func NewErrors() Errors {
 	}
 }
 
+// NewSystemError creates an Errors that only contains the given system error,
+// and has the appropriate response code.
+func NewSystemError(err error) Errors {
+	return Errors{
+		Code:        http.StatusInternalServerError,
+		SystemError: err,
+		UserError:   nil,
+	}
+}
+
+// ModifiedError creates an Errors that only contains an HTTP Precondition
+// Failed status code and associated error message.
+func ModifiedError() Errors {
+	return Errors{
+		Code:        http.StatusPreconditionFailed,
+		SystemError: nil,
+		UserError:   ResourceModifiedError,
+	}
+}
+
 // Occurred returns whether at least one error has occurred (is non-nil).
 func (e Errors) Occurred() bool {
 	return e.SystemError != nil || e.UserError != nil
@@ -523,6 +543,50 @@ func StripParamJSON(params map[string]string) map[string]string {
 		}
 	}
 	return params
+}
+
+func GetIntKey(s string) (interface{}, error) {
+	if strings.HasSuffix(s, ".json") {
+		s = s[:len(s)-len(".json")]
+	}
+	return strconv.Atoi(s)
+}
+
+func GetStringKey(s string) (interface{}, error) {
+	return s, nil
+}
+
+func GetPathParams(ctx context.Context) (map[string]string, error) {
+	val := ctx.Value(PathParamsKey)
+	if val != nil {
+		switch v := val.(type) {
+		case map[string]string:
+			return v, nil
+		default:
+			return nil, fmt.Errorf("path parameters found with bad type: %T", v)
+		}
+	}
+	return nil, errors.New("no PathParams found in Context")
+}
+
+func GetCombinedParams(r *http.Request) (map[string]string, error) {
+	combinedParams := make(map[string]string)
+	q := r.URL.Query()
+	for k, v := range q {
+		combinedParams[k] = v[0] //we take the first value and do not support multiple keys in query parameters
+	}
+
+	ctx := r.Context()
+	pathParams, err := GetPathParams(ctx)
+	if err != nil {
+		return combinedParams, fmt.Errorf("no path parameters: %s", err)
+	}
+	//path parameters will overwrite query parameters
+	for k, v := range pathParams {
+		combinedParams[k] = v
+	}
+
+	return combinedParams, nil
 }
 
 // AllParams takes the request (in which the router has inserted context for path parameters), and an array of parameters required to be integers, and returns the map of combined parameters, and the map of int parameters; or a user or system error and the HTTP error code. The intParams may be nil if no integer parameters are required.
@@ -1340,23 +1404,23 @@ func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (er
 // CheckIfUnModifiedByName checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
 // In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
 // error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
-func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName string) (error, error, int) {
+func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName string) Errors {
 	_, okIUS := h[rfc.IfUnmodifiedSince]
 	_, okIM := h[rfc.IfMatch]
 	if !okIUS && !okIM {
-		return nil, nil, http.StatusOK
+		return NewErrors()
 	}
 	existingLastUpdated, found, err := GetLastUpdatedByName(tx, name, tableName)
 	if err == nil && found == false {
-		return errors.New("no " + tableName + " found with this name"), nil, http.StatusNotFound
+		return Errors{UserError: errors.New("no " + tableName + " found with this name"), Code: http.StatusNotFound}
 	}
 	if err != nil {
-		return nil, errors.New(tableName + "update: querying: " + err.Error()), http.StatusInternalServerError
+		return NewSystemError(fmt.Errorf(tableName + "update: querying: " + err.Error()))
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
-		return ResourceModifiedError, nil, http.StatusPreconditionFailed
+		return ModifiedError()
 	}
-	return nil, nil, http.StatusOK
+	return NewErrors()
 }
 
 // GetLastUpdated checks for the resource by ID in the database, and returns its last_updated timestamp, if available.
@@ -1412,4 +1476,20 @@ func DefaultSort(readerType *APIInfo, param string) {
 		readerType.Params["orderby"] = param
 	}
 	return
+}
+
+func IsInt(s string) error {
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		err = errors.New("cannot parse to integer")
+	}
+	return err
+}
+
+func IsBool(s string) error {
+	_, err := strconv.ParseBool(s)
+	if err != nil {
+		err = errors.New("cannot parse to boolean")
+	}
+	return err
 }

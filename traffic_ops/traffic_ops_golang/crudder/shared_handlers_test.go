@@ -1,4 +1,4 @@
-package api
+package crudder
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
@@ -40,17 +41,17 @@ import (
 )
 
 type tester struct {
-	ID          int
-	APIInfoImpl `json:"-"`
-	userErr     error //only for testing
-	sysErr      error //only for testing
-	errCode     int   //only for testing
+	ID              int
+	api.APIInfoImpl `json:"-"`
+	userErr         error //only for testing
+	sysErr          error //only for testing
+	errCode         int   //only for testing
 }
 
 var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}, UseIMS: true}
 
-func (i tester) GetKeyFieldsInfo() []KeyFieldInfo {
-	return []KeyFieldInfo{{"id", GetIntKey}}
+func (i tester) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -80,8 +81,12 @@ func (v *tester) Validate() error {
 }
 
 //Creator interface functions
-func (i *tester) Create() (error, error, int) {
-	return i.userErr, i.sysErr, i.errCode
+func (i *tester) Create() api.Errors {
+	return api.Errors{
+		Code:        i.errCode,
+		SystemError: i.sysErr,
+		UserError:   i.userErr,
+	}
 }
 
 //Reader interface functions
@@ -99,13 +104,21 @@ func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, 
 }
 
 //Updater interface functions
-func (i *tester) Update(http.Header) (error, error, int) {
-	return i.userErr, i.sysErr, i.errCode
+func (i *tester) Update(http.Header) api.Errors {
+	return api.Errors{
+		Code:        i.errCode,
+		SystemError: i.sysErr,
+		UserError:   i.userErr,
+	}
 }
 
 //Deleter interface functions
-func (i *tester) Delete() (error, error, int) {
-	return i.userErr, i.sysErr, i.errCode
+func (i *tester) Delete() api.Errors {
+	return api.Errors{
+		Code:        i.errCode,
+		SystemError: i.sysErr,
+		UserError:   i.userErr,
+	}
 }
 
 //used for testing purposes only
@@ -134,12 +147,12 @@ func TestCreateHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, DBContextKey, db)
-	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
-	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -149,9 +162,9 @@ func TestCreateHandler(t *testing.T) {
 
 	//verifies we get the right changelog insertion
 	keys, _ := typeRef.GetKeys()
-	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Created + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + api.Created + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(api.ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	createFunc(w, r)
@@ -182,12 +195,12 @@ func TestReadHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-	ctx = context.WithValue(ctx, DBContextKey, db)
-	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
-	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -227,12 +240,12 @@ func TestReadHandlerIMS(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-	ctx = context.WithValue(ctx, DBContextKey, db)
-	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
-	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	r.Header.Add(rfc.IfModifiedSince, time)
@@ -272,12 +285,12 @@ func TestUpdateHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-	ctx = context.WithValue(ctx, DBContextKey, db)
-	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
-	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -287,9 +300,9 @@ func TestUpdateHandler(t *testing.T) {
 
 	//verifies we get the right changelog insertion
 	keys, _ := typeRef.GetKeys()
-	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Updated + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + api.Updated + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(api.ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	updateFunc(w, r)
@@ -321,12 +334,12 @@ func TestDeleteHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-	ctx = context.WithValue(ctx, DBContextKey, db)
-	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
-	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
@@ -335,9 +348,9 @@ func TestDeleteHandler(t *testing.T) {
 
 	//verifies we get the right changelog insertion
 	keys, _ := typeRef.GetKeys()
-	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Deleted + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + api.Deleted + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(api.ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	deleteFunc(w, r)
 

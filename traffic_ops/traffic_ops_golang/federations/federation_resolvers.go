@@ -85,9 +85,9 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 		return
 	}
 	if ok {
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		errs = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}

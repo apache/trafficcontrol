@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 )
 
 func GetAll(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +58,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		cdnName := tc.CDNName(cdnParam)
 		feds, err, code, maxTime = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
 		if code == http.StatusNotModified {
-			if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+			if maxTime != nil && crudder.SetLastModifiedHeader(r, useIMS) {
 				// RFC1123
 				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 				w.Header().Add(rfc.LastModified, date)
@@ -74,7 +75,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		feds, err, code, maxTime = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
 		if code == http.StatusNotModified {
-			if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+			if maxTime != nil && crudder.SetLastModifiedHeader(r, useIMS) {
 				// RFC1123
 				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 				w.Header().Add(rfc.LastModified, date)

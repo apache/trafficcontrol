@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -116,45 +117,50 @@ func (pp *TOProfileParameter) Validate() error {
 //generic error message returned
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
-func (pp *TOProfileParameter) Create() (error, error, int) {
+func (pp *TOProfileParameter) Create() api.Errors {
 	if pp.ProfileID != nil {
 		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	} else {
-		return errors.New("no profile ID in request"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("no profile ID in request"), Code: http.StatusBadRequest}
 	}
 	resultRows, err := pp.APIInfo().Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
 	var profile int
 	var parameter int
 	var lastUpdated tc.TimeNoMod
+	errs := api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&profile, &parameter, &lastUpdated); err != nil {
-			return nil, errors.New("profileparameter create scanning: " + err.Error()), http.StatusInternalServerError
+			errs.SystemError = errors.New("profileparameter create scanning: " + err.Error())
+			return errs
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New("profileparameter create returned no rows"), http.StatusInternalServerError
+		errs.SetSystemError("profileparameter create returned no rows")
+		return errs
 	}
 	if rowsAffected > 1 {
-		return nil, errors.New("profileparameter create returned multiple rows"), http.StatusInternalServerError
+		errs.SetSystemError("profileparameter create returned multiple rows")
+		return errs
 	}
 
 	pp.SetKeys(map[string]interface{}{ProfileIDQueryParam: profile, ParameterIDQueryParam: parameter})
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func insertQuery() string {
@@ -170,22 +176,22 @@ func (pp *TOProfileParameter) Update(h http.Header) (error, error, int) {
 }
 func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(pp.APIInfo(), "parameter")
-	return api.GenericRead(h, pp, useIMS)
+	return crudder.GenericRead(h, pp, useIMS)
 }
-func (pp *TOProfileParameter) Delete() (error, error, int) {
+func (pp *TOProfileParameter) Delete() api.Errors {
 	if pp.ProfileID != nil {
 		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	} else {
-		return errors.New("no profile ID in request"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("no profile ID in request"), Code: http.StatusBadRequest}
 	}
-	return api.GenericDelete(pp)
+	return crudder.GenericDelete(pp)
 }
 func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (

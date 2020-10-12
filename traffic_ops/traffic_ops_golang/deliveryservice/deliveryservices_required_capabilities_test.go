@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -37,16 +38,16 @@ func TestDeliveryServicesRequiredCapabilityInterfaces(t *testing.T) {
 	var i interface{}
 	i = &RequiredCapability{}
 
-	if _, ok := i.(api.Creator); !ok {
+	if _, ok := i.(crudder.Creator); !ok {
 		t.Errorf("DeliveryServicesRequiredCapability must be Creator")
 	}
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("DeliveryServicesRequiredCapability must be Reader")
 	}
-	if _, ok := i.(api.Deleter); !ok {
+	if _, ok := i.(crudder.Deleter); !ok {
 		t.Errorf("DeliveryServicesRequiredCapability must be Deleter")
 	}
-	if _, ok := i.(api.Identifier); !ok {
+	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("DeliveryServicesRequiredCapability must be Identifier")
 	}
 }
@@ -99,14 +100,11 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 	)
 	mock.ExpectQuery("INSERT INTO deliveryservices_required_capability").WillReturnRows(rows)
 
-	userErr, sysErr, errCode := rc.Create()
-	if userErr != nil {
-		t.Fatalf(userErr.Error())
+	errs := rc.Create()
+	if errs.Occurred() {
+		t.Fatal(errs)
 	}
-	if sysErr != nil {
-		t.Fatalf(sysErr.Error())
-	}
-	if got, want := errCode, http.StatusOK; got != want {
+	if got, want := errs.Code, http.StatusOK; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 
@@ -141,19 +139,19 @@ func TestUnauthorizedCreateDeliveryServicesRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 0)
 
-	userErr, sysErr, errCode := rc.Create()
+	errs := rc.Create()
 
 	expErr := "not authorized on this tenant"
-	if userErr.Error() != expErr {
-		t.Fatalf("got %s; expected %s", userErr, expErr)
+	if errs.UserError == nil || errs.UserError.Error() != expErr {
+		t.Fatalf("got %v; expected %s", errs.UserError, expErr)
 	}
 
-	if sysErr != nil {
-		t.Fatalf(userErr.Error())
+	if errs.SystemError != nil {
+		t.Fatalf(errs.SystemError.Error())
 	}
 
-	if got, want := errCode, http.StatusForbidden; got != want {
-		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
+	if got, want := errs.Code, http.StatusForbidden; got != want {
+		t.Fatalf("got %d; expected http status code %d", got, want)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -264,14 +262,14 @@ func TestDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 		},
 	}
 
-	userErr, sysErr, errCode := rc.Delete()
-	if userErr != nil {
-		t.Fatalf(userErr.Error())
+	errs := rc.Delete()
+	if errs.UserError != nil {
+		t.Fatalf(errs.UserError.Error())
 	}
-	if sysErr != nil {
-		t.Fatalf(sysErr.Error())
+	if errs.SystemError != nil {
+		t.Fatalf(errs.SystemError.Error())
 	}
-	if got, want := errCode, http.StatusOK; got != want {
+	if got, want := errs.Code, http.StatusOK; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 
@@ -306,18 +304,18 @@ func TestUnauthorizedDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 0)
 
-	userErr, sysErr, errCode := rc.Delete()
+	errs := rc.Delete()
 
 	expErr := "not authorized on this tenant"
-	if userErr.Error() != expErr {
-		t.Fatalf("got %s; expected %s", userErr, expErr)
+	if errs.UserError.Error() != expErr {
+		t.Fatalf("got %s; expected %s", errs.UserError, expErr)
 	}
 
-	if sysErr != nil {
-		t.Fatalf(userErr.Error())
+	if errs.SystemError != nil {
+		t.Fatalf(errs.UserError.Error())
 	}
 
-	if got, want := errCode, http.StatusForbidden; got != want {
+	if got, want := errs.Code, http.StatusForbidden; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 
@@ -374,15 +372,15 @@ func TestCreateDeliveryServicesRequiredCapabilityInvalidDSType(t *testing.T) {
 	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
 	mock.ExpectQuery("SELECT t.name.*").WillReturnRows(typeRows)
 
-	userErr, sysErr, errCode := rc.Create()
-	if userErr == nil {
+	errs := rc.Create()
+	if errs.UserError == nil {
 		t.Fatal("Expected to get user error with invalid ds type")
 	}
-	if sysErr != nil {
-		t.Fatalf(sysErr.Error())
+	if errs.SystemError != nil {
+		t.Fatal(errs.SystemError.Error())
 	}
-	if got, want := errCode, http.StatusBadRequest; got != want {
-		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
+	if got, want := errs.Code, http.StatusBadRequest; got != want {
+		t.Fatalf("got %d; expected http status code %d", got, want)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

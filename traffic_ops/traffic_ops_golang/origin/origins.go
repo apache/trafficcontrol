@@ -254,34 +254,55 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 	return selectStmt
 }
 
-func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, error, int) {
+func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) api.Errors {
 	if originTenantID == nil {
-		return tc.NilTenantError, nil, http.StatusForbidden
+		return api.Errors{
+			Code:      http.StatusForbidden,
+			UserError: tc.NilTenantError,
+		}
 	}
 	authorized, err := tenant.IsResourceAuthorizedToUserTx(*originTenantID, user, tx.Tx)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: err,
+		}
 	}
 	if !authorized {
-		return tc.TenantUserNotAuthError, nil, http.StatusForbidden
+		return api.Errors{
+			Code:      http.StatusForbidden,
+			UserError: tc.TenantUserNotAuthError,
+		}
 	}
 
 	var deliveryserviceTenantID int
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
+		errs := api.Errors{
+			Code: http.StatusBadRequest,
+		}
 		if err == sql.ErrNoRows {
-			return errors.New("checking tenancy: requested delivery service does not exist"), nil, http.StatusBadRequest
+			errs.SetUserError("checking tenancy: requested delivery service does not exist")
+			return errs
 		}
 		log.Errorf("could not get tenant_id from deliveryservice %d: %++v\n", *deliveryserviceID, err)
-		return err, nil, http.StatusBadRequest
+		// TODO: don't expose DB errors to the user
+		errs.UserError = err
+		return errs
 	}
 	authorized, err = tenant.IsResourceAuthorizedToUserTx(deliveryserviceTenantID, user, tx.Tx)
 	if err != nil {
-		return err, nil, http.StatusBadRequest
+		return api.Errors{
+			Code:      http.StatusBadRequest,
+			UserError: err,
+		}
 	}
 	if !authorized {
-		return tc.TenantDSUserNotAuthError, nil, http.StatusForbidden
+		return api.Errors{
+			Code:      http.StatusForbidden,
+			UserError: tc.TenantDSUserNotAuthError,
+		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 //The TOOrigin implementation of the Updater interface
@@ -289,11 +310,11 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
+func (origin *TOOrigin) Update(h http.Header) api.Errors {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if errs.Occurred() {
+		return errs
 	}
 
 	isPrimary := false
@@ -302,34 +323,33 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 
 	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds, &existingLastUpdated); err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("origin not found"), nil, http.StatusNotFound
+		if errors.Is(err, sql.ErrNoRows) {
+			return api.Errors{UserError: errors.New("origin not found"), Code: http.StatusNotFound}
 		}
-		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("origin update: querying: %w", err))
 	}
 
 	if !api.IsUnmodified(h, existingLastUpdated.Time) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return api.ModifiedError()
 	}
 
 	if isPrimary && *origin.DeliveryServiceID != ds {
-		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("cannot update the delivery service of a primary origin"), Code: http.StatusBadRequest}
 	}
 
 	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -338,17 +358,17 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
-			return nil, errors.New("origin update: scanning: " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("origin update: scanning: %w", err))
 		}
 	}
 
 	if rowsAffected == 0 {
-		return nil, errors.New("origin update: no rows returned"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("origin update: no rows returned"))
 	} else if rowsAffected > 1 {
-		return nil, errors.New("origin update: multiple rows returned"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("origin update: multiple rows returned"))
 	}
 	origin.LastUpdated = &lastUpdated
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func updateQuery() string {
@@ -376,47 +396,53 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted origin and have
 //to be added to the struct
-func (origin *TOOrigin) Create() (error, error, int) {
+func (origin *TOOrigin) Create() api.Errors {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if errs.Occurred() {
+		return errs
 	}
 
 	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
 
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
 	var id int
 	var lastUpdated tc.TimeNoMod
+	errs = api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			return nil, errors.New("origin create: scanning: " + err.Error()), http.StatusInternalServerError
+			errs.SystemError = errors.New("origin create: scanning: " + err.Error())
+			return errs
 		}
 	}
+
 	if rowsAffected == 0 {
-		return nil, errors.New("origin create: no rows returned"), http.StatusInternalServerError
+		errs.SetSystemError("origin create: no rows returned")
+		return errs
 	} else if rowsAffected > 1 {
-		return nil, errors.New("origin create: multiple rows returned"), http.StatusInternalServerError
+		errs.SetSystemError("origin create: multiple rows returned")
+		return errs
 	}
 	origin.SetKeys(map[string]interface{}{"id": id})
 	origin.LastUpdated = &lastUpdated
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func insertQuery() string {
@@ -448,42 +474,42 @@ tenant) VALUES (
 
 //The Origin implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (origin *TOOrigin) Delete() (error, error, int) {
+func (origin *TOOrigin) Delete() api.Errors {
 	isPrimary := false
 	q := `SELECT is_primary FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
 		if err == sql.ErrNoRows {
-			return errors.New("origin not found"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("origin not found"), Code: http.StatusNotFound}
 		}
-		return nil, errors.New("origin delete: is_primary scanning: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("origin delete: is_primary scanning: %w", err))
 	}
 	if isPrimary {
-		return errors.New("cannot delete a primary origin"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("cannot delete a primary origin"), Code: http.StatusBadRequest}
 	}
 
 	if origin.DeliveryServiceID != nil {
 		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
 	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {
-		return nil, errors.New("origin delete: query: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("origin delete: query: %w", err))
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, errors.New("origin delete: getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("origin delete: getting rows affected: %w", err))
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("origin delete: multiple rows affected"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("origin delete: multiple rows affected"))
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func deleteQuery() string {

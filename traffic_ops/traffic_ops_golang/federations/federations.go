@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
@@ -109,7 +110,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+	if maxTime != nil && crudder.SetLastModifiedHeader(r, useIMS) {
 		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	api.WriteResp(w, r, allFederations)

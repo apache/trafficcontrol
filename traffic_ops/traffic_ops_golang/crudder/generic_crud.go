@@ -1,4 +1,4 @@
-package api
+package crudder
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -28,16 +28,16 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 )
 
 type GenericCreator interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *api.APIInfo
 	SetKeys(map[string]interface{})
 	SetLastUpdated(tc.TimeNoMod)
 	InsertQuery() string
@@ -45,7 +45,7 @@ type GenericCreator interface {
 
 type GenericReader interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *api.APIInfo
 	ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	NewReadObj() interface{}
 	SelectQuery() string
@@ -54,7 +54,7 @@ type GenericReader interface {
 
 type GenericUpdater interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *api.APIInfo
 	SetLastUpdated(tc.TimeNoMod)
 	UpdateQuery() string
 	GetLastUpdated() (*time.Time, bool, error)
@@ -62,24 +62,23 @@ type GenericUpdater interface {
 
 type GenericDeleter interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *api.APIInfo
 	DeleteQuery() string
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
 type GenericOptionsDeleter interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *api.APIInfo
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 	DeleteQueryBase() string
 }
 
 // GenericCreate does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the common use case of a single "id" key and a lastUpdated field.
-func GenericCreate(val GenericCreator) (error, error, int) {
+func GenericCreate(val GenericCreator) api.Errors {
 	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
 	if err != nil {
-		errs := ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -89,7 +88,10 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+			return api.Errors{
+				Code:        http.StatusInternalServerError,
+				SystemError: fmt.Errorf("%v create scanning: %v", val.GetType(), err),
+			}
 		}
 	}
 
@@ -103,39 +105,52 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	default:
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no id was returned"), http.StatusInternalServerError
-	} else if rowsAffected > 1 {
-		return nil, errors.New("too many ids returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+		return api.Errors{
+			SystemError: fmt.Errorf("%s create: no %s was inserted, no id was returned", val.GetType(), val.GetType()),
+			Code:        http.StatusInternalServerError,
+		}
+	}
+	if rowsAffected > 1 {
+		return api.Errors{
+			SystemError: fmt.Errorf("too many ids returned from %s insert", val.GetType()),
+			Code:        http.StatusInternalServerError,
+		}
 	}
 	val.SetKeys(map[string]interface{}{"id": id})
 	val.SetLastUpdated(lastUpdated)
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // GenericCreateNameBasedID does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the use case of a single "name" key (not a numerical "id" key) and a lastUpdated field.
-func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
+func GenericCreateNameBasedID(val GenericCreator) api.Errors {
 	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
 	if err != nil {
-		errs := ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
+	errs := api.NewErrors()
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
-			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("%s create scanning: %v", val.GetType(), err)
+			errs.Code = http.StatusInternalServerError
+			return errs
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no row was returned"), http.StatusInternalServerError
+		errs.Code = http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("%s create: no %s was inserted, no row was returned", val.GetType(), val.GetType())
+		return errs
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many rows returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+		errs.Code = http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("too many rows returned from %s insert", val.GetType())
+		return errs
 	}
 	val.SetLastUpdated(lastUpdated)
-	return nil, nil, http.StatusOK
+	return errs
 }
 
 // TryIfModifiedSinceQuery checks to see the max time that an entity was changed, and then returns a boolean (which tells us whether or not to run the main query for the endpoint)
@@ -227,81 +242,81 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
-func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
+func GenericUpdate(h http.Header, val GenericUpdater) api.Errors {
 	existingLastUpdated, found, err := val.GetLastUpdated()
 	if err == nil && found == false {
-		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no " + val.GetType() + " found with this id"), Code: http.StatusNotFound}
 	}
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.Errors{SystemError: err, Code: http.StatusInternalServerError}
 	}
-	if !IsUnmodified(h, *existingLastUpdated) {
-		return ResourceModifiedError, nil, http.StatusPreconditionFailed
+	if !api.IsUnmodified(h, *existingLastUpdated) {
+		return api.Errors{UserError: api.ResourceModifiedError, Code: http.StatusPreconditionFailed}
 	}
 
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)
 	if err != nil {
-		errs := ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		errs := api.ParseDBError(err)
+		return errs
 	}
 	defer rows.Close()
 
 	if !rows.Next() {
-		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no " + val.GetType() + " found with this id"), Code: http.StatusNotFound}
 	}
 	lastUpdated := tc.TimeNoMod{}
 	if err := rows.Scan(&lastUpdated); err != nil {
-		return nil, errors.New("scanning lastUpdated from " + val.GetType() + " insert: " + err.Error()), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf("scanning lastUpdated from %s insert: %w", val.GetType(), err), Code: http.StatusInternalServerError}
 	}
 	val.SetLastUpdated(lastUpdated)
 	if rows.Next() {
-		return nil, errors.New(val.GetType() + " update affected too many rows: >1"), http.StatusInternalServerError
+		return api.Errors{SystemError: errors.New(val.GetType() + " update affected too many rows: >1"), Code: http.StatusInternalServerError}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // GenericOptionsDelete does a Delete (DELETE) for the given GenericOptionsDeleter object and type. Unlike
 // GenericDelete, there is no requirement that a specific key is used as the parameter.
 // GenericOptionsDeleter.DeleteKeyOptions() specifies which keys can be used.
-func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
+func GenericOptionsDelete(val GenericOptionsDeleter) api.Errors {
 	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeleteKeyOptions())
 	if len(errs) > 0 {
-		return util.JoinErrs(errs), nil, http.StatusBadRequest
+		return api.Errors{UserError: util.JoinErrs(errs), Code: http.StatusBadRequest}
 	}
 
 	query := val.DeleteQueryBase() + where
 	tx := val.APIInfo().Tx
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
-		errs := ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		errs := api.ParseDBError(err)
+		return errs
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return nil, errors.New("deleting " + val.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf("deleting %s: getting rows affected: %w", val.GetType(), err), Code: http.StatusInternalServerError}
 	} else if rowsAffected < 1 {
-		return errors.New("no " + val.GetType() + " with that key found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no " + val.GetType() + " with that key found"), Code: http.StatusNotFound}
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), Code: http.StatusInternalServerError}
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
-func GenericDelete(val GenericDeleter) (error, error, int) {
+func GenericDelete(val GenericDeleter) api.Errors {
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
-		errs := ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		errs := api.ParseDBError(err)
+		return errs
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return nil, errors.New("deleting " + val.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf("deleting %s: getting rows affected: %w", val.GetType(), err), Code: http.StatusInternalServerError}
 	} else if rowsAffected < 1 {
-		return errors.New("no " + val.GetType() + " with that key found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no " + val.GetType() + " with that key found"), Code: http.StatusNotFound}
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), Code: http.StatusInternalServerError}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }

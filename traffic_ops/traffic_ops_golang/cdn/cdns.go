@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/asaskevich/govalidator"
@@ -131,35 +132,35 @@ func (cdn TOCDN) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (cdn *TOCDN) Create() (error, error, int) {
+func (cdn *TOCDN) Create() api.Errors {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	return api.GenericCreate(cdn)
+	return crudder.GenericCreate(cdn)
 }
 
 func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(cdn.APIInfo(), "name")
-	return api.GenericRead(h, cdn, useIMS)
+	return crudder.GenericRead(h, cdn, useIMS)
 }
 
-func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
+func (cdn *TOCDN) Update(h http.Header) api.Errors {
 	if cdn.ID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	return api.GenericUpdate(h, cdn)
+	return crudder.GenericUpdate(h, cdn)
 }
 
-func (cdn *TOCDN) Delete() (error, error, int) {
+func (cdn *TOCDN) Delete() api.Errors {
 	if cdn.ID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericDelete(cdn)
+	return crudder.GenericDelete(cdn)
 }
 
 func selectQuery() string {

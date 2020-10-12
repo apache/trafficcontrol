@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -176,7 +177,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		resolvers = append(resolvers, resolver)
 	}
 
-	if api.SetLastModifiedHeader(r, useIMS) {
+	if crudder.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)

@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
@@ -63,7 +64,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -179,60 +180,56 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(v.APIInfo(), "xmlId")
-	return api.GenericRead(h, v, useIMS)
+	return crudder.GenericRead(h, v, useIMS)
 }
 
-func (v *TOFedDSes) Delete() (error, error, int) {
+func (v *TOFedDSes) Delete() api.Errors {
 	dsIDStr, ok := v.APIInfo().Params["dsID"]
 	if !ok {
-		return errors.New("dsID must be specified for deletion"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("dsID must be specified for deletion"), Code: http.StatusBadRequest}
 	}
 	dsID, err := strconv.Atoi(dsIDStr)
 	if err != nil {
-		return errors.New("dsID must be an integer"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("dsID must be an integer"), Code: http.StatusBadRequest}
 	}
 	v.ID = &dsID
 
 	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(v.ReqInfo.Tx.Tx, dsID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(v.ReqInfo.Tx.Tx, string(cdnName), v.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(v.ReqInfo.Tx.Tx, string(cdnName), v.ReqInfo.User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
 	// Check that we can delete it
-	if respCode, usrErr, sysErr := checkFedDSDeletion(v.APIInfo().Tx.Tx, *v.fedID, dsID); usrErr != nil || sysErr != nil {
-		if usrErr != nil {
-			return usrErr, sysErr, respCode
-		}
-		return usrErr, sysErr, respCode
+	if errs = checkFedDSDeletion(v.APIInfo().Tx.Tx, *v.fedID, dsID); errs.Occurred() {
+		return errs
 	}
 
 	// Actually delete the DS from the Federation
 	if err := deleteFedDS(v.APIInfo().Tx.Tx, *v.fedID, dsID); err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func checkFedDSDeletion(tx *sql.Tx, fedID, dsID int) (int, error, error) {
+func checkFedDSDeletion(tx *sql.Tx, fedID, dsID int) api.Errors {
 
 	q := `SELECT ARRAY(SELECT deliveryservice FROM federation_deliveryservice WHERE federation=$1)`
 	dsIDs := []int64{} // pq.Array does not support int slice needs to be int64
 	err := tx.QueryRow(q, fedID).Scan(pq.Array(&dsIDs))
 	if err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("querying federation %v delivery services - %v", fedID, err)
+		return api.NewSystemError(fmt.Errorf("querying federation %d delivery services - %w", fedID, err))
 	}
 
 	if len(dsIDs) == 0 {
-		return http.StatusNotFound, fmt.Errorf("federation %v not found", fedID), nil
+		return api.Errors{Code: http.StatusNotFound, UserError: fmt.Errorf("federation %d not found", fedID)}
 	}
 
 	if len(dsIDs) < 2 {
-		return http.StatusBadRequest, fmt.Errorf("a federation must have at least one delivery service assigned"), nil
+		return api.Errors{Code: http.StatusBadRequest, UserError: errors.New("a federation must have at least one delivery service assigned")}
 	}
 	found := false
 	dsID64 := int64(dsID) // need in order to compare
@@ -243,9 +240,9 @@ func checkFedDSDeletion(tx *sql.Tx, fedID, dsID int) (int, error, error) {
 		}
 	}
 	if !found {
-		return http.StatusBadRequest, fmt.Errorf("delivery service %v is not associated with federation %v", dsID, fedID), nil
+		return api.Errors{Code: http.StatusBadRequest, UserError: fmt.Errorf("delivery service %d is not associated with federation %d", dsID, fedID)}
 	}
-	return http.StatusOK, nil, nil
+	return api.NewErrors()
 }
 
 func selectQuery() string {

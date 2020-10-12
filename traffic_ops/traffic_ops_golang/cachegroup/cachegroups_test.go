@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -172,19 +173,19 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOCacheGroup{}
 
-	if _, ok := i.(api.Creator); !ok {
+	if _, ok := i.(crudder.Creator); !ok {
 		t.Errorf("cachegroup must be creator")
 	}
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("cachegroup must be reader")
 	}
-	if _, ok := i.(api.Updater); !ok {
+	if _, ok := i.(crudder.Updater); !ok {
 		t.Errorf("cachegroup must be updater")
 	}
-	if _, ok := i.(api.Deleter); !ok {
+	if _, ok := i.(crudder.Deleter); !ok {
 		t.Errorf("cachegroup must be deleter")
 	}
-	if _, ok := i.(api.Identifier); !ok {
+	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("cachegroup must be Identifier")
 	}
 }

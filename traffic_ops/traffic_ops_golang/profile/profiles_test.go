@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -119,19 +120,19 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOProfile{}
 
-	if _, ok := i.(api.Creator); !ok {
+	if _, ok := i.(crudder.Creator); !ok {
 		t.Errorf("Profile must be Creator")
 	}
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("Profile must be Reader")
 	}
-	if _, ok := i.(api.Updater); !ok {
+	if _, ok := i.(crudder.Updater); !ok {
 		t.Errorf("Profile must be Updater")
 	}
-	if _, ok := i.(api.Deleter); !ok {
+	if _, ok := i.(crudder.Deleter); !ok {
 		t.Errorf("Profile must be Deleter")
 	}
-	if _, ok := i.(api.Identifier); !ok {
+	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("Profile must be Identifier")
 	}
 }

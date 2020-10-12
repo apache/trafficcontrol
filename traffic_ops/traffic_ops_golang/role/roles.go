@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -141,34 +142,43 @@ func (role TORole) Validate() error {
 	return util.JoinErrs(errsToReturn)
 }
 
-func (role *TORole) Create() (error, error, int) {
+func (role *TORole) Create() api.Errors {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
-		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusBadRequest
+		return api.Errors{
+			Code:      http.StatusBadRequest,
+			UserError: errors.New("can not create a role with a higher priv level than your own"),
+		}
 	}
 	caps := *role.Capabilities
 	missing := role.ReqInfo.User.MissingPermissions(caps...)
 	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		return api.Errors{
+			UserError: fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")),
+			Code:      http.StatusForbidden,
+		}
 	}
-	userErr, sysErr, errCode := api.GenericCreate(role)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := crudder.GenericCreate(role)
+	if errs.Occurred() {
+		return errs
 	}
 
 	//after we have role ID we can associate the capabilities:
 	if role.Capabilities != nil && len(*role.Capabilities) > 0 {
-		userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, error, int) {
+func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) api.Errors {
 	result, err := tx.Exec(associateCapabilities(), role.ID, pq.Array(role.Capabilities))
 	if err != nil {
-		return nil, errors.New("creating role capabilities: " + err.Error()), http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: fmt.Errorf("creating role capabilities: %v", err),
+		}
 	}
 
 	if rows, err := result.RowsAffected(); err != nil {
@@ -176,25 +186,25 @@ func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 	} else if expected := len(*role.Capabilities); int(rows) != expected {
 		log.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected)
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error, int) {
+func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) api.Errors {
 	result, err := tx.Exec(deleteAssociatedCapabilities(), role.Name)
 	if err != nil {
-		return nil, errors.New("deleting role capabilities: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleting role capabilities: %w", err))
 	}
 
 	if _, err = result.RowsAffected(); err != nil {
 		log.Errorf("could not check result after inserting role_capability relations: %v", err)
 	}
 	// TODO verify expected row count shouldn't be checked?
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(role.APIInfo(), "name")
-	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
+	vals, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, role, useIMS)
 	if errCode == http.StatusNotModified {
 		return []interface{}{}, nil, nil, errCode, maxTime
 	}
@@ -212,42 +222,52 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return returnable, nil, nil, http.StatusOK, maxTime
 }
 
-func (role *TORole) Update(h http.Header) (error, error, int) {
+func (role *TORole) Update(h http.Header) api.Errors {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
-		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
+		return api.Errors{
+			UserError: errors.New("can not create a role with a higher priv level than your own"),
+			Code:      http.StatusForbidden,
+		}
 	}
 	caps := *role.Capabilities
 	missing := role.ReqInfo.User.MissingPermissions(caps...)
 	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		return api.Errors{
+			UserError: fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")),
+			Code:      http.StatusForbidden,
+		}
 	}
-	userErr, sysErr, errCode := api.GenericUpdate(h, role)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := crudder.GenericUpdate(h, role)
+	if errs.Occurred() {
+		return errs
 	}
 
 	// TODO cascade delete, to automatically do this in SQL?
 	if role.Capabilities != nil && *role.Capabilities != nil {
-		userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
+		if errs.Occurred() {
+			return errs
 		}
-		return role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+		errs = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+		return errs
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (role *TORole) Delete() (error, error, int) {
+func (role *TORole) Delete() api.Errors {
 	assignedUsers := 0
 	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID); err != nil {
-		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("role delete counting assigned users: %w", err))
 	} else if assignedUsers != 0 {
-		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil, http.StatusBadRequest
+		return api.Errors{
+			UserError: fmt.Errorf("can not delete a role with %d assigned users", assignedUsers),
+			Code:      http.StatusBadRequest,
+		}
 	}
 
-	userErr, sysErr, errCode := api.GenericDelete(role)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := crudder.GenericDelete(role)
+	if errs.Occurred() {
+		return errs
 	}
 	return role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 }
@@ -311,9 +331,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var err error
 
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"name"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -377,14 +397,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		roleV4.LastUpdated = &lastUpdated
 	}
 
-	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs = deleteRoleCapabilityAssociations(inf.Tx, roleName)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
-	userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was updated.")
@@ -426,26 +446,26 @@ $3
 RETURNING id, last_updated`
 }
 
-func createRoleCapabilityAssociations(tx *sqlx.Tx, roleID int, permissions *[]string) (error, error, int) {
+func createRoleCapabilityAssociations(tx *sqlx.Tx, roleID int, permissions *[]string) api.Errors {
 	result, err := tx.Exec(associateCapabilities(), roleID, pq.Array(permissions))
 	if err != nil {
-		return nil, fmt.Errorf("creating role capabilities: %w", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("creating role capabilities: %w", err))
 	}
 
 	if rows, err := result.RowsAffected(); err != nil {
-		return nil, fmt.Errorf("could not check result after inserting role_capability relations: %w", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("could not check result after inserting role_capability relations: %w", err))
 	} else if expected := int64(len(*permissions)); rows != expected {
-		return nil, fmt.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected))
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleName string) (error, error, int) {
+func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleName string) api.Errors {
 	_, err := tx.Exec(deleteAssociatedCapabilities(), roleName)
 	if err != nil {
-		return nil, fmt.Errorf("deleting role capabilities: %w", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleting role capabilities: %w", err))
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // Delete will delete the role identified by the role name.
@@ -453,9 +473,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	var roleName string
 	var ok bool
 	var err error
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -497,9 +517,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var lastUpdated time.Time
 	var roleV4 tc.RoleV4
 
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -538,9 +558,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(roleCapabilities) > 0 {
-		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		errs = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -562,9 +582,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 func Get(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -576,9 +596,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if _, ok := inf.Params["orderby"]; !ok {
 		inf.Params["orderby"] = "name"
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
-	if len(errs) != 0 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
+	if len(es) != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(es), nil)
 		return
 	}
 	if perm, ok := inf.Params["can"]; ok {

@@ -41,23 +41,23 @@ const deleteAdminQuery = `DELETE FROM cdn_lock WHERE cdn=$1 RETURNING username, 
 
 // Read is the handler for GET requests to /cdn_locks.
 func Read(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	cols := map[string]dbhelpers.WhereColumnInfo{
 		"cdn":      {Column: "cdn_lock.cdn", Checker: nil},
 		"username": {Column: "cdn_lock.username", Checker: nil},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
-	if len(errs) > 0 {
-		errCode = http.StatusBadRequest
-		userErr = util.JoinErrs(errs)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(es) > 0 {
+		errCode := http.StatusBadRequest
+		userErr := util.JoinErrs(es)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
@@ -86,9 +86,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 // Create is the handler for POST requests to /cdn_locks.
 func Create(w http.ResponseWriter, r *http.Request) {
 	soft := "soft"
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -138,9 +138,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for DELETE requests to /cdn_locks.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"cdn"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()

@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
@@ -56,7 +57,7 @@ func (topology *TOTopology) GetAlerts() tc.Alerts {
 }
 
 // DeleteQueryBase holds a delete query with no WHERE clause and is a
-// requirement of the api.GenericOptionsDeleter interface.
+// requirement of the crudder.GenericOptionsDeleter interface.
 func (topology *TOTopology) DeleteQueryBase() string {
 	return deleteQueryBase()
 }
@@ -70,15 +71,15 @@ func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo 
 	}
 }
 
-// GenericOptionsDeleter is required by the api.GenericOptionsDeleter interface
-// and is called by api.GenericOptionsDelete().
+// GenericOptionsDeleter is required by the crudder.GenericOptionsDeleter interface
+// and is called by crudder.GenericOptionsDelete().
 func (topology *TOTopology) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 	return topology.ParamColumns()
 }
 
 func (topology *TOTopology) SetLastUpdated(time tc.TimeNoMod) { topology.LastUpdated = &time }
 
-// GetKeyFieldsInfo is a requirement of the api.Updater interface.
+// GetKeyFieldsInfo is a requirement of the crudder.Updater interface.
 func (topology TOTopology) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
 }
@@ -395,43 +396,42 @@ func (topology TOTopology) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"name": topology.Name}, true
 }
 
-// SetKeys is a requirement of the api.Updater interface and is called by
-// api.UpdateHandler().
+// SetKeys is a requirement of the crudder.Updater interface and is called by
+// crudder.UpdateHandler().
 func (topology *TOTopology) SetKeys(keys map[string]interface{}) {
 	topology.RequestedName = topology.Name
 	topology.Name, _ = keys["name"].(string)
 }
 
-// GetAuditName is a requirement of the api.Identifier interface.
+// GetAuditName is a requirement of the crudder.Identifier interface.
 func (topology *TOTopology) GetAuditName() string {
 	return topology.Name
 }
 
-// Create is a requirement of the api.Creator interface.
-func (topology *TOTopology) Create() (error, error, int) {
+// Create is a requirement of the crudder.Creator interface.
+func (topology *TOTopology) Create() api.Errors {
 	tx := topology.APIInfo().Tx.Tx
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	errs := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if errs.Occurred() {
+		return errs
 	}
 	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 
-	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs := topology.addNodes(); errs.Occurred() {
+		return errs
 	}
 
-	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs := topology.addParents(); errs.Occurred() {
+		return errs
 	}
 
-	return nil, nil, 0
+	return api.NewErrors()
 }
 
-// Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
+// Read is a requirement of the crudder.Reader interface and is called by crudder.ReadHandler().
 func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
@@ -522,7 +522,7 @@ func (topology *TOTopology) removeNodes(cachegroups *[]string) error {
 	return nil
 }
 
-func (topology *TOTopology) addNodes() (error, error, int) {
+func (topology *TOTopology) addNodes() api.Errors {
 	var cachegroupsToInsert []string
 	var indices = make([]int, 0)
 	for index, node := range topology.Nodes {
@@ -532,25 +532,27 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 		}
 	}
 	if len(cachegroupsToInsert) == 0 {
-		return nil, nil, http.StatusOK
+		return api.NewErrors()
 	}
 	rows, err := topology.ReqInfo.Tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroupsToInsert))
 	if err != nil {
-		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: errors.New("error adding nodes: " + err.Error()),
+		}
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for _, index := range indices {
 		rows.Next()
 		err = rows.Scan(&topology.Nodes[index].Id, &topology.Name, &topology.Nodes[index].Cachegroup)
 		if err != nil {
-			errs := api.ParseDBError(err)
-			return errs.UserError, errs.SystemError, errs.Code
+			return api.ParseDBError(err)
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (topology *TOTopology) addParents() (error, error, int) {
+func (topology *TOTopology) addParents() api.Errors {
 	var (
 		children []int
 		parents  []int
@@ -566,8 +568,7 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	}
 	rows, err := topology.ReqInfo.Tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for _, node := range topology.Nodes {
@@ -576,53 +577,52 @@ func (topology *TOTopology) addParents() (error, error, int) {
 			parent := topology.Nodes[node.Parents[rank-1]]
 			err = rows.Scan(&node.Id, &parent.Id, &rank)
 			if err != nil {
-				errs := api.ParseDBError(err)
-				return errs.UserError, errs.SystemError, errs.Code
+				return api.ParseDBError(err)
 			}
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (topology *TOTopology) setTopologyDetails() (error, error, int) {
+func (topology *TOTopology) setTopologyDetails() api.Errors {
 	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.RequestedName, topology.Description, topology.Name)
 	if err != nil {
-		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("topology update: error setting the name and/or description for topology %s: %w", topology.Name, err))
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for rows.Next() {
 		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 		if err != nil {
 			errs := api.ParseDBError(err)
-			return errs.UserError, errs.SystemError, errs.Code
+			return errs
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-// Update is a requirement of the api.Updater interface.
-func (topology *TOTopology) Update(h http.Header) (error, error, int) {
+// Update is a requirement of the crudder.Updater interface.
+func (topology *TOTopology) Update(h http.Header) api.Errors {
 	topologies, userErr, sysErr, errCode, _ := topology.Read(h, false)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 	if len(topologies) != 1 {
-		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
+		return api.Errors{UserError: fmt.Errorf("cannot find exactly 1 topology with the query string provided"), Code: http.StatusBadRequest}
 	}
 
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
+	if errs.Occurred() {
+		return errs
 	}
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	errs = topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if errs.Occurred() {
+		return errs
 	}
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
 	if err := oldTopology.removeParents(); err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	var oldNodes, newNodes = map[string]int{}, map[string]int{}
 	for index, node := range oldTopology.Nodes {
@@ -641,47 +641,51 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	}
 	if len(toRemove) > 0 {
 		if err := oldTopology.removeNodes(&toRemove); err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
 	}
-	if userErr, sysErr, errCode := topology.setTopologyDetails(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs = topology.setTopologyDetails(); userErr != nil || sysErr != nil {
+		return errs
 	}
-	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs = topology.addNodes(); errs.Occurred() {
+		return errs
 	}
-	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs := topology.addParents(); errs.Occurred() {
+		return errs
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // Delete is unused and simply satisfies the Deleter interface
 // (although TOTOpology is used as an OptionsDeleter)
-func (topology *TOTopology) Delete() (error, error, int) {
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+func (topology *TOTopology) Delete() api.Errors {
+	errs := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if errs.Occurred() {
+		return errs
 	}
-	return nil, nil, 0
+	return api.NewErrors()
 }
 
 // OptionsDelete is a requirement of the OptionsDeleter interface.
-func (topology *TOTopology) OptionsDelete() (error, error, int) {
+func (topology *TOTopology) OptionsDelete() api.Errors {
 	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
+		}
 	}
 	if len(topologies) != 1 {
-		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("cannot find exactly 1 topology with the query string provided"), Code: http.StatusBadRequest}
 	}
 	topology.Topology = topologies[0].(tc.Topology)
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	errs := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if errs.Occurred() {
+		return errs
 	}
-	return api.GenericOptionsDelete(topology)
+	return crudder.GenericOptionsDelete(topology)
 }
 
 func insertQuery() string {
@@ -827,19 +831,19 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }
 
-func (topology *TOTopology) checkIfTopologyCanBeAlteredByCurrentUser() (error, error, int) {
+func (topology *TOTopology) checkIfTopologyCanBeAlteredByCurrentUser() api.Errors {
 	cachegroups := topology.getCachegroupNames()
 	serverIDs, err := dbhelpers.GetServerIDsFromCachegroupNames(topology.ReqInfo.Tx.Tx, cachegroups)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	cdns, err := dbhelpers.GetCDNNamesFromServerIds(topology.ReqInfo.Tx.Tx, serverIDs)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(topology.ReqInfo.Tx.Tx, cdns, topology.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: statusCode}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }

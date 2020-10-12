@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -143,7 +144,7 @@ LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id`
 	return query
 }
 
-// GetKeyFieldsInfo implements the api.Identifier interface.
+// GetKeyFieldsInfo implements the crudder.Identifier interface.
 func (cgparam *TOCacheGroupParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
 		{
@@ -157,7 +158,7 @@ func (cgparam *TOCacheGroupParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-// SetKeys implements the api.Identifier interface and allows the
+// SetKeys implements the crudder.Identifier interface and allows the
 // delete handler to assign cachegroup and parameter ids.
 func (cgparam *TOCacheGroupParameter) SetKeys(keys map[string]interface{}) {
 	id, _ := keys[CacheGroupIDNamedQueryParam].(int)
@@ -167,13 +168,13 @@ func (cgparam *TOCacheGroupParameter) SetKeys(keys map[string]interface{}) {
 	cgparam.ID = &paramID
 }
 
-// DeleteQuery implements the api.GenericDeleter interface.
+// DeleteQuery implements the crudder.GenericDeleter interface.
 func (cgparam *TOCacheGroupParameter) DeleteQuery() string {
 	return `DELETE FROM cachegroup_parameter
 	WHERE cachegroup = :cachegroup_id AND parameter = :id`
 }
 
-// GetAuditName implements the api.Identifier interface.
+// GetAuditName implements the crudder.Identifier interface.
 func (cgparam *TOCacheGroupParameter) GetAuditName() string {
 	if cgparam.ID != nil {
 		return strconv.Itoa(cgparam.CacheGroupID) + "-" + strconv.Itoa(*cgparam.ID)
@@ -181,7 +182,7 @@ func (cgparam *TOCacheGroupParameter) GetAuditName() string {
 	return "unknown"
 }
 
-// GetKeys implements the api.Identifier interface.
+// GetKeys implements the crudder.Identifier interface.
 func (cgparam *TOCacheGroupParameter) GetKeys() (map[string]interface{}, bool) {
 	if cgparam.ID == nil {
 		return map[string]interface{}{ParameterIDQueryParam: 0}, false
@@ -193,27 +194,27 @@ func (cgparam *TOCacheGroupParameter) GetKeys() (map[string]interface{}, bool) {
 }
 
 // Delete implements the api.CRUDer interface.
-func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
+func (cgparam *TOCacheGroupParameter) Delete() api.Errors {
 	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, cgparam.CacheGroupID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	} else if !ok {
-		return fmt.Errorf("cachegroup %v does not exist", cgparam.CacheGroupID), nil, http.StatusNotFound
+		return api.Errors{UserError: fmt.Errorf("cachegroup %d does not exist", cgparam.CacheGroupID), Code: http.StatusNotFound}
 	}
 
 	_, ok, err = dbhelpers.GetParamNameByID(cgparam.ReqInfo.Tx.Tx, *cgparam.ID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	} else if !ok {
-		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
+		return api.Errors{UserError: fmt.Errorf("parameter %d does not exist", *cgparam.ID), Code: http.StatusNotFound}
 	}
 
 	// CheckIfCurrentUserCanModifyCachegroup
 	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cgparam.ReqInfo.Tx.Tx, cgparam.CacheGroupID, cgparam.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
-	return api.GenericDelete(cgparam)
+	return crudder.GenericDelete(cgparam)
 }
 
 // ReadAllCacheGroupParameters reads all cachegroup parameter associations.

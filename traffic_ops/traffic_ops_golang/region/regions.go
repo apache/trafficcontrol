@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
@@ -106,7 +107,7 @@ func (region *TORegion) Validate() error {
 
 func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(rg.APIInfo(), "name")
-	return api.GenericRead(h, rg, useIMS)
+	return crudder.GenericRead(h, rg, useIMS)
 }
 func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
@@ -116,13 +117,12 @@ JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.table_name='region') as res`
 }
 
-func (rg *TORegion) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, rg) }
+func (rg *TORegion) Update(h http.Header) api.Errors { return crudder.GenericUpdate(h, rg) }
 
-func (rg *TORegion) Create() (error, error, int) {
+func (rg *TORegion) Create() api.Errors {
 	resultRows, err := rg.APIInfo().Tx.NamedQuery(rg.InsertQuery(), rg)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -134,25 +134,25 @@ func (rg *TORegion) Create() (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err = resultRows.Scan(&id, &lastUpdated, &divisionName); err != nil {
-			return nil, fmt.Errorf("could not scan after insert: %w)", err), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("could not scan after insert: %w)", err))
 		}
 	}
 
 	if rowsAffected == 0 {
-		return nil, fmt.Errorf("no region was inserted, nothing was returned"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("no region was inserted, nothing was returned"))
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf("too many rows affected from region insert"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("too many rows affected from region insert"))
 	}
 
 	rg.DivisionName = divisionName
 	rg.ID = id
 	rg.LastUpdated = lastUpdated
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
-func (rg *TORegion) Delete() (error, error, int) { return api.GenericDelete(rg) }
+func (rg *TORegion) Delete() api.Errors { return crudder.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
-func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }
+func (rg *TORegion) OptionsDelete() api.Errors { return crudder.GenericOptionsDelete(rg) }
 
 func selectQuery() string {
 	return `SELECT

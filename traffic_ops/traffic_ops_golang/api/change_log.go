@@ -39,8 +39,9 @@ type ChangeLog struct {
 	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-type ChangeLogger interface {
-	ChangeLogMessage(action string) (string, error)
+type KeyFieldInfo struct {
+	Field string
+	Func  func(string) (interface{}, error)
 }
 
 const (
@@ -49,21 +50,6 @@ const (
 	Created   = "Created"
 	Deleted   = "Deleted"
 )
-
-func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sql.Tx) error {
-	t, ok := i.(ChangeLogger)
-	if !ok {
-		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
-	}
-	msg, err := t.ChangeLogMessage(action)
-	if err != nil {
-		log.Errorf("%++v creating log message for %++v", err, t)
-		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
-	}
-	return CreateChangeLogRawErr(level, msg, user, tx)
-}
 
 func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sql.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "

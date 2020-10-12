@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -123,10 +124,10 @@ func (coordinate TOCoordinate) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
+func (coord *TOCoordinate) Create() api.Errors { return crudder.GenericCreate(coord) }
 func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(coord.APIInfo(), "name")
-	return api.GenericRead(h, coord, useIMS)
+	return crudder.GenericRead(h, coord, useIMS)
 }
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
@@ -135,10 +136,10 @@ func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tab
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
-func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
-	return api.GenericUpdate(h, coord)
+func (coord *TOCoordinate) Update(h http.Header) api.Errors {
+	return crudder.GenericUpdate(h, coord)
 }
-func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
+func (coord *TOCoordinate) Delete() api.Errors { return crudder.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT

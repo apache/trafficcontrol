@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -108,7 +109,7 @@ func (pl *TOPhysLocation) Validate() error {
 
 func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(pl.APIInfo(), "name")
-	return api.GenericRead(h, pl, useIMS)
+	return crudder.GenericRead(h, pl, useIMS)
 }
 func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
@@ -119,29 +120,29 @@ JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 }
 
 // MatchRegionNameAndID checks to see if the supplied region name and ID in the phys_location body correspond to each other.
-func (pl *TOPhysLocation) MatchRegionNameAndID() (error, error, int) {
+func (pl *TOPhysLocation) MatchRegionNameAndID() api.Errors {
 	if pl.RegionName != nil {
 		regionName, ok, err := dbhelpers.GetRegionNameFromID(pl.APIInfo().Tx.Tx, *pl.RegionID)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching name from region ID: %w", err), http.StatusInternalServerError
+			return api.Errors{SystemError: fmt.Errorf("error fetching name from region ID: %w", err), Code: http.StatusInternalServerError}
 		} else if !ok {
-			return errors.New("no such region"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("no such region"), Code: http.StatusNotFound}
 		}
 		if regionName != *pl.RegionName {
-			return errors.New("region name and ID do not match"), nil, http.StatusBadRequest
+			return api.Errors{UserError: errors.New("region name and ID do not match"), Code: http.StatusBadRequest}
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pl) }
-func (pl *TOPhysLocation) Create() (error, error, int) {
-	if userErr, sysErr, statusCode := pl.MatchRegionNameAndID(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+func (pl *TOPhysLocation) Update(h http.Header) api.Errors { return crudder.GenericUpdate(h, pl) }
+func (pl *TOPhysLocation) Create() api.Errors {
+	if errs := pl.MatchRegionNameAndID(); errs.Occurred() {
+		return errs
 	}
-	return api.GenericCreate(pl)
+	return crudder.GenericCreate(pl)
 }
-func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
+func (pl *TOPhysLocation) Delete() api.Errors { return crudder.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

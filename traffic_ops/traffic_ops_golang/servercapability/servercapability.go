@@ -20,6 +20,7 @@ package servercapability
  */
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -117,28 +119,32 @@ func (v *TOServerCapability) Validate() error {
 
 func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(v.APIInfo(), "name")
-	return api.GenericRead(h, v, useIMS)
+	return crudder.GenericRead(h, v, useIMS)
 }
 
-func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
+func (v *TOServerCapability) Update(h http.Header) api.Errors {
 	sc, userErr, sysErr, errCode, _ := v.Read(h, false)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{
+			UserError:   userErr,
+			SystemError: sysErr,
+			Code:        errCode,
+		}
 	}
 	if len(sc) != 1 {
-		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("cannot find exactly one server capability with the query string provided"), Code: http.StatusBadRequest}
 	}
 
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
+	if errs.Occurred() {
+		return errs
 	}
 
 	// udpate server capability name
 	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
 	if err != nil {
-		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("server capability update: error setting the name for server capability %s: %w", v.Name, err))
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
@@ -146,10 +152,10 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 		err = rows.Scan(&v.Name, &v.LastUpdated)
 		if err != nil {
 			errs := api.ParseDBError(err)
-			return errs.UserError, errs.SystemError, errs.Code
+			return errs
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -159,5 +165,5 @@ func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, paginatio
 	select max(l.last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
 }
 
-func (v *TOServerCapability) Create() (error, error, int) { return api.GenericCreateNameBasedID(v) }
-func (v *TOServerCapability) Delete() (error, error, int) { return api.GenericDelete(v) }
+func (v *TOServerCapability) Create() api.Errors { return crudder.GenericCreateNameBasedID(v) }
+func (v *TOServerCapability) Delete() api.Errors { return crudder.GenericDelete(v) }

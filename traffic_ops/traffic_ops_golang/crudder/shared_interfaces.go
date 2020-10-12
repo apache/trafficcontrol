@@ -1,4 +1,4 @@
-package api
+package crudder
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,18 +20,22 @@ package api
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"database/sql"
 	"net/http"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 type CRUDer interface {
-	Create() (error, error, int)
+	Create() api.Errors
 	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
-	Update(http.Header) (error, error, int)
-	Delete() (error, error, int)
+	Update(http.Header) api.Errors
+	Delete() api.Errors
 	APIInfoer
 	Identifier
 	Validator
@@ -56,12 +60,31 @@ type Identifier interface {
 	GetAuditName() string
 
 	// This should define the key getters and setters
-	GetKeyFieldsInfo() []KeyFieldInfo
+	GetKeyFieldsInfo() []api.KeyFieldInfo
+}
+
+type ChangeLogger interface {
+	ChangeLogMessage(action string) (string, error)
+}
+
+func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sql.Tx) error {
+	t, ok := i.(ChangeLogger)
+	if !ok {
+		keys, _ := i.GetKeys()
+		return api.CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
+	}
+	msg, err := t.ChangeLogMessage(action)
+	if err != nil {
+		log.Errorf("%++v creating log message for %++v", err, t)
+		keys, _ := i.GetKeys()
+		return api.CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
+	}
+	return api.CreateChangeLogRawErr(level, msg, user, tx)
 }
 
 type Creator interface {
 	// Create returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Create() (error, error, int)
+	Create() api.Errors
 	APIInfoer
 	Identifier
 	Validator
@@ -80,7 +103,7 @@ type Reader interface {
 
 type Updater interface {
 	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Update(h http.Header) (error, error, int)
+	Update(h http.Header) api.Errors
 	APIInfoer
 	Identifier
 	Validator
@@ -88,7 +111,7 @@ type Updater interface {
 
 type Deleter interface {
 	// Delete returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Delete() (error, error, int)
+	Delete() api.Errors
 	APIInfoer
 	Identifier
 }
@@ -114,6 +137,6 @@ type Tenantable interface {
 // APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.
 // Every CRUD operation uses this login session context
 type APIInfoer interface {
-	SetInfo(*APIInfo)
-	APIInfo() *APIInfo
+	SetInfo(*api.APIInfo)
+	APIInfo() *api.APIInfo
 }

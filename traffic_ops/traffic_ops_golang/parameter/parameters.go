@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -136,11 +137,11 @@ func (param TOParameter) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (pa *TOParameter) Create() (error, error, int) {
+func (pa *TOParameter) Create() api.Errors {
 	if pa.Value == nil {
 		pa.Value = util.StrPtr("")
 	}
-	return api.GenericCreate(pa)
+	return crudder.GenericCreate(pa)
 }
 
 func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
@@ -184,14 +185,14 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	return params, nil, nil, code, &maxTime
 }
 
-func (pa *TOParameter) Update(h http.Header) (error, error, int) {
+func (pa *TOParameter) Update(h http.Header) api.Errors {
 	if pa.Value == nil {
 		pa.Value = util.StrPtr("")
 	}
-	return api.GenericUpdate(h, pa)
+	return crudder.GenericUpdate(h, pa)
 }
 
-func (pa *TOParameter) Delete() (error, error, int) { return api.GenericDelete(pa) }
+func (pa *TOParameter) Delete() api.Errors { return crudder.GenericDelete(pa) }
 
 func insertQuery() string {
 	query := `INSERT INTO parameter (

@@ -187,65 +187,79 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='steering_target') as res`
 }
 
-func (st *TOSteeringTargetV11) Create() (error, error, int) {
+func (st *TOSteeringTargetV11) Create() api.Errors {
+	errs := api.Errors{
+		Code: http.StatusBadRequest,
+	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
-		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
+		errs.SetUserError("delivery service ID must be an integer")
+		return errs
 	}
 	dsID := uint64(dsIDInt)
 	st.DeliveryServiceID = &dsID
 
 	// target can't be in the Validate func, because it's in the parameters of PUT, not the body (but it is in the body in the POST here).
 	if st.TargetID == nil {
-		return errors.New("missing target"), nil, http.StatusBadRequest
+		errs.SetUserError("missing target")
+		return errs
 	}
 
 	if userErr, sysErr, errCode := tenant.CheckID(st.ReqInfo.Tx.Tx, st.ReqInfo.User, int(*st.DeliveryServiceID)); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{
+			Code:        errCode,
+			SystemError: sysErr,
+			UserError:   userErr,
+		}
 	}
 
 	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(dsID))
 	if err != nil {
-		return nil, errors.New("createSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("createSteeringTarget: getting CDN from DS ID %w", err))
 	}
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); errs.Occurred() {
+		return errs
 	}
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(insertQuery(), st)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer rows.Close()
 
+	errs = api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	rowsAffected := 0
 	for rows.Next() {
 		rowsAffected++
 		if err = rows.StructScan(&st); err != nil {
-			return nil, errors.New("steering target create scanning: " + err.Error()), http.StatusInternalServerError
+			errs.SystemError = errors.New("steering target create scanning: " + err.Error())
+			return errs
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New("no " + st.GetType() + " was inserted, no id was returned"), http.StatusInternalServerError
+		errs.SystemError = errors.New("no " + st.GetType() + " was inserted, no id was returned")
+		return errs
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many ids returned from steering target insert"), http.StatusInternalServerError
+		errs.SetSystemError("too many ids returned from steering target insert")
+		return errs
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
+func (st *TOSteeringTargetV11) Update(h http.Header) api.Errors {
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
-		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("delivery service ID must be an integer"), Code: http.StatusBadRequest}
 	}
 
 	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, dsIDInt)
 	if err != nil {
-		return nil, errors.New("updateSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("updateSteeringTarget: getting CDN from DS ID %w", err))
 	}
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); errs.Occurred() {
+		return errs
 	}
 
 	dsID := uint64(dsIDInt)
@@ -254,30 +268,29 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 
 	targetIDInt, err := strconv.Atoi(st.ReqInfo.Params["target"])
 	if err != nil {
-		return errors.New("target ID must be an integer"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("target ID must be an integer"), Code: http.StatusBadRequest}
 	}
 	targetID := uint64(targetIDInt)
 	st.TargetID = &targetID
 
 	if userErr, sysErr, errCode := tenant.CheckID(st.ReqInfo.Tx.Tx, st.ReqInfo.User, int(*st.DeliveryServiceID)); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 	err, found, existingLastUpdated := CheckIfExistsBeforeUpdate(st.ReqInfo.Tx, st)
 	if err == nil && found == false {
-		return errors.New("no steering target found with this id"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no steering target found with this id"), Code: http.StatusNotFound}
 	}
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 
 	if !api.IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return api.ModifiedError()
 	}
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer rows.Close()
 
@@ -286,17 +299,17 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 	for rows.Next() {
 		rowsAffected++
 		if err = rows.StructScan(&st); err != nil {
-			return nil, errors.New("steering target update scanning: " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("steering target update scanning: %w", err))
 		}
 	}
 	st.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("steering target not found"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("steering target not found"), Code: http.StatusNotFound}
 		}
-		return nil, errors.New("too many ids returned from steering target update"), http.StatusInternalServerError
+		return api.NewSystemError(errors.New("too many ids returned from steering target update"))
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, st *TOSteeringTargetV11) (error, bool, *time.Time) {
@@ -317,33 +330,33 @@ func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, st *TOSteeringTargetV11) (error, boo
 	return nil, found, &lastUpdated
 }
 
-func (st *TOSteeringTargetV11) Delete() (error, error, int) {
+func (st *TOSteeringTargetV11) Delete() api.Errors {
 	if userErr, sysErr, errCode := tenant.CheckID(st.ReqInfo.Tx.Tx, st.ReqInfo.User, int(*st.DeliveryServiceID)); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 
 	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(*st.DeliveryServiceID))
 	if err != nil {
-		return nil, errors.New("deleteSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleteSteeringTarget: getting CDN from DS ID %w", err))
 	}
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); errs.Occurred() {
+		return errs
 	}
 	result, err := st.ReqInfo.Tx.NamedExec(deleteQuery(), st)
 	if err != nil {
-		return nil, errors.New("steering target delete exec: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("steering target delete exec: %w", err))
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, errors.New("steering target delete exec getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("steering target delete exec getting rows affected: %w", err))
 	}
 
 	if rowsAffected < 1 {
-		return errors.New("steering target not found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("steering target not found"), Code: http.StatusNotFound}
 	} else if rowsAffected != 1 {
-		return nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("this create affected too many rows: %d", rowsAffected))
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func selectQuery() string {

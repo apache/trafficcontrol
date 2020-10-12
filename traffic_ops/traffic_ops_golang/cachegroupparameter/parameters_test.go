@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -150,7 +151,7 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			expectedReturnCode:   http.StatusNotFound,
 		},
 	}
-	toParameterReaders := map[string]api.Reader{
+	toParameterReaders := map[string]crudder.Reader{
 		"Parameters": &TOCacheGroupParameter{},
 	}
 	for _, testCase := range testCases {
@@ -245,7 +246,7 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOCacheGroupParameter{}
 
-	if _, ok := i.(api.Reader); !ok {
+	if _, ok := i.(crudder.Reader); !ok {
 		t.Errorf("CacheGroupParameter must be Reader")
 	}
 }

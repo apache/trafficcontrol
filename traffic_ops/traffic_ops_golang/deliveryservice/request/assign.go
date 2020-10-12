@@ -34,10 +34,9 @@ import (
 // GetAssignment is the handler for GET requests to
 // /deliveryservice_requests/{{ID}}/assign.
 func GetAssignment(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -57,18 +56,15 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
-			sysErr = nil
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{Code: http.StatusNotFound, UserError: fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])}
 		} else {
-			errCode = http.StatusInternalServerError
-			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			errs = api.NewSystemError(fmt.Errorf("looking for DSR: %w", err))
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -136,14 +132,14 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 // PutAssignment is the handler for PUT requsets to
 // /deliveryservice_requests/{{ID}}/assign.
 func PutAssignment(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	var req assignmentRequest
 	if err := api.Parse(r.Body, tx, &req); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -164,16 +160,12 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusNotFound
-			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
-			sysErr = nil
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = api.Errors{Code: http.StatusNotFound, UserError: fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])}
 		} else {
-			errCode = http.StatusInternalServerError
-			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			errs = api.NewSystemError(fmt.Errorf("looking for DSR: %w", err))
 		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	dsr.SetXMLID()

@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 )
@@ -140,24 +141,16 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 			Code:        http.StatusInternalServerError,
 		}
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
 	// use existing CRUD helpers to create the new profile
 	toProfile.ProfileNullable = profiles[0].(tc.ProfileNullable)
 	toProfile.ProfileNullable.Name = &p.Name
-	userErr, sysErr, errCode = api.GenericCreate(toProfile)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	errs = crudder.GenericCreate(toProfile)
+	if errs.Occurred() {
+		return errs
 	}
 
 	p.ExistingID = *profiles[0].(tc.ProfileNullable).ID
@@ -196,13 +189,9 @@ func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 		// parameters to new profile.
 		toParam.ProfileParameterNullable.ProfileID = &p.ID
 		toParam.ProfileParameterNullable.ParameterID = param.Parameter
-		userErr, sysErr, errCode := toParam.Create()
-		if userErr != nil || sysErr != nil {
-			return api.Errors{
-				UserError:   userErr,
-				SystemError: sysErr,
-				Code:        errCode,
-			}
+		errs := toParam.Create()
+		if errs.Occurred() {
+			return errs
 		}
 		newParams++
 	}

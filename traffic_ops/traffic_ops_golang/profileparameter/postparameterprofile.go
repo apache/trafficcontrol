@@ -52,7 +52,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return

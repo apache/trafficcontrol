@@ -39,13 +39,13 @@ const selectLimitedQuery = `SELECT email, provider from acme_account where email
 
 // Read handles GET requests for all information about the ACME accounts.
 func Read(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	acmeAccounts := []tc.AcmeAccount{}
 	rows, err := tx.Query(readQuery)
@@ -69,13 +69,13 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 // ReadProviders returns a list of unique ACME provider both from the database and cdn.conf
 func ReadProviders(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	acmeProviders := []string{}
 	rows, err := tx.Query(readProvidersQuery)
@@ -111,9 +111,9 @@ func ReadProviders(w http.ResponseWriter, r *http.Request) {
 
 // Create handles POST requests to add a new ACME provider.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -163,9 +163,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -214,9 +214,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete removes the information about an ACME account.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"provider", "email"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"provider", "email"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()

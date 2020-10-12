@@ -1,4 +1,4 @@
-package api
+package crudder
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,86 +21,19 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
-
-type KeyFieldInfo struct {
-	Field string
-	Func  func(string) (interface{}, error)
-}
-
-func GetIntKey(s string) (interface{}, error) {
-	if strings.HasSuffix(s, ".json") {
-		s = s[:len(s)-len(".json")]
-	}
-	return strconv.Atoi(s)
-}
-
-func GetStringKey(s string) (interface{}, error) {
-	return s, nil
-}
-
-func GetPathParams(ctx context.Context) (map[string]string, error) {
-	val := ctx.Value(PathParamsKey)
-	if val != nil {
-		switch v := val.(type) {
-		case map[string]string:
-			return v, nil
-		default:
-			return nil, fmt.Errorf("path parameters found with bad type: %T", v)
-		}
-	}
-	return nil, errors.New("no PathParams found in Context")
-}
-
-func IsInt(s string) error {
-	_, err := strconv.Atoi(s)
-	if err != nil {
-		err = errors.New("cannot parse to integer")
-	}
-	return err
-}
-
-func IsBool(s string) error {
-	_, err := strconv.ParseBool(s)
-	if err != nil {
-		err = errors.New("cannot parse to boolean")
-	}
-	return err
-}
-
-func GetCombinedParams(r *http.Request) (map[string]string, error) {
-	combinedParams := make(map[string]string)
-	q := r.URL.Query()
-	for k, v := range q {
-		combinedParams[k] = v[0] //we take the first value and do not support multiple keys in query parameters
-	}
-
-	ctx := r.Context()
-	pathParams, err := GetPathParams(ctx)
-	if err != nil {
-		return combinedParams, fmt.Errorf("no path parameters: %s", err)
-	}
-	//path parameters will overwrite query parameters
-	for k, v := range pathParams {
-		combinedParams[k] = v
-	}
-
-	return combinedParams, nil
-}
 
 // decodeAndValidateRequestBody decodes and validates a pointer to a struct implementing the Validator interface
 func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
@@ -151,10 +84,10 @@ type deleteSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, messag
 func ReadHandler(reader Reader) http.HandlerFunc {
 	return readHandlerHelper(
 		reader,
-		HandleErr,
+		api.HandleErr,
 		func(w http.ResponseWriter, r *http.Request, statusCode int, results interface{}) {
 			w.WriteHeader(statusCode)
-			WriteResp(w, r, results)
+			api.WriteResp(w, r, results)
 		},
 	)
 }
@@ -165,11 +98,11 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 	return readHandlerHelper(
 		reader,
 		func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
-			HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
+			api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
 		},
 		func(w http.ResponseWriter, r *http.Request, statusCode int, results interface{}) {
-			alerts := CreateDeprecationAlerts(alternative)
-			WriteAlertsObj(w, r, statusCode, alerts, results)
+			alerts := api.CreateDeprecationAlerts(alternative)
+			api.WriteAlertsObj(w, r, statusCode, alerts, results)
 		},
 	)
 }
@@ -181,7 +114,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler readSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		useIMS := false
-		inf, errs := NewInfo(r, nil, nil)
+		inf, errs := api.NewInfo(r, nil, nil)
 		if errs.Occurred() {
 			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
@@ -197,7 +130,7 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		cfg, err := GetConfig(r.Context())
+		cfg, err := api.GetConfig(r.Context())
 		if err != nil {
 			log.Warnf("Couldnt get the config %v", err)
 		}
@@ -226,7 +159,7 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 //   *forming and writing the body over the wire
 func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, errs := NewInfo(r, nil, nil)
+		inf, errs := api.NewInfo(r, nil, nil)
 		if errs.Occurred() {
 			inf.HandleErrs(w, r, errs)
 			return
@@ -235,7 +168,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 
 		interfacePtr := reflect.ValueOf(updater)
 		if interfacePtr.Kind() != reflect.Ptr {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
 			return
 		}
 		objectType := reflect.Indirect(interfacePtr).Type()
@@ -243,7 +176,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		obj.SetInfo(inf)
 
 		if err := decodeAndValidateRequestBody(r, obj); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
@@ -254,13 +187,13 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		for _, kf := range keyFields {
 			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
 				return
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
 				return
 			}
 
@@ -274,7 +207,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		obj.SetKeys(keys)
 		_, ok := obj.GetKeys()
 		if !ok {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
 			return // TODO verify?
 		}
 
@@ -282,30 +215,30 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
-		userErr, sysErr, errCode := obj.Update(r.Header)
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		errs = obj.Update(r.Header)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 
-		if err := CreateChangeLog(ApiChange, Updated, obj, inf.User, inf.Tx.Tx); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+		if err := CreateChangeLog(api.ApiChange, api.Updated, obj, inf.User, inf.Tx.Tx); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was updated.")
 		if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
 			alerts.AddAlerts(alertsObj.GetAlerts())
 		}
-		WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 	}
 }
 
@@ -318,9 +251,9 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 func DeleteHandler(deleter Deleter) http.HandlerFunc {
 	return deleteHandlerHelper(
 		deleter,
-		HandleErr,
+		api.HandleErr,
 		func(w http.ResponseWriter, r *http.Request, message string) {
-			WriteRespAlert(w, r, tc.SuccessLevel, message)
+			api.WriteRespAlert(w, r, tc.SuccessLevel, message)
 		},
 	)
 }
@@ -335,12 +268,12 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 	return deleteHandlerHelper(
 		deleter,
 		func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
-			HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
+			api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
 		},
 		func(w http.ResponseWriter, r *http.Request, message string) {
-			alerts := CreateDeprecationAlerts(alternative)
+			alerts := api.CreateDeprecationAlerts(alternative)
 			alerts.AddNewAlert(tc.SuccessLevel, message)
-			WriteAlerts(w, r, http.StatusOK, alerts)
+			api.WriteAlerts(w, r, http.StatusOK, alerts)
 		},
 	)
 }
@@ -351,7 +284,7 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 // DeprecatedDeleteHandler always returns a deprecation alert in its response, whereas DeleteHandler does not.
 func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandler deleteSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, errs := NewInfo(r, nil, nil)
+		inf, errs := api.NewInfo(r, nil, nil)
 		if errs.Occurred() {
 			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
@@ -383,12 +316,12 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 					continue
 				}
 				switch reflect.ValueOf(info.Checker) {
-				case reflect.ValueOf(IsInt):
-					if keys[key], err = GetIntKey(paramKey); err != nil {
+				case reflect.ValueOf(api.IsInt):
+					if keys[key], err = api.GetIntKey(paramKey); err != nil {
 						errHandler(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil)
 						return
 					}
-				case reflect.ValueOf(IsBool):
+				case reflect.ValueOf(api.IsBool):
 					if keys[key], err = strconv.ParseBool(paramKey); err != nil {
 						errHandler(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil)
 						return
@@ -433,15 +366,15 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 			obj.SetInfo(inf)
 			userErr, sysErr, errCode = obj.OptionsDelete()
 		} else {
-			userErr, sysErr, errCode = obj.Delete()
+			errs = obj.Delete()
 		}
-		if userErr != nil || sysErr != nil {
-			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		if errs.Occurred() {
+			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
 		}
 
 		log.Debugf("changelog for delete on object")
-		if err := CreateChangeLog(ApiChange, Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
+		if err := CreateChangeLog(api.ApiChange, api.Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
 			errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -457,7 +390,7 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 //   *forming and writing the body over the wire
 func CreateHandler(creator Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, errs := NewInfo(r, nil, nil)
+		inf, errs := api.NewInfo(r, nil, nil)
 		if errs.Occurred() {
 			inf.HandleErrs(w, r, errs)
 			return
@@ -466,7 +399,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 
 		interfacePtr := reflect.ValueOf(creator)
 		if interfacePtr.Kind() != reflect.Ptr {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
 			return
 		}
 		objectType := reflect.Indirect(interfacePtr).Type()
@@ -476,13 +409,13 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		if c, ok := obj.(MultipleCreator); ok && c.AllowMultipleCreates() {
 			data, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 				return
 			}
 
 			objSlice, err := parseMultipleCreates(data, objectType, inf)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 				return
 			}
 
@@ -491,35 +424,35 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 
 				err = objElem.Validate()
 				if err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 					return
 				}
 
 				if t, ok := objElem.(Tenantable); ok {
 					authorized, err := t.IsTenantAuthorized(inf.User)
 					if err != nil {
-						HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+						api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 						return
 					}
 					if !authorized {
-						HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+						api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 						return
 					}
 				}
 
-				userErr, sysErr, errCode := objElem.Create()
-				if userErr != nil || sysErr != nil {
-					HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+				errs := objElem.Create()
+				if errs.Occurred() {
+					api.HandleErrs(w, r, inf.Tx.Tx, errs)
 					return
 				}
 
-				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+				if err = CreateChangeLog(api.ApiChange, api.Created, objElem, inf.User, inf.Tx.Tx); err != nil {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 					return
 				}
 			}
 			if len(objSlice) == 0 {
-				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
+				api.WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
 				return
 			}
 			var (
@@ -538,47 +471,47 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					alerts.AddAlerts(objElem.(AlertsResponse).GetAlerts())
 				}
 			}
-			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
+			api.WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
 			err := decodeAndValidateRequestBody(r, obj)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 				return
 			}
 
 			if t, ok := obj.(Tenantable); ok {
 				authorized, err := t.IsTenantAuthorized(inf.User)
 				if err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 					return
 				}
 				if !authorized {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 					return
 				}
 			}
 
-			userErr, sysErr, errCode := obj.Create()
-			if userErr != nil || sysErr != nil {
-				HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			errs := obj.Create()
+			if errs.Occurred() {
+				api.HandleErrs(w, r, inf.Tx.Tx, errs)
 				return
 			}
 
-			if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+			if err = CreateChangeLog(api.ApiChange, api.Created, obj, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 				return
 			}
 			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")
 			if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
 				alerts.AddAlerts(alertsObj.GetAlerts())
 			}
-			WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
+			api.WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 		}
 	}
 }
 
-func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {
+func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *api.APIInfo) ([]Creator, error) {
 	buf := ioutil.NopCloser(bytes.NewReader(data))
 
 	var genericInt interface{}

@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -99,13 +100,13 @@ func (serviceCategory TOServiceCategory) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
-	return api.GenericCreate(serviceCategory)
+func (serviceCategory *TOServiceCategory) Create() api.Errors {
+	return crudder.GenericCreate(serviceCategory)
 }
 
 func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(serviceCategory.APIInfo(), "name")
-	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
+	serviceCategories, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, serviceCategory, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
 	}
@@ -114,9 +115,9 @@ func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]in
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"name"}, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -157,8 +158,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service Category update from "+name+" to "+newSC.Name+" was successful.", resp)
 }
 
-func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
-	return api.GenericDelete(serviceCategory)
+func (serviceCategory *TOServiceCategory) Delete() api.Errors {
+	return crudder.GenericDelete(serviceCategory)
 }
 
 func insertQuery() string {

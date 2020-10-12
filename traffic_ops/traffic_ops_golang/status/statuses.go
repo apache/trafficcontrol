@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -106,7 +107,7 @@ func (status TOStatus) Validate() error {
 func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	errCode := http.StatusOK
 	api.DefaultSort(st.APIInfo(), "name")
-	readVals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, st, useIMS)
+	readVals, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, st, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
 	}
@@ -114,7 +115,7 @@ func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	for _, iStatus := range readVals {
 		status, ok := iStatus.(*TOStatus)
 		if !ok {
-			return nil, nil, fmt.Errorf("TOStatus.Read: api.GenericRead returned unexpected type %T\n", iStatus), http.StatusInternalServerError, nil
+			return nil, nil, fmt.Errorf("TOStatus.Read: crudder.GenericRead returned unexpected type %T\n", iStatus), http.StatusInternalServerError, nil
 		}
 		if status.SQLDescription.Valid {
 			status.Description = &status.SQLDescription.String
@@ -124,9 +125,9 @@ func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return readVals, nil, nil, errCode, maxTime
 }
 
-func (st *TOStatus) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, st) }
-func (st *TOStatus) Create() (error, error, int)              { return api.GenericCreate(st) }
-func (st *TOStatus) Delete() (error, error, int)              { return api.GenericDelete(st) }
+func (st *TOStatus) Update(h http.Header) api.Errors { return crudder.GenericUpdate(h, st) }
+func (st *TOStatus) Create() api.Errors              { return crudder.GenericCreate(st) }
+func (st *TOStatus) Delete() api.Errors              { return crudder.GenericDelete(st) }
 
 func selectQuery() string {
 	return `

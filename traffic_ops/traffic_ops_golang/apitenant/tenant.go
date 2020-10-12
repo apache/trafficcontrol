@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -132,14 +133,14 @@ func (ten TOTenant) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (ten *TOTenant) Create() (error, error, int) { return api.GenericCreate(ten) }
+func (ten *TOTenant) Create() api.Errors { return crudder.GenericCreate(ten) }
 
 func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK, nil
 	}
 	api.DefaultSort(ten.APIInfo(), "name")
-	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
+	tenants, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
 	}
@@ -209,23 +210,23 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 }
 
 // Update wraps tenant validation and the generic API Update call into a single call.
-func (ten *TOTenant) Update(h http.Header) (error, error, int) {
+func (ten *TOTenant) Update(h http.Header) api.Errors {
 
-	userErr, sysErr, statusCode := ten.isUpdatable()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	errs := ten.isUpdatable()
+	if errs.Occurred() {
+		return errs
 	}
 
-	return api.GenericUpdate(h, ten)
+	return crudder.GenericUpdate(h, ten)
 }
 
 // isUpdatable peforms validation on the fields for the Tenant, such as ensuring
 // the tenant cannot be modified if it is root, or that it cannot convert its own child
 // to its own parent. This is different than the basic validation rules performed in
 // Validate() as it pertains to specific business logic, not generic API rules.
-func (ten *TOTenant) isUpdatable() (error, error, int) {
+func (ten *TOTenant) isUpdatable() api.Errors {
 	if ten.Name != nil && *ten.Name == rootName {
-		return errors.New("trying to change the root tenant, which is immutable"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("trying to change the root tenant, which is immutable"), Code: http.StatusBadRequest}
 	}
 
 	// Perform SelectQuery
@@ -233,14 +234,14 @@ func (ten *TOTenant) isUpdatable() (error, error, int) {
 	query := selectQuery(*ten.ID)
 	rows, err := ten.APIInfo().Tx.Queryx(query)
 	if err != nil {
-		return nil, errors.New("querying " + ten.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("querying %s: %w", ten.GetType(), err))
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var v tc.TenantNullable
 		if err = rows.StructScan(&v); err != nil {
-			return nil, errors.New("scanning " + ten.GetType() + ": " + err.Error()), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("scanning %s: %w", ten.GetType(), err))
 		}
 		vals = append(vals, v)
 	}
@@ -248,33 +249,33 @@ func (ten *TOTenant) isUpdatable() (error, error, int) {
 	// Ensure the new desired ParentID does not exist in the susequent list of Children
 	for _, val := range vals {
 		if *ten.ParentID == *val.ID {
-			return errors.New("trying to set existing child as new parent"), nil, http.StatusBadRequest
+			return api.Errors{UserError: errors.New("trying to set existing child as new parent"), Code: http.StatusBadRequest}
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (ten *TOTenant) Delete() (error, error, int) {
+func (ten *TOTenant) Delete() api.Errors {
 	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)
 	if err != nil {
-		return parseDeleteErr(err, *ten.ID, ten.APIInfo().Tx.Tx) // this is why we can't use api.GenericDelete
+		return parseDeleteErr(err, *ten.ID, ten.APIInfo().Tx.Tx) // this is why we can't use crudder.GenericDelete
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return nil, errors.New("deleting " + ten.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleting %s: getting rows affected: %w", ten.GetType(), err))
 	} else if rowsAffected < 1 {
-		return errors.New("no " + ten.GetType() + " with that id found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("no " + ten.GetType() + " with that id found"), Code: http.StatusNotFound}
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf(ten.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf(ten.GetType()+" delete affected too many rows: %d", rowsAffected))
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // parseDeleteErr takes the tenant delete error, and returns the appropriate user error, system error, and http status code.
-func parseDeleteErr(err error, id int, tx *sql.Tx) (error, error, int) {
+func parseDeleteErr(err error, id int, tx *sql.Tx) api.Errors {
 	pqErr, ok := err.(*pq.Error)
 	if !ok {
-		return nil, errors.New("deleting tenant: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleting tenant: %w", err))
 	}
 	// TODO fix this to check for other Postgres errors besides key violations
 	existing := ""
@@ -290,7 +291,10 @@ func parseDeleteErr(err error, id int, tx *sql.Tx) (error, error, int) {
 	default:
 		existing = pqErr.Table
 	}
-	return errors.New("Tenant '" + strconv.Itoa(id) + "' has " + existing + ". Please update these " + existing + " and retry."), nil, http.StatusBadRequest
+	return api.Errors{
+		UserError: errors.New("Tenant '" + strconv.Itoa(id) + "' has " + existing + ". Please update these " + existing + " and retry."),
+		Code:      http.StatusBadRequest,
+	}
 }
 
 // selectQuery returns a query on the tenant table that limits to tenants within the realm of the tenantID.  It's intended

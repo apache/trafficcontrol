@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
 	"github.com/jmoiron/sqlx"
@@ -256,38 +257,38 @@ func CheckIfCurrentUserCanModifyCDNsByID(tx *sql.Tx, cdns []int, user string) (e
 
 // CheckIfCurrentUserCanModifyCDN checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
-func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error, int) {
+func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) api.Errors {
 	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
 	var userName string
 	var soft bool
 	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil, http.StatusOK
+			return api.NewErrors()
 		}
-		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+		return api.Errors{SystemError: fmt.Errorf("querying cdn_lock for user %s and cdn %s: %w", user, cdn, err), Code: http.StatusInternalServerError}
 	}
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&userName, &soft)
 		if err != nil {
-			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+			return api.Errors{SystemError: fmt.Errorf("scanning cdn_lock for user %s and cdn %s: %w", user, cdn, err), Code: http.StatusInternalServerError}
 		}
 		if userName != "" && user != userName && !soft {
-			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+			return api.Errors{UserError: errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), Code: http.StatusForbidden}
 		}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // CheckIfCurrentUserCanModifyCDNWithID checks if the current user has the lock on the cdn (identified by ID) that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
-func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) (error, error, int) {
+func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) api.Errors {
 	cdnName, ok, err := GetCDNNameFromID(tx, cdnID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.Errors{SystemError: err, Code: http.StatusInternalServerError}
 	} else if !ok {
-		return errors.New("CDN not found"), nil, http.StatusNotFound
+		return api.Errors{UserError: errors.New("CDN not found"), Code: http.StatusNotFound}
 	}
 	return CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), user)
 }

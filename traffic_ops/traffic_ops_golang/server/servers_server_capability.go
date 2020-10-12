@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crudder"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
@@ -124,7 +125,7 @@ func (ssc TOServerServerCapability) Validate() error {
 
 func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(ssc.APIInfo(), "serverHostName")
-	return api.GenericRead(h, ssc, useIMS)
+	return crudder.GenericRead(h, ssc, useIMS)
 }
 func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
@@ -134,10 +135,10 @@ JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.table_name='server_server_capability') as res`
 }
 
-func (ssc *TOServerServerCapability) Delete() (error, error, int) {
+func (ssc *TOServerServerCapability) Delete() api.Errors {
 	tenantIDs, err := tenant.GetUserTenantIDListTx(ssc.APIInfo().Tx.Tx, ssc.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, fmt.Errorf("deleting servers_server_capability: %v", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("deleting servers_server_capability: %w", err))
 	}
 	accessibleTenants := make(map[int]struct{}, len(tenantIDs))
 	for _, id := range tenantIDs {
@@ -145,25 +146,25 @@ func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	}
 	userErr, sysErr, status := checkTopologyBasedDSRequiredCapabilities(ssc, accessibleTenants)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, status
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: status}
 	}
 
 	userErr, sysErr, status = checkDSRequiredCapabilities(ssc, accessibleTenants)
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, status
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: status}
 	}
 
 	if ssc.ServerID != nil {
 		cdnName, err := dbhelpers.GetCDNNameFromServerID(ssc.APIInfo().Tx.Tx, int64(*ssc.ServerID))
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ssc.APIInfo().Tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
+		errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(ssc.APIInfo().Tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+		if errs.Occurred() {
+			return errs
 		}
 	}
-	return api.GenericDelete(ssc)
+	return crudder.GenericDelete(ssc)
 }
 
 func checkTopologyBasedDSRequiredCapabilities(ssc *TOServerServerCapability, accessibleTenants map[int]struct{}) (error, error, int) {
@@ -283,40 +284,51 @@ func (ssc *TOServerServerCapability) buildDSReqCapError(dsIDs []int64, accessibl
 	return fmt.Errorf("cannot remove the capability %v from the server %v as the server is assigned to %v that require it", *ssc.ServerCapability, *ssc.ServerID, dsStr), nil, http.StatusBadRequest
 }
 
-func (ssc *TOServerServerCapability) Create() (error, error, int) {
+func (ssc *TOServerServerCapability) Create() api.Errors {
 	tx := ssc.APIInfo().Tx
 
 	// Check existence prior to checking type
 	_, exists, err := dbhelpers.GetServerNameFromID(tx.Tx, *ssc.ServerID)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: err,
+		}
 	}
 	if !exists {
-		return fmt.Errorf("server %v does not exist", *ssc.ServerID), nil, http.StatusNotFound
+		return api.Errors{
+			Code:      http.StatusNotFound,
+			UserError: fmt.Errorf("server %v does not exist", *ssc.ServerID),
+		}
 	}
 
 	// Ensure type is correct
 	correctType := true
 	if err := tx.Tx.QueryRow(scCheckServerTypeQuery(), ssc.ServerID).Scan(&correctType); err != nil {
-		return nil, fmt.Errorf("checking server type: %v", err), http.StatusInternalServerError
+		return api.Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: fmt.Errorf("checking server type: %v", err),
+		}
 	}
 	if !correctType {
-		return fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID), nil, http.StatusBadRequest
+		return api.Errors{
+			Code:      http.StatusBadRequest,
+			UserError: fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID),
+		}
 	}
 
 	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx.Tx, int64(*ssc.ServerID))
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+	if errs.Occurred() {
+		return errs
 	}
 
 	resultRows, err := tx.NamedQuery(scInsertQuery(), ssc)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -324,16 +336,25 @@ func (ssc *TOServerServerCapability) Create() (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.StructScan(&ssc); err != nil {
-			return nil, errors.New(ssc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+			return api.Errors{
+				Code:        http.StatusInternalServerError,
+				SystemError: fmt.Errorf("%s create scanning: %v", ssc.GetType(), err),
+			}
 		}
 	}
+
+	errs = api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	if rowsAffected == 0 {
-		return nil, errors.New(ssc.GetType() + " create: no " + ssc.GetType() + " was inserted, no rows was returned"), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("%s create: no %s was inserted, no rows was returned", ssc.GetType(), ssc.GetType())
+		return errs
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many rows returned from " + ssc.GetType() + " insert"), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("too many rows returned from %s insert", ssc.GetType())
+		return errs
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func scSelectQuery() string {

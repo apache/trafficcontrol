@@ -164,13 +164,13 @@ func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliverySe
 
 // Get is the GET handler for /deliveryservice_requests.
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
@@ -193,9 +193,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		inf.Params["orderby"] = "xmlId"
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(es) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(es), nil)
 		return
 	}
 
@@ -227,7 +227,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, inf.User.TenantID)
 	if err != nil {
-		sysErr = fmt.Errorf("dsr getting tenant list: %v", err)
+		sysErr := fmt.Errorf("dsr getting tenant list: %w", err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -245,7 +245,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		sysErr = fmt.Errorf("dsr querying: %v", err)
+		sysErr := fmt.Errorf("dsr querying: %w", err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -288,7 +288,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals, true)
+		errCode, userErr, sysErr := getOriginals(originalIDs, inf.Tx, needOriginals, true)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		} else {
@@ -532,8 +532,7 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 	// first, ensure there's not an active request with this XMLID
 	ds := dsr.DeliveryService
 	if ds == nil {
-		userErr := errors.New("no delivery service associated with this request")
-		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no delivery service associated with this request"), nil)
 		return
 	}
 
@@ -573,9 +572,9 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 
 // Post is the handler for POST requests to /deliveryservice_requests.
 func Post(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -587,7 +586,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if inf.User == nil {
-		sysErr = errors.New("no user in API Info")
+		sysErr := errors.New("no user in API Info")
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -607,13 +606,13 @@ func Post(w http.ResponseWriter, r *http.Request) {
 // Delete is the handler for DELETE requests to /deliveryservice_requests.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	var omitExtraLongDescFields bool
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
@@ -622,7 +621,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if inf.User == nil {
-		sysErr = errors.New("no user in API Info")
+		sysErr := errors.New("no user in API Info")
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
@@ -658,21 +657,24 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	result, err := tx.Exec(deleteQuery, inf.IntParams["id"])
 	if err != nil {
-		sysErr = fmt.Errorf("deleting DSR #%d: %v", inf.IntParams["id"], err)
+		sysErr := fmt.Errorf("deleting DSR #%d: %v", inf.IntParams["id"], err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
 	if affected, err := result.RowsAffected(); err != nil {
-		sysErr = fmt.Errorf("checking affected rows: %v", err)
+		sysErr := fmt.Errorf("checking affected rows: %v", err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	} else if affected != 1 {
-		sysErr = fmt.Errorf("incorrect number of rows affected by delete: %d", affected)
+		sysErr := fmt.Errorf("incorrect number of rows affected by delete: %d", affected)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
 
 	if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		var userErr error
+		var sysErr error
+		var errCode int
 		if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
 			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
 		} else if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
@@ -891,13 +893,13 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 
 // Put is the handler for PUT requests to /deliveryservice_requests.
 func Put(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
 	version := inf.Version
@@ -906,14 +908,14 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if inf.User == nil {
-		sysErr = errors.New("no user in API Info")
+		sysErr := errors.New("no user in API Info")
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
 
 	id := inf.IntParams["id"]
 
-	errCode, userErr, sysErr = inf.CheckPrecondition(selectMaxLastUpdatedQuery("WHERE r.id = $1"), id)
+	errCode, userErr, sysErr := inf.CheckPrecondition(selectMaxLastUpdatedQuery("WHERE r.id = $1"), id)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

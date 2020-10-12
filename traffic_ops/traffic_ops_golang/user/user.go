@@ -133,17 +133,20 @@ func postValidateV40(user tc.UserV4) error {
 }
 
 // Note: Not using GenericCreate because Scan also needs to scan tenant and rolename
-func (user *TOUser) Create() (error, error, int) {
+func (user *TOUser) Create() api.Errors {
 
 	// PUT and POST validation differs slightly
 	err := user.postValidate()
 	if err != nil {
-		return err, nil, http.StatusBadRequest
+		return api.Errors{
+			Code:      http.StatusBadRequest,
+			UserError: err,
+		}
 	}
 
 	// make sure the user cannot create someone with a higher priv_level than themselves
-	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
-		return usrErr, sysErr, code
+	if errs := user.privCheck(); errs.Occurred() {
+		return errs
 	}
 	var caps []string
 	if user.Role != nil {
@@ -152,22 +155,27 @@ func (user *TOUser) Create() (error, error, int) {
 		caps, err = dbhelpers.GetCapabilitiesFromRoleName(user.ReqInfo.Tx.Tx, *user.RoleName)
 	}
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	missing := user.ReqInfo.User.MissingPermissions(caps...)
 	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		return api.Errors{
+			UserError: fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")),
+			Code:      http.StatusForbidden,
+		}
 	}
 	// Convert password to SCRYPT
 	*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
 	if err != nil {
-		return err, nil, http.StatusBadRequest
+		return api.Errors{
+			Code:      http.StatusBadRequest,
+			UserError: err,
+		}
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.InsertQuery(), user)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -176,18 +184,24 @@ func (user *TOUser) Create() (error, error, int) {
 	var tenant string
 	var rolename string
 
+	errs := api.Errors{
+		Code: http.StatusInternalServerError,
+	}
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err = resultRows.Scan(&id, &lastUpdated, &tenant, &rolename); err != nil {
-			return nil, fmt.Errorf("could not scan after insert: %s\n)", err), http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("could not scan after insert: %v)", err)
+			return errs
 		}
 	}
 
 	if rowsAffected == 0 {
-		return nil, fmt.Errorf("no user was inserted, nothing was returned"), http.StatusInternalServerError
+		errs.SetSystemError("no user was inserted, nothing was returned")
+		return errs
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf("too many rows affected from user insert"), http.StatusInternalServerError
+		errs.SetSystemError("too many rows affected from user insert")
+		return errs
 	}
 
 	user.ID = &id
@@ -196,7 +210,7 @@ func (user *TOUser) Create() (error, error, int) {
 	user.RoleName = &rolename
 	user.LocalPassword = nil
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
@@ -287,7 +301,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='tm_user') as res`
 }
 
-func (user *TOUser) privCheck() (error, error, int) {
+func (user *TOUser) privCheck() api.Errors {
 	var requestedPrivLevel int
 	var err error
 	if user.Role == nil {
@@ -296,26 +310,29 @@ func (user *TOUser) privCheck() (error, error, int) {
 		requestedPrivLevel, _, err = dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, *user.Role)
 	}
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 
 	if user.ReqInfo.User.PrivLevel < requestedPrivLevel {
-		return fmt.Errorf("user cannot update a user with a role more privileged than themselves"), nil, http.StatusForbidden
+		return api.Errors{
+			Code:      http.StatusForbidden,
+			UserError: errors.New("user cannot update a user with a role more privileged than themselves"),
+		}
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func (user *TOUser) Update(h http.Header) (error, error, int) {
+func (user *TOUser) Update(h http.Header) api.Errors {
 
 	// make sure current user cannot update their own role to a new value
 	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
-		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
+		return api.Errors{UserError: errors.New("users cannot update their own role"), Code: http.StatusBadRequest}
 	}
 
 	// make sure the user cannot update someone with a higher priv_level than themselves
-	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
-		return usrErr, sysErr, code
+	if errs := user.privCheck(); errs.Occurred() {
+		return errs
 	}
 
 	var caps []string
@@ -326,29 +343,28 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 		caps, err = dbhelpers.GetCapabilitiesFromRoleName(user.ReqInfo.Tx.Tx, *user.RoleName)
 	}
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	missing := user.ReqInfo.User.MissingPermissions(caps...)
 	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		return api.Errors{UserError: fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), Code: http.StatusForbidden}
 	}
 
 	if user.LocalPassword != nil {
 		var err error
 		*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return api.NewSystemError(err)
 		}
 	}
 	userErr, sysErr, errCode := api.CheckIfUnModified(h, user.ReqInfo.Tx, *user.ID, "tm_user")
 	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -360,7 +376,7 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated, &tenant, &rolename); err != nil {
-			return nil, fmt.Errorf("could not scan lastUpdated from insert: %s\n", err), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("could not scan lastUpdated from insert: %w", err))
 		}
 	}
 
@@ -371,12 +387,12 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return fmt.Errorf("no user found with this id"), nil, http.StatusNotFound
+			return api.Errors{UserError: errors.New("no user found with this id"), Code: http.StatusNotFound}
 		}
-		return nil, fmt.Errorf("this update affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("this update affected too many rows: %d", rowsAffected))
 	}
 
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 func (u *TOUser) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
@@ -670,13 +686,13 @@ func getMaxLastUpdated(where string, queryValues map[string]interface{}, tx *sql
 // Get is the handler for GET requests made to /users.
 func Get(w http.ResponseWriter, r *http.Request) {
 	var query string
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
+	tx := inf.Tx.Tx
 
 	api.DefaultSort(inf, "username")
 	params := map[string]dbhelpers.WhereColumnInfo{
@@ -694,9 +710,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	params["country"] = dbhelpers.WhereColumnInfo{Column: "u.country"}
 	params["postalCode"] = dbhelpers.WhereColumnInfo{Column: "u.postal_code"}
 	params["capability"] = dbhelpers.WhereColumnInfo{Column: "rc.cap_name"}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
-	if len(errs) != 0 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
+	if len(es) != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(es), nil)
 		return
 	}
 
@@ -794,9 +810,9 @@ func validateUserV4(user tc.UserV4) error {
 func Create(w http.ResponseWriter, r *http.Request) {
 	var userV4 tc.UserV4
 	var err error
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
@@ -952,14 +968,14 @@ func (user *TOUser) InsertQuery() string {
 func Update(w http.ResponseWriter, r *http.Request) {
 	var userV4 tc.UserV4
 	var roleID int
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	inf, errs := api.NewInfo(r, nil, nil)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	idParam, ok := inf.Params["id"]
 	if !ok {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID supplied"), nil)
@@ -1010,8 +1026,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// make sure the userV4 cannot create someone with a higher priv_level than themselves
-	if userErr, sysErr, code := toUser.privCheck(); code != http.StatusOK {
-		api.HandleErr(w, r, tx, code, userErr, sysErr)
+	if errs := toUser.privCheck(); errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -1037,7 +1053,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "tm_user")
+	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, id, "tm_user")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
