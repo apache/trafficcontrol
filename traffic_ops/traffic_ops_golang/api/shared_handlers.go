@@ -130,6 +130,16 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 	return false, errors.New("Refusing to delete all resources of type " + name), nil, http.StatusBadRequest
 }
 
+func SetLastModifiedHeader(r *http.Request, useIMS bool) bool {
+	if r == nil {
+		return false
+	}
+	if r.Header.Get(rfc.IfModifiedSince) != "" && useIMS {
+		return true
+	}
+	return false
+}
+
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
@@ -166,7 +176,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-		if maxTime != nil {
+		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
 			// RFC1123
 			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 			w.Header().Add(rfc.LastModified, date)

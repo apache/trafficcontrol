@@ -22,6 +22,7 @@ package api
 import (
 	"context"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -44,7 +45,7 @@ type tester struct {
 	errCode     int   //only for testing
 }
 
-var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}
+var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}, UseIMS: true}
 
 func (i tester) GetKeyFieldsInfo() []KeyFieldInfo {
 	return []KeyFieldInfo{{"id", GetIntKey}}
@@ -83,6 +84,16 @@ func (i *tester) Create() (error, error, int) {
 
 //Reader interface functions
 func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	if h.Get(rfc.IfModifiedSince) != "" {
+		//var imsDate time.Time
+		if imsDate, ok := rfc.ParseHTTPDate(h.Get(rfc.IfModifiedSince)); !ok {
+			return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK, nil
+		} else {
+			if imsDate.UTC().After(time.Now().UTC()) {
+				return []interface{}{}, nil, nil, http.StatusNotModified, &imsDate
+			}
+		}
+	}
 	return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK, nil
 }
 
@@ -186,6 +197,52 @@ func TestReadHandler(t *testing.T) {
 	body := `{"response":[{"ID":1}]}` + "\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
+	}
+	if w.Result().Header.Get(rfc.LastModified) != "" {
+		t.Errorf("Expected no last modified header (since this is a non IMS request), but got %v", w.Result().Header.Get(rfc.LastModified))
+	}
+}
+
+func TestReadHandlerIMS(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey,
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, DBContextKey, db)
+	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	r.Header.Add(rfc.IfModifiedSince, time)
+	// Add our context to the request
+	r = r.WithContext(ctx)
+	readFunc := ReadHandler(&tester{})
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	readFunc(w, r)
+
+	if w.Result().StatusCode != http.StatusNotModified {
+		t.Errorf("Expected status code of 304, got %v instead", w.Result().StatusCode)
+	}
+	if w.Result().Header.Get(rfc.LastModified) == "" {
+		t.Error("Expected a valid last modified header, but got nothing")
 	}
 }
 

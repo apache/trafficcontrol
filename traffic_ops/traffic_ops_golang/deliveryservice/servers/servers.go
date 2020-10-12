@@ -108,6 +108,14 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 
 // ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
+	useIMS := false
+	cfg, err := api.GetConfig(r.Context())
+	if err != nil {
+		log.Warnf("Couldnt get the config %v", err)
+	}
+	if cfg != nil {
+		useIMS = cfg.UseIMS
+	}
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -117,12 +125,12 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, false)
+	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, useIMS)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if maxTime != nil {
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
@@ -184,7 +192,7 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
-	if maxTime != nil {
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
