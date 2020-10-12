@@ -170,7 +170,7 @@ END$$;
 -- Name: api_capability; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE api_capability (
+CREATE TABLE IF NOT EXISTS api_capability (
     id bigserial PRIMARY KEY,
     http_method http_method_t NOT NULL,
     route text NOT NULL,
@@ -185,7 +185,7 @@ ALTER TABLE api_capability OWNER TO traffic_ops;
 -- Name: asn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE asn (
+CREATE TABLE IF NOT EXISTS asn (
     id bigint NOT NULL,
     asn bigint NOT NULL,
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
@@ -199,7 +199,7 @@ ALTER TABLE asn OWNER TO traffic_ops;
 -- Name: asn_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE asn_id_seq
+CREATE SEQUENCE IF NOT EXISTS asn_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -219,7 +219,7 @@ ALTER SEQUENCE asn_id_seq OWNED BY asn.id;
 -- Name: cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE cachegroup (
+CREATE TABLE IF NOT EXISTS cachegroup (
     id bigint,
     name text NOT NULL,
     short_name text NOT NULL,
@@ -238,7 +238,7 @@ ALTER TABLE cachegroup OWNER TO traffic_ops;
 -- Name: cachegroup_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE cachegroup_id_seq
+CREATE SEQUENCE IF NOT EXISTS cachegroup_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -258,7 +258,7 @@ ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 -- Name: cachegroup_fallbacks; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE cachegroup_fallbacks (
+CREATE TABLE IF NOT EXISTS cachegroup_fallbacks (
     primary_cg bigint NOT NULL,
     backup_cg bigint NOT NULL CHECK (primary_cg != backup_cg),
     set_order bigint NOT NULL,
@@ -272,7 +272,7 @@ ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
 -- Name: cachegroup_localization_method; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE cachegroup_localization_method (
+CREATE TABLE IF NOT EXISTS cachegroup_localization_method (
     cachegroup bigint NOT NULL,
     method localization_method NOT NULL,
     UNIQUE (cachegroup, method)
@@ -282,7 +282,7 @@ CREATE TABLE cachegroup_localization_method (
 -- Name: cachegroup_parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE cachegroup_parameter (
+CREATE TABLE IF NOT EXISTS cachegroup_parameter (
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
     parameter bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -295,7 +295,7 @@ ALTER TABLE cachegroup_parameter OWNER TO traffic_ops;
 -- Name: capability; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE capability (
+CREATE TABLE IF NOT EXISTS capability (
     name text NOT NULL,
     description text,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -307,7 +307,7 @@ ALTER TABLE capability OWNER TO traffic_ops;
 -- Name: cdn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE cdn (
+CREATE TABLE IF NOT EXISTS cdn (
     id bigint,
     name text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
@@ -323,7 +323,7 @@ ALTER TABLE cdn OWNER TO traffic_ops;
 -- Name: cdn_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE cdn_id_seq
+CREATE SEQUENCE IF NOT EXISTS cdn_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -343,19 +343,20 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 -- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
 --
 
-CREATE TABLE coordinate (
+CREATE TABLE IF NOT EXISTS coordinate (
     id bigserial,
     name text UNIQUE NOT NULL,
     latitude numeric NOT NULL DEFAULT 0.0,
     longitude numeric NOT NULL DEFAULT 0.0,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT coordinate_pkey PRIMARY KEY (id)
 );
 
 --
 -- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice (
+CREATE TABLE IF NOT EXISTS deliveryservice (
     id bigint,
     xml_id text NOT NULL,
     active boolean DEFAULT false NOT NULL,
@@ -419,7 +420,7 @@ ALTER TABLE deliveryservice OWNER TO traffic_ops;
 -- Name: deliveryservice_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE deliveryservice_id_seq
+CREATE SEQUENCE IF NOT EXISTS deliveryservice_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -440,7 +441,7 @@ ALTER SEQUENCE deliveryservice_id_seq OWNED BY deliveryservice.id;
 -- Name: deliveryservice_regex; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice_regex (
+CREATE TABLE IF NOT EXISTS deliveryservice_regex (
     deliveryservice bigint NOT NULL,
     regex bigint NOT NULL,
     set_number bigint DEFAULT '0'::bigint,
@@ -454,7 +455,7 @@ ALTER TABLE deliveryservice_regex OWNER TO traffic_ops;
 -- Name: deliveryservice_request; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice_request (
+CREATE TABLE IF NOT EXISTS deliveryservice_request (
     assignee_id bigint,
     author_id bigint NOT NULL,
     change_type change_types NOT NULL,
@@ -472,7 +473,7 @@ ALTER TABLE deliveryservice_request OWNER TO traffic_ops;
 -- Name: deliveryservice_request_comment; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice_request_comment (
+CREATE TABLE IF NOT EXISTS deliveryservice_request_comment (
     author_id bigint NOT NULL,
     deliveryservice_request_id bigint NOT NULL,
     id bigserial,
@@ -484,7 +485,7 @@ CREATE TABLE deliveryservice_request_comment (
 -- Name: deliveryservice_server; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice_server (
+CREATE TABLE IF NOT EXISTS deliveryservice_server (
     deliveryservice bigint NOT NULL,
     server bigint NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL
@@ -497,7 +498,7 @@ ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
 -- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE deliveryservice_tmuser (
+CREATE TABLE IF NOT EXISTS deliveryservice_tmuser (
     deliveryservice bigint NOT NULL,
     tm_user_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -510,7 +511,7 @@ ALTER TABLE deliveryservice_tmuser OWNER TO traffic_ops;
 -- Name: division; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE division (
+CREATE TABLE IF NOT EXISTS division (
     id bigint NOT NULL,
     name text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -523,7 +524,7 @@ ALTER TABLE division OWNER TO traffic_ops;
 -- Name: division_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE division_id_seq
+CREATE SEQUENCE IF NOT EXISTS division_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -544,7 +545,7 @@ ALTER SEQUENCE division_id_seq OWNED BY division.id;
 -- Name: federation; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE federation (
+CREATE TABLE IF NOT EXISTS federation (
     id bigint NOT NULL,
     cname text NOT NULL,
     description text,
@@ -559,7 +560,7 @@ ALTER TABLE federation OWNER TO traffic_ops;
 -- Name: federation_deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE federation_deliveryservice (
+CREATE TABLE IF NOT EXISTS federation_deliveryservice (
     federation bigint NOT NULL,
     deliveryservice bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -572,7 +573,7 @@ ALTER TABLE federation_deliveryservice OWNER TO traffic_ops;
 -- Name: federation_federation_resolver; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE federation_federation_resolver (
+CREATE TABLE IF NOT EXISTS federation_federation_resolver (
     federation bigint NOT NULL,
     federation_resolver bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -585,7 +586,7 @@ ALTER TABLE federation_federation_resolver OWNER TO traffic_ops;
 -- Name: federation_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE federation_id_seq
+CREATE SEQUENCE IF NOT EXISTS federation_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -606,7 +607,7 @@ ALTER SEQUENCE federation_id_seq OWNED BY federation.id;
 -- Name: federation_resolver; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE federation_resolver (
+CREATE TABLE IF NOT EXISTS federation_resolver (
     id bigint NOT NULL,
     ip_address text NOT NULL,
     type bigint NOT NULL,
@@ -620,7 +621,7 @@ ALTER TABLE federation_resolver OWNER TO traffic_ops;
 -- Name: federation_resolver_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE federation_resolver_id_seq
+CREATE SEQUENCE IF NOT EXISTS federation_resolver_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -641,7 +642,7 @@ ALTER SEQUENCE federation_resolver_id_seq OWNED BY federation_resolver.id;
 -- Name: federation_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE federation_tmuser (
+CREATE TABLE IF NOT EXISTS federation_tmuser (
     federation bigint NOT NULL,
     tm_user bigint NOT NULL,
     role bigint,
@@ -655,7 +656,7 @@ ALTER TABLE federation_tmuser OWNER TO traffic_ops;
 -- Name: hwinfo; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE hwinfo (
+CREATE TABLE IF NOT EXISTS hwinfo (
     id bigint NOT NULL,
     serverid bigint NOT NULL,
     description text NOT NULL,
@@ -670,7 +671,7 @@ ALTER TABLE hwinfo OWNER TO traffic_ops;
 -- Name: hwinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE hwinfo_id_seq
+CREATE SEQUENCE IF NOT EXISTS hwinfo_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -691,7 +692,7 @@ ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 -- Name: job; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE job (
+CREATE TABLE IF NOT EXISTS job (
     id bigint NOT NULL,
     agent bigint,
     object_type text,
@@ -715,7 +716,7 @@ ALTER TABLE job OWNER TO traffic_ops;
 -- Name: job_agent; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE job_agent (
+CREATE TABLE IF NOT EXISTS job_agent (
     id bigint NOT NULL,
     name text,
     description text,
@@ -731,7 +732,7 @@ ALTER TABLE job_agent OWNER TO traffic_ops;
 -- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE job_agent_id_seq
+CREATE SEQUENCE IF NOT EXISTS job_agent_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -752,7 +753,7 @@ ALTER SEQUENCE job_agent_id_seq OWNED BY job_agent.id;
 -- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE job_id_seq
+CREATE SEQUENCE IF NOT EXISTS job_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -772,7 +773,7 @@ ALTER SEQUENCE job_id_seq OWNED BY job.id;
 -- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE job_status (
+CREATE TABLE IF NOT EXISTS job_status (
     id bigint NOT NULL,
     name text,
     description text,
@@ -787,7 +788,7 @@ ALTER TABLE job_status OWNER TO traffic_ops;
 -- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE job_status_id_seq
+CREATE SEQUENCE IF NOT EXISTS job_status_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -808,7 +809,7 @@ ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 -- Name: log; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE log (
+CREATE TABLE IF NOT EXISTS log (
     id bigint NOT NULL,
     level text,
     message text NOT NULL,
@@ -824,7 +825,7 @@ ALTER TABLE log OWNER TO traffic_ops;
 -- Name: log_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE log_id_seq
+CREATE SEQUENCE IF NOT EXISTS log_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -844,7 +845,7 @@ ALTER SEQUENCE log_id_seq OWNED BY log.id;
 -- Name: origin; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE origin (
+CREATE TABLE IF NOT EXISTS origin (
     id bigserial NOT NULL,
     name text UNIQUE NOT NULL,
     fqdn text NOT NULL,
@@ -867,7 +868,7 @@ ALTER TABLE origin OWNER TO traffic_ops;
 -- Name: parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE parameter (
+CREATE TABLE IF NOT EXISTS parameter (
     id bigint NOT NULL,
     name text NOT NULL,
     config_file text,
@@ -884,7 +885,7 @@ ALTER TABLE parameter OWNER TO traffic_ops;
 -- Name: parameter_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE parameter_id_seq
+CREATE SEQUENCE IF NOT EXISTS parameter_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -905,7 +906,7 @@ ALTER SEQUENCE parameter_id_seq OWNED BY parameter.id;
 -- Name: phys_location; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE phys_location (
+CREATE TABLE IF NOT EXISTS phys_location (
     id bigint NOT NULL,
     name text NOT NULL,
     short_name text NOT NULL,
@@ -928,7 +929,7 @@ ALTER TABLE phys_location OWNER TO traffic_ops;
 -- Name: phys_location_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE phys_location_id_seq
+CREATE SEQUENCE IF NOT EXISTS phys_location_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -948,7 +949,7 @@ ALTER SEQUENCE phys_location_id_seq OWNED BY phys_location.id;
 -- Name: profile; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE profile (
+CREATE TABLE IF NOT EXISTS profile (
     id bigint NOT NULL,
     name text NOT NULL,
     description text,
@@ -965,7 +966,7 @@ ALTER TABLE profile OWNER TO traffic_ops;
 -- Name: profile_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE profile_id_seq
+CREATE SEQUENCE IF NOT EXISTS profile_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -986,7 +987,7 @@ ALTER SEQUENCE profile_id_seq OWNED BY profile.id;
 -- Name: profile_parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE profile_parameter (
+CREATE TABLE IF NOT EXISTS profile_parameter (
     profile bigint NOT NULL,
     parameter bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -999,7 +1000,7 @@ ALTER TABLE profile_parameter OWNER TO traffic_ops;
 -- Name: regex; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE regex (
+CREATE TABLE IF NOT EXISTS regex (
     id bigint NOT NULL,
     pattern text DEFAULT ''::text NOT NULL,
     type bigint NOT NULL,
@@ -1013,7 +1014,7 @@ ALTER TABLE regex OWNER TO traffic_ops;
 -- Name: regex_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE regex_id_seq
+CREATE SEQUENCE IF NOT EXISTS regex_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1034,7 +1035,7 @@ ALTER SEQUENCE regex_id_seq OWNED BY regex.id;
 -- Name: region; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE region (
+CREATE TABLE IF NOT EXISTS region (
     id bigint NOT NULL,
     name text NOT NULL,
     division bigint NOT NULL,
@@ -1048,7 +1049,7 @@ ALTER TABLE region OWNER TO traffic_ops;
 -- Name: region_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE region_id_seq
+CREATE SEQUENCE IF NOT EXISTS region_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1069,7 +1070,7 @@ ALTER SEQUENCE region_id_seq OWNED BY region.id;
 -- Name: role; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE role (
+CREATE TABLE IF NOT EXISTS role (
     id bigint,
     name text NOT NULL,
     description text,
@@ -1085,7 +1086,7 @@ ALTER TABLE role OWNER TO traffic_ops;
 -- Name: role_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE role_id_seq
+CREATE SEQUENCE IF NOT EXISTS role_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1105,7 +1106,7 @@ ALTER SEQUENCE role_id_seq OWNED BY role.id;
 -- Name: role_capability; Type TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE role_capability (
+CREATE TABLE IF NOT EXISTS role_capability (
     role_id bigint NOT NULL,
     cap_name text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
@@ -1118,7 +1119,7 @@ ALTER TABLE role_capability OWNER TO traffic_ops;
 -- Name: server; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE server (
+CREATE TABLE IF NOT EXISTS server (
     id bigint NOT NULL,
     host_name text NOT NULL,
     domain_name text NOT NULL,
@@ -1164,7 +1165,7 @@ ALTER TABLE server OWNER TO traffic_ops;
 -- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE server_id_seq
+CREATE SEQUENCE IF NOT EXISTS server_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1185,7 +1186,7 @@ ALTER SEQUENCE server_id_seq OWNED BY server.id;
 -- Name: servercheck; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE servercheck (
+CREATE TABLE IF NOT EXISTS servercheck (
     id bigint NOT NULL,
     server bigint NOT NULL,
     aa bigint,
@@ -1229,7 +1230,7 @@ ALTER TABLE servercheck OWNER TO traffic_ops;
 -- Name: servercheck_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE servercheck_id_seq
+CREATE SEQUENCE IF NOT EXISTS servercheck_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1249,7 +1250,7 @@ ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 -- Name: snapshot; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE snapshot (
+CREATE TABLE IF NOT EXISTS snapshot (
     cdn text NOT NULL,
     content json NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -1261,7 +1262,7 @@ ALTER TABLE snapshot OWNER TO traffic_ops;
 -- Name: staticdnsentry; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE staticdnsentry (
+CREATE TABLE IF NOT EXISTS staticdnsentry (
     id bigint NOT NULL,
     host text NOT NULL,
     address text NOT NULL,
@@ -1279,7 +1280,7 @@ ALTER TABLE staticdnsentry OWNER TO traffic_ops;
 -- Name: staticdnsentry_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE staticdnsentry_id_seq
+CREATE SEQUENCE IF NOT EXISTS staticdnsentry_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1300,7 +1301,7 @@ ALTER SEQUENCE staticdnsentry_id_seq OWNED BY staticdnsentry.id;
 -- Name: stats_summary; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE stats_summary (
+CREATE TABLE IF NOT EXISTS stats_summary (
     id bigint NOT NULL,
     cdn_name text DEFAULT 'all'::text NOT NULL,
     deliveryservice_name text NOT NULL,
@@ -1317,7 +1318,7 @@ ALTER TABLE stats_summary OWNER TO traffic_ops;
 -- Name: stats_summary_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE stats_summary_id_seq
+CREATE SEQUENCE IF NOT EXISTS stats_summary_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1338,7 +1339,7 @@ ALTER SEQUENCE stats_summary_id_seq OWNED BY stats_summary.id;
 -- Name: status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE status (
+CREATE TABLE IF NOT EXISTS status (
     id bigint NOT NULL,
     name text NOT NULL,
     description text,
@@ -1353,7 +1354,7 @@ ALTER TABLE status OWNER TO traffic_ops;
 -- Name: status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE status_id_seq
+CREATE SEQUENCE IF NOT EXISTS status_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1374,7 +1375,7 @@ ALTER SEQUENCE status_id_seq OWNED BY status.id;
 -- Name: steering_target; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE steering_target (
+CREATE TABLE IF NOT EXISTS steering_target (
     deliveryservice bigint NOT NULL,
     target bigint NOT NULL,
     value bigint NOT NULL,
@@ -1389,7 +1390,7 @@ ALTER TABLE steering_target OWNER TO traffic_ops;
 -- Name: tenant; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE tenant (
+CREATE TABLE IF NOT EXISTS tenant (
     id bigserial,
     name text UNIQUE NOT NULL,
     active boolean NOT NULL DEFAULT FALSE,
@@ -1401,7 +1402,7 @@ CREATE TABLE tenant (
 -- Name: tm_user; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE tm_user (
+CREATE TABLE IF NOT EXISTS tm_user (
     id bigint NOT NULL,
     username text,
     public_ssh_key text,
@@ -1434,7 +1435,7 @@ ALTER TABLE tm_user OWNER TO traffic_ops;
 -- Name: tm_user_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE tm_user_id_seq
+CREATE SEQUENCE IF NOT EXISTS tm_user_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1455,7 +1456,7 @@ ALTER SEQUENCE tm_user_id_seq OWNED BY tm_user.id;
 -- Name: to_extension; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE to_extension (
+CREATE TABLE IF NOT EXISTS to_extension (
     id bigint NOT NULL,
     name text NOT NULL,
     version text NOT NULL,
@@ -1477,7 +1478,7 @@ ALTER TABLE to_extension OWNER TO traffic_ops;
 -- Name: to_extension_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE to_extension_id_seq
+CREATE SEQUENCE IF NOT EXISTS to_extension_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1498,7 +1499,7 @@ ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 -- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE type (
+CREATE TABLE IF NOT EXISTS type (
     id bigint NOT NULL,
     name text NOT NULL,
     description text,
@@ -1514,7 +1515,7 @@ ALTER TABLE type OWNER TO traffic_ops;
 -- Name: type_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
-CREATE SEQUENCE type_id_seq
+CREATE SEQUENCE IF NOT EXISTS type_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1534,7 +1535,7 @@ ALTER SEQUENCE type_id_seq OWNED BY type.id;
 -- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE user_role (
+CREATE TABLE IF NOT EXISTS user_role (
     user_id bigint NOT NULL,
     role_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
