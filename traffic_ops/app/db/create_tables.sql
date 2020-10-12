@@ -57,95 +57,114 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
---
--- Name: change_types; Type: TYPE; Schema: public; Owner: traffic_ops
---
+DO $$
+BEGIN
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'change_types') THEN
+    --
+    -- Name: change_types; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE change_types AS ENUM (
-    'create',
-    'update',
-    'delete'
-);
+    CREATE TYPE change_types AS ENUM (
+        'create',
+        'update',
+        'delete'
+    );
+END IF;
 
---
--- Name: deep_caching_type; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'deep_caching_type') THEN
+    --
+    -- Name: deep_caching_type; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE deep_caching_type AS ENUM (
-    'NEVER',
-    'ALWAYS'
-);
+    CREATE TYPE deep_caching_type AS ENUM (
+        'NEVER',
+        'ALWAYS'
+    );
+END IF;
 
---
--- Name: http_method_t; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'http_method_t') THEN
+    --
+    -- Name: http_method_t; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE http_method_t AS ENUM (
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE'
-);
+    CREATE TYPE http_method_t AS ENUM (
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE'
+    );
+END IF;
 
---
--- Name: localization_method; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'origin_protocol') THEN
+    --
+    -- Name: localization_method; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE localization_method AS ENUM (
-    'CZ',
-    'DEEP_CZ',
-    'GEO'
-);
+    CREATE TYPE localization_method AS ENUM (
+        'CZ',
+        'DEEP_CZ',
+        'GEO'
+    );
+END IF;
 
---
--- Name: origin_protocol; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'origin_protocol') THEN
+    --
+    -- Name: origin_protocol; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE origin_protocol AS ENUM (
-    'http',
-    'https'
-);
+    CREATE TYPE origin_protocol AS ENUM (
+        'http',
+        'https'
+    );
+END IF;
 
---
--- Name: profile_type; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'profile_type') THEN
+    --
+    -- Name: profile_type; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE profile_type AS ENUM (
-    'ATS_PROFILE',
-    'TR_PROFILE',
-    'TM_PROFILE',
-    'TS_PROFILE',
-    'TP_PROFILE',
-    'INFLUXDB_PROFILE',
-    'RIAK_PROFILE',
-    'SPLUNK_PROFILE',
-    'DS_PROFILE',
-    'ORG_PROFILE',
-    'KAFKA_PROFILE',
-    'LOGSTASH_PROFILE',
-    'ES_PROFILE',
-    'UNK_PROFILE',
-    'GROVE_PROFILE'
-);
+    CREATE TYPE profile_type AS ENUM (
+        'ATS_PROFILE',
+        'TR_PROFILE',
+        'TM_PROFILE',
+        'TS_PROFILE',
+        'TP_PROFILE',
+        'INFLUXDB_PROFILE',
+        'RIAK_PROFILE',
+        'SPLUNK_PROFILE',
+        'DS_PROFILE',
+        'ORG_PROFILE',
+        'KAFKA_PROFILE',
+        'LOGSTASH_PROFILE',
+        'ES_PROFILE',
+        'UNK_PROFILE',
+        'GROVE_PROFILE'
+    );
+END IF;
 
---
--- Name: workflow_states; Type: TYPE; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'workflow_states') THEN
+    --
+    -- Name: workflow_states; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
 
-CREATE TYPE workflow_states AS ENUM (
-    'draft',
-    'submitted',
-    'rejected',
-    'pending',
-    'complete'
-);
+    CREATE TYPE workflow_states AS ENUM (
+        'draft',
+        'submitted',
+        'rejected',
+        'pending',
+        'complete'
+    );
+END IF;
 
---
--- Name: deliveryservice_signature_type; Type: DOMAIN; Schema: public; Owner: traffic_ops
---
+IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'deliveryservice_signature_type') THEN
+    --
+    -- Name: deliveryservice_signature_type; Type: DOMAIN; Schema: public; Owner: traffic_ops
+    --
 
-CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig', 'uri_signing'));
+    CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig', 'uri_signing'));
+END IF;
+END$$;
 
 --
 -- Name: api_capability; Type: TABLE; Schema: public; Owner: traffic_ops
