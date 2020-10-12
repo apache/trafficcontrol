@@ -1786,537 +1786,537 @@ ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclas
 -- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89468_cr_id_unique ON asn USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89468_cr_id_unique ON asn USING btree (id);
 
 
 --
 -- Name: idx_89468_fk_cran_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89468_fk_cran_cachegroup1 ON asn USING btree (cachegroup);
+CREATE INDEX IF NOT EXISTS idx_89468_fk_cran_cachegroup1 ON asn USING btree (cachegroup);
 
 
 --
 -- Name: idx_89476_cg_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89476_cg_name_unique ON cachegroup USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89476_cg_name_unique ON cachegroup USING btree (name);
 
 
 --
 -- Name: idx_89476_cg_short_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89476_cg_short_unique ON cachegroup USING btree (short_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89476_cg_short_unique ON cachegroup USING btree (short_name);
 
 
 --
 -- Name: idx_89476_fk_cg_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89476_fk_cg_1 ON cachegroup USING btree (parent_cachegroup_id);
+CREATE INDEX IF NOT EXISTS idx_89476_fk_cg_1 ON cachegroup USING btree (parent_cachegroup_id);
 
 
 --
 -- Name: idx_89476_fk_cg_secondary; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89476_fk_cg_secondary ON cachegroup USING btree (secondary_parent_cachegroup_id);
+CREATE INDEX IF NOT EXISTS idx_89476_fk_cg_secondary ON cachegroup USING btree (secondary_parent_cachegroup_id);
 
 
 --
 -- Name: idx_89476_fk_cg_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89476_fk_cg_type1 ON cachegroup USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89476_fk_cg_type1 ON cachegroup USING btree (type);
 
 
 --
 -- Name: idx_89476_lo_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89476_lo_id_unique ON cachegroup USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89476_lo_id_unique ON cachegroup USING btree (id);
 
 
 --
 -- Name: idx_89484_fk_parameter; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89484_fk_parameter ON cachegroup_parameter USING btree (parameter);
+CREATE INDEX IF NOT EXISTS idx_89484_fk_parameter ON cachegroup_parameter USING btree (parameter);
 
 
 --
 -- Name: idx_89491_cdn_cdn_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89491_cdn_cdn_unique ON cdn USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89491_cdn_cdn_unique ON cdn USING btree (name);
 
 --
 -- Name: idx_89502_ds_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89502_ds_id_unique ON deliveryservice USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89502_ds_id_unique ON deliveryservice USING btree (id);
 
 --
 -- Name: idx_k_deliveryservice_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_k_deliveryservice_tenant_idx ON deliveryservice USING btree (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_k_deliveryservice_tenant_idx ON deliveryservice USING btree (tenant_id);
 
 --
 -- Name: idx_89502_ds_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89502_ds_name_unique ON deliveryservice USING btree (xml_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89502_ds_name_unique ON deliveryservice USING btree (xml_id);
 
 
 --
 -- Name: idx_89502_fk_cdn1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89502_fk_cdn1 ON deliveryservice USING btree (cdn_id);
+CREATE INDEX IF NOT EXISTS idx_89502_fk_cdn1 ON deliveryservice USING btree (cdn_id);
 
 
 --
 -- Name: idx_89502_fk_deliveryservice_profile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89502_fk_deliveryservice_profile1 ON deliveryservice USING btree (profile);
+CREATE INDEX IF NOT EXISTS idx_89502_fk_deliveryservice_profile1 ON deliveryservice USING btree (profile);
 
 
 --
 -- Name: idx_89502_fk_deliveryservice_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89502_fk_deliveryservice_type1 ON deliveryservice USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89502_fk_deliveryservice_type1 ON deliveryservice USING btree (type);
 
 
 --
 -- Name: idx_89517_fk_ds_to_regex_regex1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89517_fk_ds_to_regex_regex1 ON deliveryservice_regex USING btree (regex);
+CREATE INDEX IF NOT EXISTS idx_89517_fk_ds_to_regex_regex1 ON deliveryservice_regex USING btree (regex);
 
 
 --
 -- Name: idx_89521_fk_ds_to_cs_contentserver1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89521_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
+CREATE INDEX IF NOT EXISTS idx_89521_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
 
 
 --
 -- Name: idx_89525_fk_tm_userid; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89525_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
+CREATE INDEX IF NOT EXISTS idx_89525_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
 
 
 --
 -- Name: idx_89531_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89531_name_unique ON division USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89531_name_unique ON division USING btree (name);
 
 
 --
 -- Name: idx_89549_fk_fed_to_ds1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89549_fk_fed_to_ds1 ON federation_deliveryservice USING btree (deliveryservice);
+CREATE INDEX IF NOT EXISTS idx_89549_fk_fed_to_ds1 ON federation_deliveryservice USING btree (deliveryservice);
 
 
 --
 -- Name: idx_89553_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89553_fk_federation_federation_resolver ON federation_federation_resolver USING btree (federation);
+CREATE INDEX IF NOT EXISTS idx_89553_fk_federation_federation_resolver ON federation_federation_resolver USING btree (federation);
 
 
 --
 -- Name: idx_89553_fk_federation_resolver_to_fed1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89553_fk_federation_resolver_to_fed1 ON federation_federation_resolver USING btree (federation_resolver);
+CREATE INDEX IF NOT EXISTS idx_89553_fk_federation_resolver_to_fed1 ON federation_federation_resolver USING btree (federation_resolver);
 
 
 --
 -- Name: idx_89559_federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89559_federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89559_federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
 
 
 --
 -- Name: idx_89559_fk_federation_mapping_type; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89559_fk_federation_mapping_type ON federation_resolver USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89559_fk_federation_mapping_type ON federation_resolver USING btree (type);
 
 
 --
 -- Name: idx_89567_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89567_fk_federation_federation_resolver ON federation_tmuser USING btree (federation);
+CREATE INDEX IF NOT EXISTS idx_89567_fk_federation_federation_resolver ON federation_tmuser USING btree (federation);
 
 
 --
 -- Name: idx_89567_fk_federation_tmuser_role; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89567_fk_federation_tmuser_role ON federation_tmuser USING btree (role);
+CREATE INDEX IF NOT EXISTS idx_89567_fk_federation_tmuser_role ON federation_tmuser USING btree (role);
 
 
 --
 -- Name: idx_89567_fk_federation_tmuser_tmuser; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89567_fk_federation_tmuser_tmuser ON federation_tmuser USING btree (tm_user);
+CREATE INDEX IF NOT EXISTS idx_89567_fk_federation_tmuser_tmuser ON federation_tmuser USING btree (tm_user);
 
 
 --
 -- Name: idx_89583_fk_hwinfo1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89583_fk_hwinfo1 ON hwinfo USING btree (serverid);
+CREATE INDEX IF NOT EXISTS idx_89583_fk_hwinfo1 ON hwinfo USING btree (serverid);
 
 
 --
 -- Name: idx_89583_serverid; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89583_serverid ON hwinfo USING btree (serverid, description);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89583_serverid ON hwinfo USING btree (serverid, description);
 
 
 --
 -- Name: idx_89593_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89593_fk_job_agent_id1 ON job USING btree (agent);
+CREATE INDEX IF NOT EXISTS idx_89593_fk_job_agent_id1 ON job USING btree (agent);
 
 
 --
 -- Name: idx_89593_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89593_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
+CREATE INDEX IF NOT EXISTS idx_89593_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
 
 
 --
 -- Name: idx_89593_fk_job_status_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89593_fk_job_status_id1 ON job USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_89593_fk_job_status_id1 ON job USING btree (status);
 
 
 --
 -- Name: idx_89593_fk_job_user_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89593_fk_job_user_id1 ON job USING btree (job_user);
+CREATE INDEX IF NOT EXISTS idx_89593_fk_job_user_id1 ON job USING btree (job_user);
 
 
 --
 -- Name: idx_89634_fk_log_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89634_fk_log_1 ON log USING btree (tm_user);
+CREATE INDEX IF NOT EXISTS idx_89634_fk_log_1 ON log USING btree (tm_user);
 
 
 --
 -- Name: idx_89634_idx_last_updated; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89634_idx_last_updated ON log USING btree (last_updated);
+CREATE INDEX IF NOT EXISTS idx_89634_idx_last_updated ON log USING btree (last_updated);
 
 
 --
 -- Name: idx_89644_parameter_name_value_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89644_parameter_name_value_idx ON parameter USING btree (name, value);
+CREATE INDEX IF NOT EXISTS idx_89644_parameter_name_value_idx ON parameter USING btree (name, value);
 
 
 --
 -- Name: idx_89655_fk_phys_location_region_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89655_fk_phys_location_region_idx ON phys_location USING btree (region);
+CREATE INDEX IF NOT EXISTS idx_89655_fk_phys_location_region_idx ON phys_location USING btree (region);
 
 
 --
 -- Name: idx_89655_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89655_name_unique ON phys_location USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89655_name_unique ON phys_location USING btree (name);
 
 
 --
 -- Name: idx_89655_short_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89655_short_name_unique ON phys_location USING btree (short_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89655_short_name_unique ON phys_location USING btree (short_name);
 
 
 --
 -- Name: idx_89665_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89665_name_unique ON profile USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89665_name_unique ON profile USING btree (name);
 
 --
 -- Name: idx_181818_fk_cdn1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_181818_fk_cdn1 ON profile USING btree (cdn);
+CREATE INDEX IF NOT EXISTS idx_181818_fk_cdn1 ON profile USING btree (cdn);
 
 
 --
 -- Name: idx_89673_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89673_fk_atsprofile_atsparameters_atsparameters1 ON profile_parameter USING btree (parameter);
+CREATE INDEX IF NOT EXISTS idx_89673_fk_atsprofile_atsparameters_atsparameters1 ON profile_parameter USING btree (parameter);
 
 
 --
 -- Name: idx_89673_fk_atsprofile_atsparameters_atsprofile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89673_fk_atsprofile_atsparameters_atsprofile1 ON profile_parameter USING btree (profile);
+CREATE INDEX IF NOT EXISTS idx_89673_fk_atsprofile_atsparameters_atsprofile1 ON profile_parameter USING btree (profile);
 
 
 --
 -- Name: idx_89679_fk_regex_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89679_fk_regex_type1 ON regex USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89679_fk_regex_type1 ON regex USING btree (type);
 
 
 --
 -- Name: idx_89679_re_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89679_re_id_unique ON regex USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89679_re_id_unique ON regex USING btree (id);
 
 
 --
 -- Name: idx_89690_fk_region_division1_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89690_fk_region_division1_idx ON region USING btree (division);
+CREATE INDEX IF NOT EXISTS idx_89690_fk_region_division1_idx ON region USING btree (division);
 
 
 --
 -- Name: idx_89690_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89690_name_unique ON region USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89690_name_unique ON region USING btree (name);
 
 
 --
 -- Name: idx_89709_fk_cdn2; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_cdn2 ON server USING btree (cdn_id);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_cdn2 ON server USING btree (cdn_id);
 
 
 --
 -- Name: idx_89709_fk_contentserver_atsprofile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_contentserver_atsprofile1 ON server USING btree (profile);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_contentserver_atsprofile1 ON server USING btree (profile);
 
 
 --
 -- Name: idx_89709_fk_contentserver_contentserverstatus1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_contentserver_contentserverstatus1 ON server USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_contentserver_contentserverstatus1 ON server USING btree (status);
 
 
 --
 -- Name: idx_89709_fk_contentserver_contentservertype1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_contentserver_contentservertype1 ON server USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_contentserver_contentservertype1 ON server USING btree (type);
 
 
 --
 -- Name: idx_89709_fk_contentserver_phys_location1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_contentserver_phys_location1 ON server USING btree (phys_location);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_contentserver_phys_location1 ON server USING btree (phys_location);
 
 
 --
 -- Name: idx_89709_fk_server_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89709_fk_server_cachegroup1 ON server USING btree (cachegroup);
+CREATE INDEX IF NOT EXISTS idx_89709_fk_server_cachegroup1 ON server USING btree (cachegroup);
 
 
 --
 -- Name: idx_89709_ip6_profile; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89709_ip6_profile ON server USING btree (ip6_address, profile);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89709_ip6_profile ON server USING btree (ip6_address, profile);
 
 
 --
 -- Name: idx_89709_ip_profile; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89709_ip_profile ON server USING btree (ip_address, profile);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89709_ip_profile ON server USING btree (ip_address, profile);
 
 
 --
 -- Name: idx_89709_se_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89709_se_id_unique ON server USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89709_se_id_unique ON server USING btree (id);
 
 
 --
 -- Name: idx_89722_fk_serverstatus_server1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89722_fk_serverstatus_server1 ON servercheck USING btree (server);
+CREATE INDEX IF NOT EXISTS idx_89722_fk_serverstatus_server1 ON servercheck USING btree (server);
 
 
 --
 -- Name: idx_89722_server; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89722_server ON servercheck USING btree (server);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89722_server ON servercheck USING btree (server);
 
 
 --
 -- Name: idx_89722_ses_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89722_ses_id_unique ON servercheck USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89722_ses_id_unique ON servercheck USING btree (id);
 
 
 --
 -- Name: idx_89729_combi_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89729_combi_unique ON staticdnsentry USING btree (host, address, deliveryservice, cachegroup);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89729_combi_unique ON staticdnsentry USING btree (host, address, deliveryservice, cachegroup);
 
 
 --
 -- Name: idx_89729_fk_staticdnsentry_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89729_fk_staticdnsentry_cachegroup1 ON staticdnsentry USING btree (cachegroup);
+CREATE INDEX IF NOT EXISTS idx_89729_fk_staticdnsentry_cachegroup1 ON staticdnsentry USING btree (cachegroup);
 
 
 --
 -- Name: idx_89729_fk_staticdnsentry_ds; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89729_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliveryservice);
+CREATE INDEX IF NOT EXISTS idx_89729_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliveryservice);
 
 
 --
 -- Name: idx_89729_fk_staticdnsentry_type; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
 
 --
 -- Name: idx_k_tenant_parent_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_k_tenant_parent_tenant_idx ON tenant USING btree (parent_id);
+CREATE INDEX IF NOT EXISTS idx_k_tenant_parent_tenant_idx ON tenant USING btree (parent_id);
 
 --
 -- Name: idx_89765_fk_user_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89765_fk_user_1 ON tm_user USING btree (role);
+CREATE INDEX IF NOT EXISTS idx_89765_fk_user_1 ON tm_user USING btree (role);
 
 --
 -- Name: idx_k_tm_user_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_k_tm_user_tenant_idx ON tm_user USING btree (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_k_tm_user_tenant_idx ON tm_user USING btree (tenant_id);
 
 --
 -- Name: idx_89765_tmuser_email_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89765_tmuser_email_unique ON tm_user USING btree (email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89765_tmuser_email_unique ON tm_user USING btree (email);
 
 
 --
 -- Name: idx_89765_username_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89765_username_unique ON tm_user USING btree (username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89765_username_unique ON tm_user USING btree (username);
 
 
 --
 -- Name: idx_89776_fk_ext_type_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_89776_fk_ext_type_idx ON to_extension USING btree (type);
+CREATE INDEX IF NOT EXISTS idx_89776_fk_ext_type_idx ON to_extension USING btree (type);
 
 
 --
 -- Name: idx_89776_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX idx_89776_id_unique ON to_extension USING btree (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_89776_id_unique ON to_extension USING btree (id);
 
 --
 -- Name: cachegroup_coordinate_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX cachegroup_coordinate_fkey ON cachegroup USING btree (coordinate);
+CREATE INDEX IF NOT EXISTS cachegroup_coordinate_fkey ON cachegroup USING btree (coordinate);
 
 --
 -- Name: cachegroup_localization_method_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX cachegroup_localization_method_cachegroup_fkey ON cachegroup_localization_method USING btree(cachegroup);
+CREATE INDEX IF NOT EXISTS cachegroup_localization_method_cachegroup_fkey ON cachegroup_localization_method USING btree(cachegroup);
 
 --
 -- Name: origin_is_primary_deliveryservice_constraint; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE UNIQUE INDEX origin_is_primary_deliveryservice_constraint ON origin (is_primary, deliveryservice) WHERE is_primary;
+CREATE UNIQUE INDEX IF NOT EXISTS origin_is_primary_deliveryservice_constraint ON origin (is_primary, deliveryservice) WHERE is_primary;
 
 --
 -- Name: origin_deliveryservice_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX origin_deliveryservice_fkey ON origin USING btree (deliveryservice);
+CREATE INDEX IF NOT EXISTS origin_deliveryservice_fkey ON origin USING btree (deliveryservice);
 
 --
 -- Name: origin_coordinate_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX origin_coordinate_fkey ON origin USING btree (coordinate);
+CREATE INDEX IF NOT EXISTS origin_coordinate_fkey ON origin USING btree (coordinate);
 
 --
 -- Name: origin_profile_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX origin_profile_fkey ON origin USING btree (profile);
+CREATE INDEX IF NOT EXISTS origin_profile_fkey ON origin USING btree (profile);
 
 --
 -- Name: origin_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX origin_cachegroup_fkey ON origin USING btree (cachegroup);
+CREATE INDEX IF NOT EXISTS origin_cachegroup_fkey ON origin USING btree (cachegroup);
 
 --
 -- Name: origin_tenant_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX origin_tenant_fkey ON origin USING btree (tenant);
+CREATE INDEX IF NOT EXISTS origin_tenant_fkey ON origin USING btree (tenant);
 
 
 --
