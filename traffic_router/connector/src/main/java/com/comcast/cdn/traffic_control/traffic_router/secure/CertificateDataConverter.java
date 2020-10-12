@@ -127,7 +127,7 @@ public class CertificateDataConverter {
 		}
 
 		subjectName = subjectName.replaceFirst("\\*\\.", ".");
-		if (subjectName.length() > 0 && (hostAlias.contains(subjectName) || subject.contains(subjectName))) {
+		if (subjectName.length() > 0 && (hostAlias.contains(subjectName) || subjectName.contains(hostAlias))) {
 			return true;
 		}
 
