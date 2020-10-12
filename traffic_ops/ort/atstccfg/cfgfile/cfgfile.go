@@ -79,7 +79,11 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
 		// TODO TOAPI add /servers?cdn=1 query param
-		servers, err := cfg.TOClient.GetServers()
+		servers, unsupported, err := cfg.TOClientNew.GetServers()
+		if err == nil && unsupported {
+			log.Warnln("Traffic Ops newer than ORT, falling back to previous API Servers!")
+			servers, err = cfg.TOClient.GetServers()
+		}
 		if err != nil {
 			return errors.New("getting servers: " + err.Error())
 		}
@@ -217,7 +221,11 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 	cgF := func() error {
 		defer func(start time.Time) { log.Infof("cfF took %v\n", time.Since(start)) }(time.Now())
-		cacheGroups, err := cfg.TOClient.GetCacheGroups()
+		cacheGroups, unsupported, err := cfg.TOClientNew.GetCacheGroups()
+		if err == nil && unsupported {
+			log.Warnln("Traffic Ops newer than ORT, falling back to previous API CacheGroups!")
+			cacheGroups, err = cfg.TOClient.GetCacheGroups()
+		}
 		if err != nil {
 			return errors.New("getting cachegroups: " + err.Error())
 		}
@@ -253,7 +261,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	capsF := func() error {
 		defer func(start time.Time) { log.Infof("capsF took %v\n", time.Since(start)) }(time.Now())
-		caps, err := cfg.TOClient.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
+		caps, err := cfg.TOClientNew.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
 		if err != nil {
 			log.Errorln("Server Capabilities error, skipping!")
 			// return errors.New("getting server caps from Traffic Ops: " + err.Error())
@@ -264,7 +272,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	dsCapsF := func() error {
 		defer func(start time.Time) { log.Infof("dscapsF took %v\n", time.Since(start)) }(time.Now())
-		caps, err := cfg.TOClient.GetDeliveryServiceRequiredCapabilitiesByID(nil)
+		caps, err := cfg.TOClientNew.GetDeliveryServiceRequiredCapabilitiesByID(nil)
 		if err != nil {
 			log.Errorln("DS Required Capabilities error, skipping!")
 			// return errors.New("getting DS required capabilities: " + err.Error())

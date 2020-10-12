@@ -17,11 +17,9 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -32,16 +30,7 @@ const (
 
 // Create a PhysLocation
 func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
-	if pl.RegionID == 0 && pl.RegionName != "" {
-		regions, _, err := to.GetRegionByName(pl.RegionName)
-		if err != nil {
-			return tc.Alerts{}, ReqInf{}, err
-		}
-		if len(regions) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no region with name " + pl.RegionName)
-		}
-		pl.RegionID = regions[0].ID
-	}
+
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -112,7 +101,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 
 // GET a PhysLocation by the PhysLocation name
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

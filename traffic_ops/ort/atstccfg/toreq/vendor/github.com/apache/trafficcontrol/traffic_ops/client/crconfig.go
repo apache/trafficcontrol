@@ -15,10 +15,7 @@
 
 package client
 
-import (
-	"encoding/json"
-	"net/http"
-)
+import "fmt"
 
 // CRConfigRaw Deprecated: use GetCRConfig instead
 func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
@@ -26,28 +23,8 @@ func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
 	return bytes, err
 }
 
-type OuterResponse struct {
-	Response json.RawMessage `json:"response"`
-}
-
 // GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
-	uri := apiBase + `/cdns/` + cdn + `/snapshot`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	resp := OuterResponse{}
-	if err := json.Unmarshal(bts, &resp); err != nil {
-		return nil, reqInf, err
-	}
-	return []byte(resp.Response), reqInf, nil
-}
-
-func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
-	uri := apiBase + `/snapshot/` + cdn
-	_, remoteAddr, err := to.request(http.MethodPut, uri, nil)
-	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
-	return reqInf, err
+	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
+	return to.getBytesWithTTL(url, tmPollingInterval)
 }
