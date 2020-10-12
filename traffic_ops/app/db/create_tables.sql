@@ -189,7 +189,8 @@ CREATE TABLE IF NOT EXISTS asn (
     id bigint NOT NULL,
     asn bigint NOT NULL,
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89468_primary PRIMARY KEY (id, cachegroup)
 );
 
 
@@ -228,7 +229,8 @@ CREATE TABLE IF NOT EXISTS cachegroup (
     type bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     fallback_to_closest boolean DEFAULT TRUE,
-    coordinate bigint
+    coordinate bigint,
+    CONSTRAINT idx_89476_primary PRIMARY KEY (id, type)
 );
 
 
@@ -285,7 +287,8 @@ CREATE TABLE IF NOT EXISTS cachegroup_localization_method (
 CREATE TABLE IF NOT EXISTS cachegroup_parameter (
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
     parameter bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89484_primary PRIMARY KEY (cachegroup, parameter)
 );
 
 
@@ -298,7 +301,8 @@ ALTER TABLE cachegroup_parameter OWNER TO traffic_ops;
 CREATE TABLE IF NOT EXISTS capability (
     name text NOT NULL,
     description text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT capability_pkey PRIMARY KEY (name)
 );
 
 ALTER TABLE capability OWNER TO traffic_ops;
@@ -313,7 +317,8 @@ CREATE TABLE IF NOT EXISTS cdn (
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
     dnssec_enabled boolean DEFAULT false NOT NULL,
     domain_name text NOT NULL,
-    CONSTRAINT cdn_domain_name_unique UNIQUE (domain_name)
+    CONSTRAINT cdn_domain_name_unique UNIQUE (domain_name),
+    CONSTRAINT idx_89491_primary PRIMARY KEY (id)
 );
 
 
@@ -410,7 +415,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
-    CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0))
+    CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
+    CONSTRAINT idx_89502_primary PRIMARY KEY (id, type)
 );
 
 
@@ -445,7 +451,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice_regex (
     deliveryservice bigint NOT NULL,
     regex bigint NOT NULL,
     set_number bigint DEFAULT '0'::bigint,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89517_primary PRIMARY KEY (deliveryservice, regex)
 );
 
 
@@ -464,7 +471,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice_request (
     last_edited_by_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     deliveryservice jsonb NOT NULL,
-    status workflow_states NOT NULL
+    status workflow_states NOT NULL,
+    CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id)
 );
 
 ALTER TABLE deliveryservice_request OWNER TO traffic_ops;
@@ -478,7 +486,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice_request_comment (
     deliveryservice_request_id bigint NOT NULL,
     id bigserial,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    value text NOT NULL
+    value text NOT NULL,
+    CONSTRAINT deliveryservice_request_comment_pkey PRIMARY KEY (id)
 );
 
 --
@@ -488,7 +497,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice_request_comment (
 CREATE TABLE IF NOT EXISTS deliveryservice_server (
     deliveryservice bigint NOT NULL,
     server bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT idx_89521_primary PRIMARY KEY (deliveryservice, server)
 );
 
 
@@ -501,7 +511,8 @@ ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
 CREATE TABLE IF NOT EXISTS deliveryservice_tmuser (
     deliveryservice bigint NOT NULL,
     tm_user_id bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89525_primary PRIMARY KEY (deliveryservice, tm_user_id)
 );
 
 
@@ -514,7 +525,8 @@ ALTER TABLE deliveryservice_tmuser OWNER TO traffic_ops;
 CREATE TABLE IF NOT EXISTS division (
     id bigint NOT NULL,
     name text NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89531_primary PRIMARY KEY (id)
 );
 
 
@@ -550,7 +562,8 @@ CREATE TABLE IF NOT EXISTS federation (
     cname text NOT NULL,
     description text,
     ttl integer NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89541_primary PRIMARY KEY (id)
 );
 
 
@@ -563,7 +576,8 @@ ALTER TABLE federation OWNER TO traffic_ops;
 CREATE TABLE IF NOT EXISTS federation_deliveryservice (
     federation bigint NOT NULL,
     deliveryservice bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89549_primary PRIMARY KEY (federation, deliveryservice)
 );
 
 
@@ -576,7 +590,8 @@ ALTER TABLE federation_deliveryservice OWNER TO traffic_ops;
 CREATE TABLE IF NOT EXISTS federation_federation_resolver (
     federation bigint NOT NULL,
     federation_resolver bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89553_primary PRIMARY KEY (federation, federation_resolver)
 );
 
 
@@ -611,7 +626,8 @@ CREATE TABLE IF NOT EXISTS federation_resolver (
     id bigint NOT NULL,
     ip_address text NOT NULL,
     type bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89559_primary PRIMARY KEY (id)
 );
 
 
@@ -646,7 +662,8 @@ CREATE TABLE IF NOT EXISTS federation_tmuser (
     federation bigint NOT NULL,
     tm_user bigint NOT NULL,
     role bigint,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89567_primary PRIMARY KEY (federation, tm_user)
 );
 
 
@@ -661,7 +678,8 @@ CREATE TABLE IF NOT EXISTS hwinfo (
     serverid bigint NOT NULL,
     description text NOT NULL,
     val text NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89583_primary PRIMARY KEY (id)
 );
 
 
@@ -706,7 +724,8 @@ CREATE TABLE IF NOT EXISTS job (
     entered_time timestamp with time zone NOT NULL,
     job_user bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    job_deliveryservice bigint
+    job_deliveryservice bigint,
+    CONSTRAINT idx_89593_primary PRIMARY KEY (id)
 );
 
 
@@ -722,7 +741,8 @@ CREATE TABLE IF NOT EXISTS job_agent (
     description text,
     active integer DEFAULT 0 NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_agent_name_unique UNIQUE (name)
+    CONSTRAINT job_agent_name_unique UNIQUE (name),
+    CONSTRAINT idx_89603_primary PRIMARY KEY (id)
 );
 
 
@@ -778,7 +798,8 @@ CREATE TABLE IF NOT EXISTS job_status (
     name text,
     description text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_status_name_unique UNIQUE (name)
+    CONSTRAINT job_status_name_unique UNIQUE (name),
+    CONSTRAINT idx_89624_primary PRIMARY KEY (id)
 );
 
 
@@ -815,7 +836,8 @@ CREATE TABLE IF NOT EXISTS log (
     message text NOT NULL,
     tm_user bigint NOT NULL,
     ticketnum text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89634_primary PRIMARY KEY (id, tm_user)
 );
 
 
@@ -859,7 +881,8 @@ CREATE TABLE IF NOT EXISTS origin (
     profile bigint,
     cachegroup bigint,
     tenant bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT origin_pkey PRIMARY KEY (id)
 );
 
 ALTER TABLE origin OWNER TO traffic_ops;
@@ -875,7 +898,8 @@ CREATE TABLE IF NOT EXISTS parameter (
     value text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     secure boolean DEFAULT false NOT NULL,
-    CONSTRAINT unique_param UNIQUE (name, config_file, value)
+    CONSTRAINT unique_param UNIQUE (name, config_file, value),
+    CONSTRAINT idx_89644_primary PRIMARY KEY (id)
 );
 
 
@@ -919,7 +943,8 @@ CREATE TABLE IF NOT EXISTS phys_location (
     email text,
     comments text,
     region bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89655_primary PRIMARY KEY (id)
 );
 
 
@@ -956,7 +981,8 @@ CREATE TABLE IF NOT EXISTS profile (
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     type profile_type NOT NULL,
     cdn bigint NOT NULL,
-    routing_disabled boolean NOT NULL DEFAULT FALSE
+    routing_disabled boolean NOT NULL DEFAULT FALSE,
+    CONSTRAINT idx_89665_primary PRIMARY KEY (id)
 );
 
 
@@ -990,7 +1016,8 @@ ALTER SEQUENCE profile_id_seq OWNED BY profile.id;
 CREATE TABLE IF NOT EXISTS profile_parameter (
     profile bigint NOT NULL,
     parameter bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89673_primary PRIMARY KEY (profile, parameter)
 );
 
 
@@ -1004,7 +1031,8 @@ CREATE TABLE IF NOT EXISTS regex (
     id bigint NOT NULL,
     pattern text DEFAULT ''::text NOT NULL,
     type bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89679_primary PRIMARY KEY (id, type)
 );
 
 
@@ -1039,7 +1067,8 @@ CREATE TABLE IF NOT EXISTS region (
     id bigint NOT NULL,
     name text NOT NULL,
     division bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89690_primary PRIMARY KEY (id)
 );
 
 
@@ -1076,7 +1105,8 @@ CREATE TABLE IF NOT EXISTS role (
     description text,
     priv_level bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT role_name_unique UNIQUE (name)
+    CONSTRAINT role_name_unique UNIQUE (name),
+    CONSTRAINT idx_89700_primary PRIMARY KEY (id)
 );
 
 
@@ -1155,7 +1185,8 @@ CREATE TABLE IF NOT EXISTS server (
     guid text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
-    reval_pending boolean NOT NULL DEFAULT FALSE
+    reval_pending boolean NOT NULL DEFAULT FALSE,
+    CONSTRAINT idx_89709_primary PRIMARY KEY (id, cachegroup, type, status, profile)
 );
 
 
@@ -1220,7 +1251,8 @@ CREATE TABLE IF NOT EXISTS servercheck (
     bc bigint,
     bd bigint,
     be bigint,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89722_primary PRIMARY KEY (id, server)
 );
 
 
@@ -1253,7 +1285,8 @@ ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 CREATE TABLE IF NOT EXISTS snapshot (
     cdn text NOT NULL,
     content json NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT snapshot_pkey PRIMARY KEY (cdn)
 );
 
 ALTER TABLE snapshot OWNER TO traffic_ops;
@@ -1270,7 +1303,8 @@ CREATE TABLE IF NOT EXISTS staticdnsentry (
     ttl bigint DEFAULT '3600'::bigint NOT NULL,
     deliveryservice bigint NOT NULL,
     cachegroup bigint,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT idx_89729_primary PRIMARY KEY (id)
 );
 
 
@@ -1308,7 +1342,8 @@ CREATE TABLE IF NOT EXISTS stats_summary (
     stat_name text NOT NULL,
     stat_value double precision NOT NULL,
     summary_time timestamp with time zone DEFAULT now() NOT NULL,
-    stat_date date
+    stat_date date,
+    CONSTRAINT idx_89740_primary PRIMARY KEY (id)
 );
 
 
@@ -1344,7 +1379,8 @@ CREATE TABLE IF NOT EXISTS status (
     name text NOT NULL,
     description text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT status_name_unique UNIQUE (name)
+    CONSTRAINT status_name_unique UNIQUE (name),
+    CONSTRAINT idx_89751_primary PRIMARY KEY (id)
 );
 
 
@@ -1380,7 +1416,8 @@ CREATE TABLE IF NOT EXISTS steering_target (
     target bigint NOT NULL,
     value bigint NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-    type bigint NOT NULL
+    type bigint NOT NULL,
+    CONSTRAINT idx_89759_primary PRIMARY KEY (deliveryservice, target)
 );
 
 
@@ -1395,7 +1432,8 @@ CREATE TABLE IF NOT EXISTS tenant (
     name text UNIQUE NOT NULL,
     active boolean NOT NULL DEFAULT FALSE,
     parent_id bigint DEFAULT 1 CHECK (id != parent_id),
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT tenant_pkey PRIMARY KEY (id)
 );
 
 --
@@ -1425,7 +1463,8 @@ CREATE TABLE IF NOT EXISTS tm_user (
     country text,
     token text,
     registration_sent timestamp with time zone,
-    tenant_id bigint NOT NULL
+    tenant_id bigint NOT NULL,
+    CONSTRAINT idx_89765_primary PRIMARY KEY (id)
 );
 
 
@@ -1468,7 +1507,8 @@ CREATE TABLE IF NOT EXISTS to_extension (
     servercheck_short_name text,
     servercheck_column_name text,
     type bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT idx_89776_primary PRIMARY KEY (id)
 );
 
 
@@ -1505,7 +1545,8 @@ CREATE TABLE IF NOT EXISTS type (
     description text,
     use_in_table text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT type_name_unique UNIQUE(name)
+    CONSTRAINT type_name_unique UNIQUE(name),
+    CONSTRAINT idx_89786_primary PRIMARY KEY (id)
 );
 
 
@@ -1740,324 +1781,6 @@ ALTER TABLE ONLY to_extension ALTER COLUMN id SET DEFAULT nextval('to_extension_
 
 ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclass);
 
---
--- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY asn
-    ADD CONSTRAINT idx_89468_primary PRIMARY KEY (id, cachegroup);
-
-
---
--- Name: idx_89476_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT idx_89476_primary PRIMARY KEY (id, type);
-
---
--- Name: idx_89484_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_parameter
-    ADD CONSTRAINT idx_89484_primary PRIMARY KEY (cachegroup, parameter);
-
---
--- Name: capability_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY capability
-    ADD CONSTRAINT capability_pkey PRIMARY KEY (name);
-
---
--- Name: idx_89491_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdn
-    ADD CONSTRAINT idx_89491_primary PRIMARY KEY (id);
-
---
--- Name: coordinate_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY coordinate
-    ADD CONSTRAINT coordinate_pkey PRIMARY KEY (id);
-
---
--- Name: idx_89502_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT idx_89502_primary PRIMARY KEY (id, type);
-
-
---
--- Name: idx_89517_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_regex
-    ADD CONSTRAINT idx_89517_primary PRIMARY KEY (deliveryservice, regex);
-
---
--- Name: deliveryservice_request_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id);
-
---
--- Name: deliveryservice_request_comment_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request_comment
-    ADD CONSTRAINT deliveryservice_request_comment_pkey PRIMARY KEY (id);
-
---
--- Name: idx_89521_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_server
-    ADD CONSTRAINT idx_89521_primary PRIMARY KEY (deliveryservice, server);
-
-
---
--- Name: idx_89525_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_tmuser
-    ADD CONSTRAINT idx_89525_primary PRIMARY KEY (deliveryservice, tm_user_id);
-
-
---
--- Name: idx_89531_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY division
-    ADD CONSTRAINT idx_89531_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89541_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation
-    ADD CONSTRAINT idx_89541_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89549_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_deliveryservice
-    ADD CONSTRAINT idx_89549_primary PRIMARY KEY (federation, deliveryservice);
-
-
---
--- Name: idx_89553_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_federation_resolver
-    ADD CONSTRAINT idx_89553_primary PRIMARY KEY (federation, federation_resolver);
-
-
---
--- Name: idx_89559_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_resolver
-    ADD CONSTRAINT idx_89559_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89567_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT idx_89567_primary PRIMARY KEY (federation, tm_user);
-
-
---
--- Name: idx_89583_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY hwinfo
-    ADD CONSTRAINT idx_89583_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89593_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT idx_89593_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89603_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_agent
-    ADD CONSTRAINT idx_89603_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89624_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_status
-    ADD CONSTRAINT idx_89624_primary PRIMARY KEY (id);
-
---
--- Name: idx_89634_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY log
-    ADD CONSTRAINT idx_89634_primary PRIMARY KEY (id, tm_user);
-
---
--- Name: origin_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_pkey PRIMARY KEY (id);
-
---
--- Name: idx_89644_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY parameter
-    ADD CONSTRAINT idx_89644_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89655_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY phys_location
-    ADD CONSTRAINT idx_89655_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89665_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY profile
-    ADD CONSTRAINT idx_89665_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89673_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY profile_parameter
-    ADD CONSTRAINT idx_89673_primary PRIMARY KEY (profile, parameter);
-
-
---
--- Name: idx_89679_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY regex
-    ADD CONSTRAINT idx_89679_primary PRIMARY KEY (id, type);
-
-
---
--- Name: idx_89690_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY region
-    ADD CONSTRAINT idx_89690_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89700_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY role
-    ADD CONSTRAINT idx_89700_primary PRIMARY KEY (id);
-
---
--- Name: idx_89709_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT idx_89709_primary PRIMARY KEY (id, cachegroup, type, status, profile);
-
-
---
--- Name: idx_89722_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY servercheck
-    ADD CONSTRAINT idx_89722_primary PRIMARY KEY (id, server);
-
---
--- Name: snapshot_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY snapshot
-    ADD CONSTRAINT snapshot_pkey PRIMARY KEY (cdn);
-
---
--- Name: idx_89729_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT idx_89729_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89740_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY stats_summary
-    ADD CONSTRAINT idx_89740_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89751_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY status
-    ADD CONSTRAINT idx_89751_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89759_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT idx_89759_primary PRIMARY KEY (deliveryservice, target);
-
---
--- Name: tenant_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY tenant
-    ADD CONSTRAINT tenant_pkey PRIMARY KEY (id);
-
---
--- Name: idx_89765_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY tm_user
-    ADD CONSTRAINT idx_89765_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89776_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY to_extension
-    ADD CONSTRAINT idx_89776_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89786_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY type
-    ADD CONSTRAINT idx_89786_primary PRIMARY KEY (id);
 
 --
 -- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
