@@ -1543,16 +1543,21 @@ CREATE TABLE IF NOT EXISTS user_role (
 
 ALTER TABLE user_role OWNER TO traffic_ops;
 
---
--- Name: profile_type_values; Type: VIEW; Schema: public; Owner: traffic_ops
---
+DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.tables
+    WHERE table_name = 'profile_type_values'
+    AND table_type = 'VIEW') THEN
+    --
+    -- Name: profile_type_values; Type: VIEW; Schema: public; Owner: traffic_ops
+    --
 
-CREATE VIEW profile_type_values AS
-    SELECT unnest(enum_range(NULL::profile_type)) AS VALUE
-        ORDER BY (unnest(enum_range(NULL::profile_type)));
+    CREATE VIEW profile_type_values AS
+        SELECT unnest(enum_range(NULL::profile_type)) AS VALUE
+            ORDER BY (unnest(enum_range(NULL::profile_type)));
 
-
-ALTER TABLE profile_type_values OWNER TO traffic_ops;
+    ALTER TABLE profile_type_values OWNER TO traffic_ops;
+END IF;
+END$$;
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
