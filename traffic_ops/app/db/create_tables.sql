@@ -2318,286 +2318,85 @@ CREATE INDEX IF NOT EXISTS origin_cachegroup_fkey ON origin USING btree (cachegr
 
 CREATE INDEX IF NOT EXISTS origin_tenant_fkey ON origin USING btree (tenant);
 
-
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON api_capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: idx_89786_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON asn FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup_parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON coordinate FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_regex FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_request FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_request_comment FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_server FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_tmuser FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON division FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_deliveryservice FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_federation_resolver FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_resolver FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_tmuser FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON hwinfo FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_agent FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON log FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON origin FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON phys_location FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON profile FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON profile_parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON regex FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON region FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON role FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON role_capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON server FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON servercheck FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON snapshot FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON staticdnsentry FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON steering_target FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tenant FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tm_user FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON type FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON user_role FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+-- Add on_update_current_timestamp TRIGGER to all tables
+--
+DO $$
+DECLARE
+    table_names VARCHAR[] := CAST(ARRAY[
+        'api_capability',
+        'asn',
+        'cachegroup',
+        'cachegroup_parameter',
+        'capability',
+        'cdn',
+        'coordinate',
+        'deliveryservice',
+        'deliveryservice_regex',
+        'deliveryservice_request',
+        'deliveryservice_request_comment',
+        'deliveryservice_server',
+        'deliveryservice_tmuser',
+        'division',
+        'federation',
+        'federation_deliveryservice',
+        'federation_federation_resolver',
+        'federation_resolver',
+        'federation_tmuser',
+        'hwinfo',
+        'job',
+        'job_agent',
+        'job_status',
+        'log',
+        'origin',
+        'parameter',
+        'phys_location',
+        'profile',
+        'profile_parameter',
+        'regex',
+        'region',
+        'role',
+        'role_capability',
+        'server',
+        'servercheck',
+        'snapshot',
+        'staticdnsentry',
+        'status',
+        'steering_target',
+        'tenant',
+        'tm_user',
+        'type',
+        'user_role'
+    ] AS VARCHAR[]);
+    table_name TEXT;
+    trigger_name TEXT := 'on_update_current_timestamp';
+    trigger_exists BOOLEAN;
+BEGIN
+    FOREACH table_name IN ARRAY table_names
+    LOOP
+        EXECUTE FORMAT('SELECT EXISTS (
+            SELECT
+            FROM pg_catalog.pg_trigger
+            WHERE tgname = ''%s''
+            AND tgrelid = CAST(''%s'' AS REGCLASS))
+            ',
+            QUOTE_IDENT(trigger_name),
+            QUOTE_IDENT(table_name)) INTO trigger_exists;
+        IF NOT trigger_exists
+        THEN
+            EXECUTE FORMAT('
+                    CREATE TRIGGER %s
+                    BEFORE UPDATE ON %s
+                    FOR EACH ROW
+                        EXECUTE PROCEDURE %s_last_updated();
+                ',
+                QUOTE_IDENT(trigger_name),
+                QUOTE_IDENT(table_name),
+                QUOTE_IDENT(trigger_name)
+            );
+        END IF;
+    END LOOP;
+END$$;
 
 --
 -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
