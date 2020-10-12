@@ -1,0 +1,98 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+---
+version: '2'
+
+services:
+  source:
+    image: trafficcontrol_tarball
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-source
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_monitor_build:
+    image: traffic_monitor_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor-${COS_VERSION}
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_ops_build:
+    image: traffic_ops_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops-${COS_VERSION}
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_portal_build:
+    image: traffic_portal_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal-${COS_VERSION}
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_router_build:
+    image: traffic_router_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_router-${COS_VERSION}
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+      - ../../../.m2:/root/.m2:z
+
+  traffic_stats_build:
+    image: traffic_stats_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats-${COS_VERSION}
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  grove_build:
+    image: grove_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grove
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  grovetccfg_build:
+    image: grovetccfg_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  weasel:
+    image: licenseweasel/weasel:0.2
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
+  docs:
+    image: docs_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-docs
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
