@@ -375,10 +375,6 @@ For the go-jwx component:
 ./traffic_ops/vendor/github.com/lestrrat/go-jwx/LICENSE
 
 For the protobuf component:
-@traffic_ops/vendor/github.com/golang/protobuf/*
-./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
-
-For other parts of the protobuf component:
 @vendor/github.com/golang/protobuf/*
 ./vendor/github.com/golang/protobuf/LICENSE
 
