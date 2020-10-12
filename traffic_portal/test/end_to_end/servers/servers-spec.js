@@ -78,7 +78,8 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click();
+		let row = element(by.cssContainingText('.ag-cell', mockVals.hostName));
+		browser.actions().doubleClick(row).perform();
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');

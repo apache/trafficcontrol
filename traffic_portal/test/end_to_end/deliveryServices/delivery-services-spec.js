@@ -372,6 +372,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	it('should click new delivery service and select Steering category from the dropdown', function() {
 		console.log('Clicked Create New and selecting Steering');
 		browser.setLocation("delivery-services");
+		browser.sleep(250);
 		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('STEERING');
