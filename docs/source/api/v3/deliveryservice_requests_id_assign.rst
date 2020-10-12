@@ -88,7 +88,7 @@ Request Structure
 :assignee:   The username of the user to whom the :term:`Delivery Service Request` is assigned.
 :assigneeId: The integral, unique identifier assigned to the :term:`DSR`.
 
-It is not required to send both of these; either property is sufficient to determine an :ref:`dsr-assignee`. In most cases, it's easier to use just `assignee`. If both *are* given, then `assigneeId` will take precedence in the event that the two properties do not refer to the same user.
+It is not required to send both of these; either property is sufficient to determine an :ref:`dsr-assignee`. In most cases, it's easier to use just `assignee`. If both *are* given, then `assigneeId` will take precedence in the event that the two properties do not refer to the same user. Sending a request that sets the assignee to ``null`` un-assigns the :term:`DSR` from any assignees it previously had\ [#implicit-null]_.
 
 .. code-block:: http
 	:caption: Request Example
@@ -297,3 +297,5 @@ The response contains a full representation of the newly assigned :term:`Deliver
 		},
 		"status": "draft"
 	}}
+
+.. [#implicit-null] Because of how the Traffic Ops API parses requests, there is no distinction between ``null`` and ``undefined``/missing properties. This means that sending the request payload ``{}`` in this case will result in the :term:`DSR` being unassigned.
