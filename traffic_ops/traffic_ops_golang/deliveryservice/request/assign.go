@@ -111,7 +111,7 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 		r.Assignee = new(string)
 		if err := tx.QueryRow(`SELECT username FROM tm_user WHERE id = $1`, *r.AssigneeID).Scan(r.Assignee); err == sql.ErrNoRows {
 			userErr := fmt.Errorf("no such user #%d", *r.AssigneeID)
-			return "", http.StatusConflict, userErr, nil
+			return "", http.StatusBadRequest, userErr, nil
 		} else if err != nil {
 			sysErr := fmt.Errorf("getting username for assignee ID (#%d): %v", *r.AssigneeID, err)
 			return "", http.StatusInternalServerError, nil, sysErr
@@ -121,7 +121,7 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 		r.AssigneeID = new(int)
 		if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *r.Assignee).Scan(r.AssigneeID); err == sql.ErrNoRows {
 			userErr := fmt.Errorf("no such user '%s'", *r.Assignee)
-			return "", http.StatusConflict, userErr, nil
+			return "", http.StatusBadRequest, userErr, nil
 		} else if err != nil {
 			sysErr := fmt.Errorf("getting user ID for assignee (%s): %v", *r.Assignee, err)
 			return "", http.StatusInternalServerError, nil, sysErr
@@ -215,7 +215,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(originals) < 1 {
 			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 			return
 		}
 		if len(originals) > 1 {

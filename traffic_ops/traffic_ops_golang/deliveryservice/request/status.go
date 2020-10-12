@@ -242,7 +242,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(originals) < 1 {
 			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 			return
 		}
 		if len(originals) > 1 {

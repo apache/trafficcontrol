@@ -360,7 +360,7 @@ func insert(dsr *tc.DeliveryServiceRequestV30, inf *api.APIInfo) (int, error, er
 		}
 		if len(originals) < 1 {
 			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			return http.StatusConflict, userErr, nil
+			return http.StatusBadRequest, userErr, nil
 		}
 		if len(originals) > 1 {
 			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
@@ -441,7 +441,7 @@ func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		return
 	} else if ok {
 		userErr := fmt.Errorf("an open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
-		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
@@ -715,7 +715,7 @@ func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		}
 		if len(originals) < 1 {
 			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 			return
 		}
 		if len(originals) > 1 {
@@ -837,7 +837,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 
 	if !current.IsOpen() {
 		userErr = fmt.Errorf("cannot change DeliveryServiceRequest in '%s' status", current.Status)
-		api.HandleErr(w, r, tx, http.StatusConflict, userErr, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
