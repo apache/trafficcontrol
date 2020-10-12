@@ -2398,564 +2398,665 @@ BEGIN
     END LOOP;
 END$$;
 
---
--- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY profile_parameter
-    ADD CONSTRAINT fk_atsprofile_atsparameters_atsparameters1 FOREIGN KEY (parameter) REFERENCES parameter(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_atsprofile_atsparameters_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY profile_parameter
-    ADD CONSTRAINT fk_atsprofile_atsparameters_atsprofile1 FOREIGN KEY (profile) REFERENCES profile(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn_id) REFERENCES cdn(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-
---
--- Name: fk_cdn2; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_cdn2 FOREIGN KEY (cdn_id) REFERENCES cdn(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-
---
--- Name: fk_cg_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT fk_cg_1 FOREIGN KEY (parent_cachegroup_id) REFERENCES cachegroup(id);
-
-
---
--- Name: fk_cg_param_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_parameter
-    ADD CONSTRAINT fk_cg_param_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_cg_secondary; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT fk_cg_secondary FOREIGN KEY (secondary_parent_cachegroup_id) REFERENCES cachegroup(id);
-
-
---
--- Name: fk_cg_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT fk_cg_type1 FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_contentserver_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_contentserver_atsprofile1 FOREIGN KEY (profile) REFERENCES profile(id);
-
-
---
--- Name: fk_contentserver_contentserverstatus1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_contentserver_contentserverstatus1 FOREIGN KEY (status) REFERENCES status(id);
-
-
---
--- Name: fk_contentserver_contentservertype1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_contentserver_contentservertype1 FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_contentserver_phys_location1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_contentserver_phys_location1 FOREIGN KEY (phys_location) REFERENCES phys_location(id);
-
-
---
--- Name: fk_cran_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY asn
-    ADD CONSTRAINT fk_cran_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
-
-
---
--- Name: fk_deliveryservice_profile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT fk_deliveryservice_profile1 FOREIGN KEY (profile) REFERENCES profile(id);
-
-
---
--- Name: fk_deliveryservice_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT fk_deliveryservice_type1 FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_ds_to_cs_contentserver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_server
-    ADD CONSTRAINT fk_ds_to_cs_contentserver1 FOREIGN KEY (server) REFERENCES server(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_ds_to_cs_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_server
-    ADD CONSTRAINT fk_ds_to_cs_deliveryservice1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_ds_to_regex_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_regex
-    ADD CONSTRAINT fk_ds_to_regex_deliveryservice1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_ds_to_regex_regex1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_regex
-    ADD CONSTRAINT fk_ds_to_regex_regex1 FOREIGN KEY (regex) REFERENCES regex(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_ext_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY to_extension
-    ADD CONSTRAINT fk_ext_type FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_federation_federation_resolver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_federation_resolver
-    ADD CONSTRAINT fk_federation_federation_resolver1 FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_mapping_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_resolver
-    ADD CONSTRAINT fk_federation_mapping_type FOREIGN KEY (type) REFERENCES type(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_resolver_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_federation_resolver
-    ADD CONSTRAINT fk_federation_resolver_to_fed1 FOREIGN KEY (federation_resolver) REFERENCES federation_resolver(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_tmuser_federation; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT fk_federation_tmuser_federation FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_tmuser_role; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT fk_federation_tmuser_role FOREIGN KEY (role) REFERENCES role(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_tmuser_tmuser; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT fk_federation_tmuser_tmuser FOREIGN KEY (tm_user) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_to_ds1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_deliveryservice
-    ADD CONSTRAINT fk_federation_to_ds1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_federation_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY federation_deliveryservice
-    ADD CONSTRAINT fk_federation_to_fed1 FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_hwinfo1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY hwinfo
-    ADD CONSTRAINT fk_hwinfo1 FOREIGN KEY (serverid) REFERENCES server(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT fk_job_agent_id1 FOREIGN KEY (agent) REFERENCES job_agent(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-
---
--- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT fk_job_status_id1 FOREIGN KEY (status) REFERENCES job_status(id);
-
-
---
--- Name: fk_job_user_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job
-    ADD CONSTRAINT fk_job_user_id1 FOREIGN KEY (job_user) REFERENCES tm_user(id);
-
-
---
--- Name: fk_log_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY log
-    ADD CONSTRAINT fk_log_1 FOREIGN KEY (tm_user) REFERENCES tm_user(id);
-
-
---
--- Name: fk_parameter; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_parameter
-    ADD CONSTRAINT fk_parameter FOREIGN KEY (parameter) REFERENCES parameter(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_phys_location_region; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY phys_location
-    ADD CONSTRAINT fk_phys_location_region FOREIGN KEY (region) REFERENCES region(id);
-
-
---
--- Name: fk_regex_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY regex
-    ADD CONSTRAINT fk_regex_type1 FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_region_division1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY region
-    ADD CONSTRAINT fk_region_division1 FOREIGN KEY (division) REFERENCES division(id);
-
-
---
--- Name: fk_server_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-
---
--- Name: fk_serverstatus_server1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY servercheck
-    ADD CONSTRAINT fk_serverstatus_server1 FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_staticdnsentry_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT fk_staticdnsentry_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
-
-
---
--- Name: fk_staticdnsentry_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT fk_staticdnsentry_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-
---
--- Name: fk_staticdnsentry_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT fk_staticdnsentry_type FOREIGN KEY (type) REFERENCES type(id);
-
-
---
--- Name: fk_steering_target_delivery_service; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT fk_steering_target_delivery_service FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_steering_target_target; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT fk_steering_target_target FOREIGN KEY (target) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_tm_user_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_tmuser
-    ADD CONSTRAINT fk_tm_user_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_tm_user_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_tmuser
-    ADD CONSTRAINT fk_tm_user_id FOREIGN KEY (tm_user_id) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY tm_user
-    ADD CONSTRAINT fk_user_1 FOREIGN KEY (role) REFERENCES role(id) ON DELETE SET NULL;
-
-
---
--- Name: fk_capability; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY api_capability
-    ADD CONSTRAINT fk_capability FOREIGN KEY (capability) REFERENCES capability (name) ON DELETE RESTRICT;
-
---
--- Name: steering_target_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT steering_target_type_fkey FOREIGN KEY (type) REFERENCES type (id);
-
---
--- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
-
---
--- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user(id) ON DELETE CASCADE;
-
---
--- Name: fk_assignee; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT fk_assignee FOREIGN KEY (assignee_id) REFERENCES tm_user(id) ON DELETE SET NULL;
-
---
--- Name: fk_last_edited_by; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-
---
--- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request_comment
-    ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-
---
--- Name: origin_profile_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_profile_fkey FOREIGN KEY (profile) REFERENCES profile (id) ON DELETE RESTRICT;
-
---
--- Name: origin_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice (id) ON DELETE CASCADE;
-
---
--- Name: origin_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE RESTRICT;
-
---
--- Name: origin_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE RESTRICT;
-
---
--- Name: origin_tenant_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
-
---
--- Name: cachegroup_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
-
---
--- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_fallbacks
-    ADD CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
-
---
--- Name: fk_backup_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_fallbacks
-    ADD CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
-
---
--- Name: cachegroup_localization_method_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_localization_method
-    ADD CONSTRAINT cachegroup_localization_method_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE CASCADE;
-
---
--- Name: fk_deliveryservice_request; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY deliveryservice_request_comment
-    ADD CONSTRAINT fk_deliveryservice_request FOREIGN KEY (deliveryservice_request_id) REFERENCES deliveryservice_request (id) ON DELETE CASCADE;
-
---
--- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY profile
-    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
---
--- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY role_capability
-    ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE;
-
---
--- Name: fk_cap_name; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY role_capability
-    ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
-
---
--- Name: snapshot_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY snapshot
-    ADD CONSTRAINT snapshot_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
--- Name: fk_parentid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY tenant
-    ADD CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant (id);
-
---
--- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY tm_user
-    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
-
---
--- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY user_role
-    ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-
---
--- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY user_role
-    ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
+-- New code block to deallocate table_name variable to avoid identifier collision
+DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsparameters1' AND table_name = 'profile_parameter') THEN
+    --
+    -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY profile_parameter
+        ADD CONSTRAINT fk_atsprofile_atsparameters_atsparameters1 FOREIGN KEY (parameter) REFERENCES parameter(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsprofile1' AND table_name = 'profile_parameter') THEN
+    --
+    -- Name: fk_atsprofile_atsparameters_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY profile_parameter
+        ADD CONSTRAINT fk_atsprofile_atsparameters_atsprofile1 FOREIGN KEY (profile) REFERENCES profile(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cdn1' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn_id) REFERENCES cdn(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cdn2' AND table_name = 'server') THEN
+    --
+    -- Name: fk_cdn2; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_cdn2 FOREIGN KEY (cdn_id) REFERENCES cdn(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cg_1' AND table_name = 'cachegroup') THEN
+    --
+    -- Name: fk_cg_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup
+        ADD CONSTRAINT fk_cg_1 FOREIGN KEY (parent_cachegroup_id) REFERENCES cachegroup(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cg_param_cachegroup1' AND table_name = 'cachegroup_parameter') THEN
+    --
+    -- Name: fk_cg_param_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup_parameter
+        ADD CONSTRAINT fk_cg_param_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cg_secondary' AND table_name = 'cachegroup') THEN
+    --
+    -- Name: fk_cg_secondary; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup
+        ADD CONSTRAINT fk_cg_secondary FOREIGN KEY (secondary_parent_cachegroup_id) REFERENCES cachegroup(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cg_type1' AND table_name = 'cachegroup') THEN
+    --
+    -- Name: fk_cg_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup
+        ADD CONSTRAINT fk_cg_type1 FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_contentserver_atsprofile1' AND table_name = 'server') THEN
+    --
+    -- Name: fk_contentserver_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_contentserver_atsprofile1 FOREIGN KEY (profile) REFERENCES profile(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_contentserver_contentserverstatus1' AND table_name = 'server') THEN
+    --
+    -- Name: fk_contentserver_contentserverstatus1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_contentserver_contentserverstatus1 FOREIGN KEY (status) REFERENCES status(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_contentserver_contentservertype1' AND table_name = 'server') THEN
+    --
+    -- Name: fk_contentserver_contentservertype1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_contentserver_contentservertype1 FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_contentserver_phys_location1' AND table_name = 'server') THEN
+    --
+    -- Name: fk_contentserver_phys_location1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_contentserver_phys_location1 FOREIGN KEY (phys_location) REFERENCES phys_location(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cran_cachegroup1' AND table_name = 'asn') THEN
+    --
+    -- Name: fk_cran_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY asn
+        ADD CONSTRAINT fk_cran_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice_profile1' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: fk_deliveryservice_profile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT fk_deliveryservice_profile1 FOREIGN KEY (profile) REFERENCES profile(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice_type1' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: fk_deliveryservice_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT fk_deliveryservice_type1 FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_ds_to_cs_contentserver1' AND table_name = 'deliveryservice_server') THEN
+    --
+    -- Name: fk_ds_to_cs_contentserver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_server
+        ADD CONSTRAINT fk_ds_to_cs_contentserver1 FOREIGN KEY (server) REFERENCES server(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_ds_to_cs_deliveryservice1' AND table_name = 'deliveryservice_server') THEN
+    --
+    -- Name: fk_ds_to_cs_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_server
+        ADD CONSTRAINT fk_ds_to_cs_deliveryservice1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_ds_to_regex_deliveryservice1' AND table_name = 'deliveryservice_regex') THEN
+    --
+    -- Name: fk_ds_to_regex_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_regex
+        ADD CONSTRAINT fk_ds_to_regex_deliveryservice1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_ds_to_regex_regex1' AND table_name = 'deliveryservice_regex') THEN
+    --
+    -- Name: fk_ds_to_regex_regex1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_regex
+        ADD CONSTRAINT fk_ds_to_regex_regex1 FOREIGN KEY (regex) REFERENCES regex(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_ext_type' AND table_name = 'to_extension') THEN
+    --
+    -- Name: fk_ext_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY to_extension
+        ADD CONSTRAINT fk_ext_type FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_federation_resolver1' AND table_name = 'federation_federation_resolver') THEN
+    --
+    -- Name: fk_federation_federation_resolver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_federation_resolver
+        ADD CONSTRAINT fk_federation_federation_resolver1 FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_mapping_type' AND table_name = 'federation_resolver') THEN
+    --
+    -- Name: fk_federation_mapping_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_resolver
+        ADD CONSTRAINT fk_federation_mapping_type FOREIGN KEY (type) REFERENCES type(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_resolver_to_fed1' AND table_name = 'federation_federation_resolver') THEN
+    --
+    -- Name: fk_federation_resolver_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_federation_resolver
+        ADD CONSTRAINT fk_federation_resolver_to_fed1 FOREIGN KEY (federation_resolver) REFERENCES federation_resolver(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_tmuser_federation' AND table_name = 'federation_tmuser') THEN
+    --
+    -- Name: fk_federation_tmuser_federation; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_tmuser
+        ADD CONSTRAINT fk_federation_tmuser_federation FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_tmuser_role' AND table_name = 'federation_tmuser') THEN
+    --
+    -- Name: fk_federation_tmuser_role; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_tmuser
+        ADD CONSTRAINT fk_federation_tmuser_role FOREIGN KEY (role) REFERENCES role(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_tmuser_tmuser' AND table_name = 'federation_tmuser') THEN
+    --
+    -- Name: fk_federation_tmuser_tmuser; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_tmuser
+        ADD CONSTRAINT fk_federation_tmuser_tmuser FOREIGN KEY (tm_user) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_to_ds1' AND table_name = 'federation_deliveryservice') THEN
+    --
+    -- Name: fk_federation_to_ds1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_deliveryservice
+        ADD CONSTRAINT fk_federation_to_ds1 FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_federation_to_fed1' AND table_name = 'federation_deliveryservice') THEN
+    --
+    -- Name: fk_federation_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY federation_deliveryservice
+        ADD CONSTRAINT fk_federation_to_fed1 FOREIGN KEY (federation) REFERENCES federation(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_hwinfo1' AND table_name = 'hwinfo') THEN
+    --
+    -- Name: fk_hwinfo1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY hwinfo
+        ADD CONSTRAINT fk_hwinfo1 FOREIGN KEY (serverid) REFERENCES server(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_agent_id1' AND table_name = 'job') THEN
+    --
+    -- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY job
+        ADD CONSTRAINT fk_job_agent_id1 FOREIGN KEY (agent) REFERENCES job_agent(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_deliveryservice1' AND table_name = 'job') THEN
+    --
+    -- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY job
+        ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_status_id1' AND table_name = 'job') THEN
+    --
+    -- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY job
+        ADD CONSTRAINT fk_job_status_id1 FOREIGN KEY (status) REFERENCES job_status(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_user_id1' AND table_name = 'job') THEN
+    --
+    -- Name: fk_job_user_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY job
+        ADD CONSTRAINT fk_job_user_id1 FOREIGN KEY (job_user) REFERENCES tm_user(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_log_1' AND table_name = 'log') THEN
+    --
+    -- Name: fk_log_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY log
+        ADD CONSTRAINT fk_log_1 FOREIGN KEY (tm_user) REFERENCES tm_user(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_parameter' AND table_name = 'cachegroup_parameter') THEN
+    --
+    -- Name: fk_parameter; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup_parameter
+        ADD CONSTRAINT fk_parameter FOREIGN KEY (parameter) REFERENCES parameter(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_phys_location_region' AND table_name = 'phys_location') THEN
+    --
+    -- Name: fk_phys_location_region; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY phys_location
+        ADD CONSTRAINT fk_phys_location_region FOREIGN KEY (region) REFERENCES region(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_regex_type1' AND table_name = 'regex') THEN
+    --
+    -- Name: fk_regex_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY regex
+        ADD CONSTRAINT fk_regex_type1 FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_region_division1' AND table_name = 'region') THEN
+    --
+    -- Name: fk_region_division1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY region
+        ADD CONSTRAINT fk_region_division1 FOREIGN KEY (division) REFERENCES division(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_server_cachegroup1' AND table_name = 'server') THEN
+    --
+    -- Name: fk_server_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server
+        ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_serverstatus_server1' AND table_name = 'servercheck') THEN
+    --
+    -- Name: fk_serverstatus_server1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY servercheck
+        ADD CONSTRAINT fk_serverstatus_server1 FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_staticdnsentry_cachegroup1' AND table_name = 'staticdnsentry') THEN
+    --
+    -- Name: fk_staticdnsentry_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY staticdnsentry
+        ADD CONSTRAINT fk_staticdnsentry_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_staticdnsentry_ds' AND table_name = 'staticdnsentry') THEN
+    --
+    -- Name: fk_staticdnsentry_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY staticdnsentry
+        ADD CONSTRAINT fk_staticdnsentry_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_staticdnsentry_type' AND table_name = 'staticdnsentry') THEN
+    --
+    -- Name: fk_staticdnsentry_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY staticdnsentry
+        ADD CONSTRAINT fk_staticdnsentry_type FOREIGN KEY (type) REFERENCES type(id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_steering_target_delivery_service' AND table_name = 'steering_target') THEN
+    --
+    -- Name: fk_steering_target_delivery_service; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY steering_target
+        ADD CONSTRAINT fk_steering_target_delivery_service FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_steering_target_target' AND table_name = 'steering_target') THEN
+    --
+    -- Name: fk_steering_target_target; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY steering_target
+        ADD CONSTRAINT fk_steering_target_target FOREIGN KEY (target) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tm_user_ds' AND table_name = 'deliveryservice_tmuser') THEN
+    --
+    -- Name: fk_tm_user_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_tmuser
+        ADD CONSTRAINT fk_tm_user_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tm_user_id' AND table_name = 'deliveryservice_tmuser') THEN
+    --
+    -- Name: fk_tm_user_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_tmuser
+        ADD CONSTRAINT fk_tm_user_id FOREIGN KEY (tm_user_id) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_user_1' AND table_name = 'tm_user') THEN
+    --
+    -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY tm_user
+        ADD CONSTRAINT fk_user_1 FOREIGN KEY (role) REFERENCES role(id) ON DELETE SET NULL;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_capability' AND table_name = 'api_capability') THEN
+    --
+    -- Name: fk_capability; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY api_capability
+        ADD CONSTRAINT fk_capability FOREIGN KEY (capability) REFERENCES capability (name) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'steering_target_type_fkey' AND table_name = 'steering_target') THEN
+    --
+    -- Name: steering_target_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY steering_target
+        ADD CONSTRAINT steering_target_type_fkey FOREIGN KEY (type) REFERENCES type (id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tenantid' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_author' AND table_name = 'deliveryservice_request') THEN
+    --
+    -- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_request
+        ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_assignee' AND table_name = 'deliveryservice_request') THEN
+    --
+    -- Name: fk_assignee; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_request
+        ADD CONSTRAINT fk_assignee FOREIGN KEY (assignee_id) REFERENCES tm_user(id) ON DELETE SET NULL;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_last_edited_by' AND table_name = 'deliveryservice_request') THEN
+    --
+    -- Name: fk_last_edited_by; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_request
+        ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_author' AND table_name = 'deliveryservice_request_comment') THEN
+    --
+    -- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_request_comment
+        ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'origin_profile_fkey' AND table_name = 'origin') THEN
+    --
+    -- Name: origin_profile_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY origin
+        ADD CONSTRAINT origin_profile_fkey FOREIGN KEY (profile) REFERENCES profile (id) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'origin_deliveryservice_fkey' AND table_name = 'origin') THEN
+    --
+    -- Name: origin_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY origin
+        ADD CONSTRAINT origin_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'origin_coordinate_fkey' AND table_name = 'origin') THEN
+    --
+    -- Name: origin_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY origin
+        ADD CONSTRAINT origin_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'origin_cachegroup_fkey' AND table_name = 'origin') THEN
+    --
+    -- Name: origin_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY origin
+        ADD CONSTRAINT origin_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'origin_tenant_fkey' AND table_name = 'origin') THEN
+    --
+    -- Name: origin_tenant_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY origin
+        ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'cachegroup_coordinate_fkey' AND table_name = 'cachegroup') THEN
+    --
+    -- Name: cachegroup_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup
+        ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_primary_cg' AND table_name = 'cachegroup_fallbacks') THEN
+    --
+    -- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup_fallbacks
+        ADD CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_backup_cg' AND table_name = 'cachegroup_fallbacks') THEN
+    --
+    -- Name: fk_backup_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup_fallbacks
+        ADD CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'cachegroup_localization_method_cachegroup_fkey' AND table_name = 'cachegroup_localization_method') THEN
+    --
+    -- Name: cachegroup_localization_method_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cachegroup_localization_method
+        ADD CONSTRAINT cachegroup_localization_method_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice_request' AND table_name = 'deliveryservice_request_comment') THEN
+    --
+    -- Name: fk_deliveryservice_request; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_request_comment
+        ADD CONSTRAINT fk_deliveryservice_request FOREIGN KEY (deliveryservice_request_id) REFERENCES deliveryservice_request (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cdn1' AND table_name = 'profile') THEN
+    --
+    -- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY profile
+        ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_role_id' AND table_name = 'role_capability') THEN
+    --
+    -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY role_capability
+        ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cap_name' AND table_name = 'role_capability') THEN
+    --
+    -- Name: fk_cap_name; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY role_capability
+        ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'snapshot_cdn_fkey' AND table_name = 'snapshot') THEN
+    --
+    -- Name: snapshot_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY snapshot
+        ADD CONSTRAINT snapshot_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_parentid' AND table_name = 'tenant') THEN
+    --
+    -- Name: fk_parentid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY tenant
+        ADD CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant (id);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tenantid' AND table_name = 'tm_user') THEN
+    --
+    -- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY tm_user
+        ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_user_id' AND table_name = 'user_role') THEN
+    --
+    -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY user_role
+        ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_role_id' AND table_name = 'user_role') THEN
+    --
+    -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY user_role
+        ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
+END IF;
+END$$;
 
 
 --
