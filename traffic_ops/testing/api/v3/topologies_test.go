@@ -126,10 +126,15 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "has-edge-parent1", Parents: []int{}},
 		}}},
 		{testCaseDescription: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
-			{Cachegroup: "legitcachegroup", Parents: []int{0}},
+			{Cachegroup: "legitcachegroup", Parents: []int{}},
 		}}},
 		{testCaseDescription: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains an out-of-bounds parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{7}},
+		}}},
+		{testCaseDescription: "a cachegroup containing no servers", Topology: tc.Topology{Name: "empty-cg", Description: `Invalid because it contains a cachegroup, fallback3, that contains no servers`, Nodes: []tc.TopologyNode{
+			{Cachegroup: "parentCachegroup", Parents: []int{}},
+			{Cachegroup: "parentCachegroup2", Parents: []int{}},
+			{Cachegroup: "fallback3", Parents: []int{0, 1}},
 		}}},
 	}
 	var statusCode int

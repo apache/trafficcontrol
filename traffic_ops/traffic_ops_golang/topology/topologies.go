@@ -133,6 +133,8 @@ func (topology *TOTopology) Validate() error {
 		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = topology.checkForEdgeParents(cacheGroups, index)
 	}
 
+	rules["empty cachegroups"] = topology.checkForEmptyCacheGroups()
+
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
 		return err
@@ -145,6 +147,51 @@ func (topology *TOTopology) Validate() error {
 	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()
 
 	return util.JoinErrs(tovalidate.ToErrors(rules))
+}
+
+func (topology *TOTopology) checkForEmptyCacheGroups() error {
+	var (
+		cacheGroupNames = make([]string, len(topology.Nodes))
+		baseError       = errors.New("unable to check for cachegroups with no servers")
+		systemError     = "checking for cachegroups with no servers: %s"
+		parameters      = map[string]interface{}{
+			"edge_server_type": tc.EdgeTypePrefix,
+			"mid_server_type":  tc.MidTypePrefix,
+		}
+		query = selectEmptyCacheGroupsQuery()
+	)
+	for index, node := range topology.Nodes {
+		cacheGroupNames[index] = node.Cachegroup
+	}
+	parameters["cachegroup_names"] = pq.Array(cacheGroupNames)
+
+	rows, err := topology.ReqInfo.Tx.NamedQuery(query, parameters)
+	if err != nil {
+		log.Errorf(systemError, err.Error())
+		return baseError
+	}
+
+	var (
+		serverCount int
+		cacheGroup  string
+		cacheGroups []string
+	)
+	defer log.Close(rows, "unable to close DB connection when checking for cachegroups with no servers")
+	for rows.Next() {
+		if err := rows.Scan(&cacheGroup, &serverCount); err != nil {
+			log.Errorf(systemError, err.Error())
+			return baseError
+		}
+		if serverCount != 0 {
+			break
+		}
+		cacheGroups = append(cacheGroups, cacheGroup)
+	}
+
+	if cacheGroups != nil {
+		err = fmt.Errorf("cachegroups with no servers in them: %s", strings.Join(cacheGroups, ", "))
+	}
+	return err
 }
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
@@ -567,6 +614,26 @@ SELECT t.name, tc.cachegroup,
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
 `
+	return query
+}
+
+func selectEmptyCacheGroupsQuery() string {
+	// language=SQL
+	query := `
+		SELECT c."name", COUNT((
+			SELECT s2.id FROM server s2
+			JOIN "type" t ON s."type" = t.id
+				AND (
+				t.name = :edge_server_type
+				OR t.name = :mid_server_type)
+			WHERE s2.id = s.id
+		)) server_count
+		FROM cachegroup c
+		LEFT JOIN "server" s ON c.id = s.cachegroup
+		WHERE c."name" = ANY(CAST(:cachegroup_names AS TEXT[]))
+		GROUP BY c."name"
+		ORDER BY server_count
+	`
 	return query
 }
 
