@@ -91,10 +91,6 @@ func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, e
 	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullableV30)
 }
 
-func (ds *TODeliveryService) Validate() error {
-	return ds.DeliveryServiceNullableV30.Validate(ds.APIInfo().Tx.Tx)
-}
-
 func CreateV12(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -423,8 +419,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV30(ds)
-	return &dsLatest, http.StatusOK, nil, nil
+	return &ds, http.StatusOK, nil, nil
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -798,6 +793,18 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, errCode, userErr, sysErr
 	}
 
+	if ds.Topology != nil {
+		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*ds.ID, tx)
+		if err != nil {
+			return nil, http.StatusInternalServerError, nil, errors.New("getting existing DS required capabilities: " + err.Error())
+		}
+		if len(requiredCapabilities) > 0 {
+			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
+				return nil, status, userErr, sysErr
+			}
+		}
+	}
+
 	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
 		&ds.CacheURL,
@@ -956,8 +963,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV30(*ds)
-	return &dsLatest, http.StatusOK, nil, nil
+	return ds, http.StatusOK, nil, nil
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.
