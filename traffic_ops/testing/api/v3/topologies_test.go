@@ -33,7 +33,7 @@ type topologyTestCase struct {
 }
 
 func TestTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, Topologies}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
