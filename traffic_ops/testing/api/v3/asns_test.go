@@ -16,14 +16,15 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestASN(t *testing.T) {
@@ -42,44 +43,52 @@ func TestASN(t *testing.T) {
 }
 
 func GetTestASNsIMSAfterChange(t *testing.T, header http.Header) {
+	params := url.Values{}
 	for _, asn := range testData.ASNs {
-		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+		params.Add("asn", strconv.Itoa(asn.ASN))
+		_, reqInf, err := TOSession.GetASNsWithHeader(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
+		params.Del("asn")
 	}
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, asn := range testData.ASNs {
-		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+		params.Add("asn", strconv.Itoa(asn.ASN))
+		_, reqInf, err := TOSession.GetASNsWithHeader(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
+		params.Del("asn")
 	}
 }
 
 func GetTestASNsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
+	params := url.Values{}
 	for _, asn := range testData.ASNs {
+		params.Add("asn", strconv.Itoa(asn.ASN))
 		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+		_, reqInf, err := TOSession.GetASNsWithHeader(&params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
+		params.Del("asn")
 	}
 }
 
@@ -103,7 +112,8 @@ func CreateTestASNs(t *testing.T) {
 func SortTestASNs(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetASNsWithHeader(header)
+	params := url.Values{}
+	resp, _, err := TOSession.GetASNsWithHeader(&params, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -122,8 +132,10 @@ func SortTestASNs(t *testing.T) {
 func UpdateTestASNs(t *testing.T) {
 	var header http.Header
 	firstASN := testData.ASNs[0]
+	params := url.Values{}
+	params.Add("asn", strconv.Itoa(firstASN.ASN))
 	// Retrieve the ASN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetASNByASNWithHeader(firstASN.ASN, header)
+	resp, _, err := TOSession.GetASNsWithHeader(&params, header)
 	if err != nil {
 		t.Errorf("cannot GET ASN by name: '%v', %v", firstASN.ASN, err)
 	}
@@ -136,7 +148,9 @@ func UpdateTestASNs(t *testing.T) {
 	}
 
 	// Retrieve the ASN to check ASN name got updated
-	resp, _, err = TOSession.GetASNByIDWithHeader(remoteASN.ID, header)
+	params.Del("asn")
+	params.Add("id", strconv.Itoa(remoteASN.ID))
+	resp, _, err = TOSession.GetASNsWithHeader(&params, header)
 	if err != nil {
 		t.Errorf("cannot GET ANS by number: '$%v', %v", firstASN.ASN, err)
 	}
@@ -156,20 +170,25 @@ func UpdateTestASNs(t *testing.T) {
 func GetTestASNs(t *testing.T) {
 
 	var header http.Header
+	params := url.Values{}
 	for _, asn := range testData.ASNs {
-		resp, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+		params.Add("asn", strconv.Itoa(asn.ASN))
+		resp, _, err := TOSession.GetASNsWithHeader(&params, header)
 		if err != nil {
 			t.Errorf("cannot GET ASN by name: %v - %v", err, resp)
 		}
+		params.Del("asn")
 	}
 }
 
 func DeleteTestASNs(t *testing.T) {
 
 	var header http.Header
+	params := url.Values{}
 	for _, asn := range testData.ASNs {
+		params.Add("asn", strconv.Itoa(asn.ASN))
 		// Retrieve the ASN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+		resp, _, err := TOSession.GetASNsWithHeader(&params, header)
 		if err != nil {
 			t.Errorf("cannot GET ASN by number: %v - %v", asn.ASN, err)
 		}
@@ -182,7 +201,7 @@ func DeleteTestASNs(t *testing.T) {
 			}
 
 			// Retrieve the ASN to see if it got deleted
-			asns, _, err := TOSession.GetASNByASNWithHeader(asn.ASN, header)
+			asns, _, err := TOSession.GetASNsWithHeader(&params, header)
 			if err != nil {
 				t.Errorf("error deleting ASN number: %s", err.Error())
 			}
@@ -190,5 +209,6 @@ func DeleteTestASNs(t *testing.T) {
 				t.Errorf("expected ASN number: %v to be deleted", asn.ASN)
 			}
 		}
+		params.Del("asn")
 	}
 }
