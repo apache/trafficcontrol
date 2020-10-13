@@ -43,7 +43,8 @@ func validateLegacy(dsr tc.DeliveryServiceRequestV15, tx *sql.Tx) error {
 		err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus)
 
 		if err != nil {
-			return err
+			log.Errorf("querying for dsr by ID %d: %v", *dsr.ID, err)
+			return errors.New("unknown error")
 		}
 	}
 

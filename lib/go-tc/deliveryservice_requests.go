@@ -878,18 +878,17 @@ func (dsr DeliveryServiceRequestV30) String() string {
 	return builder.String()
 }
 
-// Validate satisfies the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
-// interface.
-func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
+// Validate validates a DSR, returning - in order - a user-facing error that
+// should be shown to the client, and a system error.
+func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) (error, error) {
 	if tx == nil {
-		return errors.New("unknown error")
+		return nil, errors.New("nil transaction")
 	}
 
 	fromStatus := RequestStatusDraft
 	if dsr.ID != nil && *dsr.ID > 0 {
 		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -978,7 +977,7 @@ func (dsr *DeliveryServiceRequestV30) Validate(tx *sql.Tx) error {
 				return nil
 			},
 		)),
-	)
+	), nil
 }
 
 // StatusChangeRequest is the form of a PUT request body to

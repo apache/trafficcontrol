@@ -414,8 +414,12 @@ func (d dsrManipulationResult) String() string {
 func createV3(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV30
-	if err := api.Parse(r.Body, tx, &dsr); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
+		return
+	}
+	if userErr, sysErr := dsr.Validate(tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
 	}
 
@@ -666,8 +670,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 func putV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV30
-	if err := api.Parse(r.Body, tx, &dsr); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
+		return
+	}
+	if userErr, sysErr := dsr.Validate(tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
 	}
 
