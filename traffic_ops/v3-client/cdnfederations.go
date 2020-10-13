@@ -52,6 +52,18 @@ func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationRes
 	return to.GetCDNFederationsByNameWithHdr(CDNName, nil)
 }
 
+func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, ReqInf, error) {
+	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
+	resp := struct {
+		Response []tc.CDNFederation `json:"response"`
+	}{}
+	inf, err := get(to, url, &resp, header)
+	if err != nil {
+		return nil, inf, err
+	}
+	return resp.Response, inf, nil
+}
+
 func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)

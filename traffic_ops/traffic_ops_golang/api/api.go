@@ -998,3 +998,11 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
 }
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
+}

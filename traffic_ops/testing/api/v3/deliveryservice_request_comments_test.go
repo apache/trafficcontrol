@@ -16,11 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -32,6 +33,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestDeliveryServiceRequestComments(t)
 		UpdateTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestCommentsIMSAfterChange(t, header)
@@ -82,6 +84,25 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestDeliveryServiceRequestComments(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].XMLID)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestDeliveryServiceRequestComments(t *testing.T) {

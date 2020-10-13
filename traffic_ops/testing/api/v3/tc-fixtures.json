@@ -2,11 +2,11 @@
     "asns": [
         {
             "asn": 8888,
-            "cachegroupName": "mid-northeast-group"
+            "cachegroupName": "originCachegroup"
         },
         {
             "asn": 9999,
-            "cachegroupName": "edge_cg4"
+            "cachegroupName": "multiOriginCachegroup"
         }
     ],
     "cachegroups": [
@@ -1127,7 +1127,7 @@
             "name": "division1"
         },
         {
-            "name": "division2"
+            "name": "cdn-div2"
         }
     ],
     "federations": [
@@ -1174,6 +1174,11 @@
             "latitude": 3.3,
             "longitude": 4.4,
             "name": "coordinate2"
+        },
+        {
+            "latitude": 5.5,
+            "longitude": 6.6,
+            "name": "abc-coordinate"
         }
     ],
     "origins": [
@@ -1880,8 +1885,8 @@
             "name": "region1"
         },
         {
-            "divisionName": "division2",
-            "name": "region2"
+            "divisionName": "cdn-div2",
+            "name": "cdn-region2"
         }
     ],
     "roles": [
@@ -3358,7 +3363,7 @@
             "tenant": "tenant3"
         },
         {
-            "name": "serviceCategory2",
+            "name": "barServiceCategory2",
             "tenant": "tenant4"
         }
     ],

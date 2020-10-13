@@ -16,12 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -97,7 +97,10 @@ func CreateTestCDNs(t *testing.T) {
 func SortTestCDNs(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, _ := TOSession.GetCDNsWithHdr(header)
+	resp, _, err := TOSession.GetCDNsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
 	for i, _ := range resp {
 		sortedList = append(sortedList, resp[i].Name)
 	}

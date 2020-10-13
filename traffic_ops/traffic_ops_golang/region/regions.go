@@ -97,6 +97,7 @@ func (region *TORegion) Validate() error {
 }
 
 func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(rg.APIInfo(), "name")
 	return api.GenericRead(h, rg, useIMS)
 }
 func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
