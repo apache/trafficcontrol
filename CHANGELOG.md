@@ -91,6 +91,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5020, #5021 - Creating an ASN with the same number and same cache group should not be allowed.
 - Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
 - Fixed #4680 - Change Content-Type to application/json for TR auth calls
+- Fixed #4292 - Traffic Ops not looking for influxdb.conf in the right place
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
