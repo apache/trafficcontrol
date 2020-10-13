@@ -33,6 +33,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -130,8 +131,8 @@ func (topology *TOTopology) Validate() error {
 
 	for index, node := range topology.Nodes {
 		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = topology.checkForEdgeParents(cacheGroups, index)
-
 	}
+
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
 		return err
@@ -148,11 +149,17 @@ func (topology *TOTopology) Validate() error {
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
-	where := `WHERE name != $1`
-	query := selectQueryWithParentNames() + where +
-		` UNION ` + selectNonTopologyCacheGroupsQuery() +
-		` UNION ` + selectNonTopologyParentCacheGroupsQuery()
-	rows, err := topology.ReqInfo.Tx.Query(query, topology.Name)
+	where := `WHERE name != :topology_name`
+	query := selectQueryWithParentNames() + where + `
+		UNION ` + selectNonTopologyCacheGroupsQuery() + `
+		UNION ` + selectNonTopologyParentCacheGroupsQuery()
+
+	parameters := map[string]interface{}{
+		"topology_name":    topology.Name,
+		"edge_type_prefix": strings.ToLower(tc.EdgeTypePrefix) + "%",
+		"mid_type_prefix":  strings.ToLower(tc.MidTypePrefix) + "%",
+	}
+	rows, err := topology.ReqInfo.Tx.NamedQuery(query, parameters)
 	if err != nil {
 		return nil, nil, baseError
 	}
@@ -573,8 +580,8 @@ SELECT 'non-topology cachegroups' AS name, c."name" AS cachegroup,
 	)
 FROM cachegroup c
 JOIN "type" t ON c."type" = t.id
-WHERE (t.name = 'EDGE_LOC'
-OR t.name = 'MID_LOC')
+WHERE (LOWER(t.name) LIKE :edge_type_prefix
+OR LOWER(t.name) LIKE :mid_type_prefix)
 AND (c.parent_cachegroup_id IS NOT NULL
 OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `
@@ -593,8 +600,8 @@ FROM cachegroup c
 JOIN "type" t ON c."type" = t.id
 JOIN cachegroup pc2 ON c.parent_cachegroup_id = pc2.id
 	OR c.secondary_parent_cachegroup_id = pc2.id
-WHERE (t.name = 'EDGE_LOC'
-OR t.name = 'MID_LOC')
+WHERE (LOWER(t.name) LIKE :edge_type_prefix
+OR LOWER(t.name) LIKE :mid_type_prefix)
 AND (c.parent_cachegroup_id IS NOT NULL
 OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `
