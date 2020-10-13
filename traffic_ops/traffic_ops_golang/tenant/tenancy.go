@@ -83,7 +83,7 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 // a system error, and an HTTP error code. If both the user and system error are nil, the error
 // code should be ignored.
 func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
-	dsTenantID, ok, err := getDSTenantIDByIDTx(tx, dsID)
+	dsTenantID, ok, err := GetDSTenantIDByIDTx(tx, dsID)
 	if err != nil {
 		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
 	}
@@ -214,10 +214,10 @@ FETCH FIRST 1 ROW ONLY;
 	}
 }
 
-// getDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
+// GetDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
 // Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 // TODO move somewhere generic
-func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
+func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
 		if err == sql.ErrNoRows {
@@ -226,4 +226,33 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
 	}
 	return tenantID, true, nil
+}
+
+// GetServiceCategoryTenantIDByNameTx returns the tenant ID, whether the service category exists, and any error.
+func GetServiceCategoryTenantIDByNameTx(tx *sql.Tx, name string) (*int, bool, error) {
+	tenantID := (*int)(nil)
+	if err := tx.QueryRow(`SELECT tenant_id FROM service_category where name = $1`, name).Scan(&tenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("querying tenant ID for service category name '%v': %v", name, err)
+	}
+	return tenantID, true, nil
+}
+
+// CrossReferenceTenancy returns whether the tenantId is within the tenancy tree hierarchy of the tenantIdToReference
+// and any error.
+func CrossReferenceTenancy(tx *sql.Tx, tenantId int, tenantIdToReference int) (bool, error) {
+	allowedTenants, err := GetUserTenantIDListTx(tx, tenantIdToReference)
+	if err != nil {
+		return false, errors.New("getting tenant list: " + err.Error())
+	}
+
+	for _, tenantID := range allowedTenants {
+		if tenantID == tenantId {
+			return true, nil
+		}
+	}
+	return false, nil
+
 }

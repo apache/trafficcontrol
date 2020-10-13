@@ -117,10 +117,35 @@ func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]in
 
 	filteredServiceCategories := []interface{}{}
 	for _, sc := range serviceCategories {
-		sc1 := sc.(*tc.ServiceCategory)
-		if checkTenancy(sc1, tenantIDs) {
-			filteredServiceCategories = append(filteredServiceCategories, sc1)
+		scToCheck := sc.(*tc.ServiceCategory)
+		if checkTenancy(scToCheck, tenantIDs) {
+			filteredServiceCategories = append(filteredServiceCategories, scToCheck)
 		}
+	}
+
+	dsIdParam := serviceCategory.APIInfo().Params["dsId"]
+
+	if dsIdParam != "" {
+		dsId, err := strconv.Atoi(dsIdParam)
+		if err != nil {
+			return nil, errors.New("dsId query param must be an int"), nil, http.StatusBadRequest, nil
+		}
+		dsTenantId, _, err := tenant.GetDSTenantIDByIDTx(serviceCategory.APIInfo().Tx.Tx, dsId)
+
+		dsAllowedTenants, err := tenant.GetUserTenantIDListTx(serviceCategory.APIInfo().Tx.Tx, *dsTenantId)
+		if err != nil {
+			return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
+		}
+
+		filteredSCByDS := []interface{}{}
+		for _, sc := range filteredServiceCategories {
+			scToCheck := sc.(*tc.ServiceCategory)
+			if checkTenancy(scToCheck, dsAllowedTenants) {
+				filteredSCByDS = append(filteredSCByDS, scToCheck)
+			}
+		}
+
+		return filteredSCByDS, nil, nil, errCode, maxTime
 	}
 
 	return filteredServiceCategories, nil, nil, errCode, maxTime
