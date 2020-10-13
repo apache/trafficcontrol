@@ -154,11 +154,8 @@ func (topology *TOTopology) checkForEmptyCacheGroups() error {
 		cacheGroupNames = make([]string, len(topology.Nodes))
 		baseError       = errors.New("unable to check for cachegroups with no servers")
 		systemError     = "checking for cachegroups with no servers: %s"
-		parameters      = map[string]interface{}{
-			"edge_server_type": tc.EdgeTypePrefix,
-			"mid_server_type":  tc.MidTypePrefix,
-		}
-		query = selectEmptyCacheGroupsQuery()
+		parameters      = map[string]interface{}{}
+		query           = selectEmptyCacheGroupsQuery()
 	)
 	for index, node := range topology.Nodes {
 		cacheGroupNames[index] = node.Cachegroup
@@ -623,9 +620,6 @@ func selectEmptyCacheGroupsQuery() string {
 		SELECT c."name", COUNT((
 			SELECT s2.id FROM server s2
 			JOIN "type" t ON s."type" = t.id
-				AND (
-				t.name = :edge_server_type
-				OR t.name = :mid_server_type)
 			WHERE s2.id = s.id
 		)) server_count
 		FROM cachegroup c
