@@ -3267,7 +3267,7 @@
         },
         {
             "cachegroup": "cachegroup3",
-            "cdnName": "cdn2",
+            "cdnName": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "edgeInCachegroup3",
             "httpsPort": 443,
@@ -3291,7 +3291,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",

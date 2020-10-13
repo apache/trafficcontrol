@@ -29,7 +29,7 @@ import (
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, CDNFederations}, func() {
 		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
@@ -37,7 +37,7 @@ func TestCDNFederations(t *testing.T) {
 }
 
 func TestFederationFederationResolvers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations, FederationResolvers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, CDNFederations, FederationResolvers}, func() {
 		AssignTestFederationFederationResolvers(t)
 		GetTestFederationFederationResolvers(t)
 	})
