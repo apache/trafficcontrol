@@ -779,6 +779,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
 
+	if version.Major >= 3 {
+		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{"cg.name", nil}
+	}
+
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false

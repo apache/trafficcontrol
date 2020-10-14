@@ -43,7 +43,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
 - Added the ability to delete invalidation requests in Traffic Portal
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
-- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
+- Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
+- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
