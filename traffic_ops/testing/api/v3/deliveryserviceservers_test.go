@@ -102,7 +102,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	if dsWithMid[0].Topology != nil {
 		t.Fatal("expected delivery service: 'ds1' to have a nil Topology, actual: non-nil")
 	}
-	serversResp, _, err := TOSession.GetServersWithHdr(nil,nil)
+	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
 	serversIds := []int{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *dsWithMid[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
