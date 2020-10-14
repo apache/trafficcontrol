@@ -29,7 +29,7 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, Servers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		GetTestServersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		timestamp := currentTime.Format(time.RFC1123)
@@ -427,9 +427,12 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
-		"edge1-cdn1-cg3": true,
-		"edge2-cdn1-cg3": true,
-		"atlanta-mid-16": true,
+		"edge1-cdn1-cg3":           true,
+		"edge2-cdn1-cg3":           true,
+		"atlanta-mid-16":           true,
+		"edgeInCachegroup3":        true,
+		"midInParentCachegroup":    true,
+		"midInSecondaryCachegroup": true,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
