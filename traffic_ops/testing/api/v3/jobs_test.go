@@ -75,7 +75,7 @@ func JobCollisionWarningTest(t *testing.T) {
 	firstJob := tc.InvalidationJobInput{
 		DeliveryService: util.InterfacePtr(testData.DeliveryServices[0].XMLID),
 		Regex:           util.StrPtr(`/\.*([A-Z]0?)`),
-		TTL:             util.InterfacePtr(8),
+		TTL:             util.InterfacePtr(16),
 		StartTime:       &startTime,
 	}
 
@@ -101,7 +101,7 @@ func JobCollisionWarningTest(t *testing.T) {
 	}
 
 	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts, got %v", len(alerts.Alerts))
+		t.Fatalf("expected 2 alerts on creation, got %v", len(alerts.Alerts))
 	}
 
 	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
@@ -121,9 +121,9 @@ func JobCollisionWarningTest(t *testing.T) {
 	for i, job := range jobs {
 		d := (*newJob.DeliveryService)
 		y := d.(*string)
-		diff := newJob.StartTime.Time.Sub(newJob.StartTime.Time)
+		diff := newJob.StartTime.Time.Sub(job.StartTime.Time)
 		if *job.DeliveryService == *y && *job.CreatedBy == "admin" &&
-			diff.Seconds() == 0 {
+			diff < time.Second {
 			realJob = &jobs[i]
 			break
 		}
@@ -141,7 +141,7 @@ func JobCollisionWarningTest(t *testing.T) {
 	}
 
 	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts, got %v", len(alerts.Alerts))
+		t.Fatalf("expected 2 alerts on update, got %v", len(alerts.Alerts))
 	}
 
 	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
