@@ -263,7 +263,7 @@ if ( $sysctl_p_needed && $script_mode != $SYNCDS ) {
 	&run_sysctl_p();
 }
 
-&check_ntp();
+#&check_ntp();
 
 if ( $script_mode != $REPORT ) {
 	&update_trops();
