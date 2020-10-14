@@ -19,6 +19,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -30,6 +31,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		DeleteTestDeliveryServiceServers(t)
 		AssignServersToTopologyBasedDeliveryService(t)
+		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
 	})
 }
 
@@ -85,6 +87,51 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("creating deliveryserviceserver assignment for topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+}
+func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T) {
+	params := url.Values{}
+	params.Set("xmlId", "ds1")
+	dsWithMid, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service 'ds1': %s", err.Error())
+	}
+	if len(dsWithMid) != 1 {
+		t.Fatalf("expected one delivery service: 'ds1', actual: %v", len(dsWithMid))
+	}
+	if dsWithMid[0].Topology != nil {
+		t.Fatal("expected delivery service: 'ds1' to have a nil Topology, actual: non-nil")
+	}
+	serversResp, _, err := TOSession.GetServersWithHdr(nil,nil)
+	serversIds := []int{}
+	for _, s := range serversResp.Response {
+		if s.CDNID != nil && *s.CDNID == *dsWithMid[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
+			serversIds = append(serversIds, *s.ID)
+		}
+	}
+	if len(serversIds) < 1 {
+		t.Fatalf("expected: at least one EDGE in cdn %s, actual: 0", *dsWithMid[0].CDNName)
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dsWithMid[0].ID, serversIds, true)
+	if err != nil {
+		t.Errorf("POST delivery service servers: %v", err)
+	}
+
+	params = url.Values{"dsId": []string{strconv.Itoa(*dsWithMid[0].ID)}}
+	dsServersResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	dsServerIds := []int{}
+	for _, dss := range dsServersResp.Response {
+		dsServerIds = append(dsServerIds, *dss.ID)
+	}
+	if len(dsServerIds) <= len(serversIds) {
+		t.Fatalf("delivery service servers (%d) expected to exceed directly assigned servers (%d) to account for implicitly assigned mid servers", len(dsServerIds), len(serversIds))
+	}
+
+	for _, dss := range dsServersResp.Response {
+		if dss.CDNID != nil && *dss.CDNID != *dsWithMid[0].CDNID {
+			t.Fatalf("a server for another cdn was returned for this delivery service")
+		}
 	}
 }
 

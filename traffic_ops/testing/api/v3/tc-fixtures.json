@@ -418,7 +418,7 @@
             "sslKeyVersion": 2,
             "tenant": "tenant1",
             "tenantName": "tenant1",
-            "type": "HTTP_LIVE",
+            "type": "HTTP",
             "xmlId": "ds1",
             "anonymousBlockingEnabled": true
         },
@@ -1804,6 +1804,14 @@
             "type": "ATS_PROFILE"
         },
         {
+            "cdnName": "cdn2",
+            "description": "mid description",
+            "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
+            "name": "MID2",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        },
+        {
             "cdnName": "cdn1",
             "description": "origin description",
             "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
@@ -2296,7 +2304,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "MID1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
@@ -2306,6 +2314,56 @@
             "type": "MID",
             "updPending": false,
             "xmppId": "atlanta-mid-16\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "parentCachegroup",
+            "cdnName": "cdn2",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "atlanta-mid-17",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:17:d::7/64",
+                            "gateway": "2345:1234:17:d::7",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.17/30",
+                            "gateway": "127.0.0.17",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "MID2",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false,
+            "xmppId": "atlanta-mid-17\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {
