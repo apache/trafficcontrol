@@ -799,9 +799,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 			return nil, 0, nil, err, http.StatusInternalServerError, nil
 		}
 
-		if err != nil {
-			return nil, 0, errors.New("ds not found"), nil, http.StatusNotFound, nil
-		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
