@@ -1018,7 +1018,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, cdnID int, 
 	WHERE s.id IN (?)))
 	`
 
-	if (cdnID > 0) {
+	if cdnID > 0 {
 		q += ` AND s.cdn_id = ?`
 		filters = append(filters, cdnID)
 	}
