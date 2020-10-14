@@ -39,11 +39,16 @@ const LineCommentParentDotConfig = LineCommentHash
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"
 const ParentConfigParamMSOParentRetry = "mso.parent_retry"
-const ParentConfigParamUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
-const ParentConfigParamMaxSimpleRetries = "mso.max_simple_retries"
-const ParentConfigParamMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
+const ParentConfigParamMSOUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
+const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
+const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
 const ParentConfigParamAlgorithm = "algorithm"
 const ParentConfigParamQString = "qstring"
+
+const ParentConfigParamParentRetry = "parent_retry"
+const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
+const ParentConfigParamMaxSimpleRetries = "max_simple_retries"
+const ParentConfigParamMaxUnavailableServerRetries = "max_unavailable_server_retries"
 
 const ParentConfigDSParamDefaultMSOAlgorithm = "consistent_hash"
 const ParentConfigDSParamDefaultMSOParentRetry = "both"
@@ -418,6 +423,8 @@ func MakeParentDotConfig(
 
 	parentInfos := MakeParentInfo(serverParentCGData, serverCDNDomain, profileCaches, originServers)
 
+	dsOrigins := makeDSOrigins(dss, dses, servers)
+
 	for _, ds := range dses {
 		if ds.XMLID == nil || *ds.XMLID == "" {
 			log.Errorln("parent.config got ds with missing XMLID, skipping!")
@@ -445,32 +452,9 @@ func MakeParentDotConfig(
 			continue
 		}
 
-		msoAlgorithm := ParentConfigDSParamDefaultMSOAlgorithm
-		msoParentRetry := ParentConfigDSParamDefaultMSOParentRetry
-		msoUnavailableServerRetryResponses := ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses
-		msoMaxSimpleRetries := ParentConfigDSParamDefaultMaxSimpleRetries
-		msoMaxUnavailableServerRetries := ParentConfigDSParamDefaultMaxUnavailableServerRetries
-		qStringHandling := ""
-		if ds.ProfileName != nil && *ds.ProfileName != "" {
-			if dsParams, ok := profileParentConfigParams[*ds.ProfileName]; ok {
-				qStringHandling = dsParams[ParentConfigParamQStringHandling] // may be blank, no default
-				if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
-					msoAlgorithm = v
-				}
-				if v, ok := dsParams[ParentConfigParamMSOParentRetry]; ok {
-					msoParentRetry = v
-				}
-				if v, ok := dsParams[ParentConfigParamUnavailableServerRetryResponses]; ok {
-					msoUnavailableServerRetryResponses = v
-				}
-				if v, ok := dsParams[ParentConfigParamMaxSimpleRetries]; ok {
-					msoMaxSimpleRetries = v
-				}
-				if v, ok := dsParams[ParentConfigParamMaxUnavailableServerRetries]; ok {
-					msoMaxUnavailableServerRetries = v
-				}
-			}
-		}
+		// Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices (except QueryStringHandling which is used by all DeliveryServices).
+		//      Topology DSes use them for all DSes, MSO and non-MSO.
+		dsParams := getParentDSParams(ds, profileParentConfigParams)
 
 		log.Infoln("parent.config processing ds '" + *ds.XMLID + "'")
 
@@ -492,12 +476,9 @@ func MakeParentDotConfig(
 				serverCapabilities,
 				dsRequiredCapabilities,
 				cacheGroups,
-				msoAlgorithm,
-				msoParentRetry,
-				msoUnavailableServerRetryResponses,
-				msoMaxSimpleRetries,
-				msoMaxUnavailableServerRetries,
-				qStringHandling,
+				dsParams,
+				atsMajorVer,
+				dsOrigins[DeliveryServiceID(*ds.ID)],
 			)
 			if err != nil {
 				log.Errorln(err)
@@ -510,7 +491,7 @@ func MakeParentDotConfig(
 		} else if IsTopLevelCache(serverParentCGData) {
 			log.Infoln("parent.config generating top level line for ds '" + *ds.XMLID + "'")
 			parentQStr := "ignore"
-			if qStringHandling == "" && msoAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+			if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
 			}
 
@@ -538,21 +519,9 @@ func MakeParentDotConfig(
 					log.Warnln("ParentInfo: delivery service " + *ds.XMLID + " has no parent servers")
 				}
 
-				parents, secondaryParents := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsRequiredCapabilities, msoAlgorithm)
-				textLine += parents + secondaryParents + ` round_robin=` + msoAlgorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
-
-				parentRetry := msoParentRetry
-				if atsMajorVer >= 6 && parentRetry != "" {
-					if unavailableServerRetryResponsesValid(msoUnavailableServerRetryResponses) {
-						textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + msoUnavailableServerRetryResponses
-					} else {
-						if msoUnavailableServerRetryResponses != "" {
-							log.Errorln("Malformed unavailable_server_retry_responses parameter '" + msoUnavailableServerRetryResponses + "', not using!")
-						}
-						textLine += ` parent_retry=` + parentRetry
-					}
-					textLine += ` max_simple_retries=` + msoMaxSimpleRetries + ` max_unavailable_server_retries=` + msoMaxUnavailableServerRetries
-				}
+				parents, secondaryParents := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsRequiredCapabilities, dsParams.Algorithm)
+				textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
+				textLine += getParentRetryStr(true, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
 				textArr = append(textArr, textLine)
 			}
@@ -587,7 +556,7 @@ func MakeParentDotConfig(
 				// TODO refactor this logic, hard to understand (transliterated from Perl)
 				dsQSH := queryStringHandling
 				if dsQSH == "" {
-					dsQSH = qStringHandling
+					dsQSH = dsParams.QueryStringHandling
 				}
 				parentQStr := dsQSH
 				if parentQStr == "" {
@@ -627,6 +596,85 @@ func MakeParentDotConfig(
 	return text
 }
 
+type ParentDSParams struct {
+	Algorithm                       string
+	ParentRetry                     string
+	UnavailableServerRetryResponses string
+	MaxSimpleRetries                string
+	MaxUnavailableServerRetries     string
+	QueryStringHandling             string
+}
+
+// getDSParameters returns the Delivery Service Profile Parameters used in parent.config.
+// If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
+// Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices.
+//      Topology DSes use them for all DSes, MSO and non-MSO.
+func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigParams map[string]map[string]string) ParentDSParams {
+	params := ParentDSParams{}
+	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
+	if isMSO {
+		params.Algorithm = ParentConfigDSParamDefaultMSOAlgorithm
+		params.ParentRetry = ParentConfigDSParamDefaultMSOParentRetry
+		params.UnavailableServerRetryResponses = ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses
+		params.MaxSimpleRetries = ParentConfigDSParamDefaultMaxSimpleRetries
+		params.MaxUnavailableServerRetries = ParentConfigDSParamDefaultMaxUnavailableServerRetries
+	}
+	if ds.ProfileName == nil || *ds.ProfileName == "" {
+		return params
+	}
+	dsParams, ok := profileParentConfigParams[*ds.ProfileName]
+	if !ok {
+		return params
+	}
+
+	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling] // may be blank, no default
+	// TODO deprecate & remove "mso." Parameters - there was never a reason to restrict these settings to MSO.
+	if isMSO {
+		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
+			params.Algorithm = v
+		}
+		if v, ok := dsParams[ParentConfigParamMSOParentRetry]; ok {
+			params.ParentRetry = v
+		}
+		if v, ok := dsParams[ParentConfigParamMSOUnavailableServerRetryResponses]; ok {
+			if v != "" && !unavailableServerRetryResponsesValid(v) {
+				log.Errorln("Malformed " + ParentConfigParamMSOUnavailableServerRetryResponses + " parameter '" + v + "', not using!")
+			} else if v != "" {
+				params.UnavailableServerRetryResponses = v
+			}
+		}
+		if v, ok := dsParams[ParentConfigParamMSOMaxSimpleRetries]; ok {
+			params.MaxSimpleRetries = v
+		}
+		if v, ok := dsParams[ParentConfigParamMSOMaxUnavailableServerRetries]; ok {
+			params.MaxUnavailableServerRetries = v
+		}
+	}
+
+	// Even if the DS is MSO, non-"mso." Parameters override "mso." ones, because they're newer.
+	if v, ok := dsParams[ParentConfigParamAlgorithm]; ok && strings.TrimSpace(v) != "" {
+		params.Algorithm = v
+	}
+	if v, ok := dsParams[ParentConfigParamParentRetry]; ok {
+		params.ParentRetry = v
+	}
+	if v, ok := dsParams[ParentConfigParamUnavailableServerRetryResponses]; ok {
+		if v != "" && !unavailableServerRetryResponsesValid(v) {
+			log.Errorln("Malformed " + ParentConfigParamUnavailableServerRetryResponses + " parameter '" + v + "', not using!")
+		} else if v != "" {
+			params.UnavailableServerRetryResponses = v
+		}
+	}
+	if v, ok := dsParams[ParentConfigParamMaxSimpleRetries]; ok {
+		params.MaxSimpleRetries = v
+	}
+	if v, ok := dsParams[ParentConfigParamMaxUnavailableServerRetries]; ok {
+		params.MaxUnavailableServerRetries = v
+	}
+
+	return params
+}
+
 func GetTopologyParentConfigLine(
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
@@ -637,12 +685,9 @@ func GetTopologyParentConfigLine(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
-	msoAlgorithm string,
-	msoParentRetry string,
-	msoUnavailableServerRetryResponses string,
-	msoMaxSimpleRetries string,
-	msoMaxUnavailableServerRetries string,
-	qStringHandling string,
+	dsParams ParentDSParams,
+	atsMajorVer int,
+	dsOrigins map[ServerID]struct{},
 ) (string, error) {
 	txt := ""
 
@@ -662,13 +707,13 @@ func GetTopologyParentConfigLine(
 
 	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	serverPlacement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
+	serverPlacement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 	if !serverPlacement.InTopology {
 		return "", nil // server isn't in topology, no error
 	}
 	// TODO add Topology/Capabilities to remap.config
 
-	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities)
+	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
 	if err != nil {
 		return "", errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
@@ -680,17 +725,47 @@ func GetTopologyParentConfigLine(
 	if len(secondaryParents) > 0 {
 		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
 	}
-	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastTier, msoAlgorithm)
+	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
-	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastTier, msoAlgorithm, qStringHandling)
-	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastTier)
+	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, dsParams.QueryStringHandling)
+	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastCacheTier)
+	txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 	txt += " # topology '" + *ds.Topology + "'"
 	txt += "\n"
 	return txt, nil
 }
 
-func getTopologyParentIsProxyStr(serverIsLastTier bool) string {
-	if serverIsLastTier {
+// getParentRetryStr builds the parent retry directive(s).
+// If atsMajorVer < 6, "" is returned (ATS 5 and below don't support retry directives).
+// If isLastCacheTier is false, "" is returned. This argument exists to simplify usage.
+// If parentRetry is "", "" is returned (because the other directives are unused if parent_retry doesn't exist). This is allowed to simplify usage.
+// If unavailableServerRetryResponses is not "", it must be valid. Use unavailableServerRetryResponsesValid to check.
+// If maxSimpleRetries is "", ParentConfigDSParamDefaultMaxSimpleRetries will be used.
+// If maxUnavailableServerRetries is "", ParentConfigDSParamDefaultMaxUnavailableServerRetries will be used.
+func getParentRetryStr(isLastCacheTier bool, atsMajorVer int, parentRetry string, unavailableServerRetryResponses string, maxSimpleRetries string, maxUnavailableServerRetries string) string {
+	if !isLastCacheTier || // allow !isLastCacheTier, to simplify usage.
+		parentRetry == "" || // allow parentRetry to be empty, to simplify usage.
+		atsMajorVer < 6 { // ATS 5 and below don't support parent_retry directives
+		return ""
+	}
+
+	if maxSimpleRetries == "" {
+		maxSimpleRetries = ParentConfigDSParamDefaultMaxSimpleRetries
+	}
+	if maxUnavailableServerRetries == "" {
+		maxUnavailableServerRetries = ParentConfigDSParamDefaultMaxUnavailableServerRetries
+	}
+
+	txt := ` parent_retry=` + parentRetry
+	if unavailableServerRetryResponses != "" {
+		txt += ` unavailable_server_retry_responses=` + unavailableServerRetryResponses
+	}
+	txt += ` max_simple_retries=` + maxSimpleRetries + ` max_unavailable_server_retries=` + maxUnavailableServerRetries
+	return txt
+}
+
+func getTopologyParentIsProxyStr(serverIsLastCacheTier bool) string {
+	if serverIsLastCacheTier {
 		return ` parent_is_proxy=false`
 	}
 	return ""
@@ -700,7 +775,7 @@ func getTopologyRoundRobin(
 	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	serverIsLastTier bool,
-	msoAlgorithm string,
+	algorithm string,
 ) string {
 	roundRobinConsistentHash := "consistent_hash"
 	if !serverIsLastTier {
@@ -709,8 +784,8 @@ func getTopologyRoundRobin(
 	if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; ds.OriginShield != nil && *ds.OriginShield != "" && strings.TrimSpace(parentSelectAlg) != "" {
 		return parentSelectAlg
 	}
-	if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
-		return msoAlgorithm
+	if algorithm != "" {
+		return algorithm
 	}
 	return roundRobinConsistentHash
 }
@@ -732,11 +807,11 @@ func getTopologyQueryString(
 	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	serverIsLastTier bool,
-	msoAlgorithm string,
+	algorithm string,
 	qStringHandling string,
 ) string {
 	if serverIsLastTier {
-		if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin && qStringHandling == "" && msoAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+		if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin && qStringHandling == "" && algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 			return "consider"
 		}
 		return "ignore"
@@ -819,6 +894,7 @@ func GetTopologyParents(
 	serverIsLastTier bool,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
+	dsOrigins map[ServerID]struct{}, // for Topology DSes, MSO still needs DeliveryServiceServer assignments.
 ) ([]string, []string, error) {
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
@@ -883,11 +959,27 @@ func GetTopologyParents(
 		} else if sv.Cachegroup == nil {
 			log.Errorln("TO Servers server had nil Cachegroup, skipping")
 			continue
+		} else if sv.CDNName == nil {
+			log.Errorln("parent.config generation: TO servers had server with missing CDNName, skipping!")
+			continue
+		} else if sv.Status == nil || *sv.Status == "" {
+			log.Errorln("parent.config generation: TO servers had server with missing Status, skipping!")
+			continue
 		}
 
 		if tc.CacheType(sv.Type) != tc.CacheTypeEdge && tc.CacheType(sv.Type) != tc.CacheTypeMid && sv.Type != tc.OriginTypeName {
 			continue // only consider edges, mids, and origins in the CacheGroup.
 		}
+		if _, dsHasOrigin := dsOrigins[ServerID(*sv.ID)]; sv.Type == tc.OriginTypeName && !dsHasOrigin {
+			continue
+		}
+		if *sv.CDNName != *server.CDNName {
+			continue
+		}
+		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
+			continue
+		}
+
 		if !HasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
@@ -1324,4 +1416,49 @@ func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*OriginUR
 		dsOrigins[*ds.ID] = &OriginURI{Scheme: scheme, Host: host, Port: port}
 	}
 	return dsOrigins, nil
+}
+
+func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, servers []tc.ServerNullable) map[DeliveryServiceID]map[ServerID]struct{} {
+	dssMap := map[DeliveryServiceID]map[ServerID]struct{}{}
+	for _, dss := range dsses {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			log.Errorln("making parent.config, got deliveryserviceserver with nil values, skipping!")
+			continue
+		}
+		dsID := DeliveryServiceID(*dss.DeliveryService)
+		serverID := ServerID(*dss.Server)
+		if dssMap[dsID] == nil {
+			dssMap[dsID] = map[ServerID]struct{}{}
+		}
+		dssMap[dsID][serverID] = struct{}{}
+	}
+
+	svMap := map[ServerID]tc.ServerNullable{}
+	for _, sv := range servers {
+		if sv.ID == nil {
+			log.Errorln("parent.config got server with missing ID, skipping!")
+		}
+		svMap[ServerID(*sv.ID)] = sv
+	}
+
+	dsOrigins := map[DeliveryServiceID]map[ServerID]struct{}{}
+	for _, ds := range dses {
+		if ds.ID == nil {
+			log.Errorln("parent.config got ds with missing ID, skipping!")
+			continue
+		}
+		dsID := DeliveryServiceID(*ds.ID)
+		assignedServers := dssMap[dsID]
+		for svID, _ := range assignedServers {
+			sv := svMap[svID]
+			if sv.Type != tc.OriginTypeName {
+				continue
+			}
+			if dsOrigins[dsID] == nil {
+				dsOrigins[dsID] = map[ServerID]struct{}{}
+			}
+			dsOrigins[dsID][svID] = struct{}{}
+		}
+	}
+	return dsOrigins
 }
