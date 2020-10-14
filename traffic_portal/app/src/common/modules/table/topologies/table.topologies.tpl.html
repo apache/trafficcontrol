@@ -23,7 +23,7 @@ under the License.
             <li class="active">Topologies</li>
         </ol>
         <div class="pull-right">
-            <button type="button" class="btn btn-primary" title="Create Topology" ng-click="createTopology()"><i class="fa fa-plus"></i></button>
+            <button type="button" name="createTopologyBtn" class="btn btn-primary" title="Create Topology" ng-click="createTopology()"><i class="fa fa-plus"></i></button>
             <button type="button" class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -40,7 +40,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editTopology(t.name)" ng-repeat="t in ::topologies">
-                <td data-search="^{{::t.name}}$">{{::t.name}}</td>
+                <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
                 <td data-search="^{{::t.description}}$">{{::t.description}}</td>
                 <td >{{::t.nodes.length}}</td>
             </tr>

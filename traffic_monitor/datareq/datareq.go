@@ -42,7 +42,7 @@ import (
 // MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.
 func MakeDispatchMap(
 	opsConfig threadsafe.OpsConfig,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
@@ -78,8 +78,11 @@ func MakeDispatchMap(
 			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, rfc.ApplicationJSON)),
-		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
+		}, rfc.ApplicationJSON)),
+		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvLegacyCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
 		}, rfc.ApplicationJSON)),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)

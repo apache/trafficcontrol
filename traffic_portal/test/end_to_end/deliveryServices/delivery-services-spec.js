@@ -264,7 +264,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should populate and submit the delivery service form', function() {
-		console.log('Creating a HTTP DS for ' + mockVals.dnsXmlId);
+		console.log('Creating a HTTP DS with a topology for ' + mockVals.httpXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=HTTP");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
@@ -288,6 +288,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
+		// set topology
+		commonFunctions.selectDropdownbyNum(pageData.topology, 1);
 		pageData.createButton.click();
 	});
 
@@ -355,19 +357,22 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		});
 	});
 
-	it('should navigate back to the HTTP delivery service and delete it', function() {
-		console.log('Deleting ' + mockVals.httpXmlId);
+	it('should navigate back to the HTTP delivery service and view all servers utilized per the assigned topology', function() {
+		console.log('Viewing all servers utilized by ' + mockVals.httpXmlId);
 		pageData.dsLink.click();
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.httpXmlId);
-		pageData.deletePermanentlyButton.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
+		pageData.moreBtn.click();
+		pageData.manageServersMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
+		console.log('The ability to assign servers is disabled for ' + mockVals.httpXmlId);
+		expect(pageData.selectServersMenuItem.isEnabled()).toBe(false);
 	});
 
 	// Steering delivery service
 
 	it('should click new delivery service and select Steering category from the dropdown', function() {
 		console.log('Clicked Create New and selecting Steering');
+		browser.setLocation("delivery-services");
+		browser.sleep(250);
 		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('STEERING');

@@ -70,17 +70,34 @@ const DefaultCoalesceNumberV4 = 5
 const DefaultCoalesceMaskLenV6 = 48
 const DefaultCoalesceNumberV6 = 5
 
+type ServersSortByName []tc.ServerNullable
+
+func (ss ServersSortByName) Len() int      { return len(ss) }
+func (ss ServersSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss ServersSortByName) Less(i, j int) bool {
+	if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName == nil {
+		return true
+	}
+	return *ss[i].HostName < *ss[j].HostName
+}
+
 // MakeIPAllowDotConfig creates the ip_allow.config ATS config file.
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	serverName tc.CacheName,
-	serverType tc.CacheType,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string][]string, // map[name]value - config file should always be ip_allow.config
-	childServers map[tc.CacheName]IPAllowServer,
+	server *tc.ServerNullable,
+	servers []tc.ServerNullable,
+	cacheGroups []tc.CacheGroupNullable,
 ) string {
+	if server.HostName == nil {
+		return "ERROR: server missing hostname"
+	}
+
 	ipAllowData := []IPAllowData{}
 	const ActionAllow = "ip_allow"
 	const ActionDeny = "ip_deny"
@@ -150,7 +167,7 @@ func MakeIPAllowDotConfig(
 	}
 
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
-	isMid := strings.HasPrefix(string(serverType), tc.MidTypePrefix)
+	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 	if !isMid {
 		ipAllowData = append(ipAllowData, IPAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
@@ -166,48 +183,80 @@ func MakeIPAllowDotConfig(
 
 		ips := []*net.IPNet{}
 		ip6s := []*net.IPNet{}
-		for serverName, server := range childServers {
 
-			if ip := net.ParseIP(server.IPAddress).To4(); ip != nil {
-				// got an IP - convert it to a CIDR and add it to the list
-				ips = append(ips, util.IPToCIDR(ip))
-			} else {
-				// not an IP, try a CIDR
-				if ip, cidr, err := net.ParseCIDR(server.IPAddress); err != nil {
-					// not a CIDR or IP - error out
-					log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP '" + server.IPAddress + " is not an IPv4 address or CIDR - skipping!")
-				} else {
-					// got a valid CIDR - now make sure it's v4
-					ip = ip.To4()
-					if ip == nil {
-						// valid CIDR, but not v4
-						log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP '" + server.IPAddress + " is a CIDR, but not v4 - skipping!")
-					} else {
-						// got a valid IPv4 CIDR - add it to the list
-						ips = append(ips, cidr)
-					}
-				}
+		cgMap := map[string]tc.CacheGroupNullable{}
+		for _, cg := range cacheGroups {
+			if cg.Name == nil {
+				return "ERROR: got cachegroup with nil name!'"
+			}
+			cgMap[*cg.Name] = cg
+		}
+
+		if server.Cachegroup == nil {
+			return "ERROR: server had nil Cachegroup!"
+		}
+
+		serverCG, ok := cgMap[*server.Cachegroup]
+		if !ok {
+			return "ERROR: Server cachegroup not in cachegroups!"
+		}
+
+		childCGs := map[string]tc.CacheGroupNullable{}
+		for cgName, cg := range cgMap {
+			if (cg.ParentName != nil && *cg.ParentName == *serverCG.Name) || (cg.SecondaryParentName != nil && *cg.SecondaryParentName == *serverCG.Name) {
+				childCGs[cgName] = cg
+			}
+		}
+
+		// sort servers, to guarantee things like IP coalescing are deterministic
+		sort.Sort(ServersSortByName(servers))
+		for _, childServer := range servers {
+			if childServer.Cachegroup == nil {
+				log.Errorln("Servers had server with nil Cachegroup, skipping!")
+				continue
+			} else if childServer.HostName == nil {
+				log.Errorln("Servers had server with nil HostName, skipping!")
+				continue
 			}
 
-			if server.IP6Address != "" {
-				ip6 := net.ParseIP(server.IP6Address)
-				if ip6 != nil && ip6.To4() == nil {
-					// got a valid IPv6 - add it to the list
-					ip6s = append(ip6s, util.IPToCIDR(ip6))
-				} else {
-					// not a v6 IP, try a CIDR
-					if ip, cidr, err := net.ParseCIDR(server.IP6Address); err != nil {
-						// not a CIDR or IP - error out
-						log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP6 '" + server.IP6Address + " is not an IPv6 address or CIDR - skipping!")
-					} else {
-						// got a valid CIDR - now make sure it's v6
-						ip = ip.To4()
-						if ip != nil {
-							// valid CIDR, but not v6
-							log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP6 '" + server.IPAddress + " is a CIDR, but not v6 - skipping!")
+			// We need to add IPs to the allow of
+			// - all children of this server
+			// - all monitors, if this server is a Mid
+			//
+			// TODO: handle Topologies. Mids currently block everything but Edges
+			//       We should decide how to handle that in a post-edge-mid world.
+			//       That probably means adding all child and monitor IPs, and blocking everything else,
+			//       for all non-first-tier caches.
+			//
+			_, isChild := childCGs[*childServer.Cachegroup]
+			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {
+				continue
+			}
+
+			for _, svInterface := range childServer.Interfaces {
+				for _, svAddr := range svInterface.IPAddresses {
+					if ip := net.ParseIP(svAddr.Address); ip != nil {
+						// got an IP - convert it to a CIDR and add it to the list
+						if ip4 := ip.To4(); ip4 != nil {
+							ips = append(ips, util.IPToCIDR(ip4))
 						} else {
-							// got a valid IPv6 CIDR - add it to the list
-							ip6s = append(ip6s, cidr)
+							ip6s = append(ip6s, util.IPToCIDR(ip))
+						}
+					} else {
+						// not an IP, try a CIDR
+						if ip, cidr, err := net.ParseCIDR(svAddr.Address); err != nil {
+							// not a CIDR or IP - error out
+							log.Errorln("MakeIPAllowDotConfig server '" + *server.HostName + "' IP '" + svAddr.Address + " is not an IP address or CIDR - skipping!")
+						} else if ip == nil {
+							// not a CIDR or IP - error out
+							log.Errorln("MakeIPAllowDotConfig server '" + *server.HostName + "' IP '" + svAddr.Address + " failed to parse as IP or CIDR - skipping!")
+						} else {
+							// got a valid CIDR - add it to the list
+							if ip4 := ip.To4(); ip4 != nil {
+								ips = append(ips, cidr)
+							} else {
+								ip6s = append(ip6s, cidr)
+							}
 						}
 					}
 				}
@@ -265,7 +314,7 @@ func MakeIPAllowDotConfig(
 		})
 	}
 
-	text := GenericHeaderComment(string(serverName), toToolName, toURL)
+	text := GenericHeaderComment(*server.HostName, toToolName, toURL)
 	for _, al := range ipAllowData {
 		text += `src_ip=` + al.Src + ` action=` + al.Action + ` method=` + al.Method + "\n"
 	}

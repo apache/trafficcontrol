@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
-	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -639,18 +639,7 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 }
 
 func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]tc.Server, config StartupConfig) error {
-
-	type CacheStatsJSON struct {
-		Pp     string `json:"pp"`
-		Date   string `json:"date"`
-		Caches map[string]map[string][]struct {
-			Index uint64 `json:"index"`
-			Time  int    `json:"time"`
-			Value string `json:"value"`
-			Span  uint64 `json:"span"`
-		} `json:"caches"`
-	}
-	var jData CacheStatsJSON
+	var jData tc.LegacyStats
 	err := json.Unmarshal(trafmonData, &jData)
 	if err != nil {
 		return fmt.Errorf("could not unmarshall cache stats JSON - %v", err)
@@ -666,37 +655,27 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		errHndlr(err, ERROR)
 	}
 	for cacheName, cacheData := range jData.Caches {
-		cache := cacheMap[cacheName]
+		cache := cacheMap[string(cacheName)]
 
 		for statName, statData := range cacheData {
 			//Get the stat time and make sure it's greater than the time 24 hours ago.  If not, skip it so influxdb doesn't throw retention policy errors.
-			validTime := time.Now().AddDate(0, 0, -1).UnixNano() / 1000000
-			timeStamp := int64(statData[0].Time)
-			if timeStamp < validTime {
-				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", cacheName, statName, timeStamp))
+			validTime := time.Now().AddDate(0, 0, -1)
+			if statData[0].Time.Before(validTime) {
+				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", cacheName, statName, statData[0].Time))
 				continue
 			}
 			dataKey := statName
 			dataKey = strings.Replace(dataKey, ".bandwidth", ".kbps", 1)
 			dataKey = strings.Replace(dataKey, "-", "_", -1)
 
-			//Get the stat time and convert to epoch
-			statTime := strconv.Itoa(statData[0].Time)
-			msInt, err := strconv.ParseInt(statTime, 10, 64)
-			if err != nil {
-				errHndlr(err, ERROR)
-			}
-
-			newTime := time.Unix(0, msInt*int64(time.Millisecond))
 			//Get the stat value and convert to float
-			statValue := statData[0].Value
-			statFloatValue, err := strconv.ParseFloat(statValue, 64)
-			if err != nil {
+			statFloatValue, ok := statData[0].Val.(float64)
+			if !ok {
 				statFloatValue = 0.00
 			}
 			tags := map[string]string{
 				"cachegroup": cache.Cachegroup,
-				"hostname":   cacheName,
+				"hostname":   string(cacheName),
 				"cdn":        cdnName,
 				"type":       cache.Type,
 			}
@@ -708,7 +687,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 				dataKey,
 				tags,
 				fields,
-				newTime,
+				statData[0].Time,
 			)
 			if err != nil {
 				errHndlr(err, ERROR)

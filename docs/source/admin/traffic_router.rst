@@ -264,6 +264,16 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dynamic.cache.primer.limit              | CRConfig.json                | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to "500".                              |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.limit                          | CRConfig.json                | Integer that controls the default number of records returned when edge.dns.routing is set to true                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.routing                        | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of NS records                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.limit                         | CRConfig.json                | Integer that controls the default number of records returned when edge.http.routing is set to true; this can be overridden by the     |
+	|                                         |                              | maxDnsAnswers delivery service setting                                                                                                |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.routing                       | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of traffic router routing names for HTTP delivery |
+	|                                         |                              | service records                                                                                                                       |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| keystore.maintenance.interval           | CRConfig.json                | The interval in seconds which Traffic Router will check the :ref:`to-api` for new DNSSEC keys.                                        |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| keystore.api.url                        | CRConfig.json                | The URL of the DNSSEC key management endpoint of the :ref:`to-api` (:ref:`to-api-cdns-name-name-dnsseckeys`). The actual              |
@@ -517,6 +527,8 @@ GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
 	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the :term:`Delivery Service`
+GEO_DS
+	The request was redirected to the Miss Location configured on the :term:`Delivery Service`, because CZF couldn't resolve the client IP, and Maxmind returned the default coordinates of the country code of the client IP
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT

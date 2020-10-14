@@ -66,6 +66,33 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
+	this.queueServerUpdates = function(topology, cdnId) {
+		return $http.post(ENV.api['root'] + 'topologies/' + topology + '/queue_update', {action: "queue", cdnId: cdnId}).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Queued topology server updates'}], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
+	};
+
+	this.clearServerUpdates = function(topology, cdnId) {
+		return $http.post(ENV.api['root'] + 'topologies/' + topology + '/queue_update', {action: "dequeue", cdnId: cdnId}).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Cleared topology server updates'}], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
+	};
+
+
 };
 
 TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];

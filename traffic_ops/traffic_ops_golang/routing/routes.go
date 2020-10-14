@@ -286,6 +286,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPut, `topologies/?$`, api.UpdateHandler(&topology.TOTopology{}), auth.PrivLevelOperations, Authenticated, nil, 3871452223, noPerlBypass},
 		{api.Version{3, 0}, http.MethodDelete, `topologies/?$`, api.DeleteHandler(&topology.TOTopology{}), auth.PrivLevelOperations, Authenticated, nil, 3871452224, noPerlBypass},
 
+		{api.Version{3, 0}, http.MethodPost, `topologies/{name}/queue_update$`, topology.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 3205351748, noPerlBypass},
+
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
 		{api.Version{3, 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 29461450333, noPerlBypass},

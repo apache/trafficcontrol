@@ -17,31 +17,18 @@
  * under the License.
  */
 
-var TableDeliveryServiceJobsController = function(deliveryService, jobs, $scope, $state, $location, locationUtils) {
+var TableDeliveryServiceJobsController = function(deliveryService, jobs, $controller, $scope, $location) {
+
+	// extends the TableJobsController to inherit common methods
+	angular.extend(this, $controller('TableJobsController', { tableName: 'dsJobs', jobs: jobs, $scope: $scope }));
 
 	$scope.deliveryService = deliveryService;
-
-	$scope.dsJobs = jobs;
 
 	$scope.createJob = function() {
 		$location.path($location.path() + '/new');
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	angular.element(document).ready(function () {
-		$('#dsJobsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
 };
 
-TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$scope', '$state', '$location', 'locationUtils'];
+TableDeliveryServiceJobsController.$inject = ['deliveryService', 'jobs', '$controller', '$scope', '$location'];
 module.exports = TableDeliveryServiceJobsController;

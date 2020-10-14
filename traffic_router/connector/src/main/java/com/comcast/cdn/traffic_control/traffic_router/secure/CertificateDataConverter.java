@@ -18,8 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPrivateCrtKey;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import java.math.BigInteger;
 import java.security.PrivateKey;
@@ -27,6 +25,8 @@ import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -138,15 +138,15 @@ public class CertificateDataConverter {
 		BigInteger privModulus = null;
 		if (privateKey instanceof BCRSAPrivateCrtKey) {
 			privModulus = ((BCRSAPrivateCrtKey) privateKey).getModulus();
-		} else if (privateKey instanceof RSAPrivateCrtKeyImpl) {
-			privModulus = ((RSAPrivateCrtKeyImpl) privateKey).getModulus();
+		} else if (privateKey instanceof RSAPrivateCrtKeySpec) {
+			privModulus = ((RSAPrivateCrtKeySpec) privateKey).getModulus();
 		} else {
 			return false;
 		}
 		BigInteger pubModulus = null;
 		final PublicKey publicKey = certificate.getPublicKey();
-		if ((publicKey instanceof RSAPublicKeyImpl)) {
-			pubModulus = ((RSAPublicKeyImpl) publicKey).getModulus();
+		if ((publicKey instanceof RSAPublicKeySpec)) {
+			pubModulus = ((RSAPublicKeySpec) publicKey).getModulus();
 		} else {
 			final String[] keyparts = publicKey.toString().split(System.getProperty("line.separator"));
 			for (final String part : keyparts) {

@@ -29,6 +29,10 @@ import (
 )
 
 func GetConfigFileProfileURLSigConfig(toData *config.TOData, fileName string) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
 	paramData := ParamsToMap(FilterParams(toData.ServerParams, fileName, "", "", "location"))
 
 	dsName := GetDSFromURLSigConfigFileName(fileName)
@@ -42,7 +46,7 @@ func GetConfigFileProfileURLSigConfig(toData *config.TOData, fileName string) (s
 		return "", "", "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeURLSig, atscfg.LineCommentURLSig, nil
+	return atscfg.MakeURLSigConfig(*toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeURLSig, atscfg.LineCommentURLSig, nil
 }
 
 // GetDSFromURLSigConfigFileName returns the DS of a URLSig config file name.

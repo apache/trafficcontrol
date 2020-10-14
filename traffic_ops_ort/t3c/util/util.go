@@ -106,10 +106,10 @@ func ExecCommand(fullCommand string, arg ...string) ([]byte, int, error) {
 	cmd.Stderr = &errbuf
 	err := cmd.Run()
 
-  if err != nil {
-    return outbuf.Bytes(), cmd.ProcessState.ExitCode(), 
-      errors.New("Error executing '" + fullCommand + "': " + errbuf.String())
-  }
+	if err != nil {
+		return outbuf.Bytes(), cmd.ProcessState.ExitCode(),
+			errors.New("Error executing '" + fullCommand + "': " + errbuf.String())
+	}
 	return outbuf.Bytes(), cmd.ProcessState.ExitCode(), err
 }
 

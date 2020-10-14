@@ -532,37 +532,6 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
-	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
-		"must be one of 'NEVER' or 'ALWAYS'")
-	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
-	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
-	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
-	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
-	errs := tovalidate.ToErrors(validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
-		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
-		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
-		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
-		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
-		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
-		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
-		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
-		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
-	})
-	if err := ds.validateTypeFields(tx); err != nil {
-		errs = append(errs, errors.New("type fields: "+err.Error()))
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return util.JoinErrs(errs)
-}
-
 func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
@@ -608,21 +577,45 @@ func (ds *DeliveryServiceNullableV30) validateTopologyFields() error {
 	return nil
 }
 
-// Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
-func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
-	b, err := json.Marshal(d)
+func jsonValue(v interface{}) (driver.Value, error) {
+	b, err := json.Marshal(v)
 	return b, err
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
-func (d *DeliveryServiceNullable) Scan(src interface{}) error {
+func jsonScan(src interface{}, dest interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
-	return json.Unmarshal(b, d)
+	return json.Unmarshal(b, dest)
+}
+
+// NOTE: the driver.Valuer and sql.Scanner interface implementations are
+// necessary for Delivery Service Requests which store and read raw JSON
+// from the database.
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceNullable) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullable struct.
+func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
+	return jsonScan(src, ds)
+}
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceNullableV30) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullableV30 struct.
+func (ds *DeliveryServiceNullableV30) Scan(src interface{}) error {
+	return jsonScan(src, ds)
 }
 
 // DeliveryServiceMatch ...

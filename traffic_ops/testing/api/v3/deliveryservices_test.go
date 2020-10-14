@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -27,20 +26,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		GetTestDeliveryServicesIMS(t)
-		GetAccessibleToTest(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfModifiedSince, currentTime.Format(time.RFC1123))
+
+		if includeSystemTests {
+			SSLDeliveryServiceCDNUpdateTest(t)
+		}
+		GetTestDeliveryServicesIMS(t)
+		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
@@ -49,10 +52,185 @@ func TestDeliveryServices(t *testing.T) {
 		GetTestDeliveryServicesIMSAfterChange(t, header)
 		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
 		GetTestDeliveryServices(t)
+		GetTestDeliveryServicesCapacity(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
 	})
+}
+
+func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
+	_, _, err := TOSession.CreateCDN(tc.CDN{
+		DNSSECEnabled: false,
+		DomainName:    cdnName + ".ai",
+		Name:          cdnName,
+	})
+	if err != nil {
+		t.Fatal("unable to create cdn: " + err.Error())
+	}
+
+	originalKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
+	if err != nil {
+		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
+	}
+
+	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
+	if err != nil {
+		t.Fatalf("unable to get cdn %v: %v", cdnName, err)
+	}
+	if len(cdns) < 1 {
+		t.Fatal("expected more than 0 cdns")
+	}
+	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
+	if err != nil {
+		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
+	}
+	if len(keys) != len(originalKeys) {
+		t.Fatalf("expected %v ssl keys on cdn %v, got %v", len(originalKeys), cdnName, len(keys))
+	}
+	return cdns[0]
+}
+
+func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV30, oldCDNID int, newCDNID int) {
+	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(oldCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(newCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
+	cdnNameOld := "sslkeytransfer"
+	oldCdn := createBlankCDN(cdnNameOld, t)
+	cdnNameNew := "sslkeytransfer1"
+	newCdn := createBlankCDN(cdnNameNew, t)
+
+	types, _, err := TOSession.GetTypeByNameWithHdr("HTTP", nil)
+	if err != nil {
+		t.Fatal("unable to get types: " + err.Error())
+	}
+	if len(types) < 1 {
+		t.Fatal("expected at least one type")
+	}
+
+	customDS := tc.DeliveryServiceNullableV30{
+		DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
+			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
+				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
+					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
+						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
+							Active:               util.BoolPtr(true),
+							CDNID:                util.IntPtr(oldCdn.ID),
+							DSCP:                 util.IntPtr(0),
+							DisplayName:          util.StrPtr("displayName"),
+							RoutingName:          util.StrPtr("routingName"),
+							GeoLimit:             util.IntPtr(0),
+							GeoProvider:          util.IntPtr(0),
+							IPV6RoutingEnabled:   util.BoolPtr(false),
+							InitialDispersion:    util.IntPtr(1),
+							LogsEnabled:          util.BoolPtr(true),
+							MissLat:              util.FloatPtr(0),
+							MissLong:             util.FloatPtr(0),
+							MultiSiteOrigin:      util.BoolPtr(false),
+							OrgServerFQDN:        util.StrPtr("https://test.com"),
+							Protocol:             util.IntPtr(2),
+							QStringIgnore:        util.IntPtr(0),
+							RangeRequestHandling: util.IntPtr(0),
+							RegionalGeoBlocking:  util.BoolPtr(false),
+							TenantID:             util.IntPtr(1),
+							TypeID:               util.IntPtr(types[0].ID),
+							XMLID:                util.StrPtr("dsID"),
+						},
+					},
+				},
+			},
+		},
+	}
+	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds.CDNName = &oldCdn.Name
+
+	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID)
+
+	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
+		BusinessUnit: util.StrPtr("BU"),
+		City:         util.StrPtr("CI"),
+		Organization: util.StrPtr("OR"),
+		HostName:     util.StrPtr("*.test.com"),
+		Country:      util.StrPtr("CO"),
+		State:        util.StrPtr("ST"),
+	})
+	if err != nil {
+		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
+	}
+
+	tries := 0
+	var oldCDNKeys []tc.CDNSSLKeys
+	for tries < 5 {
+		time.Sleep(time.Second)
+		oldCDNKeys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+		if err == nil && len(oldCDNKeys) > 0 {
+			break
+		}
+		tries++
+	}
+	if err != nil {
+		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
+	}
+	if len(oldCDNKeys) < 1 {
+		t.Fatal("expected at least 1 key")
+	}
+
+	newCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	if err != nil {
+		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
+	}
+
+	ds.RoutingName = util.StrPtr("anothername")
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service (routing name) as it has ssl keys")
+	}
+	ds.RoutingName = util.StrPtr("routingName")
+
+	ds.CDNID = &newCdn.ID
+	ds.CDNName = &newCdn.Name
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service (cdn) as it has ssl keys")
+	}
+
+	// Check new CDN still has an ssl key
+	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	if err != nil {
+		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
+	}
+	if len(keys) != len(newCDNKeys) {
+		t.Fatalf("expected %v keys, got %v", len(newCDNKeys), len(keys))
+	}
+
+	// Check old CDN does not have ssl key
+	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+	if err != nil {
+		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
+	}
+	if len(keys) != len(oldCDNKeys) {
+		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys))
+	}
+
 }
 
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
@@ -77,16 +255,35 @@ func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func PostDeliveryServiceTest(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one testing Delivery Service to test creating Delivery Services")
+	}
 	ds := testData.DeliveryServices[0]
+	if ds.XMLID == nil {
+		t.Fatal("Testing Delivery Service had no XMLID")
+	}
+	xmlid := *ds.XMLID + "-topology-test"
+
 	ds.XMLID = util.StrPtr("")
 	_, _, err := TOSession.CreateDeliveryServiceV30(ds)
 	if err == nil {
-		t.Fatal("Expected error with empty xmlid")
+		t.Error("Expected error with empty xmlid")
 	}
 	ds.XMLID = nil
 	_, _, err = TOSession.CreateDeliveryServiceV30(ds)
 	if err == nil {
-		t.Fatal("Expected error with nil xmlid")
+		t.Error("Expected error with nil xmlid")
+	}
+
+	ds.Topology = new(string)
+	ds.XMLID = &xmlid
+
+	_, reqInf, err := TOSession.CreateDeliveryServiceV30(ds)
+	if err == nil {
+		t.Error("Expected error with non-existent Topology")
+	}
+	if reqInf.StatusCode < 400 || reqInf.StatusCode >= 500 {
+		t.Errorf("Expected client-level error creating DS with non-existent Topology, got: %d", reqInf.StatusCode)
 	}
 }
 
@@ -148,6 +345,22 @@ func GetTestDeliveryServices(t *testing.T) {
 	if cnt > 2 {
 		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
 	}
+}
+
+func GetTestDeliveryServicesCapacity(t *testing.T) {
+	actualDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	actualDSMap := map[string]tc.DeliveryServiceNullableV30{}
+	for _, ds := range actualDSes {
+		actualDSMap[*ds.XMLID] = ds
+		capDS, _, err := TOSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(*ds.ID), nil)
+		if err != nil {
+			t.Errorf("cannot GET DeliveryServices: %v's Capacity: %v - %v", ds, err, capDS)
+		}
+	}
+
 }
 
 func UpdateTestDeliveryServices(t *testing.T) {
@@ -257,7 +470,9 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	}
 }
 
-// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be assigned to (CLIENT_)STEERING delivery services.
+// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be:
+// - assigned to (CLIENT_)STEERING delivery services
+// - assigned to any delivery services which have required capabilities that the topology can't satisfy
 func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
@@ -265,17 +480,80 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 
 	found := false
+	var nonCSDS *tc.DeliveryServiceNullableV30
 	for _, ds := range dses {
+		if ds.Type == nil || ds.ID == nil {
+			continue
+		}
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
 			ds.Topology = util.StrPtr("my-topology")
-			if _, _, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds); err == nil {
-				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
+			_, _, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+			if err == nil {
+				t.Error("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
 			}
+		} else if nonCSDS == nil {
+			nonCSDS = new(tc.DeliveryServiceNullableV30)
+			*nonCSDS = ds
 		}
 	}
 	if !found {
-		t.Fatalf("expected at least one CLIENT_STEERING delivery service")
+		t.Error("expected at least one CLIENT_STEERING delivery service")
+	}
+	if nonCSDS == nil {
+		t.Fatal("Expected at least on non-CLIENT_STEERING DS to exist")
+	}
+
+	nonCSDS.Topology = new(string)
+	_, inf, err := TOSession.UpdateDeliveryServiceV30(*nonCSDS.ID, *nonCSDS)
+	if err == nil {
+		t.Error("Expected an error assigning a non-existent topology")
+	}
+	if inf.StatusCode < 400 || inf.StatusCode >= 500 {
+		t.Errorf("Expected client-level error assigning a non-existent topology, got: %d", inf.StatusCode)
+	}
+
+	params := url.Values{}
+	params.Add("xmlId", "ds-top-req-cap")
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service: %v", err)
+	}
+	if len(dses) != 1 {
+		t.Fatalf("expected: 1 DS, actual: %d", len(dses))
+	}
+	ds := dses[0]
+	// unassign its topology, add a required capability that its topology
+	// can't satisfy, then attempt to reassign its topology
+	top := *ds.Topology
+	ds.Topology = nil
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Fatalf("updating DS to remove topology, expected: no error, actual: %v", err)
+	}
+	reqCap := tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  ds.ID,
+		RequiredCapability: util.StrPtr("asdf"),
+	}
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	if err != nil {
+		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	ds.Topology = &top
+	_, reqInf, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err == nil {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+	_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf")
+	if err != nil {
+		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	_, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	if err != nil {
+		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
 	}
 }
 
@@ -656,7 +934,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot delete tenant3user's deliveryservice
-	if _, err = tenant4TOClient.DeleteDeliveryService(string(*tenant3DS.ID)); err == nil {
+	if _, err = tenant4TOClient.DeleteDeliveryService(strconv.Itoa(*tenant3DS.ID)); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 

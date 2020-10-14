@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -27,6 +29,10 @@ import (
 const VolumeFileName = StorageFileName
 
 func GetConfigFileProfileVolumeDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
 	params := ParamsToMap(FilterParams(toData.ServerParams, VolumeFileName, "", "", ""))
-	return atscfg.MakeVolumeDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeVolumeDotConfig, atscfg.LineCommentVolumeDotConfig, nil
+	return atscfg.MakeVolumeDotConfig(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeVolumeDotConfig, atscfg.LineCommentVolumeDotConfig, nil
 }

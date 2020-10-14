@@ -208,3 +208,15 @@ div.dropdown button.menu-item-button {
         background-color: #f5f5f5;
     }
 }
+
+.jobs-table {
+  .ag-row.active-job {
+    background-color: #dff0d8;
+  }
+  .ag-row.expired-job {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}

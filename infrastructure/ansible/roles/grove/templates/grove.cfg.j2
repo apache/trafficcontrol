@@ -1,0 +1,43 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+  "rfc_compliant":            {{ grove_rfc_compliant | bool | lower }},
+  "port":                     {{ grove_port | int }},
+  "https_port":               {{ grove_https_port | int }},
+  "cache_size_bytes_comment": "{{ grove_cache_size_bytes_comment }}",
+  "cache_size_bytes":         {{ grove_cache_size_bytes | int }},
+  "remap_rules_file":         "{{ grove_remap_file_path }}",
+  "concurrent_rule_requests": {{ grove_concurrent_rule_requests | int }},
+  "connection_close":         {{ grove_connection_close | bool | lower }},
+  "interface_name":           "{{ grove_interface_name }}",
+  "cert_file":                "{{ grove_ssl_cert_path }}",
+  "key_file":                 "{{ grove_ssl_key_path }}",
+
+  "log_location_error":   "{{ grove_log_path_error }}",
+  "log_location_warning": "{{ grove_log_path_warn }}",
+  "log_location_info":    "{{ grove_log_path_info }}",
+  "log_location_debug":   "{{ grove_log_path_debug }}",
+  "log_location_event":   "{{ grove_log_path_event }}",
+
+  "parent_request_timeout_ms":                 {{ grove_parent_request_timeout | int }},
+  "parent_request_keep_alive_ms":              {{ grove_parent_request_keep_alive | int }},
+  "parent_request_max_idle_connections":       {{ grove_parent_request_max_idle_connections | int }},
+  "parent_request_idle_connection_timeout_ms": {{ grove_parent_request_idle_connection_timeout | int }},
+
+  "server_read_timeout_ms":  {{ grove_server_read_timeout | int }},
+  "server_write_timeout_ms": {{ grove_server_write_timeout | int }},
+  "server_idle_timeout_ms":  {{ grove_server_idle_timeout | int }},
+
+  "plugins": {{ grove_plugins | to_nice_json }}
+}

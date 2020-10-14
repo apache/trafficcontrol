@@ -406,9 +406,9 @@ The bytefmt component is used under the Apache 2.0 license:
 @grove/vendor/code.cloudfoundry.org/bytefmt/*
 ./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
-The bytefmt component is used under the MIT license:
-@grove/vendor/github.com/coreos/bbolt/*
-./grove/vendor/github.com/coreos/bbolt/LICENSE
+The bbolt component is used under the MIT license:
+@grove/vendor/go.etcd.io/bbolt/*
+./grove/vendor/go.etcd.io/bbolt/LICENSE
 
 For the siphash component:
 @grove/vendor/github.com/dchest/siphash/*
@@ -425,6 +425,10 @@ The asn1-ber.v1 component is used under the MIT license:
 The ldap.v2 component is used under the MIT license:
 @traffic_ops/vendor/gopkg.in/ldap.v2/*
 ./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
+
+The fakeOrigin example video is used the Public Domain license:
+@test/fakeOrigin/example/video/*
+./test/fakeOrigin/example/video/LICENSE
 
 The json-iterator/go component is used under the MIT license:
 @vendor/github.com/json-iterator/go/*

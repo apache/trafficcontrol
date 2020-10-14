@@ -27,6 +27,11 @@ on:
       - 'blueprints/**'
       - 'docs/**'
       - 'experimental/**'
+      - '.github/**'
+      - '!.github/actions/build-ciab/*'
+      - '!.github/actions/build-rpms/*'
+      - '!.github/actions/run-ciab/*'
+      - '!.github/workflows/ciab.yaml'
       - 'licenses/**'
       - 'misc/**'
       - 'NOTICE'
@@ -41,11 +46,16 @@ on:
       - 'blueprints/**'
       - 'docs/**'
       - 'experimental/**'
+      - '.github/**'
+      - '!.github/actions/build-ciab/*'
+      - '!.github/actions/build-rpms/*'
+      - '!.github/actions/run-ciab/*'
+      - '!.github/workflows/ciab.yaml'
       - 'licenses/**'
       - 'misc/**'
       - 'NOTICE'
       - 'traffic_control/java'
-    types: [opened, reopened, edited, synchronize]
+    types: [ opened, reopened, edited, synchronize ]
 
 jobs:
   traffic_monitor:
@@ -113,6 +123,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -184,6 +201,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: ${{ github.workspace }}/dist/
+      - name: Build CDN-in-a-Box images
+        uses: ./.github/actions/build-ciab
       - name: Start CDN-in-a-Box
         uses: ./.github/actions/run-ciab
       - name: Upload CDN-in-a-Box logs

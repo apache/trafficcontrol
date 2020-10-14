@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
@@ -46,5 +48,9 @@ func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string,
 		paramData[param.Name] = param.Value
 	}
 
-	return atscfg.MakeAStatsDotConfig(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeAstatsDotConfig, atscfg.LineCommentAstatsDotConfig, nil
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("server missing Profile")
+	}
+
+	return atscfg.MakeAStatsDotConfig(*toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeAstatsDotConfig, atscfg.LineCommentAstatsDotConfig, nil
 }

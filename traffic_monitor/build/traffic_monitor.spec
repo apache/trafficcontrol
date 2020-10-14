@@ -101,7 +101,7 @@ fi
 %defattr(644, traffic_monitor, traffic_monitor, 755)
 %config(noreplace) %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/conf/traffic_monitor.cfg
 %config(noreplace) %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/conf/traffic_ops.cfg
-%config(noreplace) /etc/logrotate.d/traffic_monitor
+%config(noreplace) %attr(644, root, root) /etc/logrotate.d/traffic_monitor
 
 %dir /opt/traffic_monitor
 %dir /opt/traffic_monitor/bin

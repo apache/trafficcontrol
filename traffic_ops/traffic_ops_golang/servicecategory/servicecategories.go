@@ -87,9 +87,9 @@ func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.Wh
 
 func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from ` + tableName + ` sc ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from service_category sc ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='service_category') as res`
 }
 
 func (serviceCategory TOServiceCategory) Validate() error {
@@ -110,6 +110,7 @@ func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]in
 		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
 	}
 
+	api.DefaultSort(serviceCategory.APIInfo(), "name")
 	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil

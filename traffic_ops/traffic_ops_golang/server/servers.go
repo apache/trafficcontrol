@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -59,6 +60,45 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
+`
+
+/* language=SQL */
+const dssTopologiesJoinSubquery = `
+(SELECT
+	ARRAY_AGG(CAST(ROW(td.id, s.id, NULL) AS deliveryservice_server))
+FROM "server" s
+JOIN cachegroup c on s.cachegroup = c.id
+JOIN topology_cachegroup tc ON c.name = tc.cachegroup
+JOIN deliveryservice td ON td.topology = tc.topology
+WHERE td.id = :dsId
+),
+`
+
+/* language=SQL */
+const deliveryServiceServersJoin = `
+FULL OUTER JOIN (
+SELECT (dss.dss_record).deliveryservice, (dss.dss_record).server FROM (
+	SELECT UNNEST(COALESCE(
+		%s
+		(SELECT
+			ARRAY_AGG(CAST(ROW(dss.deliveryservice, dss."server", NULL) AS deliveryservice_server))
+		FROM deliveryservice_server dss)
+	)) AS dss_record) AS dss
+) dss ON dss.server = s.id
+JOIN deliveryservice d ON cdn.id = d.cdn_id AND dss.deliveryservice = d.id
+`
+
+/* language=SQL */
+const requiredCapabilitiesCondition = `
+AND (
+	SELECT ARRAY_AGG(ssc.server_capability)
+	FROM server_server_capability ssc
+	WHERE ssc."server" = s.id
+) @> (
+	SELECT ARRAY_AGG(drc.required_capability)
+	FROM deliveryservices_required_capability drc
+	WHERE drc.deliveryservice_id = d.id
+)
 `
 
 const serverCountQuery = `
@@ -102,8 +142,101 @@ SELECT
 	s.type AS server_type_id,
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
-	s.xmpp_passwd
+	s.xmpp_passwd,
+	s.status_last_updated
 ` + serversFromAndJoin
+
+const insertQueryV3 = `
+INSERT INTO server (
+	cachegroup,
+	cdn_id,
+	domain_name,
+	host_name,
+	https_port,
+	ilo_ip_address,
+	ilo_ip_netmask,
+	ilo_ip_gateway,
+	ilo_username,
+	ilo_password,
+	mgmt_ip_address,
+	mgmt_ip_netmask,
+	mgmt_ip_gateway,
+	offline_reason,
+	phys_location,
+	profile,
+	rack,
+	router_host_name,
+	router_port_name,
+	status,
+	tcp_port,
+	type,
+	upd_pending,
+	xmpp_id,
+	xmpp_passwd,
+	status_last_updated
+) VALUES (
+	:cachegroup_id,
+	:cdn_id,
+	:domain_name,
+	:host_name,
+	:https_port,
+	:ilo_ip_address,
+	:ilo_ip_netmask,
+	:ilo_ip_gateway,
+	:ilo_username,
+	:ilo_password,
+	:mgmt_ip_address,
+	:mgmt_ip_netmask,
+	:mgmt_ip_gateway,
+	:offline_reason,
+	:phys_location_id,
+	:profile_id,
+	:rack,
+	:router_host_name,
+	:router_port_name,
+	:status_id,
+	:tcp_port,
+	:server_type_id,
+	:upd_pending,
+	:xmpp_id,
+	:xmpp_passwd,
+	:status_last_updated
+) RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
+`
 
 const insertQuery = `
 INSERT INTO server (
@@ -270,8 +403,8 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	errs := tovalidate.ToErrors(validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
-		"domainName":     validation.Validate(s.DomainName, validation.NotNil, noSpaces),
-		"hostName":       validation.Validate(s.HostName, validation.NotNil, noSpaces),
+		"domainName":     validation.Validate(s.DomainName, validation.Required, noSpaces),
+		"hostName":       validation.Validate(s.HostName, validation.Required, noSpaces),
 		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
@@ -451,9 +584,9 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-
-	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
-
+	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
+		return serviceInterface, util.JoinErrs(errs)
+	}
 	query := `
 SELECT s.ID, ip.address FROM server s 
 JOIN profile p on p.Id = s.Profile
@@ -516,7 +649,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if maxTime != nil {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
@@ -573,6 +706,13 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	servers := []tc.ServerNullable{}
 	cfg, e := api.GetConfig(r.Context())
 	useIMS := false
@@ -581,7 +721,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if len(servers) > 1 {
 		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
 		return
@@ -620,7 +760,7 @@ JOIN type t ON s.type = t.id ` +
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
-func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	// Query Parameters to Database Query column mappings
@@ -634,12 +774,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"physLocation":     dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
 		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
+		"topology":         dbhelpers.WhereColumnInfo{"tc.topology", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
 
 	usesMids := false
 	queryAddition := ""
+	dsHasRequiredCapabilities := false
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
@@ -650,10 +792,20 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
+
+		var joinSubQuery string
+		if version.Major >= 3 {
+			if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
+				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+				return nil, 0, nil, err, http.StatusInternalServerError, nil
+			}
+			joinSubQuery = dssTopologiesJoinSubquery
+		} else {
+			joinSubQuery = ""
+		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = `
-			FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
-		`
+		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
+
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
@@ -666,7 +818,17 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
 	}
 
+	if _, ok := params[`topology`]; ok {
+		/* language=SQL */
+		queryAddition += `
+			JOIN topology_cachegroup tc ON cg."name" = tc.cachegroup
+`
+	}
+
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if dsHasRequiredCapabilities {
+		where += requiredCapabilitiesCondition
+	}
 	if len(errs) > 0 {
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -813,9 +975,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 	}
 
-	returnable := make([]tc.ServerNullable, 0, len(servers))
-	for _, server := range servers {
-		for _, iface := range interfaces[*server.ID] {
+	returnable := make([]tc.ServerNullable, 0, len(ids))
+	for _, id := range ids {
+		server := servers[id]
+		for _, iface := range interfaces[id] {
 			server.Interfaces = append(server.Interfaces, iface)
 		}
 		returnable = append(returnable, server)
@@ -911,6 +1074,16 @@ func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error
 	return nil, nil, http.StatusOK
 }
 
+func updateStatusLastUpdatedTime(id int, status_last_updated_time *time.Time, tx *sql.Tx) (error, error, int) {
+	query := `UPDATE server SET
+	status_last_updated=$1
+WHERE id=$2 `
+	if _, err := tx.Exec(query, status_last_updated_time, id); err != nil {
+		return errors.New("updating status last updated: " + err.Error()), nil, http.StatusInternalServerError
+	}
+	return nil, nil, http.StatusOK
+}
+
 func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (error, error, int) {
 	ifaceQry := `
 	INSERT INTO interface (
@@ -986,25 +1159,50 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	//Get original xmppid
-	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	originalXMPPID := *origSer[0].XMPPID
+	if len(origSer) == 0 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("the server doesn't exist, cannot update"), nil)
+		return
+	}
+	originalXMPPID := ""
+	originalStatusID := 0
 	changeXMPPID := false
+	if origSer[0].XMPPID != nil {
+		originalXMPPID = *origSer[0].XMPPID
+	}
+	if origSer[0].Status != nil {
+		originalStatusID = *origSer[0].StatusID
+	}
 
 	var server tc.ServerNullableV2
 	var interfaces []tc.ServerInterfaceInfo
+	var statusLastUpdatedTime time.Time
 	if inf.Version.Major >= 3 {
 		var newServer tc.ServerNullable
 		if err := json.NewDecoder(r.Body).Decode(&newServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if *newServer.XMPPID != originalXMPPID {
+		if newServer.XMPPID != nil && *newServer.XMPPID != originalXMPPID {
 			changeXMPPID = true
+		}
+		currentTime := time.Now()
+		if newServer.StatusID != nil && *newServer.StatusID != originalStatusID {
+			newServer.StatusLastUpdated = &currentTime
+		} else {
+			newServer.StatusLastUpdated = origSer[0].StatusLastUpdated
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
@@ -1019,6 +1217,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		server.InterfaceName = util.StrPtr(serviceInterface)
 		interfaces = newServer.Interfaces
+		if newServer.StatusLastUpdated != nil {
+			statusLastUpdatedTime = *newServer.StatusLastUpdated
+		}
 	} else if inf.Version.Major == 2 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1113,7 +1314,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 3 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
+		if userErr, sysErr, errCode = updateStatusLastUpdatedTime(inf.IntParams["id"], &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces, StatusLastUpdated: &statusLastUpdatedTime})
 	} else if inf.Version.Minor <= 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
 	} else {
@@ -1132,6 +1337,19 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	if err := validateV1(&server, tx); err != nil {
@@ -1188,6 +1406,19 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
 	}
 
 	str := uuid.New().String()
@@ -1248,24 +1479,31 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			return
+		}
+	}
+
 	str := uuid.New().String()
 	server.XMPPID = &str
-
-	serviceInterface, err := validateV3(&server, tx)
+	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	v2Server, err := server.ToServerV2()
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
+	currentTime := time.Now()
+	server.StatusLastUpdated = &currentTime
 
-	v2Server.InterfaceName = &serviceInterface
-
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, v2Server)
+	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -1329,10 +1567,17 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
 	id := inf.IntParams["id"]
 
 	var servers []tc.ServerNullable
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false)
+	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

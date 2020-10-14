@@ -24,11 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/lib/pq"
 
@@ -211,6 +212,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
 		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},
 		"assetUrl":        dbhelpers.WhereColumnInfo{"job.asset_url", nil},
+		"startTime":       dbhelpers.WhereColumnInfo{"job.start_time", nil},
 		"userId":          dbhelpers.WhereColumnInfo{"job.job_user", api.IsInt},
 		"createdBy":       dbhelpers.WhereColumnInfo{`(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`, nil},
 		"deliveryService": dbhelpers.WhereColumnInfo{`(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`, nil},
@@ -374,7 +376,24 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := json.Marshal(apiResponse{[]tc.Alert{{"Invalidation Job creation was successful", tc.SuccessLevel.String()}}, result})
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, job.StartTime.Time, *result.AssetURL, ttl)
+	response := apiResponse{
+		make([]tc.Alert, len(conflicts)+1),
+		result,
+	}
+	for i, conflict := range conflicts {
+		response.Alerts[i] = tc.Alert{
+			Text:  conflict,
+			Level: tc.WarnLevel.String(),
+		}
+	}
+	response.Alerts[len(conflicts)] = tc.Alert{
+		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *result.AssetURL, job.StartTime.Time,
+			job.StartTime.Add(time.Hour*time.Duration(ttl))),
+		tc.SuccessLevel.String(),
+	}
+	resp, err := json.Marshal(response)
+
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
 		return
@@ -384,7 +403,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
+	duplicate := ""
+	if len(conflicts) > 0 {
+		duplicate = "(duplicate) "
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job "+duplicate+"- ID: "+
+		strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+
+		"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
@@ -522,14 +547,22 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ttlHours := input.TTLHours()
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, input.StartTime.Time, *input.AssetURL, ttlHours)
 	response := apiResponse{
-		[]tc.Alert{
-			tc.Alert{
-				"Content invalidation job updated",
-				tc.SuccessLevel.String(),
-			},
-		},
+		make([]tc.Alert, len(conflicts)+1),
 		job,
+	}
+	for i, conflict := range conflicts {
+		response.Alerts[i] = tc.Alert{
+			Text:  conflict,
+			Level: tc.WarnLevel.String(),
+		}
+	}
+	response.Alerts[len(conflicts)] = tc.Alert{
+		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.AssetURL, job.StartTime.Time,
+			job.StartTime.Add(time.Hour*time.Duration(ttlHours))),
+		tc.SuccessLevel.String(),
 	}
 
 	resp, err := json.Marshal(response)

@@ -59,8 +59,7 @@ func requiredFiles() []string {
 }
 
 func MakeMetaConfig(
-	serverHostName tc.CacheName,
-	server *ServerInfo,
+	server *tc.ServerNullable,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
@@ -71,7 +70,7 @@ func MakeMetaConfig(
 	topologies []tc.Topology,
 ) string {
 	configDir := "" // this should only be used for Traffic Ops, which doesn't have a local ATS install config directory (and thus will fail if any location Parameters are missing or relative).
-	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies, configDir))
+	return MetaObjToMetaConfig(MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies, configDir))
 }
 
 func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData, err error) string {
@@ -94,8 +93,7 @@ func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData, err error) string {
 func AddMetaObjConfigDir(
 	metaObj tc.ATSConfigMetaData,
 	configDir string,
-	serverHostName tc.CacheName,
-	server *ServerInfo,
+	server *tc.ServerNullable,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
@@ -105,7 +103,14 @@ func AddMetaObjConfigDir(
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 ) (tc.ATSConfigMetaData, error) {
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	if server.Cachegroup == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing Cachegroup")
+	}
+
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		return tc.ATSConfigMetaData{}, errors.New("making CG map: " + err.Error())
+	}
 
 	// Note there may be multiple files with the same name in different directories.
 	configFilesM := map[string][]tc.ATSConfigMetaDataConfigFile{} // map[fileShortName]tc.ATSConfigMetaDataConfigFile
@@ -160,7 +165,7 @@ func AddMetaObjConfigDir(
 		if ds.Topology != nil && *ds.Topology != "" {
 			topology := nameTopologies[TopologyName(*ds.Topology)]
 
-			placement := getTopologyPlacement(tc.CacheGroupName(server.CacheGroupName), topology, cacheGroups)
+			placement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
 			switch placement.CacheTier {
 			case TopologyCacheTierFirst:
 				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
@@ -266,8 +271,7 @@ func ensureConfigFile(files map[string][]tc.ATSConfigMetaDataConfigFile, fileNam
 }
 
 func MakeMetaObj(
-	serverHostName tc.CacheName,
-	server *ServerInfo,
+	server *tc.ServerNullable,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
@@ -278,22 +282,37 @@ func MakeMetaObj(
 	topologies []tc.Topology,
 	configDir string,
 ) (tc.ATSConfigMetaData, error) {
+	if server.ProfileID == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing ProfileID")
+	} else if server.TCPPort == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing TCPPort")
+	} else if server.HostName == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing HostName")
+	} else if server.CDNID == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing CDNID")
+	} else if server.CDNName == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing CDNName")
+	} else if server.ID == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing ID")
+	} else if server.Profile == nil {
+		return tc.ATSConfigMetaData{}, errors.New("server missing Profile")
+	}
+
 	if tmURL == "" {
 		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
 	}
 
 	atsData := tc.ATSConfigMetaData{
 		Info: tc.ATSConfigMetaDataInfo{
-			ProfileID:         int(server.ProfileID),
+			ProfileID:         int(*server.ProfileID),
 			TOReverseProxyURL: tmReverseProxyURL,
 			TOURL:             tmURL,
-			ServerIPv4:        server.IP,
-			ServerPort:        server.Port,
-			ServerName:        server.HostName,
-			CDNID:             server.CDNID,
-			CDNName:           string(server.CDN),
-			ServerID:          server.ID,
-			ProfileName:       server.ProfileName,
+			ServerPort:        *server.TCPPort,
+			ServerName:        *server.HostName,
+			CDNID:             *server.CDNID,
+			CDNName:           *server.CDNName,
+			ServerID:          *server.ID,
+			ProfileName:       *server.Profile,
 		},
 		ConfigFiles: []tc.ATSConfigMetaDataConfigFile{},
 	}
@@ -353,7 +372,7 @@ locationParamsFor:
 		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
 	}
 
-	return AddMetaObjConfigDir(atsData, configDir, serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies)
+	return AddMetaObjConfigDir(atsData, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies)
 }
 
 func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {

@@ -28,7 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -47,6 +47,8 @@ const (
 	CRConfigBackupFile = "/opt/traffic_monitor/crconfig.backup"
 	//TmConfigBackupFile is the default file name to store the last tmconfig
 	TMConfigBackupFile = "/opt/traffic_monitor/tmconfig.backup"
+	//HTTPPollingFormat is the default accept encoding for stats from caches
+	HTTPPollingFormat = "text/json"
 )
 
 // PollingProtocol is a string value indicating whether to use IPv4, IPv6, or both.
@@ -125,6 +127,7 @@ type Config struct {
 	TrafficOpsDiskRetryMax       uint64          `json:"-"`
 	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
 	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
+	HTTPPollingFormat            string          `json:"http_polling_format"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -165,6 +168,7 @@ var DefaultConfig = Config{
 	TrafficOpsDiskRetryMax:       2,
 	CachePollingProtocol:         Both,
 	PeerPollingProtocol:          Both,
+	HTTPPollingFormat:            HTTPPollingFormat,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -221,6 +225,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		TrafficOpsDiskRetryMax         *uint64 `json:"traffic_ops_disk_retry_max"`
 		CRConfigBackupFile             *string `json:"crconfig_backup_file"`
 		TMConfigBackupFile             *string `json:"tmconfig_backup_file"`
+		HTTPPollingFormat              *string `json:"http_polling_format"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -280,6 +285,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.TMConfigBackupFile != nil {
 		c.TMConfigBackupFile = *aux.TMConfigBackupFile
+	}
+	if aux.HTTPPollingFormat != nil {
+		c.HTTPPollingFormat = *aux.HTTPPollingFormat
 	}
 	return nil
 }

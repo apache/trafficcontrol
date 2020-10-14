@@ -17,15 +17,20 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"net/http"
+	"sort"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
+		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
 	})
@@ -62,6 +67,50 @@ func CreateTestCDNFederations(t *testing.T) {
 			fedIDs = append(fedIDs, *data.Response.ID)
 		}
 	}
+}
+
+// This test will not work unless a given CDN has more than one federation associated with it.
+func SortTestCDNFederations(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+
+	//Create a new federation under the same CDN
+	cname := "bar.foo."
+	ttl := 50
+	description := "test"
+	f := tc.CDNFederation{ID: nil, CName: &cname, TTL: &ttl, Description: &description, LastUpdated: nil}
+	data, _, err := TOSession.CreateCDNFederationByName(f, "cdn1")
+	if err != nil {
+		t.Errorf("could not POST federations: " + err.Error())
+	}
+	bytes, _ := json.Marshal(data)
+	t.Logf("POST Response: %s\n", bytes)
+	id := *data.Response.ID
+
+	//Get list of federations for one type of cdn
+	resp, _, err := TOSession.GetCDNFederationsByNameWithHdrReturnList("cdn1", header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].CName)
+	}
+
+	// Check if list was sorted
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+
+	// Delete the newly created federation
+	resp1, _, err1 := TOSession.DeleteCDNFederationByID("cdn1", id)
+	if err != nil {
+		t.Errorf("cannot DELETE federation by id: '%d' %v", id, err1)
+	}
+	bytes, _ = json.Marshal(resp1)
+	t.Logf("DELETE Response: %s\n", bytes)
 }
 
 func UpdateTestCDNFederations(t *testing.T) {

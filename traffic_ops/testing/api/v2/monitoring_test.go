@@ -23,8 +23,33 @@ import (
 
 func TestMonitoring(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		GetTestMonitoringConfigNoSnapshotOnTheFly(t) // MUST run first
 		AllCDNsCanSnapshot(t)
 	})
+}
+
+// GetTestMonitoringConfigNoSnapshotOnTheFly verifies that Traffic Ops generates a monitoring.json on-the-fly rather than returning "" or "{}" if no snapshot exists.
+// This MUST NOT be run after a different function in the same Test creates a Snapshot, or the test will be invalid.
+// This prevents a critical bug of upgrading to 4.x bringing a CDN down until a Snapshot is performed.
+func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
+	server := tc.Server{}
+	for _, sv := range testData.Servers {
+		if sv.Type != "EDGE" {
+			continue
+		}
+		server = sv
+		break
+	}
+	if server.CDNName == "" {
+		t.Fatal("No edge server found in test data, cannot test")
+	}
+
+	tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(server.CDNName)
+	if err != nil {
+		t.Error("getting monitoring: " + err.Error())
+	} else if len(tmConfig.TrafficServer) == 0 {
+		t.Error("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for cdn '" + server.CDNName + "'")
+	}
 }
 
 func AllCDNsCanSnapshot(t *testing.T) {
@@ -42,8 +67,8 @@ func AllCDNsCanSnapshot(t *testing.T) {
 			continue
 		}
 
-		_, _, err = TOSession.GetTrafficMonitorConfigMap(cdn.Name)
-		if err != nil {
+		tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(cdn.Name)
+		if err != nil && tmConfig == nil {
 			t.Error(err)
 			continue
 		}

@@ -1,11 +1,5 @@
 package deliveryservicesregexes
 
-import (
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"testing"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,42 +19,71 @@ import (
  * under the License.
  */
 
-func TestValidateDSRegexOrder(t *testing.T) {
-	expected := `cannot add regex, another regex with the same order exists`
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"testing"
+)
+
+func TestValidateDSRegexOrderExisting(t *testing.T) {
+	expected := `'setNumber' cannot add regex, another regex with the same order exists`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
-
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
-	cols := []string{"deliveryservice"}
+	cols := []string{"name", "use_in_table"}
 	rows := sqlmock.NewRows(cols)
 	rows = rows.AddRow(
+		"HTTP",
+		"regex",
+	)
+	cols2 := []string{"deliveryservice"}
+	rows2 := sqlmock.NewRows(cols2)
+	rows2 = rows2.AddRow(
 		1,
 	)
+
+	regex := tc.DeliveryServiceRegexPost{Type: 33, SetNumber: 3, Pattern: ".*"}
 	mock.ExpectBegin()
-	mock.ExpectQuery("select").WithArgs(1, 3).WillReturnRows(rows)
-	tx := db.MustBegin().Tx
-	err = validateDSRegexOrder(tx, 1, 3)
-	if err == nil {
-		t.Fatal("Expected error but got nil")
-	}
-	if err.Error() != expected {
-		t.Fatalf("Expected error was %v, got %v", expected, err.Error())
-	}
-	mock.ExpectQuery("select").WithArgs(1, 4).WillReturnRows(nil)
+	mock.ExpectQuery("select").WithArgs(1, regex.SetNumber).WillReturnRows(rows2)
+	mock.ExpectQuery("SELECT").WithArgs(regex.Type).WillReturnRows(rows)
 	mock.ExpectCommit()
-	err = validateDSRegexOrder(tx, 1, 3)
-	if err != nil {
-		t.Fatalf("Expect no error, got %v", err.Error())
-	}
-	err = validateDSRegexOrder(tx, 1, -1)
+	tx := db.MustBegin().Tx
+	err = validateDSRegex(tx, regex, 1)
 	if err == nil {
-		t.Fatal("Expect error saying cannot add regex with order < 0, got nothing")
+		t.Fatalf("Expected error '%v' but got none", expected)
 	}
-	if err.Error() != "cannot add regex with order < 0" {
-		t.Errorf("Expected error detail to be 'cannot add regex with order <0', got %v", err.Error())
+}
+
+func TestValidateDSRegex(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+	cols := []string{"name", "use_in_table"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		"HTTP",
+		"regex",
+	)
+	cols2 := []string{"deliveryservice"}
+	rows2 := sqlmock.NewRows(cols2)
+
+	regex := tc.DeliveryServiceRegexPost{Type: 33, SetNumber: 3, Pattern: ".*"}
+	mock.ExpectBegin()
+	mock.ExpectQuery("select").WithArgs(1, regex.SetNumber).WillReturnRows(rows2)
+	mock.ExpectQuery("SELECT").WithArgs(regex.Type).WillReturnRows(rows)
+	mock.ExpectCommit()
+	tx := db.MustBegin().Tx
+	err = validateDSRegex(tx, regex, 1)
+	if err != nil {
+		t.Fatalf("Expected no error but got %v", err.Error())
 	}
 }

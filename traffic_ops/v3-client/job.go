@@ -47,6 +47,30 @@ func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts
 	return alerts, reqInf, err
 }
 
+// Updates a Content Invalidation Job
+func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, ReqInf, error) {
+	remoteAddr := (net.Addr)(nil)
+	reqBody, err := json.Marshal(job)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	if job.ID == nil {
+		return tc.Alerts{}, reqInf, errors.New("job id cannot be nil")
+	}
+	resp, remoteAddr, err := to.request(http.MethodPut, fmt.Sprintf(`%v/jobs?id=%v`, apiBase, *job.ID), reqBody, nil)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
+
 // GetJobs returns a list of Jobs.
 // If deliveryServiceID or userID are not nil, only jobs for that delivery service or belonging to
 // that user are returned. Both deliveryServiceID and userID may be nil.

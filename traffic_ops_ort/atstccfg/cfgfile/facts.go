@@ -20,10 +20,15 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileProfile12MFacts(toData *config.TOData) (string, string, string, error) {
-	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, atscfg.LineComment12MFacts, nil
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("this server missing Profile")
+	}
+	return atscfg.Make12MFacts(*toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, atscfg.LineComment12MFacts, nil
 }

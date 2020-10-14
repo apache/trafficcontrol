@@ -17,11 +17,12 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,6 +34,7 @@ func TestTypes(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestTypes(t)
 		UpdateTestTypes(t)
 		GetTestTypes(t)
 		GetTestTypesIMSAfterChange(t, header)
@@ -114,6 +116,25 @@ func CreateTestTypes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not CREATE types: %v", err)
 		}
+	}
+}
+
+func SortTestTypes(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetTypesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

@@ -77,10 +77,10 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 1)
 
-	typeRows := sqlmock.NewRows([]string{"name"}).AddRow(
-		"HTTP",
+	typeRows := sqlmock.NewRows([]string{"name", "required_capabilities", "topology"}).AddRow(
+		"HTTP", "{}", nil,
 	)
-	mock.ExpectQuery("SELECT t.name FROM deliveryservice as ds").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT t.name.*").WillReturnRows(typeRows)
 
 	scRows := sqlmock.NewRows([]string{"name"}).AddRow(
 		"mem",
@@ -363,10 +363,10 @@ func TestCreateDeliveryServicesRequiredCapabilityInvalidDSType(t *testing.T) {
 
 	mockTenantID(t, mock, 1)
 
-	typeRows := sqlmock.NewRows([]string{"name"}).AddRow(
-		"ANY_MAP",
+	typeRows := sqlmock.NewRows([]string{"name", "required_capabilities", "topology"}).AddRow(
+		"ANY_MAP", "{}", nil,
 	)
-	mock.ExpectQuery("SELECT t.name FROM deliveryservice as ds").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT t.name.*").WillReturnRows(typeRows)
 
 	userErr, sysErr, errCode := rc.Create()
 	if userErr == nil {

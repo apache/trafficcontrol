@@ -66,7 +66,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
-		return dateUtils.getRelativeTime(params.value);
+		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
 
 
@@ -264,6 +264,13 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: false,
 			filter: true,
 			cellRenderer: "updateCellRenderer"
+		},
+		{
+			headerName: "Status Last Updated",
+			field: "statusLastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			valueFormatter: dateCellFormatter
 		}
 	];
 
@@ -274,6 +281,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	$scope.servers = servers.map(
 		function(x) {
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
+			x.statusLastUpdated = x.statusLastUpdated ? new Date(x.statusLastUpdated): x.statusLastUpdated;
 			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
 	});
 
@@ -297,14 +305,18 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
+		onRowDoubleClicked: function(params) {
+			locationUtils.navigateToPath('/servers/' + params.data.id);
+			// Event is outside the digest cycle, so we need to trigger one.
+			$scope.$apply();
+		},
 		columnDefs: columns,
+		enableCellTextSelection:true,
+		suppressMenuHide: true,
+		multiSortKey: 'ctrl',
+		alwaysShowVerticalScroll: true,
 		defaultColDef: {
 			filter: true,
-			onCellClicked: function(params) {
-					locationUtils.navigateToPath('/servers/' + params.data.id);
-					// Event is outside the digest cycle, so we need to trigger one.
-					$scope.$apply();
-				},
 			sortable: true,
 			resizable: true,
 			tooltip: defaultTooltip

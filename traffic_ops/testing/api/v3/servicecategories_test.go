@@ -16,20 +16,79 @@ package v3
 */
 
 import (
+	"net/http"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestServiceCategories(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants, ServiceCategories, Users}, func() {
+		GetTestServiceCategoriesIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		SortTestServiceCategories(t)
 		UpdateTestServiceCategories(t)
 		GetTestServiceCategories(t)
 		ServiceCategoryTenancyTest(t)
+		GetTestServiceCategoriesIMSAfterChange(t, header)
 	})
+}
+
+func GetTestServiceCategoriesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	params := url.Values{}
+	for _, sc := range testData.ServiceCategories {
+		params.Add("name", sc.Name)
+		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestServiceCategoriesIMSAfterChange(t *testing.T, header http.Header) {
+	params := url.Values{}
+	for _, sc := range testData.ServiceCategories {
+		params.Add("name", sc.Name)
+		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	params = url.Values{}
+	for _, sc := range testData.ServiceCategories {
+		params.Add("name", sc.Name)
+		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestServiceCategories(t *testing.T) {
@@ -53,6 +112,26 @@ func GetTestServiceCategories(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", err, resp)
 		}
+	}
+}
+
+func SortTestServiceCategories(t *testing.T) {
+	var header http.Header
+	params := url.Values{}
+	var sortedList []string
+	resp, _, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
