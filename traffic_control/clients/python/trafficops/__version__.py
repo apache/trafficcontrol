@@ -27,4 +27,4 @@ changes to this client will remain non-breaking for existing code using it until
 version is released.
 """
 
-__version__ = '2.0.1'
+__version__ = '2.0.2'
