@@ -617,16 +617,15 @@ JOIN topology_cachegroup tc on t.name = tc.topology
 func selectEmptyCacheGroupsQuery() string {
 	// language=SQL
 	query := `
-		SELECT c."name", COUNT((
-			SELECT s2.id FROM server s2
-			JOIN "type" t ON s."type" = t.id
-			WHERE s2.id = s.id
-		)) server_count
-		FROM cachegroup c
-		LEFT JOIN "server" s ON c.id = s.cachegroup
-		WHERE c."name" = ANY(CAST(:cachegroup_names AS TEXT[]))
-		GROUP BY c."name"
-		ORDER BY server_count
+		SELECT
+			c."name",
+			COUNT(*) FILTER (WHERE s.id IS NOT NULL) AS server_count
+		FROM
+			cachegroup c
+			LEFT JOIN "server" s ON c.id = s.cachegroup
+			WHERE c."name" = ANY(CAST(:cachegroup_names AS TEXT[]))
+			GROUP BY c."name"
+			ORDER BY server_count;
 	`
 	return query
 }
