@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 	"net"
 	"net/http"
 	"strconv"
@@ -1214,6 +1215,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		cacheGroupIds := []int{*origSer[0].CachegroupID}
+		serverIds := []int{*origSer[0].ID}
+		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
+			return
+		}
+
 		server, err = newServer.ToServerV2()
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting v3 server to v2 for update: %v", err))
@@ -1594,6 +1602,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if len(servers) > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id))
 		return
+	}
+	if version.Major >= 3 {
+		cacheGroupIds := []int{*servers[0].CachegroupID}
+		serverIds := []int{*servers[0].ID}
+		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
+			return
+		}
 	}
 
 	userErr, sysErr, errCode = deleteInterfaces(id, tx)
