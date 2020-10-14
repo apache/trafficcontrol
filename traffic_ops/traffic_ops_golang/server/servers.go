@@ -999,7 +999,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	return returnable, serverCount, nil, nil, http.StatusOK, &maxTime
 }
 
-// getMidServers gets the mids used by the servers provided with an option to filter for a given cdn
+// getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
 func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
