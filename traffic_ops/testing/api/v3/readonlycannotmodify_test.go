@@ -57,12 +57,12 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	}
 
 	for _, alert := range alerts.Alerts {
-		if alert.Level == string(tc.SuccessLevel) {
+		if alert.Level == tc.SuccessLevel.String() {
 			t.Errorf("readonlyuser creating cdn, alerts expected: no success alert, actual: got success alert '" + alert.Text + "'")
 		}
 	}
 
-	cdns, _, _ := TOSession.GetCDNByName(cdn.Name, nil)
+	cdns, _, _ := TOSession.GetCDNByName(cdn.Name)
 	if len(cdns) > 0 {
 		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %+v", len(cdns), cdns)
 	}

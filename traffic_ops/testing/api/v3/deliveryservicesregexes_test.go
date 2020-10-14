@@ -17,12 +17,12 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -30,6 +30,7 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, DeliveryServicesRegexes}, func() {
 		QueryDSRegexTest(t)
 		QueryDSRegexTestIMS(t)
+		CreateTestDSRegexWithMissingPattern(t)
 	})
 }
 
@@ -97,8 +98,33 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 	}
 }
 
+func CreateTestDSRegexWithMissingPattern(t *testing.T) {
+	var regex = testData.DeliveryServicesRegexes[3]
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(regex.DSName, nil)
+	if err != nil {
+		t.Fatalf("unable to get ds %v: %v", regex.DSName, err)
+	}
+	if len(ds) == 0 {
+		t.Fatalf("unable to get ds %v", regex.DSName)
+	}
+
+	var dsID int
+	if ds[0].ID == nil {
+		t.Fatal("ds has a nil id")
+	} else {
+		dsID = *ds[0].ID
+	}
+
+	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
+
+	_, reqInfo, _ := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
+	if reqInfo.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected: %v, but got: %v", http.StatusBadRequest, reqInfo.StatusCode)
+	}
+}
+
 func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
-	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName, nil)
+	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
 	if err != nil {
 		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
 	}
@@ -107,7 +133,7 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	}
 	test.Type = dsTypes[0].ID
 
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName, nil)
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
 	if err != nil {
 		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
 	}
@@ -120,10 +146,10 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 func QueryDSRegexTestIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", header)
+	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds1", header)
 	if err != nil {
 		t.Fatalf("could not GET delivery services regex: %v", err)
 	}
@@ -133,7 +159,7 @@ func QueryDSRegexTestIMS(t *testing.T) {
 }
 
 func QueryDSRegexTest(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
 	if err != nil {
 		t.Fatalf("unable to get ds ds1: %v", err)
 	}
@@ -151,8 +177,8 @@ func QueryDSRegexTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(dsID))
 	}
-	if len(dsRegexes) != 3 {
-		t.Fatal("expected to get 3 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	if len(dsRegexes) != 4 {
+		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
 	}
 
 	params := make(map[string]string)

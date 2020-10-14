@@ -49,6 +49,7 @@ local.tar.gz
 *.sublime-project
 *.sublime-workspace
 .vscode/
+*.code-workspace
 *.pydevproject
 .idea/
 .project
@@ -64,4 +65,3 @@ local.tar.gz
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
 junit/
-

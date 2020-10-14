@@ -20,46 +20,41 @@ package atscfg
  */
 
 import (
-	"encoding/json"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeMetaConfig(t *testing.T) {
-	serverHostName := tc.CacheName("myServer")
-	server := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "myserverdomain.invalid",
-		HostName:                      "myserver",
-		HTTPSPort:                     443,
-		ID:                            44,
-		IP:                            "192.168.2.9",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "MID_LOC",
-		ProfileID:                     46,
-		ProfileName:                   "myserverprofile",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MID_LOC",
-		Type:                          "EDGE",
-	}
+	server := &tc.ServerNullable{}
+	server.CachegroupID = util.IntPtr(42)
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CDNName = util.StrPtr("mycdn")
+	server.CDNID = util.IntPtr(43)
+	server.DomainName = util.StrPtr("myserverdomain.invalid")
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(443)
+	server.ID = util.IntPtr(44)
+	ip := "192.168.2.9"
+	setIP(server, ip)
+	// server.ParentCacheGroupID=            45
+	// server.ParentCacheGroupType=          "MID_LOC"
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("myserverprofile")
+	server.TCPPort = util.IntPtr(80)
+	// server.SecondaryParentCacheGroupID=   47
+	// server.SecondaryParentCacheGroupType= "MID_LOC"
+	server.Type = "EDGE"
 
 	tmURL := "https://myto.invalid"
 	tmReverseProxyURL := "https://myrp.myto.invalid"
 	locationParams := map[string]ConfigProfileParams{
-		"remap.config": ConfigProfileParams{
-			FileNameOnDisk: "remap.config",
-			Location:       "/my/location/",
-		},
 		"regex_revalidate.config": ConfigProfileParams{
 			FileNameOnDisk: "regex_revalidate.config",
 			Location:       "/my/location/",
 			URL:            "http://myurl/remap.config", // cdn-scoped endpoint
-			APIURI:         "http://myapi/remap.config",
 		},
 		"cache.config": ConfigProfileParams{
 			FileNameOnDisk: "cache.config", // cache.config on mids is server-scoped
@@ -116,18 +111,21 @@ func TestMakeMetaConfig(t *testing.T) {
 		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
-	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 
-	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
+	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.Topology{}
 
-	cfg := tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	cfgPath := "/etc/foo/trafficserver"
+
+	cfg, err := MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
+	if err != nil {
+		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
 
-	if cfg.Info.ProfileID != int(server.ProfileID) {
+	if cfg.Info.ProfileID != int(*server.ProfileID) {
 		t.Errorf("expected Info.ProfileID %v actual %v", server.ProfileID, cfg.Info.ProfileID)
 	}
 
@@ -139,30 +137,26 @@ func TestMakeMetaConfig(t *testing.T) {
 		t.Errorf("expected Info.TOURL %v actual %v", tmURL, cfg.Info.TOURL)
 	}
 
-	if server.IP != cfg.Info.ServerIPv4 {
-		t.Errorf("expected Info.ServerIP %v actual %v", server.IP, cfg.Info.ServerIPv4)
+	if *server.TCPPort != cfg.Info.ServerPort {
+		t.Errorf("expected Info.ServerPort %v actual %v", server.TCPPort, cfg.Info.ServerPort)
 	}
 
-	if server.Port != cfg.Info.ServerPort {
-		t.Errorf("expected Info.ServerPort %v actual %v", server.Port, cfg.Info.ServerPort)
+	if *server.HostName != cfg.Info.ServerName {
+		t.Errorf("expected Info.ServerName %v actual %v", *server.HostName, cfg.Info.ServerName)
 	}
 
-	if server.HostName != cfg.Info.ServerName {
-		t.Errorf("expected Info.ServerName %v actual %v", server.HostName, cfg.Info.ServerName)
+	if cfg.Info.CDNID != *server.CDNID {
+		t.Errorf("expected Info.CDNID %v actual %v", *server.CDNID, cfg.Info.CDNID)
 	}
 
-	if cfg.Info.CDNID != server.CDNID {
-		t.Errorf("expected Info.CDNID %v actual %v", server.CDNID, cfg.Info.CDNID)
+	if cfg.Info.CDNName != *server.CDNName {
+		t.Errorf("expected Info.CDNName %v actual %v", server.CDNName, cfg.Info.CDNName)
 	}
-
-	if cfg.Info.CDNName != string(server.CDN) {
-		t.Errorf("expected Info.CDNName %v actual %v", server.CDN, cfg.Info.CDNName)
+	if cfg.Info.ServerID != *server.ID {
+		t.Errorf("expected Info.ServerID %v actual %v", *server.ID, cfg.Info.ServerID)
 	}
-	if cfg.Info.ServerID != server.ID {
-		t.Errorf("expected Info.ServerID %v actual %v", server.ID, cfg.Info.ServerID)
-	}
-	if cfg.Info.ProfileName != server.ProfileName {
-		t.Errorf("expected Info.ProfileName %v actual %v", server.ProfileName, cfg.Info.ProfileName)
+	if cfg.Info.ProfileName != *server.Profile {
+		t.Errorf("expected Info.ProfileName %v actual %v", *server.Profile, cfg.Info.ProfileName)
 	}
 
 	expectedConfigs := map[string]func(cf tc.ATSConfigMetaDataConfigFile){
@@ -223,7 +217,7 @@ func TestMakeMetaConfig(t *testing.T) {
 			}
 		},
 		"remap.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
+			if expected := cfgPath; cf.Location != expected {
 				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
 			}
 			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
@@ -246,6 +240,46 @@ func TestMakeMetaConfig(t *testing.T) {
 				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
 			}
 		},
+		"hosting.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"parent.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"plugin.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"records.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"storage.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
 	}
 
 	for _, cfgFile := range cfg.ConfigFiles {
@@ -258,10 +292,9 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
-	cfg = tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	cfg, err = MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
+	if err != nil {
+		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
 	for _, cfgFile := range cfg.ConfigFiles {
 		if cfgFile.FileNameOnDisk != "cache.config" {
@@ -272,23 +305,15 @@ func TestMakeMetaConfig(t *testing.T) {
 		}
 		break
 	}
-	if strings.Contains(txt, "nonexistentds") {
-		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
-	}
-
-	// check for expected apiUri vs url keys (if values are empty strings, they should be omitted from the json)
-	m := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(txt), &m); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
-	}
-	cfl := m["configFiles"].([]interface{})
-	for _, cf := range cfl {
-		c := cf.(map[string]interface{})
-		if c["fnameOnDisk"] == "external.config" {
-			if _, exists := c["apiUri"]; exists {
+	for _, fi := range cfg.ConfigFiles {
+		if strings.Contains(fi.FileNameOnDisk, "nonexistentds") {
+			t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", fi.FileNameOnDisk)
+		}
+		if fi.FileNameOnDisk == "external.config" {
+			if fi.APIURI != "" {
 				t.Errorf("expected: apiUri field to be omitted for external.config, actual: present")
 			}
-			if _, exists := c["url"]; !exists {
+			if fi.URL != "" {
 				t.Errorf("expected: url field to be present for external.config, actual: omitted")
 			}
 		}

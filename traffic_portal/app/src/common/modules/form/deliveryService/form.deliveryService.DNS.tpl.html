@@ -59,7 +59,7 @@ under the License.
                     <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
-                    <li ng-if="::(!deliveryService.topology)" role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
@@ -244,6 +244,22 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
+                                <div class="helptext">The type of content being delivered. Some examples are linear and vod.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="serviceCategory" name="serviceCategory" class="form-control" ng-model="deliveryService.serviceCategory" ng-options="serviceCategory.name as serviceCategory.name for serviceCategory in serviceCategories">
+                                <option value="">Select...</option>
+                            </select>
+                            <small ng-show="deliveryService.serviceCategory"><a href="/#!/service-categories/edit?name={{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.serviceCategory != dsCurrent.serviceCategory">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.serviceCategory}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc), 'has-feedback': hasError(generalConfig.longDesc)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description 1<div class="helptooltip">
                             <div class="helptext">Free text field not currently used in configuration.</div>
@@ -396,7 +412,7 @@ under the License.
                                 </dl>
                                 <br>
                                 <br>
-                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#signed-urls" target="_blank">See Token Based Authentication</a>
+                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#signing-algorithm" target="_blank">See Token Based Authentication</a>
                             </div>
                         </div>
                         </label>
@@ -473,9 +489,9 @@ under the License.
                                 </ul>
                                 <aside>
                                     <h6>Note:</h6>
-                                    <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
+                                    <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
                                         <br>
-                                        To set the qstring without the use of regex remap, or for further options, <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#qstring-handling" target="_blank">See Qstring Handling</a></p>
+                                        To set the qstring without the use of regex remap, or for further options, <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#query-string-handling" target="_blank">See Qstring Handling</a></p>
                                 </aside>
                             </div>
                         </div>
@@ -505,7 +521,7 @@ under the License.
                                     <li>Header Value: Foo</li>
                                 </ul>
                                 <br>
-                                <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#edge-header-rewrite-rules" target="_blank">Edge Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
@@ -529,7 +545,7 @@ under the License.
                                 </ul>
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#mid-header-rewrite-rules" target="_blank">Mid Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
@@ -553,7 +569,7 @@ under the License.
                                 </ul>
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#first-header-rewrite-rules" target="_blank">First Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
@@ -577,7 +593,7 @@ under the License.
                                 </ul>
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#inner-header-rewrite-rules" target="_blank">Inner Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
@@ -601,7 +617,7 @@ under the License.
                                 </ul>
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#last-header-rewrite-rules" target="_blank">Last Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
@@ -624,7 +640,7 @@ under the License.
                                 <br>
                                 <aside>
                                     <h6>Note</h6>
-                                    <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
+                                    <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
                                 </aside>
                             </div>
                         </div>
@@ -853,7 +869,7 @@ under the License.
                                 Traffic Router will redirect to this URL when Geo Limit check fails.
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html?highlight=Geo%20Limit#geo-limit-redirect-url" target="_blank">GeoLimit Failure Redirect</a> feature...
                             </div>
                         </div>
                         </label>

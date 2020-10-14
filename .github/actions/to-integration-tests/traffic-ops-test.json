@@ -1,0 +1,38 @@
+{
+	"default": {
+		"logLocations": {
+			"debug": "stderr",
+			"error": "stderr",
+			"event": "stderr",
+			"info": "stderr",
+			"warning": "stderr"
+		},
+		"session": {
+			"timeoutInSecs": 60
+		}
+	},
+	"trafficOps": {
+		"URL": "https://localhost:6443",
+		"password": "twelve",
+		"users": {
+			"disallowed": "disallowed",
+			"operations": "operations",
+			"admin": "admin",
+			"federation": "federation",
+			"portal": "portal",
+			"readOnly": "readOnly",
+			"extension": "extension"
+		}
+	},
+	"trafficOpsDB": {
+		"dbname": "traffic_ops",
+		"description": "Test database to_test",
+		"hostname": "postgres",
+		"password": "twelve",
+		"port": "5432",
+		"type": "Pg",
+		"user": "traffic_ops"
+	},
+	"noPerl": true,
+	"noISO": true
+}

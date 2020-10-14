@@ -20,6 +20,7 @@ package staticdnsentry
  */
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -95,7 +96,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		return err
 	}
 
-	var addressErr error
+	var addressErr, ttlErr error
 	switch typeStr {
 	case "A_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv4)
@@ -103,21 +104,37 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv6)
 	case "CNAME_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.DNSName)
+		address := *staticDNSEntry.Address
+		if addressErr == nil {
+			lastChar := address[len(address)-1:]
+			if lastChar != "." {
+				addressErr = fmt.Errorf("for type: CNAME_RECORD must have a trailing period")
+			}
+		}
 	default:
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
+	}
+
+	if staticDNSEntry.TTL != nil {
+		if *staticDNSEntry.TTL == 0 {
+			ttlErr = validation.Validate(staticDNSEntry.TTL, is.Digit)
+		}
+	} else {
+		ttlErr = validation.Validate(staticDNSEntry.TTL, validation.Required)
 	}
 
 	errs := validation.Errors{
 		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
 		"address":           addressErr,
 		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
-		"ttl":               validation.Validate(staticDNSEntry.TTL, validation.Required),
+		"ttl":               ttlErr,
 		"typeId":            validation.Validate(staticDNSEntry.TypeID, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(en.APIInfo(), "host")
 	return api.GenericRead(h, en, useIMS)
 }
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }

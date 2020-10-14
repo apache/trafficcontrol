@@ -26,6 +26,9 @@ import (
 )
 
 func TestGetOSVersions(t *testing.T) {
+	if Config.NoISO {
+		t.Skip("No ISO generation available")
+	}
 	// Default value per ./traffic_ops/install/data/json/osversions.json file.
 	// This should be the data returned in the CiaB environment.
 	expected := map[string]string{
@@ -78,7 +81,7 @@ func TestGetOSVersions(t *testing.T) {
 		}
 		// Cleanup DB entry
 		defer func() {
-			resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(p.Name, p.ConfigFile, p.Value, nil)
+			resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(p.Name, p.ConfigFile, p.Value)
 			if err != nil {
 				t.Fatalf("cannot GET Parameter by name: %v - %v\n", p.Name, err)
 			}

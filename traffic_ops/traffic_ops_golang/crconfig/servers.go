@@ -464,7 +464,7 @@ func getCDNNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 // getGlobalParam returns the global parameter with the requested name, whether it existed, and any error
 func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
 	val := ""
-	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = 'global' and name = $1`, name).Scan(&val); err != nil {
+	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = $1 and name = $2`, tc.GlobalConfigFileName, name).Scan(&val); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}

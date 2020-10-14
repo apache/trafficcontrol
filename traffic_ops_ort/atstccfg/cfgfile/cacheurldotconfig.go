@@ -20,6 +20,8 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
@@ -43,7 +45,7 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 		dssMap[*dss.DeliveryService] = append(dssMap[*dss.DeliveryService], *dss.Server)
 	}
 
-	dsesWithServers := []tc.DeliveryServiceNullable{}
+	dsesWithServers := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue // TODO warn
@@ -52,7 +54,7 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
 			continue
 		}
-		if len(dssMap[*ds.ID]) == 0 {
+		if len(dssMap[*ds.ID]) == 0 && ds.Topology == nil {
 			continue
 		}
 		dsesWithServers = append(dsesWithServers, ds)
@@ -60,7 +62,11 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 
 	cfgDSes := atscfg.DeliveryServicesToCacheURLDSes(dsesWithServers)
 
-	return atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, atscfg.LineCommentCacheURLDotConfig, nil
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server missing CDNName")
+	}
+
+	return atscfg.MakeCacheURLDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, atscfg.LineCommentCacheURLDotConfig, nil
 }
 
 func GetConfigFileCDNCacheURLPlain(toData *config.TOData) (string, string, string, error) {

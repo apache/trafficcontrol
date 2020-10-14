@@ -16,13 +16,13 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"reflect"
+	"sort"
 	"testing"
 	"time"
 
-	"reflect"
-
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -35,6 +35,7 @@ func TestStaticDNSEntries(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntries(t)
 		GetTestStaticDNSEntriesIMSAfterChange(t, header)
 		UpdateTestStaticDNSEntriesInvalidAddress(t)
@@ -43,7 +44,7 @@ func TestStaticDNSEntries(t *testing.T) {
 
 func GetTestStaticDNSEntriesIMSAfterChange(t *testing.T, header http.Header) {
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, header)
+		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -56,7 +57,7 @@ func GetTestStaticDNSEntriesIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, header)
+		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -69,12 +70,12 @@ func GetTestStaticDNSEntriesIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestStaticDNSEntriesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, header)
+		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -95,11 +96,30 @@ func CreateTestStaticDNSEntries(t *testing.T) {
 
 }
 
+func SortTestStaticDNSEntries(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetStaticDNSEntriesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Host)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
 func UpdateTestStaticDNSEntries(t *testing.T) {
 
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]
 	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host, nil)
+	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
 	}
@@ -115,7 +135,7 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 	}
 
 	// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
-	resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID, nil)
+	resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID)
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v", firstStaticDNSEntry.Host, err)
 	}
@@ -128,12 +148,16 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
+	expectedAlerts := []tc.Alerts{
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' for type: CNAME_RECORD must have a trailing period", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
 
 	// A_RECORD
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]
 	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host, nil)
+	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
 	}
@@ -154,7 +178,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	// CNAME_RECORD
 	secondStaticDNSEntry := testData.StaticDNSEntries[1]
 	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err = TOSession.GetStaticDNSEntriesByHost(secondStaticDNSEntry.Host, nil)
+	resp, _, err = TOSession.GetStaticDNSEntriesByHost(secondStaticDNSEntry.Host)
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", secondStaticDNSEntry.Host, err)
 	}
@@ -170,10 +194,22 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[1])
 	}
 
+	//CNAME_RECORD: missing a trailing period
+	expectedAddressMissingPeriod := "cdn.test.com"
+	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	t.Log("Status Code [expect 400]: ", status)
+	if err != nil {
+		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+	}
+	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	}
+
 	// AAAA_RECORD
 	thirdStaticDNSEntry := testData.StaticDNSEntries[2]
 	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err = TOSession.GetStaticDNSEntriesByHost(thirdStaticDNSEntry.Host, nil)
+	resp, _, err = TOSession.GetStaticDNSEntriesByHost(thirdStaticDNSEntry.Host)
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", thirdStaticDNSEntry.Host, err)
 	}
@@ -185,15 +221,15 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
-	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	if !reflect.DeepEqual(alert, expectedAlerts[3]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[3])
 	}
 }
 
 func GetTestStaticDNSEntries(t *testing.T) {
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, nil)
+		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 		if err != nil {
 			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v", err, resp)
 		}
@@ -204,7 +240,7 @@ func DeleteTestStaticDNSEntries(t *testing.T) {
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
 		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, nil)
+		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 		if err != nil {
 			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v", staticDNSEntry.Host, err)
 		}
@@ -217,7 +253,7 @@ func DeleteTestStaticDNSEntries(t *testing.T) {
 			}
 
 			// Retrieve the StaticDNSEntry to see if it got deleted
-			staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host, nil)
+			staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 			if err != nil {
 				t.Errorf("error deleting StaticDNSEntrie name: %s", err.Error())
 			}

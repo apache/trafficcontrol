@@ -31,6 +31,10 @@ import (
 const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
 
 func GetConfigFileServerCacheDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.HostName == nil {
+		return "", "", "", errors.New("server missing HostName")
+	}
+
 	// TODO TOAPI add /servers?cdn=1 query param
 
 	// TODO remove this, we generated the scope, we know it's right? Or should we have an extra safety check?
@@ -52,7 +56,7 @@ func GetConfigFileServerCacheDotConfig(toData *config.TOData) (string, string, s
 		dsData[tc.DeliveryServiceName(*ds.XMLID)] = atscfg.ServerCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
 	}
 
-	serverName := tc.CacheName(toData.Server.HostName)
+	serverName := tc.CacheName(*toData.Server.HostName)
 
 	return atscfg.MakeServerCacheDotConfig(serverName, toData.TOToolName, toData.TOURL, dsData), atscfg.ContentTypeCacheDotConfig, atscfg.LineCommentCacheDotConfig, nil
 }

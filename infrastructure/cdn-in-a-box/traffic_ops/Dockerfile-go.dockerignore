@@ -23,5 +23,7 @@
 # - https://github.com/docker/compose/pull/6865
 # - https://docs.docker.com/develop/develop-images/build_enhancements/
 *
+!dns/set-dns.sh
+!dns/insert-self-into-dns.sh
 !enroller/
 !traffic_ops/

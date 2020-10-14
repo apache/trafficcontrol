@@ -402,6 +402,10 @@ Glossary
 	Server Capabilities
 		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier cache servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier cache servers` assigned to the requiring :term:`Delivery Services`.
 
+    Service Category
+    Service Categories
+        A :dfn:`Service Category` defines the type of content being delivered by a :dfn:`Delivery Service`. For example, a :dfn:`Service Category` could be created named "linear" and assigned to a :dfn:`Delivery Service` that delivers linear content. 
+
 	Snapshot
 	Snapshots
 	CDN Snapshot
@@ -417,6 +421,14 @@ Glossary
 	Tenancy
 	Tenancies
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
+
+	Topology Node
+	Topology Nodes
+	Parent Topology Node
+	Parent Topology Nodes
+	Child Topology Node
+	Child Topology Nodes
+		Each :dfn:`Topology Node` is associated with a particular :term:`Cache Group`. In addition, the Topology Node has 0, 1, or 2 Parent Topology Nodes and has 0, 1, or 2 Child Topology Nodes, according to your configuration.
 
 	Topology
 	Topologies

@@ -16,11 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -32,6 +33,7 @@ func TestCDNs(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestCDNs(t)
 		UpdateTestCDNs(t)
 		GetTestCDNs(t)
 		GetTestCDNsIMSAfterChange(t, header)
@@ -40,7 +42,7 @@ func TestCDNs(t *testing.T) {
 
 func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -53,7 +55,7 @@ func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -67,10 +69,10 @@ func GetTestCDNsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	for _, cdn := range testData.CDNs {
-		futureTime := time.Now().AddDate(0,0,1)
+		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -92,11 +94,30 @@ func CreateTestCDNs(t *testing.T) {
 
 }
 
+func SortTestCDNs(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetCDNsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
 func UpdateTestCDNs(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
@@ -110,7 +131,7 @@ func UpdateTestCDNs(t *testing.T) {
 	}
 
 	// Retrieve the CDN to check CDN name got updated
-	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID, nil)
+	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
 	}
@@ -124,7 +145,7 @@ func UpdateTestCDNs(t *testing.T) {
 func GetTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.GetCDNByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetCDNByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET CDN by name: %v - %v", err, resp)
 		}
@@ -135,7 +156,7 @@ func DeleteTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
 		// Retrieve the CDN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCDNByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetCDNByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
 		}
@@ -148,7 +169,7 @@ func DeleteTestCDNs(t *testing.T) {
 			}
 
 			// Retrieve the CDN to see if it got deleted
-			cdns, _, err := TOSession.GetCDNByName(cdn.Name, nil)
+			cdns, _, err := TOSession.GetCDNByName(cdn.Name)
 			if err != nil {
 				t.Errorf("error deleting CDN name: %s", err.Error())
 			}

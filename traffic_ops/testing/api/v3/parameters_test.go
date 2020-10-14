@@ -16,12 +16,12 @@
 package v3
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -45,7 +45,7 @@ func TestParameters(t *testing.T) {
 
 func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -58,7 +58,7 @@ func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -84,7 +84,7 @@ func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByName(firstParameter.Name, nil)
+	resp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -98,7 +98,7 @@ func UpdateTestParameters(t *testing.T) {
 	}
 
 	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
+	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -112,11 +112,11 @@ func UpdateTestParameters(t *testing.T) {
 func GetTestParametersIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -129,7 +129,7 @@ func GetTestParametersIMS(t *testing.T) {
 func GetTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.GetParameterByName(pl.Name, nil)
+		resp, _, err := TOSession.GetParameterByName(pl.Name)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
 		}
@@ -161,7 +161,7 @@ func DeleteTestParameters(t *testing.T) {
 func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 
 	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile, nil)
+	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
 	}
@@ -180,7 +180,7 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pls, _, err := TOSession.GetParameterByID(pl.ID, nil)
+		pls, _, err := TOSession.GetParameterByID(pl.ID)
 		if err != nil {
 			t.Errorf("error deleting Parameter name: %s", err.Error())
 		}

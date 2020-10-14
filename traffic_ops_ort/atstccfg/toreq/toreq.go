@@ -142,21 +142,93 @@ func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
 	return toToolName, toURL
 }
 
-func (cl *TOClient) GetServers() ([]tc.Server, error) {
-	servers := []tc.Server{}
+func (cl *TOClient) GetServers() ([]tc.ServerNullable, error) {
+	servers := []tc.ServerNullable{}
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
 		toServers, reqInf, err := cl.C.GetServers()
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		servers := obj.(*[]tc.Server)
-		*servers = toServers
+		servers := obj.(*[]tc.ServerNullable)
+		*servers = ServersToNullable(toServers)
 		return nil
 	})
 	if err != nil {
 		return nil, errors.New("getting servers: " + err.Error())
 	}
 	return servers, nil
+}
+
+// ServersToNullable converts a []tc.Server to []tc.ServerNullable.
+// This is necessary, because the Traffic Ops API 1.x client doesn't have a []tc.ServerNullable function.
+func ServersToNullable(svs []tc.Server) []tc.ServerNullable {
+	nss := []tc.ServerNullable{}
+	for _, sv := range svs {
+		ns := tc.ServerNullable{}
+		ns.Cachegroup = util.StrPtr(sv.Cachegroup)
+		ns.CachegroupID = util.IntPtr(sv.CachegroupID)
+		ns.CDNID = util.IntPtr(sv.CDNID)
+		ns.CDNName = util.StrPtr(sv.CDNName)
+		ns.DomainName = util.StrPtr(sv.DomainName)
+		ns.FQDN = sv.FQDN
+		ns.GUID = util.StrPtr(sv.GUID)
+		ns.HostName = util.StrPtr(sv.HostName)
+		ns.HTTPSPort = util.IntPtr(sv.HTTPSPort)
+		ns.ID = util.IntPtr(sv.ID)
+		ns.ILOIPAddress = util.StrPtr(sv.ILOIPAddress)
+		ns.ILOIPGateway = util.StrPtr(sv.ILOIPGateway)
+		ns.ILOIPNetmask = util.StrPtr(sv.ILOIPNetmask)
+		ns.ILOPassword = util.StrPtr(sv.ILOPassword)
+		ns.ILOUsername = util.StrPtr(sv.ILOUsername)
+		lastUpdated := sv.LastUpdated
+		ns.LastUpdated = &lastUpdated
+		ns.MgmtIPAddress = util.StrPtr(sv.MgmtIPAddress)
+		ns.MgmtIPGateway = util.StrPtr(sv.MgmtIPGateway)
+		ns.MgmtIPNetmask = util.StrPtr(sv.MgmtIPNetmask)
+		ns.OfflineReason = util.StrPtr(sv.OfflineReason)
+		ns.PhysLocation = util.StrPtr(sv.PhysLocation)
+		ns.PhysLocationID = util.IntPtr(sv.PhysLocationID)
+		ns.Profile = util.StrPtr(sv.Profile)
+		ns.ProfileDesc = util.StrPtr(sv.ProfileDesc)
+		ns.ProfileID = util.IntPtr(sv.ProfileID)
+		ns.Rack = util.StrPtr(sv.Rack)
+		ns.RevalPending = util.BoolPtr(sv.RevalPending)
+		ns.RouterHostName = util.StrPtr(sv.RouterHostName)
+		ns.RouterPortName = util.StrPtr(sv.RouterPortName)
+		ns.Status = util.StrPtr(sv.Status)
+		ns.StatusID = util.IntPtr(sv.StatusID)
+		ns.TCPPort = util.IntPtr(sv.TCPPort)
+		ns.Type = sv.Type
+		ns.TypeID = util.IntPtr(sv.TypeID)
+		ns.UpdPending = util.BoolPtr(sv.UpdPending)
+		ns.XMPPID = util.StrPtr(sv.XMPPID)
+		ns.XMPPPasswd = util.StrPtr(sv.XMPPPasswd)
+
+		mtu := uint64(sv.InterfaceMtu)
+		iFace := tc.ServerInterfaceInfo{
+			MTU:     &mtu,
+			Name:    sv.InterfaceName,
+			Monitor: true,
+			IPAddresses: []tc.ServerIPAddress{
+				tc.ServerIPAddress{
+					Address:        sv.IPAddress,
+					Gateway:        util.StrPtr(sv.IPGateway),
+					ServiceAddress: true,
+				},
+			},
+		}
+		if sv.IP6Address != "" {
+			iFace.IPAddresses = append(iFace.IPAddresses, tc.ServerIPAddress{
+				Address:        sv.IP6Address,
+				Gateway:        util.StrPtr(sv.IP6Gateway),
+				ServiceAddress: true,
+			})
+		}
+		ns.Interfaces = append(ns.Interfaces, iFace)
+
+		nss = append(nss, ns)
+	}
+	return nss
 }
 
 func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, error) {

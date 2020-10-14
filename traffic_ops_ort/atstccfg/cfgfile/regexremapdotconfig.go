@@ -20,6 +20,7 @@ package cfgfile
  */
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -28,6 +29,10 @@ import (
 )
 
 func GetConfigFileCDNRegexRemap(toData *config.TOData, fileName string) (string, string, string, error) {
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server CDNName missing")
+	}
+
 	configSuffix := `.config`
 	if !strings.HasPrefix(fileName, atscfg.RegexRemapPrefix) || !strings.HasSuffix(fileName, configSuffix) {
 		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen."}]}`, "", "", config.ErrBadRequest
@@ -39,7 +44,7 @@ func GetConfigFileCDNRegexRemap(toData *config.TOData, fileName string) (string,
 	}
 
 	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent atscfg.DeliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
-	ds := tc.DeliveryServiceNullable{}
+	ds := tc.DeliveryServiceNullableV30{}
 	for _, dsesDS := range toData.DeliveryServices {
 		if dsesDS.XMLID == nil {
 			continue // TODO log?
@@ -53,7 +58,7 @@ func GetConfigFileCDNRegexRemap(toData *config.TOData, fileName string) (string,
 		return `{"alerts":[{"level":"error","text":"Error - delivery service '` + dsName + `' not found! Do you have a regex_remap_*.config location Parameter for a delivery service that doesn't exist?"}]}`, "", "", config.ErrNotFound
 	}
 
-	cfgDSes := atscfg.DeliveryServicesToCDNDSes([]tc.DeliveryServiceNullable{ds})
+	cfgDSes := atscfg.DeliveryServicesToCDNDSes([]tc.DeliveryServiceNullableV30{ds})
 
-	return atscfg.MakeRegexRemapDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeRegexRemapDotConfig, atscfg.LineCommentRegexRemapDotConfig, nil
+	return atscfg.MakeRegexRemapDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeRegexRemapDotConfig, atscfg.LineCommentRegexRemapDotConfig, nil
 }

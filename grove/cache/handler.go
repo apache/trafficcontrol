@@ -26,13 +26,12 @@ import (
 	"github.com/apache/trafficcontrol/grove/plugin"
 
 	"github.com/apache/trafficcontrol/grove/remap"
-	"github.com/apache/trafficcontrol/grove/remapdata"
-	"github.com/apache/trafficcontrol/grove/rfc"
 	"github.com/apache/trafficcontrol/grove/stat"
 	"github.com/apache/trafficcontrol/grove/thread"
 	"github.com/apache/trafficcontrol/grove/web"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 type HandlerPointer struct {
@@ -219,7 +218,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqCacheControl := web.ParseCacheControl(reqHeader)
+	reqCacheControl := rfc.ParseCacheControl(reqHeader)
 	log.Debugf("Serve got Cache-Control %+v (reqid %v)\n", reqCacheControl, reqID)
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
@@ -268,15 +267,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqHeaders := r.Header
 	canReuseStored := rfc.CanReuseStored(reqHeaders, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, h.strictRFC)
 
-	if canReuseStored != remapdata.ReuseCan { // run the BeforeParentRequest hook for revalidations / ReuseCannot
+	if canReuseStored != rfc.ReuseCan { // run the BeforeParentRequest hook for revalidations / ReuseCannot
 		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
 	}
 
 	switch canReuseStored {
-	case remapdata.ReuseCan:
+	case rfc.ReuseCan:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit! (reqid %v)\n", cacheKey, reqID)
-	case remapdata.ReuseCannot:
+	case rfc.ReuseCannot:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse (reqid %v)\n", cacheKey, reqID)
 		cacheObj, reqHost, err = retrier.Get(r, nil)
 		if err != nil {
@@ -284,7 +283,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			responder.Do()
 			return
 		}
-	case remapdata.ReuseMustRevalidate:
+	case rfc.ReuseMustRevalidate:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (reqid %v)\n", cacheKey, reqID)
 		cacheObj, reqHost, err = retrier.Get(r, cacheObj)
 		if err != nil {
@@ -292,7 +291,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			responder.Do()
 			return
 		}
-	case remapdata.ReuseMustRevalidateCanStale:
+	case rfc.ReuseMustRevalidateCanStale:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale) (reqid %v)\n", cacheKey, reqID)
 		oldCacheObj := cacheObj
 		cacheObj, reqHost, err = retrier.Get(r, cacheObj)

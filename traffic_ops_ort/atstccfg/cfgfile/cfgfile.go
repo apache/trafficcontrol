@@ -20,9 +20,7 @@ package cfgfile
  */
 
 import (
-	"encoding/json"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
 )
 
 const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
@@ -51,7 +48,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil, errors.New("getting global parameters: " + err.Error())
 	}
 	toData.GlobalParams = globalParams
-	toData.TOToolName, toData.TOURL = toreq.GetTOToolNameAndURL(globalParams)
+	toData.TOToolName, toData.TOURL = atscfg.GetTOToolNameAndURL(globalParams)
 
 	if !cfg.DisableProxy {
 		toProxyURLStr := ""
@@ -86,24 +83,30 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 		toData.Servers = servers
 
-		server := tc.Server{ID: atscfg.InvalidID}
+		server := &tc.ServerNullable{}
 		for _, toServer := range servers {
-			if toServer.HostName == cfg.CacheHostName {
-				server = toServer
+			if toServer.HostName != nil && *toServer.HostName == cfg.CacheHostName {
+				server = &toServer
 				break
 			}
 		}
-		if server.ID == atscfg.InvalidID {
+		if server.ID == nil {
 			return errors.New("server '" + cfg.CacheHostName + " not found in servers")
+		} else if server.CDNName == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing CDNName")
+		} else if server.CDNID == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing CDNID")
+		} else if server.Profile == nil {
+			return errors.New("server '" + cfg.CacheHostName + " missing Profile")
 		}
 
 		toData.Server = server
 
 		sslF := func() error {
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
-			keys, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(server.CDNName))
+			keys, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName))
 			if err != nil {
-				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
 			toData.SSLKeys = keys
 			return nil
@@ -111,15 +114,43 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(server.CDNID)
+			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(*server.CDNID)
 			if err == nil && unsupported {
 				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
-				dses, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
+				legacyDSes := []tc.DeliveryServiceNullable{}
+				legacyDSes, err = cfg.TOClient.GetCDNDeliveryServices(*server.CDNID)
+				if err == nil {
+					dses = make([]tc.DeliveryServiceNullableV30, 0, len(legacyDSes))
+					for _, ds := range legacyDSes {
+						dses = append(dses, tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)})
+					}
+				}
 			}
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
 			}
 			toData.DeliveryServices = dses
+
+			allDSesHaveTopologies := true
+			for _, ds := range toData.DeliveryServices {
+				if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
+					continue
+				}
+				if ds.Topology == nil {
+					allDSesHaveTopologies = false
+					break
+				}
+			}
+
+			dssF := func() error {
+				defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
+				dss, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
+				if err != nil {
+					return errors.New("getting delivery service servers: " + err.Error())
+				}
+				toData.DeliveryServiceServers = dss
+				return nil
+			}
 
 			uriSignKeysF := func() error {
 				defer func(start time.Time) { log.Infof("uriF took %v\n", time.Since(start)) }(time.Now())
@@ -177,33 +208,39 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			if !cfg.RevalOnly {
 				fs = append([]func() error{uriSignKeysF, urlSigKeysF}, fs...) // skip keys for reval-only, which doesn't need them
 			}
+			if !cfg.RevalOnly && !allDSesHaveTopologies {
+				// skip DSS if reval-only (which doesn't need DSS)
+				// or if all DSes have Topologies (which don't use DSS)
+				fs = append([]func() error{dssF}, fs...)
+			}
+
 			return util.JoinErrs(runParallel(fs))
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
-			params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+			params, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
 			if err != nil {
-				return errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
+				return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 			} else if len(params) == 0 {
-				return errors.New("getting server profile '" + server.Profile + "' parameters: no parameters (profile not found?)")
+				return errors.New("getting server profile '" + *server.Profile + "' parameters: no parameters (profile not found?)")
 			}
 			toData.ServerParams = params
 			return nil
 		}
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
-			cdn, err := cfg.TOClient.GetCDN(tc.CDNName(server.CDNName))
+			cdn, err := cfg.TOClient.GetCDN(tc.CDNName(*server.CDNName))
 			if err != nil {
-				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
 			toData.CDN = cdn
 			return nil
 		}
 		profileF := func() error {
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			profile, err := cfg.TOClient.GetProfileByName(server.Profile)
+			profile, err := cfg.TOClient.GetProfileByName(*server.Profile)
 			if err != nil {
-				return errors.New("getting profile '" + server.Profile + "': " + err.Error())
+				return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
 			}
 			toData.Profile = profile
 			return nil
@@ -231,15 +268,6 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			return errors.New("getting scope parameters: " + err.Error())
 		}
 		toData.ScopeParams = scopeParams
-		return nil
-	}
-	dssF := func() error {
-		defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
-		dss, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
-		if err != nil {
-			return errors.New("getting delivery service servers: " + err.Error())
-		}
-		toData.DeliveryServiceServers = dss
 		return nil
 	}
 	jobsF := func() error {
@@ -301,10 +329,24 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil
 	}
 
+	topologiesF := func() error {
+		defer func(start time.Time) { log.Infof("topologiesF took %v\n", time.Since(start)) }(time.Now())
+		topologies, unsupported, err := cfg.TOClientNew.GetTopologies()
+		if err != nil {
+			return errors.New("getting topologies: " + err.Error())
+		}
+		if unsupported {
+			log.Warnln("Traffic Ops didn't support Topologies, topologies will be not be used for config generation!")
+			return nil
+		}
+		toData.Topologies = topologies
+		return nil
+	}
+
 	fs := []func() error{serversF, cgF, scopeParamsF, jobsF}
 	if !cfg.RevalOnly {
 		// skip data not needed for reval, if we're reval-only
-		fs = append([]func() error{dssF, dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
+		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
 	}
 	errs := runParallel(fs)
 	return toData, util.JoinErrs(errs)
@@ -347,45 +389,6 @@ func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverI
 		filtered = append(filtered, dss)
 	}
 	return filtered
-}
-
-// TCParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfiles, error) {
-	params := make([]ParameterWithProfiles, 0, len(tcParams))
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfiles{Parameter: tcParam}
-
-		profiles := []string{}
-		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
-			return nil, errors.New("unmarshalling JSON from parameter '" + strconv.Itoa(param.ID) + "': " + err.Error())
-		}
-		param.ProfileNames = profiles
-		param.Profiles = nil
-		params = append(params, param)
-	}
-	return params, nil
-}
-
-type ParameterWithProfiles struct {
-	tc.Parameter
-	ProfileNames []string
-}
-
-type ParameterWithProfilesMap struct {
-	tc.Parameter
-	ProfileNames map[string]struct{}
-}
-
-func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
-	params := []ParameterWithProfilesMap{}
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
-		for _, profile := range tcParam.ProfileNames {
-			param.ProfileNames[profile] = struct{}{}
-		}
-		params = append(params, param)
-	}
-	return params
 }
 
 // FilterParams filters params and returns only the parameters which match configFile, name, and value.

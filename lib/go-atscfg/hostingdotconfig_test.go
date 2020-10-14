@@ -24,10 +24,12 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeHostingDotConfig(t *testing.T) {
-	serverName := tc.CacheName("server0")
+	server := &tc.ServerNullable{}
+	server.HostName = util.StrPtr("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string]string{
@@ -43,8 +45,14 @@ func TestMakeHostingDotConfig(t *testing.T) {
 		"https://origin4.example.net/",
 		"http://origin5.example.net/",
 	}
+	dses := []tc.DeliveryServiceNullableV30{}
+	for _, origin := range origins {
+		ds := tc.DeliveryServiceNullableV30{}
+		ds.OrgServerFQDN = util.StrPtr(origin)
+		dses = append(dses, ds)
+	}
 
-	txt := MakeHostingDotConfig(serverName, toToolName, toURL, params, origins)
+	txt := MakeHostingDotConfig(server, toToolName, toURL, params, dses, nil)
 
 	lines := strings.Split(txt, "\n")
 
@@ -81,6 +89,70 @@ func TestMakeHostingDotConfig(t *testing.T) {
 
 	if len(originFQDNs) > 0 {
 		t.Errorf("expected %+v actual %v\n", originFQDNs, "missing")
+	}
+}
+
+func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
+	server := &tc.ServerNullable{}
+	server.HostName = util.StrPtr("server0")
+	server.Cachegroup = util.StrPtr("edgeCG")
+
+	toToolName := "to0"
+	toURL := "trafficops.example.net"
+	params := map[string]string{
+		ParamRAMDrivePrefix: "ParamRAMDrivePrefix-shouldnotappearinconfig",
+		ParamDrivePrefix:    "ParamDrivePrefix-shouldnotappearinconfig",
+		"somethingelse":     "somethingelse-shouldnotappearinconfig",
+	}
+
+	dsTopology := tc.DeliveryServiceNullableV30{}
+	dsTopology.OrgServerFQDN = util.StrPtr("https://origin0.example.net")
+	dsTopology.XMLID = util.StrPtr("ds-topology")
+	dsTopology.Topology = util.StrPtr("t0")
+	dsTopology.Active = util.BoolPtr(true)
+
+	dsTopologyWithoutServer := tc.DeliveryServiceNullableV30{}
+	dsTopologyWithoutServer.OrgServerFQDN = util.StrPtr("https://origin1.example.net")
+	dsTopologyWithoutServer.XMLID = util.StrPtr("ds-topology-without-server")
+	dsTopologyWithoutServer.Topology = util.StrPtr("t1")
+	dsTopologyWithoutServer.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullableV30{dsTopology, dsTopologyWithoutServer}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+		tc.Topology{
+			Name: "t1",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "otherEdgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	txt := MakeHostingDotConfig(server, toToolName, toURL, params, dses, topologies)
+
+	if !strings.Contains(txt, "origin0") {
+		t.Errorf("expected origin0 in topology, actual %v\n", txt)
+	}
+	if strings.Contains(txt, "origin1") {
+		t.Errorf("expected no origin1 not in topology, actual %v\n", txt)
 	}
 }
 

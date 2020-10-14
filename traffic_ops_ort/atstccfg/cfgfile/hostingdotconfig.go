@@ -24,27 +24,40 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
-const ServerHostingDotConfigMidIncludeInactive = false
-const ServerHostingDotConfigEdgeIncludeInactive = true
-
 func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.HostingConfigParamConfigFile, "", "", ""))
 
-	cdnServers := map[tc.CacheName]tc.Server{}
+	if toData.Server.CDNID == nil {
+		return "", "", "", errors.New("this server missing CDNID")
+	}
+
+	cdnServers := map[tc.CacheName]tc.ServerNullable{}
 	for _, sv := range toData.Servers {
-		if sv.CDNID != toData.Server.CDNID {
+		if sv.HostName == nil {
+			log.Errorln("TO Servers had server missing HostName, skipping!")
+			continue
+		} else if sv.CDNID == nil {
+			log.Errorln("TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		cdnServers[tc.CacheName(sv.HostName)] = sv
+		if *sv.CDNID != *toData.Server.CDNID {
+			continue
+		}
+		cdnServers[tc.CacheName(*sv.HostName)] = sv
 	}
 
 	serverIDs := map[int]struct{}{}
 	for _, sv := range cdnServers {
-		serverIDs[sv.ID] = struct{}{}
+		if sv.CDNID == nil {
+			log.Errorln("TO Servers had server missing CDNID, skipping!")
+			continue
+		}
+		serverIDs[*sv.ID] = struct{}{}
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -67,59 +80,53 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		dsServerMap[*dss.DeliveryService][*dss.Server] = struct{}{}
 	}
 
-	hostingDSes := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
-
 	isMid := strings.HasPrefix(toData.Server.Type, tc.MidTypePrefix)
 
+	if toData.Server.ID == nil {
+		return "", "", "", errors.New("this server missing ID")
+	}
+
+	filteredDSes := []tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
-
-		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
+		if *ds.CDNID != *toData.Server.CDNID {
 			continue
 		}
+		if ds.Topology == nil {
+			if !*ds.Active && ((!isMid && !atscfg.ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !atscfg.ServerHostingDotConfigMidIncludeInactive)) {
+				continue
+			}
 
-		if *ds.CDNID != toData.Server.CDNID {
-			continue
+			if isMid {
+				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
+					continue
+				}
+
+				// mids: include all DSes with at least one server assigned
+				if len(dsServerMap[*ds.ID]) == 0 {
+					continue
+				}
+			} else {
+				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
+					continue
+				}
+
+				// edges: only include DSes assigned to this edge
+				if dsServerMap[*ds.ID] == nil {
+					continue
+				}
+
+				if _, ok := dsServerMap[*ds.ID][*toData.Server.ID]; !ok {
+					continue
+				}
+			}
 		}
 
-		if isMid {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
-				continue
-			}
-
-			// mids: include all DSes with at least one server assigned
-			if len(dsServerMap[*ds.ID]) == 0 {
-				continue
-			}
-		} else {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
-				continue
-			}
-
-			// edges: only include DSes assigned to this edge
-			if dsServerMap[*ds.ID] == nil {
-				continue
-			}
-
-			if _, ok := dsServerMap[*ds.ID][toData.Server.ID]; !ok {
-				continue
-			}
-		}
-
-		hostingDSes[tc.DeliveryServiceName(*ds.XMLID)] = ds
+		filteredDSes = append(filteredDSes, ds)
 	}
 
-	originSet := map[string]struct{}{}
-	for _, ds := range hostingDSes {
-		originSet[*ds.OrgServerFQDN] = struct{}{}
-	}
-	origins := []string{}
-	for origin, _ := range originSet {
-		origins = append(origins, origin)
-	}
-
-	return atscfg.MakeHostingDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, fileParams, origins), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
+	return atscfg.MakeHostingDotConfig(toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
 }

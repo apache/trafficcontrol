@@ -31,9 +31,9 @@ Usage
 - ``atstccfg -h``
 - ``atstccfg -v``
 - ``atstccfg -l``
-- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] -n CACHE_NAME``
-- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -d DATA``
-- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS``
+- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] [--dir TSROOT] -n CACHE_NAME``
+- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -d DATA``
+- ``atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS``
 
 When called using the fourth form, :program:`atstccfg` provides its normal output. This is the entirety of all configuration files necessary for the server, all provided at once. The output is in :mimetype:`mixed/multipart` format, defined by :rfc:`1521`. Each chunk of the message comes with the proprietary ``Path`` header, which specifies the exact location on disk of the file whose contents are contained in that chunk.
 
@@ -70,6 +70,25 @@ Options
 		Retrieves generic information about the Traffic Control system from the :ref:`to-api-system-info` API endpoint. The output is the ``parameters`` object of the responses from GET requests to that endpoint (still JSON-encoded).
 	update-status
 		Retrieves information about the current update status using :ref:`to-api-servers-hostname-update_status`. The response is in the same format as the responses for that endpoint's GET method handler - except that that endpoint returns an array and this :program:`atstccfg` call signature returns a single one of those elements. Which one is chosen is arbitrary (hence undefined behavior when more than one server with the same hostname exists).
+
+.. option:: --dir TSROOT
+
+	Specifies a directory path in which to place Traffic Server configuration
+	files, in the event that "location" :term:`Parameters` are not found for
+	them. If this is not given and location :term:`Parameters` are not found for
+	required files, then :program:`atstccfg` will exit with an error.
+
+	The files that :program:`atstccfg` considers "required" for these purposes
+	are:
+
+	- cache.config
+	- hosting.config
+	- parent.config
+	- plugin.config
+	- records.config
+	- remap.config
+	- storage.config
+	- volume.config
 
 .. option:: -h, --help
 
@@ -135,15 +154,4 @@ Options
 
 Environment Variables
 ---------------------
-
-.. envvar:: TO_USER
-
-	Defines the user as whom to authenticate with Traffic Ops. This is only used if :option:`-U`/:option:`--traffic-ops-user` is not given.
-
-.. envvar:: TO_PASSWORD
-
-	Defines the password to use when authenticating with Traffic Ops. This is only used if :option:`-P`/:option:`--traffic-ops-password` is not given.
-
-.. envvar:: TO_URL
-
-	Defines the *full* URL to be requested. This is only used if :option:`-u`/:option:`--traffic-ops-url` is not given.
+:program:`atstccfg` supports authentication with a Traffic Ops instance using the environment variables :envvar:`TO_URL` (if :option:`-u`/:option:`--traffic-ops-url` is not given), :envvar:`TO_USER` (if :option:`-U`/:option:`--traffic-ops-user` is not given), and :envvar:`TO_PASSWORD` (if :option:`-P`/:option:`--traffic-ops-password` is not given).

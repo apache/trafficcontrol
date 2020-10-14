@@ -28,6 +28,7 @@ Some CDN-in-a-Box components can be used with a debugger to step through lines o
 * `Traffic Ops (Go)`_
 * `Traffic Ops Perl`_
 * `Traffic Router`_
+* `Traffic Stats`_
 
 Traffic Monitor
 ===============
@@ -44,17 +45,17 @@ Traffic Monitor
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TM_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficmonitor`` image without reusing any cached layers to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box.
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficmonitor`` image to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box.
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Monitor
 
 	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
 	mydc down -v
-	mydc build --no-cache trafficmonitor
+	mydc build trafficmonitor-nondebug trafficmonitor
 	mydc up
 
-* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
 
 .. code-block:: json
 	:caption: VS Code launch.json for debugging Traffic Monitor
@@ -93,17 +94,17 @@ Traffic Ops (Go)
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficops-go`` image without reusing any cached layers to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box.
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficops-go`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box.
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Ops
 
 	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
 	mydc down -v
-	mydc build --no-cache trafficops
+	mydc build trafficops-nondebug trafficops
 	mydc up
 
-* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2345. If you are using VS Code, the configuration should look like this:
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2345. If you are using VS Code, the configuration should look like this:
 
 .. code-block:: json
 	:caption: VS Code launch.json for debugging Traffic Ops
@@ -297,6 +298,55 @@ Traffic Router
 	        21-Feb-2020 05:16:07.461 INFO [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.setSslImplementationName setSslImplementation: com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation
 
 * When you see that Tomcat is listening for debugger connections on port 5005, start debugging using the debug configuration that you created.
+
+Traffic Stats
+===============
+
+* Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove the existing RPMs because they contain release Go binaries do not include useful debugging information. Rebuild the RPMs with no optimization, for debugging:
+
+.. code-block:: shell
+	:caption: Remove release RPMs, then build debug RPMs
+
+	make very-clean
+	make debug
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
+
+* Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TS_DEBUG_ENABLE`` to ``true``.
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficstats`` image to make sure it uses our fresh ``traffic_stats.rpm``. Then, start CDN-in-a-Box.
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging Traffic Stats
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build trafficstats-nondebug trafficstats
+	mydc up
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2346. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging Traffic Stats
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Traffic Stats",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2346,
+				"cwd": "${workspaceRoot}/traffic_stats",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_stats",
+			}
+		]
+	}
+
+* Use the debugging configuration you created to start debugging Traffic Stats. It should connect without first breaking at any line.
+
+For an example of usage, set a breakpoint at `the http.Get() call in main.getURL() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.1.0/traffic_stats/traffic_stats.go#L727>`_, then wait 10 seconds for the breakpoint to be hit.
 
 Troubleshooting
 ===============

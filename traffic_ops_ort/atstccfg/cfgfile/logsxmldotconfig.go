@@ -20,11 +20,17 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileProfileLogsXMLDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Profile == nil {
+		return "", "", "", errors.New("this server missing Profile")
+	}
+
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.LogsXMLFileName, "", "", "location"))
-	return atscfg.MakeLogsXMLDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLogsDotXML, atscfg.LineCommentLogsDotXML, nil
+	return atscfg.MakeLogsXMLDotConfig(*toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLogsDotXML, atscfg.LineCommentLogsDotXML, nil
 }

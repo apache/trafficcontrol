@@ -82,6 +82,14 @@ type APIResponseWithSummary struct {
 	} `json:"summary"`
 }
 
+// GoneHandler is an http.Handler function that just writes a 410 Gone response
+// back to the client, along with an error-level alert stating that the endpoint
+// is no longer available.
+func GoneHandler(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("This endpoint is no longer available; please consult documentation")
+	HandleErr(w, r, nil, http.StatusGone, err, nil)
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
@@ -419,6 +427,10 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	return params, intParams, nil, nil, 0
 }
 
+// ParseValidator objects can make use of api.Parse to handle parsing and
+// validating at the same time.
+//
+// TODO: Rework validation to be able to return system-level errors
 type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
@@ -985,4 +997,12 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	} else {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
+}
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
 }

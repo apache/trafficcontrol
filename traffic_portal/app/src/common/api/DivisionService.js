@@ -76,7 +76,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
                     return result;
                 },
                 function(err) {
-                    messageModel.setMessages(err.data.alerts, true);
+                    messageModel.setMessages(err.data.alerts, false);
                     throw err;
                 }
             );

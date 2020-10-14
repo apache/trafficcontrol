@@ -24,20 +24,23 @@ import (
 	"io"
 	"math/rand"
 	"mime/multipart"
+	"net"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFile, error) {
-	meta, err := GetMeta(toData)
+func GetAllConfigs(toData *config.TOData, revalOnly bool, dir string) ([]config.ATSConfigFile, error) {
+	meta, err := GetMeta(toData, dir)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
 	}
@@ -50,7 +53,7 @@ func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFil
 		}
 		txt, contentType, lineComment, err := GetConfigFile(toData, fi)
 		if err != nil {
-			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
+			return nil, errors.New("getting config file '" + fi.FileNameOnDisk + "': " + err.Error())
 		}
 		if fi.FileNameOnDisk == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
@@ -75,6 +78,7 @@ const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
+	sort.Sort(ATSConfigFiles(configs))
 	w := multipart.NewWriter(output)
 
 	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
@@ -113,20 +117,68 @@ func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 	return nil
 }
 
+// ATSConfigFiles implements sort.Interface to sort by path.
+type ATSConfigFiles []config.ATSConfigFile
+
+func (p ATSConfigFiles) Len() int      { return len(p) }
+func (p ATSConfigFiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p ATSConfigFiles) Less(i, j int) bool {
+	if p[i].Location != p[j].Location {
+		return p[i].Location < p[j].Location
+	}
+	return p[i].FileNameOnDisk < p[j].FileNameOnDisk
+}
+
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 
 // PreprocessConfigFile does global preprocessing on the given config file cfgFile.
 // This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
 // These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(server tc.Server, cfgFile string) string {
-	if server.TCPPort != 80 && server.TCPPort != 0 {
-		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(server.TCPPort), -1)
+func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
+	if server.TCPPort != nil && *server.TCPPort != 80 && *server.TCPPort != 0 {
+		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(*server.TCPPort), -1)
 	} else {
 		cfgFile = strings.Replace(cfgFile, `:__SERVER_TCP_PORT__`, ``, -1)
 	}
-	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, server.IPAddress, -1)
-	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, server.HostName, -1)
-	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, server.HostName+`.`+server.DomainName, -1)
+
+	ipAddr := ""
+	for _, iFace := range server.Interfaces {
+		for _, addr := range iFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+			addrStr := addr.Address
+			ip := net.ParseIP(addrStr)
+			if ip == nil {
+				err := error(nil)
+				ip, _, err = net.ParseCIDR(addrStr)
+				if err != nil {
+					ip = nil // don't bother with the error, just skip
+				}
+			}
+			if ip == nil || ip.To4() == nil {
+				continue
+			}
+			ipAddr = addrStr
+			break
+		}
+	}
+	if ipAddr != "" {
+		cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, ipAddr, -1)
+	} else {
+		log.Errorln("Preprocessing: this server had a missing or malformed IPv4 Service Interface, cannot replace __CACHE_IPV4__ directives!")
+	}
+
+	if server.HostName == nil || *server.HostName == "" {
+		log.Errorln("Preprocessing: this server missing HostName, cannot replace __HOSTNAME__ directives!")
+	} else {
+		cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, *server.HostName, -1)
+	}
+	if server.HostName == nil || *server.HostName == "" || server.DomainName == nil || *server.DomainName == "" {
+		log.Errorln("Preprocessing: this server missing HostName or DomainName, cannot replace __FULL_HOSTNAME__ directives!")
+	} else {
+		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
+	}
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
 	return cfgFile
 }

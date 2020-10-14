@@ -20,13 +20,19 @@ package cfgfile
  */
 
 import (
+	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileCDNSSLMultiCertDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("server missing CDNName")
+	}
+
 	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
 
-	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, atscfg.LineCommentSSLMultiCertDotConfig, nil
+	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, atscfg.LineCommentSSLMultiCertDotConfig, nil
 }

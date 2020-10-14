@@ -37,6 +37,7 @@ func TestDeliveryServices(t *testing.T) {
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
 		GetTestDeliveryServices(t)
+		GetTestDeliveryServicesCapacity(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
@@ -100,6 +101,22 @@ func GetTestDeliveryServices(t *testing.T) {
 	if cnt > 2 {
 		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
 	}
+}
+
+func GetTestDeliveryServicesCapacity(t *testing.T) {
+	actualDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	actualDSMap := map[string]tc.DeliveryServiceNullable{}
+	for _, ds := range actualDSes {
+		actualDSMap[*ds.XMLID] = ds
+		capDS, _, err := TOSession.GetDeliveryServiceCapacity(strconv.Itoa(*ds.ID))
+		if err != nil {
+			t.Errorf("cannot GET DeliveryServices: %v's Capacity: %v - %v", ds, err, capDS)
+		}
+	}
+
 }
 
 func UpdateTestDeliveryServices(t *testing.T) {
@@ -515,12 +532,12 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's deliveryservice
-	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(string(*tenant3DS.ID), &tenant3DS); err == nil {
+	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(strconv.Itoa(*tenant3DS.ID), &tenant3DS); err == nil {
 		t.Errorf("expected tenant4user to be unable to update tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 
 	// assert that tenant4user cannot delete tenant3user's deliveryservice
-	if _, err = tenant4TOClient.DeleteDeliveryService(string(*tenant3DS.ID)); err == nil {
+	if _, err = tenant4TOClient.DeleteDeliveryService(strconv.Itoa(*tenant3DS.ID)); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 

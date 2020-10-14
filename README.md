@@ -17,8 +17,12 @@
     under the License.
 -->
 
-[![Build Status](https://builds.apache.org/buildStatus/icon?job=trafficcontrol-master-build)](https://builds.apache.org/job/trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
-![](https://github.com/apache/trafficcontrol/workflow/Weasel%20License%20checks/badge.svg)
+![Build Status](https://github.com/apache/trafficcontrol/workflows/CDN-in-a-Box%20CI/badge.svg)
+![Weasel License Checks](https://github.com/apache/trafficcontrol/workflows/Weasel%20License%20checks/badge.svg)
+![Traffic Ops Integration Tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Ops%20Go%20client/API%20integration%20tests/badge.svg)
+![Go Unit Tests](https://github.com/apache/trafficcontrol/workflows/Go%20Unit%20Tests/badge.svg)
+![Go Formatting](https://github.com/apache/trafficcontrol/workflows/Go%20Format/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 # Apache Traffic Control
 Apache Traffic Control is an Open Source implementation of a Content Delivery Network.

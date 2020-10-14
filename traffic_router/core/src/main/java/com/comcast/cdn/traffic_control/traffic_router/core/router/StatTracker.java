@@ -110,12 +110,87 @@ public class StatTracker {
 	}
 
 	public static class Track {
+		/**
+		 * RouteType represents the type of routing performed/to be performed by Traffic Router.
+		 */
 		public static enum RouteType {
-			DNS,HTTP
+			/**
+			 * This value indicates DNS routing is taking/has taken/will take place.
+			 */
+			DNS,
+			/**
+			 * This value indicates HTTP routing is taking/has taken/will take place.
+			 */
+			HTTP
 		}
 
+		/**
+		 * ResultType represents the final result of attempting to route a request.
+		 */
 		public static enum ResultType {
-			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED, RGDENY, RGALT, GEO_REDIRECT, DEEP_CZ, ANON_BLOCK
+			/**
+			 * This value indicates that an error occurred and routing could not be successfully completed.
+			 */
+			ERROR,
+			/**
+			 * This value indicates that routing was satisfied by a mapping in Coverage Zone configuration.
+			 */
+			CZ,
+			/**
+			 * This value indicates that routing was satisfied by geo-locating the client.
+			 */
+			GEO,
+			/**
+			 * This value indicates that geo-location of the client failed, and they were directed to an appropriate "miss" location.
+			 */
+			MISS,
+			/**
+			 * This value indicates that routing was satisfied by a static DNS entry configured on a Delivery Service.
+			 */
+			STATIC_ROUTE,
+			/**
+			 * 
+			 */
+			DS_REDIRECT,
+			/**
+			 * This value indicates that routing could not be performed, because no Delivery Service could be found to match
+			 * the client request.
+			 */
+			DS_MISS,
+			/**
+			 *
+			 */
+			INIT,
+			/**
+			 * This value indicates that the client was routed according to Federation mappings.
+			 */
+			FED,
+			/**
+			 * 
+			 */
+			RGDENY,
+			/**
+			 * 
+			 */
+			RGALT,
+			/**
+			 * 
+			 */
+			GEO_REDIRECT,
+			/**
+			 * This value indicates that routing was satisfied by a mapping in Deep Coverage Zone configuration.
+			 */
+			DEEP_CZ,
+			/**
+			 * This value indicates that routing was blocked in accordance with anonymous blocking configurations.
+			 */
+			ANON_BLOCK,
+			/**
+			 * This value indicates that routing was based on the default lat/long of the delivery service, because maxmind
+			 * returned the centre of the country as the client location, due to the CZF not being able to resolve the client IP
+			 * to a valid location.
+			 */
+			GEO_DS
 		}
 
 		public enum ResultDetails {

@@ -1,0 +1,166 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+	{% if targetds.active is defined and targetds.active is not none and targetds.active != omit %}
+	"active": {{ targetds.active | bool | lower }},
+	{% endif %}
+	{% if targetds.anonymousBlockingEnabled is defined and targetds.anonymousBlockingEnabled is not none and targetds.anonymousBlockingEnabled != omit %}
+  "anonymousBlockingEnabled": {{ targetds.anonymousBlockingEnabled | bool | lower }},
+	{% endif %}
+	{% if targetds.ccrDnsTtl is defined and targetds.ccrDnsTtl is not none and targetds.ccrDnsTtl != omit %}
+  "ccrDnsTtl": {{ targetds.ccrDnsTtl | int }},
+	{% endif %}
+	{% if targetds.cdnId is defined and targetds.cdnId is not none and targetds.cdnId != omit %}
+  "cdnId":  {{ targetds.cdnId | int }},
+	{% endif %}
+	{% if targetds.checkPath is defined and targetds.checkPath is not none and targetds.checkPath != omit %}
+  "checkPath": "{{ targetds.checkPath }}",
+	{% endif %}
+	{% if targetds.deepCachingType is defined and targetds.deepCachingType is not none and targetds.deepCachingType != omit %}
+  "deepCachingType": "{{ targetds.deepCachingType }}",
+	{% endif %}
+	{% if targetds.displayName is defined and targetds.displayName is not none and targetds.displayName != omit %}
+  "displayName": "{{ targetds.displayName }}",
+	{% endif %}
+	{% if targetds.dnsBypassCname is defined and targetds.dnsBypassCname is not none and targetds.dnsBypassCname != omit %}
+  "dnsBypassCname": "{{ targetds.dnsBypassCname }}",
+	{% endif %}
+	{% if targetds.dnsBypassIp is defined and targetds.dnsBypassIp is not none and targetds.dnsBypassIp != omit %}
+  "dnsBypassIp": "{{ targetds.dnsBypassIp }}",
+	{% endif %}
+	{% if targetds.dnsBypassIp6 is defined and targetds.dnsBypassIp6 is not none and targetds.dnsBypassIp6 != omit %}
+  "dnsBypassIp6": "{{ targetds.dnsBypassIp6 }}",
+	{% endif %}
+	{% if targetds.dnsBypassTtl is defined and targetds.dnsBypassTtl is not none and targetds.dnsBypassTtl != omit %}
+  "dnsBypassTtl": {{ targetds.dnsBypassTtl | int }},
+	{% endif %}
+	{% if targetds.dscp is defined and targetds.dscp is not none and targetds.dscp != omit %}
+  "dscp": {{ targetds.dscp | int }},
+	{% endif %}
+	{% if targetds.edgeHeaderRewrite is defined and targetds.edgeHeaderRewrite is not none and targetds.edgeHeaderRewrite != omit %}
+  "edgeHeaderRewrite": "{{ targetds.edgeHeaderRewrite }}",
+	{% endif %}
+	{% if targetds.fqPacingRate is defined and targetds.fqPacingRate is not none and targetds.fqPacingRate != omit %}
+  "fqPacingRate": {{ targetds.fqPacingRate | int }},
+	{% endif %}
+	{% if targetds.geoLimit is defined and targetds.geoLimit is not none and targetds.geoLimit != omit %}
+  "geoLimit": {{ targetds.geoLimit | int }},
+	{% endif %}
+	{% if targetds.geoLimitCountries is defined and targetds.geoLimitCountries is not none and targetds.geoLimitCountries != omit %}
+  "geoLimitCountries": "{{ targetds.geoLimitCountries }}",
+	{% endif %}
+	{% if targetds.geoLimitRedirectUrl is defined and targetds.geoLimitRedirectUrl is not none and targetds.geoLimitRedirectUrl != omit %}
+  "geoLimitRedirectUrl": "{{ targetds.geoLimitRedirectUrl }}",
+	{% endif %}
+	{% if targetds.geoProvider is defined and targetds.geoProvider is not none and targetds.geoProvider != omit %}
+  "geoProvider": {{ targetds.geoProvider | int }},
+	{% endif %}
+	{% if targetds.globalMaxMbps is defined and targetds.globalMaxMbps is not none and targetds.globalMaxMbps != omit %}
+  "globalMaxMbps": {{ targetds.globalMaxMbps | int }},
+	{% endif %}
+	{% if targetds.globalMaxTps is defined and targetds.globalMaxTps is not none and targetds.globalMaxTps != omit %}
+  "globalMaxTps": {{ targetds.globalMaxTps | int }},
+	{% endif %}
+	{% if targetds.httpBypassFqdn is defined and targetds.httpBypassFqdn is not none and targetds.httpBypassFqdn != omit %}
+  "httpBypassFqdn": "{{ targetds.httpBypassFqdn }}",
+	{% endif %}
+	{% if targetds.infoUrl is defined and targetds.infoUrl is not none and targetds.infoUrl != omit %}
+  "infoUrl": "{{ targetds.infoUrl }}",
+	{% endif %}
+	{% if targetds.initialDispersion is defined and targetds.initialDispersion is not none and targetds.initialDispersion != omit %}
+  "initialDispersion": {{ targetds.initialDispersion }},
+	{% endif %}
+	{% if targetds.ipv6RoutingEnabled is defined and targetds.ipv6RoutingEnabled is not none and targetds.ipv6RoutingEnabled != omit %}
+  "ipv6RoutingEnabled": {{ targetds.ipv6RoutingEnabled | bool | lower }},
+	{% endif %}
+	{% if targetds.logsEnabled is defined and targetds.logsEnabled is not none and targetds.logsEnabled != omit %}
+  "logsEnabled": {{ targetds.logsEnabled | bool | lower }},
+	{% endif %}
+	{% if targetds.longDesc is defined and targetds.longDesc is not none and targetds.longDesc != omit %}
+  "longDesc": "{{ targetds.longDesc }}",
+	{% endif %}
+	{% if targetds.longDesc1 is defined and targetds.longDesc1 is not none and targetds.longDesc1 != omit %}
+  "longDesc1": "{{ targetds.longDesc1 }}",
+	{% endif %}
+	{% if targetds.longDesc2 is defined and targetds.longDesc2 is not none and targetds.longDesc2 != omit %}
+  "longDesc2": "{{ targetds.longDesc2 }}",
+	{% endif %}
+	{% if targetds.maxDnsAnswers is defined and targetds.maxDnsAnswers is not none and targetds.maxDnsAnswers != omit %}
+  "maxDnsAnswers": {{ targetds.maxDnsAnswers | int }},
+	{% endif %}
+	{% if targetds.midHeaderRewrite is defined and targetds.midHeaderRewrite is not none and targetds.midHeaderRewrite != omit %}
+  "midHeaderRewrite": "{{ targetds.midHeaderRewrite }}",
+	{% endif %}
+	{% if targetds.missLat is defined and targetds.missLat is not none and targetds.missLat != omit %}
+  "missLat": {{ targetds.missLat | float }},
+	{% endif %}
+	{% if targetds.missLong is defined and targetds.missLong is not none and targetds.missLong != omit %}
+  "missLong": {{ targetds.missLong | float }},
+	{% endif %}
+	{% if targetds.multiSiteOrigin is defined and targetds.multiSiteOrigin is not none and targetds.multiSiteOrigin != omit %}
+  "multiSiteOrigin": {{ targetds.multiSiteOrigin | bool | lower }},
+	{% endif %}
+	{% if targetds.orgServerFqdn is defined and targetds.orgServerFqdn is not none and targetds.orgServerFqdn != omit %}
+  "orgServerFqdn": "{{ targetds.orgServerFqdn }}",
+	{% endif %}
+	{% if targetds.originShield is defined and targetds.originShield is not none and targetds.originShield != omit %}
+  "originShield": "{{ targetds.originShield }}",
+	{% endif %}
+	{% if targetds.profileId is defined and targetds.profileId is not none and targetds.profileId != omit %}
+  "profileId": {{ targetds.profileId | int }},
+	{% endif %}
+	{% if targetds.protocol is defined and targetds.protocol is not none and targetds.protocol != omit %}
+  "protocol": {{ targetds.protocol | int }},
+	{% endif %}
+	{% if targetds.qstringIgnore is defined and targetds.qstringIgnore is not none and targetds.qstringIgnore != omit %}
+  "qstringIgnore": {{ targetds.qstringIgnore | int }},
+	{% endif %}
+	{% if targetds.rangeRequestHandling is defined and targetds.rangeRequestHandling is not none and targetds.rangeRequestHandling != omit %}
+  "rangeRequestHandling": {{ targetds.rangeRequestHandling | int }},
+	{% endif %}
+	{% if targetds.regexRemap is defined and targetds.regexRemap is not none and targetds.regexRemap != omit %}
+  "regexRemap": "{{ targetds.regexRemap }}",
+	{% endif %}
+	{% if targetds.regionalGeoBlocking is defined and targetds.regionalGeoBlocking is not none and targetds.regionalGeoBlocking != omit %}
+  "regionalGeoBlocking": {{ targetds.regionalGeoBlocking | bool | lower }},
+	{% endif %}
+	{% if targetds.remapText is defined and targetds.remapText is not none and targetds.remapText != omit %}
+  "remapText": "{{ targetds.remapText }}",
+	{% endif %}
+	{% if targetds.routingName is defined and targetds.routingName is not none and targetds.routingName != omit %}
+  "routingName": "{{ targetds.routingName }}",
+	{% endif %}
+	{% if targetds.signed is defined and targetds.signed is not none and targetds.signed != omit %}
+  "signed": {{ targetds.signed | bool | lower }},
+	{% endif %}
+	{% if targetds.signingAlgorithm is defined and targetds.signingAlgorithm is not none and targetds.signingAlgorithm != omit %}
+  "signingAlgorithm": "{{ targetds.signingAlgorithm }}",
+	{% endif %}
+	{% if targetds.sslKeyVersion is defined and targetds.sslKeyVersion is not none and targetds.sslKeyVersion != omit %}
+  "sslKeyVersion": {{ targetds.sslKeyVersion | int }},
+	{% endif %}
+	{% if targetds.tenantId is defined and targetds.tenantId is not none and targetds.tenantId != omit %}
+  "tenantId": {{ targetds.tenantId | int }},
+	{% endif %}
+	{% if targetds.trRequestHeaders is defined and targetds.trRequestHeaders is not none and targetds.trRequestHeaders != omit %}
+  "trRequestHeaders": "{{ targetds.trRequestHeaders }}",
+	{% endif %}
+	{% if targetds.trResponseHeaders is defined and targetds.trResponseHeaders is not none and targetds.trResponseHeaders != omit %}
+  "trResponseHeaders": "{{ targetds.trResponseHeaders }}",
+	{% endif %}
+	{% if targetds.typeId is defined and targetds.typeId is not none and targetds.typeId != omit %}
+  "typeId": {{ targetds.typeId | int }},
+	{% endif %}
+  "xmlId": "{{ targetds.xmlId }}"
+}

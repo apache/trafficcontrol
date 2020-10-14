@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -31,7 +32,7 @@ import (
 func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewritePrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	tcDS := tc.DeliveryServiceNullable{}
+	tcDS := tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue
@@ -67,18 +68,30 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 
 	assignedEdges := []atscfg.HeaderRewriteServer{}
 	for _, server := range toData.Servers {
-		if server.CDNName != *tcDS.CDNName {
+		if server.CDNName == nil {
+			log.Errorln("TO returned Servers server with missing CDNName, skipping!")
 			continue
 		}
-		if _, ok := dsServerIDs[server.ID]; !ok {
+		if server.ID == nil {
+			log.Errorln("TO returned Servers server with missing ID, skipping!")
 			continue
 		}
-		cfgServer, err := atscfg.HeaderRewriteServerFromServerNotNullable(server)
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := dsServerIDs[*server.ID]; !ok && tcDS.Topology == nil {
+			continue
+		}
+		cfgServer, err := atscfg.HeaderRewriteServerFromServer(server)
 		if err != nil {
 			continue // TODO warn?
 		}
 		assignedEdges = append(assignedEdges, cfgServer)
 	}
 
-	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("this server missing CDNName")
+	}
+
+	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges, dsName), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }

@@ -64,12 +64,23 @@ initBuildArea() {
 	(cd atstccfg;
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
+	(cd t3c;
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
+
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
+	mkdir -p "${dest}/build";
+
+	echo "build_rpm.sh lsing for logrotate";
+	ls -lah .;
+	ls -lah ./build;
+
+	cp -p build/atstccfg.logrotate "$dest"/build;
 	mkdir -p "${dest}/atstccfg";
 	cp -a atstccfg/* "${dest}/atstccfg";
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")";
 	cp build/traffic_ops_ort.spec "$RPMBUILD"/SPECS/.;
+	cp build/atstccfg.logrotate "$RPMBUILD"/.;
 
 	echo "The build area has been initialized.";
 }

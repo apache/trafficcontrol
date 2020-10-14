@@ -20,28 +20,158 @@ package cache
  */
 
 import (
+	"bytes"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"os"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-
-	"github.com/json-iterator/go"
 )
 
-func TestAstats(t *testing.T) {
-	text, err := ioutil.ReadFile("astats.json")
+func TestAstatsJson(t *testing.T) {
+	file, err := os.Open("astats.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	aStats := Astats{}
-	json := jsoniter.ConfigFastest
-	err = json.Unmarshal(text, &aStats)
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	stats, misc, err := astatsParse("testCache", file, ctx)
+
 	if err != nil {
 		t.Error(err)
 	}
-	t.Logf("Found %v key/val pairs in ats\n", len(aStats.Ats))
+	if len(stats.Interfaces) != 1 {
+		t.Errorf("Expected exactly one interface, got %d", len(stats.Interfaces))
+		if len(stats.Interfaces) < 1 {
+			t.FailNow()
+		}
+	}
+
+	// Floating-Point arithmetic...
+	if misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"] != float64(296727207) {
+		t.Errorf("Expected 296727207 for remap_stats edge-cache in_bytes, got %.10f", misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"])
+	}
+
+	if stats.Loadavg.One != float64(.3) {
+		t.Errorf("Incorrect one-minute loadavg, expected roughly 0.3, got '%.10f'", stats.Loadavg.One)
+	}
+	if stats.Loadavg.Five != float64(.12) {
+		t.Errorf("Incorrect five-minute loadavg, expected roughly 0.12, got %.10f", stats.Loadavg.Five)
+	}
+	if stats.Loadavg.Fifteen != float64(.21) {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected roughly 0.21, got %.10f", stats.Loadavg.Fifteen)
+	}
+	if stats.Loadavg.CurrentProcesses != 803 {
+		t.Errorf("Incorrect current_processes, expected 1, got %d", stats.Loadavg.CurrentProcesses)
+	}
+}
+
+func TestAstatsAppJson(t *testing.T) {
+	file, err := os.Open("astats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "application/json")
+	_, _, err = astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAstatsCSV(t *testing.T) {
+	file, err := os.Open("astats.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	stats, misc, err := astatsParse("testCache", file, ctx)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(stats.Interfaces) != 1 {
+		t.Errorf("Expected exactly one interface, got %d", len(stats.Interfaces))
+		if len(stats.Interfaces) < 1 {
+			t.FailNow()
+		}
+	}
+
+	// Floating-Point arithmetic...
+	if misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"] != float64(296727207) {
+		t.Errorf("Expected 296727207 for remap_stats edge-cache in_bytes, got %.10f", misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"])
+	}
+
+	if stats.Loadavg.One != float64(.3) {
+		t.Errorf("Incorrect one-minute loadavg, expected roughly 0.3, got '%.10f'", stats.Loadavg.One)
+	}
+	if stats.Loadavg.Five != float64(.12) {
+		t.Errorf("Incorrect five-minute loadavg, expected roughly 0.12, got %.10f", stats.Loadavg.Five)
+	}
+	if stats.Loadavg.Fifteen != float64(.21) {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected roughly 0.21, got %.10f", stats.Loadavg.Fifteen)
+	}
+	if stats.Loadavg.CurrentProcesses != 803 {
+		t.Errorf("Incorrect current_processes, expected 1, got %d", stats.Loadavg.CurrentProcesses)
+	}
+}
+
+func BenchmarkAstatsJson(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkAstatsCSV(b *testing.B) {
+	file, err := ioutil.ReadFile("astats.csv")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Reset benchmark timer to not include reading the file
+	b.ResetTimer()
+	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
+	ctx := interface{}(pl)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
+	// Reset benchmark timer to not include reading the file
+	b.ReportAllocs()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := astatsParse("testCache", bytes.NewReader(file), ctx)
+
+		if err != nil {
+			b.Error(err)
+		}
+	}
 }
 
 func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {

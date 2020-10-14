@@ -74,6 +74,17 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Because logs will be appended, we want a "start" message, so individual runs are easily distinguishable.
+	// log the "start" message to each distinct logger.
+	startMsg := "Starting atstccfg"
+	log.Errorln(startMsg)
+	if cfg.WarningLog() != cfg.ErrorLog() {
+		log.Warnln(startMsg)
+	}
+	if cfg.InfoLog() != cfg.WarningLog() && cfg.InfoLog() != cfg.ErrorLog() {
+		log.Infoln(startMsg)
+	}
+
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
@@ -109,7 +120,7 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly)
+	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly, tccfg.Dir)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)

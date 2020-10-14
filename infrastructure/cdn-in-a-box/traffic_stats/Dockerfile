@@ -35,12 +35,16 @@ RUN yum install -y epel-release && \
     yum clean all
 
 ADD $TRAFFIC_TS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_TS_RPM) \
+RUN rpm -Uvh /$(basename $TRAFFIC_TS_RPM) && \
     rm /$(basename $TRAFFIC_TS_RPM)
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     traffic_stats/run.sh \
     /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 ENTRYPOINT /run.sh

@@ -101,7 +101,31 @@ td span {
 	max-height: 300px;
 	padding: 10px 20px;
 	overflow-y: auto;
+
+  .checkbox {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    label {
+      min-height: 20px;
+      padding-left: 20px;
+      margin-bottom: 0;
+      font-weight: normal;
+      cursor: pointer;
+
+      input[type="checkbox"] {
+        position: absolute;
+        margin-left: -20px;
+      }
+
+    }
+
+  }
+
 }
+
 table.dataTable.params tbody td {
 	word-break: break-word;
 	vertical-align: top;
@@ -183,4 +207,16 @@ div.dropdown button.menu-item-button {
         color: #262626;
         background-color: #f5f5f5;
     }
+}
+
+.jobs-table {
+  .ag-row.active-job {
+    background-color: #dff0d8;
+  }
+  .ag-row.expired-job {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
 }

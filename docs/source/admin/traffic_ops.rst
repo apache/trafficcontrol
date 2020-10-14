@@ -241,6 +241,8 @@ Running
 =======
 Currently, Traffic Ops consists of two programs, as it is in the middle of a transition from one code-base to another. It is not recommended that either one be run on its own. Also, while this section contains instructions for running each piece manually, the only truly supported method is via :manpage:`systemd(8)`, e.g. :bash:`systemctl start traffic_ops` (this method also starts both programs properly and uses their default configuration file locations).
 
+.. _legacy-perl-script:
+
 .. program:: traffic_ops-perl
 
 Legacy Perl Script
@@ -253,14 +255,7 @@ The old code base was written in Perl, and is executed as a Perl script. When In
 
 The script takes no options other than the ones accepted by `Hypnotoad <https://mojolicious.org/perldoc/Mojo/Server/Hypnotoad>`_ itself, and it just expects to gets its configuration from the standard file locations (covered in Configuring_).
 
-.. envvar:: MOJO_MODE
-
-	This sets the "mode" of the Traffic Ops Mojolicious application. Effectively, this chooses the set of configuration files it will consult. The default value is "development", and the possible values are:
-
-	- development
-	- integration
-	- production
-	- test
+The operating environment of the Legacy Perl Script can be chosen by setting the :envvar:`MOJO_MODE` environment variable.
 
 .. program:: traffic_ops
 
@@ -329,7 +324,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:workers:           This is used only by the `Legacy Perl Script`_, and sets the number of concurrent HTTP server workers allowed.
 
 :inactivity_timeout: This was used by the `Legacy Perl Script`_ to set timeouts on idle client connections to Traffic Ops - the exact operation (and even units) of this configuration option is unknown. `traffic_ops_golang`_ ignores this field.
-:influx_db_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
+:influxdb_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is to first check if the :envvar:`MOJO_MODE` environment variable is set. If it is, then Traffic Ops will look in the current working directory for a subdirectory named ``conf/``, then inside that for a subdirectory with the name that is the value of the :envvar:`MOJO_MODE` variable, and inside that directory for a file named ``influxdb.conf``. If :envvar:`MOJO_MODE` is *not* set, then Traffic Ops will look for a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
 
 	.. versionadded:: 4.0
 
@@ -399,6 +394,10 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:db_query_timeout_seconds: An optional field specifying a timeout on database *transactions* (not actually single queries in most cases) within API route handlers. Effectively this is a timeout on a single handler's ability to interact with the Traffic Ops Database. Default if not specified is the value of `DefaultDBQueryTimeoutSecs <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
 	:idle_timeout: An optional timeout in seconds for idle client connections to Traffic Ops. If set to zero, the value of ``read_timeout`` will be used instead. If both are zero, then the value of ``read_header_timeout`` will be used. If all three fields are zero, there is no timeout and connections will be kept alive indefinitely - **not** recommended. Default if not specified is zero.
 	:insecure: An optional boolean which, if set to ``true`` will cause Traffic Ops to skip verification of client certificates whenever necessary/possible. If set to ``false``, the normal verification behavior is exhibited. Default if not specified is ``false``.
+
+		.. deprecated:: 5.0
+			Future versions of Traffic Ops will not support this legacy configuration option, see tls_config: { InsecureSkipVerify: <bool> } instead
+
 	:log_location_debug: This optional field, if specified, should either be the location of a file to which debug-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``.
 	:log_location_error: This optional field, if specified, should either be the location of a file to which error-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``. This field is also used to determine where server profiling statistics are written. Assuming ``profiling_enabled`` is ``true`` and ``profiling_location`` is unset, if this field's value is given as a path to a regular file, a file named :file:`profiling` will be written to the same directory containing the profiling information - overwriting any existing files by that name.
 	:log_location_event: This optional field, if specified, should either be the location of a file to which event-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``.
@@ -443,9 +442,12 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		:disabled_routes: A list of API route IDs to disable. Requests matching these routes will receive a 503 response. To find the route ID for a given path you would like to disable, run ``./traffic_ops_golang`` using the :option:`--api-routes` option to view all the route information, including route IDs and paths.
 		:ignore_unknown_routes: If ``false`` (default) return an error and prevent startup if unknown route IDs are found. Otherwise, log a warning and continue startup.
 
+	:tls_config: An optional stanza for TLS configuration. The values of which conform to the :godoc:`crypto/tls.Config` structure.
+
 :use_ims:
+
     .. versionadded:: 5.0
-    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
 Example cdn.conf
 ''''''''''''''''
@@ -702,6 +704,7 @@ Data Source Extensions work in much the same way as `Check Extensions`_, but are
 Example Cron File
 -----------------
 The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system.
+Edit $TO_USER and $TO_PASS to match ORT input parameters.
 
 .. code-block:: shell
 	:caption: Example Cron File
@@ -746,5 +749,5 @@ The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` a
 	20 * * * * root /opt/traffic_ops/app/bin/checks/ToCDUCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"CDU\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
 
 	# ORT
-	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
-	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"syslog_facility\": \"local0\"}" > /dev/null 2>&1
+	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"to_user\":\"$TO_USER\", \"to_pass\": \"$TO_PASS\"}"  >> /var/log/traffic_ops/extensionCheck.log 2>&1
+	40 * * * * ssh_key_edge_user /opt/traffic_ops/app/bin/checks/ToORTCheck.pl -c "{\"base_url\": \"https://localhost\", \"check_name\": \"ORT\", \"name\": \"Operational Readiness Test\", \"syslog_facility\": \"local0\", \"to_user\":\"$TO_USER\", \"to_pass\": \"$TO_PASS\"}" > /dev/null 2>&1

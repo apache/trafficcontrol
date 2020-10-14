@@ -28,10 +28,12 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
 
@@ -221,7 +223,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegexType(tx, dsr.Type); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -298,7 +300,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegexType(tx, dsr.Type); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -327,9 +329,31 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
-func validateDSRegexType(tx *sql.Tx, typeID int) error {
-	_, err := tc.ValidateTypeID(tx, &typeID, "regex")
-	return err
+// Validate POST/PUT regex struct
+func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
+	var ds int
+	var setNumberErr error
+	if dsr.SetNumber < 0 {
+		return errors.New("cannot add regex with order < 0")
+	}
+	err := tx.QueryRow(`
+select deliveryservice from deliveryservice_regex
+where deliveryservice = $1 and set_number = $2`,
+		dsID, dsr.SetNumber).Scan(&ds)
+	if err == nil {
+		setNumberErr = errors.New("cannot add regex, another regex with the same order exists")
+	} else {
+		setNumberErr = nil
+	}
+
+	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
+
+	errs := validation.Errors{
+		"type":      typeErr,
+		"setNumber": setNumberErr,
+		"pattern":   validation.Validate(dsr.Pattern, validation.Required)}
+
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {

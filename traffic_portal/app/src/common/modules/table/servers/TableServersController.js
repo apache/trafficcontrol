@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
+var TableServersController = function(tableName, servers, filter, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
 	/**** Table cell formatters/renderers ****/
 
 	// browserify can't handle classes...
@@ -41,7 +41,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		} else {
 			this.eGui.classList.add("fa-check");
 		}
-	}
+	};
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	/**
@@ -52,14 +52,21 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		if (!params.value || !serverUtils.isOffline(params.value)) {
 			return;
 		}
-		return params.data.offlineReason;
+		return params.value + ': ' + params.data.offlineReason;
+	}
+
+	/**
+	 * Gets value to display a default tooltip.
+	 */
+	function defaultTooltip(params) {
+		return params.value;
 	}
 
 	/**
 	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
-		return dateUtils.getRelativeTime(params.value);
+		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
 
 
@@ -70,28 +77,33 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "Cache Group",
 			field: "cachegroup",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "CDN",
 			field: "cdnName",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "Domain",
 			field: "domainName",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "Host",
 			field: "hostName",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "HTTPS Port",
 			field: "httpsPort",
 			hide: true,
 			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Hash ID",
+			field: "xmppId",
+			hide: true
 		},
 		{
 			headerName: "ID",
@@ -116,27 +128,27 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "ILO IP Netmask",
 			field: "iloIpNetmask",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "ILO Username",
 			field: "iloUsername",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Interface Name",
 			field: "interfaceName",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "IPv6 Address",
 			field: "ip6Address",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "IPv6 Gateway",
 			field: "ip6Gateway",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Last Updated",
@@ -148,7 +160,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "Mgmt IP Address",
 			field: "mgmtIpAddress",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Mgmt IP Gateway",
@@ -191,27 +203,27 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "Network Subnet",
 			field: "ipNetmask",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Offline Reason",
 			field: "offlineReason",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Phys Location",
 			field: "physLocation",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Profile",
 			field: "profile",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "Rack",
 			field: "rack",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Reval Pending",
@@ -223,12 +235,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "Router Hostname",
 			field: "routerHostName",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Router Port Name",
 			field: "routerPortName",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Status",
@@ -239,12 +251,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		{
 			headerName: "TCP Port",
 			field: "tcpPort",
-			hide: true,
+			hide: true
 		},
 		{
 			headerName: "Type",
 			field: "type",
-			hide: false,
+			hide: false
 		},
 		{
 			headerName: "Update Pending",
@@ -252,6 +264,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: false,
 			filter: true,
 			cellRenderer: "updateCellRenderer"
+		},
+		{
+			headerName: "Status Last Updated",
+			field: "statusLastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			valueFormatter: dateCellFormatter
 		}
 	];
 
@@ -262,6 +281,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.servers = servers.map(
 		function(x) {
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
+			x.statusLastUpdated = x.statusLastUpdated ? new Date(x.statusLastUpdated): x.statusLastUpdated;
 			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
 	});
 
@@ -275,28 +295,38 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		id: -1
 	};
 
+	$scope.quickSearch = '';
+
+	$scope.pageSize = 100;
+
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
+		onRowDoubleClicked: function(params) {
+			locationUtils.navigateToPath('/servers/' + params.data.id);
+			// Event is outside the digest cycle, so we need to trigger one.
+			$scope.$apply();
+		},
 		columnDefs: columns,
+		enableCellTextSelection:true,
+		suppressMenuHide: true,
+		multiSortKey: 'ctrl',
+		alwaysShowVerticalScroll: true,
 		defaultColDef: {
 			filter: true,
-			onCellClicked: function(params) {
-					locationUtils.navigateToPath('/servers/' + params.data.id);
-					// Event is outside the digest cycle, so we need to trigger one.
-					$scope.$apply();
-				},
 			sortable: true,
-			resizable: true
+			resizable: true,
+			tooltip: defaultTooltip
 		},
 		rowData: servers,
 		pagination: true,
+		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
 		onColumnResized: function(params) {
-			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		},
 		tooltipShowDelay: 500,
 		allowContextMenuWithControlKey: true,
@@ -450,110 +480,76 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		);
 	};
 
-	$scope.confirmCDNQueueServerUpdates = function(cdn) {
-		let params;
-		if (cdn) {
-			params = {
-				title: 'Queue Server Updates: ' + cdn.name,
-				message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-				controller: 'DialogConfirmController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
+	$scope.confirmCDNQueueServerUpdates = function() {
+		const params = {
+			title: 'Queue Server Updates',
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
 				}
-			});
-			modalInstance.result.then(function() {
-				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// this is just a cancel event from closing the dialog, do nothing
-			});
-		} else {
-			params = {
-				title: 'Queue Server Updates',
-				message: "Please select a CDN"
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					},
-					collection: function(cdnService) {
-						return cdnService.getCDNs();
-					}
-				}
-			});
-			modalInstance.result.then(function(cdn) {
-				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-		}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
+		}, function () {
+			// do nothing
+		});
 	};
 
-	$scope.confirmCDNClearServerUpdates = function(cdn) {
-		let params;
-		if (cdn) {
-			params = {
-				title: 'Clear Server Updates: ' + cdn.name,
-				message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-				controller: 'DialogConfirmController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
+	$scope.confirmCDNClearServerUpdates = function() {
+		const params = {
+			title: 'Clear Server Updates',
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
 				}
-			});
-			modalInstance.result.then(function() {
-				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-
-
-		} else {
-			params = {
-				title: 'Clear Server Updates',
-				message: "Please select a CDN"
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					},
-					collection: function(cdnService) {
-						return cdnService.getCDNs();
-					}
-				}
-			});
-			modalInstance.result.then(function(cdn) {
-				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-		}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
+		}, function () {
+			// do nothing
+		});
 	};
 
+	$scope.onQuickSearchChanged = function() {
+		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		localStorage.setItem(tableName + "_quick_search", $scope.quickSearch);
+	};
+
+	$scope.onPageSizeChanged = function() {
+		const value = Number($scope.pageSize);
+		$scope.gridOptions.api.paginationSetPageSize(value);
+		localStorage.setItem(tableName + "_page_size", value);
+	};
+
+	$scope.clearColFilters = function() {
+		$scope.gridOptions.api.setFilterModel(null);
+	};
 
 	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
 		try {
 			// need to create the show/hide column checkboxes and bind to the current visibility
-			const colstates = JSON.parse(localStorage.getItem("servers_table_columns"));
+			const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
 			if (colstates) {
 				if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
 					console.error("Failed to load stored column state: one or more columns not found");
@@ -562,40 +558,59 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				$scope.gridOptions.api.sizeColumnsToFit();
 			}
 		} catch (e) {
-			console.error("Failure to retrieve required column info from localStorage (key=servers_table_columns):", e);
+			console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
 		}
 
 		try {
-			const filterState = JSON.parse(localStorage.getItem("servers_table_filters"));
+			const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+			// apply any filter provided to the controller
+			Object.assign(filterState, filter);
 			$scope.gridOptions.api.setFilterModel(filterState);
 		} catch (e) {
 			console.error("Failure to load stored filter state:", e);
 		}
 
 		$scope.gridOptions.api.addEventListener("filterChanged", function() {
-			localStorage.setItem("servers_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
+			localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
 		});
 
 		try {
-			const sortState = JSON.parse(localStorage.getItem("servers_table_sort"));
+			const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
 			$scope.gridOptions.api.setSortModel(sortState);
 		} catch (e) {
 			console.error("Failure to load stored sort state:", e);
 		}
 
+		try {
+			$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
+			$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		} catch (e) {
+			console.error("Failure to load stored quick search:", e);
+		}
+
+		try {
+			const ps = localStorage.getItem(tableName + "_page_size");
+			if (ps && ps > 0) {
+				$scope.pageSize = Number(ps);
+				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
+			}
+		} catch (e) {
+			console.error("Failure to load stored page size:", e);
+		}
+
 		$scope.gridOptions.api.addEventListener("sortChanged", function() {
-			localStorage.setItem("servers_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
+			localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
 		});
 
 		$scope.gridOptions.api.addEventListener("columnMoved", function() {
-			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		});
 
 		$scope.gridOptions.api.addEventListener("columnVisible", function() {
 			$scope.gridOptions.api.sizeColumnsToFit();
 			try {
 				colStates = $scope.gridOptions.columnApi.getColumnState();
-				localStorage.setItem("servers_table_columns", JSON.stringify(colStates));
+				localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
 			} catch (e) {
 				console.error("Failed to store column defs to local storage:", e);
 			}
@@ -616,5 +631,5 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	});
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
+TableServersController.$inject = ['tableName', 'servers', 'filter', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
 module.exports = TableServersController;

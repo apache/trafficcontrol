@@ -25,5 +25,10 @@ RUN cd /root && \
     mkdir /vpnca
 ADD ./optional/vpn/server.conf /etc/openvpn/server.conf
 ADD ./optional/vpn/run.sh ./optional/vpn/vars /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 ENTRYPOINT /run.sh
 EXPOSE 443

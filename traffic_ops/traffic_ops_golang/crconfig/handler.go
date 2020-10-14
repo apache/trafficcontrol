@@ -219,7 +219,6 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, &alt)
 		return
 	}
-
 	monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()), deprecated, &alt)

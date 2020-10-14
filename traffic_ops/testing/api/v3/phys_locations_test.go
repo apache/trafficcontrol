@@ -16,12 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -35,6 +35,7 @@ func TestPhysLocations(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestPhysLocations(t)
 		UpdateTestPhysLocations(t)
 		GetTestPhysLocations(t)
 		GetTestPhysLocationsIMSAfterChange(t, header)
@@ -44,11 +45,11 @@ func TestPhysLocations(t *testing.T) {
 func GetTestPhysLocationsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -61,7 +62,7 @@ func GetTestPhysLocationsIMS(t *testing.T) {
 
 func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -74,7 +75,7 @@ func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -95,11 +96,30 @@ func CreateTestPhysLocations(t *testing.T) {
 
 }
 
+func SortTestPhysLocations(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetPhysLocationsWithHdr(nil, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
 func UpdateTestPhysLocations(t *testing.T) {
 
 	firstPhysLocation := testData.PhysLocations[0]
 	// Retrieve the PhysLocation by name so we can get the id for the Update
-	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, nil)
+	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
@@ -113,7 +133,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 	}
 
 	// Retrieve the PhysLocation to check PhysLocation name got updated
-	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
+	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
 	}
@@ -127,7 +147,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 func GetTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
 		}
@@ -136,7 +156,7 @@ func GetTestPhysLocations(t *testing.T) {
 }
 
 func GetSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"}, nil)
+	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -149,7 +169,7 @@ func GetSortPhysLocationsTest(t *testing.T) {
 }
 
 func GetDefaultSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(nil, nil)
+	resp, _, err := TOSession.GetPhysLocations(nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -165,7 +185,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
 		}
@@ -178,7 +198,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 			}
 
 			// Retrieve the PhysLocation to see if it got deleted
-			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 			if err != nil {
 				t.Errorf("error deleting PhysLocation name: %s", err.Error())
 			}

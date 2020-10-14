@@ -75,7 +75,7 @@ Request Structure
 
 Response Structure
 ------------------
-:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server with a trailing period, otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -109,7 +109,7 @@ Response Structure
 
 	{ "response": [
 		{
-			"address": "foo.bar",
+			"address": "foo.bar.",
 			"cachegroup": null,
 			"cachegroupId": null,
 			"deliveryservice": "demo1",
@@ -119,7 +119,7 @@ Response Structure
 			"lastUpdated": "2018-12-10 19:59:56+00",
 			"ttl": 300,
 			"type": "CNAME_RECORD",
-			"typeId": 40
+			"typeId": 41
 		}
 	]}
 
@@ -133,7 +133,7 @@ Creates a new, static DNS entry.
 
 Request Structure
 -----------------
-:address:      If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:address:      If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server with a trailing period, otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -155,16 +155,16 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"address": "test.quest",
+		"address": "test.quest.",
 		"deliveryserviceId": 1,
 		"host": "test",
 		"ttl": 300,
-		"typeId": 40
+		"typeId": 41
 	}
 
 Response Structure
 ------------------
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server with a trailing period, otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -203,7 +203,7 @@ Response Structure
 		}
 	],
 	"response": {
-		"address": "test.quest",
+		"address": "test.quest.",
 		"cachegroup": null,
 		"cachegroupId": null,
 		"deliveryservice": null,
@@ -212,8 +212,8 @@ Response Structure
 		"id": 2,
 		"lastUpdated": "2018-12-10 19:54:19+00",
 		"ttl": 300,
-		"type": null,
-		"typeId": 40
+		"type": "CNAME_RECORD",
+		"typeId": 41
 	}}
 
 ``PUT``
@@ -234,7 +234,7 @@ Request Structure
 	|  id  | The integral, unique identifier of the static DNS entry to modify |
 	+------+-------------------------------------------------------------------+
 
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server with a trailing period, otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -256,16 +256,16 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"address": "foo.bar",
+		"address": "foo.bar.",
 		"deliveryserviceId": 1,
 		"host": "test",
 		"ttl": 300,
-		"typeId": 40
+		"typeId": 41
 	}
 
 Response Structure
 ------------------
-:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server with a trailing period, otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -304,7 +304,7 @@ Response Structure
 		}
 	],
 	"response": {
-		"address": "foo.bar",
+		"address": "foo.bar.",
 		"cachegroup": null,
 		"cachegroupId": null,
 		"deliveryservice": null,
@@ -313,8 +313,8 @@ Response Structure
 		"id": 2,
 		"lastUpdated": "2018-12-10 19:59:56+00",
 		"ttl": 300,
-		"type": null,
-		"typeId": 40
+		"type": "CNAME_RECORD",
+		"typeId": 41
 	}}
 
 

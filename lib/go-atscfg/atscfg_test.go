@@ -244,3 +244,33 @@ func TestHeaderCommentUTC(t *testing.T) {
 		t.Error("Expected header comment to print time in UTC, actual '" + txt + "'")
 	}
 }
+
+func setIP(sv *tc.ServerNullable, ipAddress string) {
+	setIPInfo(sv, "", ipAddress, "")
+}
+
+func setIP6(sv *tc.ServerNullable, ip6Address string) {
+	setIPInfo(sv, "", "", ip6Address)
+}
+
+func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip6Address string) {
+	sv.Interfaces = []tc.ServerInterfaceInfo{
+		tc.ServerInterfaceInfo{
+			Name: interfaceName,
+		},
+	}
+	if ipAddress != "" {
+		sv.Interfaces[0].IPAddresses = append(sv.Interfaces[0].IPAddresses, tc.ServerIPAddress{
+			Address:        ipAddress,
+			Gateway:        nil,
+			ServiceAddress: true,
+		})
+	}
+	if ip6Address != "" {
+		sv.Interfaces[0].IPAddresses = append(sv.Interfaces[0].IPAddresses, tc.ServerIPAddress{
+			Address:        ip6Address,
+			Gateway:        nil,
+			ServiceAddress: true,
+		})
+	}
+}

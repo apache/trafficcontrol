@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Startup script for fakeOrigin
+#
+#
+# chkconfig: 345 99 10
+# description: fakeOrigin control script
+# processname: fakeOrigin
+
+### BEGIN INIT INFO
+# Provides: fakeOrigin
+# Required-Start: $network $local_fs $syslog
+# Required-Stop: $network $local_fs $syslog
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Short-Description: start and stop fakeOrigin
+# Description: Controls all fakeOrigin processes at once.
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+name=fakeOrigin
+basepath=/opt/$name
+runpath=/var/run
+prog=$basepath/$name
+lockfile=$runpath/$name
+
+#options="-cfg /etc/${name}/config.json"
+options="-cfg /etc/fakeOrigin/config.json"
+
+start() {
+        [ "$NETWORKING" = "no" ] && exit 1
+        [ -x $prog ] || exit 5
+
+        #Set file limits
+        # Max open files
+        OPEN_FILE_LIMIT=65536
+        ulimit -n $OPEN_FILE_LIMIT
+        if [ $? -ne 0 ]; then
+            echo "Failed to set open file limit to $OPEN_FILE_LIMIT"
+            exit 1
+        fi
+
+        # Start daemons.
+        echo -n "Starting $name: "
+        daemon nohup $prog $options < /dev/null > /var/log/${name}/${name}.log 2>&1 &
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $lockfile
+        return $RETVAL
+}
+
+stop() {
+        echo -n "Shutting down $name: "
+        killproc $prog
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $lockfile
+        return $RETVAL
+}
+
+reload() {
+        echo -n "Reloading $name: "
+        if [ -n "`pidofproc $prog`" ]; then
+                killproc $prog -HUP
+        else
+                failure "Reloading $name"
+        fi
+        RETVAL=$?
+        echo
+        return $RETVAL
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status $prog
+        ;;
+  restart|force-reload)
+        stop
+        start
+        ;;
+  try-restart|condrestart)
+        if status $prog > /dev/null; then
+            stop
+            start
+        fi
+        ;;
+  reload)
+        reload
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
+        exit 2
+esac

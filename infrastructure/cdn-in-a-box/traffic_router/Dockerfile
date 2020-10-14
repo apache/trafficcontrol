@@ -27,7 +27,7 @@ ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
 ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
 RUN yum -y install epel-release && \
-    yum -y install git rpm-build net-tools iproute nc wget tar unzip \
+    yum -y install jq git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
           java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
@@ -37,13 +37,17 @@ RUN yum -y install epel-release && \
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm
 
-RUN yum -y install /traffic_router.rpm /tomcat.rpm && \
+RUN rpm -Uvh /traffic_router.rpm /tomcat.rpm && \
     find /usr/lib* -name libtc\* -exec ln -sfv {} /opt/tomcat/lib \;
 
 ADD enroller/server_template.json \
     traffic_router/run.sh \
     traffic_ops/to-access.sh \
     /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 EXPOSE 53 80 3333 3443
 

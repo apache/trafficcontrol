@@ -17,11 +17,12 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,6 +34,7 @@ func TestTypes(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestTypes(t)
 		UpdateTestTypes(t)
 		GetTestTypes(t)
 		GetTestTypesIMSAfterChange(t, header)
@@ -41,7 +43,7 @@ func TestTypes(t *testing.T) {
 
 func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -54,7 +56,7 @@ func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -67,13 +69,13 @@ func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestTypesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	t.Log("---- GetTestTypes ----")
 
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -99,7 +101,7 @@ func CreateTestTypes(t *testing.T) {
 	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
 
 	for _, typ := range testData.Types {
-		foundTypes, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
 		if err == nil && len(foundTypes) > 0 {
 			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
 			continue
@@ -117,13 +119,32 @@ func CreateTestTypes(t *testing.T) {
 	}
 }
 
+func SortTestTypes(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetTypesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
 func UpdateTestTypes(t *testing.T) {
 	t.Log("---- UpdateTestTypes ----")
 
 	for i, typ := range testData.Types {
 		expectedTypeName := fmt.Sprintf("testType%v", i)
 		originalType := typ
-		resp, _, err := TOSession.GetTypeByName(originalType.Name, nil)
+		resp, _, err := TOSession.GetTypeByName(originalType.Name)
 		if err != nil {
 			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
 		}
@@ -148,7 +169,7 @@ func UpdateTestTypes(t *testing.T) {
 		}
 
 		// Retrieve the Type to check Type name got updated
-		resp, _, err = TOSession.GetTypeByID(remoteType.ID, nil)
+		resp, _, err = TOSession.GetTypeByID(remoteType.ID)
 		if err != nil {
 			t.Fatalf("cannot GET Type by ID: %v - %v", originalType.ID, err)
 		}
@@ -173,7 +194,7 @@ func GetTestTypes(t *testing.T) {
 	t.Log("---- GetTestTypes ----")
 
 	for _, typ := range testData.Types {
-		resp, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil {
 			t.Errorf("cannot GET Type by name: %v - %v", err, resp)
 
@@ -200,7 +221,7 @@ func DeleteTestTypes(t *testing.T) {
 
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
-		resp, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
 			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err)
 		}
@@ -219,7 +240,7 @@ func DeleteTestTypes(t *testing.T) {
 		}
 
 		// Retrieve the Type to see if it got deleted
-		types, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		types, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil {
 			t.Errorf("error deleting Type name: %v", err)
 		}

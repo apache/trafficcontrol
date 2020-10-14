@@ -41,7 +41,7 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMoni
 	}
 	tmConfigMap, err := tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	if err != nil {
-		return nil, reqInf, err
+		return tmConfigMap, reqInf, err
 	}
 	return tmConfigMap, reqInf, nil
 }

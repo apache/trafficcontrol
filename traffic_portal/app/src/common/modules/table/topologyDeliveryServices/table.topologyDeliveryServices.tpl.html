@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
-            <li><a ng-click="navigateToPath('/topologies/edit?name=' + topology.name)">{{::topology.name}}</a></li>
+            <li><a name="topLink" ng-click="navigateToPath('/topologies/edit?name=' + topology.name)">{{::topology.name}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -42,7 +42,7 @@ under the License.
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="x_content">
+        <div class="x_content">
         <br>
         <table id="topologyDSsTable" class="table responsive-utilities jambo_table">
             <thead>
@@ -98,6 +98,7 @@ under the License.
                 <th>Regional Geoblocking</th>
                 <th>Raw Remap Text</th>
                 <th>Routing Name</th>
+                <th>Service Category</th>
                 <th>Signed</th>
                 <th>Signing Algorithm</th>
                 <th>Range Slice Block Size</th>
@@ -162,6 +163,7 @@ under the License.
                 <td data-search="^{{::ds.regionalGeoBlocking}}$">{{::ds.regionalGeoBlocking}}</td>
                 <td data-search="^{{::ds.remapText}}$">{{::ds.remapText}}</td>
                 <td data-search="^{{::ds.routingName}}$">{{::ds.routingName}}</td>
+                <td data-search="^{{::ds.serviceCategory}}$">{{::ds.serviceCategory}}</td>
                 <td data-search="^{{::ds.signed}}$">{{::ds.signed}}</td>
                 <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
                 <td data-search="^{{::ds.rangeSliceBlockSize}}$">{{::ds.rangeSliceBlockSize}}</td>

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -31,7 +32,7 @@ import (
 func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewriteMidPrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	tcDS := tc.DeliveryServiceNullable{}
+	tcDS := tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue
@@ -52,28 +53,43 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		return "", "", "", errors.New("converting ds to config ds: " + err.Error())
 	}
 
-	dsServers := FilterDSS(toData.DeliveryServiceServers, map[int]struct{}{cfgDS.ID: {}}, nil)
-
-	dsServerIDs := map[int]struct{}{}
-	for _, dss := range dsServers {
+	assignedServers := map[int]struct{}{}
+	for _, dss := range toData.DeliveryServiceServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn?
+			continue
 		}
 		if *dss.DeliveryService != *tcDS.ID {
 			continue
 		}
-		dsServerIDs[*dss.Server] = struct{}{}
+		assignedServers[*dss.Server] = struct{}{}
 	}
 
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range toData.Servers {
+		if sv.CDNName == nil {
+			log.Errorln("TO returned Servers server with missing CDNName, skipping!")
+			continue
+		} else if sv.ID == nil {
+			log.Errorln("TO returned Servers server with missing ID, skipping!")
+			continue
+		} else if sv.Status == nil {
+			log.Errorln("TO returned Servers server with missing Status, skipping!")
+			continue
+		} else if sv.Cachegroup == nil {
+			log.Errorln("TO returned Servers server with missing Cachegroup, skipping!")
+			continue
+		}
+
 		if sv.CDNName != toData.Server.CDNName {
 			continue
 		}
-		if tc.CacheStatus(sv.Status) != tc.CacheStatusReported && tc.CacheStatus(sv.Status) != tc.CacheStatusOnline {
+		if _, ok := assignedServers[*sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {
 			continue
 		}
-		serverCGs[tc.CacheGroupName(sv.Cachegroup)] = struct{}{}
+		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
+			continue
+		}
+		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
 	}
 
 	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
@@ -90,28 +106,34 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		parentCGs[*cg.ParentName] = struct{}{}
 	}
 
-	parentServers := []tc.Server{}
-	for _, sv := range toData.Servers {
-		if _, ok := parentCGs[sv.Cachegroup]; !ok {
-			continue
-		}
-		parentServers = append(parentServers, sv)
-	}
-
 	assignedMids := []atscfg.HeaderRewriteServer{}
 	for _, server := range toData.Servers {
-		if server.CDNName != *tcDS.CDNName {
+		if server.CDNName == nil {
+			log.Errorln("TO returned Servers server with missing CDNName, skipping!")
 			continue
 		}
-		if _, ok := parentCGs[server.Cachegroup]; !ok {
+		if server.Cachegroup == nil {
+			log.Errorln("TO returned Servers server with missing Cachegroup, skipping!")
 			continue
 		}
-		cfgServer, err := atscfg.HeaderRewriteServerFromServerNotNullable(server)
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := parentCGs[*server.Cachegroup]; !ok {
+			continue
+		}
+		cfgServer, err := atscfg.HeaderRewriteServerFromServer(server)
 		if err != nil {
 			continue // TODO warn?
 		}
 		assignedMids = append(assignedMids, cfgServer)
 	}
 
-	return atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedMids), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
+	log.Infof("MakeHeaderRewriteMidDotConfig ds "+*tcDS.XMLID+" got mids %+v\n", len(assignedMids))
+
+	if toData.Server.CDNName == nil {
+		return "", "", "", errors.New("this server missing CDNName")
+	}
+
+	return atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(*toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedMids), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }

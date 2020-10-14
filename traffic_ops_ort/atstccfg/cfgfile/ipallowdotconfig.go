@@ -21,43 +21,26 @@ package cfgfile
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func GetConfigFileServerIPAllowDotConfig(toData *config.TOData) (string, string, string, error) {
+	if toData.Server.Cachegroup == nil {
+		return "", "", "", errors.New("this server missing Cachegroup")
+	} else if toData.Server.HostName == nil {
+		return "", "", "", errors.New("this server missing HostName")
+	}
+
 	fileParams := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.IPAllowConfigFileName, "", "", ""))
 
-	cgMap := map[string]tc.CacheGroupNullable{}
-	for _, cg := range toData.CacheGroups {
-		if cg.Name == nil {
-			return "", "", "", errors.New("got cachegroup with nil name!'")
-		}
-		cgMap[*cg.Name] = cg
-	}
-
-	serverCG, ok := cgMap[toData.Server.Cachegroup]
-	if !ok {
-		return "", "", "", errors.New("server cachegroup not in cachegroups!")
-	}
-
-	childCGs := map[string]tc.CacheGroupNullable{}
-	for cgName, cg := range cgMap {
-		if (cg.ParentName != nil && *cg.ParentName == *serverCG.Name) || (cg.SecondaryParentName != nil && *cg.SecondaryParentName == *serverCG.Name) {
-			childCGs[cgName] = cg
-		}
-	}
-
-	childServers := map[tc.CacheName]atscfg.IPAllowServer{}
-	for _, sv := range toData.Servers {
-		_, ok := childCGs[sv.Cachegroup]
-		if ok || (strings.HasPrefix(toData.Server.Type, tc.MidTypePrefix) && string(sv.Type) == tc.MonitorTypeName) {
-			childServers[tc.CacheName(sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
-		}
-	}
-
-	return atscfg.MakeIPAllowDotConfig(tc.CacheName(toData.Server.HostName), tc.CacheType(toData.Server.Type), toData.TOToolName, toData.TOURL, fileParams, childServers), atscfg.ContentTypeIPAllowDotConfig, atscfg.LineCommentIPAllowDotConfig, nil
+	return atscfg.MakeIPAllowDotConfig(
+		toData.TOToolName,
+		toData.TOURL,
+		fileParams,
+		toData.Server,
+		toData.Servers,
+		toData.CacheGroups,
+	), atscfg.ContentTypeIPAllowDotConfig, atscfg.LineCommentIPAllowDotConfig, nil
 }

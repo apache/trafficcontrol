@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,6 +34,14 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 
 	jsoniter "github.com/json-iterator/go"
+)
+
+// InterfaceStatNames is a "set" of the names of all the statistics that may be
+// found on a network interface of a cache server.
+const (
+	InterfaceStatNameBytesIn  = "inBytes"
+	InterfaceStatNameBytesOut = "outBytes"
+	InterfaceStatNameSpeed    = "speed"
 )
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.
@@ -55,156 +64,301 @@ func (h *ResultInfoHistory) Get() cache.ResultInfoHistory {
 	return *h.history
 }
 
-// Set sets the internal ResultInfoHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+// Set sets the internal ResultInfoHistory. This is only safe for one thread of
+// execution. This MUST NOT be called from multiple threads.
 func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 	h.m.Lock()
 	*h.history = v
 	h.m.Unlock()
 }
 
-type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]map[interfaceName]ResultStatValHistory
+// ResultStatHistory is a thread-safe mapping of cache server hostnames to
+// CacheStatHistory objects containing statistics for those cache servers.
+type ResultStatHistory struct{ *sync.Map } // map[string]CacheStatHistory
 
+// NewResultStatHistory constructs a new, empty ResultStatHistory.
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) map[string]ResultStatValHistory {
+// LoadOrStore returns the stored CacheStatHistory for the given cache server
+// hostname if it has already been stored. If it has not already been stored, a
+// new, empty CacheStatHistory object is created, stored under the given
+// hostname, and returned.
+func (h ResultStatHistory) LoadOrStore(hostname string) CacheStatHistory {
 	// TODO change to use sync.Pool?
-	v, loaded := h.Map.LoadOrStore(cache, NewResultStatValHistory())
-	if !loaded {
-		v = map[string]ResultStatValHistory{}
+	v, _ := h.Map.LoadOrStore(hostname, NewCacheStatHistory())
+	rv, ok := v.(CacheStatHistory)
+	if !ok {
+		log.Errorf("Failed to load or store stat history for '%s': invalid stored type.", hostname)
+		return NewCacheStatHistory()
 	}
-	if rv, ok := v.(ResultStatValHistory); ok {
-		v = map[string]ResultStatValHistory{tc.CacheInterfacesAggregate: rv}
-	}
-	return v.(map[string]ResultStatValHistory)
+
+	return rv
 }
 
-// Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache tc.CacheName, interfaceName string, val ResultStatValHistory) bool) {
+// Range behaves like sync.Map.Range. It calls f for every value in the map; if
+// f returns false, the iteration is stopped.
+func (h ResultStatHistory) Range(f func(cacheName string, val CacheStatHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		i, ok := v.(map[string]ResultStatValHistory)
+		i, ok := v.(CacheStatHistory)
 		if !ok {
-			log.Warnln("Cannot umarshal result stat val history")
+			log.Warnf("Non-CacheStatHistory object (%T) found in ResultStatHistory during Range.", v)
 			return true
 		}
-		for a, b := range i {
-			if !f(k.(tc.CacheName), a, b) {
-				return false
-			}
+		cacheName, ok := k.(string)
+		if !ok {
+			log.Warnf("Non-string object (%T) found as key in ResultStatHistory during Range.", k)
+			return true
 		}
-		return true
+		return f(cacheName, i)
 	})
 }
 
-// ResultStatValHistory is threadsafe for one writer. Specifically, because a CompareAndSwap is not provided, it's not possible to Load and Store without a race condition.
-// If multiple writers were necessary, it wouldn't be difficult to add a CompareAndSwap, internally storing an atomically-accessed pointer to the slice.
-type ResultStatValHistory struct{ *sync.Map } //  map[string][]ResultStatVal
+// interfaceStat is just a convenience structure used only for passing data
+// about a single statistic for a network interface into
+// compareAndAppendStatForInterface.
+type interfaceStat struct {
+	InterfaceName string
+	Stat          interface{}
+	StatName      string
+	Time          time.Time
+}
 
-func NewResultStatValHistory() ResultStatValHistory { return ResultStatValHistory{&sync.Map{}} }
-
-// Load returns the []ResultStatVal for the given stat. If the given stat does not exist, nil is returned.
-func (h ResultStatValHistory) Load(stat string) []cache.ResultStatVal {
-	i, ok := h.Map.Load(stat)
-	if !ok {
-		return nil
+// compareAndAppendStatForInterface is a little helper function used to compare
+// a single stat for a single network interface to its historical values and do
+// the appropriate appending and management of the history to ensure it never
+// exceeds `limit`.
+func compareAndAppendStatForInterface(history []tc.ResultStatVal, errs strings.Builder, limit uint64, stat interfaceStat) []tc.ResultStatVal {
+	if history == nil {
+		history = make([]tc.ResultStatVal, 0, limit)
 	}
-	return i.([]cache.ResultStatVal)
+
+	ok, err := newStatEqual(history, stat.Stat)
+	if err != nil {
+		errs.WriteString(stat.InterfaceName)
+		errs.Write([]byte(": cannot add stat "))
+		errs.WriteString(stat.StatName)
+		errs.Write([]byte(": "))
+		errs.WriteString(err.Error())
+		errs.Write([]byte("; "))
+	} else if ok {
+		history[0].Time = stat.Time
+		history[0].Span++
+	} else {
+		if uint64(len(history)) > limit {
+			history = history[:limit]
+		} else if uint64(len(history)) < limit {
+			history = append(history, tc.ResultStatVal{})
+		}
+
+		for i := len(history) - 1; i >= 1; i-- {
+			history[i] = history[i-1]
+		}
+		history[0] = tc.ResultStatVal{
+			Val:  stat.Stat,
+			Time: stat.Time,
+			Span: 1,
+		}
+	}
+	return history
 }
 
-// Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatValHistory) Range(f func(stat string, val []cache.ResultStatVal) bool) {
-	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(string), v.([]cache.ResultStatVal))
-	})
-}
-
-// Store stores the given []ResultStatVal in the ResultStatValHistory for the given stat. Store is threadsafe for only one writer.
-// Specifically, if there are multiple writers, there's a race, that one writer could Load(), another writer could Store() underneath it,
-// and the first writer would then Store() having lost values.
-// To safely use ResultStatValHistory with multiple writers, a CompareAndSwap function would have to be added.
-func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
-	h.Map.Store(stat, vals)
-}
-
+// Add adds the given result to the stored statistics history, keeping only up
+// to `limit` number of records for any given stat (oldest records will be
+// removed to make way for new ones if the limit would otherwise be exceeded).
+//
+// If `limit` is zero, it will be treated as though it were one instead.
 func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
-	errStrs := ""
-	resultHistory := a.LoadOrStore(tc.CacheName(r.ID))
+	var errStrs strings.Builder
+	cacheHistory := a.LoadOrStore(r.ID)
 	if limit == 0 {
 		log.Warnln("ResultStatHistory.Add got limit 0 - setting to 1")
 		limit = 1
 	}
 
 	for statName, statVal := range r.Miscellaneous {
-		for interfaceName, _ := range resultHistory {
-			statHistory := resultHistory[interfaceName].Load(statName)
-			if len(statHistory) == 0 {
-				statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
-			}
-
-			ok, err := newStatEqual(statHistory, statVal)
-
-			// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
-			if err != nil {
-				errStrs += "cannot add stat " + statName + ": " + err.Error() + "; "
-			} else if ok {
-				statHistory[0].Time = r.Time
-				statHistory[0].Span++
-			} else {
-				resultVal := cache.ResultStatVal{
-					Val:  statVal,
-					Time: r.Time,
-					Span: 1,
-				}
-
-				if len(statHistory) > int(limit) {
-					statHistory = statHistory[:int(limit)]
-				} else if len(statHistory) < int(limit) {
-					statHistory = append(statHistory, cache.ResultStatVal{})
-				}
-				// shift all values to the right, in order to put the new val at the beginning. Faster than allocating memory again
-				for i := len(statHistory) - 1; i >= 1; i-- {
-					statHistory[i] = statHistory[i-1]
-				}
-				statHistory[0] = resultVal // new result at the beginning
-			}
-			resultHistory[interfaceName].Store(statName, statHistory)
+		statHistory := cacheHistory.Stats.Load(statName)
+		if statHistory == nil {
+			statHistory = make([]tc.ResultStatVal, 0, limit)
 		}
+
+		ok, err := newStatEqual(statHistory, statVal)
+		// If the new stat value is the same as the last, update the time and
+		// increment the span. Span is the number of polls the latest value has
+		// been the same, and hence the length of time it's been the same is
+		// span*pollInterval.
+		if err != nil {
+			errStrs.Write([]byte("cannot add stat "))
+			errStrs.WriteString(statName)
+			errStrs.Write([]byte(": "))
+			errStrs.WriteString(err.Error())
+			errStrs.Write([]byte("; "))
+		} else if ok {
+			statHistory[0].Time = r.Time
+			statHistory[0].Span++
+		} else {
+			if uint64(len(statHistory)) > limit {
+				statHistory = statHistory[:limit]
+			} else if uint64(len(statHistory)) < limit {
+				statHistory = append(statHistory, tc.ResultStatVal{})
+			}
+
+			for i := len(statHistory) - 1; i >= 1; i-- {
+				statHistory[i] = statHistory[i-1]
+			}
+			statHistory[0] = tc.ResultStatVal{
+				Val:  statVal,
+				Time: r.Time,
+				Span: 1,
+			}
+		}
+		cacheHistory.Stats.Store(statName, statHistory)
+
 	}
 
-	if errStrs != "" {
-		return errors.New("some stats could not be added: " + errStrs[:len(errStrs)-2])
+	stat := interfaceStat{
+		Time: r.Time,
+	}
+	for interfaceName, inf := range r.Interfaces() {
+		statHistory, ok := cacheHistory.Interfaces[interfaceName]
+		if !ok {
+			statHistory = NewResultStatValHistory()
+			cacheHistory.Interfaces[interfaceName] = statHistory
+		}
+
+		speedHistory := statHistory.Load(InterfaceStatNameSpeed)
+
+		stat.InterfaceName = interfaceName
+		stat.Stat = inf.Speed
+		stat.StatName = InterfaceStatNameSpeed
+
+		speedHistory = compareAndAppendStatForInterface(speedHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameSpeed, speedHistory)
+
+		outHistory := statHistory.Load(InterfaceStatNameBytesOut)
+
+		stat.Stat = inf.BytesOut
+		stat.StatName = InterfaceStatNameBytesOut
+
+		outHistory = compareAndAppendStatForInterface(outHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameBytesOut, outHistory)
+
+		inHistory := statHistory.Load(InterfaceStatNameBytesIn)
+
+		stat.Stat = inf.BytesIn
+		stat.StatName = InterfaceStatNameBytesIn
+
+		inHistory = compareAndAppendStatForInterface(inHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameBytesIn, inHistory)
+	}
+
+	if errStrs.Len() > 0 {
+		errStr := errStrs.String()
+		return errors.New("some stats could not be added: " + errStr[:len(errStr)-2])
 	}
 	return nil
 }
 
-// newStatEqual Returns whether the given stat is equal to the latest stat in history. If len(history)==0, this returns false without error. If the given stat is not a JSON primitive (string, number, bool), this returns an error. We explicitly refuse to compare arrays and objects, for performance.
-func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error) {
+// ResultStatValHistory is thread-safe for one writer. Specifically, because a
+// CompareAndSwap is not provided, it's not possible to Load and Store without
+// a race condition. If multiple writers were necessary, it wouldn't be
+// difficult to add a CompareAndSwap, internally storing an atomically-accessed
+// pointer to the slice.
+type ResultStatValHistory struct{ *sync.Map } //  map[string][]ResultStatVal
+
+func NewResultStatValHistory() ResultStatValHistory { return ResultStatValHistory{&sync.Map{}} }
+
+// Load returns the []ResultStatVal for the given stat. If the given stat does
+// not exist, nil is returned.
+func (h ResultStatValHistory) Load(stat string) []tc.ResultStatVal {
+	i, ok := h.Map.Load(stat)
+	if !ok {
+		return nil
+	}
+	return i.([]tc.ResultStatVal)
+}
+
+// Range behaves like sync.Map.Range. It calls f for every value in the map; if
+// f returns false, the iteration is stopped.
+func (h ResultStatValHistory) Range(f func(stat string, val []tc.ResultStatVal) bool) {
+	h.Map.Range(func(k, v interface{}) bool {
+		return f(k.(string), v.([]tc.ResultStatVal))
+	})
+}
+
+// Store stores the given []ResultStatVal in the ResultStatValHistory for the
+// given stat. Store is thread-safe for only one writer. Specifically, if there
+// are multiple writers, there's a race, that one writer could Load(), another
+// writer could Store() underneath it, and the first writer would then Store()
+// having lost values. To safely use ResultStatValHistory with multiple writers,
+// a CompareAndSwap method would have to be added.
+func (h ResultStatValHistory) Store(stat string, vals []tc.ResultStatVal) {
+	h.Map.Store(stat, vals)
+}
+
+// CacheStatHistory is the type of a single record in a ResultStatHistory map.
+// It contains interface statistics as well as historical statistics for each
+// of a cache server's polled interfaces.
+type CacheStatHistory struct {
+	// Interfaces is a map of the names of network interfaces that have been
+	// polled for this cache server to historical collections of their polled
+	// statistics.
+	Interfaces map[string]ResultStatValHistory
+	// Stats is a historical collection of all of the cache server's generic
+	// (non-interface-dependent) statistics.
+	Stats ResultStatValHistory
+}
+
+// NewCacheStatHistory constructs a new empty CacheStatHistory.
+func NewCacheStatHistory() CacheStatHistory {
+	return CacheStatHistory{
+		Interfaces: make(map[string]ResultStatValHistory),
+		Stats:      NewResultStatValHistory(),
+	}
+}
+
+// newStatEqual returns whether the given stat is equal to the latest stat in
+// history. If len(history)==0, this returns false without error. If the given
+// stat is not a JSON primitive (string, number, bool), this returns an error.
+// We explicitly refuse to compare arrays and objects, for performance.
+func newStatEqual(history []tc.ResultStatVal, stat interface{}) (bool, error) {
 	if len(history) == 0 {
 		return false, nil // if there's no history, it's "not equal", i.e. store this new history
 	}
 	switch stat.(type) {
-	case string:
-	case float64:
 	case bool:
+	case float64:
+	case int64:
+	case string:
+	case uint64:
 	default:
 		return false, fmt.Errorf("incomparable stat type %T", stat)
 	}
 	switch history[0].Val.(type) {
-	case string:
-	case float64:
 	case bool:
+	case float64:
+	case int64:
+	case string:
+	case uint64:
 	default:
 		return false, fmt.Errorf("incomparable history stat type %T", stat)
 	}
 	return stat == history[0].Val, nil
 }
 
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.LegacyTrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
-	stats := cache.Stats{
+func generateStats(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses cache.Kbpses,
+	filter cache.Filter,
+	params url.Values,
+) tc.Stats {
+	stats := tc.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[tc.CacheName]map[string]map[string][]cache.ResultStatVal{},
+		Caches:        map[string]tc.ServerStats{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -216,27 +370,54 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 			continue
 		}
 
-		cacheStatResultHistory := statResultHistory.LoadOrStore(id)
-		for interfaceName, interfaceHistory := range cacheStatResultHistory {
-			interfaceHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
-				stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
-				if !filter.UseStat(stat) {
+		cacheId := string(id)
+
+		cacheStatResultHistory := statResultHistory.LoadOrStore(cacheId)
+		if _, ok := stats.Caches[cacheId]; !ok {
+			stats.Caches[cacheId] = tc.ServerStats{
+				Interfaces: make(map[string]map[string][]tc.ResultStatVal),
+				Stats:      make(map[string][]tc.ResultStatVal),
+			}
+		}
+
+		cacheStatResultHistory.Stats.Range(func(stat string, vals []tc.ResultStatVal) bool {
+			stat = "ats." + stat // legacy reasons
+			if !filter.UseStat(stat) {
+				return true
+			}
+
+			var historyCount uint64 = 1
+			for _, val := range vals {
+				if !filter.WithinStatHistoryMax(historyCount) {
+					break
+				}
+				if _, ok := stats.Caches[cacheId].Stats[stat]; !ok {
+					stats.Caches[cacheId].Stats[stat] = []tc.ResultStatVal{val}
+				} else {
+					stats.Caches[cacheId].Stats[stat] = append(stats.Caches[cacheId].Stats[stat], val)
+				}
+				historyCount += val.Span
+			}
+
+			return true
+		})
+
+		for interfaceName, interfaceHistory := range cacheStatResultHistory.Interfaces {
+			interfaceHistory.Range(func(stat string, vals []tc.ResultStatVal) bool {
+				if !filter.UseInterfaceStat(stat) {
 					return true
 				}
-				historyCount := 1
-				if _, ok := stats.Caches[id]; !ok {
-					stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
-				}
+
+				var historyCount uint64 = 1
 				for _, val := range vals {
 					if !filter.WithinStatHistoryMax(historyCount) {
 						break
 					}
-					if _, ok := stats.Caches[id][interfaceName]; !ok {
-						stats.Caches[id][interfaceName] = map[string][]cache.ResultStatVal{}
+					if _, ok := stats.Caches[cacheId].Interfaces[interfaceName]; !ok {
+						stats.Caches[cacheId].Interfaces[interfaceName] = map[string][]tc.ResultStatVal{}
 					}
-					stats.Caches[id][interfaceName][stat] = append(stats.Caches[id][interfaceName][stat], val)
-					// Todo add for each interface?
-					historyCount += int(val.Span)
+					stats.Caches[cacheId].Interfaces[interfaceName][stat] = append(stats.Caches[cacheId].Interfaces[interfaceName][stat], val)
+					historyCount += val.Span
 				}
 				return true
 			})
@@ -253,11 +434,8 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 		}
 
 		for i, resultInfo := range statInfo[id] {
-			if !filter.WithinStatHistoryMax(i + 1) {
+			if !filter.WithinStatHistoryMax(uint64(i) + 1) {
 				break
-			}
-			if _, ok := stats.Caches[id]; !ok {
-				stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
 			}
 
 			t := resultInfo.Time
@@ -266,28 +444,67 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 				if !filter.UseStat(stat) {
 					continue
 				}
-				if _, ok := stats.Caches[id][tc.CacheInterfacesAggregate]; !ok {
-					stats.Caches[id][tc.CacheInterfacesAggregate] = map[string][]cache.ResultStatVal{}
+				rv := tc.ResultStatVal{
+					Span: 1,
+					Time: t,
+					Val:  statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache),
 				}
-				stats.Caches[id][tc.CacheInterfacesAggregate][stat] = append(stats.Caches[id][tc.CacheInterfacesAggregate][stat],
-					cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
-				// Need to actually handle interfaces, needs vitals to be refactored
-				for infName, _ := range resultInfo.Statistics.Interfaces {
-					if _, ok := stats.Caches[id][infName]; !ok {
-						stats.Caches[id][infName] = map[string][]cache.ResultStatVal{}
-					}
-					stats.Caches[id][infName][stat] = append(stats.Caches[id][infName][stat],
-						cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
-				}
+				stats.Caches[cacheId].Stats[stat] = append(stats.Caches[cacheId].Stats[stat], rv)
 			}
 		}
 	}
+
+	return stats
+}
+
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each
+// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
+// given stats are encoded. If `wildcard` is true, stats which contain the text
+// in each statsToUse are returned, instead of exact stat names. If cacheType is
+// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
+// not empty, only the given hosts are returned.
+func StatsMarshall(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses cache.Kbpses,
+	filter cache.Filter,
+	params url.Values,
+) ([]byte, error) {
+	stats := generateStats(statResultHistory, statInfo, combinedStates, monitorConfig, statMaxKbpses, filter, params)
 
 	json := jsoniter.ConfigFastest // TODO make configurable
 	return json.Marshal(stats)
 }
 
-func pruneStats(history []cache.ResultStatVal, limit uint64) []cache.ResultStatVal {
+// LegacyStatsMarshall encodes the stats in JSON, encoding up to historyCount of each
+// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
+// given stats are encoded. If `wildcard` is true, stats which contain the text
+// in each statsToUse are returned, instead of exact stat names. If cacheType is
+// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
+// not empty, only the given hosts are returned.
+func LegacyStatsMarshall(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses cache.Kbpses,
+	filter cache.Filter,
+	params url.Values,
+) ([]byte, error) {
+
+	stats := generateStats(statResultHistory, statInfo, combinedStates, monitorConfig, statMaxKbpses, filter, params)
+	skippedCaches, legacyStats := stats.ToLegacy(monitorConfig)
+	if len(skippedCaches) > 0 {
+		log.Errorln(strings.Join(skippedCaches, "\n"))
+	}
+
+	json := jsoniter.ConfigFastest // TODO make configurable
+	return json.Marshal(legacyStats)
+}
+
+func pruneStats(history []tc.ResultStatVal, limit uint64) []tc.ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]
 	}

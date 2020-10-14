@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $controller, $scope) {
+var TablePhysLocationServersController = function(physLocation, servers, filter, $controller, $scope) {
 
-	// extends the TableParentServersController to inherit common methods
-	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
-
-	let physLocServersTable;
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { tableName: 'physLocationServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.physLocation = physLocation;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = physLocServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		physLocServersTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		physLocServersTable = $('#physLocServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_physLocServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_physLocServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$controller', '$scope'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TablePhysLocationServersController;

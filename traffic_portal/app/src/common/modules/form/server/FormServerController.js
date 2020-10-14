@@ -140,6 +140,24 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getProfiles($scope.server.cdnId); // and get a new list of profiles (for the selected cdn)
     };
 
+    $scope.isLargeCIDR = function(address) {
+        if($scope.IPWithCIDRPattern.test(address) && /.+\/(\d+)/.test(address)) {
+            let ip = address.split("/")[0],
+                cidr = parseInt(address.split("/")[1],10);
+
+            if ($scope.IPv4Pattern.test(ip)) {
+                if (cidr < 27) {
+                    return true;
+                }
+            } else {
+                if (cidr < 64) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
     $scope.queueServerUpdates = function(server) {
         serverService.queueServerUpdates(server.id)
             .then(
@@ -181,10 +199,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.viewCapabilities = function() {
         $location.path($location.path() + '/capabilities');
-    };
-
-    $scope.viewConfigFiles = function() {
-        $location.path($location.path() + '/config-files');
     };
 
     $scope.viewDeliveryServices = function() {

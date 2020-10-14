@@ -116,6 +116,10 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.tcp.backlog                           | Maximum length of the queue for incoming TCP connection requests                 | ``0``                                              |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.tcp.host                              | IP Address Traffic Router will listen on for incoming TCP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.udp.host                              | IP Address Traffic Router will listen on for incoming UDP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.udp.port                              | UDP port that Traffic Router will use for incoming DNS requests                  | ``53``                                             |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.max-threads                           | Maximum number of threads used to process incoming DNS requests                  | ``1000``                                           |
@@ -259,6 +263,16 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| dynamic.cache.primer.enabled            | CRConfig.json                | Allow Traffic Router to attempt to prime the dynamic zone cache; defaults to "true".                                                  |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dynamic.cache.primer.limit              | CRConfig.json                | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to "500".                              |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.limit                          | CRConfig.json                | Integer that controls the default number of records returned when edge.dns.routing is set to true                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.routing                        | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of NS records                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.limit                         | CRConfig.json                | Integer that controls the default number of records returned when edge.http.routing is set to true; this can be overridden by the     |
+	|                                         |                              | maxDnsAnswers delivery service setting                                                                                                |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.routing                       | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of traffic router routing names for HTTP delivery |
+	|                                         |                              | service records                                                                                                                       |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| keystore.maintenance.interval           | CRConfig.json                | The interval in seconds which Traffic Router will check the :ref:`to-api` for new DNSSEC keys.                                        |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -513,6 +527,8 @@ GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
 	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the :term:`Delivery Service`
+GEO_DS
+	The request was redirected to the Miss Location configured on the :term:`Delivery Service`, because CZF couldn't resolve the client IP, and Maxmind returned the default coordinates of the country code of the client IP
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT

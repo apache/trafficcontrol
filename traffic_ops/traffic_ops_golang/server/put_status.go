@@ -24,8 +24,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -108,13 +110,42 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 // queueUpdatesOnChildCaches queues updates on child caches of the given cdnID and parentCachegroupID and returns an error (if one occurs).
 func queueUpdatesOnChildCaches(tx *sql.Tx, cdnID, parentCachegroupID int) error {
 	q := `
+/* topology_descendants finds the descendant topology nodes of the topology node
+ * for the cachegroup containing server $2.
+ */
+WITH RECURSIVE topology_descendants AS (
+/* This is the base case of the recursive CTE, the topology node for the
+ * cachegroup containing cachegroup $2.
+ */
+	SELECT tcp.parent child, NULL cachegroup
+	FROM cachegroup c
+	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
+	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
+	WHERE c.id = $2
+UNION ALL
+/* Find all direct topology child nodes tc of a given topology descendant td. */
+	SELECT tcp.child, tc.cachegroup
+	FROM topology_descendants td, topology_cachegroup_parents tcp
+	JOIN topology_cachegroup tc ON tcp.child = tc.id
+	WHERE td.child = tcp.parent
+/* server_topology_descendants is the set of every server whose cachegroup is a
+ * descendant topology node found by topology_descendants.
+ */
+), server_topology_descendants AS (
+SELECT c.id
+FROM cachegroup c
+JOIN topology_descendants td ON c."name" = td.cachegroup
+)
 UPDATE server
-SET    upd_pending = TRUE
-WHERE  server.cdn_id = $1
-       AND server.cachegroup IN (SELECT id
-                                 FROM   cachegroup
-                                 WHERE  parent_cachegroup_id = $2
-                                        OR secondary_parent_cachegroup_id = $2)
+SET upd_pending = TRUE
+WHERE (server.cdn_id = $1
+	   AND server.cachegroup IN (
+			SELECT id
+			FROM cachegroup
+			WHERE parent_cachegroup_id = $2
+				OR secondary_parent_cachegroup_id = $2
+			))
+		OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc)
 `
 	if _, err := tx.Exec(q, cdnID, parentCachegroupID); err != nil {
 		return errors.New("queueing updates on child caches: " + err.Error())
@@ -122,15 +153,44 @@ WHERE  server.cdn_id = $1
 	return nil
 }
 
+// checkExistingStatusInfo returns the existing status and status_last_updated values for the server in question
+func checkExistingStatusInfo(serverID int, tx *sql.Tx) (int, time.Time) {
+	status := 0
+	var status_last_updated time.Time
+	q := `SELECT status,
+status_last_updated 
+FROM server
+WHERE id = $1`
+	response, err := tx.Query(q, serverID)
+	if err != nil {
+		log.Errorf("couldn't get status/ status_last_updated for server with id %v", serverID)
+		return status, status_last_updated
+	}
+	defer response.Close()
+	for response.Next() {
+		if err := response.Scan(&status, &status_last_updated); err != nil {
+			log.Errorf("couldn't get status/ status_last_updated of server with id %v, err: %v", serverID, err.Error())
+		}
+	}
+	return status, status_last_updated
+}
+
 // updateServerStatusAndOfflineReason updates a server's status and offline_reason and returns an error (if one occurs).
 func updateServerStatusAndOfflineReason(serverID, statusID int, offlineReason *string, tx *sql.Tx) error {
+	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(serverID, tx)
+	newStatusUpdatedTime := time.Now()
+	// Set the status_last_updated time to the current time ONLY IF the new status is different from the old one
+	if existingStatus == statusID {
+		newStatusUpdatedTime = existingStatusUpdatedTime
+	}
 	q := `
 UPDATE server
 SET    status = $1,
-       offline_reason = $2
-WHERE  id = $3
+       offline_reason = $2,
+       status_last_updated = $3
+WHERE  id = $4
 `
-	if _, err := tx.Exec(q, statusID, offlineReason, serverID); err != nil {
+	if _, err := tx.Exec(q, statusID, offlineReason, &newStatusUpdatedTime, serverID); err != nil {
 		return errors.New("updating server status and offline_reason: " + err.Error())
 	}
 	return nil

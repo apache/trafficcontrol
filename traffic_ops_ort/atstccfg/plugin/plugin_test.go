@@ -22,13 +22,15 @@ package plugin
 import (
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func TestPlugin(t *testing.T) {
 	AddPlugin(10000, Funcs{
 		modifyFiles: func(d ModifyFilesData) []config.ATSConfigFile {
-			if d.TOData.Server.HostName != "testplugin" {
+			if d.TOData.Server == nil || d.TOData.Server.HostName == nil || *d.TOData.Server.HostName != "testplugin" {
 				return d.Files
 			}
 			fi := config.ATSConfigFile{}
@@ -71,7 +73,10 @@ func TestPlugin(t *testing.T) {
 		t.Error("Expected server '' to be unhandled by a plugin, actual: handled")
 	}
 
-	modifyFilesData.TOData.Server.HostName = "testplugin"
+	if modifyFilesData.TOData.Server == nil {
+		modifyFilesData.TOData.Server = &tc.ServerNullable{}
+	}
+	modifyFilesData.TOData.Server.HostName = util.StrPtr("testplugin")
 	newFiles = plugins.ModifyFiles(modifyFilesData)
 	if len(newFiles) == 0 {
 		t.Error("Expected server 'testplugin' to be handled by plugin, actual: unhandled")

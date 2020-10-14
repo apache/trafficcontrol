@@ -16,6 +16,7 @@
 use strict;
 use warnings;
 use feature qw(switch);
+no if $] >= 5.018, warnings => qw( experimental::smartmatch );
 use JSON;
 use File::Basename;
 use File::Path;
@@ -29,7 +30,7 @@ chomp($date);
 print "$date\n";
 
 # supported redhat/centos releases
-my %supported_el_release = ( "EL6" => 1, "EL7" => 1);
+my %supported_el_release = ( "EL6" => 1, "EL7" => 1, "EL8" => 1);
 
 my $dispersion = 300;
 my $retries = 5;
@@ -41,6 +42,7 @@ my $rev_proxy_disable = 0;
 my $skip_os_check = 0;
 my $override_hostname_short = '';
 my $to_timeout_ms = 30000;
+my $syncds_updates_ipallow = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -50,6 +52,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "skip_os_check=i" => \$skip_os_check,
             "override_hostname_short=s" => \$override_hostname_short,
             "to_timeout_ms=i" => \$to_timeout_ms,
+            "syncds_updates_ipallow=i" => \$syncds_updates_ipallow,
           );
 
 if ( $#ARGV < 1 ) {
@@ -164,7 +167,9 @@ if ($rev_proxy_disable != 0) {
 }
 
 my $TMP_BASE  = "/tmp/ort";
-my $atstccfg_log_path = $TMP_BASE . '/atstccfg.log';
+
+my $LOG_BASE  = "/var/log/ort"; # TODO add inferring ORT install location, and allowing / vs /opt install
+my $atstccfg_log_path = $LOG_BASE . '/atstccfg.log';
 
 # add any special yum options for your environment here; this variable is used with all yum commands
 my $YUM_OPTS = "";
@@ -188,6 +193,8 @@ my $installed_new_ssl_keys    = 0;
 my %install_tracker;
 
 my $cfg_file_tracker = undef;
+
+my $ats_config_dir = get_ats_config_dir();
 
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Start main flow
@@ -270,6 +277,26 @@ if ( $script_mode != $REPORT ) {
 #### Subroutines
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 
+# Returns the ATS config directory, if it can find it.
+# Tries rpm (yum) first, then falls back to find.
+# If it fails to find it, logs an error and returns the empty string.
+sub get_ats_config_dir {
+	my $dir = `rpm -ql trafficserver | grep -E 'etc/trafficserver\$' | tail -1`;
+	$dir =~ s/^\s+|\s+$//g; # trim leading and trailing whitespace
+	if ( $dir eq "" ) {
+		$dir = `find / -type d -path '*/etc/trafficserver' | tail -1`;
+		$dir =~ s/^\s+|\s+$//g; # trim leading and trailing whitespace
+	}
+	if ( ! length $dir ) {
+		# if it became undefined somehow, make sure we're returning ""
+		$dir = "";
+	}
+	if ( $dir eq "" ) {
+		( $log_level >> $ERROR ) && print "ERROR Failed to find config directory, using empty string!\n";
+	}
+	return $dir;
+}
+
 sub revalidate_while_sleeping {
 	$syncds_update = &check_revalidate_state(1);
 	if ( $syncds_update > 0 ) {
@@ -288,7 +315,7 @@ sub revalidate_while_sleeping {
 
 sub os_version {
 	my $release = "UNKNOWN";
-	if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
+	if (`uname -r` =~ m/.+(el\d)((?:\.\w+)|(?:_\w+))*\.x86_64/)  {
 		$release = uc $1;
 	}
 	if (!exists $supported_el_release{$release} && !$skip_os_check) {
@@ -320,6 +347,7 @@ sub usage {
 	print "\t   skip_os_check=<0|1>            => bypass the check for a supported CentOS version. Default = 0.\n";
 	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
 	print "\t   to_timeout_ms=<time>           => the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds).\n";
+	print "\t   syncds_updates_ipallow=<0|1>   => Update ip_allow.config in syncds mode, which may trigger an ATS bug blocking random addresses on load! Default = 0, only update on badass and restart.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -384,6 +412,15 @@ sub process_cfg_file {
 				# all lines accounted for
 				$change_needed = undef;
 			}
+		}
+	}
+
+	if ($change_needed && $cfg_file eq "ip_allow.config" && $syncds_updates_ipallow != 1) {
+		if ($script_mode == $BADASS) {
+			$trafficserver_restart_needed++;
+		} else {
+			( $log_level >> $ERROR ) && print "ERROR Not in badass mode, but ip_allow.config changed! Changing that file will cause ATS to break the next time it Reloads! Ignoring file!! This will cause this server to reject any new servers! ORT must be run in badass mode to get the ip_allow.config change and permit the necessary client!\n";
+			$change_needed = undef;
 		}
 	}
 
@@ -472,7 +509,7 @@ sub start_service {
 	( $log_level >> $DEBUG ) && print "DEBUG start_service called for $pkg_name.\n";
 
 	my $pkg_running;
-	if ($RELEASE eq "EL7") {
+	if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 		$pkg_running = &systemd_service_status($pkg_name);
 	} else {
 		$pkg_running  = `/sbin/service $pkg_name status`;
@@ -494,7 +531,7 @@ sub start_service {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 				my $pkg_start_output = `/sbin/service $pkg_name start`;
 				my $pkg_started = 0;
-				if ($RELEASE eq "EL7") {
+				if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 					my $_st = &systemd_service_status($pkg_name);
 					if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
 						$pkg_started++;
@@ -527,7 +564,7 @@ sub start_service {
 					( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 					my $pkg_start_output = `/sbin/service $pkg_name start`;
 					my $pkg_started = 0;
-					if ($RELEASE eq "EL7") {
+					if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 						my $_st = &systemd_service_status($pkg_name);
 						if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
 							$pkg_started++;
@@ -559,6 +596,7 @@ sub start_service {
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL Unrecognized service: $pkg_name. Not starting $pkg_name.\n";
+		$pkg_running = $START_NOT_ATTEMPTED;
 	}
 	return $pkg_running;
 }
@@ -567,7 +605,7 @@ sub restart_service {
 	my $pkg_name = $_[0];
 
 	my $pkg_running;
-	if ($RELEASE eq "EL7") {
+	if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 		$pkg_running = &systemd_service_status($pkg_name);
 	} else {
 		$pkg_running  = `/sbin/service $pkg_name status`;
@@ -593,11 +631,12 @@ sub restart_service {
 				}
 				if ($pkg_started) {
 					( $log_level >> $ERROR ) && print "ERROR $pkg_name restarted successfully.\n";
-					$pkg_running++;
+					$pkg_running = $START_SUCCESSFUL;
 				}
 				else {
 					$pkg_start_output =~ s/\n/\t/g;
 					( $log_level >> $ERROR ) && print "ERROR $pkg_name failed to restart, error is: $pkg_start_output.\n";
+					$pkg_running = $START_FAILED;
 				}
 			}
 			if ( $script_mode == $INTERACTIVE ) {
@@ -617,22 +656,24 @@ sub restart_service {
 					}
 					if ($pkg_started) {
 						( $log_level >> $DEBUG ) && print "DEBUG $pkg_name restarted successfully.\n";
-						$pkg_running++;
+						$pkg_running = $START_SUCCESSFUL;
 					}
 					else {
 						$pkg_start_output =~ s/\n/\t/g;
 						( $log_level >> $ERROR ) && print "ERROR $pkg_name failed to restart, error is: $pkg_start_output.\n";
+						$pkg_running = $START_FAILED;
 					}
 				}
 			}
 		}
 		else {
 			( $log_level >> $DEBUG ) && print "DEBUG $pkg_name is not running! This shouldn't happnen, $pkg_name must have died recently!\n";
-			$pkg_running++;
+			$pkg_running = $START_FAILED;
 		}
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL Unrecognized service: $pkg_name. Not restarting $pkg_name.\n";
+		$pkg_running = $START_NOT_ATTEMPTED;
 	}
 	return $pkg_running;
 }
@@ -746,7 +787,7 @@ sub send_update_to_trops {
 		$reval_str='true';
 	}
 
-	my $response = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --set-queue-status=$upd_str --set-reval-status=$reval_str 2>$atstccfg_log_path`;
+	my $response = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --set-queue-status=$upd_str --set-reval-status=$reval_str 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR sending update status with atstccfg (via Traffic Ops). See $atstccfg_log_path.\n");
@@ -756,7 +797,7 @@ sub send_update_to_trops {
 }
 
 sub get_update_status {
-	my $upd_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=update-status 2>$atstccfg_log_path`;
+	my $upd_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=update-status 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR getting update status from atstccfg (via Traffic Ops). See $atstccfg_log_path.\n");
@@ -767,7 +808,7 @@ sub get_update_status {
 
 	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
 	if ( !defined( $upd_json->{'use_reval_pending'} ) ) {
-		my $info_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>$atstccfg_log_path`;
+		my $info_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ($atstccfg_exit_code != 0) {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get status of use_reval_pending parameter.  Stopping.\n");
@@ -822,7 +863,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>$atstccfg_log_path`;
+		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ( $atstccfg_exit_code != 0 ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: returned $stj! Skipping creation of status file.\n";
@@ -941,7 +982,7 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
-		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>$atstccfg_log_path`;
+		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ( $atstccfg_exit_code != 0 ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: returned $stj! Skipping creation of status file.\n";
@@ -1583,7 +1624,7 @@ sub get_cfg_file_list {
 		$atstccfg_reval_arg = '--revalidate-only';
 	}
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd --dir='$ats_config_dir' $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR getting config files from atstccfg via Traffic Ops. See $atstccfg_log_path for details\n");
@@ -1659,7 +1700,7 @@ sub parse_multipart_config_files {
 sub get_header_comment {
 	my $toolname;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get system info. Stopping.\n");
@@ -1834,7 +1875,7 @@ sub process_packages {
 
 	my $proceed = 0;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=packages 2>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=packages 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $FATAL ) && print "FATAL Error getting package list from Traffic Ops!\n";
@@ -2032,7 +2073,7 @@ sub chkconfig_matches {
 	# This will work for now as  it trys to map from chkconfig run level settings to systemd enabled/disabled state.
 	# I think that a new generic endpoint should be added to traffic opts for chkconfig and systemd state settings and that functions
 	# here in the ort script should abstract the checking of chkconfig/systemd states with traffic ops.
-	if ($RELEASE eq "EL7") {
+	if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 		my $service_state = systemd_service_chk($service);
 		if ($service_state eq "enabled") {
 			if ($service_settings =~ m/on/) {
@@ -2080,7 +2121,7 @@ sub process_chkconfig {
 
 	my $proceed = 0;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=chkconfig 2>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=chkconfig 2>>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
@@ -2108,7 +2149,7 @@ sub process_chkconfig {
 
 						if ($fixit) {
 							#use systemd commands by mapping chkconfig runlrvrld to either enable or disable.
-							if ($RELEASE eq "EL7") {
+							if (($RELEASE eq "EL7") || ($RELEASE eq "EL8")) {
 								my $systemd_service_enable = "disable";
 								if ($chkconfig->{"value"} =~ m/on/) {
 									$systemd_service_enable = "enable";

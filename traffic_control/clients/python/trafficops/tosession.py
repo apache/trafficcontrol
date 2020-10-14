@@ -1915,6 +1915,19 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('post', 'topologies/{topology_name:s}/queue_update', ('3.0',))
+	def topologies_queue_update(self, topology_name=None, data=None):
+		"""
+		Queue Updates by Topology name.
+		:ref:`to-api-topologies-name-queue_update`
+		:param topology_name: The Topology name
+		:param data: The update action.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
 	#
 	# Types
 	#

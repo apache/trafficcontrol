@@ -49,7 +49,7 @@ ARG TRAFFIC_OPS_RPM=traffic_ops/traffic_ops.rpm
 
 COPY $TRAFFIC_OPS_RPM /
 RUN to_rpm_filename="$(basename $TRAFFIC_OPS_RPM)" && \
-    rpm --install --nodeps --verbose --hash "$to_rpm_filename" && \
+    rpm -Uvh --nodeps "$to_rpm_filename" && \
     rm "$to_rpm_filename"
 
 COPY enroller/server_template.json \
@@ -58,6 +58,12 @@ COPY enroller/server_template.json \
      traffic_ops/to-access.sh \
      /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 WORKDIR /opt/traffic_ops/app
 EXPOSE  443
 CMD     /run-go.sh
+HEALTHCHECK --interval=10s --timeout=1s \
+    CMD bash -c 'source /to-access.sh && [[ "$(curl -sk "https://${TO_FQDN}/api/${TO_API_VERSION}/ping" | jq .ping)" == \"pong\" ]]'

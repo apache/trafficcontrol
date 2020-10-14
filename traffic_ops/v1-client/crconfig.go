@@ -17,7 +17,10 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type OuterResponse struct {
@@ -39,9 +42,39 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	return []byte(resp.Response), reqInf, nil
 }
 
+// GetCRConfigNew returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
+func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
+	uri := apiBase + `/cdns/` + cdn + `/snapshot/new`
+	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	resp := OuterResponse{}
+	if err := json.Unmarshal(bts, &resp); err != nil {
+		return nil, reqInf, err
+	}
+	return []byte(resp.Response), reqInf, nil
+}
+
+// SnapshotCRConfig snapshots a CDN by name.
 func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
 	uri := apiBase + `/snapshot/` + cdn
 	_, remoteAddr, err := to.request(http.MethodPut, uri, nil)
 	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
 	return reqInf, err
+}
+
+// SnapshotCDNByID snapshots a CDN by ID.
+func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, ReqInf, error) {
+	url := fmt.Sprintf(apiBase+`/cdns/%d/snapshot`, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
 }

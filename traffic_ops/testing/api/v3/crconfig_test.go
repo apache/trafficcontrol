@@ -51,7 +51,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
 		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
@@ -66,7 +66,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if serverID == 0 {
 		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
 	}
-	res, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("anymap-ds", nil)
+	res, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("anymap-ds")
 	if err != nil {
 		t.Errorf("GetDeliveryServiceByXMLIDNullable err expected nil, actual %+v", err)
 	}
@@ -125,7 +125,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
 	}
 
-	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName, nil)
+	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
 	if err != nil {
 		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}
@@ -137,6 +137,23 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
+	}
+
+	crcBtsNew, _, err := TOSession.GetCRConfigNew(cdn)
+	if err != nil {
+		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
+	}
+	crcNew := tc.CRConfig{}
+	if err := json.Unmarshal(crcBtsNew, &crcNew); err != nil {
+		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
+	}
+
+	if len(crcNew.DeliveryServices) != len(crc.DeliveryServices) {
+		t.Errorf("/new endpoint returned a different snapshot. DeliveryServices length expected %v, was %v", len(crc.DeliveryServices), len(crcNew.DeliveryServices))
+	}
+
+	if *crcNew.Stats.TMHost != "" {
+		t.Errorf("update to snapshot not captured in /new endpoint")
 	}
 }
 
@@ -162,7 +179,7 @@ func SnapshotTestCDNbyID(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the snapshot
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}

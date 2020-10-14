@@ -65,6 +65,7 @@ type Cfg struct {
 	TOTimeout       time.Duration
 	TOURL           *url.URL
 	TOUser          string
+	Dir             string
 }
 
 type TCCfg struct {
@@ -99,6 +100,7 @@ func GetCfg() (Cfg, error) {
 	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revalidate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
 	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
+	dirPtr := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
 
 	flag.Parse()
 
@@ -128,6 +130,7 @@ func GetCfg() (Cfg, error) {
 	setRevalStatus := *setRevalStatusPtr
 	revalOnly := *revalOnlyPtr
 	disableProxy := *disableProxyPtr
+	dir := *dirPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -186,6 +189,7 @@ func GetCfg() (Cfg, error) {
 		SetQueueStatus:  setQueueStatus,
 		RevalOnly:       revalOnly,
 		DisableProxy:    disableProxy,
+		Dir:             dir,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
@@ -232,7 +236,7 @@ func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 //   require the potential fields to be omitted to generate correctly.
 type TOData struct {
 	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
-	Servers []tc.Server
+	Servers []tc.ServerNullable
 
 	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
 	CacheGroups []tc.CacheGroupNullable
@@ -253,13 +257,13 @@ type TOData struct {
 	ParentConfigParams []tc.Parameter
 
 	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
-	DeliveryServices []tc.DeliveryServiceNullable
+	DeliveryServices []tc.DeliveryServiceNullableV30
 
 	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
 	DeliveryServiceServers []tc.DeliveryServiceServer
 
 	// Server must be the server we're fetching configs from
-	Server tc.Server
+	Server *tc.ServerNullable
 
 	// TOToolName must be the Parameter named 'tm.toolname' on the tc.GlobalConfigFileName Profile.
 	TOToolName string
@@ -293,4 +297,8 @@ type TOData struct {
 
 	// SSLKeys must be all the ssl keys for the server's cdn.
 	SSLKeys []tc.CDNSSLKeys
+
+	// Topologies must be all the topologies for the server's cdn.
+	// May incude topologies of other cdns.
+	Topologies []tc.Topology
 }

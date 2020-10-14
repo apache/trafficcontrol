@@ -105,7 +105,7 @@ type StatsDecoder struct {
 // whatever miscellaneous data was in the payload but not represented by
 // the properties of a Statistics object, so that it can be used in later
 // calculations if necessary.
-type StatisticsParser func(string, io.Reader) (Statistics, map[string]interface{}, error)
+type StatisticsParser func(string, io.Reader, interface{}) (Statistics, map[string]interface{}, error)
 
 // StatisticsPrecomputer is a function that "pre-computes" some statistics
 // beyond the basic ones covered by a Statistics object.

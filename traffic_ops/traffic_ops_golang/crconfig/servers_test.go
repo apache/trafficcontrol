@@ -463,8 +463,8 @@ func TestGetAllServersNonService(t *testing.T) {
 	getServerParamsExpected := ExpectedGetServerParams()
 	MockGetServerParams(mock, getServerParamsExpected, cdn)
 
-	expected := ExpectedGetAllServers(getServerParamsExpected, false, false)
-	MockGetAllServers(mock, expected, cdn, false, false)
+	expected := ExpectedGetAllServers(getServerParamsExpected, true, false)
+	MockGetAllServers(mock, expected, cdn, true, false)
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)

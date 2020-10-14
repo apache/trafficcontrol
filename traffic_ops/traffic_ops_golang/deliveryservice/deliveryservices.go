@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,10 +34,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -48,15 +46,15 @@ import (
 
 type TODeliveryService struct {
 	api.APIInfoImpl
-	tc.DeliveryServiceNullable
+	tc.DeliveryServiceNullableV30
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullable)
+	return json.Marshal(ds.DeliveryServiceNullableV30)
 }
 
 func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullable)
+	return json.Unmarshal(data, ds.DeliveryServiceNullableV30)
 }
 
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
@@ -90,11 +88,7 @@ func (ds *TODeliveryService) GetType() string {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullable)
-}
-
-func (ds *TODeliveryService) Validate() error {
-	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx.Tx)
+	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullableV30)
 }
 
 func CreateV12(w http.ResponseWriter, r *http.Request) {
@@ -244,9 +238,20 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	return nil, status, userErr, sysErr
 }
 
+func checkTopology(tx *sql.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+	if ds.Topology != nil {
+		if ok, err := dbhelpers.TopologyExists(tx, *ds.Topology); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("checking topology existence: %v", err)
+		} else if !ok {
+			return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
+}
+
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
-	ds := tc.DeliveryServiceNullable(reqDS)
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
@@ -265,6 +270,10 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	}
+
+	if errCode, userErr, sysErr := checkTopology(tx, ds); userErr != nil || sysErr != nil {
+		return nil, errCode, userErr, sysErr
 	}
 
 	resultRows, err := tx.Query(insertQuery(),
@@ -326,6 +335,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
+		&ds.ServiceCategory,
 	)
 
 	if err != nil {
@@ -409,8 +419,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV30(ds)
-	return &dsLatest, http.StatusOK, nil, nil
+	return &ds, http.StatusOK, nil, nil
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -709,7 +718,8 @@ SELECT
   ds.topology,
   ds.first_header_rewrite,
   ds.inner_header_rewrite,
-  ds.last_header_rewrite
+  ds.last_header_rewrite,
+  ds.service_category
 FROM
   deliveryservice ds
 WHERE
@@ -719,6 +729,7 @@ WHERE
 		&dsV30.FirstHeaderRewrite,
 		&dsV30.InnerHeaderRewrite,
 		&dsV30.LastHeaderRewrite,
+		&dsV30.ServiceCategory,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
@@ -732,11 +743,8 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 
-func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
-	converted := tc.DeliveryServiceNullable(*reqDS)
-	ds := &converted
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	tx := inf.Tx.Tx
-	cfg := inf.Config
 	user := inf.User
 
 	if err := ds.Validate(tx); err != nil {
@@ -766,8 +774,10 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 
 	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	oldHostName := ""
+	oldCDNName := ""
+	oldRoutingName := ""
 	if dsType.HasSSLKeys() {
-		oldHostName, err = getOldHostName(*ds.ID, tx)
+		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*ds.ID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
 		}
@@ -777,6 +787,22 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	}
+
+	if errCode, userErr, sysErr := checkTopology(tx, *ds); userErr != nil || sysErr != nil {
+		return nil, errCode, userErr, sysErr
+	}
+
+	if ds.Topology != nil {
+		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*ds.ID, tx)
+		if err != nil {
+			return nil, http.StatusInternalServerError, nil, errors.New("getting existing DS required capabilities: " + err.Error())
+		}
+		if len(requiredCapabilities) > 0 {
+			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
+				return nil, status, userErr, sysErr
+			}
+		}
 	}
 
 	resultRows, err := tx.Query(updateDSQuery(),
@@ -838,6 +864,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
+		&ds.ServiceCategory,
 		&ds.ID)
 
 	if err != nil {
@@ -895,17 +922,17 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 
 	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	newHostName := ""
+	newCDNName := ""
 	if dsType.HasSSLKeys() {
+		newCDNName, err = getCDNName(*ds.CDNID, tx)
 		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
 		}
 	}
 
-	if newDSType.HasSSLKeys() && oldHostName != newHostName {
-		if err := updateSSLKeys(ds, newHostName, tx, cfg); err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
-		}
+	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
+		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -936,8 +963,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV30(*ds)
-	return &dsLatest, http.StatusOK, nil, nil
+	return ds, http.StatusOK, nil, nil
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.
@@ -986,7 +1012,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullable, error, error, int, *time.Time) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullableV30, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
@@ -1009,6 +1035,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"tenant":           {"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": {"ds.signing_algorithm", nil},
 		"topology":         {"ds.topology", nil},
+		"serviceCategory":  {"ds.service_category", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1019,7 +1046,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.DeliveryServiceNullableV30{}, nil, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -1068,9 +1095,9 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldHostName(id int, tx *sql.Tx) (string, error) {
+func getOldDetails(id int, tx *sql.Tx) (string, string, string, error) {
 	q := `
-SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name
+SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name
 FROM  deliveryservice as ds
 JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
@@ -1081,30 +1108,31 @@ WHERE ds.id=$1
 	dsTypeStr := ""
 	routingName := ""
 	cdnDomain := ""
-	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain); err != nil {
-		return "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
+	cdnName := ""
+	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain, &cdnName); err != nil {
+		return "", "", "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
 	}
 	dsType := tc.DSTypeFromString(dsTypeStr)
 	if dsType == tc.DSTypeInvalid {
-		return "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
+		return "", "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
 	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
-		return "", errors.New("getting delivery services matchlist: " + err.Error())
+		return "", "", "", errors.New("getting delivery services matchlist: " + err.Error())
 	}
 	matchList, ok := matchLists[xmlID]
 	if !ok {
-		return "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
+		return "", "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
 	}
 	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
 	if err != nil {
-		return "", errors.New("getting hostname: " + err.Error())
+		return "", "", "", errors.New("getting hostname: " + err.Error())
 	}
-	return host, nil
+	return host, cdnName, routingName, nil
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
-	// TODO combine with getOldHostName, to only make one query?
+	// TODO combine with getOldDetails, to only make one query?
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM type WHERE id = $1`, id).Scan(&name); err != nil {
 		return "", fmt.Errorf("querying type ID %v: "+err.Error()+"\n", id)
@@ -1112,7 +1140,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	return tc.DSTypeFromString(name), nil
 }
 
-func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) error {
+func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
 	count := 0
 	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
 	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
@@ -1152,7 +1180,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) error {
+func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
 	if ds.OrgServerFQDN == nil {
 		return nil
 	}
@@ -1184,21 +1212,21 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, error, error, int) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullableV30, error, error, int) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
-	dses := []tc.DeliveryServiceNullable{}
+	dses := []tc.DeliveryServiceNullableV30{}
 	dsCDNDomains := map[string]string{}
 
 	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceNullable{}
+		ds := tc.DeliveryServiceNullableV30{}
 		cdnDomain := ""
 		err := rows.Scan(&ds.Active,
 			&ds.AnonymousBlockingEnabled,
@@ -1256,6 +1284,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RegionalGeoBlocking,
 			&ds.RemapText,
 			&ds.RoutingName,
+			&ds.ServiceCategory,
 			&ds.SigningAlgorithm,
 			&ds.RangeSliceBlockSize,
 			&ds.SSLKeyVersion,
@@ -1317,25 +1346,6 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	return dses, nil, nil, http.StatusOK
 }
 
-func updateSSLKeys(ds *tc.DeliveryServiceNullable, hostName string, tx *sql.Tx, cfg *config.Config) error {
-	if ds.XMLID == nil {
-		return errors.New("delivery services has no XMLID!")
-	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(*ds.XMLID, riaksvc.DSSSLKeyVersionLatest, tx, cfg.RiakAuthOptions, cfg.RiakPort)
-	if err != nil {
-		return errors.New("getting SSL key: " + err.Error())
-	}
-	if !ok {
-		return nil // no keys to update
-	}
-	key.DeliveryService = *ds.XMLID
-	key.Hostname = hostName
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(key, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting updated SSL key: " + err.Error())
-	}
-	return nil
-}
-
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
 func getHostName(dsProtocol *int, dsType tc.DSType, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
 	exampleURLs := MakeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
@@ -1362,6 +1372,15 @@ func getHostName(dsProtocol *int, dsType tc.DSType, dsRoutingName string, dsMatc
 		}
 	}
 	return host, nil
+}
+
+func getCDNName(cdnID int, tx *sql.Tx) (string, error) {
+	q := `SELECT cdn.name FROM cdn where cdn.id = $1`
+	cdnName := ""
+	if err := tx.QueryRow(q, cdnID).Scan(&cdnName); err != nil {
+		return "", fmt.Errorf("getting CDN name with id '%v': %v", cdnID, err)
+	}
+	return cdnName, nil
 }
 
 func getCDNDomain(dsID int, tx *sql.Tx) (string, error) {
@@ -1636,7 +1655,7 @@ func GetDSSelectQuery() string {
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
-func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullable) (*int, error) {
+func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV30) (*int, error) {
 	if ds.ID == nil && ds.XMLID == nil {
 		return nil, errors.New("delivery service has no ID or XMLID")
 	}
@@ -1648,7 +1667,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullable) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (bool, error) {
+func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
@@ -1780,6 +1799,7 @@ ds.regex_remap,
 ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
+ds.service_category,
 ds.signing_algorithm,
 ds.range_slice_block_size,
 ds.ssl_key_version,
@@ -1861,8 +1881,9 @@ range_slice_block_size=$54,
 topology=$55,
 first_header_rewrite=$56,
 inner_header_rewrite=$57,
-last_header_rewrite=$58
-WHERE id=$59
+last_header_rewrite=$58,
+service_category=$59
+WHERE id=$60
 RETURNING last_updated
 `
 }
@@ -1927,9 +1948,10 @@ ecs_enabled,
 range_slice_block_size,
 first_header_rewrite,
 inner_header_rewrite,
-last_header_rewrite
+last_header_rewrite,
+service_category
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
 RETURNING id, last_updated
 `
 }

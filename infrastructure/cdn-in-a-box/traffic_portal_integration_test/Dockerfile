@@ -64,10 +64,13 @@ RUN jq ' \
     mv conf.json.tmp conf.json
 
 RUN webdriver-manager clean && \
-    webdriver-manager update
+	repoquery --installed --qf='%{version}' google-chrome-stable | \
+		xargs webdriver-manager update --versions.chrome
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
      infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \
+     infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
      /usr/local/sbin/
 
 CMD run.sh

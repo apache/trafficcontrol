@@ -47,6 +47,12 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 80
 ADD traffic_monitor/run.sh /
 CMD /run.sh
+HEALTHCHECK --interval=10s --timeout=1s \
+    CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "$TO_URL" ]]'

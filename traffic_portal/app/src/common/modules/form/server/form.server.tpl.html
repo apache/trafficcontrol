@@ -36,7 +36,6 @@ under the License.
                     <li ng-show="isCache(server)" class="divider"></li>
                     <li ng-show="isCache(server)" name="viewCapabilitiesMenuItem"><a ng-click="viewCapabilities()">Manage Capabilities</a></li>
                     <li ng-show="isEdge(server) || isOrigin(server)"><a ng-click="viewDeliveryServices()">Manage Delivery Services</a></li>
-                    <li ng-show="isCache(server)"><a ng-click="viewConfigFiles()">View Config Files</a></li>
                 </ul>
             </div>
         </div>
@@ -49,6 +48,11 @@ under the License.
             <label for="status">Status *</label>
             <div>
                 <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" ng-disabled="!settings.isNew"></select>
+            </div>
+
+            <label ng-if="!settings.isNew" for="statusLastUpdated">Status Last Updated</label>
+            <div ng-if="!settings.isNew">
+                <input id="statusLastUpdated" name="statusLastUpdated" type="text" class="form-control" ng-model="server.statusLastUpdated" ng-disabled="true">
             </div>
 
             <label ng-if="server.offlineReason.length > 0" for="offlineReason">Offline Reason</label>
@@ -241,11 +245,17 @@ under the License.
                 <span ng-show="hasError(serverForm.routerPortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
             </div>
 
+            <label ng-if="!settings.isNew">Hash ID</label>
+            <div ng-if="!settings.isNew">
+                <input name="xmppId" type="text" class="form-control" ng-model="server.xmppId" readonly/>
+            </div>
+
             <fieldset>
                 <legend>Interfaces<button name="addInterfaceBtn" class="btn btn-primary right-button btn-xs" type="button" title="add a new interface" ng-click="addInterface()"><i class="fa fa-plus"></i></button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
-                    <legend>
-                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="interface-name"/>
+                    <legend ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}">
+                        <label for="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}">Name</label>
+                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input"/>
                         <button class="btn btn-danger right-button btn-xs" type="button" title="delete this interface" ng-click="deleteInterface(inf)"><i class="fa fa-minus"></i></button>
                     </legend>
 
@@ -265,12 +275,13 @@ under the License.
                         <ul>
                             <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
                                 <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
-                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/24" />
+                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/27" />
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
+                                <small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR &lt; 27 or IPv6 with CIDR &lt; 64 can be problematic.</small>
                                 <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
                                 <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
-                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
+                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small>
                                 <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
                                 <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" ng-model="ip.serviceAddress"/>
                                 <button type="button" title="delete this IP address" class="btn btn-danger btn-xs" style="justify-self: start;" ng-click="deleteIP(inf, ip)"><i class="fa fa-minus"></i></button>

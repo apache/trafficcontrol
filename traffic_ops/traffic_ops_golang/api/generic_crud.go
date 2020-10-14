@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -81,7 +80,7 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	}
 	defer resultRows.Close()
 
-	id := 0
+	var id interface{}
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
 	for resultRows.Next() {
@@ -89,6 +88,16 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
+	}
+
+	switch id.(type) {
+	case int64:
+		// ahhh generics in a language without generics
+		// sql.Driver values return int64s from integral database data
+		// but our objects all use ambiguous-width ints for their IDs
+		// so naturally this suffers from overflow issues, but c'est la vie
+		id = int(id.(int64))
+	default:
 	}
 	if rowsAffected == 0 {
 		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no id was returned"), http.StatusInternalServerError
@@ -142,7 +151,7 @@ func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, ord
 	if len(imsDateHeader) == 0 {
 		return runSecond, max
 	}
-	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}

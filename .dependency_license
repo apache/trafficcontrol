@@ -34,6 +34,7 @@ CHANGELOG$, Docs
 \.cfg$, Apache-2.0
 \.json$, Apache-2.0
 \.webmanifest, Apache-2.0
+\.csv$, Apache-2.0
 \.conf$, Apache-2.0
 \.config(\.example)?$, Apache-2.0
 /\.bowerrc$, Apache-2.0
@@ -123,6 +124,8 @@ traffic_portal/app/src/assets/js/dataTables.buttons\..*, MIT
 traffic_portal/app/src/assets/js/buttons.html5\..*, MIT
 traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
 traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
+traffic_ops_ort/vendor/github\.com/gofrs/flock/.*, BSD
+traffic_ops_ort/vendor/github\.com/pborman/getopt/.*, BSD
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
