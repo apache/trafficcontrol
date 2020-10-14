@@ -32,6 +32,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-db
+    ports:
+      - 5432
 
   trafficops-db-admin:
     build:
