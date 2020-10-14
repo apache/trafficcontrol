@@ -36,6 +36,8 @@ Request Structure
 	+===========+==========+==========================================================================================================================+
 	| id        | no       | Return the only :term:`Cache Group` that has this id                                                                     |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| name      | no       | Return only the :term:`Cache Group` identified by this :ref:`cache-group-name`                                           |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| type      | no       | Return only :term:`Cache Groups` that are of the :ref:`cache-group-type` identified by this integral, unique identifier  |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| topology  | no       | Return only :term:`Cache Groups` that are used in the :term:`Topology` identified by this unique identifier              |

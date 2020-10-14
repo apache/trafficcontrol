@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Added validation to prohibit removing a capability from a server if no other server in the same cachegroup can satisfy the required capabilities of the delivery services assigned to it via topologies.
     - Traffic Ops: Added validation to ensure that at least one server per cachegroup in a delivery service's topology has the delivery service's required capabilities.
-    - Traffic Ops: Added validation to ensure that at least one server exists in each cachegroup that that is used in a Topology.
+    - Traffic Ops: Added validation to ensure that at least one server exists in each cachegroup that is used in a Topology on the `/api/3.0/topologies` endpoint and the `/api/3.0/servers/{{ID}}` endpoint.
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
     - ORT: Added Topologies to Config Generation.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
@@ -43,7 +43,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
 - Added the ability to delete invalidation requests in Traffic Portal
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
-- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
+- Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
+- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
