@@ -200,9 +200,18 @@ public class Node extends DefaultHashable {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void setState(final JsonNode state) {
-		final boolean isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
-		final boolean ipv4Available = JsonUtils.optBoolean(state, "ipv4Available", true);
-		final boolean ipv6Available = JsonUtils.optBoolean(state, "ipv6Available", true);
+		final boolean ipv4Available;
+		final boolean ipv6Available;
+		if (state == null) {
+			LOGGER.warn("got null health state for " + fqdn + ". Setting it to unavailable!");
+			isAvailable = false;
+			ipv4Available = false;
+			ipv6Available = false;
+		} else {
+			isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
+			ipv4Available = JsonUtils.optBoolean(state, "ipv4Available", true);
+			ipv6Available = JsonUtils.optBoolean(state, "ipv6Available", true);
+		}
 
 		final List<InetRecord> newlyAvailable = new ArrayList<>();
 		final List<InetRecord> newlyUnavailable = new ArrayList<>();

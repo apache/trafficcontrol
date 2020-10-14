@@ -26,7 +26,8 @@
       "physLocations/phys-locations-spec.js",
       "serverCapabilities/server-capabilities-spec.js",
       "servers/servers-spec.js",
-      "deliveryServices/delivery-services-spec.js"
+      "deliveryServices/delivery-services-spec.js",
+      "jobs/jobs-spec.js"
     ]
   }
 }

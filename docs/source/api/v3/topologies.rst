@@ -160,7 +160,7 @@ Request Structure
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a :term:`Cache Group`
+	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
@@ -364,7 +364,7 @@ Request Structure
 :name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a :term:`Cache Group`
+	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http

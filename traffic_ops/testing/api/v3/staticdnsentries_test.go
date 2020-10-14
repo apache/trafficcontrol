@@ -16,13 +16,13 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"reflect"
+	"sort"
 	"testing"
 	"time"
 
-	"reflect"
-
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -35,6 +35,7 @@ func TestStaticDNSEntries(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntries(t)
 		GetTestStaticDNSEntriesIMSAfterChange(t, header)
 		UpdateTestStaticDNSEntriesInvalidAddress(t)
@@ -93,6 +94,25 @@ func CreateTestStaticDNSEntries(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestStaticDNSEntries(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetStaticDNSEntriesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Host)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestStaticDNSEntries(t *testing.T) {

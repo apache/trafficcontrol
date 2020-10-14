@@ -121,6 +121,7 @@ func (coordinate TOCoordinate) Validate() error {
 
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
 func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(coord.APIInfo(), "name")
 	return api.GenericRead(h, coord, useIMS)
 }
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
