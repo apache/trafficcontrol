@@ -130,6 +130,8 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 	return false, errors.New("Refusing to delete all resources of type " + name), nil, http.StatusBadRequest
 }
 
+// SetLastModifiedHeader sets the Last-Modified header in case the "useIMS" is set to true in the config,
+// and if there is an "If-Modified-Since" header in the incoming request
 func SetLastModifiedHeader(r *http.Request, useIMS bool) bool {
 	if r == nil {
 		return false
