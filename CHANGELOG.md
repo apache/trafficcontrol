@@ -98,6 +98,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #4292 - Traffic Ops not looking for influxdb.conf in the right place
 - Fixed #5102 - Python client scripts fail silently on authentication failures
 - Fixed #5103 - Python client scripts crash on connection errors
+- Fixed matching of wildcards in subjectAlternateNames when loading TLS certificates
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
