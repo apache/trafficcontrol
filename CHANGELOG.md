@@ -64,6 +64,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issues](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed #5010 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5010)
+- Fixed #5147 - When fetching servers for a delivery service, the result is limited to the servers of the delivery service's CDN [Related github issues](https://github.com/apache/trafficcontrol/issues/5147)
 - Fixed #4981 - Cannot create routing regular expression with a blank pattern param in Delivery Service [Related github issues](https://github.com/apache/trafficcontrol/issues/4981)
 - Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
 - Fixed #4237 - Do not return an internal server error when delivery service's capacity is zero. [Related github issue](https://github.com/apache/trafficcontrol/issues/4237)
