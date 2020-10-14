@@ -185,7 +185,7 @@ func (topology *TOTopology) checkForEmptyCacheGroups() error {
 		cacheGroups = append(cacheGroups, cacheGroup)
 	}
 
-	if cacheGroups != nil {
+	if len(cacheGroups) > 0 {
 		err = fmt.Errorf("cachegroups with no servers in them: %s", strings.Join(cacheGroups, ", "))
 	}
 	return err
