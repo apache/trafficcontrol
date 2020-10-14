@@ -105,7 +105,7 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(rg.APIInfo(), "name")
 	return crudder.GenericRead(h, rg, useIMS)
 }

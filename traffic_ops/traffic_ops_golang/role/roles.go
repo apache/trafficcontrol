@@ -202,14 +202,14 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) api.Errors {
 	return api.NewErrors()
 }
 
-func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(role.APIInfo(), "name")
-	vals, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, role, useIMS)
-	if errCode == http.StatusNotModified {
-		return []interface{}{}, nil, nil, errCode, maxTime
+	vals, errs, maxTime := crudder.GenericRead(h, role, useIMS)
+	if errs.Code == http.StatusNotModified {
+		return []interface{}{}, errs, maxTime
 	}
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, maxTime
+	if errs.Occurred() {
+		return nil, errs, maxTime
 	}
 
 	returnable := []interface{}{}
@@ -219,7 +219,7 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 		rl.Capabilities = &caps
 		returnable = append(returnable, rl)
 	}
-	return returnable, nil, nil, http.StatusOK, maxTime
+	return returnable, errs, maxTime
 }
 
 func (role *TORole) Update(h http.Header) api.Errors {

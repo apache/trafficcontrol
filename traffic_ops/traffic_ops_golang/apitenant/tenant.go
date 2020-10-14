@@ -135,14 +135,14 @@ func (ten TOTenant) Validate() error {
 
 func (ten *TOTenant) Create() api.Errors { return crudder.GenericCreate(ten) }
 
-func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
-		return nil, nil, nil, http.StatusOK, nil
+		return nil, api.NewErrors(), nil
 	}
 	api.DefaultSort(ten.APIInfo(), "name")
-	tenants, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, ten, useIMS)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+	tenants, errs, maxTime := crudder.GenericRead(h, ten, useIMS)
+	if errs.Occurred() {
+		return nil, errs, nil
 	}
 
 	tenantNames := map[int]*string{}
@@ -159,7 +159,7 @@ func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, err
 		p := *tenantNames[*t.ParentID]
 		t.ParentName = &p // copy
 	}
-	return tenants, nil, nil, errCode, maxTime
+	return tenants, errs, maxTime
 }
 
 // IsTenantAuthorized implements the Tenantable interface for TOTenant

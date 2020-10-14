@@ -171,15 +171,18 @@ func (rc *RequiredCapability) Update(http.Header) (error, error, int) {
 }
 
 // Read implements the api.CRUDer interface.
-func (rc *RequiredCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (rc *RequiredCapability) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
+	errs := api.NewErrors()
 	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
-		return nil, nil, err, http.StatusInternalServerError, nil
+		errs.SystemError = err
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 
-	capabilities, userErr, sysErr, errCode, maxTime := rc.getCapabilities(h, tenantIDs, useIMS)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+	capabilities, errs, maxTime := rc.getCapabilities(h, tenantIDs, useIMS)
+	if errs.Occurred() {
+		return nil, errs, nil
 	}
 
 	results := []interface{}{}
@@ -187,7 +190,7 @@ func (rc *RequiredCapability) Read(h http.Header, useIMS bool) ([]interface{}, e
 		results = append(results, capability)
 	}
 
-	return results, nil, nil, errCode, maxTime
+	return results, errs, maxTime
 }
 
 func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
@@ -198,14 +201,16 @@ func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
 	return tenantIDs, nil
 }
 
-func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, useIMS bool) ([]tc.DeliveryServicesRequiredCapability, error, error, int, *time.Time) {
+func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, useIMS bool) ([]tc.DeliveryServicesRequiredCapability, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	var results []tc.DeliveryServicesRequiredCapability
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
-
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
+	if len(dbErrs) > 0 {
+		errs.UserError = util.JoinErrs(dbErrs)
+		errs.Code = http.StatusBadRequest
+		return nil, errs, nil
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -213,7 +218,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return results, nil, nil, http.StatusNotModified, &maxTime
+			return results, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -223,19 +228,23 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 
 	rows, err := rc.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, err, http.StatusInternalServerError, nil
+		errs.SystemError = err
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var result tc.DeliveryServicesRequiredCapability
 		if err := rows.StructScan(&result); err != nil {
-			return nil, nil, fmt.Errorf("%s get scanning: %s", rc.GetType(), err.Error()), http.StatusInternalServerError, nil
+			errs.SystemError = fmt.Errorf("%s get scanning: %s", rc.GetType(), err.Error())
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 		results = append(results, result)
 	}
 
-	return results, nil, nil, http.StatusOK, &maxTime
+	return results, errs, &maxTime
 }
 
 func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string) string {

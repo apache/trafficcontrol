@@ -137,16 +137,16 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 		if cfg != nil {
 			useIMS = cfg.UseIMS
 		}
-		results, userErr, sysErr, errCode, maxTime := obj.Read(r.Header, useIMS)
-		if userErr != nil || sysErr != nil {
-			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		results, errs, maxTime := obj.Read(r.Header, useIMS)
+		if errs.Occurred() {
+			errHandler(w, r, inf.Tx.Tx, errs.Code, errs.UserError, errs.SystemError)
 			return
 		}
 		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
 			date := maxTime.Format(rfc.LastModifiedFormat)
 			w.Header().Add(rfc.LastModified, date)
 		}
-		successHandler(w, r, errCode, results)
+		successHandler(w, r, errs.Code, results)
 	}
 }
 
@@ -364,7 +364,7 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 		if isOptionsDeleter {
 			obj := reflect.New(objectType).Interface().(OptionsDeleter)
 			obj.SetInfo(inf)
-			userErr, sysErr, errCode = obj.OptionsDelete()
+			errs = obj.OptionsDelete()
 		} else {
 			errs = obj.Delete()
 		}

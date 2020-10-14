@@ -412,11 +412,11 @@ func TestReadGetDeliveryServices(t *testing.T) {
 	regexRows.AddRow("demo1", "hostregexp", "", 0)
 	mock.ExpectQuery("SELECT ds\\.xml_id as ds_name, t\\.name as type, r\\.pattern, COALESCE\\(dsr\\.set_number, 0\\) FROM regex").WillReturnRows(regexRows)
 
-	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false)
-	if userErr != nil {
-		t.Errorf("Unexpected user error reading Delivery Services: %v", userErr)
+	_, errs, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false)
+	if errs.UserError != nil {
+		t.Errorf("Unexpected user error reading Delivery Services: %v", errs.UserError)
 	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error reading Delivery Services: %v", sysErr)
+	if errs.SystemError != nil {
+		t.Errorf("Unexpected system error reading Delivery Services: %v", errs.SystemError)
 	}
 }

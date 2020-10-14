@@ -165,22 +165,20 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	// store the current original DS if the DSR is being closed
 	// (and isn't a "create" request)
 	var sysErr error
-	var userErr error
-	var errCode int
 	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			errs = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
+			if errs.Occurred() {
+				inf.HandleErrs(w, r, errs)
 				return
 			}
 			if dsr.Original == nil {
 				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
 			}
 		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			errs = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
+			if errs.Occurred() {
+				inf.HandleErrs(w, r, errs)
 				return
 			}
 			if dsr.Original == nil {
@@ -202,9 +200,9 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
 		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
 			query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.xml_id = :xmlid"
-			original, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"xmlid": dsr.XMLID}, inf.Tx)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			original, errs := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"xmlid": dsr.XMLID}, inf.Tx)
+			if errs.Occurred() {
+				inf.HandleErrs(w, r, errs)
 				return
 			}
 			if len(original) != 1 {

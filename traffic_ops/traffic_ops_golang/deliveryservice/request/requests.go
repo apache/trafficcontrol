@@ -136,11 +136,11 @@ func selectMaxLastUpdatedQuery(where string) string {
 // them as originals on the Delivery Services to which each ID maps in
 // needOriginals. It returns a response code to use if an error occurred, in
 // which case it also returns a user error and a system error.
-func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV4, omitExtraLongDescFields bool) (int, error, error) {
+func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV4, omitExtraLongDescFields bool) api.Errors {
 	if len(ids) > 0 {
-		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(ids)}, tx)
-		if userErr != nil || sysErr != nil {
-			return errCode, userErr, sysErr
+		originals, errs := deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(ids)}, tx)
+		if errs.Occurred() {
+			return errs
 		}
 
 		for _, original := range originals {
@@ -159,7 +159,7 @@ func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliverySe
 			}
 		}
 	}
-	return http.StatusOK, nil, nil
+	return api.NewErrors()
 }
 
 // Get is the GET handler for /deliveryservice_requests.
@@ -288,9 +288,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		errCode, userErr, sysErr := getOriginals(originalIDs, inf.Tx, needOriginals, true)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		errs := getOriginals(originalIDs, inf.Tx, needOriginals, true)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 		} else {
 			api.WriteResp(w, r, dsrs)
 		}
@@ -356,21 +356,15 @@ func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) api.Errors {
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
-		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
-		if userErr != nil || sysErr != nil {
-			return api.Errors{
-				Code:        errCode,
-				UserError:   userErr,
-				SystemError: sysErr,
-			}
+		originals, errs := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if errs.Occurred() {
+			return errs
 		}
 		if len(originals) < 1 {
-			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
-			return api.Errors{Code: http.StatusBadRequest, UserError: userErr}
+			return api.Errors{Code: http.StatusBadRequest, UserError: fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)}
 		}
 		if len(originals) > 1 {
-			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
-			return api.Errors{Code: http.StatusInternalServerError, SystemError: sysErr}
+			return api.NewSystemError(fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals)))
 		}
 		dsr.Original = new(tc.DeliveryServiceV4)
 		*dsr.Original = originals[0]
@@ -672,17 +666,15 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
-		var userErr error
-		var sysErr error
-		var errCode int
+		var errs api.Errors
 		if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
+			errs = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
 		} else if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
+			errs = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
 		}
 
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -790,18 +782,18 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
-		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		originals, errs := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		if len(originals) < 1 {
-			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			userErr := fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
 			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 			return
 		}
 		if len(originals) > 1 {
-			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			sysErr := fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}

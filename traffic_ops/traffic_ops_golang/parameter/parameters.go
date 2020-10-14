@@ -20,7 +20,6 @@ package parameter
  */
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -144,20 +143,22 @@ func (pa *TOParameter) Create() api.Errors {
 	return crudder.GenericCreate(pa)
 }
 
-func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
-	code := http.StatusOK
 	queryParamsToQueryCols := param.ParamColumns()
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
+	if len(dbErrs) > 0 {
+		errs.Code = http.StatusBadRequest
+		errs.UserError = util.JoinErrs(dbErrs)
+		return nil, errs, nil
 	}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(param.APIInfo().Tx, h, queryValues, param.SelectMaxLastUpdatedQuery(where, orderBy, pagination, "parameter"))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+			return []interface{}{}, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -166,7 +167,9 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	query := selectQuery() + where + ParametersGroupBy() + orderBy + pagination
 	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
+		errs.SetSystemError("querying " + param.GetType() + ": " + err.Error())
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	defer rows.Close()
 
@@ -174,7 +177,9 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	for rows.Next() {
 		var p tc.ParameterNullable
 		if err = rows.StructScan(&p); err != nil {
-			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
+			errs.SetSystemError("scanning " + param.GetType() + ": " + err.Error())
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 		if p.Secure != nil && *p.Secure && param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 			p.Value = &HiddenField
@@ -182,7 +187,7 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 		params = append(params, p)
 	}
 
-	return params, nil, nil, code, &maxTime
+	return params, errs, &maxTime
 }
 
 func (pa *TOParameter) Update(h http.Header) api.Errors {

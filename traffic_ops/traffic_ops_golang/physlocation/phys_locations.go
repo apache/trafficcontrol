@@ -107,7 +107,7 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(pl.APIInfo(), "name")
 	return crudder.GenericRead(h, pl, useIMS)
 }

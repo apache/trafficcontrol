@@ -586,21 +586,21 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 
 	return c, nil
 }
-func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+
+func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	version := ds.APIInfo().Version
 	if version == nil {
-		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
+		return nil, api.NewSystemError(errors.New("TODeliveryService.Read called with nil API version")), nil
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
-
-	if sysErr != nil {
-		sysErr = errors.New("reading dses: " + sysErr.Error())
-		errCode = http.StatusInternalServerError
-	}
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+	dses, errs, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
+	if errs.Occurred() {
+		if errs.SystemError != nil {
+			errs.SetSystemError("reading dses: " + errs.SystemError.Error())
+			errs.Code = http.StatusInternalServerError
+		}
+		return nil, errs, nil
 	}
 
 	for _, ds := range dses {
@@ -615,10 +615,12 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		case version.Major > 1:
 			returnable = append(returnable, ds.DowngradeToV3().DeliveryServiceNullableV15)
 		default:
-			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
+			errs.SystemError = fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor)
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 	}
-	return returnable, nil, nil, errCode, maxTime
+	return returnable, errs, maxTime
 }
 
 func UpdateV15(w http.ResponseWriter, r *http.Request) {
@@ -1210,12 +1212,12 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, api.Errors, *time.Time) {
 	if tx == nil {
-		return nil, nil, errors.New("nil transaction passed to readGetDeliveryServices"), http.StatusInternalServerError, nil
+		return nil, api.NewSystemError(errors.New("nil transaction passed to readGetDeliveryServices")), nil
 	}
 	if user == nil {
-		return nil, nil, errors.New("nil user passed to readGetDeliveryServices"), http.StatusInternalServerError, nil
+		return nil, api.NewSystemError(errors.New("nil user passed to readGetDeliveryServices")), nil
 	}
 	if params == nil {
 		params = make(map[string]string)
@@ -1247,15 +1249,18 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"active":           {Column: "ds.active", Checker: api.IsBool},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if len(dbErrs) > 0 {
+		errs.UserError = util.JoinErrs(dbErrs)
+		errs.Code = http.StatusBadRequest
+		return nil, errs, nil
 	}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.DeliveryServiceV4{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.DeliveryServiceV4{}, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -1264,8 +1269,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
-		err = fmt.Errorf("received error querying for user's tenants: %w", err)
-		return nil, nil, err, http.StatusInternalServerError, &maxTime
+		return nil, api.NewSystemError(fmt.Errorf("received error querying for user's tenants: %w", err)), &maxTime
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -1273,13 +1277,17 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	if accessibleTo, ok := params["accessibleTo"]; ok {
 		if err := api.IsInt(accessibleTo); err != nil {
 			log.Errorln("unknown parameter value: " + err.Error())
-			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest, &maxTime
+			errs.SetUserError("accessibleTo must be an integer")
+			errs.Code = http.StatusBadRequest
+			return nil, errs, &maxTime
 		}
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
 		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
 		if err != nil {
 			log.Errorln("unable to get tenants: " + err.Error())
-			return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
+			errs.SystemError = tc.DBError
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, &maxTime
 		}
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
@@ -1288,8 +1296,8 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	r, e1, e2, code := GetDeliveryServices(query, queryValues, tx)
-	return r, e1, e2, code, &maxTime
+	r, errs := GetDeliveryServices(query, queryValues, tx)
+	return r, errs, &maxTime
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
@@ -1638,10 +1646,10 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceV4, error, error, int) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceV4, api.Errors) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
+		return nil, api.NewSystemError(fmt.Errorf("querying: %w", err))
 	}
 	defer rows.Close()
 
@@ -1726,7 +1734,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&cdnDomain)
 
 		if err != nil {
-			return nil, nil, fmt.Errorf("getting delivery services: %v", err), http.StatusInternalServerError
+			return nil, api.NewSystemError(fmt.Errorf("getting delivery services: %w", err))
 		}
 
 		ds.ConsistentHashQueryParams = []string{}
@@ -1763,7 +1771,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 	matchLists, err := GetDeliveryServicesMatchLists(dsNames, tx.Tx)
 	if err != nil {
-		return nil, nil, errors.New("getting delivery service matchlists: " + err.Error()), http.StatusInternalServerError
+		return nil, api.NewSystemError(fmt.Errorf("getting delivery service matchlists: %w", err))
 	}
 	for i, ds := range dses {
 		matchList, ok := matchLists[*ds.XMLID]
@@ -1775,7 +1783,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		dses[i] = ds
 	}
 
-	return dses, nil, nil, http.StatusOK
+	return dses, api.NewErrors()
 }
 
 func getCDNDomain(dsID int, tx *sql.Tx) (string, error) {

@@ -130,7 +130,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	// Query Parameters to Database Query column mappings
@@ -152,15 +152,19 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		}
 	}
 
+	e := api.NewErrors()
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+		e.Code = http.StatusBadRequest
+		e.UserError = util.JoinErrs(errs)
+		return nil, e, nil
 	}
 
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+			e.Code = http.StatusNotModified
+			return []interface{}{}, e, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -172,7 +176,9 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError, nil
+		e.SetSystemError("profile read querying: " + err.Error())
+		e.Code = http.StatusInternalServerError
+		return nil, e, nil
 	}
 	defer rows.Close()
 
@@ -181,7 +187,9 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	for rows.Next() {
 		var p tc.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
-			return nil, nil, errors.New("profile read scanning: " + err.Error()), http.StatusInternalServerError, nil
+			e.SetSystemError("profile read scanning: " + err.Error())
+			e.Code = http.StatusInternalServerError
+			return nil, e, nil
 		}
 		profiles = append(profiles, p)
 	}
@@ -192,13 +200,15 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
 			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
 			if err != nil {
-				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
+				e.SetSystemError("profile read reading parameters: " + err.Error())
+				e.Code = http.StatusInternalServerError
+				return nil, e, nil
 			}
 		}
 		profileInterfaces = append(profileInterfaces, profile)
 	}
 
-	return profileInterfaces, nil, nil, http.StatusOK, &maxTime
+	return profileInterfaces, e, &maxTime
 
 }
 

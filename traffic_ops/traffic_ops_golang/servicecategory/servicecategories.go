@@ -104,14 +104,10 @@ func (serviceCategory *TOServiceCategory) Create() api.Errors {
 	return crudder.GenericCreate(serviceCategory)
 }
 
-func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(serviceCategory.APIInfo(), "name")
-	serviceCategories, userErr, sysErr, errCode, maxTime := crudder.GenericRead(h, serviceCategory, useIMS)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
-	}
-
-	return serviceCategories, nil, nil, errCode, maxTime
+	serviceCategories, errs, maxTime := crudder.GenericRead(h, serviceCategory, useIMS)
+	return serviceCategories, errs, maxTime
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {

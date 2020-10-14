@@ -105,13 +105,9 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 		tc.ProfileNullable{},
 	}
 
-	profiles, userErr, sysErr, errCode, _ := toProfile.Read(nil, false)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	profiles, errs, _ := toProfile.Read(nil, false)
+	if errs.Occurred() {
+		return errs
 	}
 
 	if len(profiles) == 0 {
@@ -141,7 +137,7 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 			Code:        http.StatusInternalServerError,
 		}
 	}
-	errs := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	errs = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if errs.Occurred() {
 		return errs
 	}
@@ -172,13 +168,9 @@ func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) api.Errors {
 		},
 	}
 
-	parameters, userErr, sysErr, errCode, _ := toParam.Read(nil, false)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	parameters, errs, _ := toParam.Read(nil, false)
+	if errs.Occurred() {
+		return errs
 	}
 
 	var newParams int

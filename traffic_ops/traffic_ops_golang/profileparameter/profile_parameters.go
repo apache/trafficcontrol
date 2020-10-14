@@ -174,7 +174,7 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(pp.APIInfo(), "parameter")
 	return crudder.GenericRead(h, pp, useIMS)
 }

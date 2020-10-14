@@ -214,21 +214,26 @@ func (user *TOUser) Create() api.Errors {
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
-func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	var query string
 
 	inf := this.APIInfo()
 	api.DefaultSort(inf, "username")
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
+	if len(dbErrs) > 0 {
+		errs.UserError = util.JoinErrs(dbErrs)
+		errs.Code = http.StatusBadRequest
+		return nil, errs, nil
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting tenant list for user: %w", err), http.StatusInternalServerError, nil
+		errs.SystemError = fmt.Errorf("getting tenant list for user: %w", err)
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
@@ -236,7 +241,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+			return []interface{}{}, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -248,7 +253,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 	version := inf.Version
 	if version == nil {
-		return nil, nil, fmt.Errorf("TOUsers.Read called with invalid API version"), http.StatusInternalServerError, nil
+		return nil, api.NewSystemError(errors.New("TOUsers.Read called with invalid API version")), nil
 	}
 	if version.Major >= 4 {
 		query = this.SelectQuery40() + where + orderBy + pagination
@@ -258,7 +263,9 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying users : %w", err), http.StatusInternalServerError, nil
+		errs.SystemError = fmt.Errorf("querying users : %w", err)
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	defer rows.Close()
 
@@ -278,18 +285,18 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	for rows.Next() {
 		if version.Major >= 4 {
 			if err = rows.StructScan(user40); err != nil {
-				return nil, nil, fmt.Errorf("parsing user rows: %w", err), http.StatusInternalServerError, nil
+				return nil, api.NewSystemError(fmt.Errorf("parsing user rows: %w", err)), nil
 			}
 			users = append(users, *user40)
 		} else {
 			if err = rows.StructScan(user); err != nil {
-				return nil, nil, fmt.Errorf("parsing user rows: %w", err), http.StatusInternalServerError, nil
+				return nil, api.NewSystemError(fmt.Errorf("parsing user rows: %w", err)), nil
 			}
 			users = append(users, *user)
 		}
 	}
 
-	return users, nil, nil, http.StatusOK, &maxTime
+	return users, errs, &maxTime
 }
 
 func selectMaxLastUpdatedQuery(where string) string {

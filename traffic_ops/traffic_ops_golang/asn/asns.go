@@ -114,7 +114,8 @@ func (as *TOASNV11) Create() api.Errors {
 	}
 	return crudder.GenericCreate(as)
 }
-func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+
+func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(as.APIInfo(), "asn")
 	return crudder.GenericRead(h, as, useIMS)
 }

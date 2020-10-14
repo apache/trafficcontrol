@@ -51,7 +51,7 @@ func TestInterfaces(t *testing.T) {
 	if _, ok := i.(crudder.Identifier); !ok {
 		t.Errorf("Tenant must be Identifier")
 	}
-	if _, ok := i.(api.Tenantable); !ok {
+	if _, ok := i.(crudder.Tenantable); !ok {
 		t.Errorf("Tenant must be Tenantable")
 	}
 }
@@ -71,9 +71,9 @@ func TestIsUpdateable(t *testing.T) {
 
 	// First test, attempt to change root
 	root := getRootTestTenant()
-	userErr, _, statusCode := root.isUpdatable()
-	if userErr == nil && statusCode != http.StatusBadRequest {
-		t.Errorf("Should not be able to update root tenant. userErr = %s, statuscode = %d", userErr, statusCode)
+	errs := root.isUpdatable()
+	if errs.UserError == nil && errs.Code != http.StatusBadRequest {
+		t.Errorf("Should not be able to update root tenant. userErr = %s, statuscode = %d", errs.UserError, errs.Code)
 	}
 
 	// Second test, attempt to change Child's (ID:7) parent from ID:3 to ID:1 (root)
@@ -85,9 +85,9 @@ func TestIsUpdateable(t *testing.T) {
 	mock.ExpectQuery("SELECT")
 
 	child.ReqInfo = &api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": strconv.Itoa(*child.ID)}}
-	userErr, _, statusCode = child.isUpdatable()
-	if userErr != nil && statusCode != http.StatusOK {
-		t.Errorf("Should be able to update child to new parent (from Parent to Root). userErr = %s, statuscode = %d", userErr, statusCode)
+	errs = child.isUpdatable()
+	if errs.UserError != nil && errs.Code != http.StatusOK {
+		t.Errorf("Should be able to update child to new parent (from Parent to Root). userErr = %s, statuscode = %d", errs.UserError, errs.Code)
 	}
 
 	// Third test, attempt to change Parent from ID:3 to ID:7 (Child)
@@ -108,9 +108,9 @@ func TestIsUpdateable(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	parent.ReqInfo = &api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": strconv.Itoa(*parent.ID)}}
-	userErr, _, statusCode = parent.isUpdatable()
-	if userErr == nil && statusCode != http.StatusBadRequest {
-		t.Errorf("Should NOT be able to update parent to own child (from Parent to Child). userErr = %s, statuscode = %d", userErr, statusCode)
+	errs = parent.isUpdatable()
+	if errs.UserError == nil && errs.Code != http.StatusBadRequest {
+		t.Errorf("Should NOT be able to update parent to own child (from Parent to Child). userErr = %s, statuscode = %d", errs.UserError, errs.Code)
 	}
 
 }

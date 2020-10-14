@@ -89,7 +89,7 @@ func (topology *TOTopology) GetType() string {
 	return "topology"
 }
 
-// Validate is a requirement of the api.Validator interface.
+// Validate is a requirement of the crudder.Validator interface.
 func (topology *TOTopology) Validate() error {
 	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
@@ -431,20 +431,20 @@ func (topology *TOTopology) Create() api.Errors {
 	return api.NewErrors()
 }
 
-// Read is a requirement of the crudder.Reader interface and is called by crudder.ReadHandler().
-func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+// Read is a requirement of the crudder.Reader interface and is called by api.ReadHandler().
+func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	interfaces := make([]interface{}, 0)
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+		return nil, api.Errors{UserError: util.JoinErrs(errs), Code: http.StatusBadRequest}, nil
 	}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return interfaces, nil, nil, http.StatusNotModified, &maxTime
+			return interfaces, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -454,7 +454,7 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := topology.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError, nil
+		return nil, api.Errors{SystemError: errors.New("topology read: querying: " + err.Error()), Code: http.StatusInternalServerError}, nil
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	topologies := map[string]*tc.Topology{}
@@ -475,7 +475,7 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 			&topologyNode.Cachegroup,
 			&parents,
 		); err != nil {
-			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError, nil
+			return nil, api.Errors{SystemError: errors.New("topology read: scanning: " + err.Error()), Code: http.StatusInternalServerError}, nil
 		}
 		for _, id := range parents {
 			topologyNode.Parents = append(topologyNode.Parents, int(id))
@@ -503,7 +503,7 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 		}
 		interfaces = append(interfaces, *topology)
 	}
-	return interfaces, nil, nil, http.StatusOK, &maxTime
+	return interfaces, api.NewErrors(), &maxTime
 }
 
 func (topology *TOTopology) removeParents() error {
@@ -602,16 +602,16 @@ func (topology *TOTopology) setTopologyDetails() api.Errors {
 
 // Update is a requirement of the crudder.Updater interface.
 func (topology *TOTopology) Update(h http.Header) api.Errors {
-	topologies, userErr, sysErr, errCode, _ := topology.Read(h, false)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
+	topologies, errs, _ := topology.Read(nil, false)
+	if errs.Occurred() {
+		return errs
 	}
 	if len(topologies) != 1 {
-		return api.Errors{UserError: fmt.Errorf("cannot find exactly 1 topology with the query string provided"), Code: http.StatusBadRequest}
+		return api.Errors{UserError: errors.New("cannot find exactly 1 topology with the query string provided"), Code: http.StatusBadRequest}
 	}
 
 	// check if the entity was already updated
-	errs := api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
+	errs = api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
 	if errs.Occurred() {
 		return errs
 	}
@@ -644,7 +644,7 @@ func (topology *TOTopology) Update(h http.Header) api.Errors {
 			return api.NewSystemError(err)
 		}
 	}
-	if errs = topology.setTopologyDetails(); userErr != nil || sysErr != nil {
+	if errs = topology.setTopologyDetails(); errs.Occurred() {
 		return errs
 	}
 	if errs = topology.addNodes(); errs.Occurred() {
@@ -669,19 +669,15 @@ func (topology *TOTopology) Delete() api.Errors {
 
 // OptionsDelete is a requirement of the OptionsDeleter interface.
 func (topology *TOTopology) OptionsDelete() api.Errors {
-	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	topologies, errs, _ := topology.Read(nil, false)
+	if errs.Occurred() {
+		return errs
 	}
 	if len(topologies) != 1 {
 		return api.Errors{UserError: errors.New("cannot find exactly 1 topology with the query string provided"), Code: http.StatusBadRequest}
 	}
 	topology.Topology = topologies[0].(tc.Topology)
-	errs := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	errs = topology.checkIfTopologyCanBeAlteredByCurrentUser()
 	if errs.Occurred() {
 		return errs
 	}

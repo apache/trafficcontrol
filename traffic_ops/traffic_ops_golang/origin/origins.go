@@ -132,21 +132,21 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 }
 
-func (origin *TOOrigin) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (origin *TOOrigin) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	returnable := []interface{}{}
-	origins, userErr, sysErr, errCode, maxTime := getOrigins(h, origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User, useIMS)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+	origins, errs, maxTime := getOrigins(h, origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User, useIMS)
+	if errs.Occurred() {
+		return nil, errs, nil
 	}
 
 	for _, origin := range origins {
 		returnable = append(returnable, origin)
 	}
 
-	return returnable, nil, nil, http.StatusOK, maxTime
+	return returnable, errs, maxTime
 }
 
-func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.Origin, error, error, int, *time.Time) {
+func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.Origin, api.Errors, *time.Time) {
 	var rows *sqlx.Rows
 	var err error
 	var maxTime time.Time
@@ -165,15 +165,18 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"tenant":          dbhelpers.WhereColumnInfo{Column: "o.tenant", Checker: api.IsInt},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if len(dbErrs) > 0 {
+		errs.UserError = util.JoinErrs(dbErrs)
+		errs.Code = http.StatusBadRequest
+		return nil, errs, nil
 	}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.Origin{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.Origin{}, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -183,7 +186,9 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError, nil
+		errs.SystemError = tc.DBError
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
@@ -192,7 +197,9 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	rows, err = tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError, nil
+		errs.SystemError = fmt.Errorf("querying: %v", err)
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	defer rows.Close()
 
@@ -201,11 +208,13 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	for rows.Next() {
 		var s tc.Origin
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, fmt.Errorf("getting origins: %v", err), http.StatusInternalServerError, nil
+			errs.SystemError = fmt.Errorf("getting origins: %v", err)
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 		origins = append(origins, s)
 	}
-	return origins, nil, nil, http.StatusOK, &maxTime
+	return origins, errs, &maxTime
 }
 
 func selectMaxLastUpdatedQuery(where string) string {

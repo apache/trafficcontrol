@@ -137,7 +137,7 @@ func (cdn *TOCDN) Create() api.Errors {
 	return crudder.GenericCreate(cdn)
 }
 
-func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(cdn.APIInfo(), "name")
 	return crudder.GenericRead(h, cdn, useIMS)
 }

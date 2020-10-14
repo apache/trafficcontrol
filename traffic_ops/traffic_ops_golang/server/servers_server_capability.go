@@ -123,7 +123,7 @@ func (ssc TOServerServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(ssc.APIInfo(), "serverHostName")
 	return crudder.GenericRead(h, ssc, useIMS)
 }

@@ -125,7 +125,7 @@ func (coordinate TOCoordinate) Validate() error {
 }
 
 func (coord *TOCoordinate) Create() api.Errors { return crudder.GenericCreate(coord) }
-func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(coord.APIInfo(), "name")
 	return crudder.GenericRead(h, coord, useIMS)
 }

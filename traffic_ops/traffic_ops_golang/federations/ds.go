@@ -178,7 +178,7 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(v.APIInfo(), "xmlId")
 	return crudder.GenericRead(h, v, useIMS)
 }

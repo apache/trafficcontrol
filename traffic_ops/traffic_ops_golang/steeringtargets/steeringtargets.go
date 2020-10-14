@@ -98,35 +98,38 @@ func (st TOSteeringTargetV11) Validate() error {
 	return st.SteeringTargetNullable.Validate(st.ReqInfo.Tx.Tx)
 }
 
-func (st *TOSteeringTargetV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	steeringTargets, userErr, sysErr, errCode, maxTime := read(h, st.ReqInfo.Tx, st.ReqInfo.Params, st.ReqInfo.User, useIMS)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+func (st *TOSteeringTargetV11) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
+	steeringTargets, errs, maxTime := read(h, st.ReqInfo.Tx, st.ReqInfo.Params, st.ReqInfo.User, useIMS)
+	if errs.Occurred() {
+		return nil, errs, nil
 	}
 	iSteeringTargets := make([]interface{}, len(steeringTargets), len(steeringTargets))
 	for i, steeringTarget := range steeringTargets {
 		iSteeringTargets[i] = steeringTarget
 	}
-	return iSteeringTargets, nil, nil, errCode, maxTime
+	return iSteeringTargets, errs, maxTime
 }
 
-func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, useIMS bool) ([]tc.SteeringTargetNullable, error, error, int, *time.Time) {
+func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, useIMS bool) ([]tc.SteeringTargetNullable, api.Errors, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"deliveryservice": dbhelpers.WhereColumnInfo{Column: "st.deliveryservice", Checker: api.IsInt},
 		"target":          dbhelpers.WhereColumnInfo{Column: "st.target", Checker: api.IsInt},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, nil, util.JoinErrs(errs), http.StatusBadRequest, nil
+	errs := api.NewErrors()
+	where, orderBy, pagination, queryValues, dbErrs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	if len(dbErrs) > 0 {
+		errs.UserError = util.JoinErrs(dbErrs)
+		errs.Code = http.StatusBadRequest
+		return nil, errs, nil
 	}
 
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.SteeringTargetNullable{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.SteeringTargetNullable{}, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -137,12 +140,16 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 
 	userTenants, err := tenant.GetUserTenantListTx(*user, tx.Tx)
 	if err != nil {
-		return nil, nil, errors.New("getting user tenant list: " + err.Error()), http.StatusInternalServerError, nil
+		errs.SetSystemError("getting user tenant list: " + err.Error())
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("steering targets querying: " + err.Error()), http.StatusInternalServerError, nil
+		errs.SetSystemError("steering targets querying: " + err.Error())
+		errs.Code = http.StatusInternalServerError
+		return nil, errs, nil
 	}
 	defer rows.Close()
 
@@ -150,7 +157,9 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 	for rows.Next() {
 		s := TOSteeringTargetV11{}
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("steering targets parsing: " + err.Error()), http.StatusInternalServerError, nil
+			errs.SetSystemError("steering targets parsing: " + err.Error())
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 		steeringTargets = append(steeringTargets, s)
 	}
@@ -158,7 +167,9 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 	tenantMap := map[int]struct{}{}
 	for _, ten := range userTenants {
 		if ten.ID == nil {
-			return nil, nil, errors.New("user tenant with nil ID"), http.StatusInternalServerError, nil
+			errs.SetSystemError("user tenant with nil ID")
+			errs.Code = http.StatusInternalServerError
+			return nil, errs, nil
 		}
 		tenantMap[*ten.ID] = struct{}{}
 	}
@@ -174,7 +185,7 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 			continue
 		}
 	}
-	return filteredTargets, nil, nil, http.StatusOK, &maxTime
+	return filteredTargets, errs, &maxTime
 }
 
 func selectMaxLastUpdatedQuery(where string) string {

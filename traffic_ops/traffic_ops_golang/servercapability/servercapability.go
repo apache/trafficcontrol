@@ -117,26 +117,22 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(v.APIInfo(), "name")
 	return crudder.GenericRead(h, v, useIMS)
 }
 
 func (v *TOServerCapability) Update(h http.Header) api.Errors {
-	sc, userErr, sysErr, errCode, _ := v.Read(h, false)
-	if userErr != nil || sysErr != nil {
-		return api.Errors{
-			UserError:   userErr,
-			SystemError: sysErr,
-			Code:        errCode,
-		}
+	sc, errs, _ := v.Read(h, false)
+	if errs.Occurred() {
+		return errs
 	}
 	if len(sc) != 1 {
 		return api.Errors{UserError: errors.New("cannot find exactly one server capability with the query string provided"), Code: http.StatusBadRequest}
 	}
 
 	// check if the entity was already updated
-	errs := api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
+	errs = api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
 	if errs.Occurred() {
 		return errs
 	}

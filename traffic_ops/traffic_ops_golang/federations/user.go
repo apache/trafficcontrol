@@ -127,17 +127,23 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {
-		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest, nil
+		errs := api.Errors{Code: http.StatusBadRequest}
+		errs.SetUserError("federation id must be an integer")
+		return nil, errs, nil
 	}
 	_, exists, err := getFedNameByID(v.APIInfo().Tx.Tx, fedID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError, nil
+		errs := api.Errors{Code: http.StatusInternalServerError}
+		errs.SystemError = fmt.Errorf("getting federation cname from ID %v: %v", fedID, err)
+		return nil, errs, nil
 	} else if !exists {
-		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound, nil
+		errs := api.Errors{Code: http.StatusNotFound}
+		errs.UserError = fmt.Errorf("federation %v not found", fedID)
+		return nil, errs, nil
 	}
 	return crudder.GenericRead(h, v, useIMS)
 }

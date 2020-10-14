@@ -197,14 +197,11 @@ func TestReadDeliveryServicesRequiredCapability(t *testing.T) {
 	)
 	mock.ExpectQuery("SELECT .* FROM deliveryservices_required_capability").WillReturnRows(rows)
 
-	results, userErr, sysErr, errCode, _ := rc.Read(nil, false)
-	if userErr != nil {
-		t.Fatalf(userErr.Error())
+	results, errs, _ := rc.Read(nil, false)
+	if errs.Occurred() {
+		t.Fatal(errs)
 	}
-	if sysErr != nil {
-		t.Fatalf(sysErr.Error())
-	}
-	if got, want := errCode, http.StatusOK; got != want {
+	if got, want := errs.Code, http.StatusOK; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 	if got, want := len(results), 1; got != want {

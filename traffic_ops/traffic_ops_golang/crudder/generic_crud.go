@@ -203,21 +203,19 @@ func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, ord
 	return runSecond, max
 }
 
-func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	vals := []interface{}{}
-	code := http.StatusOK
 	var maxTime time.Time
 	var runSecond bool
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	where, orderBy, pagination, queryValues, es := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
+	if len(es) > 0 {
+		return nil, api.Errors{UserError: util.JoinErrs(es), Code: http.StatusBadRequest}, nil
 	}
 	if useIMS {
 		runSecond, maxTime = TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			code = http.StatusNotModified
-			return vals, nil, nil, code, &maxTime
+			return vals, api.Errors{Code: http.StatusNotModified}, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -227,18 +225,18 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 	query := val.SelectQuery() + where + orderBy + pagination
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
+		return nil, api.NewSystemError(fmt.Errorf("querying %s: %w", val.GetType(), err)), &maxTime
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		v := val.NewReadObj()
 		if err = rows.StructScan(v); err != nil {
-			return nil, nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
+			return nil, api.NewSystemError(fmt.Errorf("scanning %s: %w", val.GetType(), err)), &maxTime
 		}
 		vals = append(vals, v)
 	}
-	return vals, nil, nil, code, &maxTime
+	return vals, api.NewErrors(), &maxTime
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
@@ -288,8 +286,7 @@ func GenericOptionsDelete(val GenericOptionsDeleter) api.Errors {
 	tx := val.APIInfo().Tx
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs
+		return api.ParseDBError(err)
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {

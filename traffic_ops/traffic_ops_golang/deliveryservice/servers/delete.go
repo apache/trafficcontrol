@@ -123,9 +123,9 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 
 	query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.id=:dsid"
 	vals := map[string]interface{}{"dsid": dsID}
-	dses, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, vals, inf.Tx)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	dses, errs := deliveryservice.GetDeliveryServices(query, vals, inf.Tx)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	if len(dses) < 1 {

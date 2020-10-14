@@ -121,9 +121,9 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
-	dses, userErr, sysErr, errCode, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	dses, errs, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 	if len(dses) != 1 {

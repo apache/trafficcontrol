@@ -106,7 +106,7 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
 	api.DefaultSort(tp.APIInfo(), "name")
 	return crudder.GenericRead(h, tp, useIMS)
 }

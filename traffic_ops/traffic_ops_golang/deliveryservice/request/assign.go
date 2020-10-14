@@ -194,9 +194,9 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
-		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		originals, errs := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		if len(originals) < 1 {

@@ -33,7 +33,7 @@ import (
 
 type CRUDer interface {
 	Create() api.Errors
-	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
+	Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time)
 	Update(http.Header) api.Errors
 	Delete() api.Errors
 	APIInfoer
@@ -97,7 +97,7 @@ type MultipleCreator interface {
 
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
+	Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time)
 	APIInfoer
 }
 
@@ -120,7 +120,7 @@ type Deleter interface {
 type OptionsDeleter interface {
 	// OptionsDelete returns any user error, any system error, and the HTTP error code to be returned if there was an
 	// error.
-	OptionsDelete() (error, error, int)
+	OptionsDelete() api.Errors
 	APIInfoer
 	Identifier
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
