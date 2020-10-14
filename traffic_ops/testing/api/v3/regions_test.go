@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -34,6 +35,7 @@ func TestRegions(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestRegions(t)
 		UpdateTestRegions(t)
 		UpdateTestRegionsWithHeaders(t, header)
 		GetTestRegions(t)
@@ -118,6 +120,25 @@ func CreateTestRegions(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE region: %v", err)
 		}
+	}
+}
+
+func SortTestRegions(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetRegionsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

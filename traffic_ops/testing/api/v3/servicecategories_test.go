@@ -16,12 +16,13 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -34,6 +35,7 @@ func TestServiceCategories(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestServiceCategories(t)
 		UpdateTestServiceCategories(t)
 		GetTestServiceCategories(t)
 		ServiceCategoryTenancyTest(t)
@@ -110,6 +112,26 @@ func GetTestServiceCategories(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", err, resp)
 		}
+	}
+}
+
+func SortTestServiceCategories(t *testing.T) {
+	var header http.Header
+	params := url.Values{}
+	var sortedList []string
+	resp, _, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

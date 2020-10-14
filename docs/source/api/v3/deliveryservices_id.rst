@@ -38,6 +38,9 @@ Request Structure
 
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+
+		.. note:: If the Delivery Service has SSL Keys, then cdnId is not allowed to change as that would invalidate the SSL Key
+
 :checkPath:                 A :ref:`ds-check-path`
 :consistentHashRegex:       A :ref:`ds-consistent-hashing-regex`
 :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
@@ -84,6 +87,9 @@ Request Structure
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
 :routingName:               The :ref:`ds-routing-name` of this :term:`Delivery Service`
+
+		.. note:: If the Delivery Service has SSL Keys, then routingName is not allowed to change as that would invalidate the SSL Key
+
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).

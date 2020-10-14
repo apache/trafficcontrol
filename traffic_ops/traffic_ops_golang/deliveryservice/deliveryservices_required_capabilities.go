@@ -290,7 +290,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		}
 	} else {
 		newReqCaps := append(reqCaps, *rc.RequiredCapability)
-		usrErr, sysErr, rCode = EnsureTopologyBasedRequiredCapabilities(rc.APIInfo().Tx.Tx, *rc.DeliveryServiceID, newReqCaps)
+		usrErr, sysErr, rCode = EnsureTopologyBasedRequiredCapabilities(rc.APIInfo().Tx.Tx, *rc.DeliveryServiceID, *topology, newReqCaps)
 		if usrErr != nil {
 			return fmt.Errorf("cannot add required capability: %v", usrErr), sysErr, rCode
 		}
@@ -342,7 +342,7 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 
 // EnsureTopologyBasedRequiredCapabilities ensures that at least one server per cachegroup
 // in this delivery service's topology has this delivery service's required capabilities.
-func EnsureTopologyBasedRequiredCapabilities(tx *sql.Tx, dsID int, requiredCapabilities []string) (error, error, int) {
+func EnsureTopologyBasedRequiredCapabilities(tx *sql.Tx, dsID int, topology string, requiredCapabilities []string) (error, error, int) {
 	q := `
 SELECT
   s.id,
@@ -352,13 +352,12 @@ FROM server s
 LEFT JOIN server_server_capability ssc ON ssc.server = s.id
 JOIN cachegroup c ON c.id = s.cachegroup
 JOIN topology_cachegroup tc ON tc.cachegroup = c.name
-JOIN deliveryservice d ON d.topology = tc.topology
 WHERE
-  d.id = $1
-  AND s.cdn_id = d.cdn_id
+  s.cdn_id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)
+  AND tc.topology = $2
 GROUP BY s.id, c.name
 `
-	rows, err := tx.Query(q, dsID)
+	rows, err := tx.Query(q, dsID, topology)
 	if err != nil {
 		return nil, fmt.Errorf("querying server capabilities in EnsureTopologyBasedRequiredCapabilities: %v", err), http.StatusInternalServerError
 	}
@@ -378,6 +377,10 @@ GROUP BY s.id, c.name
 		for _, sc := range serverCap {
 			serverCapabilities[serverID][sc] = struct{}{}
 		}
+	}
+	if len(serverCapabilities) == 0 {
+		return fmt.Errorf("topology %s contains no servers in this delivery service's CDN; "+
+			"therefore, this delivery service's required capabilities cannot be satisfied", topology), nil, http.StatusBadRequest
 	}
 
 	invalidCachegroups := []string{}

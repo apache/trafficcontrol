@@ -34,7 +34,7 @@ import (
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		ti := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -43,7 +43,7 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfUnmodifiedSince, ti)
 
 		if includeSystemTests {
-			DeliveryServiceCDNKeyTransferTest(t)
+			SSLDeliveryServiceCDNUpdateTest(t)
 		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
@@ -118,6 +118,12 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	if err != nil {
 		t.Fatal("unable to create cdn: " + err.Error())
 	}
+
+	originalKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
+	if err != nil {
+		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
+	}
+
 	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v: %v", cdnName, err)
@@ -129,13 +135,32 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	if err != nil {
 		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
 	}
-	if len(keys) != 0 {
-		t.Fatal("expected no ssl keys on cdn " + cdnName)
+	if len(keys) != len(originalKeys) {
+		t.Fatalf("expected %v ssl keys on cdn %v, got %v", len(originalKeys), cdnName, len(keys))
 	}
 	return cdns[0]
 }
 
-func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
+func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV30, oldCDNID int, newCDNID int) {
+	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(oldCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+	_, _, err = TOSession.DeleteCDNByID(newCDNID)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	cdnNameOld := "sslkeytransfer"
 	oldCdn := createBlankCDN(cdnNameOld, t)
 	cdnNameNew := "sslkeytransfer1"
@@ -158,7 +183,8 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 							Active:               util.BoolPtr(true),
 							CDNID:                util.IntPtr(oldCdn.ID),
 							DSCP:                 util.IntPtr(0),
-							DisplayName:          util.StrPtr("asdf"),
+							DisplayName:          util.StrPtr("displayName"),
+							RoutingName:          util.StrPtr("routingName"),
 							GeoLimit:             util.IntPtr(0),
 							GeoProvider:          util.IntPtr(0),
 							IPV6RoutingEnabled:   util.BoolPtr(false),
@@ -174,7 +200,7 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 							RegionalGeoBlocking:  util.BoolPtr(false),
 							TenantID:             util.IntPtr(1),
 							TypeID:               util.IntPtr(types[0].ID),
-							XMLID:                util.StrPtr("asdf"),
+							XMLID:                util.StrPtr("dsID"),
 						},
 					},
 				},
@@ -186,6 +212,8 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 		t.Fatal(err)
 	}
 	ds.CDNName = &oldCdn.Name
+
+	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID)
 
 	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
@@ -199,30 +227,53 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
 	}
 
-	// Check old CDN has an ssl key
-	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+	tries := 0
+	var oldCDNKeys []tc.CDNSSLKeys
+	for tries < 5 {
+		time.Sleep(time.Second)
+		oldCDNKeys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+		if err == nil && len(oldCDNKeys) > 0 {
+			break
+		}
+		tries++
+	}
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
-	if len(keys) != 1 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
+	if len(oldCDNKeys) < 1 {
+		t.Fatal("expected at least 1 key")
 	}
 
-	// Change CDN
+	newCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	if err != nil {
+		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
+	}
+
+	ds.RoutingName = util.StrPtr("anothername")
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service (routing name) as it has ssl keys")
+	}
+	ds.RoutingName = util.StrPtr("routingName")
+
 	ds.CDNID = &newCdn.ID
 	ds.CDNName = &newCdn.Name
 	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	if err == nil {
+		t.Fatal("should not be able to update delivery service (cdn) as it has ssl keys")
+	}
 
-	// Check new CDN has ssl key
-	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	// Check new CDN still has an ssl key
+	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
 	}
-	if len(keys) != 1 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
+	if len(keys) != len(newCDNKeys) {
+		t.Fatalf("expected %v keys, got %v", len(newCDNKeys), len(keys))
 	}
 
 	// Check old CDN does not have ssl key
@@ -230,26 +281,8 @@ func DeliveryServiceCDNKeyTransferTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
-	if len(keys) != 0 {
-		t.Fatalf("expected %v key, got %v", 1, len(keys))
-	}
-
-	// Clean up
-	_, _, err = TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(oldCdn.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.DeleteCDNByID(newCdn.ID)
-	if err != nil {
-		t.Fatal(err)
+	if len(keys) != len(oldCDNKeys) {
+		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys))
 	}
 }
 
@@ -490,7 +523,9 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	}
 }
 
-// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be assigned to (CLIENT_)STEERING delivery services.
+// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be:
+// - assigned to (CLIENT_)STEERING delivery services
+// - assigned to any delivery services which have required capabilities that the topology can't satisfy
 func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
@@ -528,6 +563,49 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	if inf.StatusCode < 400 || inf.StatusCode >= 500 {
 		t.Errorf("Expected client-level error assigning a non-existent topology, got: %d", inf.StatusCode)
+	}
+
+	params := url.Values{}
+	params.Add("xmlId", "ds-top-req-cap")
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service: %v", err)
+	}
+	if len(dses) != 1 {
+		t.Fatalf("expected: 1 DS, actual: %d", len(dses))
+	}
+	ds := dses[0]
+	// unassign its topology, add a required capability that its topology
+	// can't satisfy, then attempt to reassign its topology
+	top := *ds.Topology
+	ds.Topology = nil
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	if err != nil {
+		t.Fatalf("updating DS to remove topology, expected: no error, actual: %v", err)
+	}
+	reqCap := tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  ds.ID,
+		RequiredCapability: util.StrPtr("asdf"),
+	}
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	if err != nil {
+		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	ds.Topology = &top
+	_, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	if err == nil {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+	_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf")
+	if err != nil {
+		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v", *ds.XMLID, err)
+	}
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	if err != nil {
+		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
 	}
 }
 

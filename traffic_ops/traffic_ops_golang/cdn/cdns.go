@@ -137,10 +137,7 @@ func (cdn *TOCDN) Create() (error, error, int) {
 }
 
 func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	// sorting alphabetically by cdn name.
-	if _, ok := cdn.APIInfo().Params["orderby"]; !ok {
-		cdn.APIInfo().Params["orderby"] = "name"
-	}
+	api.DefaultSort(cdn.APIInfo(), "name")
 	return api.GenericRead(h, cdn, useIMS)
 }
 

@@ -336,10 +336,18 @@ def parse_arguments(program):
 		raise KeyError("Traffic Ops password not set! Set the TO_PASSWORD environment variable or "\
 		               "use '--to-password'") from e
 
+	# TOSession objects return LoginError when certs are invalid, OperationError when
+	# login actually fails
 	try:
 		s.login(to_user, to_passwd)
-	except (OperationError, InvalidJSONError, LoginError) as e:
-		raise PermissionError from e
+	except LoginError as e:
+		raise PermissionError(
+			"certificate verification failed, the system may have a self-signed certificate - try using -k/--insecure"
+		) from e
+	except (OperationError, InvalidJSONError) as e:
+		raise PermissionError(e) from e
+	except RequestException as e:
+		raise ConnectionError("Traffic Ops host not found: Name or service not known") from e
 
 	return (s,
 	       args.PATH,
@@ -361,7 +369,7 @@ def request(method):
 	"""
 	try:
 		s, path, data, full, raw, pretty = parse_arguments("to%s" % method)
-	except (PermissionError, KeyError) as e:
+	except (PermissionError, KeyError, ConnectionError) as e:
 		print(e, file=sys.stderr)
 		return 1
 

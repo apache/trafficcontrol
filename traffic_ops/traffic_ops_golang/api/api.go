@@ -1036,3 +1036,11 @@ func FormatLastModified(t time.Time) string {
 func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
 	w.Header().Add(rfc.LastModified, FormatLastModified(t))
 }
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
+}

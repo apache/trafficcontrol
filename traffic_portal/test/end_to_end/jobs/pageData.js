@@ -17,44 +17,11 @@
  * under the License.
  */
 
-var JobService = function($http, ENV) {
-
-	this.getJobs = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'jobs', {params: queryParams}).then(
-			function(result) {
-				return result.data.response;
-			},
-			function (err) {
-				throw err;
-			}
-		);
-	};
-
-	this.createJob = function(job) {
-		return $http.post(ENV.api['root'] + 'jobs', job).then(
-			function (result) {
-				return result;
-			},
-			function (err) {
-				throw err;
-			}
-		);
-	};
-
-	this.deleteJob = function(id) {
-		return $http.delete(ENV.api['root'] + 'jobs', {params: {id: id}}).then(
-			function(result) {
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, true);
-				throw err;
-			}
-		);
-	};
-
-
+module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.createJobMenuItem=element(by.name('createJobMenuItem'));
+	this.regex=element(by.name('regex'));
+	this.ttl=element(by.name('ttl'));
+	this.deliveryservice=element(by.name('deliveryservice'));
+	this.createButton=element(by.buttonText('Create'));
 };
-
-JobService.$inject = ['$http', 'ENV'];
-module.exports = JobService;

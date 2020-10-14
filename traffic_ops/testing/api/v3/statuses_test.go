@@ -17,11 +17,12 @@ package v3
 
 import (
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestStatuses(t *testing.T) {
@@ -33,6 +34,7 @@ func TestStatuses(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestStatuses(t)
 		UpdateTestStatuses(t)
 		UpdateTestStatusesWithHeaders(t, header)
 		GetTestStatuses(t)
@@ -132,6 +134,25 @@ func CreateTestStatuses(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestStatuses(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetStatusesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestStatuses(t *testing.T) {

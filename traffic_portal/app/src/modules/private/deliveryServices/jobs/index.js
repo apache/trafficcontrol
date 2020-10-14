@@ -22,7 +22,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.jobs', [
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServices.jobs', {
-				url: '/{deliveryServiceId}/jobs',
+				url: '/{deliveryServiceId}/jobs?type',
 				abstract: true,
 				views: {
 					deliveryServicesContent: {

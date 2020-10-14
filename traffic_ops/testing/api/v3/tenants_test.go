@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -29,6 +30,7 @@ import (
 
 func TestTenants(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants}, func() {
+		SortTestTenants(t)
 		GetTestTenants(t)
 		UpdateTestTenants(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
@@ -113,6 +115,25 @@ func GetTestTenants(t *testing.T) {
 		} else {
 			t.Errorf("expected tenant %s: not found", ten.Name)
 		}
+	}
+}
+
+func SortTestTenants(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.TenantsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

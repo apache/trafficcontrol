@@ -109,6 +109,7 @@ func (dv *TODivision) Read(h http.Header, useIMS bool) ([]interface{}, error, er
 	if strings.HasSuffix(params["name"], ".json") {
 		params["name"] = params["name"][:len(params["name"])-len(".json")]
 	}
+	api.DefaultSort(dv.APIInfo(), "name")
 	return api.GenericRead(h, dv, useIMS)
 }
 func (dv *TODivision) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, dv) }

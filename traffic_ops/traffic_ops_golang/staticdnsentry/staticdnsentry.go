@@ -138,6 +138,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 }
 
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(en.APIInfo(), "host")
 	return api.GenericRead(h, en, useIMS)
 }
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
