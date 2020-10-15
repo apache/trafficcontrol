@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data. Using the new `stats_over_http` `health.polling.format` value that allows monitoring of multiple interfaces will first require that *all* Traffic Monitors monitoring the affected cache server be upgraded.
 - Traffic Ops, Traffic Ops ORT, Traffic Monitor, Traffic Stats, and Grove are now compiled using Go version 1.15.
 - Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
+- Added User-Agent string to Traffic Router log output.
 - Added default sort logic to GET API calls using Read()
 
 ### Fixed

@@ -143,8 +143,11 @@ public class HTTPAccessEventBuilder {
         final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\"";
         stringBuilder.append(respurl);
 
-        final String respurls = " rurls=\"" + formatObject(httpAccessRecord.getResponseURLs()) + "\" ";
+        final String respurls = " rurls=\"" + formatObject(httpAccessRecord.getResponseURLs()) + "\"";
         stringBuilder.append(respurls);
+
+        final String userAgent = httpServletRequest.getHeader("User-Agent") + "\" ";
+        stringBuilder.append(" uas=\"").append(userAgent);
 
         stringBuilder.append(formatRequestHeaders(httpAccessRecord.getRequestHeaders()));
         return stringBuilder.toString();
