@@ -493,10 +493,13 @@ func GetTestServersQueryParameters(t *testing.T) {
 	params.Del("dsId")
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
-		"edge1-cdn1-cg3": true,
-		"edge2-cdn1-cg3": true,
-		"atlanta-mid-16": true,
-		"atlanta-mid-17": true,
+		"edge1-cdn1-cg3":           true,
+		"edge2-cdn1-cg3":           true,
+		"atlanta-mid-16":           true,
+		"atlanta-mid-17":           true,
+		"edgeInCachegroup3":        true,
+		"midInParentCachegroup":    true,
+		"midInSecondaryCachegroup": true,
 	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
