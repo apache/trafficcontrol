@@ -532,15 +532,9 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
-	existingLastUpdated, found, e := api.GetLastUpdated(cg.ReqInfo.Tx, *cg.ID, "cachegroup")
-	if e == nil && found == false {
-		return errors.New("no cachegroup found with this id"), nil, http.StatusNotFound
-	}
-	if e != nil {
-		return nil, e, http.StatusInternalServerError
-	}
-	if !api.IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	userErr, sysErr, errCode := api.CheckIfUnModified(h, cg.ReqInfo.Tx, *cg.ID, "cachegroup")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()

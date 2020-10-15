@@ -387,15 +387,9 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
-	existingLastUpdated, found, err := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
-	if err == nil && found == false {
-		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
-	}
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-	if !api.IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	userErr, sysErr, statusCode := api.CheckIfUnModified(h, req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
 	}
 
 	// LastEditedBy field should not change with status update

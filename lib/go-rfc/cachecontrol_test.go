@@ -1,10 +1,5 @@
 package rfc
 
-import (
-	"testing"
-	"time"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,6 +18,11 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"testing"
+	"time"
+)
 
 func TestETag(t *testing.T) {
 	layout := "2006-01-02 15:04:05.000000-07"

@@ -1274,18 +1274,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, *server.ID, "server")
-	if err == nil && found == false {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
-		return
-	}
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-
-	if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
+	userErr, sysErr, statusCode := api.CheckIfUnModified(r.Header, inf.Tx, *server.ID, "server")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 

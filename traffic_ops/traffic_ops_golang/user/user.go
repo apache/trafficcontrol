@@ -21,7 +21,6 @@ package user
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -267,16 +266,9 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
-	existingLastUpdated, found, err := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
-	if err == nil && found == false {
-		return errors.New("no server found with this id"), nil, http.StatusNotFound
-	}
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-
-	if !api.IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	userErr, sysErr, errCode := api.CheckIfUnModified(h, user.ReqInfo.Tx, *user.ID, "tm_user")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
