@@ -324,7 +324,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:workers:           This is used only by the `Legacy Perl Script`_, and sets the number of concurrent HTTP server workers allowed.
 
 :inactivity_timeout: This was used by the `Legacy Perl Script`_ to set timeouts on idle client connections to Traffic Ops - the exact operation (and even units) of this configuration option is unknown. `traffic_ops_golang`_ ignores this field.
-:influx_db_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
+:influxdb_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is to first check if the :envvar:`MOJO_MODE` environment variable is set. If it is, then Traffic Ops will look in the current working directory for a subdirectory named ``conf/``, then inside that for a subdirectory with the name that is the value of the :envvar:`MOJO_MODE` variable, and inside that directory for a file named ``influxdb.conf``. If :envvar:`MOJO_MODE` is *not* set, then Traffic Ops will look for a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
 
 	.. versionadded:: 4.0
 

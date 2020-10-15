@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -28,7 +29,7 @@ const (
 	API_ASNS = apiBase + "/asns"
 )
 
-// Create a ASN
+// CreateASN creates a ASN
 func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -47,7 +48,7 @@ func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a ASN by ID
+// UpdateASNByID updates a ASN by ID
 func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -56,7 +57,7 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_ASNS, id)
+	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,25 +68,18 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 	return alerts, reqInf, nil
 }
 
-// Returns a list of ASNs
-func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_ASNS, nil, nil)
+// GetASNsWithHeader Returns a list of ASNs matching query params
+func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, ReqInf, error) {
+	route := fmt.Sprintf("%s?%s", API_ASNS, params.Encode())
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
+
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ASN{}, reqInf, nil
+		}
 	}
-	defer resp.Body.Close()
-
-	var data tc.ASNsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
-}
-
-// GET a ASN by the id
-func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -93,33 +87,14 @@ func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
 
 	var data tc.ASNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
+		return data.Response, reqInf, err
 	}
-
 	return data.Response, reqInf, nil
 }
 
-// GET an ASN by the asn number
-func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
-	url := fmt.Sprintf("%s?asn=%d", API_ASNS, asn)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ASNsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// DELETE an ASN by asn number
+// DeleteASNByASN deletes an ASN by asn number
 func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/asn/%d", API_ASNS, asn)
+	route := fmt.Sprintf("%s?id=%d", API_ASNS, asn)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

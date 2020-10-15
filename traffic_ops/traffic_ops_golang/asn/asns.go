@@ -107,6 +107,7 @@ func (as *TOASNV11) Create() (error, error, int) {
 	return api.GenericCreate(as)
 }
 func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(as.APIInfo(), "asn")
 	return api.GenericRead(h, as, useIMS)
 }
 func (v *TOASNV11) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {

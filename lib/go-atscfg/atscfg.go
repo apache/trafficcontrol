@@ -265,20 +265,25 @@ const (
 type TopologyPlacement struct {
 	// InTopology is whether the server is in the topology at all.
 	InTopology bool
+	// IsFirstCacheTier is whether the server is the first cache tier. Note if the server is the only tier, both IsFirstCacheTier and IsLastCacheTier may be true.
+	IsFirstCacheTier bool
+	// IsInnerCacheTier is whether the server is an inner cache tier. This will never be true if IsFirstCacheTier or IsLstCacheTier are true.
+	IsInnerCacheTier bool
+	// IsLastCacheTier is whether the server is the last cache tier. Note if the server is the only tier, both IsFirstCacheTier and IsLastCacheTier may be true.
+	// Note this is distinct from IsLastTier, which will be false for the last cache tier of MSO.
+	IsLastCacheTier bool
 	// IsLastTier is whether the server is the last tier in the topology.
-	// Note this is different for MSO vs non-MSO. For MSO, the last tier is the Origin. For non-MSO, the last tier is the last cache tier.
+	// Note this is different than IsLastCacheTier for MSO vs non-MSO. For MSO, the last tier is the Origin. For non-MSO, the last tier is the last cache tier.
 	IsLastTier bool
-	// CacheTier is the position of the cache in the topology.
-	// Note this is whether the cache is the last cache, even if it has parents in the topology who are origins (MSO).
-	// Thus, it's possible for a server to be CacheTierLast and not IsLastTier.
-	CacheTier TopologyCacheTier
 }
 
 // getTopologyPlacement returns information about the cachegroup's placement in the topology.
 // - Whether the cachegroup is the last tier in the topology.
 // - Whether the cachegroup is in the topology at all.
 // - Whether it's the first, inner, or last cache tier before the Origin.
-func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) TopologyPlacement {
+func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *tc.DeliveryServiceNullableV30) TopologyPlacement {
+	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
+
 	serverNode := tc.TopologyNode{}
 	serverNodeIndex := -1
 	for nodeI, node := range topology.Nodes {
@@ -292,47 +297,46 @@ func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, ca
 		return TopologyPlacement{InTopology: false}
 	}
 
-	topologyNodeHasChildren := false
+	hasChildren := false
 nodeFor:
 	for _, node := range topology.Nodes {
 		for _, parent := range node.Parents {
 			if parent == serverNodeIndex {
-				topologyNodeHasChildren = true
+				hasChildren = true
 				break nodeFor
 			}
 		}
 	}
 
-	cacheTier := TopologyCacheTierFirst
-	if topologyNodeHasChildren {
-		cacheTier = TopologyCacheTierInner
-	}
+	hasParents := len(serverNode.Parents) > 0
 
-	isLastTier := len(serverNode.Parents) == 0
-
-	if isLastTier {
-		cacheTier = TopologyCacheTierLast
-	}
-	// Check if the parent is an Origin, and if so, set to Last
-	if cacheTier == TopologyCacheTierInner {
+	parentIsOrigin := false
+	if hasParents {
 		// TODO extra safety: check other parents, and warn if parents have different types?
 		parentI := serverNode.Parents[0]
 		if parentI >= len(topology.Nodes) {
 			log.Errorln("ATS config generation: topology '" + topology.Name + "' has node with parent larger than nodes size! Config Generation will be malformed!")
-		} else {
-			parentNode := topology.Nodes[parentI]
-			cg, ok := cacheGroups[tc.CacheGroupName(parentNode.Cachegroup)]
-			if !ok {
-				log.Errorln("ATS config generation: topology '" + topology.Name + "' has node with cachegroup '" + parentNode.Cachegroup + "' that wasn't found in cachegroups! Config Generation will be malformed!")
-			} else if cg.Type == nil {
-				log.Errorln("ATS config generation: cachegroup '" + parentNode.Cachegroup + "' with nil type! Config Generation will be malformed!")
-			} else if *cg.Type == tc.CacheGroupOriginTypeName {
-				// this server's parent in the topology is an Origin, so this server is the last cache tier.
-				cacheTier = TopologyCacheTierLast
-			}
+			return TopologyPlacement{}
 		}
+		parentNode := topology.Nodes[parentI]
+		parentCG, ok := cacheGroups[tc.CacheGroupName(parentNode.Cachegroup)]
+		if !ok {
+			log.Errorln("ATS config generation: topology '" + topology.Name + "' has node with cachegroup '" + parentNode.Cachegroup + "' that wasn't found in cachegroups! Config Generation will be malformed!")
+			return TopologyPlacement{}
+		} else if parentCG.Type == nil {
+			log.Errorln("ATS config generation: cachegroup '" + parentNode.Cachegroup + "' with nil type! Config Generation will be malformed!")
+			return TopologyPlacement{}
+		}
+		parentIsOrigin = *parentCG.Type == tc.CacheGroupOriginTypeName
 	}
-	return TopologyPlacement{InTopology: true, IsLastTier: isLastTier, CacheTier: cacheTier}
+
+	return TopologyPlacement{
+		InTopology:       true,
+		IsFirstCacheTier: !hasChildren,
+		IsInnerCacheTier: hasChildren && hasParents && !parentIsOrigin,
+		IsLastCacheTier:  !hasParents || parentIsOrigin,
+		IsLastTier:       !hasParents || (parentIsOrigin && !isMSO), // If the parent CG is an Origin CG, but this DS is not MSO, then ignore the Topology and declare this the last tier
+	}
 }
 
 func MakeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {

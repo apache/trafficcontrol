@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -37,6 +38,7 @@ func TestUsers(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestUsers(t)
 		UpdateTestUsers(t)
 		GetTestUsersIMSAfterChange(t, header)
 		RolenameCapitalizationTest(t)
@@ -182,6 +184,25 @@ func OpsUpdateAdminTest(t *testing.T) {
 	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err == nil {
 		t.Error("ops user incorrectly updated an admin")
+	}
+}
+
+func SortTestUsers(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetUsersWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].Username)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
