@@ -103,6 +103,9 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 		t.Fatal("expected delivery service: 'ds1' to have a nil Topology, actual: non-nil")
 	}
 	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	if err != nil {
+		t.Fatalf("unable to fetch all servers: %v", err)
+	}
 	serversIds := []int{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *dsWithMid[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
@@ -120,6 +123,9 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 
 	params = url.Values{"dsId": []string{strconv.Itoa(*dsWithMid[0].ID)}}
 	dsServersResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("unable to fetch delivery service servers: %v", err)
+	}
 	dsServerIds := []int{}
 	for _, dss := range dsServersResp.Response {
 		dsServerIds = append(dsServerIds, *dss.ID)
