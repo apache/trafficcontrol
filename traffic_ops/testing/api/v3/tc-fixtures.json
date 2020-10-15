@@ -2317,7 +2317,7 @@
             "xmppPasswd": "X"
         },
         {
-            "cachegroup": "parentCachegroup",
+            "cachegroup": "parentCachegroup2",
             "cdnName": "cdn2",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
