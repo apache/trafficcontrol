@@ -1005,7 +1005,7 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
 	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
 	if err == nil && found == false {
-		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
+		return errors.New("no " + tableName +" found with this id"), nil, http.StatusNotFound
 	}
 	if err != nil {
 		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
