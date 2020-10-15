@@ -405,8 +405,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
-	if len(servers.Response) != 1 {
-		t.Fatalf("expected to get 1 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+	if len(servers.Response) != 2 {
+		t.Fatalf("expected to get 2 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
