@@ -405,8 +405,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
-	if len(servers.Response) != 1 {
-		t.Fatalf("expected to get 1 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+	if len(servers.Response) != 2 {
+		t.Fatalf("expected to get 2 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
@@ -491,8 +491,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 		}
 	}
 	params.Del("dsId")
-
 	params.Add("topology", topology)
+	expectedHostnames = map[string]bool{
+		"edge1-cdn1-cg3":           true,
+		"edge2-cdn1-cg3":           true,
+		"atlanta-mid-16":           true,
+		"atlanta-mid-17":           true,
+		"edgeInCachegroup3":        true,
+		"midInParentCachegroup":    true,
+		"midInSecondaryCachegroup": true,
+	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get servers belonging to cachegroups in topology %s: %s", topology, err)

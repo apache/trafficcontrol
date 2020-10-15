@@ -787,12 +787,18 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
+	var cdnID int
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
 			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
 		}
+		cdnID, _, err = dbhelpers.GetDSCDNIdFromID(tx.Tx, dsID)
+		if err != nil {
+			return nil, 0, nil, err, http.StatusInternalServerError, nil
+		}
+
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
@@ -903,7 +909,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, tx)
+		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, cdnID, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
@@ -981,6 +987,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	returnable := make([]tc.ServerNullable, 0, len(ids))
+
 	for _, id := range ids {
 		server := servers[id]
 		for _, iface := range interfaces[id] {
@@ -992,17 +999,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	return returnable, serverCount, nil, nil, http.StatusOK, &maxTime
 }
 
-// getMidServers gets the mids used by the servers in this DS.
-//
-// Original comment from the Perl code:
-//
-// If the delivery service employs mids, we're gonna pull mid servers too by
-// pulling the cachegroups of the edges and finding those cachegroups parent
-// cachegroup... then we see which servers have cachegroup in parent cachegroup
-// list...that's how we find mids for the ds :)
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx) ([]int, error, error, int) {
+// getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
+	}
+
+	filters := []interface{}{
+		edgeIDs,
 	}
 
 	// TODO: include secondary parent?
@@ -1014,7 +1018,12 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 	WHERE s.id IN (?)))
 	`
 
-	query, args, err := sqlx.In(q, edgeIDs)
+	if cdnID > 0 {
+		q += ` AND s.cdn_id = ?`
+		filters = append(filters, cdnID)
+	}
+
+	query, args, err := sqlx.In(q, filters...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("constructing mid servers query: %v", err), http.StatusInternalServerError
 	}
