@@ -303,12 +303,15 @@ func TestUnauthorizedDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 
 	errs := rc.Delete()
 
+	// TODO: this could segfault before failing
 	expErr := "not authorized on this tenant"
 	if errs.UserError.Error() != expErr {
 		t.Fatalf("got %s; expected %s", errs.UserError, expErr)
 	}
 
 	if errs.SystemError != nil {
+		// TODO: I think this should be failing with the system error, and also
+		// it seems like this would segfault.
 		t.Fatalf(errs.UserError.Error())
 	}
 
