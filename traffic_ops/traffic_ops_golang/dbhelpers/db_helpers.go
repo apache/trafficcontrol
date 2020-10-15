@@ -275,13 +275,13 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 }
 
 // GetDSCDNIdFromID loads the DeliveryService's cdn ID from the database, from the delivery service ID. Returns whether the delivery service was found, and any error.
-func GetDSCDNIdFromID(tx *sql.Tx, id int) (int, bool, error) {
+func GetDSCDNIdFromID(tx *sql.Tx, dsID int) (int, bool, error) {
 	var cdnID int
-	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = $1`, id).Scan(&cdnID); err != nil {
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = $1`, dsID).Scan(&cdnID); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, false, nil
 		}
-		return 0, false, fmt.Errorf("querying cdn_id for delivery service ID '%v': %v", id, err)
+		return 0, false, fmt.Errorf("querying cdn_id for delivery service ID '%v': %v", dsID, err)
 	}
 	return cdnID, true, nil
 }
