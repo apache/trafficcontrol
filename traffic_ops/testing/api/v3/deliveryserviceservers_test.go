@@ -115,7 +115,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 
 	_, _, err = TOSession.CreateDeliveryServiceServers(*dsWithMid[0].ID, serversIds, true)
 	if err != nil {
-		t.Errorf("POST delivery service servers: %v", err)
+		t.Fatalf("unable to create delivery service server associations: %v", err)
 	}
 
 	params = url.Values{"dsId": []string{strconv.Itoa(*dsWithMid[0].ID)}}
