@@ -41,7 +41,7 @@ import (
 // MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.
 func MakeDispatchMap(
 	opsConfig threadsafe.OpsConfig,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,

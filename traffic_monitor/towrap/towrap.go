@@ -38,17 +38,6 @@ import (
 	"github.com/json-iterator/go"
 )
 
-// ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
-type ITrafficOpsSession interface {
-	CRConfigRaw(cdn string) ([]byte, error)
-	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
-	Update(url, username, password string, insecure bool, userAgent string, useCache bool, timeout time.Duration) error
-	CRConfigHistory() []CRConfigStat
-	BackupFileExists() bool
-	MonitorCDN(hostName string) (string, error)
-}
-
 const localHostIP = "127.0.0.1"
 
 var ErrNilSession = fmt.Errorf("nil session")
@@ -183,10 +172,19 @@ func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *legacyClient.Session,
 	}
 }
 
+// Initialized tells whether or not the TrafficOpsSessionThreadsafe has been
+// properly initialized (by calling 'Update').
+func (s TrafficOpsSessionThreadsafe) Initialized() bool {
+	if s.useLegacy {
+		return s.legacySession != nil && *s.legacySession != nil
+	}
+	return s.session != nil && *s.session != nil
+}
+
 // Update updates the TrafficOpsSessionThreadsafe's connection information with
 // the provided information. It's safe for calling by multiple goroutines, being
 // aware that they will race.
-func (s TrafficOpsSessionThreadsafe) Update(
+func (s *TrafficOpsSessionThreadsafe) Update(
 	url string,
 	username string,
 	password string,

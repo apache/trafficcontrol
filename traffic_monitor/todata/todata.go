@@ -138,7 +138,7 @@ type CRConfig struct {
 
 // Fetch gets the CRConfig from Traffic Ops, creates the TOData maps, and atomically sets the TOData.
 // TODO since the session is threadsafe, each TOData get func below could be put in a goroutine, if performance mattered
-func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error {
+func (d TODataThreadsafe) Fetch(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
 	if _, err := to.CRConfigRaw(cdn); err != nil {
 		return fmt.Errorf("Error getting CRconfig from Traffic Ops: %v", err)
 	}
@@ -146,7 +146,7 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 }
 
 // Update updates the TOData data with the last fetched CDN
-func (d TODataThreadsafe) Update(to towrap.ITrafficOpsSession, cdn string) error {
+func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
 	crConfigBytes, _, err := to.LastCRConfig(cdn)
 	if err != nil {
 		return fmt.Errorf("Error getting last CRConfig: %v", err)

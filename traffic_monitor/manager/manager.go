@@ -44,7 +44,7 @@ import (
 // Start starts the poller and handler goroutines
 //
 func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
-	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, nil, cfg.CRConfigHistoryCount, cfg))
+	toSession := towrap.NewTrafficOpsSessionThreadsafe(nil, nil, cfg.CRConfigHistoryCount, cfg)
 
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
@@ -126,7 +126,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		toSession,
 		toData,
 		[]chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel},
-		[]chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel},
+		[]chan<- towrap.TrafficOpsSessionThreadsafe{monitorConfigPoller.SessionChannel},
 		localStates,
 		peerStates,
 		combinedStates,
