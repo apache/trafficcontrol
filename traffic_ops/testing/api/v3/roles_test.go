@@ -19,6 +19,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -40,6 +41,7 @@ func TestRoles(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		SortTestRoles(t)
 		UpdateTestRoles(t)
 		GetTestRoles(t)
 		GetTestRolesIMSAfterChange(t, header)
@@ -100,6 +102,25 @@ func CreateTestRoles(t *testing.T) {
 		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
 			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
 		}
+	}
+}
+
+func SortTestRoles(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, _, err := TOSession.GetRolesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

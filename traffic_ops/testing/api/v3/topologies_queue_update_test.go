@@ -121,6 +121,9 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnId int64, d
 	}
 	servers := serversResponse.Response
 	for _, server := range servers {
+		if *server.CDNID != int(cdnId) {
+			continue
+		}
 		if !*server.UpdPending {
 			t.Fatalf("expected UpdPending = %t for server with hostname %s, got UpdPending = %t", true, *server.HostName, *server.UpdPending)
 		}

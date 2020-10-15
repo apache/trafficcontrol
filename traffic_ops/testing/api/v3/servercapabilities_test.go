@@ -16,12 +16,16 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"net/http"
+	"sort"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCapabilities}, func() {
+		SortTestServerCapabilities(t)
 		GetTestServerCapabilities(t)
 		ValidationTestServerCapabilities(t)
 	})
@@ -37,6 +41,25 @@ func CreateTestServerCapabilities(t *testing.T) {
 		t.Log("Response: ", resp)
 	}
 
+}
+
+func SortTestServerCapabilities(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func GetTestServerCapabilities(t *testing.T) {

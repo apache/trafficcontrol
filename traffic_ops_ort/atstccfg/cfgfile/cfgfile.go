@@ -131,16 +131,17 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			}
 			toData.DeliveryServices = dses
 
-			allDSesHaveTopologies := true
-			for _, ds := range toData.DeliveryServices {
-				if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
-					continue
-				}
-				if ds.Topology == nil {
-					allDSesHaveTopologies = false
-					break
-				}
-			}
+			// TODO uncomment when MSO Origins are changed to not use DSS, to avoid the DSS call if it isn't necessary
+			// allDSesHaveTopologies := true
+			// for _, ds := range toData.DeliveryServices {
+			// 	if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
+			// 		continue
+			// 	}
+			// 	if ds.Topology == nil {
+			// 		allDSesHaveTopologies = false
+			// 		break
+			// 	}
+			// }
 
 			dssF := func() error {
 				defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
@@ -208,9 +209,8 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			if !cfg.RevalOnly {
 				fs = append([]func() error{uriSignKeysF, urlSigKeysF}, fs...) // skip keys for reval-only, which doesn't need them
 			}
-			if !cfg.RevalOnly && !allDSesHaveTopologies {
+			if !cfg.RevalOnly { // TODO when MSO Origins are changed to not use DSS, we can add `&& !allDSesHaveTopologies` here, to avoid the DSS call if it isn't necessary
 				// skip DSS if reval-only (which doesn't need DSS)
-				// or if all DSes have Topologies (which don't use DSS)
 				fs = append([]func() error{dssF}, fs...)
 			}
 

@@ -22,6 +22,11 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
 
+	this.$onInit = function() {
+		$scope.originalRoutingName = deliveryService.routingName;
+		$scope.originalCDN = deliveryService.cdnId;
+	};
+
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
@@ -161,6 +166,30 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	};
 
 	$scope.save = function(deliveryService) {
+		if (deliveryService.sslKeyVersion !== null && deliveryService.sslKeyVersion !== 0 &&
+			($scope.originalRoutingName !== deliveryService.routingName || $scope.originalCDN !== deliveryService.cdnId) &&
+			type.indexOf("HTTP") !== -1) {
+
+			let params = {
+				title: "Cannot update Delivery Service",
+				message: "Delivery Service has SSL Keys that cannot be updated"
+			};
+
+			$uibModal.open({
+				templateUrl: "common/modules/dialog/text/dialog.text.tpl.html",
+				controller: "DialogTextController",
+				size: "md",
+				resolve: {
+					params: function() {
+						return params;
+					},
+					text: function() {
+						return null;
+					}
+				}
+			});
+			return;
+		}
 		// if ds requests are enabled in traffic_portal_properties.json, we'll create a ds request, else just update the ds
 		if ($scope.dsRequestsEnabled) {
 			var params = {
@@ -197,7 +226,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 					status: status,
 					deliveryService: deliveryService
 				};
-				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete, 
+				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete,
 				// then if that is successful, the DS will be updated
 				if (options.status.id == $scope.COMPLETE) {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(

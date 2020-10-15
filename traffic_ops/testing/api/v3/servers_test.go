@@ -29,7 +29,7 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, Servers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		GetTestServersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		timestamp := currentTime.Format(time.RFC1123)
@@ -41,10 +41,55 @@ func TestServers(t *testing.T) {
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		CreateTestBlankFields(t)
 		CreateTestServerWithoutProfileId(t)
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
+		LastServerInTopologyCacheGroup(t)
 	})
+}
+
+func LastServerInTopologyCacheGroup(t *testing.T) {
+	const cacheGroupName = "topology-mid-cg-01"
+	const moveToCacheGroup = "topology-mid-cg-02"
+	const topologyName = "forked-topology"
+	const expectedLength = 1
+	params := url.Values{}
+	params.Add("cachegroupName", cacheGroupName)
+	params.Add("topology", topologyName)
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("getting server from cachegroup %s in topology %s: %s", cacheGroupName, topologyName, err.Error())
+	}
+	if len(servers.Response) != expectedLength {
+		t.Fatalf("expected to get %d server from cachegroup %s in topology %s, got %d servers", expectedLength, cacheGroupName, topologyName, len(servers.Response))
+	}
+	server := servers.Response[0]
+	_, reqInf, err := TOSession.DeleteServerByID(*server.ID)
+	if err == nil {
+		t.Fatalf("expected an error deleting server with id %d, received no error", *server.ID)
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("expected a 400-level error deleting server with id %d, got status code %d: %s", *server.ID, reqInf.StatusCode, err.Error())
+	}
+
+	params = url.Values{}
+	params.Add("name", moveToCacheGroup)
+	cgs, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(params, nil)
+	if err != nil {
+		t.Fatalf("getting cachegroup with hostname %s: %s", moveToCacheGroup, err.Error())
+	}
+	if len(cgs) != expectedLength {
+		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs))
+	}
+	*server.CachegroupID = *cgs[0].ID
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err == nil {
+		t.Fatalf("expected an error moving server with id %d to a different cachegroup, received no error", *server.ID)
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("expected a 400-level error moving server with id %d to a different cachegroup, got status code %d: %s", *server.ID, reqInf.StatusCode, err.Error())
+	}
 }
 
 func UpdateTestServerStatus(t *testing.T) {
@@ -249,6 +294,30 @@ func CreateTestServers(t *testing.T) {
 	}
 }
 
+func CreateTestBlankFields(t *testing.T) {
+	serverResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	if err != nil {
+		t.Fatalf("couldnt get servers: %v", err)
+	}
+	if len(serverResp.Response) < 1 {
+		t.Fatal("expected at least one server")
+	}
+	server := serverResp.Response[0]
+	originalHost := server.HostName
+
+	server.HostName = util.StrPtr("")
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err == nil {
+		t.Fatal("should not be able to update server with blank HostName")
+	}
+
+	server.HostName = originalHost
+	server.DomainName = util.StrPtr("")
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err == nil {
+		t.Fatal("should not be able to update server with blank DomainName")
+	}
+}
 func CreateTestServerWithoutProfileId(t *testing.T) {
 	params := url.Values{}
 	servers := testData.Servers[19]
@@ -402,9 +471,12 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
-		"edge1-cdn1-cg3": true,
-		"edge2-cdn1-cg3": true,
-		"atlanta-mid-16": true,
+		"edge1-cdn1-cg3":           true,
+		"edge2-cdn1-cg3":           true,
+		"atlanta-mid-16":           true,
+		"edgeInCachegroup3":        true,
+		"midInParentCachegroup":    true,
+		"midInSecondaryCachegroup": true,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {

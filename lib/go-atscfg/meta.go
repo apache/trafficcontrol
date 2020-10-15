@@ -165,9 +165,8 @@ func AddMetaObjConfigDir(
 		if ds.Topology != nil && *ds.Topology != "" {
 			topology := nameTopologies[TopologyName(*ds.Topology)]
 
-			placement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
-			switch placement.CacheTier {
-			case TopologyCacheTierFirst:
+			placement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, &ds)
+			if placement.IsFirstCacheTier {
 				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
 					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
 					scope := tc.ATSConfigMetaDataConfigFileScopeServers
@@ -175,7 +174,8 @@ func AddMetaObjConfigDir(
 						log.Errorln("meta config generation: " + err.Error())
 					}
 				}
-			case TopologyCacheTierInner:
+			}
+			if placement.IsInnerCacheTier {
 				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" || ds.MaxOriginConnections != nil {
 					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
 					scope := tc.ATSConfigMetaDataConfigFileScopeServers
@@ -183,7 +183,8 @@ func AddMetaObjConfigDir(
 						log.Errorln("meta config generation: " + err.Error())
 					}
 				}
-			case TopologyCacheTierLast:
+			}
+			if placement.IsLastCacheTier {
 				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" || ds.MaxOriginConnections != nil {
 					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
 					scope := tc.ATSConfigMetaDataConfigFileScopeServers

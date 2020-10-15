@@ -18,6 +18,7 @@ package v3
 import (
 	"net/http"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 
 func TestServerServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+		SortTestServerServerCapabilities(t)
 		GetTestServerServerCapabilitiesIMS(t)
 		GetTestServerServerCapabilities(t)
 	})
@@ -148,6 +150,25 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
 	if err == nil {
 		t.Error("expected to receive error when assigning a server capability to a server with incorrect type\n")
+	}
+}
+
+func SortTestServerServerCapabilities(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].Server)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

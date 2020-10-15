@@ -367,19 +367,12 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.selectServersMenuItem.isEnabled()).toBe(false);
 	});
 
-	it('should navigate back to the HTTP delivery service and delete it', function() {
-		console.log('Deleting ' + mockVals.httpXmlId);
-		pageData.dsLink.click();
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.httpXmlId);
-		pageData.deletePermanentlyButton.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
-	});
-
 	// Steering delivery service
 
 	it('should click new delivery service and select Steering category from the dropdown', function() {
 		console.log('Clicked Create New and selecting Steering');
+		browser.setLocation("delivery-services");
+		browser.sleep(250);
 		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('STEERING');

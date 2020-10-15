@@ -43,6 +43,7 @@ my $skip_os_check = 0;
 my $override_hostname_short = '';
 my $to_timeout_ms = 30000;
 my $syncds_updates_ipallow = 0;
+my $traffic_ops_insecure = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -53,6 +54,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "override_hostname_short=s" => \$override_hostname_short,
             "to_timeout_ms=i" => \$to_timeout_ms,
             "syncds_updates_ipallow=i" => \$syncds_updates_ipallow,
+            "traffic_ops_insecure=i" => \$traffic_ops_insecure,
           );
 
 if ( $#ARGV < 1 ) {
@@ -164,6 +166,11 @@ my $atstccfg_cmd = '/opt/ort/atstccfg';
 my $atstccfg_arg_disable_proxy = '';
 if ($rev_proxy_disable != 0) {
 	$atstccfg_arg_disable_proxy = '--traffic-ops-disable-proxy';
+}
+
+my $atstccfg_insecure_arg = "";
+if ($traffic_ops_insecure == 1) {
+	$atstccfg_insecure_arg = "--traffic-ops-insecure";
 }
 
 my $TMP_BASE  = "/tmp/ort";
@@ -348,6 +355,7 @@ sub usage {
 	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
 	print "\t   to_timeout_ms=<time>           => the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds).\n";
 	print "\t   syncds_updates_ipallow=<0|1>   => Update ip_allow.config in syncds mode, which may trigger an ATS bug blocking random addresses on load! Default = 0, only update on badass and restart.\n";
+	print "\t   traffic_ops_insecure=<0|1>     => Turns off certificate checking when connecting to Traffic Ops.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -787,7 +795,7 @@ sub send_update_to_trops {
 		$reval_str='true';
 	}
 
-	my $response = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --set-queue-status=$upd_str --set-reval-status=$reval_str 2>>$atstccfg_log_path`;
+	my $response = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --set-queue-status=$upd_str --set-reval-status=$reval_str 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR sending update status with atstccfg (via Traffic Ops). See $atstccfg_log_path.\n");
@@ -797,7 +805,7 @@ sub send_update_to_trops {
 }
 
 sub get_update_status {
-	my $upd_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=update-status 2>>$atstccfg_log_path`;
+	my $upd_ref = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=update-status 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR getting update status from atstccfg (via Traffic Ops). See $atstccfg_log_path.\n");
@@ -808,7 +816,7 @@ sub get_update_status {
 
 	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
 	if ( !defined( $upd_json->{'use_reval_pending'} ) ) {
-		my $info_ref = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
+		my $info_ref = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ($atstccfg_exit_code != 0) {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get status of use_reval_pending parameter.  Stopping.\n");
@@ -863,7 +871,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
+		my $stj = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ( $atstccfg_exit_code != 0 ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: returned $stj! Skipping creation of status file.\n";
@@ -982,7 +990,7 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
-		my $stj = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
+		my $stj = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=statuses 2>>$atstccfg_log_path`;
 		my $atstccfg_exit_code = $?;
 		if ( $atstccfg_exit_code != 0 ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: returned $stj! Skipping creation of status file.\n";
@@ -1624,7 +1632,7 @@ sub get_cfg_file_list {
 		$atstccfg_reval_arg = '--revalidate-only';
 	}
 
-	my $result = `$atstccfg_cmd --dir='$ats_config_dir' $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd --dir='$ats_config_dir' $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR getting config files from atstccfg via Traffic Ops. See $atstccfg_log_path for details\n");
@@ -1700,7 +1708,7 @@ sub parse_multipart_config_files {
 sub get_header_comment {
 	my $toolname;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=system-info 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get system info. Stopping.\n");
@@ -1875,7 +1883,7 @@ sub process_packages {
 
 	my $proceed = 0;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=packages 2>>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=packages 2>>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $FATAL ) && print "FATAL Error getting package list from Traffic Ops!\n";
@@ -2121,7 +2129,7 @@ sub process_chkconfig {
 
 	my $proceed = 0;
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=chkconfig 2>>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd $atstccfg_insecure_arg $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$hostname_short' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null --get-data=chkconfig 2>>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
