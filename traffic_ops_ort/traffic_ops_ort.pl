@@ -185,7 +185,6 @@ my @config_files = ();
 #### Process reboot tracker
 my $traffic_ctl_needed           = 0;
 my $sysctl_p_needed              = 0;
-my $ntpd_restart_needed          = 0;
 my $trafficserver_restart_needed = 0;
 
 #### Process installed tracker
@@ -262,8 +261,6 @@ if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->
 if ( $sysctl_p_needed && $script_mode != $SYNCDS ) {
 	&run_sysctl_p();
 }
-
-#&check_ntp();
 
 if ( $script_mode != $REPORT ) {
 	&update_trops();
@@ -1170,10 +1167,6 @@ sub process_config_files{
 				$cfg_file_tracker->{$file}->{'service'} = "puppet";
 				$return = &process_cfg_file($file);
 			}
-			elsif ( $file eq "ntp.conf" ) {
-				$cfg_file_tracker->{$file}->{'service'} = "ntpd";
-				$return = &process_cfg_file($file);
-			}
 			else {
 				( $log_level >> $WARN ) && print "WARN $file is being processed with an unknown service\n";
 				$cfg_file_tracker->{$file}->{'service'} = "unknown";
@@ -1208,7 +1201,6 @@ sub process_config_files{
 			}
 		}
 	}
-	
 	( $log_level >> $INFO ) && print "\nINFO: ======== End processing config files ========\n\n";
 }
 
@@ -1346,81 +1338,6 @@ sub check_plugins {
 	return $return_code;
 }
 
-sub check_ntp {
-	if ( $ntpd_restart_needed && $script_mode != $SYNCDS ) {
-		if ( $script_mode == $INTERACTIVE ) {
-			my $select = 'Y';
-			( $log_level >> $ERROR ) && print "ERROR ntp configuration has changed. 'service ntpd restart' needs to be run. Should I do that now? (Y/[n]):";
-			$select = <STDIN>;
-			chomp($select);
-			if ( $select =~ m/Y/ ) {
-				my $status = &restart_service("ntpd");
-				( $log_level >> $DEBUG ) && print "DEBUG 'service ntpd restart' run successful.\n";
-			}
-			else {
-				( $log_level >> $ERROR ) && print "ERROR ntp configuration has changed, but ntpd was not restarted.\n";
-			}
-		}
-		elsif ( $script_mode == $BADASS ) {
-			my $status = &restart_service("ntpd");
-			( $log_level >> $DEBUG ) && print "DEBUG 'service ntpd restart' successful.\n";
-		}
-	}
-	if ( $script_mode == $REPORT ) {
-		open my $fh, '<', "/etc/ntp.conf" || ( ( $log_level >> $ERROR ) && print "ERROR Can't open /etc/ntp.conf\n" );
-		my %ntp_conf_servers = ();
-		while (<$fh>) {
-			my $line = $_;
-			$line =~ s/\s+/ /g;
-			$line =~ s/(^\s+|\s+$)//g;
-			chomp($line);
-			if ( $line =~ m/^\#/ || $line =~ m/^$/ ) { next; }
-			if ( $line =~ m/^server/ ) {
-				( my $dum, my $server ) = split( /\s+/, $line );
-				( $log_level >> $TRACE ) && print "TRACE ntp.conf server: ...$line...\n";
-				$ntp_conf_servers{$server} = undef;
-			}
-		}
-		close $fh;
-
-		my $ntpq_output         = `/usr/sbin/ntpq -pn`;
-		my $ntp_peer_found      = 0;
-		my $ntp_candidate_found = 0;
-		( my @ntpq_output_lines ) = split( /\n/, $ntpq_output );
-		foreach my $nol (@ntpq_output_lines) {
-			if ( $nol =~ m/refid/ || $nol =~ m/========/ ) { next; }
-			if ( $nol !~ m/(\d){1,3}\.(\d){1,3}\.(\d){1,3}\.(\d){1,3}/ ) { next; }
-			$nol =~ s/^\s//;
-			( $log_level >> $TRACE ) && print "TRACE ntpq output line: ...$nol...\n";
-			( my $ntpq_server ) = split( /\s+/, $nol );
-			if ( $nol =~ m/\*/ ) {
-				( $log_level >> $TRACE ) && print "TRACE Found NTP server peer: $ntpq_server\n";
-				$ntp_peer_found++;
-			}
-			elsif ( $nol =~ m/\+/ ) {
-				( $log_level >> $TRACE ) && print "TRACE Found NTP server candidate: $ntpq_server\n";
-				$ntp_candidate_found++;
-			}
-			$ntpq_server =~ s/^\s//;
-			$ntpq_server =~ s/^\*//;
-			$ntpq_server =~ s/^\-//;
-			$ntpq_server =~ s/^\.//;
-			$ntpq_server =~ s/^\+//;
-			$ntpq_server =~ s/^o//;
-			$ntpq_server =~ s/^x//;
-			( $log_level >> $TRACE ) && print "TRACE ntpq server after processing: $ntpq_server\n";
-
-			if ( !exists( $ntp_conf_servers{$ntpq_server} ) ) {
-				( $log_level >> $ERROR ) && print "ERROR NTP server ($ntpq_server) is in use but is not configured in ntp.conf!\n";
-			}
-		}
-		if ( !$ntp_peer_found ) {
-			( $log_level >> $ERROR ) && print "ERROR No NTP server peer found!\n";
-		}
-	}
-}
-
-
 my %checked_plugins = ();
 sub check_this_plugin {
 	my $plugin      = shift;
@@ -1528,10 +1445,6 @@ sub process_reload_restarts {
 	elsif ( $cfg_file eq "sysctl.conf" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, 'sysctl -p' needed.\n";
 		$sysctl_p_needed++;
-	}
-	elsif ( $cfg_file eq "ntpd.conf" ) {
-		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, ntpd restart needed.\n";
-		$ntpd_restart_needed++;
 	}
 	elsif ( $cfg_file =~ m/\_facts/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Puppet facts file $cfg_file changed.\n";
