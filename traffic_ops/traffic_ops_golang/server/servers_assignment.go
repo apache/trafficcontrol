@@ -172,8 +172,8 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(dsList) > 0 {
-		if errCode, userErr, sysErr := checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		if errs := checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 		if strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
@@ -248,13 +248,17 @@ HAVING NOT ($2 = ANY(ARRAY_AGG(tc.cachegroup)))
 	return nil, nil, http.StatusOK
 }
 
-func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.ServerInfo, dsList []int, user *auth.CurrentUser) (int, error, error) {
+func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.ServerInfo, dsList []int, user *auth.CurrentUser) api.Errors {
+	errs := api.NewErrors()
 	rows, err := tx.Query(needsCheckInfoQuery, pq.Array(dsList))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return http.StatusBadRequest, errors.New("Either at least one Delivery Service ID doesn't exist, or is outside your tenancy!"), nil
+			errs.Code = http.StatusBadRequest
+			errs.SetUserError("Either at least one Delivery Service ID doesn't exist, or is outside your tenancy!")
+		} else {
+			errs.Code = http.StatusInternalServerError
+			errs.SystemError = err
 		}
-		return http.StatusInternalServerError, nil, err
 	}
 	defer rows.Close()
 
@@ -262,31 +266,42 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 	for rows.Next() {
 		var n needsCheck
 		if err = rows.Scan(&n.DSID, &n.CDN, &n.Tenant, &n.DSXMLID, &n.CDNName); err != nil {
-			return http.StatusInternalServerError, nil, fmt.Errorf("Scanning cdn_id for ds: %v", err)
+			errs.Code = http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Scanning cdn_id for ds: %v", err)
+			return errs
 		}
 
 		tenantsToCheck = append(tenantsToCheck, n)
 	}
 
 	if len(tenantsToCheck) != len(dsList) {
-		return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), nil
+		errs.Code = http.StatusNotFound
+		errs.SetUserError("Either no Delivery Service ids given, or at least one id doesn't exist!")
+		return errs
 	}
 
 	for _, t := range tenantsToCheck {
 		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, user, tx); err != nil {
-			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, user.TenantID, err)
+			errs.Code = http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, user.TenantID, err)
+			return errs
 		} else if !ok {
 			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
 			// of Delivery Services to which the user is forbidden access
-			return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", user.UserName, t.DSID, t.Tenant)
+			errs.Code = http.StatusNotFound
+			errs.SetUserError("Either no Delivery Service ids given, or at least one id doesn't exist!")
+			errs.SystemError = fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", user.UserName, t.DSID, t.Tenant)
+			return errs
 		}
 
 		if int(t.CDN) != serverInfo.CDNID {
-			return http.StatusConflict, fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDNName, t.CDN), nil
+			errs.Code = http.StatusConflict
+			errs.UserError = fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDNName, t.CDN)
+			return errs
 		}
 	}
 
-	return http.StatusOK, nil, nil
+	return errs
 }
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
