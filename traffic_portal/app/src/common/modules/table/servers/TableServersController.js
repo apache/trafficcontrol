@@ -305,11 +305,6 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
-		onRowDoubleClicked: function(params) {
-			locationUtils.navigateToPath('/servers/' + params.data.id);
-			// Event is outside the digest cycle, so we need to trigger one.
-			$scope.$apply();
-		},
 		columnDefs: columns,
 		enableCellTextSelection:true,
 		suppressMenuHide: true,
@@ -325,12 +320,24 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		pagination: true,
 		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
-		onColumnResized: function(params) {
-			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
-		},
 		tooltipShowDelay: 500,
 		allowContextMenuWithControlKey: true,
 		preventDefaultOnContextMenu: true,
+		colResizeDefault: "shift",
+		onColumnVisible: function(params) {
+			if (params.visisble){
+				return;
+			}
+		    for (let column of params.columns) {
+				if (column.filterActive) {
+					const filterModel = $scope.gridOptions.api.getFilterModel();
+					if (column.colId in filterModel) {
+						delete filterModel[column.colId];
+						$scope.gridOptions.api.setFilterModel(filterModel);
+					}
+				}
+			}
+		},
 		onCellContextMenu: function(params) {
 			$scope.showMenu = true;
 			$scope.menuStyle.left = String(params.event.pageX) + "px";
@@ -338,7 +345,15 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.server = params.data;
 			$scope.$apply();
 		},
-		colResizeDefault: "shift"
+		onRowDoubleClicked: function(params) {
+			locationUtils.navigateToPath('/servers/' + params.data.id);
+			// Event is outside the digest cycle, so we need to trigger one.
+			$scope.$apply();
+		},
+		onColumnResized: function(params) {
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+		},
+
 	};
 
 	/** These three functions are used by the context menu to determine what functionality to provide for a server. */
@@ -368,11 +383,6 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
 	$scope.toggleVisibility = function(col) {
-		const filterModel = $scope.gridOptions.api.getFilterModel();
-		if(col in filterModel) {
-			delete filterModel[col];
-		}
-		$scope.gridOptions.api.setFilterModel(filterModel);
 		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
 		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
 	};

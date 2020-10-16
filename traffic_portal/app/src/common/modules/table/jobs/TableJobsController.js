@@ -124,6 +124,20 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			$scope.job = params.data;
 			$scope.$apply();
 		},
+		onColumnVisible: function(params) {
+			if (params.visisble){
+				return;
+			}
+			for (let column of params.columns) {
+				if (column.filterActive) {
+					const filterModel = $scope.gridOptions.api.getFilterModel();
+					if (column.colId in filterModel) {
+						delete filterModel[column.colId];
+						$scope.gridOptions.api.setFilterModel(filterModel);
+					}
+				}
+			}
+		},
 		colResizeDefault: "shift"
 	};
 
@@ -135,11 +149,6 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
 	$scope.toggleVisibility = function(col) {
-		const filterModel = $scope.gridOptions.api.getFilterModel();
-		if(col in filterModel) {
-			delete filterModel[col];
-		}
-		$scope.gridOptions.api.setFilterModel(filterModel);
 		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
 		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
 	};
