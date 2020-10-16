@@ -151,9 +151,9 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if !strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
-		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, tx)
-		if usrErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, status, usrErr, sysErr)
+		errs := ValidateDSCapabilities(dsList, serverInfo.HostName, inf.Tx.Tx)
+		if errs.Occurred() {
+			inf.HandleErrs(w, r, errs)
 			return
 		}
 	}
@@ -290,26 +290,29 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 }
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
-func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error, int) {
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) api.Errors {
 	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 
 	dsCaps, err := dbhelpers.GetRequiredCapabilitiesOfDeliveryServices(dsIDs, tx)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 
 	for id, caps := range dsCaps {
 		for _, dsrc := range caps {
 			if !util.ContainsStr(sCaps, dsrc) {
-				return errors.New(fmt.Sprintf("cache %s cannot assign delivery service %d without having the required delivery service capabilities: %v", serverName, id, dsCaps)), nil, http.StatusBadRequest
+				return api.Errors{
+					UserError: fmt.Errorf("cache %s cannot assign delivery service %d without having the required delivery service capabilities: %v", serverName, id, dsCaps),
+					Code:      http.StatusBadRequest,
+				}
 			}
 		}
 	}
 
-	return nil, nil, 0
+	return api.NewErrors()
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {
