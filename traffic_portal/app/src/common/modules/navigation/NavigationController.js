@@ -85,7 +85,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
     $scope.customURL = function(item) {
         var url;
         if (item.embed) {
-            url = '/#!/custom?urdocument.l=' + encodeURIComponent(item.url);
+            url = '/#!/custom?url=' + encodeURIComponent(item.url);
         } else {
             url = item.url;
         }
