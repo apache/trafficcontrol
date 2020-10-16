@@ -10,8 +10,6 @@ do
     esac
 done
 
-
-
 # Traffic ops
 if [ "ops" == "$IMAGE" ]; then
   echo "OPS"
