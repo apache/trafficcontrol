@@ -104,69 +104,6 @@ type APIResponseWithSummary struct {
 	} `json:"summary"`
 }
 
-// Errors represents a set of errors to be handled by the API.
-type Errors struct {
-	// Code is the HTTP response code. If no error has occurred, this *should*
-	// be http.StatusOK.
-	Code int
-	// SystemError is an error that occurred internally; not safe for exposure
-	// to the user.
-	SystemError error
-	// UserError is an error that should be shown to the user to explain why
-	// their request failed.
-	UserError error
-}
-
-// NewErrors constructs a new Errors where no error has actually occurred.
-func NewErrors() Errors {
-	return Errors{
-		Code:        http.StatusOK,
-		SystemError: nil,
-		UserError:   nil,
-	}
-}
-
-// NewSystemError creates an Errors that only contains the given system error,
-// and has the appropriate response code.
-func NewSystemError(err error) Errors {
-	return Errors{
-		Code:        http.StatusInternalServerError,
-		SystemError: err,
-		UserError:   nil,
-	}
-}
-
-// ModifiedError creates an Errors that only contains an HTTP Precondition
-// Failed status code and associated error message.
-func ModifiedError() Errors {
-	return Errors{
-		Code:        http.StatusPreconditionFailed,
-		SystemError: nil,
-		UserError:   ResourceModifiedError,
-	}
-}
-
-// Occurred returns whether at least one error has occurred (is non-nil).
-func (e Errors) Occurred() bool {
-	return e.SystemError != nil || e.UserError != nil
-}
-
-// SetSystemError sets the Errors' system-level error to a new error containing
-// the passed message.
-func (e *Errors) SetSystemError(err string) {
-	e.SystemError = errors.New(err)
-}
-
-// SetUserError sets the Errors' user-level error to a new error containing the
-// passed message.
-func (e *Errors) SetUserError(err string) {
-	e.UserError = errors.New(err)
-}
-
-func (e Errors) String() string {
-	return fmt.Sprintf("Errors(Code=%d, SystemError='%v', UserError='%v')", e.Code, e.SystemError, e.UserError)
-}
-
 // GoneHandler is an http.Handler function that just writes a 410 Gone response
 // back to the client, along with an error-level alert stating that the endpoint
 // is no longer available.
@@ -725,7 +662,11 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, Errors{SystemError: fmt.Errorf("could not begin transaction: %w", err), Code: http.StatusInternalServerError}
+		return inf, Errors{
+			Code:        http.StatusInternalServerError,
+			SystemError: fmt.Errorf("could not begin transaction: %v", err),
+			UserError:   nil,
+		}
 	}
 
 	inf = &APIInfo{
@@ -1425,7 +1366,7 @@ func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName 
 		return NewSystemError(fmt.Errorf(tableName + "update: querying: " + err.Error()))
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
-		return ModifiedError()
+		return NewModifiedError()
 	}
 	return NewErrors()
 }

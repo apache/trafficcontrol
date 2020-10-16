@@ -51,9 +51,9 @@ func DSPostHandlerV31(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, vals, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	resp, vals, errs := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -94,9 +94,9 @@ func DSPostHandlerV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	resp, vals, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	resp, vals, errs := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -119,55 +119,55 @@ func writeChangeLog(tx *sql.Tx, user *auth.CurrentUser, cgID int) (error, int) {
 }
 
 // postDSes returns the post response, any user error, any system error, and the HTTP status code to be returned in the event of an error.
-func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int, dsIDs []int) (tc.CacheGroupPostDSResp, map[string]interface{}, error, error, int) {
+func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int, dsIDs []int) (tc.CacheGroupPostDSResp, map[string]interface{}, api.Errors) {
 	cdnName, errs := getCachegroupCDN(tx, cgID)
 	if errs.SystemError != nil {
 		errs.SystemError = fmt.Errorf("getting cachegroup CDN: %w", errs.SystemError)
 	}
 	if errs.Occurred() {
-		return tc.CacheGroupPostDSResp{}, nil, errs.UserError, errs.SystemError, errs.Code
+		return tc.CacheGroupPostDSResp{}, nil, errs
 	}
 
 	tenantIDs, err := getDSTenants(tx, dsIDs)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting delivery service tenant IDs: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("getting delivery service tenant IDs: %w", err))
 	}
 	for _, tenantID := range tenantIDs {
 		ok, err := tenant.IsResourceAuthorizedToUserTx(int(tenantID), user, tx)
 		if err != nil {
-			return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("checking tenancy: " + err.Error()), http.StatusInternalServerError
+			return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("checking tenancy: %w", err))
 		}
 		if !ok {
-			return tc.CacheGroupPostDSResp{}, nil, fmt.Errorf("not authorized for delivery service tenant %d", tenantID), nil, http.StatusForbidden
+			return tc.CacheGroupPostDSResp{}, nil, api.Errors{UserError: fmt.Errorf("not authorized for delivery service tenant %d", tenantID), Code: http.StatusForbidden}
 		}
 	}
 
 	topologyDSes, err := dbhelpers.GetDeliveryServicesWithTopologies(tx, dsIDs)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting delivery services with topologies: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("getting delivery services with topologies: %w", err))
 	}
 	if len(topologyDSes) > 0 {
-		return tc.CacheGroupPostDSResp{}, nil, fmt.Errorf("delivery services %v are already assigned to a topology", topologyDSes), nil, http.StatusBadRequest
+		return tc.CacheGroupPostDSResp{}, nil, api.Errors{UserError: fmt.Errorf("delivery services %v are already assigned to a topology", topologyDSes), Code: http.StatusBadRequest}
 	}
 
 	if err := verifyDSesCDN(tx, dsIDs, cdnName); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("verifying delivery service CDNs match cachegroup server CDNs: %w", err))
 	}
 	cgServers, err := getCachegroupServers(tx, cgID)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting cachegroup server names " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("getting cachegroup server names %w", err))
 	}
 	if err := insertCachegroupDSes(tx, cgID, dsIDs); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("inserting cachegroup delivery services: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("inserting cachegroup delivery services: %w", err))
 	}
 
 	if err := updateParams(tx, dsIDs); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, api.NewSystemError(fmt.Errorf("updating delivery service parameters: %w", err))
 	}
 	vals := map[string]interface{}{
 		"alerts": tc.CreateAlerts(tc.SuccessLevel, "Delivery services successfully assigned to all the servers of cache group "+strconv.Itoa(cgID)+".").Alerts,
 	}
-	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, vals, nil, nil, http.StatusOK
+	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, vals, api.NewErrors()
 }
 
 func insertCachegroupDSes(tx *sql.Tx, cgID int, dsIDs []int) error {

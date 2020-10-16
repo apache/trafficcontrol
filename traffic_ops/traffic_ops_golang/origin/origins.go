@@ -339,7 +339,7 @@ func (origin *TOOrigin) Update(h http.Header) api.Errors {
 	}
 
 	if !api.IsUnmodified(h, existingLastUpdated.Time) {
-		return api.ModifiedError()
+		return api.NewModifiedError()
 	}
 
 	if isPrimary && *origin.DeliveryServiceID != ds {

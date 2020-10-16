@@ -291,6 +291,7 @@ func parseDeleteErr(err error, id int, tx *sql.Tx) api.Errors {
 	default:
 		existing = pqErr.Table
 	}
+
 	return api.Errors{
 		UserError: errors.New("Tenant '" + strconv.Itoa(id) + "' has " + existing + ". Please update these " + existing + " and retry."),
 		Code:      http.StatusBadRequest,

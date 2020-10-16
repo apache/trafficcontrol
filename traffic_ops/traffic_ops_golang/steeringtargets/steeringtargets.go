@@ -296,7 +296,7 @@ func (st *TOSteeringTargetV11) Update(h http.Header) api.Errors {
 	}
 
 	if !api.IsUnmodified(h, *existingLastUpdated) {
-		return api.ModifiedError()
+		return api.NewModifiedError()
 	}
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)

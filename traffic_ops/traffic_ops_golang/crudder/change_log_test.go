@@ -1,4 +1,4 @@
-package api
+package crudder
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,6 +27,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
@@ -34,8 +35,8 @@ type testIdentifier struct {
 	ID int
 }
 
-func (i testIdentifier) GetKeyFieldsInfo() []KeyFieldInfo {
-	return []KeyFieldInfo{{"id", GetIntKey}}
+func (i testIdentifier) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 func (i *testIdentifier) SetKeys(keys map[string]interface{}) {
@@ -67,12 +68,12 @@ func TestCreateChangeLog(t *testing.T) {
 	i := testIdentifier{}
 
 	keys, _ := i.GetKeys()
-	expectedMessage := strings.ToUpper(i.GetType()) + ": " + i.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Created + " " + i.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
+	expectedMessage := strings.ToUpper(i.GetType()) + ": " + i.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + api.Created + " " + i.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(api.ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}
-	err = CreateChangeLog(ApiChange, Created, &i, &user, db.MustBegin().Tx)
+	err = CreateChangeLog(api.ApiChange, api.Created, &i, &user, db.MustBegin().Tx)
 	if err != nil {
 		t.Fatal(err)
 	}

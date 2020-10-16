@@ -24,7 +24,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -33,31 +32,6 @@ import (
 
 	"github.com/lib/pq"
 )
-
-func ExampleErrors_String() {
-	fmt.Println(NewErrors())
-
-	// Output: Errors(Code=200, SystemError='<nil>', UserError='<nil>')
-}
-
-func ExampleErrors_Occurred() {
-	err := NewErrors()
-	fmt.Println(err.Occurred())
-
-	err.SetSystemError("test")
-	fmt.Println(err.Occurred())
-
-	err.SetUserError("test")
-	fmt.Println(err.Occurred())
-
-	err.SystemError = nil
-	fmt.Println(err.Occurred())
-
-	// Output: false
-	// true
-	// true
-	// true
-}
 
 func TestCamelCase(t *testing.T) {
 	testStrings := []string{"hello_world", "trailing_underscore_", "w_h_a_t____"}
