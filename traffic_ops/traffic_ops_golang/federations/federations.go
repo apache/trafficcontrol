@@ -114,7 +114,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
-	if maxTime != nil {
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
