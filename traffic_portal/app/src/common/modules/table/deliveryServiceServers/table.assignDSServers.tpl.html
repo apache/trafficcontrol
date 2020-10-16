@@ -21,7 +21,7 @@ under the License.
 
 <div class="modal-header">
     <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-    <h3 class="modal-title">Assign Servers to {{::deliveryService.xmlId}}</h3>
+    <h3 class="modal-title">Assign {{(deliveryService.topology) ? 'ORG ' : ''}}Servers to {{::deliveryService.xmlId}}</h3>
 </div>
 <div class="modal-body">
     <table id="dsServersUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
