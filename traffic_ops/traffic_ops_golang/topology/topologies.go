@@ -156,7 +156,7 @@ func (topology *TOTopology) Validate() error {
 
 	//Get current Topology-CG for the requested change.
 	topoCachegroupNames := topology.getCachegroupNames()
-	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
+	userErr, sysErr, _ := dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
 	if userErr != nil {
 		return userErr
 	}

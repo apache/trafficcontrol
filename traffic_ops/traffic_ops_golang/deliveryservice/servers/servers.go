@@ -409,9 +409,9 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, *payload.Replace)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+	errs = validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, *payload.Replace)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -504,9 +504,9 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, false)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+	errs = validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, false)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -538,11 +538,11 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
-func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
+func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) api.Errors {
 	anyAvailableServers := false
-	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, status
+	errs := validateDSS(tx, ds, serverInfos)
+	if errs.Occurred() {
+		return errs
 	}
 
 	if ds.Active && replace {
@@ -564,11 +564,17 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		}
 		// Prevent the user from deleting all the servers in an active DS
 		if len(ids) == 0 {
-			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			return api.Errors{
+				UserError: fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported),
+				Code:      http.StatusConflict,
+			}
 		}
 		// prevent the user from deleting all ORG servers from an active, MSO-enabled DS
 		if ds.UseMultiSiteOrigin && newOrgCount < 1 {
-			return fmt.Errorf("this server assignment leaves Active, MSO-enabled Delivery Service #%d without any '%s' or '%s' %s servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported, tc.OriginTypeName), nil, http.StatusConflict
+			return api.Errors{
+				UserError: fmt.Errorf("this server assignment leaves Active, MSO-enabled Delivery Service #%d without any '%s' or '%s' %s servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported, tc.OriginTypeName),
+				Code:      http.StatusConflict,
+			}
 		}
 		// The following check is necessary because of the following:
 		// Consider a brand new active DS that has no server assignments.
@@ -578,44 +584,47 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
 		currentlyHasAvailableEdgesAssigned, err := hasAvailableEdgesCurrentlyAssigned(tx, ds.ID)
 		if err != nil {
-			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
+			return api.NewSystemError(fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %w", err))
 		}
 		if (currentlyHasAvailableEdgesAssigned && newAvailableEdgeCount < 1) || !anyAvailableServers {
-			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			return api.Errors{
+				UserError: fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported),
+				Code:      http.StatusConflict,
+			}
 		}
 	}
 
-	userErr, sysErr, status = ValidateServerCapabilities(tx, ds.ID, serverInfos)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, status
+	errs = ValidateServerCapabilities(tx, ds.ID, serverInfos)
+	if errs.Occurred() {
+		return errs
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
-func validateDSS(tx *sql.Tx, ds DSInfo, servers []tc.ServerInfo) (error, error, int) {
+func validateDSS(tx *sql.Tx, ds DSInfo, servers []tc.ServerInfo) api.Errors {
 	if ds.Topology == nil {
 		for _, s := range servers {
 			if ds.CDNID != nil && s.CDNID != *ds.CDNID {
-				return errors.New("server and delivery service CDNs do not match"), nil, http.StatusBadRequest
+				return api.Errors{UserError: errors.New("server and delivery service CDNs do not match"), Code: http.StatusBadRequest}
 			}
 		}
-		return nil, nil, http.StatusOK
+		return api.NewErrors()
 	}
 	for _, s := range servers {
 		if s.Type != tc.OriginTypeName {
-			return fmt.Errorf("only servers of type %s may be assigned to topology-based delivery services", tc.OriginTypeName), nil, http.StatusBadRequest
+			return api.Errors{UserError: fmt.Errorf("only servers of type %s may be assigned to topology-based delivery services", tc.OriginTypeName), Code: http.StatusBadRequest}
 		}
 	}
 
 	_, cachegroups, sysErr := dbhelpers.GetTopologyCachegroups(tx, *ds.Topology)
 	if sysErr != nil {
-		return nil, fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, sysErr), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("validating %s servers in topology %s: %w", tc.OriginTypeName, *ds.Topology, sysErr))
 	}
 	userErr := CheckServersInCachegroups(servers, cachegroups)
 	if userErr != nil {
-		return fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, userErr), nil, http.StatusBadRequest
+		return api.Errors{UserError: fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, userErr), Code: http.StatusBadRequest}
 	}
-	return nil, nil, http.StatusOK
+	return api.NewErrors()
 }
 
 // CheckServersInCachegroups checks whether or not all the given server cachegroups belong to the topology
@@ -638,7 +647,7 @@ func CheckServersInCachegroups(servers []tc.ServerInfo, cachegroups []string) er
 }
 
 // ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
-func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.ServerInfo) (error, error, int) {
+func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.ServerInfo) api.Errors {
 	nonOriginServerNames := []string{}
 	for _, s := range serverNamesAndTypes {
 		if strings.HasPrefix(s.Type, tc.EdgeTypePrefix) {
@@ -647,23 +656,25 @@ func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.S
 	}
 
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
-
 	if err != nil {
-		return nil, fmt.Errorf("validating server capabilities: %v", err), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("validating server capabilities: %w", err))
 	}
 
 	serverCaps, err := dbhelpers.GetServerCapabilitiesOfServers(nonOriginServerNames, tx)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return api.NewSystemError(err)
 	}
 	for hostname, caps := range serverCaps {
 		for _, dsc := range dsCaps {
 			if !util.ContainsStr(caps, dsc) {
-				return fmt.Errorf("the cache %s cannot be assigned to this delivery service without having the required delivery service capabilities: %v", hostname, dsCaps), nil, http.StatusBadRequest
+				return api.Errors{
+					UserError: fmt.Errorf("the cache %s cannot be assigned to this delivery service without having the required delivery service capabilities: %v", hostname, dsCaps),
+					Code:      http.StatusBadRequest,
+				}
 			}
 		}
 	}
-	return nil, nil, 0
+	return api.NewErrors()
 }
 
 func insertIdsQuery() string {

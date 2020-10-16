@@ -45,17 +45,17 @@ func TestValidateDSSAssignments(t *testing.T) {
 		Type:     "",
 	}
 	servers = append(servers, server)
-	userErr, _, _ := validateDSS(nil, ds, servers)
-	if userErr == nil {
+	errs := validateDSS(nil, ds, servers)
+	if errs.UserError == nil {
 		t.Fatalf("Expected user error with mismatching ds and server CDN IDs, got no error instead")
 	}
-	if userErr.Error() != expected {
-		t.Errorf("Expected error details %v, got %v", expected, userErr.Error())
+	if errs.UserError.Error() != expected {
+		t.Errorf("Expected error details %v, got %v", expected, errs.UserError)
 	}
 	servers[0].CDNID = 1
-	userErr, _, _ = validateDSS(nil, ds, servers)
-	if userErr != nil {
-		t.Fatalf("Expected no user error, got %v", userErr.Error())
+	errs = validateDSS(nil, ds, servers)
+	if errs.UserError != nil {
+		t.Fatalf("Expected no user error, got %v", errs.UserError)
 	}
 }
 
