@@ -55,12 +55,12 @@ func TestGetDetails(t *testing.T) {
 	mock.ExpectQuery("SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ds.xml_id as ds_name, t.name as type, r.pattern").WillReturnRows(rows2)
 
-	oldDetails, userErr, sysErr, code := getOldDetails(1, db.MustBegin().Tx)
-	if userErr != nil || sysErr != nil {
-		t.Fatalf("didn't expect an error but got user err %v, sys err %v", userErr, sysErr)
+	oldDetails, errs := getOldDetails(1, db.MustBegin().Tx)
+	if errs.Occurred() {
+		t.Fatalf("didn't expect an error but got user err %v, sys err %v", errs.UserError, errs.SystemError)
 	}
-	if code != http.StatusOK {
-		t.Fatalf("expected status OK 200, but got %d", code)
+	if errs.Code != http.StatusOK {
+		t.Fatalf("expected status OK 200, but got %d", errs.Code)
 	}
 	if oldDetails.OldOrgServerFqdn == nil {
 		t.Fatalf("old org server fqdn is nil")
@@ -96,15 +96,15 @@ func TestGetOldDetailsError(t *testing.T) {
 	rows := sqlmock.NewRows([]string{""})
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id").WillReturnRows(rows)
-	_, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
-	if userErr == nil {
+	_, errs := getOldDetails(1, db.MustBegin().Tx)
+	if errs.UserError == nil {
 		t.Fatalf("expected error %v, but got none", expected)
 	}
-	if userErr.Error() != expected {
-		t.Errorf("expected error %v, but got %v", expected, userErr.Error())
+	if errs.UserError.Error() != expected {
+		t.Errorf("expected error %v, but got %v", expected, errs.UserError.Error())
 	}
-	if code != http.StatusNotFound {
-		t.Errorf("expected error code : %d, but got : %d", http.StatusNotFound, code)
+	if errs.Code != http.StatusNotFound {
+		t.Errorf("expected error code : %d, but got : %d", http.StatusNotFound, errs.Code)
 	}
 }
 
