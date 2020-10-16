@@ -204,16 +204,16 @@ func ReadServerCheck(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	data, errs := handleReadServerCheck(inf, tx)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
 	api.WriteResp(w, r, data)
 }
 
-func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
+func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, api.Errors) {
 	extensions := make(map[string]string)
 
 	// Query Parameters to Database Query column mappings
@@ -224,7 +224,7 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, api.Errors{UserError: util.JoinErrs(errs), Code: http.StatusBadRequest}
 	}
 	// where clause is different for servercheck and server table. Also, it differs for the query param.
 	var whereSC, whereSI string
@@ -262,15 +262,13 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
-		sysErr := fmt.Errorf("querying for extensions: %v", err)
-		return nil, nil, sysErr, http.StatusInternalServerError
+		return nil, api.NewSystemError(fmt.Errorf("querying for extensions: %w", err))
 	}
 	for extRows.Next() {
 		var shortName string
 		var checkName string
 		if err = extRows.Scan(&shortName, &checkName); err != nil {
-			sysErr := fmt.Errorf("scanning extension: %v", err)
-			return nil, nil, sysErr, http.StatusInternalServerError
+			return nil, api.NewSystemError(fmt.Errorf("scanning extension: %w", err))
 		}
 		extensions[shortName] = checkName
 	}
@@ -278,16 +276,14 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 	querySC := serverChecksQuery + whereSC + orderBy + pagination
 	colRows, err := inf.Tx.NamedQuery(querySC, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("querying serverchecks columns: %v", err)
-		return nil, nil, sysErr, http.StatusInternalServerError
+		return nil, api.NewSystemError(fmt.Errorf("querying serverchecks columns: %w", err))
 	}
 
 	columns := make(map[int]tc.ServerCheckColumns)
 	for colRows.Next() {
 		var cols tc.ServerCheckColumns
 		if err = colRows.StructScan(&cols); err != nil {
-			sysErr := fmt.Errorf("scanning server checks columns: %v", err)
-			return nil, nil, sysErr, http.StatusInternalServerError
+			return nil, api.NewSystemError(fmt.Errorf("scanning server checks columns: %w", err))
 		}
 		columns[cols.Server] = cols
 	}
@@ -296,16 +292,14 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 	querySI := serverInfoQuery + whereSI + orderBySI + pagination
 	serverRows, err := inf.Tx.NamedQuery(querySI, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("querying server info for checks: %v", err)
-		return nil, nil, sysErr, http.StatusInternalServerError
+		return nil, api.NewSystemError(fmt.Errorf("querying server info for checks: %w", err))
 	}
 
 	data := []tc.GenericServerCheck{}
 	for serverRows.Next() {
 		var serverInfo tc.GenericServerCheck
 		if err = serverRows.Scan(&serverInfo.HostName, &serverInfo.ID, &serverInfo.Profile, &serverInfo.AdminState, &serverInfo.CacheGroup, &serverInfo.Type, &serverInfo.UpdPending, &serverInfo.RevalPending); err != nil {
-			sysErr := fmt.Errorf("scanning server info for checks: %v", err)
-			return nil, nil, sysErr, http.StatusInternalServerError
+			return nil, api.NewSystemError(fmt.Errorf("scanning server info for checks: %w", err))
 		}
 
 		serverCheckCols, ok := columns[serverInfo.ID]
@@ -386,5 +380,5 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		data = append(data, serverInfo)
 	}
 
-	return data, nil, nil, http.StatusOK
+	return data, api.NewErrors()
 }
