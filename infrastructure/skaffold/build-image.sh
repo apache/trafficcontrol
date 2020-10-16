@@ -14,10 +14,10 @@ trap "{ rm -rf $WORKDIR; }" EXIT
 # Check if our base image exists
 docker image inspect $GOIMAGE > /dev/null 2>&1
 
-# Build it if not
-if [ $? == 1 ]; then
+# Build it if not (disabled during development)
+# if [ $? == 1 ]; then
   docker build -f "$DIR/go.dockerfile" -t $GOIMAGE .
-fi
+# fi
 
 # Command flags
 while getopts s: flag
@@ -30,6 +30,7 @@ done
 # Traffic ops
 if [ "ops" == "$SERVICE" ]; then
   cp -r lib $WORKDIR
-  cp -r traffic_ops ${WORKDIR}/traffic_ops
+  cp -r traffic_ops ${WORKDIR}
+  cp -r vendor $WORKDIR
   docker build -f "$DIR/traffic-ops.dockerfile" $WORKDIR
 fi

@@ -12,6 +12,7 @@ RUN tar -C /usr/local/ -xzf go1.15.3.linux-amd64.tar.gz
 #
 FROM centos:7
 
+RUN yum update && yum install -y git && yum clean all
 COPY --from=install /usr/local/go /usr/local/go
-ENV PATH=$PATH:/usr/local/go/bin
+ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
 ENV GOPATH=/root/go
