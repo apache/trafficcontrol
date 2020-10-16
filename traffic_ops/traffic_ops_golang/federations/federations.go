@@ -433,16 +433,16 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	ips, errs := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
 	// I'm not sure if I necessarily agree with treating this as a client error, but it's what Perl did.
 	if len(ips) < 1 {
-		errCode = http.StatusConflict
-		userErr = fmt.Errorf("No federation resolvers to delete for user %s", inf.User.UserName)
+		errCode := http.StatusConflict
+		userErr := fmt.Errorf("No federation resolvers to delete for user %s", inf.User.UserName)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
@@ -456,14 +456,18 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 }
 
 // handles the main logic of the DELETE handler, separated out for convenience
-func removeFederationResolverMappingsForCurrentUser(tx *sql.Tx, u *auth.CurrentUser) ([]string, error, error, int) {
+func removeFederationResolverMappingsForCurrentUser(tx *sql.Tx, u *auth.CurrentUser) ([]string, api.Errors) {
 	rows, err := tx.Query(deleteCurrentUserFederationResolversQuery, u.ID)
+	errs := api.NewErrors()
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("No federation resolvers to delete for user %s", u.UserName), nil, http.StatusConflict
+			errs.UserError = fmt.Errorf("No federation resolvers to delete for user %s", u.UserName)
+			errs.Code = http.StatusConflict
 		} else {
-			return nil, nil, fmt.Errorf("Deleting federation resolvers for user %s: %v", u.UserName, err), http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Deleting federation resolvers for user %s: %v", u.UserName, err)
+			errs.Code = http.StatusInternalServerError
 		}
+		return nil, errs
 	}
 	defer rows.Close()
 
@@ -471,11 +475,13 @@ func removeFederationResolverMappingsForCurrentUser(tx *sql.Tx, u *auth.CurrentU
 	for rows.Next() {
 		var ip string
 		if err := rows.Scan(&ip); err != nil {
-			return nil, nil, fmt.Errorf("Error scanning deleted resolver IP: %v", err), http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Error scanning deleted resolver IP: %v", err)
+			errs.Code = http.StatusInternalServerError
+			return nil, errs
 		}
 		ips = append(ips, ip)
 	}
-	return ips, nil, nil, http.StatusOK
+	return ips, errs
 }
 
 func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -487,9 +493,9 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	ips, errs := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -504,6 +510,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 		return
 	}
 
+	errCode := http.StatusOK
 	if err := mappings.Validate(tx); err != nil {
 		errCode = http.StatusBadRequest
 		userErr = fmt.Errorf("validating request: %v", err)

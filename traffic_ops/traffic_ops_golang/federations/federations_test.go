@@ -281,15 +281,12 @@ func TestRemoveFederationResolverMappingsForCurrentUser(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when beginning a mock transaction", err)
 	}
 
-	returnedIPs, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, &u)
-	if userErr != nil {
-		t.Errorf("Unexpected user error removing resolvers: %v", userErr)
+	returnedIPs, errs := removeFederationResolverMappingsForCurrentUser(tx, &u)
+	if errs.Occurred() {
+		t.Errorf("Unexpected error(s) removing resolvers: %s", errs)
 	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error removing resolvers: %v", sysErr)
-	}
-	if errCode != http.StatusOK {
-		t.Errorf("Expected return code %d when removing resolvers, but got %d", http.StatusOK, errCode)
+	if errs.Code != http.StatusOK {
+		t.Errorf("Expected return code %d when removing resolvers, but got %d", http.StatusOK, errs.Code)
 	}
 
 	if len(returnedIPs) != len(ips) {
