@@ -69,6 +69,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	successMsg := "Check Extension Loaded."
 	errCode := http.StatusInternalServerError
 	id, userErr, sysErr := createCheckExt(toExt, inf.Tx)
+	// TODO: if a system error occurs - but not a user error - then the response code will be wrong (200 OK)
 	if userErr != nil {
 		errCode = http.StatusBadRequest
 	}
@@ -244,9 +245,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
-	userErr, sysErr, errCode := deleteServerCheckExtension(id, inf.Tx)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	errs = deleteServerCheckExtension(id, inf.Tx)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -256,13 +257,18 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
 }
 
-func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
+func deleteServerCheckExtension(id int, tx *sqlx.Tx) api.Errors {
 	// Get Open Slot Type ID
+	errs := api.NewErrors()
 	openID, exists, err := dbhelpers.GetTypeIDByName("CHECK_EXTENSION_OPEN_SLOT", tx.Tx)
 	if !exists {
-		return nil, errors.New("expected type CHECK_EXTENSION_OPEN_SLOT does not exist in type table"), http.StatusInternalServerError
+		errs.SetSystemError("expected type CHECK_EXTENSION_OPEN_SLOT does not exist in type table")
+		errs.Code = http.StatusInternalServerError
+		return errs
 	} else if err != nil {
-		return nil, fmt.Errorf("getting CHECK_EXTENSION_OPEN_SLOT type id: %v", err), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("getting CHECK_EXTENSION_OPEN_SLOT type id: %v", err)
+		errs.Code = http.StatusInternalServerError
+		return errs
 	}
 
 	openTOExt := tc.ServerCheckExtensionNullable{
@@ -279,17 +285,19 @@ func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
 
 	result, err := tx.NamedExec(updateQuery(), openTOExt)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return errs.UserError, errs.SystemError, errs.Code
+		return api.ParseDBError(err)
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return nil, fmt.Errorf("deleting TO Extension: getting rows affected: %v", err), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("deleting TO Extension: getting rows affected: %v", err)
+		errs.Code = http.StatusInternalServerError
 	} else if rowsAffected < 1 {
-		return fmt.Errorf("no TO Extension with that key found"), nil, http.StatusNotFound
+		errs.UserError = fmt.Errorf("no TO Extension with that key found")
+		errs.Code = http.StatusNotFound
 	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf("TO Extension delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+		errs.SystemError = fmt.Errorf("TO Extension delete affected too many rows: %d", rowsAffected)
+		errs.Code = http.StatusInternalServerError
 	}
 
-	return nil, nil, http.StatusOK
+	return errs
 }
