@@ -104,8 +104,6 @@ func (topology *TOTopology) Validate() error {
 		cacheGroups      = make([]tc.CacheGroupNullable, nodeCount)
 		cacheGroupsExist = true
 		err              error
-		userErr          error
-		sysErr           error
 		cacheGroupMap    map[string]tc.CacheGroupNullable
 		exists           bool
 	)
@@ -117,11 +115,14 @@ func (topology *TOTopology) Validate() error {
 		rules[fmt.Sprintf("node %v self parent", index)] = checkForSelfParents(topology.Nodes, index)
 		cacheGroupNames[index] = node.Cachegroup
 	}
-	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.APIInfoImpl.ReqInfo.Tx); userErr != nil || sysErr != nil {
+
+	cacheGroupMap, errs := cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.APIInfoImpl.ReqInfo.Tx)
+	if errs.Occurred() {
+		// TODO: looks like system errors will go undetected here
 		var err error
 		message := "could not get cachegroups"
-		if userErr != nil {
-			err = fmt.Errorf("%s: %s", message, userErr.Error())
+		if errs.UserError != nil {
+			err = fmt.Errorf("%s: %s", message, errs.UserError.Error())
 		}
 		return err
 	}

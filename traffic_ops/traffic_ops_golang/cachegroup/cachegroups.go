@@ -498,13 +498,12 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
-func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, error, error, int) {
+func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, api.Errors) {
 	query := SelectQuery() + multipleCacheGroupsWhere()
 	namesPqArray := pq.Array(names)
 	rows, err := Tx.Query(query, namesPqArray)
 	if err != nil {
-		errs := api.ParseDBError(err)
-		return nil, errs.UserError, errs.SystemError, errs.Code
+		return nil, api.ParseDBError(err)
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	cacheGroupMap := map[string]tc.CacheGroupNullable{}
@@ -529,13 +528,16 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 			pq.Array(&cgfs),
 			&s.FallbackToClosest,
 		); err != nil {
-			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, api.Errors{
+				SystemError: errors.New("cachegroup read: scanning: " + err.Error()),
+				Code:        http.StatusInternalServerError,
+			}
 		}
 		s.LocalizationMethods = &lms
 		s.Fallbacks = &cgfs
 		cacheGroupMap[*s.Name] = s
 	}
-	return cacheGroupMap, nil, nil, http.StatusOK
+	return cacheGroupMap, api.NewErrors()
 }
 
 func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, api.Errors, *time.Time) {
