@@ -871,7 +871,7 @@
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds-top",
             "anonymousBlockingEnabled": false,
-            "topology": "my-topology",
+            "topology": "mso-topology",
             "firstHeaderRewrite": "first header rewrite",
             "innerHeaderRewrite": "inner header rewrite",
             "lastHeaderRewrite": "last header rewrite"
@@ -4014,20 +4014,24 @@
     ],
     "topologies": [
         {
-            "name": "my-topology",
-            "description": "a topology",
+            "name": "mso-topology",
+            "description": "a multi-site origin topology",
             "nodes": [
                 {
-                    "cachegroup": "parentCachegroup",
+                    "cachegroup": "multiOriginCachegroup",
                     "parents": []
+                },
+                {
+                    "cachegroup": "parentCachegroup",
+                    "parents": [0]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
-                    "parents": []
+                    "parents": [0]
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [0, 1]
+                    "parents": [1, 2]
                 }
             ]
         },

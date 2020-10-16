@@ -487,7 +487,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		}
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
-			ds.Topology = util.StrPtr("my-topology")
+			ds.Topology = util.StrPtr("mso-topology")
 			_, _, err := TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
 			if err == nil {
 				t.Error("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")

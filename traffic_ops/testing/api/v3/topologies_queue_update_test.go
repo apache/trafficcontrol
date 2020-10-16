@@ -35,7 +35,7 @@ type topologiesQueueUpdateTestCase struct {
 
 func TestTopologiesQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		const topologyName = "my-topology"
+		const topologyName = "mso-topology"
 		cdnId, dsId := getCdnIdAndDsId(t)
 		InvalidCDNIDIsRejected(t, topologyName)
 		InvalidActionIsRejected(t, topologyName, cdnId)
