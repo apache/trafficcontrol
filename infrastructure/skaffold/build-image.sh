@@ -16,7 +16,7 @@ docker image inspect $GOIMAGE > /dev/null 2>&1
 
 # Build it if not (disabled during development)
 # if [ $? == 1 ]; then
-  docker build -f "$DIR/go.dockerfile" -t $GOIMAGE .
+docker build -f "$DIR/go.dockerfile" -t $GOIMAGE .
 # fi
 
 # Command flags
