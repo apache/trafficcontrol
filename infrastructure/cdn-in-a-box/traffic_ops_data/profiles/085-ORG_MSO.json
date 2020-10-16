@@ -1,0 +1,7 @@
+{
+  "cdnName": "$CDN_NAME",
+  "description": "Origin web server running lighttpd",
+  "name": "ORG_MSO",
+  "routingDisabled": false,
+  "type": "ORG_PROFILE"
+}

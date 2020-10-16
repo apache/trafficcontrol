@@ -50,6 +50,6 @@ while ! to-ping 2>/dev/null; do
   sleep 3
 done
 
-# no need to enroll the origin -- gets created when deliveryservice is created
+to-enroll origin "$CDN_NAME" 'CDN_in_a_Box_Origin' || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 lighttpd -t -f /etc/lighttpd/lighttpd.conf && lighttpd -D -f /etc/lighttpd/lighttpd.conf
