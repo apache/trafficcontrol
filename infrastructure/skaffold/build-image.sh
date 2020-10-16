@@ -1,19 +1,35 @@
 #!/usr/bin/env bash
 
-IMAGE=notset
+SERVICE=notset
 WORKDIR=$(mktemp -d)
+GOIMAGE=tcgo:latest
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-while getopts i: flag
+# Always clean up
+trap "{ rm -rf $WORKDIR; }" EXIT
+
+# TODO: Detect if the go image has changed and
+#  rebuild all images if so
+
+# Check if our base image exists
+docker image inspect $GOIMAGE > /dev/null 2>&1
+
+# Build it if not
+if [ $? == 1 ]; then
+  docker build -f "$DIR/go.dockerfile" -t $GOIMAGE .
+fi
+
+# Command flags
+while getopts s: flag
 do
     case "${flag}" in
-        i) IMAGE=${OPTARG};;
+        s) SERVICE=${OPTARG};;
     esac
 done
 
 # Traffic ops
-if [ "ops" == "$IMAGE" ]; then
-  echo "OPS"
+if [ "ops" == "$SERVICE" ]; then
+  cp -r lib $WORKDIR
+  cp -r traffic_ops ${WORKDIR}/traffic_ops
+  docker build -f "$DIR/traffic-ops.dockerfile" $WORKDIR
 fi
-
-echo "$WORKDIR"
-echo "$IMAGE"
