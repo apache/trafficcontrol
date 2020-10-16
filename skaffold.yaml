@@ -1,0 +1,5 @@
+apiVersion: skaffold/v2beta8
+kind: Config
+metadata:
+  name: Apache Traffic Control
+
