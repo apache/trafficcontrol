@@ -530,14 +530,14 @@ func GetTestServersQueryParameters(t *testing.T) {
 	params.Del("dsId")
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
-		originHostname:             true,
-		"edge1-cdn1-cg3":           true,
-		"edge2-cdn1-cg3":           true,
-		"atlanta-mid-16":           true,
-		"atlanta-mid-17":           true,
-		"edgeInCachegroup3":        true,
-		"midInParentCachegroup":    true,
-		"midInSecondaryCachegroup": true,
+		originHostname:             false,
+		"edge1-cdn1-cg3":           false,
+		"edge2-cdn1-cg3":           false,
+		"atlanta-mid-16":           false,
+		"atlanta-mid-17":           false,
+		"edgeInCachegroup3":        false,
+		"midInParentCachegroup":    false,
+		"midInSecondaryCachegroup": false,
 	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
@@ -550,6 +550,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
 		}
+		expectedHostnames[*server.HostName] = true
 	}
 	notInResponse = []string{}
 	for hostName, inResponse := range expectedHostnames {
