@@ -96,15 +96,12 @@ func positiveTestAddFederationResolverMappingsForCurrentUser(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when beginning a mock transaction", err)
 	}
 
-	userErr, sysErr, errCode := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
+	errs := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
+	if errs.Occurred() {
+		t.Errorf("Unexpected error(s): %s", errs)
 	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
-	}
-	if errCode != http.StatusOK {
-		t.Errorf("Expected response code %d, got %d", http.StatusOK, errCode)
+	if errs.Code != http.StatusOK {
+		t.Errorf("Expected response code %d, got %d", http.StatusOK, errs.Code)
 	}
 }
 
@@ -149,17 +146,17 @@ func testAddFederationResolverMappingsForCurrentUserWithoutFederations(t *testin
 		t.Fatalf("an error '%s' was not expected when beginning a mock transaction", err)
 	}
 
-	userErr, sysErr, errCode := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
-	if userErr == nil {
+	errs := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
+	if errs.UserError == nil {
 		t.Errorf("Unexpected a user error, but didn't get one")
 	} else {
-		t.Logf("Got expected user error: %v", userErr)
+		t.Logf("Got expected user error: %v", errs.UserError)
 	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	if errs.SystemError != nil {
+		t.Errorf("Unexpected system error: %v", errs.SystemError)
 	}
-	if errCode != http.StatusConflict {
-		t.Errorf("Expected response code %d, got %d", http.StatusConflict, errCode)
+	if errs.Code != http.StatusConflict {
+		t.Errorf("Expected response code %d, got %d", http.StatusConflict, errs.Code)
 	}
 }
 
@@ -203,19 +200,19 @@ func testUnauthorizedDSOnResolverAdd(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when beginning a mock transaction", err)
 	}
 
-	userErr, sysErr, errCode := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
-	if userErr == nil {
+	errs := addFederationResolverMappingsForCurrentUser(&u, tx, mappings)
+	if errs.UserError == nil {
 		t.Errorf("Unexpected a user error, but didn't get one")
 	} else {
-		t.Logf("Got expected user error: %v", userErr)
+		t.Logf("Got expected user error: %v", errs.UserError)
 	}
-	if sysErr == nil {
+	if errs.SystemError == nil {
 		t.Errorf("Unexpected a system error, but didn't get one")
 	} else {
-		t.Logf("Got expected system error: %v", sysErr)
+		t.Logf("Got expected system error: %v", errs.SystemError)
 	}
-	if errCode != http.StatusConflict {
-		t.Errorf("Expected response code %d, got %d", http.StatusConflict, errCode)
+	if errs.Code != http.StatusConflict {
+		t.Errorf("Expected response code %d, got %d", http.StatusConflict, errs.Code)
 	}
 }
 

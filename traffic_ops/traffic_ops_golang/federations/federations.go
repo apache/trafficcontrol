@@ -331,9 +331,9 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 		return
 	}
 
-	userErr, sysErr, errCode := addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs = addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
@@ -342,43 +342,53 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 }
 
 // handles the main logic of the POST handler, separated out for convenience
-func addFederationResolverMappingsForCurrentUser(u *auth.CurrentUser, tx *sql.Tx, mappings []tc.DeliveryServiceFederationResolverMapping) (error, error, int) {
+func addFederationResolverMappingsForCurrentUser(u *auth.CurrentUser, tx *sql.Tx, mappings []tc.DeliveryServiceFederationResolverMapping) api.Errors {
+	errs := api.NewErrors()
 	for _, fed := range mappings {
 		dsTenant, ok, err := dbhelpers.GetDSTenantIDFromXMLID(tx, fed.DeliveryService)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			errs.SystemError = err
+			errs.Code = http.StatusInternalServerError
+			return errs
 		} else if !ok {
-			return fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService), nil, http.StatusConflict
+			errs.UserError = fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService)
+			errs.Code = http.StatusConflict
+			return errs
 		}
 
 		if ok, err = tenant.IsResourceAuthorizedToUserTx(dsTenant, u, tx); err != nil {
-			err = fmt.Errorf("Checking user #%d tenancy permissions on DS '%s' (tenant #%d)", u.ID, fed.DeliveryService, dsTenant)
-			return nil, err, http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Checking user #%d tenancy permissions on DS '%s' (tenant #%d)", u.ID, fed.DeliveryService, dsTenant)
+			errs.Code = http.StatusInternalServerError
+			return errs
 		} else if !ok {
-			userErr := fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService)
-			sysErr := fmt.Errorf("User '%s' requested unauthorized federation resolver mapping modification on the '%s' Delivery Service", u.UserName, fed.DeliveryService)
-			return userErr, sysErr, http.StatusConflict
+			errs.UserError = fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService)
+			errs.SystemError = fmt.Errorf("User '%s' requested unauthorized federation resolver mapping modification on the '%s' Delivery Service", u.UserName, fed.DeliveryService)
+			errs.Code = http.StatusConflict
+			return errs
 		}
 
 		fedID, ok, err := dbhelpers.GetFederationIDForUserIDByXMLID(tx, u.ID, fed.DeliveryService)
 		if err != nil {
-			return nil, fmt.Errorf("Getting Federation ID: %v", err), http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Getting Federation ID: %v", err)
+			errs.Code = http.StatusInternalServerError
 		} else if !ok {
-			err = fmt.Errorf("No federation(s) found for user %s on delivery service '%s'.", u.UserName, fed.DeliveryService)
-			return err, nil, http.StatusConflict
+			errs.UserError = fmt.Errorf("No federation(s) found for user %s on delivery service '%s'.", u.UserName, fed.DeliveryService)
+			errs.Code = http.StatusConflict
+			return errs
 		}
 
 		inserted, err := addFederationResolverMappingsToFederation(fed.Mappings, fed.DeliveryService, fedID, tx)
 		if err != nil {
-			err = fmt.Errorf("Adding federation resolver mapping(s) to federation: %v", err)
-			return nil, err, http.StatusInternalServerError
+			errs.SystemError = fmt.Errorf("Adding federation resolver mapping(s) to federation: %v", err)
+			errs.Code = http.StatusInternalServerError
+			return errs
 		}
 
 		changelogMsg := "FEDERATION DELIVERY SERVICE: %s, ID: %d, ACTION: User %s successfully added federation resolvers [ %s ]"
 		changelogMsg = fmt.Sprintf(changelogMsg, fed.DeliveryService, fedID, u.UserName, inserted)
 		api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, u, tx)
 	}
-	return nil, nil, http.StatusOK
+	return errs
 }
 
 // adds federation resolver mappings for a particular delivery service to a given federation, creating said resolvers if
@@ -518,9 +528,9 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 		return
 	}
 
-	userErr, sysErr, errCode = addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs = addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
