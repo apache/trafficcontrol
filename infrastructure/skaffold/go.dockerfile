@@ -14,3 +14,4 @@ FROM centos:7
 
 COPY --from=install /usr/local/go /usr/local/go
 ENV PATH=$PATH:/usr/local/go/bin
+ENV GOPATH=/root/go
