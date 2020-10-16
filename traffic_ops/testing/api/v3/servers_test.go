@@ -557,6 +557,9 @@ func GetTestServersQueryParameters(t *testing.T) {
 			notInResponse = append(notInResponse, hostName)
 		}
 	}
+	if len(notInResponse) != 0 {
+		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
+	}
 	params.Del("topology")
 
 	resp, _, err := TOSession.GetServersWithHdr(nil, nil)
