@@ -119,8 +119,8 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		preventDefaultOnContextMenu: true,
 		onCellContextMenu: function(params) {
 			$scope.showMenu = true;
-			$scope.menuStyle.left = String(params.event.pageX) + "px";
-			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.menuStyle.left = String(params.event.clientX) + "px";
+			$scope.menuStyle.top = String(params.event.clientY) + "px";
 			$scope.job = params.data;
 			$scope.$apply();
 		},

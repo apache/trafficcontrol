@@ -333,8 +333,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		preventDefaultOnContextMenu: true,
 		onCellContextMenu: function(params) {
 			$scope.showMenu = true;
-			$scope.menuStyle.left = String(params.event.pageX) + "px";
-			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.menuStyle.left = String(params.event.clientX) + "px";
+			$scope.menuStyle.top = String(params.event.clientY) + "px";
 			$scope.server = params.data;
 			$scope.$apply();
 		},
