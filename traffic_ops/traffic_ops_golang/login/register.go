@@ -284,8 +284,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Sending registration email to %s", email)
 
-	if errCode, userErr, sysErr = inf.SendMail(email, msg); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	if errs = inf.SendMail(email, msg); errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 

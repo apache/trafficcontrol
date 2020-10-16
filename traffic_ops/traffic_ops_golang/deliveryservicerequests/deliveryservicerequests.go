@@ -83,9 +83,9 @@ func Request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body = fmt.Sprintf(msg, inf.Config.ConfigTO.EmailFrom, addr, dsr.Details.Customer, body)
-	errCode, userErr, sysErr := inf.SendMail(rfc.EmailAddress{Address: *addr}, []byte(body))
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	errs = inf.SendMail(rfc.EmailAddress{Address: *addr}, []byte(body))
+	if errs.Occurred() {
+		inf.HandleErrs(w, r, errs)
 		return
 	}
 
