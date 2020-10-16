@@ -662,9 +662,9 @@ func (cg *TOCacheGroup) Update(h http.Header) api.Errors {
 	if userErr != nil || sysErr != nil {
 		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
 	}
-	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
-	if userErr != nil || sysErr != nil {
-		return api.Errors{UserError: userErr, SystemError: sysErr, Code: errCode}
+	coordinateID, errs := cg.handleCoordinateUpdate()
+	if errs.Occurred() {
+		return errs
 	}
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(
@@ -698,18 +698,22 @@ func (cg *TOCacheGroup) Update(h http.Header) api.Errors {
 	return api.NewErrors()
 }
 
-func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
+func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, api.Errors) {
 
+	errs := api.NewErrors()
 	coordinateID, err := cg.getCoordinateID()
 
 	// This is not a logic error. Because the coordinate id is recieved from the
 	// cachegroup table, not being able to find the coordinate is equivalent to
 	// not being able to find the cachegroup.
+	// TODO: segfault possibility dereferencing cg.ID
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), nil, http.StatusNotFound
+		errs.UserError = fmt.Errorf("no cachegroup with id %d found", *cg.ID)
+		errs.Code = http.StatusNotFound
+		return nil, errs
 	}
 	if err != nil {
-		return nil, nil, err, http.StatusInternalServerError
+		return nil, api.NewSystemError(err)
 	}
 
 	// If partial coordinate information is given or the coordinate information is wholly
@@ -726,21 +730,21 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	//
 	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, nil, err, http.StatusInternalServerError
+			return nil, api.NewSystemError(err)
 		}
 		cg.Latitude = nil
 		cg.Longitude = nil
-		return nil, nil, nil, http.StatusOK
+		return nil, errs
 	}
 
 	err = cg.updateCoordinate()
 	if err != nil {
 		if errors.Is(err, duplicateExist) {
-			return nil, err, err, http.StatusBadRequest
+			return nil, api.Errors{UserError: err, SystemError: err, Code: http.StatusBadRequest}
 		}
-		return nil, err, err, http.StatusInternalServerError
+		return nil, api.Errors{UserError: err, SystemError: err, Code: http.StatusInternalServerError}
 	}
-	return coordinateID, nil, nil, http.StatusOK
+	return coordinateID, errs
 }
 
 func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
