@@ -31,35 +31,43 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/miekg/dns"
 )
 
-func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []string, tv trafficvault.TrafficVault, ctx context.Context) (error, error, int) {
+func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []string, tv trafficvault.TrafficVault, ctx context.Context) api.Errors {
+	errs := api.NewErrors()
 	keys, ok, err := tv.GetDNSSECKeys(cdnName, tx, ctx)
 	if err != nil {
-		return nil, errors.New("getting DNSSec keys from Traffic Vault: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("getting DNSSec keys from Traffic Vault: %w", err))
 	} else if !ok {
-		return fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName), nil, http.StatusBadRequest
+		errs.UserError = fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName)
+		errs.Code = http.StatusBadRequest
+		return errs
 	}
 	cdnKeys, ok := keys[cdnName]
 	// TODO warn and continue?
 	if !ok {
-		return fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName), nil, http.StatusBadRequest
+		errs.UserError = fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName)
+		errs.Code = http.StatusBadRequest
+		return errs
 	}
 	kExp := getKeyExpiration(cdnKeys.KSK, dnssecDefaultKSKExpiration)
 	zExp := getKeyExpiration(cdnKeys.ZSK, dnssecDefaultZSKExpiration)
 	overrideTTL := false
 	dsKeys, err := CreateDNSSECKeys(exampleURLs, cdnKeys, kExp, zExp, dnssecDefaultTTL, overrideTTL)
 	if err != nil {
-		return nil, errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error()), http.StatusInternalServerError
+		errs.SetSystemError("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error())
+		errs.Code = http.StatusInternalServerError
+		return errs
 	}
 	keys[xmlID] = dsKeys
 	if err := tv.PutDNSSECKeys(cdnName, keys, tx, ctx); err != nil {
-		return nil, errors.New("putting DNSSEC keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
+		return api.NewSystemError(fmt.Errorf("putting DNSSEC keys in Traffic Vault: %w", err))
 	}
-	return nil, nil, http.StatusOK
+	return errs
 }
 
 // CreateDNSSECKeys creates DNSSEC keys for the given delivery service, updating existing keys if they exist. The overrideTTL parameter determines whether to reuse existing key TTLs if they exist, or to override existing TTLs with the ttl parameter's value.

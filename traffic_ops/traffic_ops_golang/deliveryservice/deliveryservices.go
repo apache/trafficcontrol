@@ -534,8 +534,8 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		if !inf.Config.TrafficVaultEnabled {
 			return nil, http.StatusInternalServerError, nil, errors.New("cannot create DNSSEC keys for delivery service: Traffic Vault is not configured")
 		}
-		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, *ds.XMLID, cdnName, ds.ExampleURLs, inf.Vault, r.Context()); userErr != nil || sysErr != nil {
-			return nil, statusCode, userErr, sysErr
+		if errs := PutDNSSecKeys(tx, *ds.XMLID, cdnName, ds.ExampleURLs, inf.Vault, r.Context()); errs.Occurred() {
+			return nil, errs.Code, errs.UserError, errs.SystemError
 		}
 	}
 
