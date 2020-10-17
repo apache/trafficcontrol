@@ -82,10 +82,16 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	if len(cgs) != expectedLength {
 		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs))
 	}
+
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err != nil {
+		t.Fatalf("error updating server with hostname %s without moving it to a different cachegroup: %s", *server.HostName, err.Error())
+	}
+
 	*server.CachegroupID = *cgs[0].ID
 	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
 	if err == nil {
-		t.Fatalf("expected an error moving server with id %d to a different cachegroup, received no error", *server.ID)
+		t.Fatalf("expected an error moving server with id %s to a different cachegroup, received no error", *server.HostName)
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("expected a 400-level error moving server with id %d to a different cachegroup, got status code %d: %s", *server.ID, reqInf.StatusCode, err.Error())

@@ -1226,9 +1226,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 		cacheGroupIds := []int{*origSer[0].CachegroupID}
 		serverIds := []int{*origSer[0].ID}
-		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
-			return
+		if *origSer[0].CachegroupID != *newServer.CachegroupID {
+			if err = topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
+				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
+				return
+			}
 		}
 
 		server, err = newServer.ToServerV2()
