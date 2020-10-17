@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ats
+  labels:
+    app: ats
+spec:
+  selector:
+    matchLabels:
+      app: ats
+  template:
+    metadata:
+      labels:
+        app: ats
+    spec:
+      containers:
+        - name: ats
+          image: wernight/trafficserver
+          ports:
+            - containerPort: 8080
