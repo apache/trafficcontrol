@@ -1,0 +1,9 @@
+version: "1.0"
+name: dbconf.yml
+
+production:
+  driver: postgres
+  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+test:
+  driver: postgres
+  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
