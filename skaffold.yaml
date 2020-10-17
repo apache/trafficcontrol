@@ -9,3 +9,4 @@ deploy:
       - infrastructure/skaffold/postgres/*.yaml
       - infrastructure/skaffold/influxdb/*.yaml
       - infrastructure/skaffold/riak/*.yaml
+      - infrastructure/skaffold/ats/*.yaml
