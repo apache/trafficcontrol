@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riak
+  labels:
+    app: riak
+spec:
+  selector:
+    matchLabels:
+      app: riak
+  template:
+    metadata:
+      labels:
+        app: riak
+    spec:
+      containers:
+        - name: riak
+          image: basho/riak-kv:ubuntu-2.2.3
+          ports:
+            - containerPort: 8087
+            - containerPort: 8098

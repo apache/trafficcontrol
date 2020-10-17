@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: riak
+spec:
+  selector:
+    app: riak
+  ports:
+    - name: buffer
+      protocol: TCP
+      port: 8087
+      targetPort: 8087
+    - name: http
+      protocol: TCP
+      port: 8098
+      targetPort: 8098
