@@ -3,3 +3,7 @@ kind: Config
 metadata:
   name: Apache Traffic Control
 
+deploy:
+  kubectl:
+    manifests:
+      - infrastructure/skaffold/postgres/*.yaml

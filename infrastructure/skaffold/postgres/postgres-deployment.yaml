@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13.0
+          ports:
+            - containerPort: 5432
+          env:
+              # Overwrites the values from database-config
+              # So we can apply pre-start migrations
+            - name: PGHOST
+              value: ""
+
+            - name: PGUSER
+              value: "atc"
+
+            - name: POSTGRES_USER
+              value: "atc"
+
+            - name: POSTGRES_PASSWORD
+              value: "changeme"
