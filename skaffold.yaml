@@ -7,3 +7,5 @@ deploy:
   kubectl:
     manifests:
       - infrastructure/skaffold/postgres/*.yaml
+      - infrastructure/skaffold/influxdb/*.yaml
+      - infrastructure/skaffold/riak/*.yaml
