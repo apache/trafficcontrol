@@ -12,7 +12,14 @@ RUN tar -C /usr/local/ -xzf go1.15.3.linux-amd64.tar.gz
 #
 FROM centos:7
 
-RUN yum update && yum install -y git && yum clean all
+# Add git so we can go get
+RUN yum update && yum install -y git openssl && yum clean all
 COPY --from=install /usr/local/go /usr/local/go
+
+# Generate certs
+COPY generate-certs.sh .
+RUN ./generate-certs.sh
+
+# Make Go work
 ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
 ENV GOPATH=/root/go
