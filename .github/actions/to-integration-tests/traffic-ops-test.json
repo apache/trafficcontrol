@@ -9,7 +9,8 @@
 		},
 		"session": {
 			"timeoutInSecs": 60
-		}
+		},
+		"includeSystemTests": true
 	},
 	"trafficOps": {
 		"URL": "https://localhost:6443",

@@ -18,13 +18,26 @@
 -->
 
 # to-integration-tests Docker action
-This action runs the Traffic Ops Go client integration tests with the Traffic
-Ops API.
+This action runs the Traffic Ops Go client integration tests with the Traffic Ops API.
+- Requires an SMTP service (see `smtp_address` input)
+- Provides a Riak server at address `trafficvault.infra.ciab.test`
 
 ## Inputs
 
 ### `version`
 **Required** Major API version to test e.g. 1, 2, 3 etc.
+
+### `smtp_address`
+**Required** The address of an SMTP server for use by Traffic Ops. Required for API versions 2 and up.
+
+### `smtp_port`
+**Required** The address of an SMTP server for use by Traffic Ops. Required for API versions 2 and up but defaults to `25`.
+
+### `smtp_user`
+**Optional** The user to authenticate with for the SMTP server.
+
+### `smtp_password`
+**Optional** The password to authenticate with for the SMTP server.
 
 ## Outputs
 

@@ -17,6 +17,8 @@
 
 FROM alpine:3.12
 
+VOLUME /run/docker.sock:/run/docker.sock
+
 RUN architecture=$(uname -m) && \
     mkdir lib64 && \
     # Use musl libc where the go binary expects glibc
@@ -25,8 +27,8 @@ RUN architecture=$(uname -m) && \
 ENV GOROOT=/usr/local/go \
     CGO_ENABLED=0
 
-RUN apk add --no-cache gettext git
+RUN apk add --no-cache gettext git docker-cli
 
-COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
+COPY entrypoint.sh database.json traffic-ops-test.json cdn.json riak.json /
 
 ENTRYPOINT /entrypoint.sh

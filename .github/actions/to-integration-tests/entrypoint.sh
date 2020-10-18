@@ -16,6 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+if [ -z "$INPUT_VERSION" ]; then
+	INPUT_VERSION="3";
+fi
+if [ -z "$INPUT_SMTP_ADDRESS" ] && [ "$INPUT_VERSION" -ge 2 ]; then
+	echo 'No SMTP server specified. Specify it in the smtp_address input.';
+	exit 1;
+fi;
+if [ -z "$INPUT_SMTP_PORT" ]; then
+	export INPUT_SMTP_PORT=25;
+fi;
+
 download_go() {
 	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
@@ -25,6 +36,46 @@ download_go() {
 	go version
 }
 download_go
+
+ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
+start_traffic_vault() {
+<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
+		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
+		certs_dir=/etc/ssl/certs;
+		X509_INFRA_CERT_FILE="${certs_dir}/trafficvault.crt";
+		X509_INFRA_KEY_FILE="${certs_dir}/trafficvault.key";
+
+		# Generate x509 certificate
+		openssl req -new -x509 -nodes -newkey rsa:4096 -out "$X509_INFRA_CERT_FILE" -keyout "$X509_INFRA_KEY_FILE" -subj "/CN=${TV_FQDN}";
+
+		# Do not wait for CDN in a Box to generate SSL keys
+		sed -i '0,/^update-ca-certificates/d' /etc/riak/prestart.d/00-config.sh;
+
+		# Do not try to source to-access.sh
+		sed -i '/to-access\.sh/d' /etc/riak/{prestart.d,poststart.d}/*
+	BASH_LINES
+
+	trafficvault=trafficvault;
+	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault";
+	network="$(docker network ls --quiet --filter name=github_network)";
+	if [[ "$INPUT_VERSION" -lt 3 ]]; then
+		echo 'Not starting Traffic Vault for API versions less than 3'
+		return;
+	fi;
+	echo 'Starting Traffic Vault...';
+	docker run \
+		--rm \
+		--detach \
+		--name="$trafficvault" \
+		--network="$network" \
+		--hostname="${trafficvault}.infra.ciab.test" \
+		--network-alias="${trafficvault}.infra.ciab.test" \
+		--env-file="${ciab_dir}/variables.env" \
+		"$trafficvault" \
+		/usr/lib/riak/riak-cluster.sh;
+	docker logs -f "$trafficvault" | sed "s/^/${trafficvault}: /g";
+}
+start_traffic_vault &
 
 export GOPATH="$(mktemp -d)"
 srcdir="$GOPATH/src/github.com/apache"
@@ -92,13 +143,12 @@ A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
 " > localhost.key
 
 envsubst </cdn.json >cdn.conf
+
+export $(cat "${ciab_dir}/variables.env" | sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
+envsubst </riak.json >riak.conf
 mv /database.json ./database.conf
 
-./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>err.log &
-
-if [ -z "$INPUT_VERSION" ]; then
-	INPUT_VERSION="3";
-fi
+./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>err.log &
 
 cd "../testing/api/v$INPUT_VERSION"
 
@@ -106,6 +156,11 @@ cp /traffic-ops-test.json ./traffic-ops-test.conf
 /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
 CODE="$?"
 rm traffic-ops-test.conf
+if [[ "$INPUT_VERSION" -ge 3 ]]; then
+	echo 'Stopping Traffic Vault...'
+	docker kill "$trafficvault";
+	docker rm -f "$trafficvault";
+fi;
 
 # TODO - make these build artifacts
 if [ -f ../../../traffic_ops_golang/out.log ]; then

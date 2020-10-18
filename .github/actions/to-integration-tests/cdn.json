@@ -45,7 +45,7 @@
 	},
 	"inactivity_timeout" : 60,
 	"smtp" : {
-		"enabled" : false
+		"enabled": false
 	},
 	"InfluxEnabled": false
 }
