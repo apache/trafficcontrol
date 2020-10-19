@@ -27,6 +27,7 @@ download_go() {
 download_go
 
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
+trafficvault=trafficvault;
 start_traffic_vault() {
 <<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
 		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
@@ -44,7 +45,6 @@ start_traffic_vault() {
 		sed -i '/to-access\.sh/d' /etc/riak/{prestart.d,poststart.d}/*
 	BASH_LINES
 
-	trafficvault=trafficvault;
 	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault";
 	network="$(docker network ls --quiet --filter name=github_network)";
 	if [[ "$INPUT_VERSION" -lt 3 ]]; then
