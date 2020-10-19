@@ -21,8 +21,20 @@ inputs:
   version:
     description: 'Version of Traffic Ops API against which to run tests, e.g. 1, 2, 3, etc.'
     required: true
+    default: 3
+  smtp_address:
+    description: 'Address of an SMTP server to use for the Traffic Ops API tests'
+    required: true
+  smtp_port:
+    description: 'Port of an SMTP server to use for the Traffic Ops API tests'
+    required: true
+    default: 25
+  smtp_user:
+    description: 'The user to authenticate with for the SMTP server.'
+    required: false
+  smtp_password:
+    description: 'The user to authenticate with for the SMTP server.'
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.version }}

@@ -16,17 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if [ -z "$INPUT_VERSION" ]; then
-	INPUT_VERSION="3";
-fi
-if [ -z "$INPUT_SMTP_ADDRESS" ] && [ "$INPUT_VERSION" -ge 2 ]; then
-	echo 'No SMTP server specified. Specify it in the smtp_address input.';
-	exit 1;
-fi;
-if [ -z "$INPUT_SMTP_PORT" ]; then
-	export INPUT_SMTP_PORT=25;
-fi;
-
 download_go() {
 	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"

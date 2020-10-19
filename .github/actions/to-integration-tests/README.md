@@ -28,10 +28,10 @@ This action runs the Traffic Ops Go client integration tests with the Traffic Op
 **Required** Major API version to test e.g. 1, 2, 3 etc.
 
 ### `smtp_address`
-**Required** The address of an SMTP server for use by Traffic Ops. Required for API versions 2 and up.
+**Required** The address of an SMTP server for use by Traffic Ops.
 
 ### `smtp_port`
-**Required** The address of an SMTP server for use by Traffic Ops. Required for API versions 2 and up but defaults to `25`.
+**Required** The address of an SMTP server for use by Traffic Ops. Required but defaults to `25`.
 
 ### `smtp_user`
 **Optional** The user to authenticate with for the SMTP server.
