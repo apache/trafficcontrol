@@ -335,6 +335,19 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.showMenu = true;
 			$scope.menuStyle.left = String(params.event.clientX) + "px";
 			$scope.menuStyle.top = String(params.event.clientY) + "px";
+			$scope.menuStyle.bottom = "unset";
+			$scope.menuStyle.right = "unset";
+			$scope.$apply();
+			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+
+			if (boundingRect.bottom > window.innerHeight){
+				$scope.menuStyle.bottom = (window.innerHeight - String(params.event.clientY)) + "px";
+				$scope.menuStyle.top = "unset";
+			}
+			if (boundingRect.right > window.innerWidth) {
+				$scope.menuStyle.right = (window.innerWidth - String(params.event.clientX)) + "px";
+				$scope.menuStyle.left = "unset";
+			}
 			$scope.server = params.data;
 			$scope.$apply();
 		},
