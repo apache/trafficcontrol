@@ -72,7 +72,9 @@ JOIN cachegroup c on s.cachegroup = c.id
 JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 JOIN deliveryservice td ON td.topology = tc.topology
 JOIN type t ON s.type = t.id
-LEFT JOIN deliveryservice_server dss ON s.id = dss."server"
+LEFT JOIN deliveryservice_server dss
+	ON s.id = dss."server"
+	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
 AND (
 	t.name != :orgType
