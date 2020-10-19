@@ -77,7 +77,7 @@ LEFT JOIN deliveryservice_server dss
 	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
 AND (
-	t.name != ` + tc.OriginTypeName + `
+	t.name != '` + tc.OriginTypeName + `'
 	OR dss.deliveryservice IS NOT NULL
 )),
 `
