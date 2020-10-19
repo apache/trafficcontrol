@@ -435,6 +435,33 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	return caps, nil
 }
 
+// ScanCachegroupsServerCapabilities, given rows of (server ID, CDN ID, cachegroup name, server capabilities),
+// returns a map of cachegroup names to server IDs, a map of server IDs to a map of their capabilities,
+// a map of server IDs to CDN IDs, and an error (if one occurs).
+func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[int]map[string]struct{}, map[int]int, error) {
+	defer log.Close(rows, "closing rows in ScanCachegroupsServerCapabilities")
+
+	cachegroupServers := make(map[string][]int)
+	serverCapabilities := make(map[int]map[string]struct{})
+	serverCDNs := make(map[int]int)
+	for rows.Next() {
+		serverID := 0
+		cdnID := 0
+		cachegroup := ""
+		serverCap := []string{}
+		if err := rows.Scan(&serverID, &cdnID, &cachegroup, pq.Array(&serverCap)); err != nil {
+			return nil, nil, nil, fmt.Errorf("scanning rows in ScanCachegroupsServerCapabilities: %v", err)
+		}
+		cachegroupServers[cachegroup] = append(cachegroupServers[cachegroup], serverID)
+		serverCapabilities[serverID] = make(map[string]struct{}, len(serverCap))
+		serverCDNs[serverID] = cdnID
+		for _, sc := range serverCap {
+			serverCapabilities[serverID][sc] = struct{}{}
+		}
+	}
+	return cachegroupServers, serverCapabilities, serverCDNs, nil
+}
+
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 	var caps []string
