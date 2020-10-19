@@ -127,11 +127,11 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
 
 			if (boundingRect.bottom > window.innerHeight){
-				$scope.menuStyle.bottom = (window.innerHeight - String(params.event.clientY)) + "px";
+				$scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
 				$scope.menuStyle.top = "unset";
 			}
 			if (boundingRect.right > window.innerWidth) {
-				$scope.menuStyle.right = (window.innerWidth - String(params.event.clientX)) + "px";
+				$scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
 				$scope.menuStyle.left = "unset";
 			}
 			$scope.job = params.data;
