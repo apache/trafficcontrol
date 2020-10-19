@@ -80,6 +80,11 @@ under the License.
                     <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
                 </div>
             </li>
+            <li ng-repeat="cdn in cdns">
+                <div class="btn-group" title="Lock">
+                    <button type="button" class="btn btn-link" ng-click="toggleCDNLock(cdn)">{{cdn.name}} <i class="fa fa-unlock"></i></button>
+                </div>
+            </li>
         </ul>
     </nav>
 </div>

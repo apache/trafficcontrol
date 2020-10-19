@@ -19,6 +19,13 @@
 
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
+    let getCDNs = function() {
+        cdnService.getCDNs()
+            .then(function(result) {
+                $scope.cdns = result;
+            });
+    };
+
     $scope.isCollapsed = true;
 
     $scope.userLoaded = userModel.loaded;
@@ -77,8 +84,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -102,8 +109,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -162,6 +169,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     var init = function () {
         scrollToTop();
         initToggleMenu();
+        getCDNs();
     };
     init();
 };
