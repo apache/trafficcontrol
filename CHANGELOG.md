@@ -12,8 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
 - Fixed #5074 - Traffic Monitor logging "CreateStats not adding availability data for server: not found in DeliveryServices" for MID cachces
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
-
-### Fixed
+- Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Fixed #5005: Traffic Monitor cannot be upgraded independently of Traffic Ops
 
 ### Deprecated
