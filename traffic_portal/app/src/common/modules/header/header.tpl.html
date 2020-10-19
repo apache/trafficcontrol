@@ -82,7 +82,7 @@ under the License.
             </li>
             <li ng-repeat="cdn in cdns">
                 <div class="btn-group" title="Lock">
-                    <button type="button" class="btn btn-link" ng-click="toggleCDNLock(cdn)">{{cdn.name}} <i class="fa fa-unlock"></i></button>
+                    <button type="button" class="btn btn-link" ng-click="toggleCDNLock(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-lock': cdn.lockedBy, 'fa-unlock': !cdn.lockedBy }"></i></button>
                 </div>
             </li>
         </ul>

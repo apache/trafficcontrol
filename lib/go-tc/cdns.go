@@ -66,6 +66,14 @@ type CDN struct {
 	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
+	// Username that has locked the CDN
+	//
+	LockedBy string `json:"lockedBy" db:"locked_by"`
+
+	// Reason why the CDN was locked
+	//
+	LockedReason string `json:"lockedReason" db:"locked_reason"`
+
 	// Name of the CDN
 	//
 	// required: true
@@ -95,6 +103,14 @@ type CDNNullable struct {
 	// LastUpdated
 	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+
+	// Username that has locked the CDN
+	//
+	LockedBy *string `json:"lockedBy" db:"locked_by"`
+
+	// Reason why the CDN was locked
+	//
+	LockedReason *string `json:"lockedReason" db:"locked_reason"`
 
 	// Name of the CDN
 	//

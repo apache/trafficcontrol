@@ -80,6 +80,18 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.dnssecEnabled, 'required')">Required</small>
                 </div>
             </div>
+            <div class="form-group" ng-if="!settings.isNew">
+                <label for="lockedBy" class="control-label col-md-2 col-sm-2 col-xs-12">Locked By</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="lockedBy" name="lockedBy" type="text" class="form-control" ng-model="cdn.lockedBy" disabled>
+                </div>
+            </div>
+            <div class="form-group" ng-if="!settings.isNew">
+                <label for="lockedReason" class="control-label col-md-2 col-sm-2 col-xs-12">Locked Reason</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="lockedReason" name="lockedReason" type="text" class="form-control" ng-model="cdn.lockedReason" disabled>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cdn)">Delete</button>
                 <button type="button" class="btn btn-success" ng-disabled="cdnForm.$pristine || cdnForm.$invalid" ng-click="save(cdn)">{{settings.saveLabel}}</button>

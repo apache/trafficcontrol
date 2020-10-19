@@ -19,6 +19,6 @@ under the License.
 
 <div id="lockContainer">
     <div ng-show="cdn.lockedBy" class="alert alert-danger" ng-repeat="cdn in cdns">
-        <div>{{ cdn.name | uppercase }} IS LOCKED BY {{ cdn.lockedBy }}</div>
+        <div>{{ cdn.name + ' is locked by ' + cdn.lockedBy + ' (' + cdn.lockedReason + ')' | uppercase }}</div>
     </div>
 </div>
