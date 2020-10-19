@@ -77,7 +77,7 @@ LEFT JOIN deliveryservice_server dss
 	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
 AND (
-	t.name != :orgType
+	t.name != ` + tc.OriginTypeName + `
 	OR dss.deliveryservice IS NOT NULL
 )),
 `
@@ -785,7 +785,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"topology":         {"tc.topology", nil},
 		"type":             {"t.name", nil},
 		"dsId":             {"dss.deliveryservice", nil},
-		"orgType":          {":orgType", nil},
 	}
 
 	if version.Major >= 3 {
@@ -818,7 +817,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
 				return nil, 0, nil, err, http.StatusInternalServerError, nil
 			}
-			params[`orgType`] = tc.OriginTypeName
 			joinSubQuery = dssTopologiesJoinSubquery
 		} else {
 			joinSubQuery = ""
