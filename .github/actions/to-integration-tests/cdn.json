@@ -45,7 +45,10 @@
 	},
 	"inactivity_timeout" : 60,
 	"smtp" : {
-		"enabled": false
+		"enabled": true,
+		"user": "$INPUT_SMTP_USER",
+		"password": "$INPUT_SMTP_PASSWORD",
+		"address": "${INPUT_SMTP_ADDRESS}:${INPUT_SMTP_PORT}"
 	},
 	"InfluxEnabled": false
 }
