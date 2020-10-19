@@ -42,7 +42,9 @@ Request Structure
 	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-servers` endpoint will return     |
 	|                |          | each server whose :term:`Cache Group` is associated with a :term:`Topology Node` of that Topology and has the     |
 	|                |          | :term:`Server Capabilities` that are                                                                              |
-	|                |          | :term:`required by the Delivery Service <Delivery Service required capabilities>`.                                |
+	|                |          | :term:`required by the Delivery Service <Delivery Service required capabilities>` but excluding                   |
+	|                |          | :term:`Origin Servers` that are not assigned to the Delivery Service. For more information, see                   |
+	|                |          | :ref:`multi-site-origin-qht`.                                                                                     |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| hostName       | no       | Return only those servers that have this (short) hostname                                                         |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+

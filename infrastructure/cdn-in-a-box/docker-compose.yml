@@ -253,6 +253,7 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
+    domainname: infra.ciab.test
     depends_on:
       - dns
     env_file:
