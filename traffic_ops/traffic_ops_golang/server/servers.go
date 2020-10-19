@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 	"net"
 	"net/http"
 	"strconv"
@@ -650,7 +651,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
-	if maxTime != nil {
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		// RFC1123
 		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
@@ -779,15 +780,25 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
 
+	if version.Major >= 3 {
+		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{"cg.name", nil}
+	}
+
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
+	var cdnID int
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
 			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
 		}
+		cdnID, _, err = dbhelpers.GetDSCDNIdFromID(tx.Tx, dsID)
+		if err != nil {
+			return nil, 0, nil, err, http.StatusInternalServerError, nil
+		}
+
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
@@ -898,7 +909,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, tx)
+		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, cdnID, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
@@ -976,6 +987,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	returnable := make([]tc.ServerNullable, 0, len(ids))
+
 	for _, id := range ids {
 		server := servers[id]
 		for _, iface := range interfaces[id] {
@@ -987,17 +999,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	return returnable, serverCount, nil, nil, http.StatusOK, &maxTime
 }
 
-// getMidServers gets the mids used by the servers in this DS.
-//
-// Original comment from the Perl code:
-//
-// If the delivery service employs mids, we're gonna pull mid servers too by
-// pulling the cachegroups of the edges and finding those cachegroups parent
-// cachegroup... then we see which servers have cachegroup in parent cachegroup
-// list...that's how we find mids for the ds :)
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx) ([]int, error, error, int) {
+// getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
+	}
+
+	filters := []interface{}{
+		edgeIDs,
 	}
 
 	// TODO: include secondary parent?
@@ -1009,7 +1018,12 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 	WHERE s.id IN (?)))
 	`
 
-	query, args, err := sqlx.In(q, edgeIDs)
+	if cdnID > 0 {
+		q += ` AND s.cdn_id = ?`
+		filters = append(filters, cdnID)
+	}
+
+	query, args, err := sqlx.In(q, filters...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("constructing mid servers query: %v", err), http.StatusInternalServerError
 	}
@@ -1207,6 +1221,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		cacheGroupIds := []int{*origSer[0].CachegroupID}
+		serverIds := []int{*origSer[0].ID}
+		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
 			return
 		}
 
@@ -1590,6 +1611,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if len(servers) > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id))
 		return
+	}
+	if version.Major >= 3 {
+		cacheGroupIds := []int{*servers[0].CachegroupID}
+		serverIds := []int{*servers[0].ID}
+		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
+			return
+		}
 	}
 
 	userErr, sysErr, errCode = deleteInterfaces(id, tx)

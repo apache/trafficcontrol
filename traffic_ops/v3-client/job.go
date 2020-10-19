@@ -47,6 +47,24 @@ func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts
 	return alerts, reqInf, err
 }
 
+// Deletes a Content Invalidation Job
+func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, ReqInf, error) {
+	remoteAddr := (net.Addr)(nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	resp, remoteAddr, err := to.request(http.MethodDelete, fmt.Sprintf("%v/jobs?id=%v", apiBase, jobID), nil, nil)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+
+}
+
 // Updates a Content Invalidation Job
 func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, ReqInf, error) {
 	remoteAddr := (net.Addr)(nil)

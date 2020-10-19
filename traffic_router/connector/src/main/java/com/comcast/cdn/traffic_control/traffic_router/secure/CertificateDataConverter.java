@@ -30,6 +30,7 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings({"PMD.CyclomaticComplexity"})
 public class CertificateDataConverter {
 	private static final Logger log = Logger.getLogger(CertificateDataConverter.class);
 
@@ -108,19 +109,28 @@ public class CertificateDataConverter {
 		return false;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	private boolean hostCompare(final String hostAlias, final String subject) {
 		if (hostAlias.contains(subject) || subject.contains(hostAlias)) {
 			return true;
 		}
-		final String[] chopped = subject.split("CN=", 2);
-		if (chopped != null && chopped.length > 1) {
-			String chop = chopped[1];
-			chop = chop.replaceFirst("\\*\\.", ".");
-			chop = chop.split(",", 2)[0];
-			if (chop.length()>0 && (hostAlias.contains(chop) || chop.contains(hostAlias))) {
-				return true;
+
+		// Parse subjectName out of Common Name
+		// If no CN= present, then subjectName is a SAN and needs only wildcard removal
+		String subjectName = subject;
+		if (subjectName.contains("CN=")) {
+			final String[] chopped = subjectName.split("CN=", 2);
+			if (chopped != null && chopped.length > 1) {
+				final String chop = chopped[1];
+				subjectName = chop.split(",", 2)[0];
 			}
 		}
+
+		subjectName = subjectName.replaceFirst("\\*\\.", ".");
+		if (subjectName.length() > 0 && (hostAlias.contains(subjectName) || subjectName.contains(hostAlias))) {
+			return true;
+		}
+
 		return false;
 	}
 

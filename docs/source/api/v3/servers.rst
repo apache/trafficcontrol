@@ -31,39 +31,41 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| Name       | Required | Description                                                                                                       |
-	+============+==========+===================================================================================================================+
-	| cachegroup | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-id`                      |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| dsId       | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier.|
-	|            |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-servers` endpoint will return     |
-	|            |          | each server whose :term:`Cache Group` is associated with a :term:`Topology Node` of that Topology and has the     |
-	|            |          | :term:`Server Capabilities` that are                                                                              |
-	|            |          | :term:`required by the Delivery Service <Delivery Service required capabilities>`.                                |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| hostName   | no       | Return only those servers that have this (short) hostname                                                         |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| id         | no       | Return only the server with this integral, unique identifier                                                      |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| profileId  | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| status     | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| type       | no       | Return only servers of this :term:`Type`                                                                          |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| topology   | no       | Return only servers who belong to cachegroups assigned to the :term:`Topology` identified by this name            |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| limit      | no       | Choose the maximum number of results to return                                                                    |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit              |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and   |
-	|            |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
-	|            |          | make use of ``page``.                                                                                             |
-	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| Name           | Required | Description                                                                                                       |
+	+================+==========+===================================================================================================================+
+	| cachegroup     | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-id`                      |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| cachegroupName | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-name`                    |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| dsId           | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier.|
+	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-servers` endpoint will return     |
+	|                |          | each server whose :term:`Cache Group` is associated with a :term:`Topology Node` of that Topology and has the     |
+	|                |          | :term:`Server Capabilities` that are                                                                              |
+	|                |          | :term:`required by the Delivery Service <Delivery Service required capabilities>`.                                |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| hostName       | no       | Return only those servers that have this (short) hostname                                                         |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| id             | no       | Return only the server with this integral, unique identifier                                                      |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| profileId      | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| status         | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| type           | no       | Return only servers of this :term:`Type`                                                                          |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| topology       | no       | Return only servers who belong to cachegroups assigned to the :term:`Topology` identified by this name            |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| sortOrder      | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| limit          | no       | Choose the maximum number of results to return                                                                    |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| offset         | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit              |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| page           | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and   |
+	|                |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
+	|                |          | make use of ``page``.                                                                                             |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
