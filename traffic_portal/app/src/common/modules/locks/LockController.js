@@ -17,13 +17,35 @@
  * under the License.
  */
 
-var LockController = function($scope, cdnService) {
+var LockController = function($scope, $uibModal, cdnService) {
 
 	let getCDNs = function() {
 		cdnService.getCDNs()
 			.then(function(result) {
 				$scope.cdns = result;
 			});
+	};
+
+	$scope.confirmUnlockCDN = function(cdn) {
+		const params = {
+			title: 'Unlock ' + cdn.name,
+			message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			cdnService.unlockCDN(cdn);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	let init = function () {
@@ -33,5 +55,5 @@ var LockController = function($scope, cdnService) {
 
 };
 
-LockController.$inject = ['$scope', 'cdnService'];
+LockController.$inject = ['$scope', '$uibModal', 'cdnService'];
 module.exports = LockController;

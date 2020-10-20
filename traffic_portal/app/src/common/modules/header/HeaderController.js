@@ -71,6 +71,58 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
+    $scope.toggleCDNLock = function(cdn) {
+        if (cdn.lockedBy) {
+            confirmUnlockCDN(cdn);
+        } else {
+            confirmLockCDN(cdn);
+        }
+    };
+
+    let confirmLockCDN = function(cdn) {
+        const params = {
+            title: 'Lock ' + cdn.name,
+            message: 'What is your reason for locking the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(reason) {
+            cdnService.lockCDN(cdn, reason);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    let confirmUnlockCDN = function(cdn) {
+        const params = {
+            title: 'Unlock ' + cdn.name,
+            message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            cdnService.unlockCDN(cdn);
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.confirmQueueServerUpdates = function() {
         var params = {
             title: 'Queue Server Updates',

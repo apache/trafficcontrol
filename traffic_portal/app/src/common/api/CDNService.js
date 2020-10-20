@@ -91,6 +91,32 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    this.lockCDN = function(cdn, reason) {
+        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/lock', { reason: reason}).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: cdn.name + ' has been locked'}], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.unlockCDN = function(cdn) {
+        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/unlock').then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: cdn.name + ' has been unlocked'}], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
     this.queueServerUpdates = function(id) {
         return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "queue"}).then(
             function(result) {

@@ -160,3 +160,23 @@ type CDNQueueUpdateResponse struct {
 	Action string `json:"action"`
 	CDNID  int64  `json:"cdnId"`
 }
+
+// CDNLockRequest encodes the request data for the POST
+// cdns/{{ID}}/lock endpoint.
+type CDNLockRequest struct {
+	Reason string `json:"reason"`
+}
+
+// CDNLockResponse encodes the response data for the POST
+// cdns/{{ID}}/lock endpoint.
+type CDNLockResponse struct {
+	CDNID  int64  `json:"cdnId"`
+	Username string `json:"username"`
+	Reason string `json:"reason"`
+}
+
+// CDNUnlockResponse encodes the response data for the POST
+// cdns/{{ID}}/unlock endpoint.
+type CDNUnlockResponse struct {
+	CDNID  int64  `json:"cdnId"`
+}

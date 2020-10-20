@@ -19,6 +19,7 @@ under the License.
 
 <div id="lockContainer">
     <div ng-show="cdn.lockedBy" class="alert alert-danger" ng-repeat="cdn in cdns">
-        <div>{{ cdn.name + ' is locked by ' + cdn.lockedBy + ' (' + cdn.lockedReason + ')' | uppercase }}</div>
+        <button type="button" class="close" ng-click="confirmUnlockCDN(cdn)"><i class="fa fa-lock"></i></button>
+        <div ng-bind-html="cdn.name + ' is locked by ' + cdn.lockedBy + ' (' + cdn.lockedReason + ')' | linky:'_blank'"></div>
     </div>
 </div>

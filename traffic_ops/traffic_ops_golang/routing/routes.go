@@ -748,6 +748,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 21605052893},
 		{api.Version{3, 0}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 2276946573},
 
+		// cdn locking
+		{api.Version{3, 0}, http.MethodPost, `cdns/{id}/lock$`, cdn.Lock, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `cdns/{id}/unlock$`, cdn.Unlock, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
+
 		//Delivery service requests
 		{api.Version{3, 0}, http.MethodGet, `deliveryservice_requests/?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 26811639353},
 		{api.Version{3, 0}, http.MethodPut, `deliveryservice_requests/?$`, api.UpdateHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelPortal, Authenticated, nil, 22499079183},
