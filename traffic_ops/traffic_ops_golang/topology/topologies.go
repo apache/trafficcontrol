@@ -20,8 +20,13 @@ package topology
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -29,13 +34,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // TOTopology is a type alias on which we can define functions.
@@ -139,6 +143,7 @@ func (topology *TOTopology) Validate() error {
 		cacheGroupIds[index] = *cacheGroup.ID
 	}
 	rules["empty cachegroups"] = CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, false, nil)
+	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
 
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
@@ -301,6 +306,125 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 	}
 
 	return nodes, topologiesByCacheGroup, nil
+}
+
+func (topology TOTopology) validateDSRequiredCapabilities() error {
+	baseError := errors.New("unable to verify that delivery service required capabilities are satisfied")
+	tx := topology.APIInfo().Tx.Tx
+	dsRequiredCapabilities, dsCDNs, err := getDSRequiredCapabilitiesByTopology(topology.Name, tx)
+	if err != nil {
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		return baseError
+	}
+	if len(dsRequiredCapabilities) == 0 {
+		return nil
+	}
+	cachegroups := topology.getCachegroupNames()
+	cdnMap := make(map[int]struct{})
+	for _, cdn := range dsCDNs {
+		cdnMap[cdn] = struct{}{}
+	}
+	CDNs := []int{}
+	for cdn := range cdnMap {
+		CDNs = append(CDNs, cdn)
+	}
+	// language=sql
+	q := `
+SELECT
+  s.id,
+  s.cdn_id,
+  c.name,
+  ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
+FROM server s
+LEFT JOIN server_server_capability ssc ON ssc.server = s.id
+JOIN cachegroup c ON c.id = s.cachegroup
+WHERE
+  c.name = ANY($1)
+  AND s.cdn_id = ANY($2)
+GROUP BY s.id, s.cdn_id, c.name
+`
+	rows, err := tx.Query(q, pq.Array(cachegroups), pq.Array(CDNs))
+	if err != nil {
+		log.Errorf("querying server capabilities in topology.validateDSRequiredCapabilities: %v", err)
+		return baseError
+	}
+	cachegroupServers, serverCapabilities, serverCDNs, err := dbhelpers.ScanCachegroupsServerCapabilities(rows)
+	if err != nil {
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		return baseError
+	}
+
+	cdnCachegroupServers := make(map[int]map[string][]int)
+	for _, cdn := range dsCDNs {
+		if _, ok := cdnCachegroupServers[cdn]; !ok {
+			cdnCachegroupServers[cdn] = make(map[string][]int)
+		}
+	}
+	for cg, servers := range cachegroupServers {
+		for _, s := range servers {
+			cdnCachegroupServers[serverCDNs[s]][cg] = append(cdnCachegroupServers[serverCDNs[s]][cg], s)
+		}
+	}
+
+	invalidDSes := []string{}
+	for ds, dsReqCaps := range dsRequiredCapabilities {
+		invalidCachegroups := deliveryservice.GetInvalidCachegroupsForRequiredCapabilities(cdnCachegroupServers[dsCDNs[ds]], serverCapabilities, dsReqCaps)
+		if len(invalidCachegroups) > 0 {
+			invalidDSes = append(invalidDSes, fmt.Sprintf("%s: cachegroups [%s] do not meet required capabilities", ds, strings.Join(invalidCachegroups, ", ")))
+		}
+	}
+	if len(invalidDSes) > 0 {
+		return errors.New("cannot update topology. The following delivery services would not be satisfied: " + strings.Join(invalidDSes, "; "))
+	}
+
+	return nil
+}
+
+// getDSRequiredCapabilitiesByTopology returns a map of DS xml_id to required capabilities,
+// a map of xml_id to cdn_id, and an error (if one occurs).
+func getDSRequiredCapabilitiesByTopology(name string, tx *sql.Tx) (map[string][]string, map[string]int, error) {
+	q := `
+SELECT
+  d.xml_id,
+  d.cdn_id,
+  ARRAY_AGG(drc.required_capability) AS required_capabilities
+FROM deliveryservice d
+JOIN deliveryservices_required_capability drc ON d.id = drc.deliveryservice_id
+WHERE
+  d.topology = $1
+GROUP BY d.xml_id, d.cdn_id
+`
+	rows, err := tx.Query(q, name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying delivery service required capabilities by topology: %v", err)
+	}
+	defer log.Close(rows, "closing rows in getDSRequiredCapabilitiesByTopology")
+
+	requiredCapabilities := make(map[string][]string)
+	dsCdnIDs := make(map[string]int)
+	for rows.Next() {
+		xmlID := ""
+		cdnID := 0
+		reqCaps := []string{}
+		if err := rows.Scan(&xmlID, &cdnID, pq.Array(&reqCaps)); err != nil {
+			return nil, nil, fmt.Errorf("scanning delivery service required capabilities by topology: %v", err)
+		}
+		requiredCapabilities[xmlID] = reqCaps
+		dsCdnIDs[xmlID] = cdnID
+	}
+	return requiredCapabilities, dsCdnIDs, nil
+}
+
+func (topology TOTopology) getCachegroupNames() []string {
+	cgSet := make(map[string]struct{})
+	for _, n := range topology.Nodes {
+		cgSet[n.Cachegroup] = struct{}{}
+	}
+	cachegroups := make([]string, 0, len(cgSet))
+	for c := range cgSet {
+		cachegroups = append(cachegroups, c)
+	}
+	return cachegroups
 }
 
 // Implementation of the Identifier, Validator interface functions
@@ -566,11 +690,6 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	topology.Topology = topologies[0].(tc.Topology)
-
-	var cachegroups []string
-	for _, node := range topology.Nodes {
-		cachegroups = append(cachegroups, node.Cachegroup)
-	}
 	return api.GenericOptionsDelete(topology)
 }
 
