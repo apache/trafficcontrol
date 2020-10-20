@@ -236,9 +236,9 @@
 							<pretransScriptlet>
 								 <scriptFile>../core/src/main/scripts/pretrans.sh</scriptFile>
 							</pretransScriptlet>
-							<preScriptlet>
+							<preinstallScriptlet>
 								 <scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>
-							</preScriptlet>
+							</preinstallScriptlet>
 							<postinstallScriptlet>
 								<scriptFile>../core/src/main/scripts/postinstall.sh</scriptFile>
 							</postinstallScriptlet>

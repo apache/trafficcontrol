@@ -21,10 +21,11 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type topologyTestCase struct {
@@ -33,7 +34,7 @@ type topologyTestCase struct {
 }
 
 func TestTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, Topologies}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
@@ -126,10 +127,15 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "has-edge-parent1", Parents: []int{}},
 		}}},
 		{testCaseDescription: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
-			{Cachegroup: "legitcachegroup", Parents: []int{0}},
+			{Cachegroup: "legitcachegroup", Parents: []int{}},
 		}}},
 		{testCaseDescription: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains an out-of-bounds parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{7}},
+		}}},
+		{testCaseDescription: "a cachegroup containing no servers", Topology: tc.Topology{Name: "empty-cg", Description: `Invalid because it contains a cachegroup, fallback3, that contains no servers`, Nodes: []tc.TopologyNode{
+			{Cachegroup: "parentCachegroup", Parents: []int{}},
+			{Cachegroup: "parentCachegroup2", Parents: []int{}},
+			{Cachegroup: "fallback3", Parents: []int{0, 1}},
 		}}},
 	}
 	var statusCode int
@@ -158,11 +164,10 @@ func updateSingleTopology(topology tc.Topology) error {
 }
 
 func UpdateTestTopologies(t *testing.T) {
-	topologiesCount := len(testData.Topologies)
-	for index := range testData.Topologies {
-		topology := testData.Topologies[(index+1)%topologiesCount]
-		topology.Name = testData.Topologies[index].Name // We cannot update a topology's name
-		if err := updateSingleTopology(topology); err != nil {
+	firstTopName := testData.Topologies[0].Name
+	for _, top := range testData.Topologies {
+		top.Name = firstTopName
+		if err := updateSingleTopology(top); err != nil {
 			t.Fatalf(err.Error())
 		}
 	}
@@ -171,6 +176,17 @@ func UpdateTestTopologies(t *testing.T) {
 		if err := updateSingleTopology(topology); err != nil {
 			t.Fatalf(err.Error())
 		}
+	}
+
+	// attempt to add cachegroup that doesn't meet DS required capabilities
+	top, _, err := TOSession.GetTopologyWithHdr("top-for-ds-req", nil)
+	if err != nil {
+		t.Fatalf("cannot GET topology: %v", err)
+	}
+	top.Nodes = append(top.Nodes, tc.TopologyNode{Cachegroup: "cachegroup1", Parents: []int{0}})
+	_, _, err = TOSession.UpdateTopology(top.Name, *top)
+	if err == nil {
+		t.Errorf("making invalid update to topology - expected: error, actual: nil")
 	}
 }
 

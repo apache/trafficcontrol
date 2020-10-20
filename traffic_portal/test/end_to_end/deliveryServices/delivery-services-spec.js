@@ -220,6 +220,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
 		pageData.moreBtn.click();
+		expect(pageData.selectServersMenuItem.isEnabled()).toBe(true);
+		expect(pageData.selectServersMenuItem.getText() === 'Assign Servers');
 		pageData.selectServersMenuItem.click();
 		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
 		pageData.selectAllCB.click();
@@ -363,8 +365,9 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.moreBtn.click();
 		pageData.manageServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
-		console.log('The ability to assign servers is disabled for ' + mockVals.httpXmlId);
-		expect(pageData.selectServersMenuItem.isEnabled()).toBe(false);
+		console.log('The ability to assign ORG servers is enabled for ' + mockVals.httpXmlId);
+		expect(pageData.selectServersMenuItem.isEnabled()).toBe(true);
+		expect(pageData.selectServersMenuItem.getText() === 'Assign ORG Servers');
 	});
 
 	// Steering delivery service

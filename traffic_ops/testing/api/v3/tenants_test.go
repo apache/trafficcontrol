@@ -36,7 +36,7 @@ func TestTenants(t *testing.T) {
 }
 
 func TestTenantsActive(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, CacheGroups, Topologies, DeliveryServices, Users}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, CacheGroups, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, Users}, func() {
 		UpdateTestTenantsActive(t)
 	})
 }

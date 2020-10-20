@@ -396,30 +396,19 @@ func BuildEdgeRemapLine(
 // MakeDSTopologyHeaderRewriteTxt returns the appropriate header rewrite remap line text for the given DS on the given server.
 // May be empty, if the DS has no header rewrite for the server's position in the topology.
 func MakeDSTopologyHeaderRewriteTxt(ds tc.DeliveryServiceNullableV30, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) string {
-	placement := getTopologyPlacement(cg, topology, cacheGroups)
-	log.Errorf("DEBUG topo MakeDSTopologyHeaderRewriteTxt calling getTopologyPlacement cg '"+string(cg)+"' placement %+v\n", placement)
+	placement := getTopologyPlacement(cg, topology, cacheGroups, &ds)
+	txt := ""
 	const pluginTxt = ` @plugin=header_rewrite.so @pparam=`
-	switch placement.CacheTier {
-	case TopologyCacheTierFirst:
-		if *ds.FirstHeaderRewrite == "" {
-			return ""
-		}
-		log.Errorf("DEBUG topo MakeDSTopologyHeaderRewriteTxt first returning '" + pluginTxt + FirstHeaderRewriteConfigFileName(*ds.XMLID) + "'")
-		return pluginTxt + FirstHeaderRewriteConfigFileName(*ds.XMLID)
-	case TopologyCacheTierInner:
-		if *ds.InnerHeaderRewrite == "" {
-			return ""
-		}
-		return pluginTxt + InnerHeaderRewriteConfigFileName(*ds.XMLID)
-	case TopologyCacheTierLast:
-		if *ds.LastHeaderRewrite == "" {
-			return ""
-		}
-		return pluginTxt + LastHeaderRewriteConfigFileName(*ds.XMLID)
-	default:
-		log.Errorln("Making topology header rewrite text: got unknown cache tier '" + placement.CacheTier + "' - not setting!")
-		return ""
+	if placement.IsFirstCacheTier && ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" {
+		txt += pluginTxt + FirstHeaderRewriteConfigFileName(*ds.XMLID) + ` `
 	}
+	if placement.IsInnerCacheTier && ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" {
+		txt += pluginTxt + InnerHeaderRewriteConfigFileName(*ds.XMLID) + ` `
+	}
+	if placement.IsLastCacheTier && ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" {
+		txt += pluginTxt + LastHeaderRewriteConfigFileName(*ds.XMLID) + ` `
+	}
+	return txt
 }
 
 type RemapLine struct {

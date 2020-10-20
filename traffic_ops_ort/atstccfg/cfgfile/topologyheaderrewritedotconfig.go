@@ -35,6 +35,18 @@ func GetConfigFileServerTopologyHeaderRewrite(toData *config.TOData, fileName st
 	dsName = strings.TrimPrefix(dsName, atscfg.HeaderRewriteInnerPrefix)
 	dsName = strings.TrimPrefix(dsName, atscfg.HeaderRewriteLastPrefix)
 
+	tier := atscfg.TopologyCacheTierInvalid
+	switch {
+	case strings.HasPrefix(fileName, atscfg.HeaderRewriteFirstPrefix):
+		tier = atscfg.TopologyCacheTierFirst
+	case strings.HasPrefix(fileName, atscfg.HeaderRewriteInnerPrefix):
+		tier = atscfg.TopologyCacheTierInner
+	case strings.HasPrefix(fileName, atscfg.HeaderRewriteLastPrefix):
+		tier = atscfg.TopologyCacheTierLast
+	default:
+		return "", "", "", errors.New("topology header rewrite called for unknown tier: '" + fileName + "'")
+	}
+
 	tcDS := tc.DeliveryServiceNullableV30{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
@@ -53,9 +65,9 @@ func GetConfigFileServerTopologyHeaderRewrite(toData *config.TOData, fileName st
 		toData.TOURL,
 		tcDS,
 		toData.Topologies,
-		toData.CacheGroups,
 		toData.Servers,
 		toData.ServerCapabilities,
 		toData.DSRequiredCapabilities[*tcDS.ID],
+		tier,
 	), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }
