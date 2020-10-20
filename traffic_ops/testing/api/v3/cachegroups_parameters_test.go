@@ -27,7 +27,6 @@ import (
 
 func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
-		t.Fatal("We do not want failing TestCacheGroupParameters to cause a timeout")
 		GetTestCacheGroupParameters(t)
 		GetTestCacheGroupParametersIMS(t)
 	})
