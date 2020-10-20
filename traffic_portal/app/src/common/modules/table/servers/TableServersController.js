@@ -325,7 +325,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		preventDefaultOnContextMenu: true,
 		colResizeDefault: "shift",
 		onColumnVisible: function(params) {
-			if (params.visisble){
+			if (params.visible){
 				return;
 			}
 		    for (let column of params.columns) {

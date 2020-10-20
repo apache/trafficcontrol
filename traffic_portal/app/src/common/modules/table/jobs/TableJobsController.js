@@ -125,7 +125,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			$scope.$apply();
 		},
 		onColumnVisible: function(params) {
-			if (params.visisble){
+			if (params.visible){
 				return;
 			}
 			for (let column of params.columns) {
