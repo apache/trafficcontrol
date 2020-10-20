@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var LockController = function($scope, $uibModal, cdnService) {
+var LockController = function($scope, $state, $uibModal, cdnService) {
 
 	let getCDNs = function() {
 		cdnService.getCDNs()
@@ -42,7 +42,12 @@ var LockController = function($scope, $uibModal, cdnService) {
 			}
 		});
 		modalInstance.result.then(function() {
-			cdnService.unlockCDN(cdn);
+			cdnService.unlockCDN(cdn).
+				then(
+					function() {
+						$state.reload(); // reloads all the resolves for the view
+					}
+				);
 		}, function () {
 			// do nothing
 		});
@@ -55,5 +60,5 @@ var LockController = function($scope, $uibModal, cdnService) {
 
 };
 
-LockController.$inject = ['$scope', '$uibModal', 'cdnService'];
+LockController.$inject = ['$scope', '$state', '$uibModal', 'cdnService'];
 module.exports = LockController;

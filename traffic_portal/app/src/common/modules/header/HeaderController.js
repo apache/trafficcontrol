@@ -95,7 +95,12 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function(reason) {
-            cdnService.lockCDN(cdn, reason);
+            cdnService.lockCDN(cdn, reason).
+                then(
+                    function() {
+                        $state.reload(); // reloads all the resolves for the view
+                    }
+                );
         }, function () {
             // do nothing
         });
@@ -117,7 +122,12 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function() {
-            cdnService.unlockCDN(cdn);
+            cdnService.unlockCDN(cdn).
+                then(
+                    function() {
+                        $state.reload(); // reloads all the resolves for the view
+                    }
+                );
         }, function () {
             // do nothing
         });
