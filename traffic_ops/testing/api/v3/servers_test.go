@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -412,7 +413,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
 	if len(servers.Response) != 2 {
-		t.Fatalf("expected to get 2 server for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
@@ -433,7 +434,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	foundTopDs := false
 	const (
 		topDsXmlId = "ds-top"
-		topology   = "my-topology"
+		topology   = "mso-topology"
 	)
 	for _, ds = range dses {
 		if ds.XMLID == nil || *ds.XMLID != topDsXmlId {
@@ -477,12 +478,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
-		"edge1-cdn1-cg3":           true,
-		"edge2-cdn1-cg3":           true,
-		"atlanta-mid-16":           true,
-		"edgeInCachegroup3":        true,
-		"midInParentCachegroup":    true,
-		"midInSecondaryCachegroup": true,
+		"edge1-cdn1-cg3":    false,
+		"edge2-cdn1-cg3":    false,
+		"atlanta-mid-16":    false,
+		"edgeInCachegroup3": false,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
@@ -495,17 +494,50 @@ func GetTestServersQueryParameters(t *testing.T) {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
 		}
+		expectedHostnames[*server.HostName] = true
+	}
+	var notInResponse []string
+	for hostName, inResponse := range expectedHostnames {
+		if !inResponse {
+			notInResponse = append(notInResponse, hostName)
+		}
+	}
+	if len(notInResponse) != 0 {
+		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
+	}
+	const originHostname = "denver-mso-org-01"
+	if _, _, err = TOSession.AssignServersToDeliveryService([]string{originHostname}, topDsXmlId); err != nil {
+		t.Fatalf("assigning origin server %s to delivery service %s: %s", originHostname, topDsXmlId, err.Error())
+	}
+	response, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsXmlId, err)
+	}
+	if len(response.Response) == 0 {
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsXmlId, err)
+	}
+	containsOrigin := false
+	for _, server := range response.Response {
+		if *server.HostName != originHostname {
+			continue
+		}
+		containsOrigin = true
+		break
+	}
+	if !containsOrigin {
+		t.Fatalf("did not find origin server %s when querying servers by dsId after assigning %s to delivery service %s", originHostname, originHostname, topDsXmlId)
 	}
 	params.Del("dsId")
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
-		"edge1-cdn1-cg3":           true,
-		"edge2-cdn1-cg3":           true,
-		"atlanta-mid-16":           true,
-		"atlanta-mid-17":           true,
-		"edgeInCachegroup3":        true,
-		"midInParentCachegroup":    true,
-		"midInSecondaryCachegroup": true,
+		originHostname:             false,
+		"edge1-cdn1-cg3":           false,
+		"edge2-cdn1-cg3":           false,
+		"atlanta-mid-16":           false,
+		"atlanta-mid-17":           false,
+		"edgeInCachegroup3":        false,
+		"midInParentCachegroup":    false,
+		"midInSecondaryCachegroup": false,
 	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
@@ -518,6 +550,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
 		}
+		expectedHostnames[*server.HostName] = true
+	}
+	notInResponse = []string{}
+	for hostName, inResponse := range expectedHostnames {
+		if !inResponse {
+			notInResponse = append(notInResponse, hostName)
+		}
+	}
+	if len(notInResponse) != 0 {
+		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
 	}
 	params.Del("topology")
 

@@ -47,7 +47,6 @@ RUN go_version=$(cat /GO_VERSION) && \
 
 ###
 
-ADD build/clean_build.sh /
-CMD /clean_build.sh traffic_monitor
+CMD /trafficcontrol/build/clean_build.sh traffic_monitor
 
 # vi:syntax=Dockerfile

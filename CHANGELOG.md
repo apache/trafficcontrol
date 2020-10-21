@@ -3,24 +3,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
+## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Traffic Ops Ort: Adds a transliteration of the traffic_ops_ort.pl perl script to the go language. See traffic_ops_ort/t3c/README.md.
 - Traffic Ops API v3
 - Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
 - Added health checks to Traffic Ops and Traffic Monitor in cdn-in-a-box
-- [Flexible Topologies (in progress)](https://github.com/apache/trafficcontrol/blob/master/blueprints/flexible-topologies.md)
+- [Flexible Topologies](https://github.com/apache/trafficcontrol/blob/master/blueprints/flexible-topologies.md)
     - Traffic Ops: Added an API 3.0 endpoint, `GET /api/3.0/topologies`, to create, read, update and delete flexible topologies.
     - Traffic Ops: Added an API 3.0 endpoint, `POST /api/3.0/topologies/{name}/queue_update`, to queue or dequeue updates for all servers assigned to the Cachegroups in a given Topology.
     - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/deliveryservices` to return all delivery services that employ a given topology.
     - Traffic Ops: Added support for `dsId` query parameter for `GET /api/3.0/servers` for topology-based delivery services.
+    - Traffic Ops: Excluded ORG-type servers from `GET /api/3.0/servers?dsId=#` for Topology-based Delivery Services unless the ORG server is assigned to that Delivery Service.
     - Traffic Ops: Added support for `topology` query parameter for `GET /api/3.0/servers` to return all servers whose cachegroups are in a given topology.
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Added validation to prohibit removing a capability from a server if no other server in the same cachegroup can satisfy the required capabilities of the delivery services assigned to it via topologies.
+    - Traffic Ops: Added validation to ensure that updated topologies are still valid with respect to the required capabilities of their assigned delivery services.
     - Traffic Ops: Added validation to ensure that at least one server per cachegroup in a delivery service's topology has the delivery service's required capabilities.
     - Traffic Ops: Added validation to ensure that at least one server exists in each cachegroup that is used in a Topology on the `/api/3.0/topologies` endpoint and the `/api/3.0/servers/{{ID}}` endpoint.
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
@@ -31,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
     - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.
+    - Added to TP the ability to assign ORG servers to topology-based delivery services
     - Traffic Router: Added support for topology-based delivery services
     - Traffic Monitor: Added the ability to mark topology-based delivery services as available
     - CDN-in-a-Box: Add a second mid to CDN-in-a-Box, add topology `demo1-top`, and make the `demo1` delivery service topology-based
@@ -78,6 +81,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5038 - Adds UI warning when server interface IP CIDR is too large [Related github issue](https://github.com/apache/trafficcontrol/issues/5038)
 - Fixed #3661 - Anonymous Proxy ipv4 whitelist does not work
 - Fixed #1847 - Delivery Service with SSL keys are no longer allowed to be updated when the fields changed are relevant to the SSL Keys validity.
+- Fixed #5153 - Right click context menu on new ag-grid tables appearing at the wrong place after scrolling. [Related github issue](https://github.com/apache/trafficcontrol/issues/5153)
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 - Fixed POST deliveryservices/request (designed to simple send an email) regression which erroneously required deep caching type and routing name. [Related github issue](https://github.com/apache/trafficcontrol/issues/4735)
@@ -463,7 +467,7 @@ will be returned indicating that overlap exists.
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...HEAD
+[5.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-5.0.0
 [4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0

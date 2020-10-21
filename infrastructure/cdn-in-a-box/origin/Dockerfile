@@ -23,7 +23,14 @@
 
 FROM alpine:latest
 
-RUN apk add --no-cache lighttpd bash curl bind-tools
+RUN apk add --no-cache \
+    lighttpd \
+    bash \
+    curl \
+    bind-tools \
+    # contains envsubst for to-enroll
+    gettext \
+    jq
 
 RUN rm /etc/lighttpd/lighttpd.conf
 RUN rm -rf /var/www/localhost/
@@ -31,7 +38,10 @@ RUN rm -rf /var/www/localhost/
 ADD origin/content /var/www/html/
 
 ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD origin/run.sh traffic_ops/to-access.sh /
+ADD origin/run.sh \
+    traffic_ops/to-access.sh \
+    enroller/server_template.json \
+    /
 
 COPY dns/set-dns.sh \
      dns/insert-self-into-dns.sh \

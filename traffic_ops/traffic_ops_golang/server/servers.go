@@ -71,8 +71,15 @@ FROM "server" s
 JOIN cachegroup c on s.cachegroup = c.id
 JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 JOIN deliveryservice td ON td.topology = tc.topology
+JOIN type t ON s.type = t.id
+LEFT JOIN deliveryservice_server dss
+	ON s.id = dss."server"
+	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
-),
+AND (
+	t.name != '` + tc.OriginTypeName + `'
+	OR dss.deliveryservice IS NOT NULL
+)),
 `
 
 /* language=SQL */
@@ -767,17 +774,17 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup":       dbhelpers.WhereColumnInfo{"s.cachegroup", api.IsInt},
-		"parentCachegroup": dbhelpers.WhereColumnInfo{"cg.parent_cachegroup_id", api.IsInt},
-		"cdn":              dbhelpers.WhereColumnInfo{"s.cdn_id", api.IsInt},
-		"id":               dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
-		"hostName":         dbhelpers.WhereColumnInfo{"s.host_name", nil},
-		"physLocation":     dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
-		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
-		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
-		"topology":         dbhelpers.WhereColumnInfo{"tc.topology", nil},
-		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
-		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
+		"cachegroup":       {"s.cachegroup", api.IsInt},
+		"parentCachegroup": {"cg.parent_cachegroup_id", api.IsInt},
+		"cdn":              {"s.cdn_id", api.IsInt},
+		"id":               {"s.id", api.IsInt},
+		"hostName":         {"s.host_name", nil},
+		"physLocation":     {"s.phys_location", api.IsInt},
+		"profileId":        {"s.profile", api.IsInt},
+		"status":           {"st.name", nil},
+		"topology":         {"tc.topology", nil},
+		"type":             {"t.name", nil},
+		"dsId":             {"dss.deliveryservice", nil},
 	}
 
 	if version.Major >= 3 {
