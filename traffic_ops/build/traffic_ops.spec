@@ -62,9 +62,6 @@ Built: %(date) by %{getenv: USER}
 		# avoid detecting LICENSE as an unpackaged RPM file
 		rm LICENSE
 
-		# update version referenced in the source
-		sed -i.bak 's/__VERSION__/%{version}-%{release}/g' app/lib/UI/Utils.pm
-
 		# update the go version referenced in install_go.sh
 		sed -i.bak 's/__GO_VERSION__/%{go_version}/g' install/bin/install_go.sh
 
@@ -213,16 +210,9 @@ fi
 %files
 %license ../LICENSE
 %defattr(644,root,root,755)
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/config2json
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/extensions
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/osversions-convert.pl
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/routes.pl
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/start.pl
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/traffic_ops_golang
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/script/cdn
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/script/detect10ginterfaces.pl
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/script/generate_raid0_files.pl
-%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/reverse_schema.pl
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/conf
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
 %config(noreplace)/var/www/files/osversions.cfg
@@ -231,11 +221,7 @@ fi
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
 %{PACKAGEDIR}/etc
 %{PACKAGEDIR}/app/bin/checks
-%{PACKAGEDIR}/app/bin/db
-%{PACKAGEDIR}/app/bin/tests
-%{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
-%{PACKAGEDIR}/app/lib
 %{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
