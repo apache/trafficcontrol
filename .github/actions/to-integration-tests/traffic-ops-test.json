@@ -13,7 +13,7 @@
 		"includeSystemTests": true
 	},
 	"trafficOps": {
-		"URL": "https://localhost:6443",
+		"URL": "https://127.0.0.1:6443",
 		"password": "twelve",
 		"users": {
 			"disallowed": "disallowed",
@@ -28,7 +28,7 @@
 	"trafficOpsDB": {
 		"dbname": "traffic_ops",
 		"description": "Test database to_test",
-		"hostname": "postgres",
+		"hostname": "172.17.0.1",
 		"password": "twelve",
 		"port": "5432",
 		"type": "Pg",

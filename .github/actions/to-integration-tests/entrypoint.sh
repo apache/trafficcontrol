@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -17,14 +17,27 @@
 # under the License.
 
 download_go() {
+	. build/functions.sh
+	if verify_and_set_go_version; then
+		return
+	fi
 	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
-	tar -C /usr/local -xzf go.tar.gz
+	echo "Extracting Go ${go_version}..."
+	<<-'SUDO_COMMANDS' sudo sh
+		set -o errexit
+		go_dir="$(
+			dirname "$(
+				dirname "$(
+					realpath "$(
+						which go
+						)")")")"
+		mv "$go_dir" "${go_dir}.unused"
+		tar -C /usr/local -xzf go.tar.gz
+	SUDO_COMMANDS
 	rm go.tar.gz
-	export PATH="${PATH}:${GOROOT}/bin"
 	go version
 }
-download_go
 
 red_bg="$(printf '%s%s' $'\x1B' '[41m')";
 gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
@@ -41,7 +54,11 @@ color_and_prefix() {
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
 start_traffic_vault() {
-<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
+	<<-'ETC/HOSTS' cat | sudo tee --append /etc/hosts
+		172.17.0.1    trafficvault.infra.ciab.test
+	ETC/HOSTS
+
+	<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
 		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
 		certs_dir=/etc/ssl/certs;
 		X509_INFRA_CERT_FILE="${certs_dir}/trafficvault.crt";
@@ -59,20 +76,18 @@ start_traffic_vault() {
 
 	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" "building Traffic Vault";
-	network="$(docker network ls --quiet --filter name=github_network)";
 	if [[ "$INPUT_VERSION" -lt 3 ]]; then
 		echo 'Not starting Traffic Vault for API versions less than 3'
 		return;
 	fi;
 	echo 'Starting Traffic Vault...';
 	docker run \
-		--rm \
 		--detach \
-		--name="$trafficvault" \
-		--network="$network" \
-		--hostname="${trafficvault}.infra.ciab.test" \
-		--network-alias="${trafficvault}.infra.ciab.test" \
 		--env-file="${ciab_dir}/variables.env" \
+		--hostname="${trafficvault}.infra.ciab.test" \
+		--name="$trafficvault" \
+		--publish=8087:8087 \
+		--rm \
 		"$trafficvault" \
 		/usr/lib/riak/riak-cluster.sh;
 	docker logs -f "$trafficvault" 2>&1 |
@@ -80,6 +95,11 @@ start_traffic_vault() {
 }
 start_traffic_vault &
 
+sudo apt-get install -y --no-install-recommends gettext
+
+GOROOT=/usr/local/go
+export GOROOT PATH="${PATH}:${GOROOT}/bin"
+download_go
 export GOPATH="$(mktemp -d)"
 srcdir="$GOPATH/src/github.com/apache"
 mkdir -p "$srcdir"
@@ -88,8 +108,8 @@ ln -s "$PWD" "$srcdir/trafficcontrol"
 cd "$srcdir/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 
-/usr/local/go/bin/go get ./...
-/usr/local/go/bin/go build .
+go get ./...
+go build .
 
 echo "
 -----BEGIN CERTIFICATE-----
@@ -145,13 +165,14 @@ A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
 -----END RSA PRIVATE KEY-----
 " > localhost.key
 
-envsubst </cdn.json >cdn.conf
+resources="$(dirname "$0")"
+envsubst <"${resources}/cdn.json" >cdn.conf
+cp "${resources}/database.json" database.conf
 
 export $(cat "${ciab_dir}/variables.env" | sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
-envsubst </riak.json >riak.conf
-mv /database.json ./database.conf
+envsubst <"${resources}/riak.json" >riak.conf
 
-truncate -s 0 warning.log error.log # Removes output from previous API versions and makes sure files exist
+truncate --size=0 warning.log error.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
 
 # TODO - Make these logs build artifacts
@@ -162,14 +183,16 @@ tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
 
 cd "../testing/api/v$INPUT_VERSION"
 
-cp /traffic-ops-test.json ./traffic-ops-test.conf
-/usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
-CODE="$?"
+cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
+go test -test.v --cfg traffic-ops-test.conf
+CODE=$?
 rm traffic-ops-test.conf
 if [[ "$INPUT_VERSION" -ge 3 ]]; then
 	echo 'Stopping Traffic Vault...'
 	docker kill "$trafficvault";
 	docker rm -f "$trafficvault";
 fi;
+echo 'Killing background jobs...';
+kill -9 $(jobs -p);
 
 exit "$CODE"

@@ -49,6 +49,8 @@ jobs:
 
       smtp:
         image: maildev/maildev:2.0.0-beta3
+        ports:
+          - 25:25
         options: >-
           --entrypoint=bin/maildev
           --user=root
@@ -74,10 +76,10 @@ jobs:
       uses: ./.github/actions/to-integration-tests
       with:
         version: 2
-        smtp_address: smtp
+        smtp_address: 172.17.0.1
     - name: Run API v3 tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 3
-        smtp_address: smtp
+        smtp_address: 172.17.0.1

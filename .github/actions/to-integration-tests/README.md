@@ -17,7 +17,7 @@
   under the License.
 -->
 
-# to-integration-tests Docker action
+# to-integration-tests JavaScript action
 This action runs the Traffic Ops Go client integration tests with the Traffic Ops API.
 - Requires an SMTP service (see `smtp_address` input)
 - Provides a Riak server at address `trafficvault.infra.ciab.test`
@@ -61,6 +61,20 @@ jobs:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
+      smtp:
+        image: maildev/maildev:2.0.0-beta3
+        ports:
+          - 25:25
+        options: >-
+          --entrypoint=bin/maildev
+          --user=root
+          --health-cmd="sh -c \"[[ \$(wget -qO- http://smtp/healthz) == true ]]\""
+          --
+          maildev/maildev:2.0.0-beta3
+          --smtp=25
+          --hide-extensions=STARTTLS
+          --web=80
+
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -70,4 +84,5 @@ jobs:
         uses: ./.github/actions/to-integration-tests
         with:
           version: 5
+          smtp_address: localhost
 ```
