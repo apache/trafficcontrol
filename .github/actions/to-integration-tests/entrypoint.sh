@@ -54,9 +54,9 @@ color_and_prefix() {
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
 start_traffic_vault() {
-	<<-'ETC/HOSTS' cat | sudo tee --append /etc/hosts
+	<<-'/ETC/HOSTS' sudo tee --append /etc/hosts
 		172.17.0.1    trafficvault.infra.ciab.test
-	ETC/HOSTS
+	/ETC/HOSTS
 
 	<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
 		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
@@ -169,7 +169,7 @@ resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
 cp "${resources}/database.json" database.conf
 
-export $(cat "${ciab_dir}/variables.env" | sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
+export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
 envsubst <"${resources}/riak.json" >riak.conf
 
 truncate --size=0 warning.log error.log # Removes output from previous API versions and makes sure files exist
