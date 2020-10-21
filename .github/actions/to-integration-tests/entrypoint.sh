@@ -26,6 +26,18 @@ download_go() {
 }
 download_go
 
+red_bg="$(printf '%s%s' $'\x1B' '[41m')";
+gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
+black_fg="$(printf '%s%s' $'\x1B' '[30m')";
+color_and_prefix() {
+	color="$1";
+	shift;
+	prefix="$1";
+	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
+	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
+	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
+}
+
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
 start_traffic_vault() {
@@ -45,7 +57,8 @@ start_traffic_vault() {
 		sed -i '/to-access\.sh/d' /etc/riak/{prestart.d,poststart.d}/*
 	BASH_LINES
 
-	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault";
+	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
+		color_and_prefix "$gray_bg" "building Traffic Vault";
 	network="$(docker network ls --quiet --filter name=github_network)";
 	if [[ "$INPUT_VERSION" -lt 3 ]]; then
 		echo 'Not starting Traffic Vault for API versions less than 3'
@@ -62,7 +75,8 @@ start_traffic_vault() {
 		--env-file="${ciab_dir}/variables.env" \
 		"$trafficvault" \
 		/usr/lib/riak/riak-cluster.sh;
-	docker logs -f "$trafficvault" | sed "s/^/${trafficvault}: /g";
+	docker logs -f "$trafficvault" 2>&1 |
+		color_and_prefix "$gray_bg" 'Traffic Vault';
 }
 start_traffic_vault &
 
@@ -137,7 +151,14 @@ export $(cat "${ciab_dir}/variables.env" | sed '/^#/d') # defines TV_ADMIN_USER/
 envsubst </riak.json >riak.conf
 mv /database.json ./database.conf
 
-./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>err.log &
+truncate -s 0 warning.log error.log # Removes output from previous API versions and makes sure files exist
+./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
+
+# TODO - Make these logs build artifacts
+# 2>&1 makes terminal output go faster, even though stderr will not contain anything
+tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
+tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
+
 
 cd "../testing/api/v$INPUT_VERSION"
 
@@ -150,16 +171,5 @@ if [[ "$INPUT_VERSION" -ge 3 ]]; then
 	docker kill "$trafficvault";
 	docker rm -f "$trafficvault";
 fi;
-
-# TODO - make these build artifacts
-if [ -f ../../../traffic_ops_golang/out.log ]; then
-	cat ../../../traffic_ops_golang/out.log
-	rm ../.../../traffic_ops_golang/out.log
-fi
-
-if [ -f ../../../traffic_ops_golang/err.log ]; then
-	cat ../../../traffic_ops_golang/err.log >&2
-	rm ../../../traffic_ops_golang/err.log
-fi
 
 exit "$CODE"
