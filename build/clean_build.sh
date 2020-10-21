@@ -50,13 +50,15 @@ fi
  mkdir -p src pkg bin "$(dirname "$tc_dir")"
 )
 rsync -a --exclude=/dist --exclude=/.m2 "${tc_volume}/" "$tc_dir";
-if ! [ -d ${tc_dir}/.git ]; then
+if [ -d "${tc_volume}/.git" ] && [ ! -d ${tc_dir}/.git ]; then
 	rsync -a "${tc_volume}/.git" $tc_dir; # Docker for Windows compatibility
 fi
 
 cd "$tc_dir"
-# In case the mirrored repo already exists, remove gitignored files
-git clean -fdX
+if [ -d "${tc_volume}/.git" ]; then
+	# In case the mirrored repo already exists, remove gitignored files
+	git clean -fdX
+fi
 
 rm -rf "dist"
 mkdir -p "${tc_volume}/dist"
