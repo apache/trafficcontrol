@@ -222,7 +222,11 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		localStorage.setItem(tableName + "_page_size", value);
 	};
 
-	$scope.clearColFilters = function() {
+	$scope.clearTableFilters = function() {
+		// clear the quick search
+		$scope.quickSearch = '';
+		$scope.onQuickSearchChanged();
+		// clear any column filters
 		$scope.gridOptions.api.setFilterModel(null);
 	};
 
