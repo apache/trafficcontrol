@@ -79,12 +79,6 @@ RUN to_rpm_filename="$(basename $TRAFFIC_OPS_RPM)" && \
 	rpm --install --nodeps --verbose --hash "$to_rpm_filename" && \
 	rm "$to_rpm_filename"
 
-COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
-	infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
-	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
-	/usr/local/sbin/
-
-ADD traffic_ops_data /traffic_ops_data
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
