@@ -20,8 +20,8 @@ package dnssec_test
  */
 
 import (
-	// _ "github.com/onsi/ginkgo"
-	// _ "github.com/onsi/gomega"
+	// . "github.com/onsi/ginkgo"
+	// . "github.com/onsi/gomega"
 
 	"flag"
 	"testing"
