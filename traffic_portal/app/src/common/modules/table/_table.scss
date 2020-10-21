@@ -220,3 +220,27 @@ div.dropdown button.menu-item-button {
     }
   }
 }
+
+.ds-requests-table {
+  .ag-row.draft-request {
+    background-color: #fff3cd;
+  }
+  .ag-row.submitted-request {
+    background-color: #dff0d8;
+  }
+  .ag-row.pending-request {
+    background-color: #cce5ff;
+  }
+  .ag-row.completed-request {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+  .ag-row.rejected-request {
+    background-color: #f8d7da;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}
