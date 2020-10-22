@@ -1,3 +1,5 @@
+// Package monitoring contains handlers and supporting logic for the
+// /cdns/{{CDN Name}}/configs/monitoring Traffic Ops API endpoint.
 package monitoring
 
 /*
@@ -27,8 +29,8 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/lib/pq"
@@ -159,7 +161,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
 
-	deliveryServices, err := getDeliveryServices(tx, routers)
+	deliveryServices, err := getDeliveryServices(tx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
@@ -201,25 +203,25 @@ WHERE cdn.name = $1
 `
 
 	interfacesQuery := `
-SELECT 
+SELECT
    i.name, i.max_bandwidth, i.mtu, i.monitor, i.server
 FROM interface i
 WHERE i.server in (
-	SELECT 
-		s.id 
-	FROM "server" s 
-	JOIN cdn c 
-		on c.id = s.cdn_id 
+	SELECT
+		s.id
+	FROM "server" s
+	JOIN cdn c
+		on c.id = s.cdn_id
 	WHERE c.name = $1
 )`
 
 	ipAddressQuery := `
-SELECT 
+SELECT
 	ip.address, ip.gateway, ip.service_address, ip.server, ip.interface
 FROM ip_address ip
-JOIN server s 
+JOIN server s
 	ON s.id = ip.server
-JOIN cdn cdn 
+JOIN cdn cdn
 	ON cdn.id = s.cdn_id
 WHERE ip.server = ANY($1)
 AND ip.interface = ANY($2)
@@ -452,20 +454,13 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(tx *sql.Tx, routers []Router) ([]DeliveryService, error) {
-	profileNames := []string{}
-	for _, router := range routers {
-		profileNames = append(profileNames, router.Profile)
-	}
-
+func getDeliveryServices(tx *sql.Tx) ([]DeliveryService, error) {
 	query := `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
-FROM deliveryservice ds
-JOIN profile profile ON profile.id = ds.profile
-WHERE profile.name = ANY($1)
-AND ds.active = true
-`
-	rows, err := tx.Query(query, pq.Array(profileNames))
+	SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
+	FROM deliveryservice ds
+	WHERE ds.active = true
+	`
+	rows, err := tx.Query(query)
 	if err != nil {
 		return nil, err
 	}
