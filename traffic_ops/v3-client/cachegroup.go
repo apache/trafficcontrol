@@ -87,8 +87,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	return &cachegroupResp, reqInf, nil
 }
 
-// Update a CacheGroup by ID.
-func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+func (to *Session) UpdateCacheGroupNullableByIDWithHdr(id int, cachegroup tc.CacheGroupNullable, h http.Header) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
@@ -97,7 +96,10 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 		return nil, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, h)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -107,6 +109,12 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 		return nil, reqInf, err
 	}
 	return &cachegroupResp, reqInf, nil
+}
+
+// Update a CacheGroup by ID.
+// Deprecated: UpdateCacheGroupNullableByID will be removed in 6.0. Use UpdateCacheGroupNullableByIDWithHdr.
+func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+	return to.UpdateCacheGroupNullableByIDWithHdr(id, cachegroup, nil)
 }
 
 func (to *Session) GetCacheGroupsNullableWithHdr(header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {

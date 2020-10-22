@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
+- Added If-Match and If-Unmodified-Since Support in Server and Clients.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check

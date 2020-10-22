@@ -34,10 +34,37 @@ func TestCoordinates(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestCoordinates(t)
 		UpdateTestCoordinates(t)
+		UpdateTestCoordinatesWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCoordinatesWithHeaders(t, header)
 		GetTestCoordinatesIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
+	firstCoord := testData.Coordinates[0]
+	resp, _, err := TOSession.GetCoordinateByNameWithHdr(firstCoord.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
+	}
+	if len(resp) > 0 {
+		coord := resp[0]
+		expectedLat := 12.34
+		coord.Latitude = expectedLat
+
+		_, reqInf, err := TOSession.UpdateCoordinateByIDWithHdr(coord.ID, coord, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {

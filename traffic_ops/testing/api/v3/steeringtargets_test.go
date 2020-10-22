@@ -16,11 +16,11 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -37,10 +37,64 @@ func TestSteeringTargets(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestSteeringTargets(t)
+		UpdateTestSteeringTargetsWithHeaders(t, header)
 		GetTestSteeringTargetsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestSteeringTargetsWithHeaders(t, header)
 	})
 
+}
+
+func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.SteeringTargets) < 1 {
+		t.Fatal("updating steering target: no steering target test data")
+	}
+	st := testData.SteeringTargets[0]
+	if st.DeliveryService == nil {
+		t.Fatal("updating steering target: test data missing ds")
+	}
+	if st.Target == nil {
+		t.Fatal("updating steering target: test data missing target")
+	}
+
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullableWithHdr(string(*st.DeliveryService), header)
+	if err != nil {
+		t.Fatalf("updating steering target: getting ds: %v", err)
+	}
+	if len(respDS) < 1 {
+		t.Fatal("updating steering target: getting ds: not found")
+	}
+	if respDS[0].ID == nil {
+		t.Fatal("updating steering target: getting ds: nil id returned")
+	}
+	dsID := *respDS[0].ID
+
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
+	if err != nil {
+		t.Fatalf("updating steering targets: getting steering target: %v", err)
+	}
+	if len(sts) < 1 {
+		t.Fatal("updating steering targets: getting steering target: got 0")
+	}
+	st = sts[0]
+
+	expected := util.JSONIntStr(-12345)
+	if st.Value != nil && *st.Value == expected {
+		expected++
+	}
+	st.Value = &expected
+
+	_, reqInf, err := SteeringUserSession.UpdateSteeringTargetWithHdr(st, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestSteeringTargetsIMSAfterChange(t *testing.T, header http.Header) {

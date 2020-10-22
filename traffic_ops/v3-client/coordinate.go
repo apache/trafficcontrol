@@ -47,8 +47,7 @@ func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Update a Coordinate by ID
-func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(coordinate)
@@ -57,7 +56,10 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -65,6 +67,12 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a Coordinate by ID
+// Deprecated: UpdateCoordinateByID will be removed in 6.0. Use UpdateCoordinateByIDWithHdr.
+func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+	return to.UpdateCoordinateByIDWithHdr(id, coordinate, nil)
 }
 
 func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, ReqInf, error) {

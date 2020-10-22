@@ -379,9 +379,9 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
-// UpdateDeliveryServiceV30 replaces the Delivery Service identified by the
+// UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	bts, err := json.Marshal(ds)
 	if err != nil {
@@ -389,7 +389,7 @@ func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullabl
 	}
 
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -408,14 +408,18 @@ func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullabl
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// UpdateDeliveryServiceV30.
+// UpdateDeliveryServiceV30WithHdr.
 func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+	return to.UpdateDeliveryServiceNullableWithHdr(id, ds, nil)
+}
+
+func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data)
+	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data, header)
 	if err != nil {
 		return nil, err
 	}
@@ -613,9 +617,9 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 	return []byte(data), reqInf, nil
 }
 
-// SafeDeliveryServiceUpdateV30 updates the "safe" fields of the Delivery
+// SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	req, err := json.Marshal(r)
 	if err != nil {
@@ -623,7 +627,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 	}
 
 	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -639,7 +643,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// SafeDeliveryServiceUpdateV30.
+// SafeDeliveryServiceUpdateV30WithHdr.
 func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var reqInf ReqInf
 	var resp tc.DeliveryServiceSafeUpdateResponse
@@ -649,7 +653,7 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 		return resp.Response, reqInf, err
 	}
 
-	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp); err != nil {
+	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp, nil); err != nil {
 		return resp.Response, reqInf, err
 	}
 

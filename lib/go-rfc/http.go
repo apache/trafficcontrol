@@ -36,8 +36,6 @@ const (
 	ContentDisposition = "Content-Disposition" // RFC6266
 	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
 	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
-	IfModifiedSince    = "If-Modified-Since"   // RFC7232§3.3
-	LastModified       = "Last-Modified"       // RFC7232§2.2
 	Vary               = "Vary"                // RFC7231§7.1.4
 )
 
@@ -164,6 +162,11 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 	}
 	return time.Time{}, false
 
+}
+
+// FormatHTTPDate formats t as an RFC7231§7.1.1 HTTP-date.
+func FormatHTTPDate(t time.Time) string {
+	return t.Format(time.RFC1123)
 }
 
 // GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds

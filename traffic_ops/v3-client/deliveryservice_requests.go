@@ -204,9 +204,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 	return to.GetDeliveryServiceRequestByIDWithHdr(id, nil)
 }
 
-// Update a DeliveryServiceRequest by ID
-func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
-
+func (to *Session) UpdateDeliveryServiceRequestByIDWithHdr(id int, dsr tc.DeliveryServiceRequest, header http.Header) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 
 	var remoteAddr net.Addr
@@ -215,7 +213,10 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -223,6 +224,12 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a DeliveryServiceRequest by ID
+// Deprecated: UpdateDeliveryServiceRequestByID will be removed in 6.0. Use UpdateDeliveryServiceRequestByIDWithHdr.
+func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+	return to.UpdateDeliveryServiceRequestByIDWithHdr(id, dsr, nil)
 }
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee

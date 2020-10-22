@@ -32,12 +32,36 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		header.Set(rfc.IfModifiedSince, time)
 		SortTestDeliveryServiceRequestComments(t)
 		UpdateTestDeliveryServiceRequestComments(t)
+		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
 		GetTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestCommentsIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header http.Header) {
+	comments, _, _ := TOSession.GetDeliveryServiceRequestCommentsWithHdr(header)
+
+	if len(comments) > 0 {
+		firstComment := comments[0]
+		newFirstCommentValue := "new comment value"
+		firstComment.Value = newFirstCommentValue
+
+		_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(firstComment.ID, firstComment, header)
+		if err == nil {
+			t.Errorf("expected precondition failed error, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header http.Header) {
@@ -72,15 +96,15 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	}
 	if len(resp) != 1 {
 		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)
-	}
+	} else {
+		respDSR := resp[0]
 
-	respDSR := resp[0]
-
-	for _, comment := range testData.DeliveryServiceRequestComments {
-		comment.DeliveryServiceRequestID = respDSR.ID
-		resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
-		if err != nil {
-			t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
+		for _, comment := range testData.DeliveryServiceRequestComments {
+			comment.DeliveryServiceRequestID = respDSR.ID
+			resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
+			if err != nil {
+				t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
+			}
 		}
 	}
 

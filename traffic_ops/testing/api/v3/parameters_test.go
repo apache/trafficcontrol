@@ -37,10 +37,39 @@ func TestParameters(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestParameters(t)
+		UpdateTestParametersWithHeaders(t, header)
 		GetTestParameters(t)
 		GetTestParametersIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestParametersWithHeaders(t, header)
 	})
+}
+
+func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		resp, _, err := TOSession.GetParametersByProfileNameWithHdr(firstParameter.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteParameter := resp[0]
+			expectedParameterValue := "UPDATED"
+			remoteParameter.Value = expectedParameterValue
+			_, reqInf, err := TOSession.UpdateParameterByIDWithHdr(remoteParameter.ID, remoteParameter, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {

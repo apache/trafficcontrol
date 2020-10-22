@@ -58,8 +58,7 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, er
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdatePhysLocationByIDWithHdr(id int, pl tc.PhysLocation, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
@@ -68,7 +67,10 @@ func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_PHYS_LOCATIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -76,6 +78,12 @@ func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// Update a PhysLocation by ID
+// Deprecated: UpdatePhysLocationByID will be removed in 6.0. Use UpdatePhysLocationByIDWithHdr.
+func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+	return to.UpdatePhysLocationByIDWithHdr(id, pl, nil)
 }
 
 func (to *Session) GetPhysLocationsWithHdr(params map[string]string, header http.Header) ([]tc.PhysLocation, ReqInf, error) {

@@ -789,7 +789,12 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	if errCode, userErr, sysErr := checkTopology(tx, *ds); userErr != nil || sysErr != nil {
+	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, *ds.ID, "deliveryservice")
+	if userErr != nil || sysErr != nil {
+		return nil, errCode, userErr, sysErr
+	}
+
+	if errCode, userErr, sysErr = checkTopology(tx, *ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 

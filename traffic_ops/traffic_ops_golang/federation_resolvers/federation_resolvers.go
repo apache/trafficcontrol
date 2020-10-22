@@ -146,9 +146,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		runSecond, maxTime = TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-			w.Header().Add(rfc.LastModified, date)
+			api.AddLastModifiedHdr(w, maxTime)
 			w.WriteHeader(http.StatusNotModified)
 			api.WriteResp(w, r, []tc.FederationResolver{})
 			return

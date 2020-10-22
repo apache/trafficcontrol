@@ -60,8 +60,7 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// UpdateRegionByID updates a Region by ID.
-func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateRegionByIDWithHdr(id int, region tc.Region, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(region)
@@ -70,7 +69,10 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -78,6 +80,12 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateRegionByID updates a Region by ID.
+// Deprecated: UpdateRegionByID will be removed in 6.0. Use UpdateRegionByIDWithHdr.
+func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
+	return to.UpdateRegionByIDWithHdr(id, region, nil)
 }
 
 func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, ReqInf, error) {

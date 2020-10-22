@@ -45,6 +45,10 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
+func (v *TORole) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "role")
+}
+
 func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` r ` + where + orderBy + pagination +
@@ -192,11 +196,11 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return returnable, nil, nil, http.StatusOK, maxTime
 }
 
-func (role *TORole) Update() (error, error, int) {
+func (role *TORole) Update(h http.Header) (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
 	}
-	userErr, sysErr, errCode := api.GenericUpdate(role)
+	userErr, sysErr, errCode := api.GenericUpdate(h, role)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}

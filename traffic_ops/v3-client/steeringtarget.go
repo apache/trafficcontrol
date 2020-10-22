@@ -44,7 +44,7 @@ func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, header http.Header) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	if st.DeliveryServiceID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing delivery service id")
@@ -58,7 +58,10 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 		return tc.Alerts{}, reqInf, err
 	}
 	resp := (*http.Response)(nil)
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets/`+strconv.Itoa(int(*st.TargetID)), reqBody, nil)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets/`+strconv.Itoa(int(*st.TargetID)), reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -66,6 +69,11 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	alerts := tc.Alerts{}
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, err
+}
+
+// Deprecated: UpdateSteeringTarget will be removed in 6.0. Use UpdateSteeringTargetWithHdr.
+func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
+	return to.UpdateSteeringTargetWithHdr(st, nil)
 }
 
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
