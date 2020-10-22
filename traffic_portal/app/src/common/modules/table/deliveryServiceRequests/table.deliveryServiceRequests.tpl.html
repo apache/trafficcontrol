@@ -66,25 +66,27 @@ under the License.
 <menu id="context-menu" class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
     <ul>
         <li role="menuitem">
+            <button type="button" ng-click="editStatus(request, $event)" ng-disabled="!open(request)">Edit Status</button>
+        </li>
+        <hr class="divider"/>
+        <li role="menuitem" ng-show="!request.assignee">
+            <button type="button" ng-click="assignRequest(request, true, $event)" ng-disabled="!open(request)">Assign Request</button>
+        </li>
+        <li role="menuitem" ng-show="request.assignee">
+            <button type="button" ng-click="assignRequest(request, false, $event)" ng-disabled="!open(request)">Unassign Request</button>
+        </li>
+        <hr class="divider"/>
+        <li role="menuitem">
             <button type="button" ng-click="fulfillRequest(request, $event)" ng-disabled="!fulfillable(request)">Fulfill Request</button>
         </li>
-        <li role="menuitem">
-            <button type="button" ng-click="rejectRequest(request, $event)" ng-disabled="!rejectable(request)">Reject Request</button>
+        <li role="menuitem" ng-show="rejectable(request)">
+            <button type="button" ng-click="rejectRequest(request, $event)">Reject Request</button>
         </li>
-        <li role="menuitem">
-            <button type="button" ng-click="completeRequest(request, $event)" ng-disabled="!completeable(request)">Complete Request</button>
+        <li role="menuitem" ng-show="completeable(request)">
+            <button type="button" ng-click="completeRequest(request, $event)">Complete Request</button>
         </li>
         <li role="menuitem">
             <button type="button" ng-click="deleteRequest(request, $event)" ng-disabled="!open(request)">Delete Request</button>
-        </li>
-        <li role="menuitem">
-            <button type="button" ng-click="editStatus(request, $event)" ng-disabled="!open(request)">Edit Status</button>
-        </li>
-        <li role="menuitem">
-            <button type="button" ng-click="assignRequest(request, true, $event)" ng-disabled="!open(request)">Assign Request</button>
-        </li>
-        <li role="menuitem">
-            <button type="button" ng-click="assignRequest(request, false, $event)" ng-disabled="!open(request)">Unassign Request</button>
         </li>
     </ul>
 </menu>
