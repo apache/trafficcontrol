@@ -45,10 +45,8 @@ RUN go_version=$(cat /GO_VERSION) && \
 
 ###
 
-ADD build/clean_build.sh /
-
 ENV GOPATH=/go
 RUN mkdir -p /go/src/github.com/apache && ln -s /tmp/trafficcontrol /go/src/github.com/apache/trafficcontrol
-CMD /clean_build.sh grove
+CMD /trafficcontrol/build/clean_build.sh grove
 
 # vi:syntax=Dockerfile

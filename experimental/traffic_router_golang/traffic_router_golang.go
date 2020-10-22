@@ -37,14 +37,25 @@ import (
 	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/toutil"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
+// Version is the utility's version.
 const Version = "0.1"
+
+// UserAgent is the string passed by the utility in the HTTP User-Agent header.
 const UserAgent = "traffic_router_golang/" + Version
+
+// DefaultConfigFile is the relative file path used as the default
+// configuration file location
 const DefaultConfigFile = "./cfg.json"
 
+// CRConfigPath is the Traffic Monitor API path used to retrieve the CDN
+// Snapshot.
 const CRConfigPath = "/publish/CrConfig"
+
+// CRStatesPath is the Traffic Monitor API path used to retrieve the states of
+// the monitored cache servers.
 const CRStatesPath = "/publish/CrStates"
 
 func main() {
