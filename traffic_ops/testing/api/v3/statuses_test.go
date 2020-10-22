@@ -33,11 +33,44 @@ func TestStatuses(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestStatuses(t)
 		UpdateTestStatuses(t)
+		UpdateTestStatusesWithHeaders(t, header)
 		GetTestStatuses(t)
 		GetTestStatusesIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestStatusesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Statuses) > 0 {
+		firstStatus := testData.Statuses[0]
+		if firstStatus.Name == nil {
+			t.Fatal("cannot update test statuses: first test data status must have a name")
+		}
+
+		// Retrieve the Status by name so we can get the id for the Update
+		resp, _, err := TOSession.GetStatusByNameWithHdr(*firstStatus.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteStatus := resp[0]
+			expectedStatusDesc := "new description"
+			remoteStatus.Description = expectedStatusDesc
+			_, reqInf, err := TOSession.UpdateStatusByIDWithHdr(remoteStatus.ID, remoteStatus, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func GetTestStatusesIMSAfterChange(t *testing.T, header http.Header) {

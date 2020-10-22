@@ -35,11 +35,39 @@ func TestDivisions(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestDivisions(t)
 		UpdateTestDivisions(t)
+		UpdateTestDivisionsWithHeaders(t, header)
 		GetTestDivisionsIMSAfterChange(t, header)
 		GetTestDivisions(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDivisionsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
+	firstDivision := testData.Divisions[0]
+	// Retrieve the Division by division so we can get the id for the Update
+	resp, _, err := TOSession.GetDivisionByNameWithHdr(firstDivision.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
+	}
+	if len(resp) > 0 {
+		remoteDivision := resp[0]
+		expectedDivision := "division-test"
+		remoteDivision.Name = expectedDivision
+
+		_, reqInf, err := TOSession.UpdateDivisionByIDWithHdr(remoteDivision.ID, remoteDivision, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
@@ -162,18 +190,19 @@ func UpdateTestDivisions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
-	respDivision := resp[0]
-	if respDivision.Name != expectedDivision {
-		t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
-	}
+	if len(resp) > 0 {
+		respDivision := resp[0]
+		if respDivision.Name != expectedDivision {
+			t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
+		}
 
-	// Set the name back to the fixture value so we can delete it after
-	remoteDivision.Name = firstDivision.Name
-	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
-	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		// Set the name back to the fixture value so we can delete it after
+		remoteDivision.Name = firstDivision.Name
+		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
+		if err != nil {
+			t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		}
 	}
-
 }
 
 func GetTestDivisions(t *testing.T) {

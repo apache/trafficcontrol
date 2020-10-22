@@ -30,7 +30,7 @@ import (
 type CRUDer interface {
 	Create() (error, error, int)
 	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
-	Update() (error, error, int)
+	Update(http.Header) (error, error, int)
 	Delete() (error, error, int)
 	APIInfoer
 	Identifier
@@ -80,7 +80,7 @@ type Reader interface {
 
 type Updater interface {
 	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Update() (error, error, int)
+	Update(h http.Header) (error, error, int)
 	APIInfoer
 	Identifier
 	Validator

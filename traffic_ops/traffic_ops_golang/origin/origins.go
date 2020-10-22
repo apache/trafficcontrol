@@ -23,10 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -288,7 +289,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (origin *TOOrigin) Update() (error, error, int) {
+func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if userErr != nil || sysErr != nil {
@@ -297,13 +298,20 @@ func (origin *TOOrigin) Update() (error, error, int) {
 
 	isPrimary := false
 	ds := 0
-	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
-	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
+	var existingLastUpdated *tc.TimeNoMod
+
+	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
+	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds, &existingLastUpdated); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("origin not found"), nil, http.StatusNotFound
 		}
 		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
+
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
+
 	if isPrimary && *origin.DeliveryServiceID != ds {
 		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
 	}

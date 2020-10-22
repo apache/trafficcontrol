@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -32,7 +33,43 @@ func TestTenants(t *testing.T) {
 		SortTestTenants(t)
 		GetTestTenants(t)
 		UpdateTestTenants(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestTenantsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestTenantsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
+	// Retrieve the Tenant by name so we can get the id for the Update
+	name := "tenant2"
+	parentName := "tenant1"
+	modTenant, _, err := TOSession.TenantByNameWithHdr(name, header)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+	}
+
+	newParent, _, err := TOSession.TenantByNameWithHdr(parentName, header)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
+	}
+	if newParent != nil {
+		modTenant.ParentID = newParent.ID
+
+		_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
+		if err == nil {
+			t.Fatalf("expected a precondition failed error, got none")
+		}
+		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+			t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+		}
+	}
 }
 
 func TestTenantsActive(t *testing.T) {

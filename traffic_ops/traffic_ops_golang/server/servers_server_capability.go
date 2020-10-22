@@ -122,10 +122,6 @@ func (ssc TOServerServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (ssc *TOServerServerCapability) Update() (error, error, int) {
-	return nil, nil, http.StatusNotImplemented
-}
-
 func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(ssc.APIInfo(), "serverHostName")
 	return api.GenericRead(h, ssc, useIMS)

@@ -35,11 +35,40 @@ func TestPhysLocations(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestPhysLocations(t)
 		UpdateTestPhysLocations(t)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 		GetTestPhysLocations(t)
 		GetTestPhysLocationsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.PhysLocations) > 0 {
+		firstPhysLocation := testData.PhysLocations[0]
+		// Retrieve the PhysLocation by name so we can get the id for the Update
+		resp, _, err := TOSession.GetPhysLocationByNameWithHdr(firstPhysLocation.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
+		}
+		if len(resp) > 0 {
+			remotePhysLocation := resp[0]
+			expectedPhysLocationCity := "city1"
+			remotePhysLocation.City = expectedPhysLocationCity
+			_, reqInf, err := TOSession.UpdatePhysLocationByIDWithHdr(remotePhysLocation.ID, remotePhysLocation, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func GetTestPhysLocationsIMS(t *testing.T) {

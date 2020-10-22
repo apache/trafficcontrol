@@ -92,8 +92,7 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqI
 	return alerts, reqInf, nil
 }
 
-// UpdateStaticDNSEntryByID updates a Static DNS Entry by ID.
-func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
+func (to *Session) UpdateStaticDNSEntryByIDWithHdr(id int, sdns tc.StaticDNSEntry, header http.Header) (tc.Alerts, ReqInf, int, error) {
 	// fill in missing IDs from names
 	staticDNSEntryIDs(to, &sdns)
 	var remoteAddr net.Addr
@@ -103,7 +102,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
+	resp, remoteAddr, errClient := to.RawRequestWithHdr(http.MethodPut, route, reqBody, header)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
@@ -113,6 +112,12 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return alerts, reqInf, resp.StatusCode, errClient
 	}
 	return tc.Alerts{}, reqInf, 0, errClient
+}
+
+// UpdateStaticDNSEntryByID updates a Static DNS Entry by ID.
+// Deprecated: UpdateStaticDNSEntryByID will be removed in 6.0. Use UpdateStaticDNSEntryByIDWithHdr.
+func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
+	return to.UpdateStaticDNSEntryByIDWithHdr(id, sdns, nil)
 }
 
 func (to *Session) GetStaticDNSEntriesWithHdr(header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
