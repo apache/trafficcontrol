@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5188)
 - Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
+- Fixed #5180 - Global Max Mbps and Tps is not send to TM
+- Fixed #3528 - Fix Traffic Ops monitoring.json missing DeliveryServices
 - Fixed #5074 - Traffic Monitor logging "CreateStats not adding availability data for server: not found in DeliveryServices" for MID cachces
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
