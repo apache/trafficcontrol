@@ -311,7 +311,6 @@ For the yaml component:
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
 For the pq component:
-@experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 
@@ -319,10 +318,6 @@ For the influxdb component:
 @vendor/github.com/influxdata/influxdb/*
 ./vendor/github.com/influxdata/influxdb/LICENSE
 ./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
-
-For the errors component:
-@traffic_stats/vendor/github.com/pkg/errors/*
-./traffic_stats/vendor/github.com/pkg/errors/LICENSE
 
 For the MaxMind DB GeoLite2 Database:
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
