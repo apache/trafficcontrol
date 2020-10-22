@@ -114,7 +114,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
-	if maxTime != nil {
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
 		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	api.WriteResp(w, r, allFederations)

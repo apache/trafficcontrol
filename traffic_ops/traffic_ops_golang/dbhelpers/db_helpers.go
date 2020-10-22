@@ -274,6 +274,18 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
+// GetDSCDNIdFromID loads the DeliveryService's cdn ID from the database, from the delivery service ID. Returns whether the delivery service was found, and any error.
+func GetDSCDNIdFromID(tx *sql.Tx, dsID int) (int, bool, error) {
+	var cdnID int
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = $1`, dsID).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("querying cdn_id for delivery service ID '%v': %v", dsID, err)
+	}
+	return cdnID, true, nil
+}
+
 // GetDSTenantIDFromXMLID fetches the ID of the Tenant to whom the Delivery Service identified by the
 // the provided XMLID belongs. It returns, in order, the requested ID (if one could be found), a
 // boolean indicating whether or not a Delivery Service with the provided xmlid could be found, and
@@ -421,6 +433,33 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 		}
 	}
 	return caps, nil
+}
+
+// ScanCachegroupsServerCapabilities, given rows of (server ID, CDN ID, cachegroup name, server capabilities),
+// returns a map of cachegroup names to server IDs, a map of server IDs to a map of their capabilities,
+// a map of server IDs to CDN IDs, and an error (if one occurs).
+func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[int]map[string]struct{}, map[int]int, error) {
+	defer log.Close(rows, "closing rows in ScanCachegroupsServerCapabilities")
+
+	cachegroupServers := make(map[string][]int)
+	serverCapabilities := make(map[int]map[string]struct{})
+	serverCDNs := make(map[int]int)
+	for rows.Next() {
+		serverID := 0
+		cdnID := 0
+		cachegroup := ""
+		serverCap := []string{}
+		if err := rows.Scan(&serverID, &cdnID, &cachegroup, pq.Array(&serverCap)); err != nil {
+			return nil, nil, nil, fmt.Errorf("scanning rows in ScanCachegroupsServerCapabilities: %v", err)
+		}
+		cachegroupServers[cachegroup] = append(cachegroupServers[cachegroup], serverID)
+		serverCapabilities[serverID] = make(map[string]struct{}, len(serverCap))
+		serverCDNs[serverID] = cdnID
+		for _, sc := range serverCap {
+			serverCapabilities[serverID][sc] = struct{}{}
+		}
+	}
+	return cachegroupServers, serverCapabilities, serverCDNs, nil
 }
 
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.

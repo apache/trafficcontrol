@@ -28,7 +28,7 @@ import (
 )
 
 func TestCacheGroups(t *testing.T) {
-	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, Topologies}, func() {
+	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 		GetTestCacheGroupsIMS(t)
 		GetTestCacheGroupsByNameIMS(t)
 		GetTestCacheGroupsByShortNameIMS(t)

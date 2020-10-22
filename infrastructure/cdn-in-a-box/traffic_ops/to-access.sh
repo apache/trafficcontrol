@@ -229,6 +229,11 @@ to-enroll() {
 			export MY_PROFILE="ATS_MID_TIER_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
+		"origin" )
+			export MY_TYPE="ORG"
+			export MY_PROFILE="ORG_MSO"
+			export MY_STATUS="REPORTED"
+			;;
 		"tm" )
 			export MY_TYPE="RASCAL"
 			export MY_PROFILE="RASCAL-Traffic_Monitor"

@@ -57,8 +57,10 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		cdnName := tc.CDNName(cdnParam)
 		feds, err, code, maxTime = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
 		if code == http.StatusNotModified {
-			if maxTime != nil {
-				api.AddLastModifiedHdr(w, *maxTime)
+			if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
 			}
 			w.WriteHeader(code)
 			api.WriteResp(w, r, tc.AllFederationCDN{})
@@ -72,8 +74,10 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		feds, err, code, maxTime = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
 		if code == http.StatusNotModified {
-			if maxTime != nil {
-				api.AddLastModifiedHdr(w, *maxTime)
+			if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
 			}
 			w.WriteHeader(code)
 			api.WriteResp(w, r, tc.AllFederationCDN{})
@@ -87,8 +91,10 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 
 	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
 	if code == http.StatusNotModified {
-		if maxTime != nil {
-			api.AddLastModifiedHdr(w, *maxTime)
+		if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
 		}
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.IAllFederation{})

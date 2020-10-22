@@ -160,6 +160,8 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	return to.UpdateServerByIDWithHdr(id, server, nil)
 }
 
+// GetServersWithHdr retrieves a list of servers using the given optional query
+// string parameters and HTTP headers.
 func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, ReqInf, error) {
 	route := API_SERVERS
 	if params != nil {
@@ -257,6 +259,9 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

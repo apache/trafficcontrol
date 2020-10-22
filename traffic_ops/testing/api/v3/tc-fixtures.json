@@ -418,7 +418,7 @@
             "sslKeyVersion": 2,
             "tenant": "tenant1",
             "tenantName": "tenant1",
-            "type": "HTTP_LIVE",
+            "type": "HTTP",
             "xmlId": "ds1",
             "anonymousBlockingEnabled": true
         },
@@ -871,7 +871,7 @@
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds-top",
             "anonymousBlockingEnabled": false,
-            "topology": "my-topology",
+            "topology": "mso-topology",
             "firstHeaderRewrite": "first header rewrite",
             "innerHeaderRewrite": "inner header rewrite",
             "lastHeaderRewrite": "last header rewrite"
@@ -1804,6 +1804,14 @@
             "type": "ATS_PROFILE"
         },
         {
+            "cdnName": "cdn2",
+            "description": "mid description",
+            "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
+            "name": "MID2",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        },
+        {
             "cdnName": "cdn1",
             "description": "origin description",
             "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
@@ -2296,7 +2304,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "MID1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
@@ -2306,6 +2314,56 @@
             "type": "MID",
             "updPending": false,
             "xmppId": "atlanta-mid-16\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "parentCachegroup",
+            "cdnName": "cdn2",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "atlanta-mid-17",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:17:d::7/64",
+                            "gateway": "2345:1234:17:d::7",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.17/30",
+                            "gateway": "127.0.0.17",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "MID2",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false,
+            "xmppId": "atlanta-mid-17\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {
@@ -3264,6 +3322,516 @@
             "tcpPort": 80,
             "type": "MID",
             "updPending": false
+        },
+        {
+            "cachegroup": "cachegroup3",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "edgeInCachegroup3",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.13/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "parentCachegroup",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInParentCachegroup",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.14/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "secondaryCachegroup",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInSecondaryCachegroup",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.15/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "fallback1",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "edgeInFallback1",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.16/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "fallback2",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "edgeInFallback2",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.17/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "parentCachegroup2",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInParentCachegroup2",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.18/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-edge-cg-01",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "edgeInTopologyEdgeCg01",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.19/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-edge-cg-02",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "edgeInTopologyEdgeCg02",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.20/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-01",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg01",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.21/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-02",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg02",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.22/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-03",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg03",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.23/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-04",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg04",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.24/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-05",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg05",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.25/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-06",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg06",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.26/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-07",
+            "cdnName": "cdn2",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg07",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:dead:beef::12/64",
+                            "gateway": "2001:db8:dead:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.2.27/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
         }
     ],
     "serverCapabilities": [
@@ -3446,20 +4014,24 @@
     ],
     "topologies": [
         {
-            "name": "my-topology",
-            "description": "a topology",
+            "name": "mso-topology",
+            "description": "a multi-site origin topology",
             "nodes": [
                 {
-                    "cachegroup": "parentCachegroup",
+                    "cachegroup": "multiOriginCachegroup",
                     "parents": []
+                },
+                {
+                    "cachegroup": "parentCachegroup",
+                    "parents": [0]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
-                    "parents": []
+                    "parents": [0]
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [0, 1]
+                    "parents": [1, 2]
                 }
             ]
         },

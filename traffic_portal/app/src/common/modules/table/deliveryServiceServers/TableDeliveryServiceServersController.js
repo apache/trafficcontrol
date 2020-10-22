@@ -43,7 +43,12 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 					return deliveryService;
 				},
 				servers: function(serverService) {
-					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+					if (deliveryService.topology) {
+						// topology-based ds's can only have ORG servers from the same CDN directly assigned
+						return serverService.getServers({ type: 'ORG', cdn: deliveryService.cdnId });
+					} else {
+						return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+					}
 				},
 				assignedServers: function() {
 					return servers;

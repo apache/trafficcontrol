@@ -24,13 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -39,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -107,6 +108,14 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 
 // ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
+	useIMS := false
+	cfg, err := api.GetConfig(r.Context())
+	if err != nil {
+		log.Warnf("Couldnt get the config %v", err)
+	}
+	if cfg != nil {
+		useIMS = cfg.UseIMS
+	}
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -116,13 +125,15 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, false)
+	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, useIMS)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if maxTime != nil {
-		api.AddLastModifiedHdr(w, *maxTime)
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
 	}
 	// statusnotmodified
 	if err == nil && results == nil {
@@ -181,8 +192,10 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
-	if maxTime != nil {
-		api.AddLastModifiedHdr(w, *maxTime)
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)

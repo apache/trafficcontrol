@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
-	"github.com/lib/pq"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
+
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -66,7 +66,8 @@ func TestGetMonitoringServers(t *testing.T) {
 	mock.ExpectBegin()
 	setupMockGetMonitoringServers(mock, monitor, router, []Cache{cache, otherCache, cache3}, []uint64{cacheID, otherCacheID, cache3ID}, cdn)
 
-	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -133,7 +134,8 @@ func TestGetProfileWithParams(t *testing.T) {
 	mockGetParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -182,7 +184,8 @@ func TestGetCachegroups(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -253,7 +256,8 @@ func TestGetProfiles(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -301,11 +305,6 @@ func TestGetDeliveryServices(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	router := Router{
-		Type:    RouterType,
-		Profile: "routerProfile",
-	}
-
 	deliveryservice := DeliveryService{
 		XMLID:              "myDsid",
 		TotalTPSThreshold:  42.42,
@@ -314,7 +313,6 @@ func TestGetDeliveryServices(t *testing.T) {
 	}
 
 	deliveryservices := []DeliveryService{deliveryservice}
-	routers := []Router{router}
 
 	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps"})
@@ -322,23 +320,22 @@ func TestGetDeliveryServices(t *testing.T) {
 		rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit)
 	}
 
-	profileNames := []string{router.Profile}
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
-	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames)).WillReturnRows(rows)
-
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlDeliveryservices, err := getDeliveryServices(tx, routers)
+	sqlDeliveryservices, err := getDeliveryServices(tx)
 	if err != nil {
-		t.Errorf("getProfiles expected: nil error, actual: %v", err)
+		t.Errorf("getDeliveryServices expected: nil error, actual: %v", err)
 	}
 
 	if len(deliveryservices) != len(sqlDeliveryservices) {
-		t.Errorf("getProfiles expected: %+v actual: %+v", deliveryservices, sqlDeliveryservices)
+		t.Fatalf("getDeliveryServices expected: %+v actual: %+v", deliveryservices, sqlDeliveryservices)
 	}
 
 	for i, sqlDeliveryservice := range sqlDeliveryservices {
@@ -376,7 +373,8 @@ func TestGetConfig(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, "mycdn").WillReturnRows(rows)
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -482,7 +480,6 @@ func TestGetMonitoringJSON(t *testing.T) {
 		//
 		// getDeliveryServices
 		//
-		router := createMockRouter()
 
 		deliveryservice := DeliveryService{
 			XMLID:              "myDsid",
@@ -499,9 +496,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 			rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit)
 		}
 
-		profileNames := []string{router.Profile}
-
-		mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames)).WillReturnRows(rows)
+		mock.ExpectQuery("SELECT").WillReturnRows(rows)
 		resp.Response.DeliveryServices = deliveryservices
 	}
 	{
@@ -522,7 +517,8 @@ func TestGetMonitoringJSON(t *testing.T) {
 		resp.Response.Config = config
 	}
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	defer f()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -530,7 +526,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 
 	sqlResp, err := GetMonitoringJSON(tx, cdn)
 	if err != nil {
-		t.Errorf("GetMonitoringJSON expected: nil error, actual: %v", err)
+		t.Fatalf("GetMonitoringJSON expected: nil error, actual: %v", err)
 	}
 	for _, cache := range resp.Response.TrafficServers {
 		cache.Interfaces = sortInterfaces(cache.Interfaces)

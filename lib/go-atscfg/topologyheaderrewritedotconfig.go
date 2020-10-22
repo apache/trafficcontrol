@@ -49,10 +49,10 @@ func MakeTopologyHeaderRewriteDotConfig(
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	ds tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
-	cacheGroupArr []tc.CacheGroupNullable,
 	servers []tc.ServerNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[ServerCapability]struct{},
+	tier TopologyCacheTier,
 ) string {
 	if server.HostName == nil {
 		return "ERROR: server missing HostName"
@@ -61,11 +61,6 @@ func MakeTopologyHeaderRewriteDotConfig(
 	}
 
 	text := GenericHeaderComment(*server.HostName, toToolName, toURL)
-
-	cacheGroups, err := MakeCGMap(cacheGroupArr)
-	if err != nil {
-		log.Errorln("making topology header rewrite config, config will be malformed! : " + err.Error())
-	}
 
 	if ds.Topology == nil || *ds.Topology == "" {
 		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' with no Topology! This should never be called, a DS with no topology should never have a First, Inner, or Last Header Rewrite config in the list of config files! Returning blank config!")
@@ -79,15 +74,8 @@ func MakeTopologyHeaderRewriteDotConfig(
 		return text
 	}
 
-	log.Errorf("DEBUG topo MakeTopologyHeaderRewriteDotConfig calling getTopologyPlacement cg '" + *server.Cachegroup + "'\n")
-	serverPlacement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
-	if !serverPlacement.InTopology {
-		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' is not in the DS's topology! Returning blank config!")
-		return text
-	}
-
 	headerRewrite := (*string)(nil)
-	switch serverPlacement.CacheTier {
+	switch tier {
 	case TopologyCacheTierFirst:
 		headerRewrite = ds.FirstHeaderRewrite
 	case TopologyCacheTierInner:
@@ -95,11 +83,11 @@ func MakeTopologyHeaderRewriteDotConfig(
 	case TopologyCacheTierLast:
 		headerRewrite = ds.LastHeaderRewrite
 	default:
-		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' got unknown topology cache tier '" + string(serverPlacement.CacheTier) + "'! Returning blank config!")
+		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' got unknown topology cache tier '" + string(tier) + "'! Returning blank config!")
 		return text
 	}
 
-	if serverPlacement.CacheTier == TopologyCacheTierLast && ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0 {
+	if tier == TopologyCacheTierLast && ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0 {
 		lastTierCacheCount := GetTopologyDSServerCount(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), servers, serverCapabilities)
 
 		maxOriginConnectionsPerServer := int(math.Round(float64(*ds.MaxOriginConnections) / float64(lastTierCacheCount)))

@@ -343,9 +343,11 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 // EnsureTopologyBasedRequiredCapabilities ensures that at least one server per cachegroup
 // in this delivery service's topology has this delivery service's required capabilities.
 func EnsureTopologyBasedRequiredCapabilities(tx *sql.Tx, dsID int, topology string, requiredCapabilities []string) (error, error, int) {
+	// language=sql
 	q := `
 SELECT
   s.id,
+  s.cdn_id,
   c.name,
   ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
 FROM server s
@@ -355,33 +357,37 @@ JOIN topology_cachegroup tc ON tc.cachegroup = c.name
 WHERE
   s.cdn_id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)
   AND tc.topology = $2
-GROUP BY s.id, c.name
+GROUP BY s.id, s.cdn_id, c.name
 `
 	rows, err := tx.Query(q, dsID, topology)
 	if err != nil {
 		return nil, fmt.Errorf("querying server capabilities in EnsureTopologyBasedRequiredCapabilities: %v", err), http.StatusInternalServerError
 	}
-	defer log.Close(rows, "closing rows in EnsureTopologyBasedRequiredCapabilities")
-
-	cachegroupServers := make(map[string][]int)
-	serverCapabilities := make(map[int]map[string]struct{})
-	for rows.Next() {
-		serverID := 0
-		cachegroup := ""
-		serverCap := []string{}
-		if err := rows.Scan(&serverID, &cachegroup, pq.Array(&serverCap)); err != nil {
-			return nil, fmt.Errorf("scanning rows in EnsureTopologyBasedRequiredCapabilities: %v", err), http.StatusInternalServerError
-		}
-		cachegroupServers[cachegroup] = append(cachegroupServers[cachegroup], serverID)
-		serverCapabilities[serverID] = make(map[string]struct{}, len(serverCap))
-		for _, sc := range serverCap {
-			serverCapabilities[serverID][sc] = struct{}{}
-		}
+	cachegroupServers, serverCapabilities, _, err := dbhelpers.ScanCachegroupsServerCapabilities(rows)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
 	}
 	if len(serverCapabilities) == 0 {
 		return fmt.Errorf("topology %s contains no servers in this delivery service's CDN; "+
 			"therefore, this delivery service's required capabilities cannot be satisfied", topology), nil, http.StatusBadRequest
 	}
+
+	invalidCachegroups := GetInvalidCachegroupsForRequiredCapabilities(cachegroupServers, serverCapabilities, requiredCapabilities)
+	if len(invalidCachegroups) > 0 {
+		return fmt.Errorf("the following cachegroups in this delivery service's topology do not contain at least one server with the required capabilities: %s", strings.Join(invalidCachegroups, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
+// GetInvalidCachegroupsForRequiredCapabilities returns the cachegroups that are invalid w.r.t. the given
+// `requiredCapabilities` of a delivery service. `cachegroupServers` is a map of cachegroup names to
+// server IDs that belong to the delivery service's CDN. `serverCapabilities` is a map of those server IDs to
+// their set of capabilities.
+func GetInvalidCachegroupsForRequiredCapabilities(
+	cachegroupServers map[string][]int,
+	serverCapabilities map[int]map[string]struct{},
+	requiredCapabilities []string,
+) []string {
 
 	invalidCachegroups := []string{}
 	for cachegroup, servers := range cachegroupServers {
@@ -403,10 +409,7 @@ GROUP BY s.id, c.name
 			invalidCachegroups = append(invalidCachegroups, cachegroup)
 		}
 	}
-	if len(invalidCachegroups) > 0 {
-		return fmt.Errorf("the following cachegroups in this delivery service's topology do not contain at least one server with the required capabilities: %s", strings.Join(invalidCachegroups, ", ")), nil, http.StatusBadRequest
-	}
-	return nil, nil, http.StatusOK
+	return invalidCachegroups
 }
 
 func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {

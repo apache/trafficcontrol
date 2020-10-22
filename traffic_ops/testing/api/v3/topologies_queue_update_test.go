@@ -35,7 +35,7 @@ type topologiesQueueUpdateTestCase struct {
 
 func TestTopologiesQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		const topologyName = "my-topology"
+		const topologyName = "mso-topology"
 		cdnId, dsId := getCdnIdAndDsId(t)
 		InvalidCDNIDIsRejected(t, topologyName)
 		InvalidActionIsRejected(t, topologyName, cdnId)
@@ -121,6 +121,9 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnId int64, d
 	}
 	servers := serversResponse.Response
 	for _, server := range servers {
+		if *server.CDNID != int(cdnId) {
+			continue
+		}
 		if !*server.UpdPending {
 			t.Fatalf("expected UpdPending = %t for server with hostname %s, got UpdPending = %t", true, *server.HostName, *server.UpdPending)
 		}

@@ -33,7 +33,6 @@ RUN go_version=$(cat /GO_VERSION) && \
 	ln -s /usr/local/go/bin/go /usr/bin/go && \
 	rm go.tar.gz
 
-ADD build/clean_build.sh /
-CMD /clean_build.sh traffic_ops_ort
+CMD /trafficcontrol/build/clean_build.sh traffic_ops_ort
 
 #vi:syntax=Dockerfile
