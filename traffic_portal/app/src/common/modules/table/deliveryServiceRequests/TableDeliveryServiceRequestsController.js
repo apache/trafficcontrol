@@ -186,6 +186,20 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			$scope.request = params.data;
 			$scope.$apply();
 		},
+		onColumnVisible: function(params) {
+			if (params.visible){
+				return;
+			}
+			for (let column of params.columns) {
+				if (column.filterActive) {
+					const filterModel = $scope.gridOptions.api.getFilterModel();
+					if (column.colId in filterModel) {
+						delete filterModel[column.colId];
+						$scope.gridOptions.api.setFilterModel(filterModel);
+					}
+				}
+			}
+		},
 		colResizeDefault: "shift"
 	};
 
