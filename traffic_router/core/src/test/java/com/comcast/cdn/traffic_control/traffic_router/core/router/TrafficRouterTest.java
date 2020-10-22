@@ -20,6 +20,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -50,7 +51,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -144,15 +145,64 @@ public class TrafficRouterTest {
         List<Cache> caches = new ArrayList<Cache>();
         caches.add(cache);
         when(trafficRouter.selectCaches(any(HTTPRequest.class), any(DeliveryService.class), any(Track.class))).thenReturn(caches);
-        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
         when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(new Geolocation(40, -100));
-        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
         when(trafficRouter.orderLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
 
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
         assertThat(httpRouteResult.getUrl().toString(), equalTo("http://atscache.kabletown.net/index.html"));
+    }
+
+    @Test
+    public void itFiltersByIPAvailability() throws Exception {
+
+        DeliveryService ds = mock(DeliveryService.class);
+
+        Cache cacheIPv4 = mock(Cache.class);
+        cacheIPv4.setIsAvailable(true);
+        when(cacheIPv4.hasDeliveryService(anyString())).thenReturn(true);
+        when(cacheIPv4.hasAuthority()).thenReturn(true);
+        when(cacheIPv4.isAvailable(any(IPVersions.class))).thenCallRealMethod();
+        doCallRealMethod().when(cacheIPv4).setIsAvailable(anyBoolean());
+        setInternalState(cacheIPv4, "ipv4Available", true);
+        setInternalState(cacheIPv4, "ipv6Available", false);
+        cacheIPv4.setIsAvailable(true);
+        when(cacheIPv4.getId()).thenReturn("cache IPv4");
+
+        Cache cacheIPv6 = mock(Cache.class);
+        when(cacheIPv6.hasDeliveryService(anyString())).thenReturn(true);
+        when(cacheIPv6.hasAuthority()).thenReturn(true);
+        when(cacheIPv6.isAvailable(any(IPVersions.class))).thenCallRealMethod();
+        doCallRealMethod().when(cacheIPv6).setIsAvailable(anyBoolean());
+        setInternalState(cacheIPv6, "ipv4Available", false);
+        setInternalState(cacheIPv6, "ipv6Available", true);
+        cacheIPv6.setIsAvailable(true);
+        when(cacheIPv6.getId()).thenReturn("cache IPv6");
+
+        List<Cache> caches = new ArrayList<Cache>();
+        caches.add(cacheIPv4);
+        caches.add(cacheIPv6);
+
+        when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class), any(IPVersions.class))).thenCallRealMethod();
+
+        List<Cache> supportingIPv4Caches = trafficRouter.getSupportingCaches(caches, ds, IPVersions.IPV4ONLY);
+        assertThat(supportingIPv4Caches.size(), equalTo(1));
+        assertThat(supportingIPv4Caches.get(0).getId(), equalTo("cache IPv4"));
+
+        List<Cache> supportingIPv6Caches = trafficRouter.getSupportingCaches(caches, ds, IPVersions.IPV6ONLY);
+        assertThat(supportingIPv6Caches.size(), equalTo(1));
+        assertThat(supportingIPv6Caches.get(0).getId(), equalTo("cache IPv6"));
+
+        List<Cache> supportingEitherCaches = trafficRouter.getSupportingCaches(caches, ds, IPVersions.ANY);
+        assertThat(supportingEitherCaches.size(), equalTo(2));
+
+        cacheIPv6.setIsAvailable(false);
+        List<Cache> supportingAvailableCaches = trafficRouter.getSupportingCaches(caches, ds, IPVersions.ANY);
+        assertThat(supportingAvailableCaches.size(), equalTo(1));
+        assertThat(supportingAvailableCaches.get(0).getId(), equalTo("cache IPv4"));
     }
 
     @Test
@@ -172,11 +222,11 @@ public class TrafficRouterTest {
         List<Cache> list = new ArrayList<>();
         list.add(cache);
         when(deliveryService.getMissLocation()).thenReturn(defaultUSLocation);
-        when(trafficRouter.getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track)).thenReturn(list);
-        when(trafficRouter.selectCachesByGeo(ip, deliveryService, null, track)).thenCallRealMethod();
+        when(trafficRouter.getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track, IPVersions.IPV4ONLY)).thenReturn(list);
+        when(trafficRouter.selectCachesByGeo(ip, deliveryService, null, track, IPVersions.IPV4ONLY)).thenCallRealMethod();
         when(trafficRouter.isValidMissLocation(deliveryService)).thenCallRealMethod();
-        List<Cache> result = trafficRouter.selectCachesByGeo(ip, deliveryService, null, track);
-        verify(trafficRouter).getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track);
+        List<Cache> result = trafficRouter.selectCachesByGeo(ip, deliveryService, null, track, IPVersions.IPV4ONLY);
+        verify(trafficRouter).getCachesByGeo(deliveryService, deliveryService.getMissLocation(), track, IPVersions.IPV4ONLY);
         assertThat(result.size(), equalTo(1));
         assertThat(result.get(0), equalTo(cache));
         assertThat(track.getResult(), equalTo(Track.ResultType.GEO_DS));
@@ -215,15 +265,15 @@ public class TrafficRouterTest {
 
         when(trafficRouter.selectCaches(any(HTTPRequest.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.selectCaches(any(HTTPRequest.class), any(DeliveryService.class), any(Track.class), anyBoolean())).thenCallRealMethod();
-        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
 
         Geolocation clientLocation = new Geolocation(40, -100);
         when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(clientLocation);
 
-        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
         when(trafficRouter.filterEnabledLocations(any(List.class), any(LocalizationMethod.class))).thenCallRealMethod();
         when(trafficRouter.orderLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
-        when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class))).thenCallRealMethod();
+        when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class), any(IPVersions.class))).thenCallRealMethod();
 
         HTTPRequest httpRequest = new HTTPRequest();
         httpRequest.setClientIP("192.168.10.11");
