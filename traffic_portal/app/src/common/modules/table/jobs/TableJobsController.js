@@ -137,6 +137,20 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			$scope.job = params.data;
 			$scope.$apply();
 		},
+		onColumnVisible: function(params) {
+			if (params.visible){
+				return;
+			}
+			for (let column of params.columns) {
+				if (column.filterActive) {
+					const filterModel = $scope.gridOptions.api.getFilterModel();
+					if (column.colId in filterModel) {
+						delete filterModel[column.colId];
+						$scope.gridOptions.api.setFilterModel(filterModel);
+					}
+				}
+			}
+		},
 		colResizeDefault: "shift"
 	};
 
@@ -208,7 +222,11 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		localStorage.setItem(tableName + "_page_size", value);
 	};
 
-	$scope.clearColFilters = function() {
+	$scope.clearTableFilters = function() {
+		// clear the quick search
+		$scope.quickSearch = '';
+		$scope.onQuickSearchChanged();
+		// clear any column filters
 		$scope.gridOptions.api.setFilterModel(null);
 	};
 
