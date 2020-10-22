@@ -80,8 +80,6 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			x.expires = new Date(x.startTime.getTime() + ttl*3600*1000);
 		});
 
-	$scope.jobs = jobs;
-
 	$scope.quickSearch = '';
 
 	$scope.pageSize = 100;
