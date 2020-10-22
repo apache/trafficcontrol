@@ -20,8 +20,9 @@ package torequest
  */
 
 import (
-	"github.com/apache/trafficcontrol/traffic_ops_ort/t3c/config"
 	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops_ort/t3c/config"
 )
 
 var testCfg config.Cfg = config.Cfg{
@@ -98,16 +99,16 @@ func TestIsPackageInstalled(t *testing.T) {
 	trops := NewTrafficOpsReq(testCfg)
 	trops.pkgs["trafficserver"] = true
 
-	if trops.isPackageInstalled("mouse") {
+	if trops.IsPackageInstalled("mouse") {
 		t.Errorf("isPackageInstalled() failed, expected 'false' got 'true'.")
 	}
 
-	if !trops.isPackageInstalled("trafficserver") {
+	if !trops.IsPackageInstalled("trafficserver") {
 		t.Errorf("isPackageInstalled() failed, expected 'true' got 'false'.")
 	}
 
 	trops.pkgs["trafficserver"] = false
-	if trops.isPackageInstalled("trafficserver") {
+	if trops.IsPackageInstalled("trafficserver") {
 		t.Errorf("isPackageInstalled() failed, expected 'false' got 'true'.")
 	}
 }

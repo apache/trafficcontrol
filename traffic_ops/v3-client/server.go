@@ -152,6 +152,8 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	return alerts, reqInf, err
 }
 
+// GetServersWithHdr retrieves a list of servers using the given optional query
+// string parameters and HTTP headers.
 func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, ReqInf, error) {
 	route := API_SERVERS
 	if params != nil {
