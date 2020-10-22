@@ -191,7 +191,6 @@ rm traffic-ops-test.conf
 if [[ "$INPUT_VERSION" -ge 3 ]]; then
 	echo 'Stopping Traffic Vault...'
 	docker kill "$trafficvault";
-	docker rm -f "$trafficvault";
 fi;
 echo 'Killing background jobs...';
 kill -9 $(jobs -p);
