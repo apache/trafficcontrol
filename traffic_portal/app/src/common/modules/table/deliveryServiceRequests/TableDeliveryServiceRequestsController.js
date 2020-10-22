@@ -422,6 +422,10 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			});
 	};
 
+	$scope.refresh = function () {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
 		try {
