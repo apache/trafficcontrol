@@ -39,8 +39,9 @@ download_go() {
 	go version
 }
 
-red_bg="$(printf '%s%s' $'\x1B' '[41m')";
 gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
+red_bg="$(printf '%s%s' $'\x1B' '[41m')";
+yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
 black_fg="$(printf '%s%s' $'\x1B' '[30m')";
 color_and_prefix() {
 	color="$1";
