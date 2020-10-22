@@ -508,3 +508,195 @@ For the gopkg.in/square/go-jose.v2 component:
 For the go.uber.org/ratelimit component:
 @traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/*
 @traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/LICENSE
+
+For the akamai/AkamaiOPEN-edgegrid-golang component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/akamai/AkamaiOPEN-edgegrid-golang/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/akamai/AkamaiOPEN-edgegrid-golang/LICENSE
+
+For the aliyun/alibaba-cloud-sdk-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/aliyun/alibaba-cloud-sdk-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/aliyun/alibaba-cloud-sdk-go/LICENSE
+
+For the aws/aws-sdk-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/aws/aws-sdk-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/aws/aws-sdk-go/LICENSE.txt
+
+For the Azure/azure-sdk-for-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/Azure/azure-sdk-for-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/Azure/azure-sdk-for-go/LICENSE
+
+For the Azure/go-autorest component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/Azure/go-autorest/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/Azure/go-autorest/LICENSE
+
+For the  BurntSushi/toml component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/BurntSushi/toml/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/BurntSushi/toml/COPYING
+
+For the cenkalti/backoff component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/cenkalti/backoff/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/cenkalti/backoff/LICENSE
+
+For the census-instrumentation/opencensus-proto component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/census-instrumentation/opencensus-proto/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/census-instrumentation/opencensus-proto/LICENSE
+
+For the cloudflare/cloudflare-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/cloudflare/cloudflare-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/cloudflare/cloudflare-go/LICENSE
+
+For the cpu/goacmedns component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/cpu/goacmedns/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/cpu/goacmedns/LICENSE
+
+For the davecgh/go-spew component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/davecgh/go-spew/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/davecgh/go-spew/LICENSE
+
+For the decker502/dnspod-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/decker502/dnspod-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/decker502/dnspod-go/LICENSE
+
+For the dimchansky/utfbom component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/dimchansky/utfbom/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/dimchansky/utfbom/LICENSE
+
+For the dnsimple/dnsimple-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/dnsimple/dnsimple-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/dnsimple/dnsimple-go/LICENSE.txt
+
+For the exoscale/egoscale component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/exoscale/egoscale/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/exoscale/egoscale/LICENSE
+
+For the fatih/structs component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/fatih/structs/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/fatih/structs/LICENSE
+
+For the go-errors/errors component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/go-errors/errors/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/go-errors/errors/LICENSE.MIT
+
+For the gofrs/uuid component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/gofrs/uuid/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/gofrs/uuid/LICENSE
+
+For the go-ini/ini component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/go-ini/ini/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/go-ini/ini/LICENSE
+
+For the google/google component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/google/go-querystring/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/google/go-querystring/LICENSE
+
+For the gophercloud/gophercloud component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/gophercloud/gophercloud/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/gophercloud/gophercloud/LICENSE
+
+For the grpc-ecosystem/grpc-gateway component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/grpc-ecosystem/grpc-gateway/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/grpc-ecosystem/grpc-gateway/LICENSE.txt
+
+For the hashicorp/golang-lru component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/hashicorp/golang-lru/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/hashicorp/golang-lru/LICENSE
+
+For the iij/doapi component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/iij/doapi/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/iij/doapi/LICENSE.md
+
+For the jmespath/go-jmespath component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/jmespath/go-jmespath/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/jmespath/go-jmespath/LICENSE
+
+For the kolo/xmlrpc component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/LICENSE
+
+For the labbsr0x/bindman-dns-webhook component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/LICENSE
+
+For the labbsr0x/goh component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/goh/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/goh/LICENSE
+
+For the linode/linodego component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/linode/linodego/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/linode/linodego/LICENSE
+
+For the mitchellh/go-homedir component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/go-homedir/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/go-homedir/LICENSE
+
+For the mitchellh/mapstructure component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/mapstructure/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/mapstructure/LICENSE
+
+For the namedotcom/go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/namedotcom/go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/namedotcom/go/LICENSE
+
+For the nrdcg/auroradns component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/auroradns/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/auroradns/LICENSE
+
+For the nrdcg/goinwx component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/goinwx/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/goinwx/LICENSE
+
+For the nrdcg/namesilo component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/namesilo/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/namesilo/LICENSE
+
+For the OpenDNS/vegadns2client component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/OpenDNS/vegadns2client/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/OpenDNS/vegadns2client/LICENSE
+
+For the oracle/oci-go-sdk component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/oracle/oci-go-sdk/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/oracle/oci-go-sdk/LICENSE.txt
+
+For the ovh/go-ovh component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/ovh/go-ovh/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/ovh/go-ovh/LICENSE
+
+For the pmezard/go-difflib component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/pmezard/go-difflib/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/pmezard/go-difflib/LICENSE
+
+For the rainycape/memcache component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/rainycape/memcache/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/rainycape/memcache/LICENSE
+
+For the sacloud/libsacloud component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/sacloud/libsacloud/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/sacloud/libsacloud/LICENSE.txt
+
+For the sirupsen/logrus component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/sirupsen/logrus/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/sirupsen/logrus/LICENSE
+
+For the stretchr/objx component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/objx/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/objx/LICENSE
+
+For the stretchr/testify component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/testify/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/testify/LICENSE
+
+For the timewasted/linode component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/timewasted/linode/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/timewasted/linode/LICENSE
+
+For the transip/gotransip component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/transip/gotransip/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/transip/gotransip/LICENSE
+
+For the urfave/cli component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/urfave/cli/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/urfave/cli/LICENSE
+
+For the vultr/govultr component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/vultr/govultr/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/vultr/govultr/LICENSE
