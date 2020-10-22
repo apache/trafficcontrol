@@ -16,6 +16,12 @@
     },
     {
       "cachegroup": "CDN_in_a_Box_Mid-02",
+      "parents": [
+        3
+      ]
+    },
+    {
+      "cachegroup": "CDN_in_a_Box_Origin",
       "parents": []
     }
   ]

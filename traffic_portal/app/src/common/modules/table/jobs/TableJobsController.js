@@ -119,8 +119,21 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		preventDefaultOnContextMenu: true,
 		onCellContextMenu: function(params) {
 			$scope.showMenu = true;
-			$scope.menuStyle.left = String(params.event.pageX) + "px";
-			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.menuStyle.left = String(params.event.clientX) + "px";
+			$scope.menuStyle.top = String(params.event.clientY) + "px";
+			$scope.menuStyle.bottom = "unset";
+			$scope.menuStyle.right = "unset";
+			$scope.$apply();
+			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+
+			if (boundingRect.bottom > window.innerHeight){
+				$scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
+				$scope.menuStyle.top = "unset";
+			}
+			if (boundingRect.right > window.innerWidth) {
+				$scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
+				$scope.menuStyle.left = "unset";
+			}
 			$scope.job = params.data;
 			$scope.$apply();
 		},
@@ -209,7 +222,11 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		localStorage.setItem(tableName + "_page_size", value);
 	};
 
-	$scope.clearColFilters = function() {
+	$scope.clearTableFilters = function() {
+		// clear the quick search
+		$scope.quickSearch = '';
+		$scope.onQuickSearchChanged();
+		// clear any column filters
 		$scope.gridOptions.api.setFilterModel(null);
 	};
 

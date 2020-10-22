@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Traffic Ops Ort: Adds a transliteration of the traffic_ops_ort.pl perl script to the go language. See traffic_ops_ort/t3c/README.md.
 - Traffic Ops API v3
 - Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
@@ -20,11 +21,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/deliveryservices` to return all delivery services that employ a given topology.
     - Traffic Ops: Added support for `dsId` query parameter for `GET /api/3.0/servers` for topology-based delivery services.
+    - Traffic Ops: Excluded ORG-type servers from `GET /api/3.0/servers?dsId=#` for Topology-based Delivery Services unless the ORG server is assigned to that Delivery Service.
     - Traffic Ops: Added support for `topology` query parameter for `GET /api/3.0/servers` to return all servers whose cachegroups are in a given topology.
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Added validation to prohibit removing a capability from a server if no other server in the same cachegroup can satisfy the required capabilities of the delivery services assigned to it via topologies.
+    - Traffic Ops: Added validation to ensure that updated topologies are still valid with respect to the required capabilities of their assigned delivery services.
     - Traffic Ops: Added validation to ensure that at least one server per cachegroup in a delivery service's topology has the delivery service's required capabilities.
+    - Traffic Ops: Added validation to ensure that at least one server exists in each cachegroup that is used in a Topology on the `/api/3.0/topologies` endpoint and the `/api/3.0/servers/{{ID}}` endpoint.
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
     - ORT: Added Topologies to Config Generation.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
@@ -33,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Portal: Added the ability to define first, inner and last header rewrite values for DNS* and HTTP* delivery services that employ a topology.
     - Traffic Portal: Adds the ability to view all servers utilized by a topology-based delivery service.
     - Traffic Portal: Added topology section to cdn snapshot diff.
+    - Added to TP the ability to assign ORG servers to topology-based delivery services
     - Traffic Router: Added support for topology-based delivery services
     - Traffic Monitor: Added the ability to mark topology-based delivery services as available
     - CDN-in-a-Box: Add a second mid to CDN-in-a-Box, add topology `demo1-top`, and make the `demo1` delivery service topology-based
@@ -46,7 +51,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
 - Added the ability to delete invalidation requests in Traffic Portal
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
-- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
+- Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
+- Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
@@ -57,12 +63,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added Traffic Monitor: Support astats CSV output. Includes http_polling_format configuration option to specify the Accept header sent to stats endpoints. Adds CSV parsing ability (~100% faster than JSON) to the astats plugin
 - Added Traffic Monitor: Support stats over http CSV output. Officially supported in ATS 9.0 unless backported by users. Users must also include `system_stats.so` when using stats over http in order to keep all the same functionality (and included stats) that astats_over_http provides.
 - Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data. Using the new `stats_over_http` `health.polling.format` value that allows monitoring of multiple interfaces will first require that *all* Traffic Monitors monitoring the affected cache server be upgraded.
+- Added ORT option to try all primaries before falling back to secondary parents, via Delivery Service Profile Parameter "try_all_primaries_before_secondary".
 - Traffic Ops, Traffic Ops ORT, Traffic Monitor, Traffic Stats, and Grove are now compiled using Go version 1.15.
+- Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
+- Added User-Agent string to Traffic Router log output.
 - Added default sort logic to GET API calls using Read()
 
 ### Fixed
 - Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issues](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed #5010 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5010)
+- Fixed #5147 - GET /servers?dsId={id} should only return mid servers (in addition to edge servers) for the cdn of the delivery service if the mid tier is employed. [Related github issues](https://github.com/apache/trafficcontrol/issues/5147)
 - Fixed #4981 - Cannot create routing regular expression with a blank pattern param in Delivery Service [Related github issues](https://github.com/apache/trafficcontrol/issues/4981)
 - Fixed #4979 - Returns a Bad Request error during server creation with missing profileId [Related github issue](https://github.com/apache/trafficcontrol/issues/4979)
 - Fixed #4237 - Do not return an internal server error when delivery service's capacity is zero. [Related github issue](https://github.com/apache/trafficcontrol/issues/4237)
@@ -75,6 +85,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5038 - Adds UI warning when server interface IP CIDR is too large [Related github issue](https://github.com/apache/trafficcontrol/issues/5038)
 - Fixed #3661 - Anonymous Proxy ipv4 whitelist does not work
 - Fixed #1847 - Delivery Service with SSL keys are no longer allowed to be updated when the fields changed are relevant to the SSL Keys validity.
+- Fixed #5153 - Right click context menu on new ag-grid tables appearing at the wrong place after scrolling. [Related github issue](https://github.com/apache/trafficcontrol/issues/5153)
+- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a columns filter when its hidden
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 - Fixed POST deliveryservices/request (designed to simple send an email) regression which erroneously required deep caching type and routing name. [Related github issue](https://github.com/apache/trafficcontrol/issues/4735)
@@ -92,16 +104,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed ORT atstccfg helper log to append and not overwrite old logs. Also changed to log to /var/log/ort and added a logrotate to the RPM. See the ORT README.md for details.
 - Added Delivery Service Raw Remap `__RANGE_DIRECTIVE__` directive to allow inserting the Range Directive after the Raw Remap text. This allows Raw Remaps which manipulate the Range.
 - Added an option for `coordinateRange` in the RGB configuration file, so that in case a client doesn't have a postal code, we can still determine if it should be allowed or not, based on whether or not the latitude/ longitude of the client falls within the supplied ranges. [Related github issue](https://github.com/apache/trafficcontrol/issues/4372)
+- Fixed TR build configuration (pom.xml) to invoke preinstall.sh. [Related github issue](https://github.com/apache/trafficcontrol/issues/4882)
 - Fixed #3548 - Prevents DS regexes with non-consecutive order from generating invalid CRconfig/snapshot.
+- Fixes #4984 - Lets `create_tables.sql` be run concurrently without issue
 - Fixed #5020, #5021 - Creating an ASN with the same number and same cache group should not be allowed.
 - Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
 - Fixed #4680 - Change Content-Type to application/json for TR auth calls
 - Fixed #4292 - Traffic Ops not looking for influxdb.conf in the right place
+- Fixed #5102 - Python client scripts fail silently on authentication failures
+- Fixed #5103 - Python client scripts crash on connection errors
+- Fixed matching of wildcards in subjectAlternateNames when loading TLS certificates
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 - When creating invalidation jobs through TO/TP, if an identical regex is detected that overlaps its time, then warnings
 will be returned indicating that overlap exists.
+- Changed Traffic Portal to disable browser caching on GETs until it utilizes the If-Modified-Since functionality that the TO API now provides.
 - Changed Traffic Portal to use Traffic Ops API v3
 - Changed Traffic Portal to use the more performant and powerful ag-grid for all server and invalidation request tables.
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
@@ -119,6 +137,10 @@ will be returned indicating that overlap exists.
     - Changed the `Cache States` tab of the Traffic Monitor UI to properly handle multiple interfaces.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
     - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
+- Changed Tomcat Java dependency to 8.5.57.
+- Changed Spring Framework Java dependency to 4.2.5.
+- Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
+- Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
