@@ -477,3 +477,55 @@ For the gofrs/flock component:
 For the pborman/getopt component:
 @traffic_ops_ort/vendor/github.com/pborman/getopt/*
 ./traffic_ops_ort/vendor/github.com/pborman/getopt/LICENSE
+
+For the contrib.go.opencensus.io/exporter/ocagent component:
+@traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/*
+@traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/LICENSE
+
+For the google.golang.org/api/googleapi/internal/uritemplates component:
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/*
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/LICENSE
+
+For the google.golang.org/api component:
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/*
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/LICENSE
+
+For the google.golang.org/appengine component:
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/*
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/LICENSE
+
+For the google.golang.org/genproto component:
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/*
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/LICENSE
+
+For the google.golang.org/grpc component:
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/*
+@traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/LICENSE
+
+For the go.opencensus.io component:
+@traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/*
+@traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/LICENSE
+
+For the gopkg.in/ini.v1 component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/*
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/LICENSE
+
+For the gopkg.in/ns1/ns1-go.v2 component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/*
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/LICENSE.txt
+
+For the gopkg.in/resty.v1 component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/*
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/LICENSE
+
+For the gopkg.in/square/go-jose.v2/json component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/*
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/LICENSE
+
+For the gopkg.in/square/go-jose.v2 component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/*
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/LICENSE
+
+For the go.uber.org/ratelimit component:
+@traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/*
+@traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/LICENSE
