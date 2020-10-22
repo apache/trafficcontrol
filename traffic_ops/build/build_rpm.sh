@@ -44,7 +44,14 @@ function initBuildArea() {
 	go env
 
 	# get x/* packages (everything else should be properly vendored)
-	go get -v golang.org/x/crypto/ed25519 golang.org/x/crypto/scrypt golang.org/x/net/ipv4 golang.org/x/net/ipv6 golang.org/x/sys/unix || \
+	go get -v \
+		golang.org/x/crypto/ed25519 \
+		golang.org/x/crypto/scrypt \
+		golang.org/x/net/idna \
+		golang.org/x/net/ipv4 \
+		golang.org/x/net/ipv6 \
+		golang.org/x/sys/unix \
+		golang.org/x/text/secure/bidirule ||
                 { echo "Could not get go package dependencies"; exit 1; }
 
 	# compile traffic_ops_golang
