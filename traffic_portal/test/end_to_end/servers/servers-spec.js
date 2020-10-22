@@ -75,19 +75,6 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(tableColumns.count()).toBe(9);
 	});
 
-	it('should verify the new Server and then update Server', function() {
-		console.log('Verifying new server added and updating ' + mockVals.hostName);
-		browser.sleep(1000);
-		let row = element(by.cssContainingText('.ag-cell', mockVals.hostName));
-		browser.actions().doubleClick(row).perform();
-		browser.sleep(1000);
-		pageData.domainName.clear();
-		pageData.domainName.sendKeys('testupdated.com');
-		pageData.type.click();
-		pageData.updateButton.click();
-		expect(pageData.domainName.getText() === 'testupdated.com');
-	});
-
 	it('should clear column filter when column is hidden', function() {
 		// Confirm we have rows
 		let rows = element.all(by.css("div.ag-row"));
@@ -101,20 +88,30 @@ describe('Traffic Portal Servers Test Suite', function() {
 		filterCell.sendKeys("nothingshouldmatchthis", protractor.Key.ENTER);
 
 		// Wait for ag-grid to process changes
-		browser.sleep(1000).then(function() {
-			let rows = element.all(by.css("div.ag-row"));
-			expect(rows.count()).toBe(0);
+		browser.sleep(1000);
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).toBe(0);
 
-			// Hide filtered column
-			let columnToggle = element(by.id('toggleColumns')).click();
-			columnToggle.all(by.css('input[type=checkbox]')).first().click();
+		// Hide filtered column
+		let columnToggle = element(by.id('toggleColumns')).click();
+		columnToggle.all(by.css('input[type=checkbox]:checked')).first().click();
 
-			// Wait for ag-grid again
-			browser.sleep(1000).then(function() {
-				let rows = element.all(by.css("div.ag-row"));
-				expect(rows.count()).not.toBe(0);
-			});
-		});
+		// Wait for ag-grid again
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+	});
+
+	it('should verify the new Server and then update Server', function() {
+		console.log('Verifying new server added and updating ' + mockVals.hostName);
+		browser.sleep(1000);
+		let row = element(by.cssContainingText('.ag-cell', mockVals.hostName));
+		browser.actions().doubleClick(row).perform();
+		browser.sleep(1000);
+		pageData.domainName.clear();
+		pageData.domainName.sendKeys('testupdated.com');
+		pageData.type.click();
+		pageData.updateButton.click();
+		expect(pageData.domainName.getText() === 'testupdated.com');
 	});
 
 	it('should add a server capability to the server', function() {
