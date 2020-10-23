@@ -315,10 +315,6 @@ For the yaml component:
 ./vendor/gopkg.in/yaml.v2/LICENSE
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
-For the jwt-go component:
-@experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
-./experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
-
 For the pq component:
 @experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
 @vendor/github.com/lib/pq/*
@@ -446,9 +442,9 @@ For the lestrrat-go/jwx (commit e35178a) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
 
-For the dgrijalva/jwt-go (commit 5e25c22) component:
-@traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
+For the dgrijalva/jwt-go component:
+@vendor/github.com/dgrijalva/jwt-go/*
+./vendor/github.com/dgrijalva/jwt-go/LICENSE
 
 For the ogier/pflag (commit 45c278a) component:
 @vendor/github.com/ogier/pflag/*
