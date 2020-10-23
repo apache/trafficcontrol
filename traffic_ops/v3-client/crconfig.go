@@ -46,6 +46,16 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	return []byte(resp.Response), reqInf, nil
 }
 
+func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqInf, error) {
+	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
+	resp, remoteAddr, err := to.request(http.MethodPut, uri, nil, header)
+	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
+	return reqInf, err
+}
+
 // GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
 	uri := apiBase + `/cdns/` + cdn + `/snapshot/new`
@@ -62,11 +72,9 @@ func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
 }
 
 // SnapshotCRConfig snapshots a CDN by name.
+// Deprecated: SnapshotCRConfig will be removed in 6.0. Use SnapshotCRConfigWithHdr.
 func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
-	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
-	_, remoteAddr, err := to.request(http.MethodPut, uri, nil, nil)
-	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
-	return reqInf, err
+	return to.SnapshotCRConfigWithHdr(cdn, nil)
 }
 
 // SnapshotCDNByID snapshots a CDN by ID.

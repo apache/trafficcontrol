@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+### Fixed
+- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
@@ -50,6 +54,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
+- Added If-Match and If-Unmodified-Since Support in Server and Clients.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
@@ -109,6 +114,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5102 - Python client scripts fail silently on authentication failures
 - Fixed #5103 - Python client scripts crash on connection errors
 - Fixed matching of wildcards in subjectAlternateNames when loading TLS certificates
+- Fixed #5180 - Global Max Mbps and Tps is not send to TM
+- Fixed #3528 - Fix Traffic Ops monitoring.json missing DeliveryServices
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.

@@ -39,6 +39,10 @@ type TOPhysLocation struct {
 	tc.PhysLocationNullable
 }
 
+func (v *TOPhysLocation) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "phys_location")
+}
+
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOPhysLocation) InsertQuery() string           { return insertQuery() }
 func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocationNullable{} }
@@ -112,9 +116,9 @@ JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.table_name='phys_location') as res`
 }
 
-func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
-func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
+func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pl) }
+func (pl *TOPhysLocation) Create() (error, error, int)              { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int)              { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

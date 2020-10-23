@@ -39,6 +39,24 @@ type TOServiceCategory struct {
 	tc.ServiceCategory
 }
 
+func (v *TOServiceCategory) GetLastUpdated() (*time.Time, bool, error) {
+	found := false
+	lastUpdated := time.Time{}
+	rows, err := v.APIInfo().Tx.Query(`select last_updated from service_category where name=$1`, v.Name)
+	if err != nil {
+		return nil, found, errors.New("querying last_updated: " + err.Error())
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, found, errors.New("no resource found with this id")
+	}
+	found = true
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return nil, found, errors.New("scanning last_updated: " + err.Error())
+	}
+	return &lastUpdated, found, nil
+}
+
 func (v *TOServiceCategory) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TOServiceCategory) InsertQuery() string           { return insertQuery() }
 func (v *TOServiceCategory) NewReadObj() interface{}       { return &tc.ServiceCategory{} }
@@ -136,8 +154,8 @@ func checkTenancy(category *tc.ServiceCategory, tenantIDs []int) bool {
 	return false
 }
 
-func (serviceCategory *TOServiceCategory) Update() (error, error, int) {
-	return api.GenericUpdate(serviceCategory)
+func (serviceCategory *TOServiceCategory) Update(h http.Header) (error, error, int) {
+	return api.GenericUpdate(h, serviceCategory)
 }
 func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
 	return api.GenericDelete(serviceCategory)

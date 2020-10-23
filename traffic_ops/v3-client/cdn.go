@@ -48,8 +48,7 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// UpdateCDNByID updates a CDN by ID.
-func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCDNByIDWithHdr(id int, cdn tc.CDN, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cdn)
@@ -58,7 +57,10 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_CDNS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -66,6 +68,12 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateCDNByID updates a CDN by ID.
+// Deprecated: UpdateCDNByID will be removed in 6.0. Use UpdateCDNByIDWithHdr.
+func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+	return to.UpdateCDNByIDWithHdr(id, cdn, nil)
 }
 
 func (to *Session) GetCDNsWithHdr(header http.Header) ([]tc.CDN, ReqInf, error) {

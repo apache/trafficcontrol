@@ -42,6 +42,10 @@ type TOType struct {
 	tc.TypeNullable
 }
 
+func (v *TOType) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "type")
+}
+
 func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
@@ -107,11 +111,11 @@ func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 	return api.GenericRead(h, tp, useIMS)
 }
 
-func (tp *TOType) Update() (error, error, int) {
+func (tp *TOType) Update(h http.Header) (error, error, int) {
 	if !tp.AllowMutation(false) {
 		return errors.New("can not update type"), nil, http.StatusBadRequest
 	}
-	return api.GenericUpdate(tp)
+	return api.GenericUpdate(h, tp)
 }
 
 func (tp *TOType) Delete() (error, error, int) {

@@ -33,15 +33,21 @@ func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		GetTestServersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		timestamp := currentTime.Format(time.RFC1123)
+		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, timestamp)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestServers(t)
+		UpdateTestServersWithHeaders(t, header)
 		GetTestServersDetails(t)
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestServersWithHeaders(t, header)
 		CreateTestBlankFields(t)
 		CreateTestServerWithoutProfileId(t)
 		UniqueIPProfileTestServers(t)
@@ -224,6 +230,70 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	if *remoteServer.StatusLastUpdated == *respServer.StatusLastUpdated {
 		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
+	}
+}
+
+func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one server to test updating")
+	}
+
+	firstServer := testData.Servers[0]
+	if firstServer.HostName == nil {
+		t.Fatalf("First test server had nil hostname: %+v", firstServer)
+	}
+
+	hostName := *firstServer.HostName
+	params := url.Values{}
+	params.Add("hostName", hostName)
+
+	// Retrieve the server by hostname so we can get the id for the Update
+	resp, _, err := TOSession.GetServersWithHdr(&params, header)
+
+	if err != nil {
+		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	remoteServer := resp.Response[0]
+	if remoteServer.ID == nil {
+		t.Fatalf("Got null ID for server '%s'", hostName)
+	}
+
+	// Creating idParam to get server when hostname changes.
+	id := fmt.Sprintf("%v", *resp.Response[0].ID)
+	idParam := url.Values{}
+	idParam.Add("id", id)
+
+	infs := remoteServer.Interfaces
+	if len(infs) < 1 {
+		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
+	}
+	inf := infs[0]
+
+	updatedServerInterface := "bond1"
+	updatedServerRack := "RR 119.03"
+	updatedHostName := "atl-edge-01"
+
+	// update rack, interfaceName and hostName values on server
+	inf.Name = updatedServerInterface
+	infs[0] = inf
+	remoteServer.Interfaces = infs
+	remoteServer.Rack = &updatedServerRack
+	remoteServer.HostName = &updatedHostName
+
+	_, reqInf, err := TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -462,7 +532,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
-	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
 	}
@@ -471,7 +541,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
-	ds, _, err = TOSession.UpdateDeliveryServiceV30(*ds.ID, ds)
+	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
 	}

@@ -16,12 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
@@ -42,9 +42,37 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestDeliveryServiceRequests(t)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 		GetTestDeliveryServiceRequestsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
+	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", dsr.DeliveryService.XMLID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("Length of GET DeliveryServiceRequest is 0")
+	}
+	respDSR := resp[0]
+	respDSR.DeliveryService.DisplayName = "new display name"
+
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(respDSR.ID, respDSR, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
@@ -208,7 +236,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			}
 		}
 
-		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted", nil)
 
 		expected = []string{
 			"deliveryservice_request was updated.",
@@ -221,11 +249,11 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	})
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string, header http.Header) (tc.Alerts, tc.DeliveryServiceRequest) {
 	ID := dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
-	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr)
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(ID, dsr, header)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request: %v", err)
 		return alerts, dsr

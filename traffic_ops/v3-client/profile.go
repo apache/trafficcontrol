@@ -72,8 +72,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, err
 }
 
-// UpdateProfileByID updates a Profile by ID.
-func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateProfileByIDWithHdr(id int, pl tc.Profile, header http.Header) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
 	reqBody, err := json.Marshal(pl)
@@ -82,7 +81,10 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	}
 
 	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -93,6 +95,12 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 
 	return alerts, reqInf, err
+}
+
+// UpdateProfileByID updates a Profile by ID.
+// Deprecated: UpdateProfileByID will be removed in 6.0. Use UpdateProfileByIDWithHdr.
+func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
+	return to.UpdateProfileByIDWithHdr(id, pl, nil)
 }
 
 func (to *Session) GetParametersByProfileNameWithHdr(profileName string, header http.Header) ([]tc.Parameter, ReqInf, error) {

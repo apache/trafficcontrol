@@ -48,8 +48,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// UpdateTypeByID updates a Type by ID.
-func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateTypeByIDWithHdr(id int, typ tc.Type, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(typ)
@@ -58,7 +57,10 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_TYPES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -66,6 +68,13 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// UpdateTypeByID updates a Type by ID.
+// Deprecated: UpdateTypeByID will be removed in 6.0. Use UpdateTypeByIDWithHdr.
+func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+
+	return to.UpdateTypeByIDWithHdr(id, typ, nil)
 }
 
 // GetTypesWithHdr returns a list of Types, with an http header and 'useInTable' parameters.

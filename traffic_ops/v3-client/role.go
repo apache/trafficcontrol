@@ -50,8 +50,7 @@ func (to *Session) CreateRole(region tc.Role) (tc.Alerts, ReqInf, int, error) {
 	return tc.Alerts{}, reqInf, 0, errClient
 }
 
-// UpdateRoleByID updates a Role by ID.
-func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, int, error) {
+func (to *Session) UpdateRoleByIDWithHdr(id int, region tc.Role, header http.Header) (tc.Alerts, ReqInf, int, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(region)
@@ -60,7 +59,7 @@ func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, in
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
+	resp, remoteAddr, errClient := to.RawRequestWithHdr(http.MethodPut, route, reqBody, header)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
@@ -70,6 +69,13 @@ func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, in
 		return alerts, reqInf, resp.StatusCode, errClient
 	}
 	return tc.Alerts{}, reqInf, 0, errClient
+}
+
+// UpdateRoleByID updates a Role by ID.
+// Deprecated: UpdateRoleByID will be removed in 6.0. Use UpdateRoleByIDWithHdr.
+func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, int, error) {
+
+	return to.UpdateRoleByIDWithHdr(id, region, nil)
 }
 
 func (to *Session) GetRolesWithHdr(header http.Header) ([]tc.Role, ReqInf, int, error) {

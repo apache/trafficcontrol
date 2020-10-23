@@ -128,8 +128,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	return alerts, reqInf, err
 }
 
-// UpdateServerByID updates a Server by ID.
-func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, header http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -140,7 +139,10 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	}
 
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	reqInf.RemoteAddr = remoteAddr
 	reqInf.StatusCode = resp.StatusCode
 	if err != nil {
@@ -152,6 +154,14 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	return alerts, reqInf, err
 }
 
+// UpdateServerByID updates a Server by ID.
+// Deprecated: UpdateServerByID will be removed in 6.0. Use UpdateServerByIDWithHdr.
+func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+	return to.UpdateServerByIDWithHdr(id, server, nil)
+}
+
+// GetServersWithHdr retrieves a list of servers using the given optional query
+// string parameters and HTTP headers.
 func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, ReqInf, error) {
 	route := API_SERVERS
 	if params != nil {

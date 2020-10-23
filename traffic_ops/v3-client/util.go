@@ -32,8 +32,8 @@ func post(to *Session, endpoint string, body []byte, respStruct interface{}) (Re
 	return makeReq(to, "POST", endpoint, body, respStruct, nil)
 }
 
-func put(to *Session, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
-	return makeReq(to, "PUT", endpoint, body, respStruct, nil)
+func put(to *Session, endpoint string, body []byte, respStruct interface{}, header http.Header) (ReqInf, error) {
+	return makeReq(to, "PUT", endpoint, body, respStruct, header)
 }
 
 func del(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {

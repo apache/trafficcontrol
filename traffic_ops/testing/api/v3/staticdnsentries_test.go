@@ -35,11 +35,38 @@ func TestStaticDNSEntries(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntries(t)
+		UpdateTestStaticDNSEntriesWithHeaders(t, header)
 		GetTestStaticDNSEntriesIMSAfterChange(t, header)
 		UpdateTestStaticDNSEntriesInvalidAddress(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestStaticDNSEntriesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestStaticDNSEntriesWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.StaticDNSEntries) > 0 {
+		firstStaticDNSEntry := testData.StaticDNSEntries[0]
+		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+		resp, _, err := TOSession.GetStaticDNSEntriesByHostWithHdr(firstStaticDNSEntry.Host, header)
+		if err != nil {
+			t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
+		}
+		if len(resp) > 0 {
+			remoteStaticDNSEntry := resp[0]
+			expectedAddress := "192.168.0.2"
+			remoteStaticDNSEntry.Address = expectedAddress
+
+			_, _, status, _ := TOSession.UpdateStaticDNSEntryByIDWithHdr(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
+			if status != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", status)
+			}
+		}
+	}
 }
 
 func GetTestStaticDNSEntriesIMSAfterChange(t *testing.T, header http.Header) {

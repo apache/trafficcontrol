@@ -112,8 +112,7 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 	return &originResp, reqInf, nil
 }
 
-// Update an Origin by ID
-func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -127,7 +126,10 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 		return nil, reqInf, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -137,6 +139,12 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 		return nil, reqInf, err
 	}
 	return &originResp, reqInf, nil
+}
+
+// Update an Origin by ID
+// Deprecated: UpdateOriginByID will be removed in 6.0. Use UpdateOriginByIDWithHdr.
+func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+	return to.UpdateOriginByIDWithHdr(id, origin, nil)
 }
 
 // GET a list of Origins by a query parameter string
