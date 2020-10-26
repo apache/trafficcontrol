@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
 
 ### Fixed
+- Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5188)
 - Fixed #5006 - Traffic Ops now generates the Monitoring on-the-fly if the snapshot doesn't exist, and logs an error. This fixes upgrading to 4.x to not break the CDN until a Snapshot is done.
 - Fixed #5074 - Traffic Monitor logging "CreateStats not adding availability data for server: not found in DeliveryServices" for MID cachces
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
