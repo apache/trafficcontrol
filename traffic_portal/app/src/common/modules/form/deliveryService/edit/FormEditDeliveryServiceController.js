@@ -208,7 +208,10 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 										$state.reload(); // reloads all the resolves for the view
 										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
 									}
-								);
+								).catch(function(fault) {
+									$anchorScroll(); // scrolls window to top
+									messageModel.setMessages(fault.data.alerts, false);
+								});
 						}).catch(function(fault) {
 							$anchorScroll(); // scrolls window to top
 							messageModel.setMessages(fault.data.alerts, false);
