@@ -36,7 +36,7 @@ tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
 mkdir -p ${GOPATH}/{src,pkg,bin} $tc_dir;
 ( set -o errexit;
 	rsync -a /trafficcontrol/ $tc_dir;
-	if ! [[ -d ${tc_dir}/.git ]]; then
+	if [ -d /trafficcontrol/.git ] && [ ! -d ${tc_dir}/.git ]; then
 		rsync -a /trafficcontrol/.git $tc_dir; # Docker for Windows compatibility
 	fi;
 	rm -rf ${tc_dir}/dist;
