@@ -18,6 +18,12 @@
 version: '2'
 
 services:
+  weasel:
+    image: licenseweasel/weasel:v0.4
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
   source:
     image: trafficcontrol_tarball
     build:
@@ -82,12 +88,6 @@ services:
       context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
-
-  weasel:
-    image: licenseweasel/weasel:v0.4
-    volumes:
-      - ../../..:/trafficcontrol:z
-    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
 
   docs:
     image: docs_builder
