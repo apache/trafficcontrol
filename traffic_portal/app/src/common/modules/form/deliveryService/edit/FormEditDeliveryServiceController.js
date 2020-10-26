@@ -149,7 +149,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 					if (autoFulfilled) {
 						// assign the ds request
 						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
-						// set the status to 'complete'
+						// set the status to 'submitted'
 						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'submitted'));
 					}
 				}
