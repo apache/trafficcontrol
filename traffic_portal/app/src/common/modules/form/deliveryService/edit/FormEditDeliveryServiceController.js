@@ -150,7 +150,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						// assign the ds request
 						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
 						// set the status to 'complete'
-						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
+						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'submitted'));
 					}
 				}
 			);
@@ -234,13 +234,20 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 							deliveryServiceService.updateDeliveryService(deliveryService).
 								then(
 									function() {
+										// upon successful update of ds, set the dsr to 'complete'
+										deliveryServiceRequestService.getDeliveryServiceRequests({ xmlId: deliveryService.xmlId, status: 'submitted' }).then(
+											function(response) {
+												deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response[0].id, 'complete');
+											}
+										);
 										$state.reload(); // reloads all the resolves for the view
 										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
 									}
 								).catch(function(fault) {
-									$anchorScroll(); // scrolls window to top
-									messageModel.setMessages(fault.data.alerts, false);
-								});
+									// if the ds update fails, send to dsr view w/ error message
+									locationUtils.navigateToPath('/delivery-service-requests');
+									messageModel.setMessages(fault.data.alerts, true);
+							});
 						}).catch(function(fault) {
 							$anchorScroll(); // scrolls window to top
 							messageModel.setMessages(fault.data.alerts, false);
