@@ -229,13 +229,13 @@ func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 }
 
 // GetServiceCategoryTenantIDByNameTx returns the tenant ID, whether the service category exists, and any error.
-func GetServiceCategoryTenantIDByNameTx(tx *sql.Tx, name string) (*int, bool, error) {
-	tenantID := (*int)(nil)
+func GetServiceCategoryTenantIDByNameTx(tx *sql.Tx, name string) (int, bool, error) {
+	var tenantID int
 	if err := tx.QueryRow(`SELECT tenant_id FROM service_category where name = $1`, name).Scan(&tenantID); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, false, nil
+			return 0, false, nil
 		}
-		return nil, false, fmt.Errorf("querying tenant ID for service category name '%v': %v", name, err)
+		return 0, false, fmt.Errorf("querying tenant ID for service category name '%v': %v", name, err)
 	}
 	return tenantID, true, nil
 }

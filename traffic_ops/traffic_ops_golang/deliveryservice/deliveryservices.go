@@ -205,7 +205,7 @@ func CreateV30(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, *serviceCategoryTenantId, *ds.TenantID)
+		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, serviceCategoryTenantId, *ds.TenantID)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cross referencing service category tenancy with delivery service"))
 			return
@@ -640,7 +640,7 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, *serviceCategoryTenantId, *ds.TenantID)
+		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, serviceCategoryTenantId, *ds.TenantID)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cross referencing service category tenancy with delivery service"))
 			return
