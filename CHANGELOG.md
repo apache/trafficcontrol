@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Fixed
 - Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
+
+### Added
+- Added If-Match and If-Unmodified-Since Support in Server and Clients.
 
 ## [5.0.0] - 2020-10-20
 ### Added
@@ -54,7 +58,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
-- Added If-Match and If-Unmodified-Since Support in Server and Clients.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
@@ -71,6 +74,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added default sort logic to GET API calls using Read()
 
 ### Fixed
+- Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5188)
 - Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issues](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed #5010 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5010)
 - Fixed #5147 - GET /servers?dsId={id} should only return mid servers (in addition to edge servers) for the cdn of the delivery service if the mid tier is employed. [Related github issues](https://github.com/apache/trafficcontrol/issues/5147)
