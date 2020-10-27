@@ -18,7 +18,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = __importDefault(require("child_process"));
 const path_1 = __importDefault(require("path"));
-let spawnOptions = { stdio: "inherit" };
+const spawnOptions = { stdio: "inherit" };
 function runProcess(...commandArguments) {
     console.info(...commandArguments);
     const { status } = child_process_1.default.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions);

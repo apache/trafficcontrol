@@ -13,14 +13,14 @@
 */
 
 "use strict";
-import child_process, { SpawnSyncOptions } from "child_process";
+import child_process, { SpawnSyncOptions, SpawnSyncReturns } from "child_process";
 import path from "path";
 
 const spawnOptions: SpawnSyncOptions = {stdio: "inherit"};
 
 function runProcess(...commandArguments: string[]): void {
 	console.info(...commandArguments);
-	const {status} = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions);
+	const {status}: SpawnSyncReturns<Buffer> = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions);
 	if (status === 0) {
 		return;
 	}
