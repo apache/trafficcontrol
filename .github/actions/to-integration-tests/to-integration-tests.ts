@@ -19,13 +19,13 @@ import path from "path"
 let spawnOptions: SpawnSyncOptions = {stdio: "inherit"}
 
 function runProcess(...commandArguments: string[]): void {
-    console.info(...commandArguments)
-    const {status} = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions)
-    if (status === 0) {
-        return
-    }
-    console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!")
-    process.exit(status || 1)
+	console.info(...commandArguments)
+	const {status} = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions)
+	if (status === 0) {
+		return
+	}
+	console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!")
+	process.exit(status || 1)
 }
 
 runProcess(path.join(__dirname, "../entrypoint.sh"))
