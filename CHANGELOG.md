@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Fixed
 - Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 
 ## [5.0.0] - 2020-10-20
 ### Added
