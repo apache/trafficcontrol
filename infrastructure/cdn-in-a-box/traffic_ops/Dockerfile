@@ -54,6 +54,7 @@ RUN set -o nounset -o errexit && \
 		isomd5sum       \
 		nmap-ncat       \
 		openssl         \
+		python3         \
 		# Used to copy certs in "Shared SSL certificate generation" step
 		rsync;          \
 	dnf clean all
@@ -83,6 +84,8 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+	infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+	infrastructure/cdn-in-a-box/dns/set-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \

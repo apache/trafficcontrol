@@ -109,8 +109,12 @@ load_data_from() {
            sync
         fi
         [[ -d $d ]] || continue
-        for f in "$d"/*.json; do
+        for f in $(find "$d" -name "*.json" -type f); do
             echo "Loading $f"
+            if [ ! -f "$f" ]; then
+              echo "No such file: $f" >&2;
+              continue;
+            fi
             delayfor "$f"
             envsubst "$vars" <"$f"  > "$ENROLLER_DIR/$f"
             sync

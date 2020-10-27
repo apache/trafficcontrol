@@ -48,8 +48,8 @@ done
 
 export PATH="$PATH:/opt/traffic_ops/go/bin"
 
-set-dns.sh
-insert-self-into-dns.sh
+/set-dns.sh
+/insert-self-into-dns.sh
 
 /set-to-ips-from-dns.sh
 
