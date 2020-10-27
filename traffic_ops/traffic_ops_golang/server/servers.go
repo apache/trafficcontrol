@@ -34,7 +34,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -659,9 +658,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
-		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
+		api.AddLastModifiedHdr(w, *maxTime)
 	}
 	if errCode == http.StatusNotModified {
 		w.WriteHeader(errCode)
@@ -1304,6 +1301,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	if changeXMPPID {
 		api.WriteAlerts(w, r, http.StatusBadRequest, tc.CreateAlerts(tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable")))
+		return
+	}
+
+	userErr, sysErr, statusCode := api.CheckIfUnModified(r.Header, inf.Tx, *server.ID, "server")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 

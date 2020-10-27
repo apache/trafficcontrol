@@ -97,7 +97,7 @@ func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, 
 }
 
 //Updater interface functions
-func (i *tester) Update() (error, error, int) {
+func (i *tester) Update(http.Header) (error, error, int) {
 	return i.userErr, i.sysErr, i.errCode
 }
 

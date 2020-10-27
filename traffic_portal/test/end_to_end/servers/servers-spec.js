@@ -75,6 +75,32 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(tableColumns.count()).toBe(9);
 	});
 
+	it('should clear column filter when column is hidden', function() {
+		// Confirm we have rows
+		let rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+
+		// Filter one of our columns
+		let firstHeaderCell = element.all(by.css('.ag-header-cell')).first();
+		firstHeaderCell.all(by.css('span.ag-header-cell-menu-button')).first().click();
+		let filterContainer = element(by.css("div.ag-filter"));
+		let filterCell = filterContainer.all(by.css('.ag-input-field-input')).first();
+		filterCell.sendKeys("nothingshouldmatchthis", protractor.Key.ENTER);
+
+		// Wait for ag-grid to process changes
+		browser.sleep(1000);
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).toBe(0);
+
+		// Hide filtered column
+		let columnToggle = element(by.id('toggleColumns')).click();
+		columnToggle.all(by.css('input[type=checkbox]:checked')).first().click();
+
+		// Wait for ag-grid again
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+	});
+
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);

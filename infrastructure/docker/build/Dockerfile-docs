@@ -44,7 +44,6 @@ RUN	python3 -m pip install --upgrade setuptools && \
 	python3 -m pip install -r /docs.requirements.txt
 ###
 
-ADD build/clean_build.sh /
-CMD /clean_build.sh docs
+CMD /trafficcontrol/build/clean_build.sh docs
 
 # vi:syntax=Dockerfile

@@ -21,8 +21,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,7 +34,37 @@ func TestCDNFederations(t *testing.T) {
 		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestCDNFederationsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCDNFederationsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
+	for _, id := range fedIDs {
+		fed, _, err := TOSession.GetCDNFederationsByIDWithHdr("foo", id, h)
+		if err != nil {
+			t.Errorf("cannot GET federation by id: %v", err)
+		}
+		if fed != nil && len(fed.Response) > 0 {
+			expectedCName := "new.cname."
+			fed.Response[0].CName = &expectedCName
+			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "foo", id, h)
+			if err == nil {
+				t.Errorf("Expected an error saying precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func TestFederationFederationResolvers(t *testing.T) {
@@ -138,7 +169,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		t.Logf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
-			log.Errorln("CName is nil after updating")
+			t.Error("CName is nil after updating")
 		} else if *resp2.Response[0].CName != expectedCName {
 			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
 		}

@@ -43,6 +43,10 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
+func (v *TOASNV11) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "asn")
+}
+
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOASNV11) InsertQuery() string           { return insertQuery() }
 func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
@@ -119,14 +123,13 @@ JOIN
 	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
 }
 
-func (as *TOASNV11) Update() (error, error, int) {
+func (as *TOASNV11) Update(h http.Header) (error, error, int) {
 	err := as.ASNExists(false)
 	if err != nil {
 		return err, nil, http.StatusBadRequest
 	}
-	return api.GenericUpdate(as)
+	return api.GenericUpdate(h, as)
 }
-
 func (as *TOASNV11) Delete() (error, error, int) { return api.GenericDelete(as) }
 
 func (asn TOASNV11) ASNExists(create bool) error {

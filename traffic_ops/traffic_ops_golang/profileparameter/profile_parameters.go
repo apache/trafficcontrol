@@ -152,7 +152,7 @@ parameter) VALUES (
 :parameter_id) RETURNING profile, parameter, last_updated`
 }
 
-func (pp *TOProfileParameter) Update() (error, error, int) {
+func (pp *TOProfileParameter) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

@@ -23,11 +23,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -516,7 +517,7 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 }
 
 //The TOCacheGroup implementation of the Updater interface
-func (cg *TOCacheGroup) Update() (error, error, int) {
+func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
@@ -529,6 +530,11 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 	if cg.FallbackToClosest == nil {
 		fbc := true
 		cg.FallbackToClosest = &fbc
+	}
+
+	userErr, sysErr, errCode := api.CheckIfUnModified(h, cg.ReqInfo.Tx, *cg.ID, "cachegroup")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()

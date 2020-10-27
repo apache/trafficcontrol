@@ -55,6 +55,10 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
+func (v *TOParameter) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "parameter")
+}
+
 // AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
 func (v *TOParameter) AllowMultipleCreates() bool    { return true }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -174,11 +178,11 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	return params, nil, nil, code, &maxTime
 }
 
-func (pa *TOParameter) Update() (error, error, int) {
+func (pa *TOParameter) Update(h http.Header) (error, error, int) {
 	if pa.Value == nil {
 		pa.Value = util.StrPtr("")
 	}
-	return api.GenericUpdate(pa)
+	return api.GenericUpdate(h, pa)
 }
 
 func (pa *TOParameter) Delete() (error, error, int) { return api.GenericDelete(pa) }

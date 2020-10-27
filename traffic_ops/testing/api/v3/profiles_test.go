@@ -16,12 +16,12 @@
 package v3
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -30,12 +30,43 @@ func TestProfiles(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
 		CreateBadProfiles(t)
 		UpdateTestProfiles(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestProfilesWithHeaders(t, header)
 		GetTestProfilesIMS(t)
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
 		ImportProfile(t)
 		CopyProfile(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestProfilesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Profiles) > 0 {
+		firstProfile := testData.Profiles[0]
+		// Retrieve the Profile by name so we can get the id for the Update
+		resp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteProfile := resp[0]
+			_, reqInf, err := TOSession.UpdateProfileByIDWithHdr(remoteProfile.ID, remoteProfile, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func GetTestProfilesIMS(t *testing.T) {
