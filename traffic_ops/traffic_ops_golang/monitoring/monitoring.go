@@ -1,3 +1,5 @@
+// Package monitoring contains handlers and supporting logic for the
+// /cdns/{{CDN Name}}/configs/monitoring Traffic Ops API endpoint.
 package monitoring
 
 /*
@@ -130,7 +132,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
 
-	deliveryServices, err := getDeliveryServices(tx, routers)
+	deliveryServices, err := getDeliveryServices(tx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
@@ -337,20 +339,13 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(tx *sql.Tx, routers []Router) ([]DeliveryService, error) {
-	profileNames := []string{}
-	for _, router := range routers {
-		profileNames = append(profileNames, router.Profile)
-	}
-
+func getDeliveryServices(tx *sql.Tx) ([]DeliveryService, error) {
 	query := `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
-FROM deliveryservice ds
-JOIN profile profile ON profile.id = ds.profile
-WHERE profile.name = ANY($1)
-AND ds.active = true
-`
-	rows, err := tx.Query(query, pq.Array(profileNames))
+	SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
+	FROM deliveryservice ds
+	WHERE ds.active = true
+	`
+	rows, err := tx.Query(query)
 	if err != nil {
 		return nil, err
 	}
