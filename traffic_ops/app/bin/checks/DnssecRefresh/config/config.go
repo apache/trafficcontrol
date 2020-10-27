@@ -61,7 +61,7 @@ func Dclose(c io.Closer) {
 
 func ErrCheck(err error) {
 	if err != nil {
-		log.Errorln("from error check", err)
+		log.Errorln(err)
 		os.Exit(1)
 	}
 }
