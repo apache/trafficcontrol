@@ -47,7 +47,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     };
 
     var getServiceCategories = function() {
-        serviceCategoryService.getServiceCategories()
+        serviceCategoryService.getServiceCategories({dsId: deliveryService.id })
             .then(function(result) {
                 $scope.serviceCategories = result;
             });
