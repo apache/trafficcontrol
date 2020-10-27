@@ -194,6 +194,28 @@ func CreateV30(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ds.ServiceCategory != nil {
+		serviceCategoryTenantId, exists, err := tenant.GetServiceCategoryTenantIDByNameTx(inf.Tx.Tx, *ds.ServiceCategory)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting service category tenancy"))
+			return
+		}
+		if !exists {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("service category "+*ds.ServiceCategory+" does not exist"), nil)
+			return
+		}
+
+		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, serviceCategoryTenantId, *ds.TenantID)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cross referencing service category tenancy with delivery service"))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service tenant does not have access to this service category"), nil)
+			return
+		}
+	}
+
 	res, status, userErr, sysErr := createV30(w, r, inf, ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
@@ -606,6 +628,28 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
+
+	if ds.ServiceCategory != nil {
+		serviceCategoryTenantId, exists, err := tenant.GetServiceCategoryTenantIDByNameTx(inf.Tx.Tx, *ds.ServiceCategory)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting service category tenancy"))
+			return
+		}
+		if !exists {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("service category "+*ds.ServiceCategory+" does not exist"), nil)
+			return
+		}
+
+		ok, err := tenant.CrossReferenceTenancy(inf.Tx.Tx, serviceCategoryTenantId, *ds.TenantID)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cross referencing service category tenancy with delivery service"))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service tenant does not have access to this service category"), nil)
+			return
+		}
+	}
 
 	res, status, userErr, sysErr := updateV30(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
