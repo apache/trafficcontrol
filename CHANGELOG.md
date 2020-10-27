@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added default sort logic to GET API calls using Read()
 
 ### Fixed
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issues](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed #5010 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal. [Related Github issues](https://github.com/apache/trafficcontrol/issues/5010)
 - Fixed #5147 - GET /servers?dsId={id} should only return mid servers (in addition to edge servers) for the cdn of the delivery service if the mid tier is employed. [Related github issues](https://github.com/apache/trafficcontrol/issues/5147)
