@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Fixed #5005: Traffic Monitor cannot be upgraded independently of Traffic Ops
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 
 ### Deprecated
 - Deprecated the `insecure` option in `traffic_ops_golang` in favor of `"tls_config": { "InsecureSkipVerify": <bool> }`
