@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [4.1.1] - 2020-09-22
+## [4.1.1] - 2020-10-27
 ### Added
 - Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
 - Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
@@ -356,6 +356,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
+[4.1.1]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-4.1.1
 [4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
