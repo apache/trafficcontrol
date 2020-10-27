@@ -32,10 +32,15 @@ public class ProtectedFetcher extends Fetcher {
 
 	@Override
 	protected HttpURLConnection getConnection(final String url, final String data, final String method, final long lastFetchedTime) throws IOException {
-		if (!isCookieValid()) {
-			extractCookie(super.getConnection(getAuthorizationEndpoint(), getData(), POST_STR, 0L));
+
+		if (isCookieValid()) {
+			final HttpURLConnection connection = extractCookie(super.getConnection(url, data, method, lastFetchedTime));
+			if (connection.getResponseCode() != HttpURLConnection.HTTP_UNAUTHORIZED) {
+				return connection;
+			}
 		}
 
+		extractCookie(super.getConnection(getAuthorizationEndpoint(), getData(), POST_STR, 0L));
 		return extractCookie(super.getConnection(url, data, method, lastFetchedTime));
 	}
 
