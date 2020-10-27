@@ -22,50 +22,60 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh/config"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh/config"
 )
 
 func main() {
 	cfg, err := config.GetCfg()
 	config.ErrCheck(err)
+	//for the -h --help option
+	if cfg == (config.Cfg{}) {
+		os.Exit(0)
+	}
 	log.Debugln("Including DEBUG messages in output. Config is:")
 	config.PrintConfig(cfg) // only if DEBUG logging is set.
 	body := &config.Creds{
 		User:     cfg.TOUser,
 		Password: cfg.TOPass,
 	}
-	loginUrl := fmt.Sprintf("%s%s", cfg.TOUrl, "/api/2.0/user/login")
-	buf := new(bytes.Buffer)
+	loginUrl := cfg.TOUrl + "/api/2.0/user/login"
+	buf := &bytes.Buffer{}
 	err = json.NewEncoder(buf).Encode(body)
 	config.ErrCheck(err)
-	req, _ := http.NewRequest("POST", loginUrl, buf)
-	jar, _ := cookiejar.New(nil)
-	client := &http.Client{Jar: jar, Transport: cfg.Transport}
+	req, err := http.NewRequest(http.MethodPost, loginUrl, buf)
+	config.ErrCheck(err)
+	jar, err := cookiejar.New(nil)
+	config.ErrCheck(err)
+	client := &http.Client{Jar: jar, Transport: cfg.Transport, Timeout: 5 * time.Second}
 
 	log.Debugf("Posting to: %s", loginUrl)
 
 	res, err := client.Do(req)
 	config.ErrCheck(err)
 	defer config.Dclose(res.Body)
-	refreshUrl := fmt.Sprintf("%s%s", cfg.TOUrl, "/api/2.0/cdns/dnsseckeys/refresh")
-	resp, _ := http.NewRequest("GET", refreshUrl, buf)
-
+	refreshUrl := cfg.TOUrl + "/api/2.0/cdns/dnsseckeys/refresh"
+	resp, err := http.NewRequest(http.MethodGet, refreshUrl, buf)
+	config.ErrCheck(err)
 	log.Debugf("Get req to: %s", refreshUrl)
 
-	refresh, _ := client.Do(resp)
-	respData, _ := ioutil.ReadAll(refresh.Body)
+	refresh, err := client.Do(resp)
+	config.ErrCheck(err)
+	respData, err := ioutil.ReadAll(refresh.Body)
+	config.ErrCheck(err)
 	defer config.Dclose(refresh.Body)
+
 	if refresh.StatusCode != 200 {
-		log.Debugln(string(respData))
+		log.Errorln(string(respData))
 		os.Exit(1)
 	}
-	var response config.ToResponse
+	response := config.ToResponse{}
 	config.ErrCheck(json.Unmarshal(respData, &response))
 	log.Debugln(response.Response)
 }

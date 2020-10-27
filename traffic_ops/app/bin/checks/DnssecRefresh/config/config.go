@@ -23,12 +23,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/pborman/getopt/v2"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/pborman/getopt/v2"
 )
 
 type Creds struct {
@@ -54,12 +55,13 @@ type ToResponse struct {
 
 func Dclose(c io.Closer) {
 	if err := c.Close(); err != nil {
+		log.Errorln(err)
 	}
 }
 
 func ErrCheck(err error) {
 	if err != nil {
-		log.Errorln(err)
+		log.Errorln("from error check", err)
 		os.Exit(1)
 	}
 }
@@ -78,7 +80,7 @@ func GetCfg() (Cfg, error) {
 	logLocationWarnPtr := getopt.StringLong("log-location-warning", 'w', "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'u', "", "Traffic Ops username. Required.")
-	toPassPtr := getopt.StringLong("traffic-ops-passowrd", 'p', "", "Traffic Ops Password. Required")
+	toPassPtr := getopt.StringLong("traffic-ops-password", 'p', "", "Traffic Ops Password. Required")
 	toUrlPtr := getopt.StringLong("traffic-ops-url", 'U', "", "Traffic ops base URL. Required.")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.ParseV2()
@@ -94,23 +96,6 @@ func GetCfg() (Cfg, error) {
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toInsecure}}
 	help := *helpPtr
 
-	if help {
-		Usage()
-		return Cfg{}, nil
-	}
-
-	missingArgStr := "Missing required argument"
-	usageStr := "\nBasic usage: ToDnssecRefresh --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass"
-	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-url" + usageStr)
-	}
-	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-user" + usageStr)
-	}
-	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-password" + usageStr)
-	}
-
 	cfg := Cfg{
 		LogLocationDebug: logLocationDebug,
 		LogLocationErr:   logLocationError,
@@ -123,8 +108,24 @@ func GetCfg() (Cfg, error) {
 		TOPass:           toPass,
 	}
 
+	if help {
+		Usage()
+		return Cfg{}, nil
+	}
 	if err = log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
+	}
+
+	missingArgStr := "Missing required argument"
+	usageStr := "\nBasic usage: ToDnssecRefresh --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass\n"
+	if strings.TrimSpace(toURL) == "" {
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-url\n" + usageStr)
+	}
+	if strings.TrimSpace(toUser) == "" {
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-user\n" + usageStr)
+	}
+	if strings.TrimSpace(toPass) == "" {
+		return Cfg{}, errors.New(missingArgStr + " --traffic-ops-password\n" + usageStr)
 	}
 
 	return cfg, nil
@@ -142,12 +143,15 @@ func PrintConfig(cfg Cfg) {
 }
 
 func Usage() {
-	fmt.Println("\t  --log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --traffic-ops-url=[url] | -u [url], Traffic Ops URL. Must be the full URL, including the scheme. Required.")
-	fmt.Println("\t  --traffic-ops-user=[username] | -U [username], Traffic Ops username. Required.")
-	fmt.Println("\t  --traffic-ops-password=[password] | -P [password], Traffic Ops password. Required.")
-	fmt.Println("\t  --help | -h, Print usage information and exit")
+	usageStr := `Usage: ToDnssecRefresh -u <url> -U <to_user> -p <to_password> [-d|-e|-w <log_location>] [-I]
+	--log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stderr
+	--log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stderr
+	--log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stderr
+	--log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stderr
+	--traffic-ops-url=[url] | -u [url], Traffic Ops URL. Must be the full URL, including the scheme. Required.
+	--traffic-ops-insecure=[true|false] -I [true | false] Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging, default = false
+	--traffic-ops-user=[username] | -U [username], Traffic Ops username. Required.
+	--traffic-ops-password=[password] | -P [password], Traffic Ops password. Required.
+	--help | -h, Print usage information and exit`
+	fmt.Println(usageStr)
 }
