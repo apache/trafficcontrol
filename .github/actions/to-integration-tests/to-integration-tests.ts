@@ -12,20 +12,20 @@
 * limitations under the License.
 */
 
-"use strict"
-import child_process, {SpawnSyncOptions} from "child_process"
-import path from "path"
+"use strict";
+import child_process, { SpawnSyncOptions } from "child_process";
+import path from "path";
 
-let spawnOptions: SpawnSyncOptions = {stdio: "inherit"}
+const spawnOptions: SpawnSyncOptions = {stdio: "inherit"};
 
 function runProcess(...commandArguments: string[]): void {
-	console.info(...commandArguments)
-	const {status} = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions)
+	console.info(...commandArguments);
+	const {status} = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions);
 	if (status === 0) {
-		return
+		return;
 	}
-	console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!")
-	process.exit(status || 1)
+	console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!");
+	process.exit(status || 1);
 }
 
-runProcess(path.join(__dirname, "../entrypoint.sh"))
+runProcess(path.join(__dirname, "../entrypoint.sh"));
