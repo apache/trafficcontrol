@@ -259,10 +259,6 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	ds.CDNID = &newCdn.ID
 	ds.CDNName = &newCdn.Name
 	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
 	if err == nil {
 		t.Fatal("should not be able to update delivery service (cdn) as it has ssl keys")
 	}
