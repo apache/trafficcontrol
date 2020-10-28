@@ -102,8 +102,8 @@ func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
 func (pp *TOProfileParameter) Validate() error {
 
 	errs := validation.Errors{
-		"profile":   validation.Validate(pp.ProfileID, validation.Required),
-		"parameter": validation.Validate(pp.ParameterID, validation.Required),
+		"profileId":   validation.Validate(pp.ProfileID, validation.Required),
+		"parameterId": validation.Validate(pp.ParameterID, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
