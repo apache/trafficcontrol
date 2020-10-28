@@ -25,7 +25,7 @@ function runProcess(...commandArguments: string[]): void {
 		return;
 	}
 	console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!");
-	process.exit(status || 1);
+	process.exit(status ?? 1);
 }
 
 runProcess(path.join(__dirname, "../entrypoint.sh"));
