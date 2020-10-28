@@ -26,6 +26,6 @@ function runProcess(...commandArguments) {
         return;
     }
     console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!");
-    process.exit(status || 1);
+    process.exit(status !== null && status !== void 0 ? status : 1);
 }
 runProcess(path_1.default.join(__dirname, "../entrypoint.sh"));
