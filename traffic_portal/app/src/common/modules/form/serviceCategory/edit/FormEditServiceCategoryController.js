@@ -37,7 +37,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
     };
 
     $scope.save = function(serviceCategory) {
-        serviceCategoryService.updateServiceCategory(serviceCategory).
+        serviceCategoryService.updateServiceCategory(serviceCategory, $scope.serviceCategoryName).
             then(function() {
                 $scope.serviceCategoryName = angular.copy(serviceCategory.name);
                 $anchorScroll(); // scrolls window to top
