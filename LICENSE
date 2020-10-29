@@ -462,8 +462,8 @@ For the google/uuid (version 1.1.1) component:
 ./traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/LICENSE
 
 For the gofrs/flock component:
-@traffic_ops_ort/vendor/github.com/gofrs/flock/*
-./traffic_ops_ort/vendor/github.com/gofrs/flock/LICENSE
+@vendor/github.com/gofrs/flock/*
+./vendor/github.com/gofrs/flock/LICENSE
 
 For the pborman/getopt component:
 @vendor/github.com/pborman/getopt/*
