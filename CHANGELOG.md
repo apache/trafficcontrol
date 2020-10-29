@@ -112,6 +112,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed matching of wildcards in subjectAlternateNames when loading TLS certificates
 - Fixed #5180 - Global Max Mbps and Tps is not send to TM
 - Fixed #3528 - Fix Traffic Ops monitoring.json missing DeliveryServices
+- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
