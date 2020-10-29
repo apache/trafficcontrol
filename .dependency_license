@@ -123,8 +123,6 @@ traffic_portal/app/src/assets/css/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/dataTables.buttons\..*, MIT
 traffic_portal/app/src/assets/js/buttons.html5\..*, MIT
-traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
-traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
