@@ -58,7 +58,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     this.updateServiceCategory = function(serviceCategory, oldName) {
         return $http.put(ENV.api['root'] + 'service_categories/' + encodeURIComponent(oldName), serviceCategory).then(
             function(result) {
-                messageModel.setMessages(result.data.alerts, false);
+                messageModel.setMessages(result.data.alerts, true);
 				locationUtils.navigateToPath('/service-categories/edit?name=' + encodeURIComponent(serviceCategory.name));
                 return result;            },
             function(err) {
