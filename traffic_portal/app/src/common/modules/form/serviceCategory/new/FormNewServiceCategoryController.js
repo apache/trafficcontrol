@@ -29,8 +29,8 @@ var FormNewServiceCategoryController = function(serviceCategory, $scope, $contro
         saveLabel: 'Create'
     };
 
-    $scope.save = function(division) {
-        serviceCategoryService.createServiceCategory(serviceCategory)
+    $scope.save = function() {
+        serviceCategoryService.createServiceCategory(serviceCategory);
     };
 
 };

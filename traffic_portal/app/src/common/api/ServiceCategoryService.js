@@ -55,10 +55,11 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    this.updateServiceCategory = function(serviceCategory) {
-        return $http.put(ENV.api['root'] + 'service_categories/' + encodeURIComponent(serviceCategory.name), serviceCategory).then(
+    this.updateServiceCategory = function(serviceCategory, oldName) {
+        return $http.put(ENV.api['root'] + 'service_categories/' + encodeURIComponent(oldName), serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
+				locationUtils.navigateToPath('/service-categories/edit?name=' + encodeURIComponent(serviceCategory.name));
                 return result;            },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
