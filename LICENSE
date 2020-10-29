@@ -358,12 +358,12 @@ The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provi
 ./licenses/MIT-SecLists
 
 For the go-sqlmock component:
-@traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/*
-./traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
+@vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/*
+./vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
 
 For the go-jwx component:
-@traffic_ops/vendor/github.com/lestrrat/go-jwx/*
-./traffic_ops/vendor/github.com/lestrrat/go-jwx/LICENSE
+@vendor/github.com/lestrrat/go-jwx/*
+./vendor/github.com/lestrrat/go-jwx/LICENSE
 
 For the protobuf component:
 @vendor/github.com/golang/protobuf/*
@@ -382,8 +382,8 @@ The riak-go-client component is used under the Apache license:
 ./vendor/github.com/basho/riak-go-client/LICENSE
 
 The envconfig component is used under the MIT license:
-@traffic_ops/vendor/github.com/kelseyhightower/envconfig/*
-./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
+@vendor/github.com/kelseyhightower/envconfig/*
+./vendor/github.com/kelseyhightower/envconfig/LICENSE
 
 The govalidator component is used under the MIT license:
 @vendor/github.com/asaskevich/govalidator/*
@@ -410,12 +410,12 @@ For the miekg/dns component:
 ./licenses/BSD-miekg-dns
 
 The asn1-ber.v1 component is used under the MIT license:
-@traffic_ops/vendor/gopkg.in/asn1-ber.v1/*
-./traffic_ops/vendor/gopkg.in/asn1-ber.v1/LICENSE
+@vendor/gopkg.in/asn1-ber.v1/*
+./vendor/gopkg.in/asn1-ber.v1/LICENSE
 
 The ldap.v2 component is used under the MIT license:
-@traffic_ops/vendor/gopkg.in/ldap.v2/*
-./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
+@vendor/gopkg.in/ldap.v2/*
+./vendor/gopkg.in/ldap.v2/LICENSE
 
 The fakeOrigin example video is used the Public Domain license:
 @test/fakeOrigin/example/video/*

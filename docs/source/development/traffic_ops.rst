@@ -81,7 +81,7 @@ Go Implementation Requirements
 .. |install-go-link| replace:: Go :atc-go-version:`_` or later
 .. _install-go-link: http://golang.org/doc/install
 
-All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
+All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. No other :atc-file:`vendor/` directories exist.
 
 Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`go-get(1)` rather than downloaded by hand.
 
