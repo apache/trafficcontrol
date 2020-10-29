@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Fixed
+- Fixed # - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216) 
 - Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
@@ -75,7 +76,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added default sort logic to GET API calls using Read()
 
 ### Fixed
-- Fixed # - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216) 
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5188)
 - Fixed #3455 - Alphabetically sorting CDN Read API call [Related Github issue](https://github.com/apache/trafficcontrol/issues/3455)
 - Fixed #5010 - Fixed Reference urls for Cache Config on Delivery service pages (HTTP, DNS) in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5010)
