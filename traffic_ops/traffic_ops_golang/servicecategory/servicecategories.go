@@ -20,11 +20,13 @@ package servicecategory
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -106,7 +108,7 @@ func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, order
 
 func (serviceCategory TOServiceCategory) Validate() error {
 	errs := validation.Errors{
-		"name": validation.Validate(serviceCategory.Name, validation.NotNil, validation.Required),
+		"name": validation.Validate(serviceCategory.Name, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
@@ -135,17 +137,36 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	name := inf.Params["name"]
 
-	var newSC tc.ServiceCategory
+	var newSC TOServiceCategory
 	if err := json.NewDecoder(r.Body).Decode(&newSC); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating service category: "+err.Error()))
+	if err := newSC.Validate(); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	var origSC TOServiceCategory
+	if err := inf.Tx.QueryRow(`SELECT name FROM service_category WHERE name = $1`, name).Scan(&origSC.Name); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no service category found with name "+name), nil)
+			return
+		}
+		log.Errorf("MATT JACKSON in here")
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	log.Errorf("MATT JACKSON or here")
+
+	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" Service Category: "+newSC.Name, inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service category update was successful.", resp)
 }
 
