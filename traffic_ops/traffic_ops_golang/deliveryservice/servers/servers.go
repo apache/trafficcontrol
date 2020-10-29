@@ -106,43 +106,7 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
-func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
-	useIMS := false
-	cfg, err := api.GetConfig(r.Context())
-	if err != nil {
-		log.Warnf("Couldnt get the config %v", err)
-	}
-	if cfg != nil {
-		useIMS = cfg.UseIMS
-	}
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	dss := TODeliveryServiceServer{}
-	dss.SetInfo(inf)
-	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, useIMS)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
-		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
-	}
-	// statusnotmodified
-	if err == nil && results == nil {
-		w.WriteHeader(http.StatusNotModified)
-	}
-	api.WriteRespRaw(w, r, results)
-}
-
-// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
+// ReadDSSHandlerV14 list all of the Deliveryservice Servers in response to requests to api/1.4+/deliveryserviceserver$
 func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
@@ -740,16 +704,6 @@ VALUES (:id, :server )`
 
 // GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
-	getRead(w, r, false, tc.Alerts{})
-}
-
-// GetReadUnassigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
-func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
-	alerts := api.CreateDeprecationAlerts(nil)
-	getRead(w, r, true, alerts)
-}
-
-func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -757,7 +711,8 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 	}
 	defer inf.Close()
 
-	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
+	alerts := tc.Alerts{}
+	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User)
 	if err != nil {
 		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
@@ -819,7 +774,7 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServerV4, error) {
+func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser) ([]tc.DSServerV4, error) {
 	queryDataString :=
 		`,
 cg.name as cachegroup,
@@ -864,12 +819,8 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id `
-	if unassigned {
-		queryFormatString += `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
-	} else {
-		queryFormatString += `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
-	}
+JOIN type t ON s.type = t.id
+WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
 	idRows, err := tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
 	if err != nil {

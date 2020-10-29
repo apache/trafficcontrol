@@ -483,9 +483,9 @@ RETURNING
 `
 
 const originServerQuery = `
-JOIN deliveryservice_server dsorg 
-ON dsorg.server = s.id 
-WHERE t.name = '` + tc.OriginTypeName + `' 
+JOIN deliveryservice_server dsorg
+ON dsorg.server = s.id
+WHERE t.name = '` + tc.OriginTypeName + `'
 AND dsorg.deliveryservice=:dsId
 `
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
@@ -880,20 +880,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if version.Major <= 1 {
-		legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
-		for _, server := range servers {
-			legacyServer, err := server.ToServerV2FromV4()
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
-				return
-			}
-			legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
-		}
-		api.WriteResp(w, r, legacyServers)
-		return
-	}
-
 	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2FromV4()
@@ -904,58 +890,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		legacyServers = append(legacyServers, legacyServer)
 	}
 	api.WriteResp(w, r, legacyServers)
-}
-
-// ReadID is the handler for GET requests to /servers/{{ID}}.
-func ReadID(w http.ResponseWriter, r *http.Request) {
-	alternative := "GET /servers with query parameter id"
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, &alternative)
-		return
-	}
-	defer inf.Close()
-
-	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
-	servers := []tc.ServerV40{}
-	cfg, e := api.GetConfig(r.Context())
-	useIMS := false
-	if e == nil && cfg != nil {
-		useIMS = cfg.UseIMS
-	} else {
-		log.Warnf("Couldn't get config %v", e)
-	}
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
-	if len(servers) > 1 {
-		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
-		return
-	}
-	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
-
-	// No need to bother converting if there's no data
-	if len(servers) < 1 {
-		api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, servers)
-		return
-	}
-	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
-	for _, server := range servers {
-		legacyServer, err := server.ToServerV2FromV4()
-		if err != nil {
-			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err), &alternative)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
-			return
-		}
-		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
-	}
-	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
-	return
 }
 
 func selectMaxLastUpdatedQuery(queryAddition string, where string) string {
@@ -1274,8 +1208,8 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		capabilities.array_agg
 		@>
 		(
-		SELECT ARRAY_AGG(drc.required_capability) 
-		FROM deliveryservices_required_capability drc 
+		SELECT ARRAY_AGG(drc.required_capability)
+		FROM deliveryservices_required_capability drc
 		WHERE drc.deliveryservice_id=:ds_id)
 		)`
 	} else {
@@ -1538,7 +1472,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-	} else if inf.Version.Major == 2 {
+	} else {
 		var legacyServer tc.ServerNullableV2
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1553,31 +1487,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		server, err = legacyServer.UpgradeToV40()
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-	} else {
-		var legacyServer tc.ServerNullableV11
-		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		err := validateV1(&legacyServer, tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		v2Server := tc.ServerNullableV2{
-			ServerNullableV11: legacyServer,
-			IPIsService:       util.BoolPtr(true),
-			IP6IsService:      util.BoolPtr(true),
-		}
-
-		server, err = v2Server.UpgradeToV40()
-		if err != nil {
-			sysErr = fmt.Errorf("error upgrading valid V1 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
@@ -1721,89 +1630,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
-}
-
-func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	var server tc.ServerNullableV11
-
-	tx := inf.Tx.Tx
-
-	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if server.ID != nil {
-		var prevID int
-		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
-		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
-			return
-		}
-		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
-			return
-		}
-	}
-
-	if err := validateV1(&server, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if server.CDNName != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
-	} else if server.CDNID != nil {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
-	}
-
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer resultRows.Close()
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
-			return
-		}
-	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
-	}
-
-	ifaces, err := server.LegacyInterfaceDetails.ToInterfacesV4(true, true, server.RouterHostName, server.RouterPortName)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
-
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -2071,9 +1897,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	switch {
-	case inf.Version.Major <= 1:
-		createV1(inf, w, r)
-	case inf.Version.Major == 2:
+	case inf.Version.Major <= 2:
 		createV2(inf, w, r)
 	case inf.Version.Major == 3:
 		createV3(inf, w, r)
@@ -2230,12 +2054,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
-
-		if inf.Version.Major <= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2.ServerNullableV11)
-		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
-		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
