@@ -394,15 +394,15 @@ The ozzo-validation component is used under the MIT license:
 ./vendor/github.com/go-ozzo/ozzo-validation/LICENSE
 
 The bytefmt component is used under the Apache 2.0 license:
-@grove/vendor/code.cloudfoundry.org/bytefmt/*
-./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
+@vendor/code.cloudfoundry.org/bytefmt/*
+./vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
 The bbolt component is used under the MIT license:
-@grove/vendor/go.etcd.io/bbolt/*
-./grove/vendor/go.etcd.io/bbolt/LICENSE
+@vendor/go.etcd.io/bbolt/*
+./vendor/go.etcd.io/bbolt/LICENSE
 
 For the siphash component:
-@grove/vendor/github.com/dchest/siphash/*
+@vendor/github.com/dchest/siphash/*
 ./licenses/CC0
 
 For the miekg/dns component:
