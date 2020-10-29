@@ -227,32 +227,3 @@ func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	}
 	return tenantID, true, nil
 }
-
-// GetServiceCategoryTenantIDByNameTx returns the tenant ID, whether the service category exists, and any error.
-func GetServiceCategoryTenantIDByNameTx(tx *sql.Tx, name string) (int, bool, error) {
-	var tenantID int
-	if err := tx.QueryRow(`SELECT tenant_id FROM service_category where name = $1`, name).Scan(&tenantID); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, false, nil
-		}
-		return 0, false, fmt.Errorf("querying tenant ID for service category name '%v': %v", name, err)
-	}
-	return tenantID, true, nil
-}
-
-// CrossReferenceTenancy returns whether the tenantId is within the tenancy tree hierarchy of the tenantIdToReference
-// and any error.
-func CrossReferenceTenancy(tx *sql.Tx, tenantId int, tenantIdToReference int) (bool, error) {
-	allowedTenants, err := GetUserTenantIDListTx(tx, tenantIdToReference)
-	if err != nil {
-		return false, errors.New("getting tenant list: " + err.Error())
-	}
-
-	for _, tenantID := range allowedTenants {
-		if tenantID == tenantId {
-			return true, nil
-		}
-	}
-	return false, nil
-
-}
