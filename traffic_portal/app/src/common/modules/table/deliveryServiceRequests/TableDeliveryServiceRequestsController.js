@@ -117,16 +117,25 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.pageSize = 100;
 
+	$scope.mouseDownSelectionText = "";
+
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
-		onRowDoubleClicked: function(params) {
-			let path = '/delivery-service-requests/' + params.data.id + '?type=';
-			typeService.getType(params.data.deliveryService.typeId)
-				.then(function (result) {
-					path += result.name;
-					locationUtils.navigateToPath(path);
-				});
-			$scope.$apply();
+		onCellMouseDown: function() {
+			$scope.mouseDownSelectionText = window.getSelection().toString();
+		},
+		onRowClicked: function(params) {
+			const selection = window.getSelection().toString();
+			if(selection === "" || selection === $scope.mouseDownSelectionText) {
+				let path = '/delivery-service-requests/' + params.data.id + '?type=';
+				typeService.getType(params.data.deliveryService.typeId)
+					.then(function (result) {
+						path += result.name;
+						locationUtils.navigateToPath(path);
+					});
+				$scope.$apply();
+			}
+			$scope.mouseDownSelectionText = "";
 		},
 		columnDefs: columns,
 		enableCellTextSelection: true,
