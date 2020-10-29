@@ -36,18 +36,14 @@ func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
 	configs := []config.ATSConfigFile{
 		{
-			ATSConfigMetaDataConfigFile: tc.ATSConfigMetaDataConfigFile{
-				FileNameOnDisk: "config0.txt",
-				Location:       "/my/config0/location",
-			},
+			Name:        "config0.txt",
+			Path:        "/my/config0/location",
 			Text:        "config0",
 			ContentType: "text/plain",
 		},
 		{
-			ATSConfigMetaDataConfigFile: tc.ATSConfigMetaDataConfigFile{
-				FileNameOnDisk: "config1.txt",
-				Location:       "/my/config1/location",
-			},
+			Name:        "config1.txt",
+			Path:        "/my/config1/location",
 			Text:        "config2,foo",
 			ContentType: "text/csv",
 		},
@@ -143,7 +139,8 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	toData := MakeFakeTOData()
 	revalOnly := false
 	cfgPath := "/etc/trafficserver/"
-	configs, err := GetAllConfigs(toData, revalOnly, cfgPath)
+
+	configs, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -156,7 +153,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath)
+		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
@@ -505,11 +502,6 @@ func MakeFakeTOData() *config.TOData {
 			*randParam(),
 			*randParam(),
 		},
-		ScopeParams: []tc.Parameter{
-			*randParam(),
-			*randParam(),
-			*randParam(),
-		},
 		ServerParams: []tc.Parameter{
 			// configLocation := locationParams["remap.config"].Location
 			tc.Parameter{
@@ -542,13 +534,11 @@ func MakeFakeTOData() *config.TOData {
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,
-		TOToolName:             *randStr(),
-		TOURL:                  *randStr(),
 		Jobs: []tc.Job{
 			*randJob(),
 			*randJob(),
 		},
-		CDN: *randCDN(),
+		CDN: randCDN(),
 		DeliveryServiceRegexes: []tc.DeliveryServiceRegexes{
 			*dsr0,
 			*dsr1,

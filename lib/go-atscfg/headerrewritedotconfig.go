@@ -39,6 +39,126 @@ const ServiceCategoryHeader = "CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
+func MakeHeaderRewriteDotConfig(
+	fileName string,
+	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	server *tc.ServerNullable,
+	servers []tc.ServerNullable,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewritePrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
+
+	tcDS := tc.DeliveryServiceNullableV30{}
+	for _, ds := range deliveryServices {
+		if ds.XMLID == nil {
+			warnings = append(warnings, "deliveryServices had DS with nil xmlId (name)")
+			continue
+		}
+		if *ds.XMLID != dsName {
+			continue
+		}
+		tcDS = ds
+		break
+	}
+	if tcDS.ID == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' not found")
+	}
+
+	if tcDS.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' missing cdn")
+	}
+
+	ds, err := HeaderRewriteDSFromDS(&tcDS)
+	if err != nil {
+		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
+	}
+
+	dsServers := FilterDSS(deliveryServiceServers, map[int]struct{}{ds.ID: {}}, nil)
+
+	dsServerIDs := map[int]struct{}{}
+	for _, dss := range dsServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue // TODO warn?
+		}
+		if *dss.DeliveryService != *tcDS.ID {
+			continue
+		}
+		dsServerIDs[*dss.Server] = struct{}{}
+	}
+
+	assignedEdges := []HeaderRewriteServer{}
+	for _, server := range servers {
+		if server.CDNName == nil {
+			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
+			continue
+		}
+		if server.ID == nil {
+			warnings = append(warnings, "servers had server with missing kid, skipping!")
+			continue
+		}
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := dsServerIDs[*server.ID]; !ok && tcDS.Topology == nil {
+			continue
+		}
+		cfgServer, err := HeaderRewriteServerFromServer(server)
+		if err != nil {
+			warnings = append(warnings, "error getting header rewrite server, skipping: "+err.Error())
+			continue
+		}
+		assignedEdges = append(assignedEdges, cfgServer)
+	}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing CDNName")
+	}
+
+	text := makeHdrComment(hdrComment)
+
+	// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
+	if ds.MaxOriginConnections > 0 && !ds.Type.UsesMidCache() {
+		dsOnlineEdgeCount := 0
+		for _, sv := range assignedEdges {
+			if sv.Status == tc.CacheStatusReported || sv.Status == tc.CacheStatusOnline {
+				dsOnlineEdgeCount++
+			}
+		}
+
+		if dsOnlineEdgeCount > 0 {
+			maxOriginConnectionsPerEdge := int(math.Round(float64(ds.MaxOriginConnections) / float64(dsOnlineEdgeCount)))
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
+			if ds.EdgeHeaderRewrite == "" {
+				text += " [L]"
+			} else {
+				text += "\n"
+			}
+		}
+	}
+
+	// write the contents of ds.EdgeHeaderRewrite to hdr_rw_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
+	if ds.EdgeHeaderRewrite != "" {
+		re := regexp.MustCompile(`\s*__RETURN__\s*`)
+		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
+	}
+
+	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
+		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsName, ds.ServiceCategory)
+	}
+
+	text += "\n"
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeHeaderRewriteDotConfig,
+		LineComment: LineCommentHeaderRewriteDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
 type HeaderRewriteDS struct {
 	EdgeHeaderRewrite    string
 	ID                   int
@@ -137,48 +257,4 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (HeaderRewriteDS, 
 		Type:                 *ds.Type,
 		ServiceCategory:      *ds.ServiceCategory,
 	}, nil
-}
-
-func MakeHeaderRewriteDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	ds HeaderRewriteDS,
-	assignedEdges []HeaderRewriteServer, // the edges assigned to ds
-	dsXmlId string,
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
-
-	// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
-	if ds.MaxOriginConnections > 0 && !ds.Type.UsesMidCache() {
-		dsOnlineEdgeCount := 0
-		for _, sv := range assignedEdges {
-			if sv.Status == tc.CacheStatusReported || sv.Status == tc.CacheStatusOnline {
-				dsOnlineEdgeCount++
-			}
-		}
-
-		if dsOnlineEdgeCount > 0 {
-			maxOriginConnectionsPerEdge := int(math.Round(float64(ds.MaxOriginConnections) / float64(dsOnlineEdgeCount)))
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
-			if ds.EdgeHeaderRewrite == "" {
-				text += " [L]"
-			} else {
-				text += "\n"
-			}
-		}
-	}
-
-	// write the contents of ds.EdgeHeaderRewrite to hdr_rw_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
-	if ds.EdgeHeaderRewrite != "" {
-		re := regexp.MustCompile(`\s*__RETURN__\s*`)
-		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
-	}
-
-	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
-		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategory)
-	}
-
-	text += "\n"
-	return text
 }

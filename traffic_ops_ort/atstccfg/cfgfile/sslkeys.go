@@ -29,7 +29,8 @@ import (
 )
 
 func GetSSLCertsAndKeyFiles(toData *config.TOData) ([]config.ATSConfigFile, error) {
-	dses := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
+	dses, dsWarns := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
+	logWarnings("Getting SSL files: Making SSL MultiCert DSes: ", dsWarns)
 	dses = atscfg.GetSSLMultiCertDotConfigDeliveryServices(dses)
 
 	configs := []config.ATSConfigFile{}
@@ -61,14 +62,14 @@ func GetSSLCertsAndKeyFiles(toData *config.TOData) ([]config.ATSConfigFile, erro
 		certName, keyName := atscfg.GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 
 		keyFile := config.ATSConfigFile{}
-		keyFile.FileNameOnDisk = keyName
-		keyFile.Location = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
+		keyFile.Name = keyName
+		keyFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		keyFile.Text = string(key)
 		configs = append(configs, keyFile)
 
 		certFile := config.ATSConfigFile{}
-		certFile.FileNameOnDisk = certName
-		certFile.Location = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
+		certFile.Name = certName
+		certFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		certFile.Text = string(cert)
 		configs = append(configs, certFile)
 	}

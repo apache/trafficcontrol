@@ -22,6 +22,8 @@ package atscfg
 import (
 	"strconv"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const LogsXMLFileName = "logs_xml.config"
@@ -30,16 +32,23 @@ const ContentTypeLogsDotXML = `text/xml`
 const LineCommentLogsDotXML = `<!--`
 
 func MakeLogsXMLDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, LoggingYAMLFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
+	server *tc.ServerNullable,
+	serverParams []tc.Parameter,
+	hdrCommentTxt string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Profile")
+	}
+
+	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, LogsXMLFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
 
 	// Note LineCommentLogsDotXML must be a single-line comment!
 	// But this file doesn't have a single-line format, so we use <!-- for the header and promise it's on a single line
 	// Note! if this file is ever changed to have multi-line comments, LineCommentLogsDotXML will have to be changed to the empty string.
-	hdrComment := GenericHeaderComment(profileName, toToolName, toURL)
+	hdrComment := makeHdrComment(hdrCommentTxt)
 	hdrComment = strings.Replace(hdrComment, `# `, ``, -1)
 	hdrComment = strings.Replace(hdrComment, "\n", ``, -1)
 	text := "<!-- " + hdrComment + " -->\n"
@@ -93,5 +102,11 @@ func MakeLogsXMLDotConfig(
 `
 		}
 	}
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeLogsDotXML,
+		LineComment: LineCommentLogsDotXML,
+		Warnings:    warnings,
+	}, nil
 }

@@ -82,7 +82,7 @@ const SystemInfoParamConfigFile = `global`
 // This is identical to the /api/1.x/system/info endpoint, except it does not include a '{response: {parameters:' wrapper.
 //
 func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
-	paramArr, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
+	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
 	if err != nil {
 		return errors.New("getting system info parameters: " + err.Error())
 	}
@@ -99,7 +99,7 @@ func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
 // WriteStatuses writes the Traffic Ops statuses to output.
 // Note this is identical to /api/1.x/statuses except it omits the '{response:' wrapper.
 func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
-	statuses, err := cfg.TOClient.GetStatuses()
+	statuses, _, err := cfg.TOClient.GetStatuses()
 	if err != nil {
 		return errors.New("getting statuses: " + err.Error())
 	}
@@ -112,10 +112,10 @@ func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
 // WriteUpdateStatus writes the Traffic Ops server update status to output.
 // Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
 func WriteServerUpdateStatus(cfg config.TCCfg, output io.Writer) error {
-	status, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	status, _, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	if err == nil && unsupported {
 		log.Warnln("ORT newer than Traffic Ops, falling back to previous API Delivery Services!")
-		status, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+		status, _, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	}
 	if err != nil {
 		return errors.New("getting server update status: " + err.Error())
@@ -140,11 +140,11 @@ func WritePackages(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}
-	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
@@ -172,11 +172,11 @@ func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}
-	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}

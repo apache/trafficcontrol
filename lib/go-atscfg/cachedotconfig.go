@@ -23,33 +23,95 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const ContentTypeCacheDotConfig = ContentTypeTextASCII
 const LineCommentCacheDotConfig = LineCommentHash
 
-type ProfileDS struct {
-	Type       tc.DSType
-	OriginFQDN *string
+func MakeCacheDotConfig(
+	server *tc.ServerNullable,
+	servers []tc.ServerNullable,
+	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	hdrComment string,
+) (Cfg, error) {
+	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
+		return MakeCacheDotConfigMid(server, deliveryServices, hdrComment)
+	} else {
+		return MakeCacheDotConfigEdge(server, servers, deliveryServices, deliveryServiceServers, hdrComment)
+	}
 }
 
 // MakeCacheDotConfig makes the ATS cache.config config file.
 // profileDSes must be the list of delivery services, which are assigned to severs, for which this profile is assigned. It MUST NOT contain any other delivery services. Note DSesToProfileDSes may be helpful if you have a []tc.DeliveryServiceNullable, for example from traffic_ops/client.
-func MakeCacheDotConfig(
-	profileName string,
-	profileDSes []ProfileDS,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
+func MakeCacheDotConfigEdge(
+	server *tc.ServerNullable,
+	servers []tc.ServerNullable,
+	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing profile")
+	}
+
+	profileServerIDsMap := map[int]struct{}{}
+	for _, sv := range servers {
+		if sv.Profile == nil {
+			warnings = append(warnings, "servers had server with nil profile, skipping!")
+			continue
+		}
+		if sv.ID == nil {
+			warnings = append(warnings, "servers had server with nil id, skipping!")
+			continue
+		}
+		if *sv.Profile != *server.Profile {
+			continue
+		}
+		profileServerIDsMap[*sv.ID] = struct{}{}
+	}
+
+	dsServers := FilterDSS(deliveryServiceServers, nil, profileServerIDsMap)
+
+	dsIDs := map[int]struct{}{}
+	for _, dss := range dsServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue // TODO warn? err?
+		}
+		if _, ok := profileServerIDsMap[*dss.Server]; !ok {
+			continue
+		}
+		dsIDs[*dss.DeliveryService] = struct{}{}
+	}
+
+	profileDSes := []ProfileDS{}
+	for _, ds := range deliveryServices {
+		if ds.ID == nil || ds.Type == nil || ds.OrgServerFQDN == nil {
+			continue // TODO warn? err?
+		}
+		if *ds.Type == tc.DSTypeInvalid {
+			continue // TODO warn? err?
+		}
+		if *ds.OrgServerFQDN == "" {
+			continue // TODO warn? err?
+		}
+		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
+			continue
+		}
+		origin := *ds.OrgServerFQDN
+		profileDSes = append(profileDSes, ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
+	}
+
 	lines := map[string]struct{}{} // use a "set" for lines, to avoid duplicates, since we're looking up by profile
 	for _, ds := range profileDSes {
 		if ds.Type != tc.DSTypeHTTPNoCache {
 			continue
 		}
 		if ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
-			log.Warnf("profileCacheDotConfig ds has no origin fqdn, skipping!") // TODO add ds name to data loaded, to put it in the error here?
+			warnings = append(warnings, "profileCacheDotConfig ds has no origin fqdn, skipping!") // TODO add ds name to data loaded, to put it in the error here?
 			continue
 		}
 		originFQDN, originPort := getHostPortFromURI(*ds.OriginFQDN)
@@ -71,9 +133,20 @@ func MakeCacheDotConfig(
 	if text == "" {
 		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	hdr := makeHdrComment(hdrComment)
 	text = hdr + text
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeCacheDotConfig,
+		LineComment: LineCommentCacheDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type ProfileDS struct {
+	Type       tc.DSType
+	OriginFQDN *string
 }
 
 // DSesToProfileDSes is a helper function to convert a []tc.DeliveryServiceNullable to []ProfileDS.

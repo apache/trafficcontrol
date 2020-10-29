@@ -29,8 +29,13 @@ func TestMakePackages(t *testing.T) {
 		"p0": []string{"p0v0", "p0v1"},
 		"1":  []string{"p1v0"},
 	}
+	paramData := makeParamsFromMapArr("serverProfile", LogsXMLFileName, params)
 
-	txt := MakePackages(params)
+	cfg, err := MakePackages(paramData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	packages := []Package{}
 	if err := json.Unmarshal([]byte(txt), &packages); err != nil {

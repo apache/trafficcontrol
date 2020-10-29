@@ -28,15 +28,15 @@ import (
 )
 
 func TestMakeIPAllowDotConfig(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	params := map[string][]string{
+	hdr := "myHeaderComment"
+
+	params := makeParamsFromMapArr("serverProfile", IPAllowConfigFileName, map[string][]string{
 		"purge_allow_ip":       []string{"192.168.2.99"},
 		ParamCoalesceMaskLenV4: []string{"24"},
 		ParamCoalesceNumberV4:  []string{"3"},
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
-	}
+	})
 
 	svs := []tc.ServerNullable{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
@@ -75,7 +75,12 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
-	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
+
+	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	lines := strings.Split(txt, "\n")
 
@@ -88,11 +93,8 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 	if !strings.HasPrefix(commentLine, "#") {
 		t.Errorf("expected: comment line starting with '#', actual: '%v'\n", commentLine)
 	}
-	if !strings.Contains(commentLine, toToolName) {
-		t.Errorf("expected: comment line containing toolName '%v', actual: '%v'\n", toToolName, commentLine)
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected: comment line containing toURL '%v', actual: '%v'\n", toURL, commentLine)
+	if !strings.Contains(commentLine, hdr) {
+		t.Errorf("expected: comment line containing header comment '%v', actual: '%v'\n", hdr, commentLine)
 	}
 
 	lines = lines[1:] // remove comment line
@@ -105,14 +107,14 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 }
 
 func TestMakeIPAllowDotConfigEdge(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	params := map[string][]string{
+	hdr := "myHeaderComment"
+
+	params := makeParamsFromMapArr("serverProfile", IPAllowConfigFileName, map[string][]string{
 		ParamCoalesceMaskLenV4: []string{"24"},
 		ParamCoalesceNumberV4:  []string{"3"},
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
-	}
+	})
 
 	svs := []tc.ServerNullable{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
@@ -149,7 +151,12 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 	sv.Type = string(tc.CacheTypeEdge)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
-	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
+
+	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	lines := strings.Split(txt, "\n")
 
@@ -162,11 +169,8 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 	if !strings.HasPrefix(commentLine, "#") {
 		t.Errorf("expected: comment line starting with '#', actual: '%v'\n", commentLine)
 	}
-	if !strings.Contains(commentLine, toToolName) {
-		t.Errorf("expected: comment line containing toolName '%v', actual: '%v'\n", toToolName, commentLine)
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected: comment line containing toURL '%v', actual: '%v'\n", toURL, commentLine)
+	if !strings.Contains(commentLine, hdr) {
+		t.Errorf("expected: comment line containing header comment '%v', actual: '%v'\n", hdr, commentLine)
 	}
 
 	lines = lines[1:] // remove comment line
@@ -185,15 +189,14 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 }
 
 func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	params := map[string][]string{
+	hdr := "myHeaderComment"
+	params := makeParamsFromMapArr("serverProfile", IPAllowConfigFileName, map[string][]string{
 		"purge_allow_ip":       []string{"192.168.2.99"},
 		ParamCoalesceMaskLenV4: []string{"24"},
 		ParamCoalesceNumberV4:  []string{"3"},
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"100"},
-	}
+	})
 
 	svs := []tc.ServerNullable{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
@@ -232,7 +235,12 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
-	txt := MakeIPAllowDotConfig(toToolName, toURL, params, sv, svs, cgs)
+
+	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	lines := strings.Split(txt, "\n")
 
@@ -245,11 +253,8 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 	if !strings.HasPrefix(commentLine, "#") {
 		t.Errorf("expected: comment line starting with '#', actual: '%v'\n", commentLine)
 	}
-	if !strings.Contains(commentLine, toToolName) {
-		t.Errorf("expected: comment line containing toolName '%v', actual: '%v'\n", toToolName, commentLine)
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected: comment line containing toURL '%v', actual: '%v'\n", toURL, commentLine)
+	if !strings.Contains(commentLine, hdr) {
+		t.Errorf("expected: comment line containing header comment '%v', actual: '%v'\n", hdr, commentLine)
 	}
 
 	lines = lines[1:] // remove comment line

@@ -19,6 +19,10 @@ package atscfg
  * under the License.
  */
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 const AstatsSeparator = "="
 const AstatsFileName = "astats.config"
 
@@ -26,16 +30,30 @@ const ContentTypeAstatsDotConfig = ContentTypeTextASCII
 const LineCommentAstatsDotConfig = LineCommentHash
 
 func MakeAStatsDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, AstatsFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	server *tc.ServerNullable,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	serverParams = FilterParams(serverParams, AstatsFileName, "", "", "location")
+	paramData, paramWarns := ParamsToMap(serverParams)
+	warnings = append(warnings, paramWarns...)
+	hdr := makeHdrComment(hdrComment)
 	txt := GenericProfileConfig(paramData, AstatsSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
 	txt = hdr + txt
-	return txt
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeAstatsDotConfig,
+		LineComment: LineCommentAstatsDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

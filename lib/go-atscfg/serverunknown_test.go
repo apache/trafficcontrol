@@ -23,23 +23,31 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeServerUnknown(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	serverDomain := "example.test"
-	toToolName := "toName"
-	toURL := "to.url.example.test"
+	hdr := "myHeaderComment"
 
-	params := map[string][]string{
+	server := makeGenericServer()
+	server.HostName = util.StrPtr("server0")
+	server.Profile = util.StrPtr("serverProfile")
+	server.DomainName = util.StrPtr("example.test")
+
+	fileName := "myconfig.config"
+
+	params := makeParamsFromMapArr(*server.Profile, fileName, map[string][]string{
 		"location":   []string{"locationshouldnotexist"},
 		"param0name": []string{"param0val0", "param0val1"},
 		"param1name": []string{"param1val0"},
 		"header":     []string{"//hdr"},
-	}
+	})
 
-	txt := MakeServerUnknown(serverName, serverDomain, toToolName, toURL, params)
+	cfg, err := MakeServerUnknown(fileName, server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	if strings.Contains(txt, "#") {
 		t.Errorf("expected: '%v' actual: '%v'", "no default header comment", txt)

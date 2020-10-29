@@ -28,9 +28,7 @@ import (
 )
 
 func TestMakeParentDotConfig(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -96,7 +94,23 @@ func TestMakeParentDotConfig(t *testing.T) {
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	cgs := []tc.CacheGroupNullable{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
@@ -112,9 +126,13 @@ func TestMakeParentDotConfig(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
@@ -128,9 +146,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 }
 
 func TestMakeParentDotConfigCapabilities(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -232,9 +248,13 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	lines := strings.Split(txt, "\n")
 
@@ -270,9 +290,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -371,9 +389,13 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtx := strings.Replace(txt, " ", "", -1)
 
@@ -383,9 +405,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologies(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -502,9 +522,13 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
@@ -519,9 +543,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 // TestMakeParentDotConfigNotInTopologies tests when a given edge is NOT in a Topology, that it doesn't add a remap line.
 func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -602,7 +624,23 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	cgs := []tc.CacheGroupNullable{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
@@ -618,9 +656,13 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net' to NOT contain Topology DS without this edge: '%v'", txt)
@@ -631,9 +673,7 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0.ID = util.IntPtr(42)
@@ -771,9 +811,13 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net' without required capabilities: '%v'", txt)
@@ -787,9 +831,7 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -908,9 +950,13 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
@@ -928,9 +974,7 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -1050,9 +1094,13 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
@@ -1070,9 +1118,7 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1184,9 +1230,13 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
@@ -1200,9 +1250,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1346,9 +1394,13 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
@@ -1374,9 +1426,7 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1520,9 +1570,13 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
@@ -1548,9 +1602,8 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 }
 
 func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -1688,9 +1741,13 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
@@ -1707,9 +1764,7 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 }
 
 func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
-	serverName := "myserver"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -1841,9 +1896,13 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	txt := MakeParentDotConfig(toolName, toURL, dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn)
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, serverName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)

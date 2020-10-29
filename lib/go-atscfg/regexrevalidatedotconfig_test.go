@@ -25,17 +25,25 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeRegexRevalidateDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
 
-	params := map[string][]string{
+	server := makeGenericServer()
+	server.CDNName = &cdnName
+
+	ds := makeGenericDS()
+	ds.CDNName = &cdnName
+	ds.XMLID = util.StrPtr("myds")
+	dses := []tc.DeliveryServiceNullableV30{*ds}
+
+	params := makeParamsFromMapArr("GLOBAL", RegexRevalidateFileName, map[string][]string{
 		RegexRevalidateMaxRevalDurationDaysParamName: []string{"42"},
 		"unrelated": []string{"unrelated0", "unrelated1"},
-	}
+	})
 
 	jobs := []tc.Job{
 		tc.Job{
@@ -58,7 +66,11 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 		},
 	}
 
-	txt := MakeRegexRevalidateDotConfig(cdnName, params, toToolName, toURL, jobs)
+	cfg, err := MakeRegexRevalidateDotConfig(server, dses, params, jobs, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	if !strings.Contains(txt, "assetURL0") {
 		t.Errorf("expected 'assetURL0', actual '%v'", txt)

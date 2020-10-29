@@ -37,8 +37,8 @@ func TestPlugin(t *testing.T) {
 			fi.Text = "testfile\n"
 			fi.ContentType = "text/plain"
 			fi.LineComment = ""
-			fi.FileNameOnDisk = "testfile.txt"
-			fi.Location = "/opt/trafficserver/etc/trafficserver/"
+			fi.Name = "testfile.txt"
+			fi.Path = "/opt/trafficserver/etc/trafficserver/"
 			d.Files = append(d.Files, fi)
 			return d.Files
 		},

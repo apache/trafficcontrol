@@ -26,8 +26,7 @@ import (
 
 func TestMakeVolumeDotConfig(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 	paramData := map[string]string{
 		"Drive_Prefix":      "/dev/sd",
 		"Drive_Letters":     "a,b,c,d,e",
@@ -37,9 +36,18 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 		"SSD_Drive_Letters": "i,j,k",
 	}
 
-	txt := MakeVolumeDotConfig(profileName, paramData, toolName, toURL)
+	server := makeGenericServer()
+	server.Profile = &profileName
 
-	testComment(t, txt, profileName, toolName, toURL)
+	params := makeParamsFromMap(*server.Profile, VolumeFileName, paramData)
+
+	cfg, err := MakeVolumeDotConfig(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
 
 	if count := strings.Count(txt, "\n"); count != 5 { // one line for each volume, plus 2 comments
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
@@ -51,8 +59,13 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 
 	delete(paramData, "SSD_Drive_Prefix")
 	delete(paramData, "SSD_Drive_Letters")
+	params = makeParamsFromMap(*server.Profile, VolumeFileName, paramData)
 
-	txt = MakeVolumeDotConfig(profileName, paramData, toolName, toURL)
+	cfg, err = MakeVolumeDotConfig(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt = cfg.Text
 
 	if count := strings.Count(txt, "\n"); count != 4 { // one line for each volume, plus 2 comments
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
@@ -64,8 +77,13 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 
 	delete(paramData, "RAM_Drive_Prefix")
 	delete(paramData, "RAM_Drive_Letters")
+	params = makeParamsFromMap(*server.Profile, VolumeFileName, paramData)
 
-	txt = MakeVolumeDotConfig(profileName, paramData, toolName, toURL)
+	cfg, err = MakeVolumeDotConfig(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt = cfg.Text
 
 	if count := strings.Count(txt, "\n"); count != 3 { // one line for each volume, plus 2 comments
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)

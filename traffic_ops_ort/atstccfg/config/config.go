@@ -211,7 +211,8 @@ func ValidateURL(u *url.URL) error {
 }
 
 type ATSConfigFile struct {
-	tc.ATSConfigMetaDataConfigFile
+	Name        string
+	Path        string
 	Text        string
 	ContentType string
 	LineComment string
@@ -222,10 +223,10 @@ type ATSConfigFiles []ATSConfigFile
 
 func (fs ATSConfigFiles) Len() int { return len(fs) }
 func (fs ATSConfigFiles) Less(i, j int) bool {
-	if fs[i].Location != fs[j].Location {
-		return fs[i].Location < fs[j].Location
+	if fs[i].Path != fs[j].Path {
+		return fs[i].Path < fs[j].Path
 	}
-	return fs[i].FileNameOnDisk < fs[j].FileNameOnDisk
+	return fs[i].Name < fs[j].Name
 }
 func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 
@@ -243,9 +244,6 @@ type TOData struct {
 
 	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
 	GlobalParams []tc.Parameter
-
-	// ScopeParams must be all Parameters in Traffic Ops with the name "scope". Must not include other Parameters.
-	ScopeParams []tc.Parameter
 
 	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
 	ServerParams []tc.Parameter
@@ -265,17 +263,11 @@ type TOData struct {
 	// Server must be the server we're fetching configs from
 	Server *tc.ServerNullable
 
-	// TOToolName must be the Parameter named 'tm.toolname' on the tc.GlobalConfigFileName Profile.
-	TOToolName string
-
-	// TOToolName must be the Parameter named 'tm.url' on the tc.GlobalConfigFileName Profile.
-	TOURL string
-
 	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
 	Jobs []tc.Job
 
 	// CDN must be the CDN of the server.
-	CDN tc.CDN
+	CDN *tc.CDN
 
 	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
 	DeliveryServiceRegexes []tc.DeliveryServiceRegexes

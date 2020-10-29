@@ -29,14 +29,22 @@ import (
 const ContentTypeServerUnknownConfig = ContentTypeTextASCII
 
 func MakeServerUnknown(
-	serverName tc.CacheName,
-	serverDomain string,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	params map[string][]string, // map[name]value - for the requested unknown 'take-and-bake' config_file
-) string {
+	fileName string,
+	server *tc.ServerNullable,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
 
-	hdr := GenericHeaderComment(string(serverName), toToolName, toURL)
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "server missing HostName")
+	} else if server.DomainName == nil {
+		return Cfg{}, makeErr(warnings, "server missing DomainName")
+	}
+
+	params := ParamsToMultiMap(FilterParams(serverParams, fileName, "", "", ""))
+
+	hdr := makeHdrComment(hdrComment)
 
 	txt := ""
 
@@ -56,10 +64,19 @@ func MakeServerUnknown(
 		txt += pa.Val + "\n"
 	}
 
-	txt = strings.Replace(txt, `__HOSTNAME__`, string(serverName)+`.`+serverDomain, -1)
+	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
 	txt = strings.Replace(txt, `__RETURN__`, "\n", -1)
 
-	return hdr + txt
+	lineComment := getServerUnknownConfigCommentType(params)
+
+	txt = hdr + txt
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeServerUnknownConfig,
+		LineComment: lineComment,
+		Warnings:    warnings,
+	}, nil
 }
 
 type Param struct {
@@ -84,14 +101,10 @@ func SortParams(params map[string][]string) []Param {
 	return sortedParams
 }
 
-// GetServerUnknownConfigCommentType takes the same data as MakeUnknownConfig and returns the comment type for that config.
+// getServerUnknownConfigCommentType takes the same data as MakeUnknownConfig and returns the comment type for that config.
 // In particular, it returns # unless there is a 'header' parameter, in which case it returns an empty string.
 // Wwe don't actually know that the first characters of a custom header are a comment, or how many characters it might be.
-func GetServerUnknownConfigCommentType(
-	serverName tc.CacheName,
-	serverDomain string,
-	toToolName string,
-	toURL string,
+func getServerUnknownConfigCommentType(
 	params map[string][]string,
 ) string {
 	for name, _ := range params {

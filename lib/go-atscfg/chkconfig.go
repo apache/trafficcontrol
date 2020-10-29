@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const ChkconfigFileName = `chkconfig`
@@ -50,23 +50,28 @@ func (e ChkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
 // MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakeChkconfig(
-	params map[string][]string, // map[name]value - config file should always be 'chkconfig'
-) string {
+	serverParams []tc.Parameter,
+) (Cfg, error) {
+	warnings := []string{}
+
+	serverParams = FilterParams(serverParams, ChkconfigParamConfigFile, "", "", "")
 
 	chkconfig := []ChkConfigEntry{}
-	for name, vals := range params {
-		for _, val := range vals {
-			chkconfig = append(chkconfig, ChkConfigEntry{Name: name, Val: val})
-		}
+	for _, param := range serverParams {
+		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 
 	sort.Sort(ChkConfigEntries(chkconfig))
 
 	bts, err := json.Marshal(&chkconfig)
-	if err != nil {
-		// should never happen
-		log.Errorln("marshalling chkconfig NameVals: " + err.Error())
-		bts = []byte("error encoding params to json, see Traffic Ops log for details")
+	if err != nil { // should never happen
+		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVals: "+err.Error())
 	}
-	return string(bts)
+
+	return Cfg{
+		Text:        string(bts),
+		ContentType: ContentTypeChkconfig,
+		LineComment: LineCommentChkconfig,
+		Warnings:    warnings,
+	}, nil
 }

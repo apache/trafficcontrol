@@ -30,13 +30,33 @@ const ContentTypeURLSig = ContentTypeTextASCII
 const LineCommentURLSig = LineCommentHash
 
 func MakeURLSigConfig(
-	profileName string,
-	urlSigKeys tc.URLSigKeys,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	fileName string,
+	server *tc.ServerNullable,
+	serverParams []tc.Parameter,
+	allURLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, fileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	dsName := getDSFromURLSigConfigFileName(fileName)
+	if dsName == "" {
+		return Cfg{}, makeErr(warnings, "getting ds name: malformed config file '"+fileName+"'")
+	}
+
+	urlSigKeys, ok := allURLSigKeys[tc.DeliveryServiceName(dsName)]
+	if !ok {
+		warnings = append(warnings, "no keys fetched for ds '"+dsName+"!")
+		urlSigKeys = tc.URLSigKeys{}
+	}
+
+	hdr := makeHdrComment(hdrComment)
 
 	sep := " = "
 
@@ -58,5 +78,22 @@ func MakeURLSigConfig(
 	sort.Strings(keyLines)
 	text += strings.Join(keyLines, "")
 
-	return text
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeURLSig,
+		LineComment: LineCommentURLSig,
+		Warnings:    warnings,
+	}, nil
+}
+
+// getDSFromURLSigConfigFileName returns the DS of a URLSig config file name.
+// For example, "url_sig_foobar.config" returns "foobar".
+// If the given string is shorter than len("url_sig_a.config"), the empty string is returned.
+func getDSFromURLSigConfigFileName(fileName string) string {
+	if !strings.HasPrefix(fileName, "url_sig_") || !strings.HasSuffix(fileName, ".config") || len(fileName) <= len("url_sig_")+len(".config") {
+		return ""
+	}
+	fileName = fileName[len("url_sig_"):]
+	fileName = fileName[:len(fileName)-len(".config")]
+	return fileName
 }

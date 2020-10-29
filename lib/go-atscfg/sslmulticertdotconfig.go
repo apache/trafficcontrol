@@ -31,36 +31,20 @@ const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
 const LineCommentSSLMultiCertDotConfig = LineCommentHash
 const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
-type SSLMultiCertDS struct {
-	XMLID       string
-	Type        tc.DSType
-	Protocol    int
-	ExampleURLs []string
-}
-
-func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullableV30) map[tc.DeliveryServiceName]SSLMultiCertDS {
-	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
-	for _, ds := range dses {
-		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
-			if ds.XMLID == nil {
-				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got unknown DS with nil values! Skipping!")
-			} else {
-				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got DS '" + *ds.XMLID + "' with nil values! Skipping!")
-			}
-			continue
-		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
-	}
-	return sDSes
-}
-
 func MakeSSLMultiCertDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses map[tc.DeliveryServiceName]SSLMultiCertDS,
-) string {
-	hdr := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	server *tc.ServerNullable,
+	deliveryServices []tc.DeliveryServiceNullableV30,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	}
+
+	dses, dsWarns := DeliveryServicesToSSLMultiCertDSes(deliveryServices)
+	warnings = append(warnings, dsWarns...)
+
+	hdr := makeHdrComment(hdrComment)
 
 	dses = GetSSLMultiCertDotConfigDeliveryServices(dses)
 
@@ -70,7 +54,40 @@ func MakeSSLMultiCertDotConfig(
 		lines = append(lines, `ssl_cert_name=`+cerName+"\t"+` ssl_key_name=`+keyName+"\n")
 	}
 	sort.Strings(lines)
-	return hdr + strings.Join(lines, "")
+
+	txt := hdr + strings.Join(lines, "")
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeSSLMultiCertDotConfig,
+		LineComment: LineCommentSSLMultiCertDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type SSLMultiCertDS struct {
+	XMLID       string
+	Type        tc.DSType
+	Protocol    int
+	ExampleURLs []string
+}
+
+// DeliveryServicesToSSLMultiCertDSes returns the "SSLMultiCertDS" map, and any warnings.
+func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]SSLMultiCertDS, []string) {
+	warnings := []string{}
+	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+	for _, ds := range dses {
+		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
+			if ds.XMLID == nil {
+				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
+			} else {
+				warnings = append(warnings, "got DS '"+*ds.XMLID+"' with nil values! Skipping!")
+			}
+			continue
+		}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
+	}
+	return sDSes, warnings
 }
 
 // GetSSLMultiCertDotConfigCertAndKeyName returns the cert file name and key file name for the given delivery service.

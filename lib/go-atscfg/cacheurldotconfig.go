@@ -20,9 +20,9 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -35,38 +35,68 @@ type CacheURLDS struct {
 	CacheURL      string
 }
 
-func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) map[tc.DeliveryServiceName]CacheURLDS {
-	sDSes := map[tc.DeliveryServiceName]CacheURLDS{}
-	for _, ds := range dses {
-		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil || ds.Active == nil {
-			log.Errorf("atscfg.DeliveryServicesToCacheURLDSes got DS %+v with nil values! Skipping!", ds)
-			continue
-		}
-		if !*ds.Active {
-			continue
-		}
-		sds := CacheURLDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
-		if ds.CacheURL != nil {
-			sds.CacheURL = *ds.CacheURL
-		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
-	}
-	return sDSes
-}
-
 func MakeCacheURLDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
 	fileName string,
-	dses map[tc.DeliveryServiceName]CacheURLDS,
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	server *tc.ServerNullable,
+	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	}
+
+	dsIDs := map[int]struct{}{}
+	for _, ds := range deliveryServices {
+		if ds.ID != nil {
+			dsIDs[*ds.ID] = struct{}{} // TODO warn?
+		}
+	}
+
+	dss := FilterDSS(deliveryServiceServers, dsIDs, nil)
+
+	dssMap := map[int][]int{} // map[dsID]serverID
+	for _, dss := range dss {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			warnings = append(warnings, "Delivery Service Servers had nil entries, skipping!")
+			continue
+		}
+		dssMap[*dss.DeliveryService] = append(dssMap[*dss.DeliveryService], *dss.Server)
+	}
+
+	dsesWithServers := []tc.DeliveryServiceNullableV30{}
+	for _, ds := range deliveryServices {
+		if ds.ID == nil {
+			warnings = append(warnings, "Delivery Service had nil id, skipping!")
+			continue
+		}
+		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the cacheurl config.
+		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
+			continue
+		}
+		if len(dssMap[*ds.ID]) == 0 && ds.Topology == nil {
+			continue
+		}
+		dsesWithServers = append(dsesWithServers, ds)
+	}
+
+	dses, dsWarns := DeliveryServicesToCacheURLDSes(dsesWithServers)
+	warnings = append(warnings, dsWarns...)
+
+	text := makeHdrComment(hdrComment)
 
 	if fileName == "cacheurl_qstring.config" { // This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		text += `http://([^?]+)(?:\?|$)  http://$1` + "\n"
 		text += `https://([^?]+)(?:\?|$)  https://$1` + "\n"
-		return text
+
+		return Cfg{
+			Text:        text,
+			ContentType: ContentTypeCacheURLDotConfig,
+			LineComment: LineCommentCacheURLDotConfig,
+			Warnings:    warnings,
+		}, nil
 	}
 
 	if fileName == "cacheurl.config" { // this is the global drop qstring w cacheurl use case
@@ -86,7 +116,8 @@ func MakeCacheURLDotConfig(
 			}
 
 			if !strings.HasPrefix(org, scheme) {
-				log.Errorln("MakeCacheURLDotConfig got ds '" + string(dsName) + "' origin '" + org + "' with no scheme! cacheurl.config will likely be malformed!")
+				// TODO determine if we should return an empty config here. A bad DS should not break config gen, and MUST NOT for self-service
+				warnings = append(warnings, "ds '"+string(dsName)+"' origin '"+org+"' with no scheme! cacheurl.config will likely be malformed!")
 			}
 
 			fqdnPath := strings.TrimPrefix(org, scheme)
@@ -96,7 +127,12 @@ func MakeCacheURLDotConfig(
 			seenOrigins[ds.OrgServerFQDN] = struct{}{}
 		}
 		text = strings.Replace(text, `__RETURN__`, "\n", -1)
-		return text
+		return Cfg{
+			Text:        text,
+			ContentType: ContentTypeCacheURLDotConfig,
+			LineComment: LineCommentCacheURLDotConfig,
+			Warnings:    warnings,
+		}, nil
 	}
 
 	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
@@ -104,9 +140,36 @@ func MakeCacheURLDotConfig(
 
 	ds, ok := dses[dsName]
 	if !ok {
-		return text // TODO warn? Perl doesn't
+		warnings = append(warnings, "ds '"+string(dsName)+"' not found, not creating in cacheurl config!")
+	} else {
+		text += ds.CacheURL + "\n"
+		text = strings.Replace(text, `__RETURN__`, "\n", -1)
 	}
-	text += ds.CacheURL + "\n"
-	text = strings.Replace(text, `__RETURN__`, "\n", -1)
-	return text
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeCacheURLDotConfig,
+		LineComment: LineCommentCacheURLDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+// DeliveryServicesToCacheURLDSes returns the "CacheURLDS" map, and any warnings.
+func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]CacheURLDS, []string) {
+	warnings := []string{}
+	sDSes := map[tc.DeliveryServiceName]CacheURLDS{}
+	for _, ds := range dses {
+		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil || ds.Active == nil {
+			warnings = append(warnings, fmt.Sprintf("atscfg.DeliveryServicesToCacheURLDSes got DS %+v with nil values! Skipping!", ds))
+			continue
+		}
+		if !*ds.Active {
+			continue
+		}
+		sds := CacheURLDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		if ds.CacheURL != nil {
+			sds.CacheURL = *ds.CacheURL
+		}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
+	}
+	return sDSes, warnings
 }

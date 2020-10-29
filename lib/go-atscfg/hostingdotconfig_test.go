@@ -28,15 +28,36 @@ import (
 )
 
 func TestMakeHostingDotConfig(t *testing.T) {
-	server := &tc.ServerNullable{}
+	cdnName := "cdn0"
+
+	server := makeGenericServer()
 	server.HostName = util.StrPtr("server0")
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	params := map[string]string{
-		ParamRAMDrivePrefix: "ParamRAMDrivePrefix-shouldnotappearinconfig",
-		ParamDrivePrefix:    "ParamDrivePrefix-shouldnotappearinconfig",
-		"somethingelse":     "somethingelse-shouldnotappearinconfig",
+	server.CDNName = &cdnName
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("serverprofile")
+	hdr := "myHeaderComment"
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParamRAMDrivePrefix,
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
+		tc.Parameter{
+			Name:       ParamDrivePrefix,
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
+		tc.Parameter{
+			Name:       "somethingelse",
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "somethingelse-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
 	}
+
 	origins := []string{
 		"https://origin0.example.net",
 		"http://origin1.example.net",
@@ -47,12 +68,20 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	}
 	dses := []tc.DeliveryServiceNullableV30{}
 	for _, origin := range origins {
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := makeGenericDS()
+		ds.CDNName = &cdnName
 		ds.OrgServerFQDN = util.StrPtr(origin)
-		dses = append(dses, ds)
+		dses = append(dses, *ds)
 	}
 
-	txt := MakeHostingDotConfig(server, toToolName, toURL, params, dses, nil)
+	servers := []tc.ServerNullable{*server}
+	dss := makeDSS(servers, dses)
+
+	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, nil, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	lines := strings.Split(txt, "\n")
 
@@ -65,11 +94,8 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	if !strings.HasPrefix(commentLine, "#") {
 		t.Errorf("expected: comment line starting with '#', actual: '%v'\n", commentLine)
 	}
-	if !strings.Contains(commentLine, toToolName) {
-		t.Errorf("expected: comment line containing toolName '%v', actual: '%v'\n", toToolName, commentLine)
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected: comment line containing toURL '%v', actual: '%v'\n", toURL, commentLine)
+	if !strings.Contains(commentLine, hdr) {
+		t.Errorf("expected: comment line containing header comment '%v', actual: '%v'\n", hdr, commentLine)
 	}
 
 	lines = lines[1:] // remove comment line
@@ -93,31 +119,60 @@ func TestMakeHostingDotConfig(t *testing.T) {
 }
 
 func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
-	server := &tc.ServerNullable{}
+	cdnName := "cdn0"
+
+	server := makeGenericServer()
 	server.HostName = util.StrPtr("server0")
 	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CDNName = &cdnName
+	server.CDNID = util.IntPtr(400)
+	server.ProfileID = util.IntPtr(46)
+	server.ID = util.IntPtr(899)
+	server.Profile = util.StrPtr("serverprofile")
+	hdr := "myHeaderComment"
 
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	params := map[string]string{
-		ParamRAMDrivePrefix: "ParamRAMDrivePrefix-shouldnotappearinconfig",
-		ParamDrivePrefix:    "ParamDrivePrefix-shouldnotappearinconfig",
-		"somethingelse":     "somethingelse-shouldnotappearinconfig",
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParamRAMDrivePrefix,
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
+		tc.Parameter{
+			Name:       ParamDrivePrefix,
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
+		tc.Parameter{
+			Name:       "somethingelse",
+			ConfigFile: HostingConfigParamConfigFile,
+			Value:      "somethingelse-shouldnotappearinconfig",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		},
 	}
 
-	dsTopology := tc.DeliveryServiceNullableV30{}
+	dsTopology := makeGenericDS()
 	dsTopology.OrgServerFQDN = util.StrPtr("https://origin0.example.net")
 	dsTopology.XMLID = util.StrPtr("ds-topology")
+	dsTopology.CDNID = util.IntPtr(400)
+	dsTopology.ID = util.IntPtr(900)
 	dsTopology.Topology = util.StrPtr("t0")
 	dsTopology.Active = util.BoolPtr(true)
+	dsType := tc.DSTypeHTTP
+	dsTopology.Type = &dsType
 
-	dsTopologyWithoutServer := tc.DeliveryServiceNullableV30{}
+	dsTopologyWithoutServer := makeGenericDS()
+	dsTopologyWithoutServer.ID = util.IntPtr(901)
 	dsTopologyWithoutServer.OrgServerFQDN = util.StrPtr("https://origin1.example.net")
 	dsTopologyWithoutServer.XMLID = util.StrPtr("ds-topology-without-server")
+	dsTopologyWithoutServer.CDNID = util.IntPtr(400)
 	dsTopologyWithoutServer.Topology = util.StrPtr("t1")
 	dsTopologyWithoutServer.Active = util.BoolPtr(true)
+	dsType2 := tc.DSTypeHTTP
+	dsTopologyWithoutServer.Type = &dsType2
 
-	dses := []tc.DeliveryServiceNullableV30{dsTopology, dsTopologyWithoutServer}
+	dses := []tc.DeliveryServiceNullableV30{*dsTopology, *dsTopologyWithoutServer}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -146,7 +201,14 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 		},
 	}
 
-	txt := MakeHostingDotConfig(server, toToolName, toURL, params, dses, topologies)
+	servers := []tc.ServerNullable{*server}
+	dss := makeDSS(servers, dses)
+
+	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, topologies, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	if !strings.Contains(txt, "origin0") {
 		t.Errorf("expected origin0 in topology, actual %v\n", txt)

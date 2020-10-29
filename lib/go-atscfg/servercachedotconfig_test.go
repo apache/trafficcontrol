@@ -24,57 +24,43 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeServerCacheDotConfig(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	serverName := "server0"
+	hdr := "myHeaderComment"
 
-	dses := map[tc.DeliveryServiceName]ServerCacheConfigDS{
-		"ds0": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds0.example.test/path",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds1": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds1.example.test:4321/path",
-			Type:          tc.DSTypeDNS,
-		},
-		"ds2": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds2.example.test:4321",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds3": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds3.example.test",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds4": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds4.example.test/",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds5": ServerCacheConfigDS{
-			OrgServerFQDN: "http://ds5.example.test:1234/",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds6": ServerCacheConfigDS{
-			OrgServerFQDN: "ds6.example.test",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds7": ServerCacheConfigDS{
-			OrgServerFQDN: "ds7.example.test:80",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds8": ServerCacheConfigDS{
-			OrgServerFQDN: "ds8.example.test:8080/path",
-			Type:          tc.DSTypeHTTP,
-		},
-		"ds-nocache": ServerCacheConfigDS{
-			OrgServerFQDN: "http://ds-nocache.example.test",
-			Type:          tc.DSTypeHTTPNoCache,
-		},
+	server := makeGenericServer()
+	server.HostName = &serverName
+	server.Type = tc.MidTypePrefix + "_CUSTOM"
+
+	makeDS := func(name string, origin string, dsType tc.DSType) tc.DeliveryServiceNullableV30 {
+		ds := makeGenericDS()
+		ds.XMLID = util.StrPtr(name)
+		ds.OrgServerFQDN = util.StrPtr(origin)
+		ds.Type = &dsType
+		return *ds
 	}
 
-	txt := MakeServerCacheDotConfig(serverName, toToolName, toURL, dses)
+	dses := []tc.DeliveryServiceNullableV30{
+		makeDS("ds0", "https://ds0.example.test/path", tc.DSTypeHTTP),
+		makeDS("ds1", "https://ds1.example.test:4321/path", tc.DSTypeDNS),
+		makeDS("ds2", "https://ds2.example.test:4321", tc.DSTypeHTTP),
+		makeDS("ds3", "https://ds3.example.test", tc.DSTypeHTTP),
+		makeDS("ds4", "https://ds4.example.test/", tc.DSTypeHTTP),
+		makeDS("ds5", "http://ds5.example.test:1234/", tc.DSTypeHTTP),
+		makeDS("ds6", "ds6.example.test", tc.DSTypeHTTP),
+		makeDS("ds7", "ds7.example.test:80", tc.DSTypeHTTP),
+		makeDS("ds8", "ds8.example.test:8080/path", tc.DSTypeHTTP),
+		makeDS("ds-nocache", "http://ds-nocache.example.test", tc.DSTypeHTTPNoCache),
+	}
+
+	cfg, err := MakeCacheDotConfigMid(server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	lines := strings.Split(txt, "\n")
 

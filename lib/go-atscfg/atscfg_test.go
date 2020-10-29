@@ -24,32 +24,23 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestGenericHeaderComment(t *testing.T) {
-	objName := "foo"
-	toolName := "bar"
-	toURL := "url"
-
-	txt := GenericHeaderComment(objName, toolName, toURL)
-
-	testComment(t, txt, objName, toolName, toURL)
+	commentTxt := "foo"
+	txt := makeHdrComment(commentTxt)
+	testComment(t, txt, commentTxt)
 }
 
-func testComment(t *testing.T, txt string, objName string, toolName string, toURL string) {
+func testComment(t *testing.T, txt string, commentTxt string) {
 	commentLine := strings.SplitN(txt, "\n", 2)[0] // SplitN always returns at least 1 element, no need to check len before indexing
 
 	if !strings.HasPrefix(strings.TrimSpace(commentLine), "#") {
 		t.Errorf("expected comment on first line, actual: '" + commentLine + "'")
 	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toolName '" + toolName + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toURL '" + toURL + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, objName) {
-		t.Errorf("expected profile '" + objName + "' in comment, actual: '" + commentLine + "'")
+	if !strings.Contains(commentLine, commentTxt) {
+		t.Errorf("expected comment text '" + commentTxt + "' in comment, actual: '" + commentLine + "'")
 	}
 }
 
@@ -234,17 +225,6 @@ func TestGetConfigFile(t *testing.T) {
 	}
 }
 
-func TestHeaderCommentUTC(t *testing.T) {
-	objName := "foo"
-	toolName := "bar"
-	toURL := "url"
-
-	txt := GenericHeaderComment(objName, toolName, toURL)
-	if !strings.Contains(txt, " UTC ") {
-		t.Error("Expected header comment to print time in UTC, actual '" + txt + "'")
-	}
-}
-
 func setIP(sv *tc.ServerNullable, ipAddress string) {
 	setIPInfo(sv, "", ipAddress, "")
 }
@@ -273,4 +253,83 @@ func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip
 			ServiceAddress: true,
 		})
 	}
+}
+
+func makeGenericServer() *tc.ServerNullable {
+	server := &tc.ServerNullable{}
+	server.ProfileID = util.IntPtr(42)
+	server.CDNName = util.StrPtr("myCDN")
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CachegroupID = util.IntPtr(422)
+	server.DomainName = util.StrPtr("mydomain.example.net")
+	server.CDNID = util.IntPtr(43)
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(12443)
+	server.ID = util.IntPtr(44)
+	setIP(server, "192.168.2.1")
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("serverprofile")
+	server.TCPPort = util.IntPtr(80)
+	server.Type = "EDGE"
+	server.TypeID = util.IntPtr(91)
+	status := string(tc.CacheStatusReported)
+	server.Status = &status
+	server.StatusID = util.IntPtr(99)
+	return server
+}
+
+func makeGenericDS() *tc.DeliveryServiceNullableV30 {
+	ds := &tc.DeliveryServiceNullableV30{}
+	ds.ID = util.IntPtr(42)
+	ds.XMLID = util.StrPtr("ds1")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	dsType := tc.DSTypeDNS
+	ds.Type = &dsType
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	return ds
+}
+
+// makeDSS creates DSS as an outer product of every server and ds given.
+// The given servers and dses must all have non-nil, unique IDs.
+func makeDSS(servers []tc.ServerNullable, dses []tc.DeliveryServiceNullableV30) []tc.DeliveryServiceServer {
+	dss := []tc.DeliveryServiceServer{}
+	for _, sv := range servers {
+		for _, ds := range dses {
+			dss = append(dss, tc.DeliveryServiceServer{
+				Server:          util.IntPtr(*sv.ID),
+				DeliveryService: util.IntPtr(*ds.ID),
+			})
+		}
+	}
+	return dss
+}
+
+func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.Parameter {
+	params := []tc.Parameter{}
+	for name, vals := range paramM {
+		for _, val := range vals {
+			params = append(params, tc.Parameter{
+				Name:       name,
+				ConfigFile: configFile,
+				Value:      val,
+				Profiles:   []byte(`["` + profile + `"]`),
+			})
+		}
+	}
+	return params
+}
+
+func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.Parameter {
+	params := []tc.Parameter{}
+	for name, val := range paramM {
+		params = append(params, tc.Parameter{
+			Name:       name,
+			ConfigFile: configFile,
+			Value:      val,
+			Profiles:   []byte(`["` + profile + `"]`),
+		})
+	}
+	return params
 }

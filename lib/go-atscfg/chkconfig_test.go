@@ -22,23 +22,48 @@ package atscfg
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeChkconfig(t *testing.T) {
-	params := map[string][]string{
-		"p0": []string{"p0v0", "p0v1"},
-		"1":  []string{"p1v0"},
+	serverProfile := "sp0"
+	params := []tc.Parameter{
+		{
+			Name:       "p0",
+			ConfigFile: ChkconfigParamConfigFile,
+			Value:      "p0v0",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
+		{
+			Name:       "p0",
+			ConfigFile: ChkconfigParamConfigFile,
+			Value:      "p0v1",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
+		{
+			Name:       "1",
+			ConfigFile: ChkconfigParamConfigFile,
+			Value:      "p1v0",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
 	}
 
-	txt := MakeChkconfig(params)
+	cfg, err := MakeChkconfig(params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	chkconfig := []ChkConfigEntry{}
 	if err := json.Unmarshal([]byte(txt), &chkconfig); err != nil {
 		t.Fatalf("MakePackages expected a JSON array of objects, actual: " + err.Error())
 	}
 
+	paramsMap := ParamsToMultiMap(params)
+
 	for _, chkConfigEntry := range chkconfig {
-		vals, ok := params[chkConfigEntry.Name]
+		vals, ok := paramsMap[chkConfigEntry.Name]
 		if !ok {
 			t.Errorf("expected %+v actual %v\n", params, chkConfigEntry.Name)
 		}
@@ -47,6 +72,6 @@ func TestMakeChkconfig(t *testing.T) {
 			t.Errorf("expected %+v actual %v\n", vals, chkConfigEntry.Val)
 		}
 
-		params[chkConfigEntry.Name] = strArrRemove(vals, chkConfigEntry.Val)
+		paramsMap[chkConfigEntry.Name] = strArrRemove(vals, chkConfigEntry.Val)
 	}
 }

@@ -21,15 +21,44 @@ package atscfg
 
 import (
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeURISigningConfig(t *testing.T) {
+	fileName := "uri_signing_myds.config"
 	keyBts := []byte("anything")
+	keys := map[tc.DeliveryServiceName][]byte{
+		"myds": keyBts,
+	}
 
-	txt := MakeURISigningConfig(keyBts)
+	cfg, err := MakeURISigningConfig(fileName, keys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	// URI Signing config is the verbatim bytes from Riak.
 	if txt != string(keyBts) {
 		t.Errorf("expected URI signing config to match input bytes, actual '%v'", txt)
+	}
+}
+
+func TestGetDSFromURISigningConfigFileName(t *testing.T) {
+	expecteds := map[string]string{
+		"uri_signing_foo.config":                            "foo",
+		"uri_signing_.config":                               "",
+		"uri_signing.config":                                "",
+		"uri_signing_foo.conf":                              "",
+		"uri_signing_foo.confi":                             "",
+		"uri_signing_foo_bar_baz.config":                    "foo_bar_baz",
+		"uri_signing_uri_signing_foo_bar_baz.config.config": "uri_signing_foo_bar_baz.config",
+	}
+
+	for fileName, expected := range expecteds {
+		actual := getDSFromURISigningConfigFileName(fileName)
+		if expected != string(actual) {
+			t.Errorf("GetDSFromURLSigConfigFileName('%v') expected '%v' actual '%v'\n", fileName, expected, actual)
+		}
 	}
 }

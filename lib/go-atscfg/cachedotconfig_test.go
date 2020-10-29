@@ -24,24 +24,49 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeCacheDotConfig(t *testing.T) {
-	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	originFQDN0 := "my.fqdn.example.net"
-	originFQDN1 := "my.other.fqdn.example.net"
-	originFQDNNoCache := "nocache-fqn.example.net"
-	profileDSes := []ProfileDS{
-		ProfileDS{Type: tc.DSTypeHTTP, OriginFQDN: &originFQDN0},
-		ProfileDS{Type: tc.DSTypeDNS, OriginFQDN: &originFQDN1},
-		ProfileDS{Type: tc.DSTypeHTTPNoCache, OriginFQDN: &originFQDNNoCache},
+	server := makeGenericServer()
+	serverProfile := "myProfile"
+	server.Profile = &serverProfile
+	servers := []tc.ServerNullable{*server}
+
+	ds0 := makeGenericDS()
+	ds0.ID = util.IntPtr(420)
+	ds0.XMLID = util.StrPtr("ds0")
+	ds0.OrgServerFQDN = util.StrPtr("http://my.fqdn.example.net")
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+
+	ds1 := makeGenericDS()
+	ds1.ID = util.IntPtr(421)
+	ds1.XMLID = util.StrPtr("ds1")
+	ds1.OrgServerFQDN = util.StrPtr("http://my.other.fqdn.example.net")
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+
+	ds2 := makeGenericDS()
+	ds2.ID = util.IntPtr(422)
+	ds2.XMLID = util.StrPtr("ds2")
+	ds2.OrgServerFQDN = util.StrPtr("http://nocache-fqn.example.net")
+	ds2Type := tc.DSTypeHTTPNoCache
+	ds2.Type = &ds2Type
+
+	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1, *ds2}
+
+	dss := makeDSS(servers, dses)
+
+	hdr := "myHeaderComment"
+
+	cfg, err := MakeCacheDotConfig(server, servers, dses, dss, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakeCacheDotConfig(profileName, profileDSes, toolName, toURL)
-
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if strings.Contains(txt, "my.fqdn.example.net") {
 		t.Errorf("expected cached DS type 'my.fqdn.example.net' omitted, actual: '%v'", txt)

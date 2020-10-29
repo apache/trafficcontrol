@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const PackagesFileName = `packages`
@@ -51,8 +51,12 @@ func (ps Packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
 // MakePackages returns the 'packages' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakePackages(
-	params map[string][]string, // map[name]value - config file should always be 'package'
-) string {
+	serverParams []tc.Parameter,
+) (Cfg, error) {
+	warnings := []string{}
+
+	params := ParamsToMultiMap(FilterParams(serverParams, PackagesParamConfigFile, "", "", ""))
+
 	packages := []Package{}
 	for name, versions := range params {
 		for _, version := range versions {
@@ -63,8 +67,13 @@ func MakePackages(
 	bts, err := json.Marshal(&packages)
 	if err != nil {
 		// should never happen
-		log.Errorln("marshalling chkconfig NameVersions: " + err.Error())
-		bts = []byte("error encoding params to json, see Traffic Ops log for details")
+		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVersions: "+err.Error())
 	}
-	return string(bts)
+
+	return Cfg{
+		Text:        string(bts),
+		ContentType: ContentTypePackages,
+		LineComment: LineCommentPackages,
+		Warnings:    warnings,
+	}, nil
 }

@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -87,16 +86,22 @@ func (ss ServersSortByName) Less(i, j int) bool {
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	params map[string][]string, // map[name]value - config file should always be ip_allow.config
+	serverParams []tc.Parameter,
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
 	cacheGroups []tc.CacheGroupNullable,
-) string {
-	if server.HostName == nil {
-		return "ERROR: server missing hostname"
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Cachegroup == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Cachegroup")
 	}
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing HostName")
+	}
+
+	params := ParamsToMultiMap(FilterParams(serverParams, IPAllowConfigFileName, "", "", ""))
 
 	ipAllowData := []IPAllowData{}
 	const ActionAllow = "ip_allow"
@@ -132,33 +137,33 @@ func MakeIPAllowDotConfig(
 				})
 			case ParamCoalesceMaskLenV4:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceMaskLenV4 != DefaultCoalesceMaskLenV4 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceMaskLenV4 = vi
 				}
 			case ParamCoalesceNumberV4:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceNumberV4 != DefaultCoalesceNumberV4 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceNumberV4 = vi
 				}
 			case ParamCoalesceMaskLenV6:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceMaskLenV6 != DefaultCoalesceMaskLenV6 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceMaskLenV6 = vi
 				}
 			case ParamCoalesceNumberV6:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceNumberV6 != DefaultCoalesceNumberV6 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceNumberV6 = vi
 				}
@@ -187,18 +192,18 @@ func MakeIPAllowDotConfig(
 		cgMap := map[string]tc.CacheGroupNullable{}
 		for _, cg := range cacheGroups {
 			if cg.Name == nil {
-				return "ERROR: got cachegroup with nil name!'"
+				return Cfg{}, makeErr(warnings, "got cachegroup with nil name!")
 			}
 			cgMap[*cg.Name] = cg
 		}
 
 		if server.Cachegroup == nil {
-			return "ERROR: server had nil Cachegroup!"
+			return Cfg{}, makeErr(warnings, "server had nil Cachegroup!")
 		}
 
 		serverCG, ok := cgMap[*server.Cachegroup]
 		if !ok {
-			return "ERROR: Server cachegroup not in cachegroups!"
+			return Cfg{}, makeErr(warnings, "server cachegroup not in cachegroups!")
 		}
 
 		childCGs := map[string]tc.CacheGroupNullable{}
@@ -212,10 +217,10 @@ func MakeIPAllowDotConfig(
 		sort.Sort(ServersSortByName(servers))
 		for _, childServer := range servers {
 			if childServer.Cachegroup == nil {
-				log.Errorln("Servers had server with nil Cachegroup, skipping!")
+				warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
 				continue
 			} else if childServer.HostName == nil {
-				log.Errorln("Servers had server with nil HostName, skipping!")
+				warnings = append(warnings, "Servers had server with nil HostName, skipping!")
 				continue
 			}
 
@@ -246,10 +251,10 @@ func MakeIPAllowDotConfig(
 						// not an IP, try a CIDR
 						if ip, cidr, err := net.ParseCIDR(svAddr.Address); err != nil {
 							// not a CIDR or IP - error out
-							log.Errorln("MakeIPAllowDotConfig server '" + *server.HostName + "' IP '" + svAddr.Address + " is not an IP address or CIDR - skipping!")
+							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
 						} else if ip == nil {
 							// not a CIDR or IP - error out
-							log.Errorln("MakeIPAllowDotConfig server '" + *server.HostName + "' IP '" + svAddr.Address + " failed to parse as IP or CIDR - skipping!")
+							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
 						} else {
 							// got a valid CIDR - add it to the list
 							if ip4 := ip.To4(); ip4 != nil {
@@ -314,9 +319,15 @@ func MakeIPAllowDotConfig(
 		})
 	}
 
-	text := GenericHeaderComment(*server.HostName, toToolName, toURL)
+	text := makeHdrComment(hdrComment)
 	for _, al := range ipAllowData {
 		text += `src_ip=` + al.Src + ` action=` + al.Action + ` method=` + al.Method + "\n"
 	}
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeHostingDotConfig,
+		LineComment: LineCommentHostingDotConfig,
+		Warnings:    warnings,
+	}, nil
 }
