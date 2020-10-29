@@ -20,10 +20,12 @@ name: Go Format
 on:
   push:
     paths:
+      - GO_VERSION
       - "**.go"
   create:
   pull_request:
     paths:
+      - GO_VERSION
       - "**.go"
     types: [opened, reopened, edited, synchronize]
 
