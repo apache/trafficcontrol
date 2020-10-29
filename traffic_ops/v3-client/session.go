@@ -228,6 +228,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 		Timeout: requestTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			Proxy: ProxyFromEnvironment,
 		},
 		Jar: jar,
 	}, useCache)
@@ -253,6 +254,7 @@ func LoginWithToken(toURL string, token string, insecure bool, userAgent string,
 		Timeout: requestTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			Proxy: ProxyFromEnvironment,
 		},
 		Jar: jar,
 	}
@@ -285,6 +287,7 @@ func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool
 		Timeout: requestTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			Proxy: ProxyFromEnvironment,
 		},
 		Jar: jar,
 	}, useCache)

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Fixed
+- Add ability to use HTTPS_PROXY environment variable to access Traffic Ops.
 - Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
