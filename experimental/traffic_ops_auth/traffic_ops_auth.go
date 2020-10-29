@@ -26,13 +26,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
-	_ "github.com/lib/pq"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	_ "github.com/lib/pq"
 )
 
 const TrafficOpsDomain = "localhost"
@@ -148,8 +149,13 @@ func getTokenData(jwtSigningKey string, r *http.Request) (*TokenData, error) {
 		return nil, fmt.Errorf("invalid token")
 	}
 
-	userInterface, hasUser := token.Claims["user"]
-	roleInterface, hasRole := token.Claims["role"]
+	clms, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("expected MapClaims in token, got: %T", token.Claims)
+	}
+
+	userInterface, hasUser := clms["user"]
+	roleInterface, hasRole := clms["role"]
 	user, userIsStr := userInterface.(string)
 	role, roleIsStr := roleInterface.(string)
 	if !hasUser || !hasRole || !userIsStr || !roleIsStr {
@@ -182,8 +188,15 @@ func HandleLogin(db *sql.DB, jwtSigningKey string, w http.ResponseWriter, r *htt
 	}
 
 	token := jwt.New(jwt.SigningMethodHS256)
-	token.Claims["user"] = user
-	token.Claims["role"] = role
+
+	clms, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("%s ERROR creating token for '%s': expected MapClaims in token, got %T", token.Claims)
+		return
+	}
+	clms["user"] = user
+	clms["role"] = role
 	tokenString, err := token.SignedString([]byte(jwtSigningKey))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
