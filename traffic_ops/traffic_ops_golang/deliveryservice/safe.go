@@ -133,7 +133,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ds := dses[0]
-	if version.Major > 3 && version.Minor >= 0 {
+	if version.Major > 3 {
 		ds = ds.RemoveLD1AndLD2()
 	}
 	alertMsg := "Delivery Service safe update successful."
@@ -142,7 +142,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
 	} else {
 		switch inf.Version.Major {
-		// treat unknown versions as latest
 		default:
 			fallthrough
 		case 4:
@@ -154,21 +153,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV3().DeliveryServiceV30})
 		case 2:
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
-		case 1:
-			switch inf.Version.Minor {
-			default:
-				fallthrough
-			case 5:
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
-			case 4:
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV14{ds.DowngradeToV3().DeliveryServiceNullableV14})
-			case 3:
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV13{ds.DowngradeToV3().DeliveryServiceNullableV13})
-			case 2:
-				fallthrough
-			case 1:
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV12{ds.DowngradeToV3().DeliveryServiceNullableV12})
-			}
 		}
 	}
 
