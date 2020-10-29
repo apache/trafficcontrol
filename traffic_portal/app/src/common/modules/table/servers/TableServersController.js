@@ -360,7 +360,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.server = params.data;
 			$scope.$apply();
 		},
-        onCellMouseDown: function() {
+		onCellMouseDown: function() {
 			$scope.mouseDownSelectionText = window.getSelection().toString();
 		},
 		onRowClicked: function(params) {
