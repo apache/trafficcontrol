@@ -1,7 +1,7 @@
 {
 	"description": "Local PostgreSQL database on port 5432",
 	"dbname": "traffic_ops",
-	"hostname": "postgres",
+	"hostname": "172.17.0.1",
 	"user": "traffic_ops",
 	"password": "twelve",
 	"port": "5432",
