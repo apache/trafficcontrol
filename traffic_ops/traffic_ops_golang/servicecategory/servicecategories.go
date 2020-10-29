@@ -106,8 +106,9 @@ func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, order
 }
 
 func (serviceCategory TOServiceCategory) Validate() error {
+	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericDash, "must consist of only alphanumeric or dash characters.")
 	errs := validation.Errors{
-		"name": validation.Validate(serviceCategory.Name, validation.Required),
+		"name": validation.Validate(serviceCategory.Name, validation.Required, nameRule),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }

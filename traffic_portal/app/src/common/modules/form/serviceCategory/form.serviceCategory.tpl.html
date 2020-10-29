@@ -34,9 +34,10 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serviceCategoryForm.name), 'has-feedback': hasError(serviceCategoryForm.name)}">
                 <label for="name" class="control-label col-md-2 col-sm-2 col-xs-12">Category Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="serviceCategory.name" required autofocus>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="serviceCategory.name" pattern="^[a-zA-Z0-9\-]+$" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serviceCategoryForm.name, 'required')">Required</small>
-                    <span ng-show="hasError(serviceCategoryForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+					<small class="input-error" ng-show="hasPropertyError(serviceCategoryForm.name, 'pattern')">Must be a valid service category (no special characters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
+					<span ng-show="hasError(serviceCategoryForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="modal-footer">
