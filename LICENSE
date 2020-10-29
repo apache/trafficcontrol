@@ -303,8 +303,8 @@ For the underscore component:
 ./licenses/MIT-underscore
 
 For the stoppableListener component:
-@traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/*
-./traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/LICENSE
+@vendor/github.com/hydrogen18/stoppableListener/*
+./vendor/github.com/hydrogen18/stoppableListener/LICENSE
 
 For the fsnotify component:
 @vendor/gopkg.in/fsnotify.v1/*
