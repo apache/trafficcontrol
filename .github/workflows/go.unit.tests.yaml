@@ -20,23 +20,31 @@ name: Go Unit Tests
 on:
   push:
     paths:
+      - go.mod
+      - go.sum
       - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
+      - vendor/**.go
+      - vendor/modules.txt
   create:
   pull_request:
     paths:
+      - go.mod
+      - go.sum
       - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
+      - vendor/**.go
+      - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:

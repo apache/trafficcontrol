@@ -38,7 +38,7 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	fi
 fi
 
-# If it's unavailable, go get the image and run docker-compose inside a container.
+# If it's unavailable, download the image and run docker-compose inside a container.
 # This is considerably slower, but allows for building on hosts without docker-compose.
 if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	# Pin the version of docker-compose.

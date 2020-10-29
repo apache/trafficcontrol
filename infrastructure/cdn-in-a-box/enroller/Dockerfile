@@ -34,12 +34,13 @@ ENV GOPATH=/go
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
+COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN go clean && go get -v && go build
+RUN go clean && go mod vendor -v && go build
 
 FROM debian:buster
 

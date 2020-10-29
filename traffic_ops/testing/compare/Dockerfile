@@ -38,7 +38,7 @@ ADD vendor /go/src/github.com/apache/trafficcontrol/vendor
 ADD traffic_ops/testing/compare /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/compare
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/compare/
-RUN go get -v ./...
+RUN go mod vendor -v
 RUN go build .
 RUN cp testroutes.txt /artifacts/
 

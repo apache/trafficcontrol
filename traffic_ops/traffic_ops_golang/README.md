@@ -36,7 +36,7 @@ We treat `golang.org/x` as a part of the Go compiler so that means that we still
 ### building
 To download the remaining `golang.org/x` dependencies you need to:
 
-`$ go get -v`
+`$ go mod vendor -v`
 
 ## Configuration
 

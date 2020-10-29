@@ -47,7 +47,7 @@ initBuildArea() {
 	go version;
 	go env;
 
-	go get -v golang.org/x/crypto/ed25519 golang.org/x/crypto/scrypt golang.org/x/net/ipv4 golang.org/x/net/ipv6 golang.org/x/sys/unix;
+	go mod vendor -v;
 
 	gcflags=''
 	ldflags=''
