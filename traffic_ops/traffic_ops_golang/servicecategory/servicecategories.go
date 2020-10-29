@@ -26,7 +26,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -154,11 +153,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no service category found with name "+name), nil)
 			return
 		}
-		log.Errorf("MATT JACKSON in here")
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	log.Errorf("MATT JACKSON or here")
 
 	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
 	if err != nil {
@@ -167,7 +164,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" Service Category: "+newSC.Name, inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service category update was successful.", resp)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service category update from "+name+" to "+newSC.Name+" was successful.", resp)
 }
 
 func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
