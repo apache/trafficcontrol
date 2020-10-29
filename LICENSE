@@ -350,7 +350,7 @@ Several subsections of main.css are under the MIT license, as noted in the file:
     ./licenses/MIT-bootstrap_progressbar
 
 For the seelog component:
-@traffic_stats/vendor/github.com/cihub/seelog/*
+@vendor/github.com/cihub/seelog/*
 ./licenses/BSD-seelog
 
 The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provided under a MIT license:
