@@ -97,24 +97,6 @@ jobs:
     - name: Initialize Traffic Ops Database
       id: todb
       uses: ./.github/actions/todb-init
-    - name: Run API v1 tests
-      id: v1Tests
-      if: ${{ steps.todb.outcome == 'success' && always() }}
-      uses: ./.github/actions/to-integration-tests
-      with:
-        version: 1
-    - name: Upload v1 Vault logs
-      if: ${{ steps.v1Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: v1 Traffic Vault logs
-        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
-    - name: Upload v1 Ops logs
-      if: ${{ steps.v1Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: v1 Traffic Ops logs
-        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Run API v2 tests
       id: v2Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
