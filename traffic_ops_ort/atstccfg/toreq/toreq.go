@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 )
 
@@ -161,7 +161,7 @@ func (cl *TOClient) GetServers() ([]tc.ServerNullable, error) {
 
 // ServersToNullable converts a []tc.Server to []tc.ServerNullable.
 // This is necessary, because the Traffic Ops API 1.x client doesn't have a []tc.ServerNullable function.
-func ServersToNullable(svs []tc.Server) []tc.ServerNullable {
+func ServersToNullable(svs []tc.ServerV1) []tc.ServerNullable {
 	nss := []tc.ServerNullable{}
 	for _, sv := range svs {
 		ns := tc.ServerNullable{}
@@ -231,8 +231,8 @@ func ServersToNullable(svs []tc.Server) []tc.ServerNullable {
 	return nss
 }
 
-func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, error) {
-	server := tc.Server{}
+func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.ServerV1, error) {
+	server := tc.ServerV1{}
 	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
 		toServers, reqInf, err := cl.C.GetServerByHostName(serverHostName)
 		if err != nil {
@@ -240,12 +240,12 @@ func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, error
 		} else if len(toServers) < 1 {
 			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': no servers returned")
 		}
-		server := obj.(*tc.Server)
+		server := obj.(*tc.ServerV1)
 		*server = toServers[0]
 		return nil
 	})
 	if err != nil {
-		return tc.Server{}, errors.New("getting server name '" + serverHostName + "': " + err.Error())
+		return tc.ServerV1{}, errors.New("getting server name '" + serverHostName + "': " + err.Error())
 	}
 	return server, nil
 }
