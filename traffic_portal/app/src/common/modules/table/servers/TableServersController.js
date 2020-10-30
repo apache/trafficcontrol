@@ -299,6 +299,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	$scope.pageSize = 100;
 
+	$scope.mouseDownSelectionText = "";
+
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
@@ -358,10 +360,17 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.server = params.data;
 			$scope.$apply();
 		},
-		onRowDoubleClicked: function(params) {
-			locationUtils.navigateToPath('/servers/' + params.data.id);
-			// Event is outside the digest cycle, so we need to trigger one.
-			$scope.$apply();
+		onCellMouseDown: function() {
+			$scope.mouseDownSelectionText = window.getSelection().toString();
+		},
+		onRowClicked: function(params) {
+			const selection = window.getSelection().toString();
+			if(selection === "" || selection === $scope.mouseDownSelectionText) {
+				locationUtils.navigateToPath('/servers/' + params.data.id);
+				// Event is outside the digest cycle, so we need to trigger one.
+				$scope.$apply();
+			}
+			$scope.mouseDownSelectionText = "";
 		},
 		onColumnResized: function(params) {
 			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));

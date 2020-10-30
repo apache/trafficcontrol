@@ -133,10 +133,10 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 
 	// Attempt to assign a server capability to a non MID/EDGE server
 	// TODO: DON'T hard-code server hostnames!
-	params.Set("hostName", "riak")
+	params.Set("hostName", "trafficvault")
 	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, resp.Alerts)
+		t.Fatalf("cannot GET Server by hostname 'trafficvault': %v - %v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	if len(servers) < 1 {

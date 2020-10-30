@@ -20,6 +20,7 @@ name: Go Unit Tests
 on:
   push:
     paths:
+      - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
@@ -29,6 +30,7 @@ on:
   create:
   pull_request:
     paths:
+      - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go

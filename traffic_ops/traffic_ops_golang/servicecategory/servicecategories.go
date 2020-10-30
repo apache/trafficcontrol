@@ -20,9 +20,10 @@ package servicecategory
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,7 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/go-ozzo/ozzo-validation"
 )
 
@@ -68,9 +68,6 @@ func (serviceCategory TOServiceCategory) GetAuditName() string {
 	if serviceCategory.Name != "" {
 		return serviceCategory.Name
 	}
-	if serviceCategory.TenantID != 0 {
-		return strconv.Itoa(serviceCategory.TenantID)
-	}
 	return "unknown"
 }
 
@@ -97,9 +94,7 @@ func (serviceCategory TOServiceCategory) GetType() string {
 
 func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":       dbhelpers.WhereColumnInfo{"sc.name", nil},
-		"tenantId":   dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
-		"tenantName": dbhelpers.WhereColumnInfo{"sc.tenant", nil},
+		"name": dbhelpers.WhereColumnInfo{"sc.name", nil},
 	}
 }
 
@@ -111,9 +106,9 @@ func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, order
 }
 
 func (serviceCategory TOServiceCategory) Validate() error {
+	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericDash, "must consist of only alphanumeric or dash characters.")
 	errs := validation.Errors{
-		"name":     validation.Validate(serviceCategory.Name, validation.NotNil, validation.Required),
-		"tenantId": validation.Validate(serviceCategory.TenantID, validation.Min(1)),
+		"name": validation.Validate(serviceCategory.Name, validation.Required, nameRule),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
@@ -123,64 +118,76 @@ func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
 }
 
 func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	tenantIDs, err := tenant.GetUserTenantIDListTx(serviceCategory.APIInfo().Tx.Tx, serviceCategory.APIInfo().User.TenantID)
-	if err != nil {
-		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
-	}
-
 	api.DefaultSort(serviceCategory.APIInfo(), "name")
 	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
 	}
 
-	filteredServiceCategories := []interface{}{}
-	for _, sc := range serviceCategories {
-		sc1 := sc.(*tc.ServiceCategory)
-		if checkTenancy(sc1, tenantIDs) {
-			filteredServiceCategories = append(filteredServiceCategories, sc1)
-		}
+	return serviceCategories, nil, nil, errCode, maxTime
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+
+	var newSC TOServiceCategory
+	if err := json.NewDecoder(r.Body).Decode(&newSC); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
 	}
 
-	return filteredServiceCategories, nil, nil, errCode, maxTime
-}
-
-func checkTenancy(category *tc.ServiceCategory, tenantIDs []int) bool {
-	for _, tenantID := range tenantIDs {
-		if tenantID == category.TenantID {
-			return true
-		}
+	if err := newSC.Validate(); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
 	}
-	return false
+
+	var origSC TOServiceCategory
+	if err := inf.Tx.QueryRow(`SELECT name FROM service_category WHERE name = $1`, name).Scan(&origSC.Name); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no service category found with name "+name), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" Service Category from "+name+" to "+newSC.Name, inf.User, inf.Tx.Tx)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service Category update from "+name+" to "+newSC.Name+" was successful.", resp)
 }
 
-func (serviceCategory *TOServiceCategory) Update(h http.Header) (error, error, int) {
-	return api.GenericUpdate(h, serviceCategory)
-}
 func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
 	return api.GenericDelete(serviceCategory)
 }
 
 func insertQuery() string {
-	return `INSERT INTO service_category (name, tenant_id) VALUES (:name, :tenant_id) RETURNING name, last_updated`
+	return `INSERT INTO service_category (name) VALUES (:name) RETURNING name, last_updated`
 }
 
 func selectQuery() string {
 	return `SELECT
-sc.tenant_id,
-t.name as tenant,
 sc.last_updated,
 sc.name
-FROM service_category as sc
-LEFT JOIN tenant t ON sc.tenant_id = t.id`
+FROM service_category as sc`
 }
 
 func updateQuery() string {
 	return `UPDATE
 service_category SET
-name=:name,
-tenant_id=:tenant_id
-WHERE name=:name RETURNING last_updated`
+name=$1
+WHERE name=$2 RETURNING last_updated`
 }
 
 func deleteQuery() string {
