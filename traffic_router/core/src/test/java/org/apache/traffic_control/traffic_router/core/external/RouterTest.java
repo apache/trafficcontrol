@@ -648,7 +648,7 @@ public class RouterTest {
 
 			assert json.has("location");
 			assert validLocations.contains(json.get("location").asText());
-			assert json.get("location").asText().startsWith("http://"));
+			assert json.get("location").asText().startsWith("http://");
 		} finally {
 			if (response != null) response.close();
 		}
@@ -657,7 +657,7 @@ public class RouterTest {
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
 		httpGet.addHeader("X-TC-Format", "application/json");
-		CloseableHttpResponse response = null;
+		response = null;
 
 		try {
 			response = httpClient.execute(httpGet);
@@ -673,7 +673,7 @@ public class RouterTest {
 
 			assert json.has("location");
 			assert validLocations.contains(json.get("location").asText());
-			assert json.get("location").asText().startsWith("http://"));
+			assert json.get("location").asText().startsWith("http://");
 		} finally {
 			if (response != null) response.close();
 		}
