@@ -61,7 +61,7 @@ while [[ -z $found ]]; do
     found=$(to-get api/2.0/cdns?name="$CDN_NAME" | jq -r '.response[].name')
 done
 
-hostname="$(hostname)"
+hostname="$(hostname --short)"
 mid_index="${hostname#mid-}"
 # argument 1 is server type
 to-enroll mid $CDN_NAME "CDN_in_a_Box_Mid-${mid_index}" || (while true; do echo "enroll failed."; sleep 3 ; done)
