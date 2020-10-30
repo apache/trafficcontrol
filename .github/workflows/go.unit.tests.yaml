@@ -20,6 +20,8 @@ name: Go Unit Tests
 on:
   push:
     paths:
+      - .github/actions/go-test/**
+      - .github/workflows/go.unit.tests.yaml
       - go.mod
       - go.sum
       - GO_VERSION
@@ -34,6 +36,8 @@ on:
   create:
   pull_request:
     paths:
+      - .github/actions/go-test/**
+      - .github/workflows/go.unit.tests.yaml
       - go.mod
       - go.sum
       - GO_VERSION

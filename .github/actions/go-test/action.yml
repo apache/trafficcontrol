@@ -22,7 +22,5 @@ inputs:
     description: 'Directory in which to run tests'
     required: true
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  args:
-    - ${{ inputs.dir }}
+  using: 'node12'
+  main: 'dist/go-test.js'
