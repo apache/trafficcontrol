@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -ex
+set -e
 
 cd traffic_ops/app/db/migrations;
 
@@ -38,7 +38,7 @@ fi
 rm "$SORTED" "$SORTEDDASHN";
 
 # No two migrations may share a timestamp
-for file in "$(ls | uniq -d)"; do
+ls | cut -d _ -f 1 | uniq -d | while read -r file; do
 	echo "ERROR: more than one file uses timestamp $file - timestamps must be unique" >&2;
 	CODE=1;
 done
@@ -51,8 +51,10 @@ for file in "$(ls)"; do
 	fi
 done
 
+set +e;
 # All new migrations must use 16-digit timestamps.
-VIOLATING_FILES="$(ls | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | grep -vE '^\d{16}$')";
+VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | tr '[:space:]' '\n' | grep -vE '^[0-9]{16}$')";
+set -e;
 
 if [[ ! -z "$VIOLATING_FILES" ]]; then
 	for file in "$VIOLATING_FILES"; do
