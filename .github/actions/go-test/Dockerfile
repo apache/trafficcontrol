@@ -15,14 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: 'go-test'
-description: 'Runs go tests'
-inputs:
-  dir:  # id of input
-    description: 'Directory in which to run tests'
-    required: true
-runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  args:
-    - ${{ inputs.dir }}
+FROM alpine:3.12
+
+RUN architecture=$(uname -m) && \
+    mkdir lib64 && \
+    # Use musl libc where the go binary expects glibc
+    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2
+ENV GOROOT=/usr/local/go \
+    CGO_ENABLED=0
+
+RUN apk add --no-cache git
+
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT /entrypoint.sh

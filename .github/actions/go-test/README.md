@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# go-test JavaScript action
+# go-test Docker action
 
 This action runs Go unit tests.
 
