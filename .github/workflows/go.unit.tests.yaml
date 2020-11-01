@@ -59,7 +59,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        path: src/github.com/apache/trafficcontrol
     - name: Run unit tests
-      uses: ./.github/actions/go-test
+      uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
       with:
         dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... ./traffic_stats/... ./traffic_ops/app/bin/...
+      env:
+        GOPATH: /github/workspace

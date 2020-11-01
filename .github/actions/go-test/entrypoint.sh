@@ -18,8 +18,10 @@
 
 set -e
 
+cd "${GOPATH}/src/github.com/apache/trafficcontrol"
+
 download_go() {
-	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
+	go_version="$(cat GO_VERSION)"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
 	tar -C /usr/local -xzf go.tar.gz
 	rm go.tar.gz
@@ -32,12 +34,6 @@ if [ -z "$INPUT_DIR" ]; then
 	# There's a bug in "defaults" for inputs
 	INPUT_DIR="./lib/..."
 fi
-
-export GOPATH="$(mktemp -d)"
-srcdir="$GOPATH/src/github.com/apache"
-mkdir -p "$srcdir"
-ln -s "$PWD" "$srcdir/trafficcontrol"
-cd "$srcdir/trafficcontrol"
 
 # Need to fetch golang.org/x/* dependencies
 go mod vendor -v
