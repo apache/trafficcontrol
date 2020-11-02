@@ -98,15 +98,12 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return id;
 	}
 
-	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver) {
-		return getIpAddresses(ttls, resolver, true);
+	public List<InetRecord> getIpAddresses(final JsonNode ttls) {
+		return getIpAddresses(ttls, true);
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
-		if(ipAddresses == null || ipAddresses.isEmpty()) {
-			ipAddresses = resolver.resolve(this.getFqdn()+".");
-		}
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final boolean ip6RoutingEnabled) {
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
 		for (final InetRecord ir : ipAddresses) {

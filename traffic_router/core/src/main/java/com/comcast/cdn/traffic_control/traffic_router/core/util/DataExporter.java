@@ -33,7 +33,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Resolver;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -175,7 +174,7 @@ public class DataExporter {
 	public List<CacheModel> getCaches(final String locationId) {
 		final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		final CacheLocation location = trafficRouter.getCacheRegister().getCacheLocation(locationId);
-		return getCaches(location, trafficRouter.getZoneManager());
+		return getCaches(location);
 	}
 
 	public Map<String, Object> getCaches() {
@@ -189,13 +188,13 @@ public class DataExporter {
 		return models;
 	}
 
-	private List<CacheModel> getCaches(final CacheLocation location, final Resolver resolver) {
+	private List<CacheModel> getCaches(final CacheLocation location) {
 		final List<CacheModel> models = new ArrayList<CacheModel>();
 
 		for (final Cache cache : location.getCaches()) {
 			final CacheModel model = new CacheModel();
 			final List<String> ipAddresses = new ArrayList<String>();
-			final List<InetRecord> ips = cache.getIpAddresses(null, resolver);
+			final List<InetRecord> ips = cache.getIpAddresses(null);
 
 			if (ips != null) {
 				for (final InetRecord address : ips) {
