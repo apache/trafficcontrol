@@ -162,7 +162,6 @@ public class TrafficRouterTest {
         DeliveryService ds = mock(DeliveryService.class);
 
         Cache cacheIPv4 = mock(Cache.class);
-        cacheIPv4.setIsAvailable(true);
         when(cacheIPv4.hasDeliveryService(anyString())).thenReturn(true);
         when(cacheIPv4.hasAuthority()).thenReturn(true);
         when(cacheIPv4.isAvailable(any(IPVersions.class))).thenCallRealMethod();
