@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
@@ -63,7 +64,7 @@ public class DNSRoutingMissesTest {
         trafficRouter = mock(TrafficRouter.class);
         when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
         Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
-        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
@@ -153,7 +154,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
-        doCallRealMethod().when(trafficRouter).selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 
@@ -164,7 +165,7 @@ public class DNSRoutingMissesTest {
         when(deliveryService.getRoutingName()).thenReturn("edge");
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
-        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService);
+        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService, IPVersions.IPV4ONLY);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
 
         trafficRouter.route(request, track);

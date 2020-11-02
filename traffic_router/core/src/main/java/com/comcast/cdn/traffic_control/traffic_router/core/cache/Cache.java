@@ -39,14 +39,18 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private static final Logger LOGGER = Logger.getLogger(Cache.class);
 	private static final int REPLICAS = 1000;
 
-	public enum IpVersions {
-		IPV4ONLY, IPV6ONLY, BOTH
+	public enum IPVersions {
+		IPV4ONLY, IPV6ONLY, ANY
 	}
-	private IpVersions ipAvailableVersions;
 	private final String id;
 	private String fqdn;
 	private List<InetRecord> ipAddresses;
-	private List<InetRecord> unavailableIpAddresses;
+	private InetAddress ip4;
+	private InetAddress ip6;
+	private boolean isAvailable = false;
+	private boolean ipv4Available = true;
+	private boolean ipv6Available = true;
+	private boolean hasAuthority = false;
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
 	private final Geolocation geolocation;
@@ -191,8 +195,6 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		}
 	}
 
-	boolean isAvailable = false;
-	boolean hasAuthority = false;
 	public void setIsAvailable(final boolean isAvailable) {
 		this.hasAuthority = true;
 		this.isAvailable = isAvailable;
@@ -203,11 +205,18 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	public boolean isAvailable() {
 		return isAvailable;
 	}
-	InetAddress ip4;
-	InetAddress ip6;
+	public boolean isAvailable(final IPVersions requestVersion) {
+	    switch (requestVersion) {
+			case IPV4ONLY:
+			    return isAvailable && ipv4Available;
+			case IPV6ONLY:
+			    return isAvailable && ipv6Available;
+			default:
+			    return isAvailable;
+		}
+	}
 	public void setIpAddress(final String ip, final String ip6, final long ttl) throws UnknownHostException {
 		this.ipAddresses = new ArrayList<InetRecord>();
-		this.unavailableIpAddresses = new ArrayList<InetRecord>();
 
 		if (ip != null && !ip.isEmpty()) {
 			this.ip4 = InetAddress.getByName(ip);
@@ -233,8 +242,6 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void setState(final JsonNode state) {
-		final boolean ipv4Available;
-		final boolean ipv6Available;
 		if (state == null) {
 			LOGGER.warn("got null health state for " + fqdn + ". Setting it to unavailable!");
 			isAvailable = false;
@@ -245,44 +252,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 			ipv4Available = JsonUtils.optBoolean(state, "ipv4Available", true);
 			ipv6Available = JsonUtils.optBoolean(state, "ipv6Available", true);
 		}
-
-		final List<InetRecord> newlyAvailable = new ArrayList<>();
-		final List<InetRecord> newlyUnavailable = new ArrayList<>();
-
-		if (ipv4Available && !ipv6Available) {
-			this.ipAvailableVersions = IpVersions.IPV4ONLY;
-		} else if (ipv6Available && !ipv4Available) {
-			this.ipAvailableVersions = IpVersions.IPV6ONLY;
-		} else {
-			this.ipAvailableVersions = IpVersions.BOTH;
-		}
-
-		for (final InetRecord record : ipAddresses) {
-			if (record.getAddress().equals(ip4) && !ipv4Available) {
-				newlyUnavailable.add(record);
-			}
-			if (record.getAddress().equals(ip6) && !ipv6Available) {
-				newlyUnavailable.add(record);
-			}
-		}
-
-		for (final InetRecord record : unavailableIpAddresses) {
-			if (record.getAddress().equals(ip4) && ipv4Available) {
-				newlyAvailable.add(record);
-			}
-			if (record.getAddress().equals(ip6) && ipv6Available) {
-				newlyAvailable.add(record);
-			}
-		}
-
-		ipAddresses.addAll(newlyAvailable);
-		ipAddresses.removeAll(newlyUnavailable);
-		unavailableIpAddresses.addAll(newlyUnavailable);
-		unavailableIpAddresses.removeAll(newlyAvailable);
-
 		this.setIsAvailable(isAvailable);
-
-
 	}
 
 	@Override
@@ -322,13 +292,5 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	@Override
 	public void setOrder(final int order) {
 		hashable.setOrder(order);
-	}
-
-	public IpVersions getIpAvailableVersions() {
-		return ipAvailableVersions;
-	}
-
-	public void setIpAvailableVersions(final IpVersions ipAvailableVersions) {
-		this.ipAvailableVersions = ipAvailableVersions;
 	}
 }

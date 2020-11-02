@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -563,7 +564,7 @@ public class ZoneManager extends Resolver {
 		request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
 
 		for (final CacheLocation cacheLocation : data.getCacheLocations()) {
-			final List<Cache> caches = tr.selectCachesByCZ(ds, cacheLocation);
+			final List<Cache> caches = tr.selectCachesByCZ(ds, cacheLocation, IPVersions.ANY);
 
 			if (caches == null) {
 				continue;
