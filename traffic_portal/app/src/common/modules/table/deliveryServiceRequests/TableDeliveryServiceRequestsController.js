@@ -27,7 +27,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	}
 
 	/**
-	 * Formats the contents of a 'createdAt' column cell as "relative to now".
+	 * Formats the contents of a 'createdAt' and 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
 		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
@@ -62,7 +62,15 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		{
 			headerName: "Last Edited By",
 			field: "lastEditedBy",
-			hide: false
+			hide: true
+		},
+		{
+			headerName: "Last Updated",
+			field: "lastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			tooltip: dateCellFormatter,
+			valueFormatter: dateCellFormatter
 		},
 		{
 			headerName: "Created",
@@ -107,10 +115,11 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	$scope.PENDING = 3;
 	$scope.COMPLETE = 4;
 
-	/** All of the ds requests - createdAt field converted to actual Date */
+	/** All of the ds requests - createdAt and lastUpdated fields converted to actual Date */
 	$scope.dsRequests = dsRequests.map(
 		function(x) {
 			x.createdAt = x.createdAt ? new Date(x.createdAt.replace("+00", "Z")) : x.createdAt;
+			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
 		});
 
 	$scope.quickSearch = '';
