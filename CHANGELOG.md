@@ -11,9 +11,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
 - Fixed an issue where downgrading the database would fail while having server interfaces with null gateways, MTU, and/or netmasks.
 - Fixed an issue where partial upgrades of the database would occasionally fail to apply 2020081108261100_add_server_ip_profile_trigger.
+- Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
 
 ### Added
 - Added If-Match and If-Unmodified-Since Support in Server and Clients.
+
+### Changed
+- Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
 
 ## [5.0.0] - 2020-10-20
 ### Added
@@ -482,6 +486,7 @@ will be returned indicating that overlap exists.
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-5.0.0...HEAD
 [5.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-5.0.0
 [4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
