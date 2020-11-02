@@ -16,11 +16,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #3528 - Fix Traffic Ops monitoring.json missing DeliveryServices
 - Fixed #5074 - Traffic Monitor logging "CreateStats not adding availability data for server: not found in DeliveryServices" for MID caches
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
+- Fixed a NullPointerException in Traffic Router that prevented it from properly updating cache health states
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Fixed #5005: Traffic Monitor cannot be upgraded independently of Traffic Ops
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed #4825 - Traffic Monitor error log spamming "incomparable stat type int"
+- Fixed #4845 - issue with ATS logging.yaml generation (missing newlines when filters are used)
 - Fixed ORT atstccfg to use log appending and log rotation
+- Fixed a bug in ATS remap.config generation that caused a double range directive if there was a `__RANGE_DIRECTIVE__` override
 - Fixed ORT to be backwards compatible with Traffic Ops 3.x
 
 ### Changed
