@@ -118,6 +118,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
 - Fixed #5216 - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216)
 - Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
+- Fixed an issue where downgrading the database would fail while having server interfaces with null gateways, MTU, and/or netmasks.
+- Fixed an issue where partial upgrades of the database would occasionally fail to apply 2020081108261100_add_server_ip_profile_trigger.
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
