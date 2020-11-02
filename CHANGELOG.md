@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5074 - Traffic Monitor logging "CreateStats not adding availability data for server: not found in DeliveryServices" for MID caches
 - Fixed an issue that causes Traffic Router to mistakenly route to caches that had recently been set from ADMIN_DOWN to OFFLINE
 - Fixed a NullPointerException in Traffic Router that prevented it from properly updating cache health states
+- Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
 - Fixed #5005: Traffic Monitor cannot be upgraded independently of Traffic Ops
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
