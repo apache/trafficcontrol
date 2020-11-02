@@ -44,11 +44,11 @@ ALTER TABLE server ADD CONSTRAINT need_gateway_if_ip CHECK (ip_address IS NULL O
 ALTER TABLE server ADD CONSTRAINT need_netmask_if_ip CHECK (ip_address IS NULL OR ip_address = '' OR ip_netmask IS NOT NULL);
 
 UPDATE server SET ip_address = host(ip_address.address),
-  ip_netmask = host(netmask(ip_address.address)),
-  ip_gateway = host(ip_address.gateway),
+  ip_netmask = COALESCE(host(netmask(ip_address.address)), ''),
+  ip_gateway = COALESCE(host(ip_address.gateway), ''),
   ip_address_is_service = ip_address.service_address,
   interface_name = ip_address.interface,
-  interface_mtu = interface.mtu
+  interface_mtu = COALESCE(interface.mtu, 0)
   FROM ip_address
   JOIN interface ON ip_address.interface = interface.name
   WHERE server.id = ip_address.server
