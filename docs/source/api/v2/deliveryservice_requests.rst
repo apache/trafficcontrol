@@ -50,7 +50,7 @@ Request Structure
 	|           |          | Can be ``create``, ``update``, or ``delete``.                                            |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| createdAt | no       | Filter for :ref:`ds_requests` created on a certain date/time.                            |
-	|           |          | Value must be RFC3339 compliant. Eg. 2019-09-19T19:35:38.828535Z                         |
+	|           |          | Value must be :rfc:`3339` compliant. Eg. 2019-09-19T19:35:38.828535Z                     |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| id        | no       | Filter for the :ref:`Delivery Service Request <ds_requests>` identified by this          |
 	|           |          | integral, unique identifier.                                                             |
