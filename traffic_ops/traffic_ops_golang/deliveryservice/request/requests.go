@@ -92,6 +92,7 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
 		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
 		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
+		"createdAt":  dbhelpers.WhereColumnInfo{Column: "r.created_at"},
 		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
 		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
 		"xmlId":      dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"},

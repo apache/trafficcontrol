@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Added If-Match and If-Unmodified-Since Support in Server and Clients.
 
+### Changed
+- Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
