@@ -83,7 +83,6 @@ e.g.
 - [ ] This PR includes documentation OR I have explained why documentation is unnecessary
 - [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
 - [ ] This PR includes any and all required license headers
-- [ ] This PR ensures that database migration sequence is correct OR this PR does not include a database migration
 - [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://www.apache.org/security/) for details)
 
 
