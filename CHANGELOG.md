@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Fixed
 - Fixed #5216 - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216) 
+- Fixed #5197 - Allows users to assign topology-based DS to ORG servers [Related Github issue](https://github.com/apache/trafficcontrol/issues/5197) 
 - Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
