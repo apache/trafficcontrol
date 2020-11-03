@@ -33,7 +33,7 @@ under the License.
         </thead>
         <tbody>
         <tr id="{{::ds.id}}" class="ds-row" ng-class="::{'active': ds.selected}" ng-repeat="ds in ::selectedDeliveryServices" ng-click="toggleRow(ds)">
-            <td><input type="checkbox" ng-model="ds.selected" ng-disabled="ds.topology"></td>
+            <td><input type="checkbox" ng-model="ds.selected" ng-disabled="ds.topology && isCache(server)"></td>
             <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
             <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
             <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
