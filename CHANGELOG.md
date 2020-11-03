@@ -3,24 +3,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
-### Fixed
-- Fixed #5216 - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216) 
-- Fixed #5197 - Allows users to assign topology-based DS to ORG servers [Related Github issue](https://github.com/apache/trafficcontrol/issues/5197) 
-- Fixed #5161 - Fixes topology name character validation [Related Github issue](https://github.com/apache/trafficcontrol/issues/5161) 
-- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
-- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
-- Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
-- Fixed an issue where downgrading the database would fail while having server interfaces with null gateways, MTU, and/or netmasks.
-- Fixed an issue where partial upgrades of the database would occasionally fail to apply 2020081108261100_add_server_ip_profile_trigger.
-- Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
-
-### Added
-- Added If-Match and If-Unmodified-Since Support in Server and Clients.
-
-### Changed
-- Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
-
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
@@ -68,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for the `cachegroupName` query parameter for `GET /api/3.0/servers` in Traffic Ops
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic Ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
+- Added If-Match and If-Unmodified-Since Support in Server and Clients.
 - Added debugging functionality to the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests)
 - Made the Traffic Router unit tests runner at [`/traffic_router/tests`](https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests) run in Alpine Linux
 - Added GitHub Actions workflow for building RPMs and running the CDN-in-a-Box readiness check
@@ -130,6 +113,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed matching of wildcards in subjectAlternateNames when loading TLS certificates
 - Fixed #5180 - Global Max Mbps and Tps is not send to TM
 - Fixed #3528 - Fix Traffic Ops monitoring.json missing DeliveryServices
+- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
+- Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
+- Fixed #5216 - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216)
+- Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
+- Fixed an issue where downgrading the database would fail while having server interfaces with null gateways, MTU, and/or netmasks.
+- Fixed an issue where partial upgrades of the database would occasionally fail to apply 2020081108261100_add_server_ip_profile_trigger.
+- Fixed #5197 - Allows users to assign topology-based DS to ORG servers [Related Github issue](https://github.com/apache/trafficcontrol/issues/5197)
+- Fixed #5161 - Fixes topology name character validation [Related Github issue](https://github.com/apache/trafficcontrol/issues/5161)
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
@@ -157,6 +149,7 @@ will be returned indicating that overlap exists.
 - Changed Spring Framework Java dependency to 4.2.5.
 - Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
 - Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
+- Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
