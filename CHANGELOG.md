@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+### Fixed
+- Fixed #5216 - Removed duplicate button to link delivery service to server [Related Github issue](https://github.com/apache/trafficcontrol/issues/5216) 
+- Fixed #5197 - Allows users to assign topology-based DS to ORG servers [Related Github issue](https://github.com/apache/trafficcontrol/issues/5197) 
+- Fixed #5161 - Fixes topology name character validation [Related Github issue](https://github.com/apache/trafficcontrol/issues/5161) 
+- Fixed an issue where the jobs and servers table in Traffic Portal would not clear a column's filter when it's hidden
+- Fixed an issue with Traffic Router failing to authenticate if secrets are changed
+- Fixed an issue with Traffic Monitor to fix peer polling to work as expected
+- Fixed validation error message for Traffic Ops `POST /api/x/profileparameters` route
+- Fixed an issue where downgrading the database would fail while having server interfaces with null gateways, MTU, and/or netmasks.
+- Fixed an issue where partial upgrades of the database would occasionally fail to apply 2020081108261100_add_server_ip_profile_trigger.
+- Fixed an issue where Traffic Router would erroneously return 503s or NXDOMAINs if the caches in a cachegroup were all unavailable for a client's requested IP version, rather than selecting caches from the next closest available cachegroup.
+
+### Added
+- Added If-Match and If-Unmodified-Since Support in Server and Clients.
+
+### Changed
+- Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
