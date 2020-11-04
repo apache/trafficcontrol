@@ -259,10 +259,12 @@ func (i *isoRequest) Validate(tx *sql.Tx) error {
 	}
 
 	if i.IP6Address != "" {
-		if ipv6, _, err := net.ParseCIDR(i.IP6Address); err != nil || len(ipv6) != 16 {
+		if ipv6, _, err := net.ParseCIDR(i.IP6Address); err != nil {
+			if ipv6 = net.ParseIP(i.IP6Address); len(ipv6) != 16 || ipv6.To4() != nil {
+				addErr("ip6Address must be a valid IPv6 address (with optional CIDR prefix)")
+			}
+		} else if len(ipv6) != 16 || ipv6.To4() != nil {
 			addErr("ip6Address must be a valid IPv6 address (with optional CIDR prefix)")
-		} else if len(ipv6) != 16 {
-
 		}
 	}
 
