@@ -70,6 +70,7 @@ if [ -r "$X509_CA_PERSIST_ENV_FILE" ]; then
 	umask "$X509_CA_UMASK";
 	mkdir -p "$X509_CA_DIR";
 	chmod 777 "$X509_CA_DIR";
+	chmod -R a+rw "$X509_CA_DIR";
 	rsync -a "$X509_CA_PERSIST_DIR/" "$X509_CA_DIR/";
 	sync;
 	echo "PERSIST CERTS FROM $X509_CA_PERSIST_DIR to $X509_CA_DIR";
@@ -86,6 +87,7 @@ elif x509v3_init; then
 	# Save newly generated certs for future restarts.
 	rsync -av "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR/";
 	chmod 777 "$X509_CA_PERSIST_DIR";
+	chmod -R a+rw "$X509_CA_DIR";
 	sync;
 	echo "GENERATE CERTS FROM $X509_CA_DIR to $X509_CA_PERSIST_DIR";
 	sleep 4;
