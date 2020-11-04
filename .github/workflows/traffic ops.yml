@@ -31,11 +31,12 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/*client/**.go
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
 
   API_tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     services:
