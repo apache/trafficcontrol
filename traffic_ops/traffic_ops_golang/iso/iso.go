@@ -192,7 +192,7 @@ type isoRequest struct {
 	IPAddr        net.IP          `json:"ipAddress"`
 	IPNetmask     net.IP          `json:"ipNetmask"`
 	IPGateway     net.IP          `json:"ipGateway"`
-	IP6Address    net.IP          `json:"ip6Address"`
+	IP6Address    string          `json:"ip6Address"`
 	IP6Gateway    net.IP          `json:"ip6Gateway"`
 	InterfaceName string          `json:"interfaceName"`
 	InterfaceMTU  util.JSONIntStr `json:"interfaceMtu"`
@@ -255,6 +255,14 @@ func (i *isoRequest) Validate(tx *sql.Tx) error {
 		}
 		if len(i.IPGateway) == 0 {
 			addErr("ipGateway is required if DHCP is no")
+		}
+	}
+
+	if i.IP6Address != "" {
+		if ipv6, _, err := net.ParseCIDR(i.IP6Address); err != nil || len(ipv6) != 16 {
+			addErr("ip6Address must be a valid IPv6 address (with optional CIDR prefix)")
+		} else if len(ipv6) != 16 {
+
 		}
 	}
 
