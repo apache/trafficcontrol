@@ -23,12 +23,13 @@ on:
     paths:
       - traffic_ops/app/db/**
   pull_request:
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - traffic_ops/app/db/**
 
 jobs:
-  documentation:
+  tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
