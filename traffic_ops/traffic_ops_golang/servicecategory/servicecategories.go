@@ -144,7 +144,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !api.IsUnmodified(r.Header, origSC.LastUpdated.Time) {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, errors.New("service category has been modified"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, errors.New("service category could not be modified because the precondition failed"), nil)
 		return
 	}
 
