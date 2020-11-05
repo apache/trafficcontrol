@@ -66,31 +66,6 @@ type TopologyName string
 type CacheGroupType string
 type ServerCapability string
 
-type ServerInfo struct {
-	CacheGroupID                  int
-	CacheGroupName                string
-	CDN                           tc.CDNName
-	CDNID                         int
-	DomainName                    string
-	HostName                      string
-	HTTPSPort                     int
-	ID                            int
-	IP                            string
-	ParentCacheGroupID            int
-	ParentCacheGroupType          string
-	ProfileID                     ProfileID
-	ProfileName                   string
-	Port                          int
-	SecondaryParentCacheGroupID   int
-	SecondaryParentCacheGroupType string
-	Type                          string
-}
-
-func (s *ServerInfo) IsTopLevelCache() bool {
-	return (s.ParentCacheGroupType == tc.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
-		(s.SecondaryParentCacheGroupType == tc.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
-}
-
 func MakeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
 	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
 	for _, cg := range cgs {
