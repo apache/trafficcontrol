@@ -33,54 +33,16 @@ const IPAllowConfigFileName = `ip_allow.config`
 const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
 const LineCommentIPAllowDotConfig = LineCommentHash
 
-type IPAllowData struct {
-	Src    string
-	Action string
-	Method string
-}
-
-type IPAllowDatas []IPAllowData
-
-func (is IPAllowDatas) Len() int      { return len(is) }
-func (is IPAllowDatas) Swap(i, j int) { is[i], is[j] = is[j], is[i] }
-func (is IPAllowDatas) Less(i, j int) bool {
-	if is[i].Src != is[j].Src {
-		return is[i].Src < is[j].Src
-	}
-	if is[i].Action != is[j].Action {
-		return is[i].Action < is[j].Action
-	}
-	return is[i].Method < is[j].Method
-}
-
 const ParamPurgeAllowIP = "purge_allow_ip"
 const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
 const ParamCoalesceNumberV4 = "coalesce_number_v4"
 const ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
 const ParamCoalesceNumberV6 = "coalesce_number_v6"
 
-type IPAllowServer struct {
-	IPAddress  string
-	IP6Address string
-}
-
 const DefaultCoalesceMaskLenV4 = 24
 const DefaultCoalesceNumberV4 = 5
 const DefaultCoalesceMaskLenV6 = 48
 const DefaultCoalesceNumberV6 = 5
-
-type ServersSortByName []tc.ServerNullable
-
-func (ss ServersSortByName) Len() int      { return len(ss) }
-func (ss ServersSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
-func (ss ServersSortByName) Less(i, j int) bool {
-	if ss[j].HostName == nil {
-		return false
-	} else if ss[i].HostName == nil {
-		return true
-	}
-	return *ss[i].HostName < *ss[j].HostName
-}
 
 // MakeIPAllowDotConfig creates the ip_allow.config ATS config file.
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
@@ -103,18 +65,18 @@ func MakeIPAllowDotConfig(
 
 	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
 
-	ipAllowData := []IPAllowData{}
+	ipAllowDat := []ipAllowData{}
 	const ActionAllow = "ip_allow"
 	const ActionDeny = "ip_deny"
 	const MethodAll = "ALL"
 
 	// localhost is trusted.
-	ipAllowData = append(ipAllowData, IPAllowData{
+	ipAllowDat = append(ipAllowDat, ipAllowData{
 		Src:    `127.0.0.1`,
 		Action: ActionAllow,
 		Method: MethodAll,
 	})
-	ipAllowData = append(ipAllowData, IPAllowData{
+	ipAllowDat = append(ipAllowDat, ipAllowData{
 		Src:    `::1`,
 		Action: ActionAllow,
 		Method: MethodAll,
@@ -130,7 +92,7 @@ func MakeIPAllowDotConfig(
 		for _, val := range vals {
 			switch name {
 			case "purge_allow_ip":
-				ipAllowData = append(ipAllowData, IPAllowData{
+				ipAllowDat = append(ipAllowDat, ipAllowData{
 					Src:    val,
 					Action: ActionAllow,
 					Method: MethodAll,
@@ -174,12 +136,12 @@ func MakeIPAllowDotConfig(
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
 	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 	if !isMid {
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
 			Action: ActionDeny,
 			Method: `PUSH|PURGE|DELETE`,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
 			Action: ActionDeny,
 			Method: `PUSH|PURGE|DELETE`,
@@ -214,7 +176,7 @@ func MakeIPAllowDotConfig(
 		}
 
 		// sort servers, to guarantee things like IP coalescing are deterministic
-		sort.Sort(ServersSortByName(servers))
+		sort.Sort(serversSortByName(servers))
 		for _, childServer := range servers {
 			if childServer.Cachegroup == nil {
 				warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
@@ -272,14 +234,14 @@ func MakeIPAllowDotConfig(
 		cidr6s := util.CoalesceCIDRs(ip6s, coalesceNumberV6, coalesceMaskLenV6)
 
 		for _, cidr := range cidrs {
-			ipAllowData = append(ipAllowData, IPAllowData{
+			ipAllowDat = append(ipAllowDat, ipAllowData{
 				Src:    util.RangeStr(cidr),
 				Action: ActionAllow,
 				Method: MethodAll,
 			})
 		}
 		for _, cidr := range cidr6s {
-			ipAllowData = append(ipAllowData, IPAllowData{
+			ipAllowDat = append(ipAllowDat, ipAllowData{
 				Src:    util.RangeStr(cidr),
 				Action: ActionAllow,
 				Method: MethodAll,
@@ -287,32 +249,32 @@ func MakeIPAllowDotConfig(
 		}
 
 		// allow RFC 1918 server space - TODO JvD: parameterize
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `10.0.0.0-10.255.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `172.16.0.0-172.31.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `192.168.0.0-192.168.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
 
 		// order matters, so sort before adding the denys
-		sort.Sort(IPAllowDatas(ipAllowData))
+		sort.Sort(ipAllowDatas(ipAllowDat))
 
 		// end with a deny
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
 			Action: ActionDeny,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
 			Action: ActionDeny,
 			Method: MethodAll,
@@ -320,7 +282,7 @@ func MakeIPAllowDotConfig(
 	}
 
 	text := makeHdrComment(hdrComment)
-	for _, al := range ipAllowData {
+	for _, al := range ipAllowDat {
 		text += `src_ip=` + al.Src + ` action=` + al.Action + ` method=` + al.Method + "\n"
 	}
 
@@ -330,4 +292,42 @@ func MakeIPAllowDotConfig(
 		LineComment: LineCommentHostingDotConfig,
 		Warnings:    warnings,
 	}, nil
+}
+
+type ipAllowData struct {
+	Src    string
+	Action string
+	Method string
+}
+
+type ipAllowDatas []ipAllowData
+
+func (is ipAllowDatas) Len() int      { return len(is) }
+func (is ipAllowDatas) Swap(i, j int) { is[i], is[j] = is[j], is[i] }
+func (is ipAllowDatas) Less(i, j int) bool {
+	if is[i].Src != is[j].Src {
+		return is[i].Src < is[j].Src
+	}
+	if is[i].Action != is[j].Action {
+		return is[i].Action < is[j].Action
+	}
+	return is[i].Method < is[j].Method
+}
+
+type ipAllowServer struct {
+	IPAddress  string
+	IP6Address string
+}
+
+type serversSortByName []tc.ServerNullable
+
+func (ss serversSortByName) Len() int      { return len(ss) }
+func (ss serversSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss serversSortByName) Less(i, j int) bool {
+	if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName == nil {
+		return true
+	}
+	return *ss[i].HostName < *ss[j].HostName
 }
