@@ -126,7 +126,7 @@ public class DataExporter {
 			map.put("locationByFederation", NOT_FOUND_MESSAGE);
 		}
 
-		CacheLocation clFromDCZ = trafficRouterManager.getTrafficRouter().getDeepCoverageZoneLocation(ip);
+		CacheLocation clFromDCZ = trafficRouterManager.getTrafficRouter().getDeepCoverageZoneLocationByIP(ip);
 		if (clFromDCZ != null) {
 			map.put("locationByDeepCoverageZone", new PropertiesAndCaches(clFromDCZ));
 		} else {
