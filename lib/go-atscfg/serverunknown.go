@@ -42,7 +42,7 @@ func MakeServerUnknown(
 		return Cfg{}, makeErr(warnings, "server missing DomainName")
 	}
 
-	params := ParamsToMultiMap(FilterParams(serverParams, fileName, "", "", ""))
+	params := paramsToMultiMap(filterParams(serverParams, fileName, "", "", ""))
 
 	hdr := makeHdrComment(hdrComment)
 

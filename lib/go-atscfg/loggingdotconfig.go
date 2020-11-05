@@ -46,7 +46,7 @@ func MakeLoggingDotConfig(
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, LoggingFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, LoggingFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	hdrComment := makeHdrComment(hdrCommentTxt)

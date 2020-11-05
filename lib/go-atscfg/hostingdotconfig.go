@@ -59,7 +59,7 @@ func MakeHostingDotConfig(
 		return Cfg{}, makeErr(warnings, "this server missing ID")
 	}
 
-	params, paramWarns := ParamsToMap(FilterParams(serverParams, HostingConfigParamConfigFile, "", "", ""))
+	params, paramWarns := paramsToMap(filterParams(serverParams, HostingConfigParamConfigFile, "", "", ""))
 	warnings = append(warnings, paramWarns...)
 
 	cdnServers := map[tc.CacheName]tc.ServerNullable{}

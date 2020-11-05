@@ -38,7 +38,7 @@ func MakePluginDotConfig(
 		return Cfg{}, makeErr(warnings, "server profile missing")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, PluginFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, PluginFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)

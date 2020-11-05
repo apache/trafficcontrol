@@ -38,7 +38,7 @@ func MakeSysCtlDotConf(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, SysctlFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, SysctlFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)

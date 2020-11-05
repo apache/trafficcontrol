@@ -39,8 +39,8 @@ func MakeATSDotRules(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	serverParams = FilterParams(serverParams, ATSDotRulesFileName, "", "", "location")
-	paramData, paramWarns := ParamsToMap(serverParams)
+	serverParams = filterParams(serverParams, ATSDotRulesFileName, "", "", "location")
+	paramData, paramWarns := paramsToMap(serverParams)
 	warnings = append(warnings, paramWarns...)
 	text := makeHdrComment(hdrComment)
 

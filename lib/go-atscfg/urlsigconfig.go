@@ -42,7 +42,7 @@ func MakeURLSigConfig(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, fileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, fileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	dsName := getDSFromURLSigConfigFileName(fileName)

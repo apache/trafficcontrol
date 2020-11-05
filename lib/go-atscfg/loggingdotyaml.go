@@ -42,7 +42,7 @@ func MakeLoggingDotYAML(
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, LoggingYAMLFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, LoggingYAMLFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)

@@ -384,10 +384,10 @@ func filterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverI
 	return filtered
 }
 
-// FilterParams filters params and returns only the parameters which match configFile, name, and value.
+// filterParams filters params and returns only the parameters which match configFile, name, and value.
 // If configFile, name, or value is the empty string, it is not filtered.
 // Returns a slice of parameters.
-func FilterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
+func filterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
 	filtered := []tc.Parameter{}
 	for _, param := range params {
 		if configFile != "" && param.ConfigFile != configFile {
@@ -407,12 +407,12 @@ func FilterParams(params []tc.Parameter, configFile string, name string, value s
 	return filtered
 }
 
-// ParamsToMap converts a []tc.Parameter to a map[paramName]paramValue.
+// paramsToMap converts a []tc.Parameter to a map[paramName]paramValue.
 // If multiple params have the same value, the first one in params will be used an an error will be logged.
 // Warnings will be returned if any parameters have the same name but different values.
 // Returns the parameter map, and any warnings.
 // See ParamArrToMultiMap.
-func ParamsToMap(params []tc.Parameter) (map[string]string, []string) {
+func paramsToMap(params []tc.Parameter) (map[string]string, []string) {
 	warnings := []string{}
 	mp := map[string]string{}
 	for _, param := range params {
@@ -429,8 +429,8 @@ func ParamsToMap(params []tc.Parameter) (map[string]string, []string) {
 	return mp, warnings
 }
 
-// ParamArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
-func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
+// paramArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
+func paramsToMultiMap(params []tc.Parameter) map[string][]string {
 	mp := map[string][]string{}
 	for _, param := range params {
 		mp[param.Name] = append(mp[param.Name], param.Value)

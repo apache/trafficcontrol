@@ -40,8 +40,8 @@ func MakeAStatsDotConfig(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	serverParams = FilterParams(serverParams, AstatsFileName, "", "", "location")
-	paramData, paramWarns := ParamsToMap(serverParams)
+	serverParams = filterParams(serverParams, AstatsFileName, "", "", "location")
+	paramData, paramWarns := paramsToMap(serverParams)
 	warnings = append(warnings, paramWarns...)
 	hdr := makeHdrComment(hdrComment)
 	txt := genericProfileConfig(paramData, AstatsSeparator)

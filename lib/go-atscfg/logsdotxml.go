@@ -42,7 +42,7 @@ func MakeLogsXMLDotConfig(
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, LogsXMLFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, LogsXMLFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	// Note LineCommentLogsDotXML must be a single-line comment!

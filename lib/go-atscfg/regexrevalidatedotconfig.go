@@ -56,7 +56,7 @@ func MakeRegexRevalidateDotConfig(
 		return Cfg{}, makeErr(warnings, "server CDNName missing")
 	}
 
-	params := ParamsToMultiMap(FilterParams(globalParams, RegexRevalidateFileName, "", "", ""))
+	params := paramsToMultiMap(filterParams(globalParams, RegexRevalidateFileName, "", "", ""))
 
 	dsNames := map[string]struct{}{}
 	for _, ds := range deliveryServices {

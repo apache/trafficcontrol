@@ -55,7 +55,7 @@ func MakePackages(
 ) (Cfg, error) {
 	warnings := []string{}
 
-	params := ParamsToMultiMap(FilterParams(serverParams, PackagesParamConfigFile, "", "", ""))
+	params := paramsToMultiMap(filterParams(serverParams, PackagesParamConfigFile, "", "", ""))
 
 	packages := []Package{}
 	for name, versions := range params {

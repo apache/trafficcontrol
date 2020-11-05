@@ -44,7 +44,7 @@ func MakeStorageDotConfig(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, StorageFileName, "", "", "location"))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, StorageFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	text := ""

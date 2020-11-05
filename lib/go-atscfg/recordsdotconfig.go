@@ -40,7 +40,7 @@ func MakeRecordsDotConfig(
 		return Cfg{}, makeErr(warnings, "server profile missing")
 	}
 
-	params, paramWarns := ParamsToMap(FilterParams(serverParams, RecordsFileName, "", "", "location"))
+	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)

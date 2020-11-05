@@ -42,7 +42,7 @@ func MakeVolumeDotConfig(
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
-	paramData, paramWarns := ParamsToMap(FilterParams(serverParams, VolumeFileName, "", "", ""))
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, VolumeFileName, "", "", ""))
 	warnings = append(warnings, paramWarns...)
 
 	text := makeHdrComment(hdrComment)

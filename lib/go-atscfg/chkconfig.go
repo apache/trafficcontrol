@@ -54,7 +54,7 @@ func MakeChkconfig(
 ) (Cfg, error) {
 	warnings := []string{}
 
-	serverParams = FilterParams(serverParams, ChkconfigParamConfigFile, "", "", "")
+	serverParams = filterParams(serverParams, ChkconfigParamConfigFile, "", "", "")
 
 	chkconfig := []ChkConfigEntry{}
 	for _, param := range serverParams {

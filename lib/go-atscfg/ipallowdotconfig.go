@@ -101,7 +101,7 @@ func MakeIPAllowDotConfig(
 		return Cfg{}, makeErr(warnings, "this server missing HostName")
 	}
 
-	params := ParamsToMultiMap(FilterParams(serverParams, IPAllowConfigFileName, "", "", ""))
+	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
 
 	ipAllowData := []IPAllowData{}
 	const ActionAllow = "ip_allow"
