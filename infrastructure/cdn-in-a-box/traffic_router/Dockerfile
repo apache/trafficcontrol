@@ -35,7 +35,7 @@ ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
 RUN dnf -y install epel-release && \
     dnf -y install jq git rpm-build net-tools iproute nc wget tar unzip \
-          perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
+          perl-JSON perl-WWW-Curl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
           java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
     dnf -y clean all && \

@@ -54,6 +54,7 @@ RUN set -o nounset -o errexit && \
         nmap-ncat       \
         openssl         \
         # Used to copy certs in "Shared SSL certificate generation" step
+        rsync;          \
     dnf clean all
 
 FROM trafficops-common-deps as trafficops-perl-deps
@@ -64,7 +65,7 @@ ENV MOJO_MODE production
 RUN if [[ "${CENTOS_VERSION:0:1}" -ge 8 ]]; then \
         enable_repo='--enablerepo=PowerTools' || exit 1; \
     fi && \
-    dnf -y $enable_repo install \
+    dnf -y --allowerasing $enable_repo install \
         cpanminus           \
         expat-devel         \
         gcc-c++             \
@@ -85,6 +86,7 @@ RUN if [[ "${CENTOS_VERSION:0:1}" -ge 8 ]]; then \
         perl-Digest-SHA1    \
         perl-JSON           \
         perl-libwww-perl    \
+        perl-Net-Pcap       \
         perl-TermReadKey    \
         perl-Test-CPAN-Meta \
         perl-WWW-Curl       \
