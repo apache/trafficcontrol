@@ -141,7 +141,7 @@ func addMetaObjConfigDir(
 	server *tc.ServerNullable,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
-	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
+	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
 	cacheGroupArr []tc.CacheGroupNullable,
@@ -402,8 +402,8 @@ func getTOURLAndReverseProxy(globalParams []tc.Parameter) (string, string) {
 	return toURL, toReverseProxyURL
 }
 
-func getLocationParams(serverParams []tc.Parameter) map[string]ConfigProfileParams {
-	locationParams := map[string]ConfigProfileParams{}
+func getLocationParams(serverParams []tc.Parameter) map[string]configProfileParams {
+	locationParams := map[string]configProfileParams{}
 	for _, param := range serverParams {
 		if param.Name == "location" {
 			p := locationParams[param.ConfigFile]
@@ -415,7 +415,7 @@ func getLocationParams(serverParams []tc.Parameter) map[string]ConfigProfilePara
 	return locationParams
 }
 
-type ConfigProfileParams struct {
+type configProfileParams struct {
 	Name string
 	Path string
 }
