@@ -37,7 +37,7 @@ func TestMakePackages(t *testing.T) {
 	}
 	txt := cfg.Text
 
-	packages := []Package{}
+	packages := []pkg{}
 	if err := json.Unmarshal([]byte(txt), &packages); err != nil {
 		t.Fatalf("MakePackages expected a JSON array of objects, actual: " + err.Error())
 	}
