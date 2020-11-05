@@ -33,9 +33,16 @@ RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-RUN mkdir /etc/cron.d && \
-    dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    dnf -y install epel-release && \
+RUN set -o nounset -o errexit && \
+    mkdir -p /etc/cron.d; \
+    if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        use_repo=''; \
+    else \
+        use_repo='--repo=pgdg96'; \
+    fi; \
+    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+    dnf -y $use_repo -- install postgresql96; \
+    dnf -y install epel-release; \
     dnf -y install      \
         jq              \
         bind-utils      \
@@ -46,7 +53,7 @@ RUN mkdir /etc/cron.d && \
         isomd5sum       \
         nmap-ncat       \
         openssl         \
-        postgresql96 && \
+        # Used to copy certs in "Shared SSL certificate generation" step
     dnf clean all
 
 FROM trafficops-common-deps as trafficops-perl-deps
@@ -54,7 +61,10 @@ FROM trafficops-common-deps as trafficops-perl-deps
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN dnf install -y          \
+RUN if [[ "${CENTOS_VERSION:0:1}" -ge 8 ]]; then \
+        enable_repo='--enablerepo=PowerTools' || exit 1; \
+    fi && \
+    dnf -y $enable_repo install \
         cpanminus           \
         expat-devel         \
         gcc-c++             \
@@ -79,7 +89,6 @@ RUN dnf install -y          \
         perl-Test-CPAN-Meta \
         perl-WWW-Curl       \
         postgresql96-devel  \
-        postgresql96-libs   \
         tar &&              \
     dnf -y clean all && \
     mkdir -p /opt/traffic_ops/app/public && \
