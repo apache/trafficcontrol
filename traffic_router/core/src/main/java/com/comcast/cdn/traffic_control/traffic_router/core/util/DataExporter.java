@@ -35,6 +35,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.PropertiesAndCaches;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
