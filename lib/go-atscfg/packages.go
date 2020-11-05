@@ -32,22 +32,6 @@ const PackagesParamConfigFile = `package`
 const ContentTypePackages = ContentTypeTextASCII
 const LineCommentPackages = ""
 
-type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
-
-type Packages []Package
-
-func (ps Packages) Len() int { return len(ps) }
-func (ps Packages) Less(i, j int) bool {
-	if ps[i].Name != ps[j].Name {
-		return ps[i].Name < ps[j].Name
-	}
-	return ps[i].Version < ps[j].Version
-}
-func (ps Packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
-
 // MakePackages returns the 'packages' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakePackages(
@@ -57,14 +41,14 @@ func MakePackages(
 
 	params := paramsToMultiMap(filterParams(serverParams, PackagesParamConfigFile, "", "", ""))
 
-	packages := []Package{}
+	pkgs := []pkg{}
 	for name, versions := range params {
 		for _, version := range versions {
-			packages = append(packages, Package{Name: name, Version: version})
+			pkgs = append(pkgs, pkg{Name: name, Version: version})
 		}
 	}
-	sort.Sort(Packages(packages))
-	bts, err := json.Marshal(&packages)
+	sort.Sort(packages(pkgs))
+	bts, err := json.Marshal(&pkgs)
 	if err != nil {
 		// should never happen
 		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVersions: "+err.Error())
@@ -77,3 +61,19 @@ func MakePackages(
 		Warnings:    warnings,
 	}, nil
 }
+
+type pkg struct {
+	Name    string
+	Version string
+}
+
+type packages []pkg
+
+func (ps packages) Len() int { return len(ps) }
+func (ps packages) Less(i, j int) bool {
+	if ps[i].Name != ps[j].Name {
+		return ps[i].Name < ps[j].Name
+	}
+	return ps[i].Version < ps[j].Version
+}
+func (ps packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }

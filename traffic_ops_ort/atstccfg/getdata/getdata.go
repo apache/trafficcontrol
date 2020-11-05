@@ -139,7 +139,7 @@ func WritePackages(cfg config.TCCfg, output io.Writer) error {
 	return nil
 }
 
-func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
+func GetPackages(cfg config.TCCfg) ([]Package, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
@@ -148,14 +148,19 @@ func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
-	packages := []atscfg.Package{}
+	packages := []Package{}
 	for _, param := range params {
 		if param.ConfigFile != atscfg.PackagesParamConfigFile {
 			continue
 		}
-		packages = append(packages, atscfg.Package{Name: param.Name, Version: param.Value})
+		packages = append(packages, Package{Name: param.Name, Version: param.Value})
 	}
 	return packages, nil
+}
+
+type Package struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 // WriteChkconfig writes the chkconfig for cfg.CacheHostName to output.
