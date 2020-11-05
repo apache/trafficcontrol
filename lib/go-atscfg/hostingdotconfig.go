@@ -93,7 +93,7 @@ func MakeHostingDotConfig(
 		}
 	}
 
-	dsServers := FilterDSS(deliveryServiceServers, dsIDs, serverIDs)
+	dsServers := filterDSS(deliveryServiceServers, dsIDs, serverIDs)
 
 	dsServerMap := map[int]map[int]struct{}{} // set[dsID][serverID]
 	for _, dss := range dsServers {

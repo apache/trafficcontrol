@@ -76,7 +76,7 @@ func MakeHeaderRewriteDotConfig(
 		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
 	}
 
-	dsServers := FilterDSS(deliveryServiceServers, map[int]struct{}{ds.ID: {}}, nil)
+	dsServers := filterDSS(deliveryServiceServers, map[int]struct{}{ds.ID: {}}, nil)
 
 	dsServerIDs := map[int]struct{}{}
 	for _, dss := range dsServers {

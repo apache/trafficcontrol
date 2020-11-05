@@ -322,21 +322,21 @@ func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 	return topoNames
 }
 
-type ParameterWithProfiles struct {
+type parameterWithProfiles struct {
 	tc.Parameter
 	ProfileNames []string
 }
 
-type ParameterWithProfilesMap struct {
+type parameterWithProfilesMap struct {
 	tc.Parameter
 	ProfileNames map[string]struct{}
 }
 
-// TCParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfiles, error) {
-	params := make([]ParameterWithProfiles, 0, len(tcParams))
+// tcParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
+func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfiles, error) {
+	params := make([]parameterWithProfiles, 0, len(tcParams))
 	for _, tcParam := range tcParams {
-		param := ParameterWithProfiles{Parameter: tcParam}
+		param := parameterWithProfiles{Parameter: tcParam}
 
 		profiles := []string{}
 		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
@@ -349,10 +349,10 @@ func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfi
 	return params, nil
 }
 
-func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
-	params := []ParameterWithProfilesMap{}
+func parameterWithProfilesToMap(tcParams []parameterWithProfiles) []parameterWithProfilesMap {
+	params := []parameterWithProfilesMap{}
 	for _, tcParam := range tcParams {
-		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
+		param := parameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
 		for _, profile := range tcParam.ProfileNames {
 			param.ProfileNames[profile] = struct{}{}
 		}
@@ -361,7 +361,7 @@ func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWit
 	return params
 }
 
-func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
+func filterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
 	// TODO filter only DSes on this server's CDN? Does anything ever needs DSS cross-CDN? Surely not.
 	//      Then, we can remove a bunch of config files that filter only DSes on the current cdn.
 	filtered := []tc.DeliveryServiceServer{}

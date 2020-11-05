@@ -605,7 +605,7 @@ func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, 
 		dsIDs[*ds.ID] = struct{}{}
 	}
 
-	dsServers := FilterDSS(dss, dsIDs, serverIDs)
+	dsServers := filterDSS(dss, dsIDs, serverIDs)
 
 	dssMap := map[int]map[int]struct{}{} // set of map[dsID][serverID]
 	for _, dss := range dsServers {
@@ -670,12 +670,12 @@ func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, 
 // Returns the params, any warnings, and any error.
 func makeDSProfilesCacheKeyConfigParams(server *tc.ServerNullable, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) (map[int]map[string]string, []string, error) {
 	warnings := []string{}
-	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(cacheKeyParams)
+	cacheKeyParamsWithProfiles, err := tcParamsToParamsWithProfiles(cacheKeyParams)
 	if err != nil {
 		return nil, warnings, errors.New("decoding cache key parameter profiles: " + err.Error())
 	}
 
-	cacheKeyParamsWithProfilesMap := ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
+	cacheKeyParamsWithProfilesMap := parameterWithProfilesToMap(cacheKeyParamsWithProfiles)
 
 	dsProfileNamesToIDs := map[string]int{}
 	for _, ds := range dses {

@@ -296,12 +296,12 @@ func MakeParentDotConfig(
 	textArr := []string{}
 	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
 
-	parentConfigParamsWithProfiles, err := TCParamsToParamsWithProfiles(tcParentConfigParams)
+	parentConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
 	if err != nil {
 		warnings = append(warnings, "error getting profiles from Traffic Ops Parameters, Parameters will not be considered for generation! : "+err.Error())
-		parentConfigParamsWithProfiles = []ParameterWithProfiles{}
+		parentConfigParamsWithProfiles = []parameterWithProfiles{}
 	}
-	parentConfigParams := ParameterWithProfilesToMap(parentConfigParamsWithProfiles)
+	parentConfigParams := parameterWithProfilesToMap(parentConfigParamsWithProfiles)
 
 	// this is an optimization, to avoid looping over all params, for every DS. Instead, we loop over all params only once, and put them in a profile map.
 	profileParentConfigParams := map[string]map[string]string{} // map[profileName][paramName]paramVal
@@ -405,7 +405,7 @@ func MakeParentDotConfig(
 	}
 	cgServerIDs[*server.ID] = struct{}{}
 
-	cgDSServers := FilterDSS(dss, nil, cgServerIDs)
+	cgDSServers := filterDSS(dss, nil, cgServerIDs)
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID]
 	for _, dss := range cgDSServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
@@ -701,7 +701,7 @@ func GetTopologyParentConfigLine(
 	servers []tc.ServerNullable,
 	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
-	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.config
+	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
 	nameTopologies map[TopologyName]tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
@@ -875,7 +875,7 @@ func getTopologyQueryString(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *tc.ServerNullable, params []ParameterWithProfilesMap) (ProfileCache, []string) {
+func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfilesMap) (ProfileCache, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	profileCache := DefaultProfileCache()
@@ -935,7 +935,7 @@ func GetTopologyParents(
 	server *tc.ServerNullable,
 	ds *tc.DeliveryServiceNullableV30,
 	servers []tc.ServerNullable,
-	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.confign
+	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.confign
 	topology tc.Topology,
 	serverIsLastTier bool,
 	serverCapabilities map[int]map[ServerCapability]struct{},

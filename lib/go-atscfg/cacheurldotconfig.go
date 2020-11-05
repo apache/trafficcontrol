@@ -55,7 +55,7 @@ func MakeCacheURLDotConfig(
 		}
 	}
 
-	dss := FilterDSS(deliveryServiceServers, dsIDs, nil)
+	dss := filterDSS(deliveryServiceServers, dsIDs, nil)
 
 	dssMap := map[int][]int{} // map[dsID]serverID
 	for _, dss := range dss {

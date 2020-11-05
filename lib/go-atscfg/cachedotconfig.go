@@ -74,7 +74,7 @@ func MakeCacheDotConfigEdge(
 		profileServerIDsMap[*sv.ID] = struct{}{}
 	}
 
-	dsServers := FilterDSS(deliveryServiceServers, nil, profileServerIDsMap)
+	dsServers := filterDSS(deliveryServiceServers, nil, profileServerIDsMap)
 
 	dsIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
