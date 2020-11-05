@@ -79,6 +79,9 @@ ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffi
 
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
+
+# Start with the existing traffic_ops/app/local directory
+COPY traffic_ops/app/local local
 RUN cpanm -l ./local Carton && \
     POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
