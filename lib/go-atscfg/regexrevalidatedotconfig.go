@@ -105,16 +105,16 @@ func MakeRegexRevalidateDotConfig(
 	}, nil
 }
 
-type Job struct {
+type job struct {
 	AssetURL string
 	PurgeEnd time.Time
 }
 
-type Jobs []Job
+type jobsSort []job
 
-func (jb Jobs) Len() int      { return len(jb) }
-func (jb Jobs) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
-func (jb Jobs) Less(i, j int) bool {
+func (jb jobsSort) Len() int      { return len(jb) }
+func (jb jobsSort) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
+func (jb jobsSort) Less(i, j int) bool {
 	if jb[i].AssetURL == jb[j].AssetURL {
 		return jb[i].PurgeEnd.Before(jb[j].PurgeEnd)
 	}
@@ -128,7 +128,7 @@ func (jb Jobs) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]Job, []string) {
+func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]job, []string) {
 	warnings := []string{}
 
 	jobMap := map[string]time.Time{}
@@ -183,11 +183,11 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]
 		}
 	}
 
-	newJobs := []Job{}
+	newJobs := []job{}
 	for assetURL, purgeEnd := range jobMap {
-		newJobs = append(newJobs, Job{AssetURL: assetURL, PurgeEnd: purgeEnd})
+		newJobs = append(newJobs, job{AssetURL: assetURL, PurgeEnd: purgeEnd})
 	}
-	sort.Sort(Jobs(newJobs))
+	sort.Sort(jobsSort(newJobs))
 
 	return newJobs, warnings
 }
