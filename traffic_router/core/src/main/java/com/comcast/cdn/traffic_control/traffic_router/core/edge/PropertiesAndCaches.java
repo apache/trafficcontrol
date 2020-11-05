@@ -20,6 +20,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.edge;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -27,13 +28,13 @@ import java.util.Map;
  * An abbreviated version of CacheLocation to show only properties and a list of cache names
  */
 public class PropertiesAndCaches {
-    public Map<String, String> properties;
-    public ArrayList<String> caches;
+    final public Map<String, String> properties;
+    final public List<String> caches;
 
-    public PropertiesAndCaches(CacheLocation cacheLocation) {
+    public PropertiesAndCaches(final CacheLocation cacheLocation) {
         properties = cacheLocation.getProperties();
         caches = new ArrayList<>();
-        for (Cache cache : cacheLocation.getCaches()) {
+        for (final Cache cache : cacheLocation.getCaches()) {
             caches.add(cache.getId());
         }
     }
@@ -52,7 +53,7 @@ public class PropertiesAndCaches {
      *
      * @return the caches
      */
-    public ArrayList<String> getCaches() {
+    public List<String> getCaches() {
         return caches;
     }
 

@@ -63,7 +63,6 @@ import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1362,7 +1361,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
+		final CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
 
 		if (cacheLocation != null) {
 			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
