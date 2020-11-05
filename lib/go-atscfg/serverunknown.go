@@ -48,7 +48,7 @@ func MakeServerUnknown(
 
 	txt := ""
 
-	sortedParams := SortParams(params)
+	sortedParams := sortParams(params)
 	for _, pa := range sortedParams {
 		if pa.Name == "location" {
 			continue
@@ -79,25 +79,25 @@ func MakeServerUnknown(
 	}, nil
 }
 
-type Param struct {
+type param struct {
 	Name string
 	Val  string
 }
 
-type Params []Param
+type paramsSort []param
 
-func (a Params) Len() int           { return len(a) }
-func (a Params) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a Params) Less(i, j int) bool { return a[i].Name < a[j].Name }
+func (a paramsSort) Len() int           { return len(a) }
+func (a paramsSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a paramsSort) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-func SortParams(params map[string][]string) []Param {
-	sortedParams := []Param{}
+func sortParams(params map[string][]string) []param {
+	sortedParams := []param{}
 	for name, vals := range params {
 		for _, val := range vals {
-			sortedParams = append(sortedParams, Param{Name: name, Val: val})
+			sortedParams = append(sortedParams, param{Name: name, Val: val})
 		}
 	}
-	sort.Sort(Params(sortedParams))
+	sort.Sort(paramsSort(sortedParams))
 	return sortedParams
 }
 
