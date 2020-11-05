@@ -282,7 +282,7 @@ func MakeParentDotConfig(
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "making CacheGroup map: "+err.Error())
 	}
-	serverParentCGData, err := GetParentCacheGroupData(server, cacheGroups)
+	serverParentCGData, err := getParentCacheGroupData(server, cacheGroups)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "getting server parent cachegroup data: "+err.Error())
 	}
@@ -1207,7 +1207,7 @@ func getMSOParentStrs(
 }
 
 func MakeParentInfo(
-	serverParentCGData ServerParentCacheGroupData,
+	serverParentCGData serverParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
 	profileCaches map[ProfileID]ProfileCache, // getServerParentCacheGroupProfiles(tx, server)
 	originServers map[OriginHost][]CGServer, // getServerParentCacheGroupProfiles(tx, server)

@@ -77,25 +77,25 @@ func makeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroup
 	return cgMap, nil
 }
 
-type ServerParentCacheGroupData struct {
+type serverParentCacheGroupData struct {
 	ParentID            int
 	ParentType          CacheGroupType
 	SecondaryParentID   int
 	SecondaryParentType CacheGroupType
 }
 
-// GetParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
+// getParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
-func GetParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (ServerParentCacheGroupData, error) {
+func getParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (serverParentCacheGroupData, error) {
 	if server.Cachegroup == nil || *server.Cachegroup == "" {
-		return ServerParentCacheGroupData{}, errors.New("server missing cachegroup")
+		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
 	} else if server.HostName == nil || *server.HostName == "" {
-		return ServerParentCacheGroupData{}, errors.New("server missing hostname")
+		return serverParentCacheGroupData{}, errors.New("server missing hostname")
 	}
 	serverCG, ok := cgMap[tc.CacheGroupName(*server.Cachegroup)]
 	if !ok {
-		return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' not found in CacheGroups")
+		return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := InvalidID
@@ -103,15 +103,15 @@ func GetParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupN
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.ParentName)]
 		if !ok {
-			return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -121,21 +121,21 @@ func GetParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupN
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.SecondaryParentName)]
 		if !ok {
-			return ServerParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
 	}
 
-	return ServerParentCacheGroupData{
+	return serverParentCacheGroupData{
 		ParentID:            parentCGID,
 		ParentType:          CacheGroupType(parentCGType),
 		SecondaryParentID:   secondaryParentCGID,
@@ -146,7 +146,7 @@ func GetParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupN
 // IsTopLevelCache returns whether server is a top-level cache, as defined by traditional CacheGroup parentage.
 // This does not consider Topologies, and should not be used if the Delivery Service being considered has a Topology.
 // Takes a ServerParentCacheGroupData, which may be created via GetParentCacheGroupData.
-func IsTopLevelCache(s ServerParentCacheGroupData) bool {
+func IsTopLevelCache(s serverParentCacheGroupData) bool {
 	return (s.ParentType == tc.CacheGroupOriginTypeName || s.ParentID == InvalidID) &&
 		(s.SecondaryParentType == tc.CacheGroupOriginTypeName || s.SecondaryParentID == InvalidID)
 }
