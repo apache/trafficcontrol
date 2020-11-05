@@ -51,8 +51,7 @@ func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc
 }
 
 // UpdateServiceCategoryByName updates a service category by its unique name.
-func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
-
+func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.ServiceCategory, header http.Header) (tc.Alerts, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(serviceCategory)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -60,11 +59,14 @@ func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.S
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%s", API_SERVICE_CATEGORIES, name)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
 	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -74,8 +76,8 @@ func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.S
 
 // GetServiceCategoriesWithHdr gets a list of service categories by the passed in url values and http headers.
 func (to *Session) GetServiceCategoriesWithHdr(values *url.Values, header http.Header) ([]tc.ServiceCategory, ReqInf, error) {
-	url := fmt.Sprintf("%s?%s", API_SERVICE_CATEGORIES, values.Encode())
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
+	path := fmt.Sprintf("%s?%s", API_SERVICE_CATEGORIES, values.Encode())
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
