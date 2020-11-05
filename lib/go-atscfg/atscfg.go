@@ -66,7 +66,7 @@ type TopologyName string
 type CacheGroupType string
 type ServerCapability string
 
-func MakeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
+func makeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
 	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
 	for _, cg := range cgs {
 		if cg.Name == nil {

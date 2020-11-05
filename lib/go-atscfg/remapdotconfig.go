@@ -77,7 +77,7 @@ func MakeRemapDotConfig(
 	warnings = append(warnings, paramWarns...)
 	cacheURLConfigParams, paramWarns := ParamsToMap(FilterParams(serverParams, CacheURLParameterConfigFile, "", "", ""))
 	warnings = append(warnings, paramWarns...)
-	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "making remap.config, config will be malformed! : "+err.Error())
 	}

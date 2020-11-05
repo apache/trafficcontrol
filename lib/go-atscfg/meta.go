@@ -153,7 +153,7 @@ func addMetaObjConfigDir(
 		return nil, warnings, errors.New("server missing Cachegroup")
 	}
 
-	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
 		return nil, warnings, errors.New("making CG map: " + err.Error())
 	}

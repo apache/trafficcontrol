@@ -278,7 +278,7 @@ func MakeParentDotConfig(
 	atsMajorVer, verWarns := getATSMajorVersion(tcServerParams)
 	warnings = append(warnings, verWarns...)
 
-	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "making CacheGroup map: "+err.Error())
 	}
