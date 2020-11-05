@@ -44,7 +44,7 @@ func MakeAStatsDotConfig(
 	paramData, paramWarns := ParamsToMap(serverParams)
 	warnings = append(warnings, paramWarns...)
 	hdr := makeHdrComment(hdrComment)
-	txt := GenericProfileConfig(paramData, AstatsSeparator)
+	txt := genericProfileConfig(paramData, AstatsSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}

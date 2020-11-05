@@ -42,7 +42,7 @@ func MakePluginDotConfig(
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)
-	txt := GenericProfileConfig(paramData, PluginSeparator)
+	txt := genericProfileConfig(paramData, PluginSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}

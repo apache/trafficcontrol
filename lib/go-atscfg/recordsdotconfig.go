@@ -44,7 +44,7 @@ func MakeRecordsDotConfig(
 	warnings = append(warnings, paramWarns...)
 
 	hdr := makeHdrComment(hdrComment)
-	txt := GenericProfileConfig(params, RecordsSeparator)
+	txt := genericProfileConfig(params, RecordsSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}

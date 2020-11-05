@@ -176,10 +176,10 @@ type DeliveryServiceID int
 type ProfileID int
 type ServerID int
 
-// GenericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
+// genericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
 // This does not include a header comment, because a generic config may not use a number sign as a comment.
 // If you need a header comment, it can be added manually via ats.HeaderComment, or automatically with WithProfileDataHdr.
-func GenericProfileConfig(
+func genericProfileConfig(
 	paramData map[string]string, // GetProfileParamData(tx, profileID, fileName)
 	separator string,
 ) string {
