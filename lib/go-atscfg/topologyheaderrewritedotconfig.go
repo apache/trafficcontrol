@@ -105,7 +105,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 		}, nil
 	}
 
-	nameTopologies := MakeTopologyNameMap(topologies)
+	nameTopologies := makeTopologyNameMap(topologies)
 	topology := nameTopologies[TopologyName(*ds.Topology)]
 	if topology.Name == "" {
 		warnings = append(warnings, "Topology Header Rewrite called for DS '"+*ds.XMLID+"' but its Topology '"+*ds.Topology+"' not found in list of topologies! Returning blank config!")

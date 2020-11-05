@@ -362,7 +362,7 @@ func MakeParentDotConfig(
 		}
 	}
 
-	nameTopologies := MakeTopologyNameMap(topologies)
+	nameTopologies := makeTopologyNameMap(topologies)
 
 	cgServers := map[int]tc.ServerNullable{} // map[serverID]server
 	for _, sv := range servers {

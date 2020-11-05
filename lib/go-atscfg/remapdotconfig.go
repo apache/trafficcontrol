@@ -82,7 +82,7 @@ func MakeRemapDotConfig(
 		return Cfg{}, makeErr(warnings, "making remap.config, config will be malformed! : "+err.Error())
 	}
 
-	nameTopologies := MakeTopologyNameMap(topologies)
+	nameTopologies := makeTopologyNameMap(topologies)
 
 	hdr := makeHdrComment(hdrComment)
 	txt := ""

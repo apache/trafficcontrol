@@ -152,7 +152,7 @@ func MakeHostingDotConfig(
 
 	text := makeHdrComment(hdrComment)
 
-	nameTopologies := MakeTopologyNameMap(topologies)
+	nameTopologies := makeTopologyNameMap(topologies)
 
 	lines := []string{}
 	if _, ok := params[ParamRAMDrivePrefix]; ok {

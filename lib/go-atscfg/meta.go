@@ -196,7 +196,7 @@ func addMetaObjConfigDir(
 		configFilesM[fileName] = newFis
 	}
 
-	nameTopologies := MakeTopologyNameMap(topologies)
+	nameTopologies := makeTopologyNameMap(topologies)
 
 	for _, ds := range dses {
 		if ds.XMLID == nil {

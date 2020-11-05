@@ -31,6 +31,21 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const InvalidID = -1
+const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
+const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
+const ContentTypeTextASCII = `text/plain; charset=us-ascii`
+const LineCommentHash = "#"
+const ConfigSuffix = ".config"
+
+type DeliveryServiceID int
+type ProfileID int
+type ServerID int
+
+type TopologyName string
+type CacheGroupType string
+type ServerCapability string
+
 // CfgFile is all the information necessary to create an ATS config file, including the file name, path, data, and metadata.
 // This is provided as a convenience and unified structure for users. The lib/go-atscfg library doesn't actually use or return this. See ATSConfigFileData.
 type CfgFile struct {
@@ -51,20 +66,6 @@ type Cfg struct {
 	LineComment string
 	Warnings    []string
 }
-
-const InvalidID = -1
-
-const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
-
-const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
-
-const ContentTypeTextASCII = `text/plain; charset=us-ascii`
-
-const LineCommentHash = "#"
-
-type TopologyName string
-type CacheGroupType string
-type ServerCapability string
 
 func makeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
 	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
@@ -172,10 +173,6 @@ func getATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
 	return int(majorVer), nil
 }
 
-type DeliveryServiceID int
-type ProfileID int
-type ServerID int
-
 // genericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
 // This does not include a header comment, because a generic config may not use a number sign as a comment.
 // If you need a header comment, it can be added manually via ats.HeaderComment, or automatically with WithProfileDataHdr.
@@ -206,8 +203,6 @@ func trimParamUnderscoreNumSuffix(paramName string) string {
 	}
 	return paramName[:underscorePos]
 }
-
-const ConfigSuffix = ".config"
 
 // topologyIncludesServer returns whether the given topology includes the given server.
 func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
@@ -319,7 +314,7 @@ nodeFor:
 	}, nil
 }
 
-func MakeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {
+func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {
 	topoNames := map[TopologyName]tc.Topology{}
 	for _, to := range topologies {
 		topoNames[TopologyName(to.Name)] = to
