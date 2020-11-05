@@ -31,14 +31,85 @@ RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
 
 EXPOSE 80
 
+RUN dnf -y install epel-release && \
+    if [[ "${CENTOS_VERSION:0:1}" -ge 8 ]]; then \
+        additional_packages='compat-openssl10 pkgconf-pkg-config' || \
+        exit 1; \
+    else \
+        additional_packages=openssl || \
+        exit 1; \
+    fi && \
+    dnf -y install              \
+        GeoIP                   \
+        groff-base              \
+        hwloc                   \
+        hwloc-libs              \
+        kyotocabinet-libs       \
+        libtool-ltdl            \
+        libunwind               \
+        lzo                     \
+        make                    \
+        numactl-libs            \
+        perl                    \
+        perl-Carp               \
+        perl-constant           \
+        perl-Data-Dumper        \
+        perl-Encode             \
+        perl-Exporter           \
+        perl-File-Path          \
+        perl-File-Temp          \
+        perl-Filter             \
+        perl-Getopt-Long        \
+        perl-HTTP-Tiny          \
+        perl-libs               \
+        perl-macros             \
+        perl-parent             \
+        perl-PathTools          \
+        perl-Pod-Escapes        \
+        perl-podlators          \
+        perl-Pod-Perldoc        \
+        perl-Pod-Simple         \
+        perl-Pod-Usage          \
+        perl-Scalar-List-Utils  \
+        perl-Socket             \
+        perl-Storable           \
+        perl-Text-ParseWords    \
+        perl-threads            \
+        perl-threads-shared     \
+        perl-Time-HiRes         \
+        perl-Time-Local         \
+        perl-URI                \
+        tcl                     \
+        $additional_packages && \
+    if [[ "$CENTOS_VERSION" == 8* ]]; then \
+        set -- \
+            # Pretend that we have the right library versions.
+            # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
+            # is in EPEL again (see apache/trafficserver#6855)
+            libtcl8.6.so        libtcl8.5.so     \
+            libncursesw.so.6    libncursesw.so.5 \
+            libtinfo.so.6       libtinfo.so.5    \
+            || exit 1; \
+    fi && \
+    cd /usr/lib64 && \
+    while [[ $# -gt 0 ]]; do \
+        source="$1" && \
+        shift && \
+        target="$1" && \
+        shift && \
+        ln -s "$source" "$target" || exit 1; \
+    done
 
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
-RUN dnf install -y bind-utils kyotocabinet-libs epel-release initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
-RUN dnf install -y /trafficserver.rpm /trafficserver-devel.rpm jq python3-psutil python3-typing python3-setuptools python3-pip logrotate && dnf clean all
-RUN python3 -m pip install --upgrade pip && python3 -m pip install requests urllib3 distro
+RUN rpm -Uvh --nodeps /trafficserver.rpm /trafficserver-devel.rpm && \
+    dnf install -y jq python3-psutil python3-setuptools python3-pip logrotate && \
+    dnf clean all
 
+RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
+
+RUN python3 -m pip install --upgrade pip && python3 -m pip install requests urllib3 distro
 
 ADD traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
