@@ -136,7 +136,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 	}
 
 	if tier == TopologyCacheTierLast && ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0 {
-		lastTierCacheCount, topoWarns := GetTopologyDSServerCount(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), servers, serverCapabilities)
+		lastTierCacheCount, topoWarns := getTopologyDSServerCount(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), servers, serverCapabilities)
 		warnings = append(warnings, topoWarns...)
 
 		maxOriginConnectionsPerServer := int(math.Round(float64(*ds.MaxOriginConnections) / float64(lastTierCacheCount)))
@@ -165,12 +165,12 @@ func MakeTopologyHeaderRewriteDotConfig(
 	}, nil
 }
 
-// GetTopologyDSServerCount returns the number of servers in cg which will be used to serve ds.
+// getTopologyDSServerCount returns the number of servers in cg which will be used to serve ds.
 // This should only be used for DSes with Topologies.
 // It returns all servers in CG with the Capabilities of ds in cg.
 // It will not be the number of servers for Delivery Services not using Topologies, which use DeliveryService-Server assignments instead.
 // Returns the server count, and any warnings.
-func GetTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []tc.ServerNullable, serverCapabilities map[int]map[ServerCapability]struct{}) (int, []string) {
+func getTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []tc.ServerNullable, serverCapabilities map[int]map[ServerCapability]struct{}) (int, []string) {
 	warnings := []string{}
 	count := 0
 	for _, sv := range servers {
