@@ -117,12 +117,19 @@ public class DataExporter {
 			final List<Object> federationsList = federationExporter.getMatchingFederations(cidrAddress);
 
 			if (federationsList.isEmpty()) {
-				map.put("locationByFederation", "not found");
+				map.put("locationByFederation", NOT_FOUND_MESSAGE);
 			} else {
 				map.put("locationByFederation", federationsList);
 			}
 		} catch (NetworkNodeException e) {
 			map.put("locationByFederation", NOT_FOUND_MESSAGE);
+		}
+
+		CacheLocation clFromDCZ = trafficRouterManager.getTrafficRouter().getDeepCoverageZoneLocation(ip);
+		if (clFromDCZ != null) {
+			map.put("locationByDeepCoverageZone", new PropertiesAndCaches(clFromDCZ));
+		} else {
+			map.put("locationByDeepCoverageZone", NOT_FOUND_MESSAGE);
 		}
 
 		return map;

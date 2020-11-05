@@ -63,6 +63,7 @@ import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1347,6 +1348,23 @@ public class TrafficRouter {
 
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final IPVersions requestVersion) {
 		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false, null, requestVersion); // default is not deep
+	}
+
+	public CacheLocation getDeepCoverageZoneLocation(final String ip) {
+		final NetworkNode networkNode = getDeepNetworkNode(ip);
+
+		if (networkNode == null) {
+			return null;
+		}
+
+		CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
+
+		if (cacheLocation != null) {
+			// lazily load deep Caches into the deep CacheLocation
+			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
+		}
+
+		return cacheLocation;
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
