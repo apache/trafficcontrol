@@ -209,10 +209,6 @@ func trimParamUnderscoreNumSuffix(paramName string) string {
 
 const ConfigSuffix = ".config"
 
-func GetConfigFile(prefix string, xmlId string) string {
-	return prefix + xmlId + ConfigSuffix
-}
-
 // topologyIncludesServer returns whether the given topology includes the given server.
 func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 	for _, node := range topology.Nodes {

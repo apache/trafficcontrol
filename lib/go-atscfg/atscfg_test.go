@@ -110,14 +110,6 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	}
 }
 
-func TestGetConfigFile(t *testing.T) {
-	expected := "hdr_rw_my-xml-id.config"
-	cfgFile := GetConfigFile(HeaderRewritePrefix, "my-xml-id")
-	if cfgFile != expected {
-		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
-	}
-}
-
 func setIP(sv *tc.ServerNullable, ipAddress string) {
 	setIPInfo(sv, "", ipAddress, "")
 }
