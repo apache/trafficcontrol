@@ -16,10 +16,11 @@
 # under the License.
 ############################################################
 # Dockerfile to build Traffic Router 3.0
-# Based on CentOS 7.x
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
 MAINTAINER dev@trafficcontrol.apache.org
 
 # Default values for TOMCAT RPM and RPM -- override with `docker build --build-arg JDK=...'

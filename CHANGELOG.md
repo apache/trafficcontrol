@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fixed #5274 - CDN in a Box's Traffic Vault image failed to build due to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
 
+### Changed
+- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)

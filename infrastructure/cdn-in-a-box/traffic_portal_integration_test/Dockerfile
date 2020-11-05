@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7 as os-dependencies
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} as os-dependencies
 
 # Installs the Google Chrome yum repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc

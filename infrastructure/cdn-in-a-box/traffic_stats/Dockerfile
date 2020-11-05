@@ -19,7 +19,8 @@
 # Based on CentOS
 ############################################################
 
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm

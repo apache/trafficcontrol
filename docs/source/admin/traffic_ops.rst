@@ -30,7 +30,7 @@ System Requirements
 -------------------
 The user must have the following for a successful minimal install:
 
-- CentOS 7+
+- CentOS 7 or later
 - Two machines - physical or virtual -, each with at least two (v)CPUs, 4GB of RAM, and 20 GB of disk space
 - Access to CentOS Base and EPEL :manpage:`yum(8)` repositories
 - Access to `The Comprehensive Perl Archive Network (CPAN) <http://www.cpan.org/>`_

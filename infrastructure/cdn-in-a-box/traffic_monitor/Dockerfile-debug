@@ -20,7 +20,8 @@
 # Based on CentOS
 ############################################################
 
-FROM centos/systemd as build-delve
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} as get-delve
 RUN yum -y install epel-release && \
     yum -y install golang && \
     go get -u github.com/go-delve/delve/cmd/dlv

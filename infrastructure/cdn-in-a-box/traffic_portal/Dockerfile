@@ -17,10 +17,11 @@
 
 ############################################################
 # Dockerfile to build Traffic Portal container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
 
 RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 

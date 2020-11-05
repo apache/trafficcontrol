@@ -17,7 +17,7 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
 FROM trafficops-perl

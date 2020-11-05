@@ -17,9 +17,10 @@
 
 ############################################################
 # Dockerfile to build optional CiaB Socks Proxy
-# Based on CentOS 7
+# Based on CentOS 8
 ############################################################
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
 
 ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
 

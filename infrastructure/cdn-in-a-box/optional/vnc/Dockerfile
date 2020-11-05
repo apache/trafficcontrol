@@ -14,7 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-FROM docker.io/centos:7
+
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
 
 ARG VNC_BUILD_USER
 ENV VNC_USER=$VNC_BUILD_USER

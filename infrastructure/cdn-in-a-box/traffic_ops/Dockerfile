@@ -17,13 +17,14 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
 # Keep the trafficops-common-deps in Dockerfile the same as
 # trafficops-common-deps in Dockerfile-go to cache the same
 # layer.
-FROM centos:7 as trafficops-common-deps
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} as trafficops-common-deps
 
 RUN mkdir /etc/cron.d && \
     yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \

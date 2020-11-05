@@ -18,10 +18,11 @@
 ############################################################
 # Dockerfile to build Edge-Tier Cache container images for
 # Apache Traffic Control
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7 AS common-cache-server-layers
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} AS common-cache-server-layers
 
 EXPOSE 80
 
