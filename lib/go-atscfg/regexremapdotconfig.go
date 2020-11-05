@@ -50,7 +50,7 @@ func MakeRegexRemapDotConfig(
 		return Cfg{}, makeErr(warnings, "file '"+fileName+"' has no delivery service name!")
 	}
 
-	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent atscfg.DeliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
+	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent deliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
 	ds := tc.DeliveryServiceNullableV30{}
 	for _, dsesDS := range deliveryServices {
 		if dsesDS.XMLID == nil {
@@ -65,7 +65,7 @@ func MakeRegexRemapDotConfig(
 		return Cfg{}, makeErr(warnings, "delivery service '"+dsName+"' not found! Do you have a regex_remap_*.config location Parameter for a delivery service that doesn't exist?")
 	}
 
-	dses, dsWarns := DeliveryServicesToCDNDSes([]tc.DeliveryServiceNullableV30{ds})
+	dses, dsWarns := deliveryServicesToCDNDSes([]tc.DeliveryServiceNullableV30{ds})
 	warnings = append(warnings, dsWarns...)
 
 	text := makeHdrComment(hdrComment)
@@ -86,17 +86,17 @@ func MakeRegexRemapDotConfig(
 	}, nil
 }
 
-type CDNDS struct {
+type cdnDS struct {
 	OrgServerFQDN string
 	QStringIgnore int
 	CacheURL      string
 	RegexRemap    string
 }
 
-// DeliveryServicesToCDNDSes returns the CDNDSes and any warnings.
-func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]CDNDS, []string) {
+// deliveryServicesToCDNDSes returns the CDNDSes and any warnings.
+func deliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]cdnDS, []string) {
 	warnings := []string{}
-	sDSes := map[tc.DeliveryServiceName]CDNDS{}
+	sDSes := map[tc.DeliveryServiceName]cdnDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {
 			if ds.XMLID == nil {
@@ -106,7 +106,7 @@ func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.Del
 			}
 			continue
 		}
-		sds := CDNDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		sds := cdnDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
 		if ds.RegexRemap != nil {
 			sds.RegexRemap = *ds.RegexRemap
 		}
