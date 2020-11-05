@@ -97,14 +97,14 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	}
 
 	for input, expected := range inputExpected {
-		if actual, err := GetATSMajorVersionFromATSVersion(input); err != nil {
+		if actual, err := getATSMajorVersionFromATSVersion(input); err != nil {
 			t.Errorf("expected %v actual: error '%v'", expected, err)
 		} else if actual != expected {
 			t.Errorf("expected %v actual: %v", expected, actual)
 		}
 	}
 	for _, input := range errExpected {
-		if actual, err := GetATSMajorVersionFromATSVersion(input); err == nil {
+		if actual, err := getATSMajorVersionFromATSVersion(input); err == nil {
 			t.Errorf("input %v expected: error, actual: nil error '%v'", input, actual)
 		}
 	}

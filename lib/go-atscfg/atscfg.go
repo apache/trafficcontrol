@@ -155,10 +155,10 @@ func makeHdrComment(hdrComment string) string {
 	return "# " + hdrComment + "\n"
 }
 
-// GetATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
+// getATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
 // The atsVersion is typically a Parameter on the Server's Profile, with the configFile "package" name "trafficserver".
 // Returns an error if atsVersion is empty or does not start with an unsigned integer followed by a period or nothing.
-func GetATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
+func getATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
 	dotPos := strings.Index(atsVersion, ".")
 	if dotPos == -1 {
 		dotPos = len(atsVersion) // if there's no '.' then assume the whole string is just a major version.
@@ -546,10 +546,10 @@ func getATSMajorVersion(serverParams []tc.Parameter) (int, []string) {
 		atsVersionParam = DefaultATSVersion
 	}
 
-	atsMajorVer, err := GetATSMajorVersionFromATSVersion(atsVersionParam)
+	atsMajorVer, err := getATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
 		warnings = append(warnings, "getting ATS major version from server Profile Parameter, using default: "+err.Error())
-		atsMajorVer, err = GetATSMajorVersionFromATSVersion(DefaultATSVersion)
+		atsMajorVer, err = getATSMajorVersionFromATSVersion(DefaultATSVersion)
 		if err != nil {
 			// should never happen
 			warnings = append(warnings, "getting ATS major version from default version! Should never happen! Using 0, config will be malformed! : "+err.Error())
