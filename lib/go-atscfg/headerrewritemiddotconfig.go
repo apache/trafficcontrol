@@ -63,7 +63,7 @@ func MakeHeaderRewriteMidDotConfig(
 		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' missing cdn")
 	}
 
-	ds, err := HeaderRewriteDSFromDS(&tcDS)
+	ds, err := headerRewriteDSFromDS(&tcDS)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
 	}
@@ -121,7 +121,7 @@ func MakeHeaderRewriteMidDotConfig(
 		parentCGs[*cg.ParentName] = struct{}{}
 	}
 
-	assignedMids := []HeaderRewriteServer{}
+	assignedMids := []headerRewriteServer{}
 	for _, server := range servers {
 		if server.CDNName == nil {
 			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
@@ -137,7 +137,7 @@ func MakeHeaderRewriteMidDotConfig(
 		if _, ok := parentCGs[*server.Cachegroup]; !ok {
 			continue
 		}
-		cfgServer, err := HeaderRewriteServerFromServer(server)
+		cfgServer, err := headerRewriteServerFromServer(server)
 		if err != nil {
 			warnings = append(warnings, "failed to make header rewrite server,skipping! : "+err.Error())
 			continue

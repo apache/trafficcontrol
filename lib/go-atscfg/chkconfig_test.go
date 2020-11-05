@@ -55,12 +55,12 @@ func TestMakeChkconfig(t *testing.T) {
 	}
 	txt := cfg.Text
 
-	chkconfig := []ChkConfigEntry{}
+	chkconfig := []chkConfigEntry{}
 	if err := json.Unmarshal([]byte(txt), &chkconfig); err != nil {
 		t.Fatalf("MakePackages expected a JSON array of objects, actual: " + err.Error())
 	}
 
-	paramsMap := ParamsToMultiMap(params)
+	paramsMap := paramsToMultiMap(params)
 
 	for _, chkConfigEntry := range chkconfig {
 		vals, ok := paramsMap[chkConfigEntry.Name]

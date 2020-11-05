@@ -71,7 +71,7 @@ func MakeHeaderRewriteDotConfig(
 		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' missing cdn")
 	}
 
-	ds, err := HeaderRewriteDSFromDS(&tcDS)
+	ds, err := headerRewriteDSFromDS(&tcDS)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
 	}
@@ -89,7 +89,7 @@ func MakeHeaderRewriteDotConfig(
 		dsServerIDs[*dss.Server] = struct{}{}
 	}
 
-	assignedEdges := []HeaderRewriteServer{}
+	assignedEdges := []headerRewriteServer{}
 	for _, server := range servers {
 		if server.CDNName == nil {
 			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
@@ -105,7 +105,7 @@ func MakeHeaderRewriteDotConfig(
 		if _, ok := dsServerIDs[*server.ID]; !ok && tcDS.Topology == nil {
 			continue
 		}
-		cfgServer, err := HeaderRewriteServerFromServer(server)
+		cfgServer, err := headerRewriteServerFromServer(server)
 		if err != nil {
 			warnings = append(warnings, "error getting header rewrite server, skipping: "+err.Error())
 			continue
@@ -159,7 +159,7 @@ func MakeHeaderRewriteDotConfig(
 	}, nil
 }
 
-type HeaderRewriteDS struct {
+type headerRewriteDS struct {
 	EdgeHeaderRewrite    string
 	ID                   int
 	MaxOriginConnections int
@@ -168,17 +168,17 @@ type HeaderRewriteDS struct {
 	ServiceCategory      string
 }
 
-type HeaderRewriteServer struct {
+type headerRewriteServer struct {
 	HostName   string
 	DomainName string
 	Port       int
 	Status     tc.CacheStatus
 }
 
-func HeaderRewriteServersFromServers(servers []tc.ServerNullable) ([]HeaderRewriteServer, error) {
-	hServers := []HeaderRewriteServer{}
+func headerRewriteServersFromServers(servers []tc.ServerNullable) ([]headerRewriteServer, error) {
+	hServers := []headerRewriteServer{}
 	for _, sv := range servers {
-		hsv, err := HeaderRewriteServerFromServer(sv)
+		hsv, err := headerRewriteServerFromServer(sv)
 		if err != nil {
 			return nil, err
 		}
@@ -187,44 +187,44 @@ func HeaderRewriteServersFromServers(servers []tc.ServerNullable) ([]HeaderRewri
 	return hServers, nil
 }
 
-func HeaderRewriteServerFromServer(sv tc.ServerNullable) (HeaderRewriteServer, error) {
+func headerRewriteServerFromServer(sv tc.ServerNullable) (headerRewriteServer, error) {
 	if sv.HostName == nil {
-		return HeaderRewriteServer{}, errors.New("server host name must not be nil")
+		return headerRewriteServer{}, errors.New("server host name must not be nil")
 	}
 	if sv.DomainName == nil {
-		return HeaderRewriteServer{}, errors.New("server domain name must not be nil")
+		return headerRewriteServer{}, errors.New("server domain name must not be nil")
 	}
 	if sv.TCPPort == nil {
-		return HeaderRewriteServer{}, errors.New("server port must not be nil")
+		return headerRewriteServer{}, errors.New("server port must not be nil")
 	}
 	if sv.Status == nil {
-		return HeaderRewriteServer{}, errors.New("server status must not be nil")
+		return headerRewriteServer{}, errors.New("server status must not be nil")
 	}
 	status := tc.CacheStatusFromString(*sv.Status)
 	if status == tc.CacheStatusInvalid {
-		return HeaderRewriteServer{}, errors.New("server status '" + *sv.Status + "' invalid")
+		return headerRewriteServer{}, errors.New("server status '" + *sv.Status + "' invalid")
 	}
-	return HeaderRewriteServer{Status: status, HostName: *sv.HostName, DomainName: *sv.DomainName, Port: *sv.TCPPort}, nil
+	return headerRewriteServer{Status: status, HostName: *sv.HostName, DomainName: *sv.DomainName, Port: *sv.TCPPort}, nil
 }
 
-func HeaderRewriteServerFromServerNotNullable(sv tc.Server) (HeaderRewriteServer, error) {
+func headerRewriteServerFromServerNotNullable(sv tc.Server) (headerRewriteServer, error) {
 	if sv.HostName == "" {
-		return HeaderRewriteServer{}, errors.New("server host name must not be nil")
+		return headerRewriteServer{}, errors.New("server host name must not be nil")
 	}
 	if sv.DomainName == "" {
-		return HeaderRewriteServer{}, errors.New("server domain name must not be nil")
+		return headerRewriteServer{}, errors.New("server domain name must not be nil")
 	}
 	if sv.TCPPort == 0 {
-		return HeaderRewriteServer{}, errors.New("server port must not be nil")
+		return headerRewriteServer{}, errors.New("server port must not be nil")
 	}
 	status := tc.CacheStatusFromString(sv.Status)
 	if status == tc.CacheStatusInvalid {
-		return HeaderRewriteServer{}, errors.New("server status '" + sv.Status + "' invalid")
+		return headerRewriteServer{}, errors.New("server status '" + sv.Status + "' invalid")
 	}
-	return HeaderRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
+	return headerRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
 }
 
-func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (HeaderRewriteDS, error) {
+func headerRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (headerRewriteDS, error) {
 	errs := []error{}
 	if ds.ID == nil {
 		errs = append(errs, errors.New("ID cannot be nil"))
@@ -233,7 +233,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (HeaderRewriteDS, 
 		errs = append(errs, errors.New("Type cannot be nil"))
 	}
 	if len(errs) > 0 {
-		return HeaderRewriteDS{}, util.JoinErrs(errs)
+		return headerRewriteDS{}, util.JoinErrs(errs)
 	}
 
 	if ds.MaxOriginConnections == nil {
@@ -249,7 +249,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (HeaderRewriteDS, 
 		ds.ServiceCategory = new(string)
 	}
 
-	return HeaderRewriteDS{
+	return headerRewriteDS{
 		EdgeHeaderRewrite:    *ds.EdgeHeaderRewrite,
 		ID:                   *ds.ID,
 		MaxOriginConnections: *ds.MaxOriginConnections,
