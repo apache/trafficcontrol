@@ -35,6 +35,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		toData.TOToolName,
 		toData.TOURL,
 		toData.CacheKeyParams,
+		toData.RemapConfigParams,
 		toData.Topologies,
 		toData.CacheGroups,
 		toData.ServerCapabilities,

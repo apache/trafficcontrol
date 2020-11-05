@@ -310,6 +310,15 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		toData.DeliveryServiceRegexes = dsr
 		return nil
 	}
+	remapConfigParamsF := func() error { // BNO
+		defer func(start time.Time) { log.Infof("remapConfigParamsF took %v\n", time.Since(start)) }(time.Now())
+		params, err := cfg.TOClient.GetConfigFileParameters(atscfg.RemapConfigParameterConfigFile)
+		if err != nil {
+			return errors.New("getting remap config parameters: " + err.Error())
+		}
+		toData.RemapConfigParams = params
+		return nil
+	}
 	cacheKeyParamsF := func() error {
 		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
 		params, err := cfg.TOClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
@@ -346,7 +355,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	fs := []func() error{serversF, cgF, scopeParamsF, jobsF}
 	if !cfg.RevalOnly {
 		// skip data not needed for reval, if we're reval-only
-		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
+		fs = append([]func() error{dsrF, remapConfigParamsF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
 	}
 	errs := runParallel(fs)
 	return toData, util.JoinErrs(errs)

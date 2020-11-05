@@ -32,6 +32,7 @@ import (
 
 const CacheURLParameterConfigFile = "cacheurl.config"
 const CacheKeyParameterConfigFile = "cachekey.config"
+const RemapConfigParameterConfigFile = "remap.config"
 const ContentTypeRemapDotConfig = ContentTypeTextASCII
 const LineCommentRemapDotConfig = LineCommentHash
 
@@ -45,6 +46,7 @@ func MakeRemapDotConfig(
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	cacheKeyParams []tc.Parameter,
+	remapConfigParams []tc.Parameter,
 	topologies []tc.Topology,
 	cacheGroupArr []tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
@@ -70,6 +72,11 @@ func MakeRemapDotConfig(
 		log.Errorln("Error making Delivery Service Cache Key Params, cache key will be missing! : " + err.Error())
 	}
 
+	dsProfilesRemapConfigConfigParams, err := makeDSProfilesRemapConfigConfigParams(server, dses, remapConfigParams)
+	if err != nil {
+		log.Errorln("Error making Delivery Service Remap Config Params, remap config overrides will be missing! : " + err.Error())
+	}
+
 	atsMajorVersion := getATSMajorVersion(serverParams)
 	serverPackageParamData := makeServerPackageParamData(server, serverParams)
 	cacheURLConfigParams := ParamsToMap(FilterParams(serverParams, CacheURLParameterConfigFile, "", "", ""))
@@ -82,14 +89,15 @@ func MakeRemapDotConfig(
 
 	hdr := GenericHeaderComment(*server.HostName, toToolName, toURL)
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
-		return GetServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesCacheKeyConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
+		return GetServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesCacheKeyConfigParams, dsProfilesRemapConfigConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
 	}
-	return GetServerConfigRemapDotConfigForEdge(cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain)
+	return GetServerConfigRemapDotConfigForEdge(cacheURLConfigParams, dsProfilesCacheKeyConfigParams, dsProfilesRemapConfigConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain)
 }
 
 func GetServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
 	profilesCacheKeyConfigParams map[int]map[string]string,
+	profilesRemapConfigConfigParams map[int]map[string]string,
 	dses []tc.DeliveryServiceNullableV30,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	header string,
@@ -135,51 +143,63 @@ func GetServerConfigRemapDotConfigForMid(
 
 		midRemap := ""
 
-		if *ds.Topology != "" {
-			midRemap += MakeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
-		} else if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
-			midRemap += ` @plugin=header_rewrite.so @pparam=` + MidHeaderRewriteConfigFileName(*ds.XMLID)
+		// BNO mess with midRemap
+		if ds.ProfileID != nil && 0 < len(profilesRemapConfigConfigParams[*ds.ProfileID]) {
+			log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': REMAP OVERRIDE")
+			submap := profilesRemapConfigConfigParams[*ds.ProfileID]
+
+			if value, ok := submap["override.mid"]; ok {
+				midRemap += ` ` + value
+			}
 		}
 
-		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
-			if addedCacheURL {
-				hasCacheURL = true
+		if 0 == len(midRemap) {
+			if *ds.Topology != "" {
+				midRemap += MakeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
+			} else if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
+				midRemap += ` @plugin=header_rewrite.so @pparam=` + MidHeaderRewriteConfigFileName(*ds.XMLID)
 			}
-			if addedCacheKey {
-				hasCacheKey = true
+
+			if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
+				qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
+				if addedCacheURL {
+					hasCacheURL = true
+				}
+				if addedCacheKey {
+					hasCacheKey = true
+				}
+				midRemap += qstr
 			}
-			midRemap += qstr
-		}
-		if ds.CacheURL != nil && *ds.CacheURL != "" {
-			if hasCacheURL {
-				log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+			if ds.CacheURL != nil && *ds.CacheURL != "" {
+				if hasCacheURL {
+					log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+				}
+				midRemap += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(*ds.XMLID)
 			}
-			midRemap += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(*ds.XMLID)
+
+			if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
+				if hasCacheKey {
+					log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
+				}
+				midRemap += ` @plugin=cachekey.so`
+
+				dsProfileCacheKeyParams := []KeyVal{}
+				for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
+					dsProfileCacheKeyParams = append(dsProfileCacheKeyParams, KeyVal{Key: name, Val: val})
+				}
+				sort.Sort(KeyVals(dsProfileCacheKeyParams))
+				for _, nameVal := range dsProfileCacheKeyParams {
+					name := nameVal.Key
+					val := nameVal.Val
+					midRemap += ` @pparam=--` + name + "=" + val
+				}
+			}
+			if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
+				midRemap += ` @plugin=cache_range_requests.so`
+			}
 		}
 
-		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
-			if hasCacheKey {
-				log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
-			}
-			midRemap += ` @plugin=cachekey.so`
-
-			dsProfileCacheKeyParams := []KeyVal{}
-			for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
-				dsProfileCacheKeyParams = append(dsProfileCacheKeyParams, KeyVal{Key: name, Val: val})
-			}
-			sort.Sort(KeyVals(dsProfileCacheKeyParams))
-			for _, nameVal := range dsProfileCacheKeyParams {
-				name := nameVal.Key
-				val := nameVal.Val
-				midRemap += ` @pparam=--` + name + "=" + val
-			}
-		}
-		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
-			midRemap += ` @plugin=cache_range_requests.so`
-		}
-
-		if midRemap != "" {
+		if 0 != len(midRemap) {
 			midRemaps[*ds.OrgServerFQDN] = midRemap
 		}
 	}
@@ -198,6 +218,7 @@ func GetServerConfigRemapDotConfigForMid(
 func GetServerConfigRemapDotConfigForEdge(
 	cacheURLConfigParams map[string]string,
 	profilesCacheKeyConfigParams map[int]map[string]string,
+	profilesRemapConfigConfigParams map[int]map[string]string,
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
 	dses []tc.DeliveryServiceNullableV30,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
@@ -246,11 +267,13 @@ func GetServerConfigRemapDotConfigForEdge(
 			}
 
 			for _, line := range remapLines {
-				profilecacheKeyConfigParams := (map[string]string)(nil)
+				profilecacheKeyConfigParams := map[string]string{}
+				profileremapConfigConfigParams := map[string]string{}
 				if ds.ProfileID != nil {
 					profilecacheKeyConfigParams = profilesCacheKeyConfigParams[*ds.ProfileID]
+					profileremapConfigConfigParams = profilesRemapConfigConfigParams[*ds.ProfileID]
 				}
-				remapText = BuildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, server, serverPackageParamData, remapText, ds, dsRegex, line.From, line.To, profilecacheKeyConfigParams, cacheGroups, nameTopologies)
+				remapText = BuildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, server, serverPackageParamData, remapText, ds, dsRegex, line.From, line.To, profilecacheKeyConfigParams, profileremapConfigConfigParams, cacheGroups, nameTopologies)
 				if hasTopology {
 					remapText += " # topology '" + topology.Name + "'"
 				}
@@ -281,16 +304,25 @@ func BuildEdgeRemapLine(
 	mapFrom string,
 	mapTo string,
 	cacheKeyConfigParams map[string]string,
+	remapConfigConfigParams map[string]string,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	nameTopologies map[TopologyName]tc.Topology,
 ) string {
 	// ds = 'remap' in perl
 	mapFrom = strings.Replace(mapFrom, `__http__`, *server.HostName, -1)
 
+	text += "map	" + mapFrom + "     " + mapTo
+
+	// DS profile sledge hammer -- hopefully this is here??
+	if rawline, ok := remapConfigConfigParams["override.edge"]; ok {
+		text += " " + rawline
+		return text
+	}
+
 	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
-		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
+		text += ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
 	} else {
-		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(*ds.DSCP) + ".config"
+		text += ` @plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(*ds.DSCP) + ".config"
 	}
 
 	if *ds.Topology != "" {
@@ -542,7 +574,12 @@ func makeServerPackageParamData(server *tc.ServerNullable, serverParams []tc.Par
 // remapFilterDSes filters Delivery Services to be used to generate remap.config for the given server.
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
-func remapFilterDSes(server *tc.ServerNullable, dss []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) []tc.DeliveryServiceNullableV30 {
+func remapFilterDSes(
+	server *tc.ServerNullable,
+	dss []tc.DeliveryServiceServer,
+	dses []tc.DeliveryServiceNullableV30,
+	cacheKeyParams []tc.Parameter,
+) []tc.DeliveryServiceNullableV30 {
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
 
 	serverIDs := map[int]struct{}{}
@@ -686,6 +723,45 @@ func makeDSProfilesCacheKeyConfigParams(server *tc.ServerNullable, dses []tc.Del
 		}
 	}
 	return dsProfilesCacheKeyConfigParams, nil
+}
+
+// makeDSProfilesRemapConfigConfigParams returns a map[ProfileID][ParamName]ParamValue for the remap config params for each profile.
+func makeDSProfilesRemapConfigConfigParams(server *tc.ServerNullable, dses []tc.DeliveryServiceNullableV30, remapConfigParams []tc.Parameter) (map[int]map[string]string, error) {
+	remapConfigParamsWithProfiles, err := TCParamsToParamsWithProfiles(remapConfigParams)
+	if err != nil {
+		return nil, errors.New("decoding remap config parameter profiles: " + err.Error())
+	}
+
+	remapConfigParamsWithProfilesMap := ParameterWithProfilesToMap(remapConfigParamsWithProfiles)
+
+	dsProfileNamesToIDs := map[string]int{}
+	for _, ds := range dses {
+		if ds.ProfileID == nil || ds.ProfileName == nil {
+			continue // TODO log
+		}
+		dsProfileNamesToIDs[*ds.ProfileName] = *ds.ProfileID
+	}
+
+	dsProfilesRemapConfigConfigParams := map[int]map[string]string{}
+	for _, param := range remapConfigParamsWithProfilesMap {
+		for dsProfileName, dsProfileID := range dsProfileNamesToIDs {
+			if _, ok := param.ProfileNames[dsProfileName]; ok {
+				if _, ok := dsProfilesRemapConfigConfigParams[dsProfileID]; !ok {
+					dsProfilesRemapConfigConfigParams[dsProfileID] = map[string]string{}
+				}
+				if val, ok := dsProfilesRemapConfigConfigParams[dsProfileID][param.Name]; ok {
+					if val < param.Value {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+						continue
+					} else {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+					}
+				}
+				dsProfilesRemapConfigConfigParams[dsProfileID][param.Name] = param.Value
+			}
+		}
+	}
+	return dsProfilesRemapConfigConfigParams, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

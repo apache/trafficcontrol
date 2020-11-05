@@ -592,6 +592,8 @@ remap.config
 ''''''''''''
 This configuration file can only be affected by one Parameter on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "cachekey.config" - **NOT this Config File** -, a parameter will be added to the line for that :term:`Delivery Service` like so: :file:`pparam=--{Name}={Value}` where ``Name`` is the Parameter's :ref:`parameter-name`, and ``Value`` is its Value_.
 
+Additionally brute force parameters may be used to override all plugin arguments at the EDGE (override.edge) and MID (override.mid) that has the Config File value "remap.config".  All remap line items after "map from to" are overwritten by this parameter.  Use this with care!
+
 .. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 
 :file:`set_dscp_{anything}.config`
