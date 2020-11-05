@@ -21,18 +21,24 @@
 
 ARG CENTOS_VERSION=8
 FROM centos:${CENTOS_VERSION}
+ARG CENTOS_VERSION=8
+
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
 MAINTAINER dev@trafficcontrol.apache.org
 
 # Default values for TOMCAT RPM and RPM -- override with `docker build --build-arg JDK=...'
 ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
 ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
-RUN yum -y install epel-release && \
-    yum -y install jq git rpm-build net-tools iproute nc wget tar unzip \
+RUN dnf -y install epel-release && \
+    dnf -y install jq git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
           java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
-    yum -y clean all && \
+    dnf -y clean all && \
     ln -sfv $(realpath /usr/lib/jvm/java-1.8.0) /opt/java
 
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm

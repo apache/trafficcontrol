@@ -17,11 +17,16 @@
 
 ARG CENTOS_VERSION=8
 FROM centos:${CENTOS_VERSION} as os-dependencies
+ARG CENTOS_VERSION=8
 
-# Installs the Google Chrome yum repo
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
+# Installs the Google Chrome dnf repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
-RUN yum install -y \
+RUN dnf install -y \
         bind-utils \
         # jq is in EPEL
         epel-release \
@@ -29,8 +34,8 @@ RUN yum install -y \
         google-chrome-stable \
         java-1.8.0-openjdk \
         net-tools && \
-    yum -y install jq && \
-    yum -y clean all
+    dnf -y install jq && \
+    dnf -y clean all
 
 FROM os-dependencies AS node-dependencies
 # Download and install node

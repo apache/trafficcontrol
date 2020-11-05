@@ -25,11 +25,18 @@
 # layer.
 ARG CENTOS_VERSION=8
 FROM centos:${CENTOS_VERSION} as trafficops-common-deps
+ARG CENTOS_VERSION=8
+# Makes CENTOS_VERSION available in later layers without needing to specify it again
+ENV CENTOS_VERSION=$CENTOS_VERSION
+
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 RUN mkdir /etc/cron.d && \
-    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum -y install epel-release && \
-    yum -y install      \
+    dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf -y install epel-release && \
+    dnf -y install      \
         jq              \
         bind-utils      \
         net-tools       \
@@ -40,14 +47,14 @@ RUN mkdir /etc/cron.d && \
         nmap-ncat       \
         openssl         \
         postgresql96 && \
-    yum clean all
+    dnf clean all
 
 FROM trafficops-common-deps as trafficops-perl-deps
 
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN yum install -y          \
+RUN dnf install -y          \
         cpanminus           \
         expat-devel         \
         gcc-c++             \
@@ -74,7 +81,7 @@ RUN yum install -y          \
         postgresql96-devel  \
         postgresql96-libs   \
         tar &&              \
-    yum -y clean all && \
+    dnf -y clean all && \
     mkdir -p /opt/traffic_ops/app/public && \
     cpanm Carton
 

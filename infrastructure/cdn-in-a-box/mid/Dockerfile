@@ -23,6 +23,11 @@
 
 ARG CENTOS_VERSION=8
 FROM centos:${CENTOS_VERSION} AS common-cache-server-layers
+ARG CENTOS_VERSION=8
+
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 EXPOSE 80
 
@@ -30,8 +35,8 @@ EXPOSE 80
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
-RUN yum install -y bind-utils kyotocabinet-libs epel-release initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
-RUN yum install -y /trafficserver.rpm /trafficserver-devel.rpm jq python36-psutil python36-typing python36-setuptools python36-pip logrotate && yum clean all
+RUN dnf install -y bind-utils kyotocabinet-libs epel-release initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
+RUN dnf install -y /trafficserver.rpm /trafficserver-devel.rpm jq python36-psutil python36-typing python36-setuptools python36-pip logrotate && dnf clean all
 RUN python3 -m pip install --upgrade pip && python3 -m pip install requests urllib3 distro
 
 
@@ -42,7 +47,7 @@ RUN tsxs -v -c astats_over_http.c -o astats_over_http.so
 # The symbolic link here is a shim for broken atstccfg behavior - remove when it's fixed.
 RUN mkdir -p /usr/libexec/trafficserver /opt/ort /opt/trafficserver/etc/trafficserver/ /opt/init.d && ln -s /opt/trafficserver/etc/trafficserver/ssl /etc/trafficserver/ssl && tsxs -v -o astats_over_http.so -i
 
-RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
+RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
 
 # You need to do this because the RPM in the ATS archives is just all kinds of messed-up
 RUN chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default

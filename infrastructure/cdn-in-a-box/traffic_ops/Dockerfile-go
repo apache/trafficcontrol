@@ -25,11 +25,16 @@
 # layer.
 ARG CENTOS_VERSION=8
 FROM centos:${CENTOS_VERSION} as trafficops-common-deps
+ARG CENTOS_VERSION=8
+
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 RUN mkdir /etc/cron.d && \
-    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum -y install epel-release && \
-    yum -y install      \
+    dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf -y install epel-release && \
+    dnf -y install      \
         jq              \
         bind-utils      \
         net-tools       \
@@ -40,7 +45,7 @@ RUN mkdir /etc/cron.d && \
         nmap-ncat       \
         openssl         \
         postgresql96 && \
-    yum clean all
+    dnf clean all
 
 FROM    trafficops-common-deps
 
