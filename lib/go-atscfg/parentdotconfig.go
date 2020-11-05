@@ -286,7 +286,7 @@ func MakeParentDotConfig(
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "getting server parent cachegroup data: "+err.Error())
 	}
-	isTopLevelCache := IsTopLevelCache(serverParentCGData)
+	cacheIsTopLevel := isTopLevelCache(serverParentCGData)
 	serverCDNDomain := cdn.DomainName
 
 	sort.Sort(DSesSortByName(dses))
@@ -327,7 +327,7 @@ func MakeParentDotConfig(
 	}
 
 	parentCacheGroups := map[string]struct{}{}
-	if isTopLevelCache {
+	if cacheIsTopLevel {
 		for _, cg := range cacheGroups {
 			if cg.Type == nil {
 				return Cfg{}, makeErr(warnings, "cachegroup type is nil!")
@@ -440,7 +440,7 @@ func MakeParentDotConfig(
 			continue
 		}
 
-		if !isTopLevelCache && ds.Topology == nil {
+		if !cacheIsTopLevel && ds.Topology == nil {
 			if _, ok := parentServerDSes[*server.ID][*ds.ID]; !ok {
 				continue // skip DSes not assigned to this server.
 			}
@@ -491,7 +491,7 @@ func MakeParentDotConfig(
 			if txt != "" { // will be empty with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
 				textArr = append(textArr, txt)
 			}
-		} else if IsTopLevelCache(serverParentCGData) {
+		} else if isTopLevelCache(serverParentCGData) {
 			parentQStr := "ignore"
 			if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
@@ -580,7 +580,7 @@ func MakeParentDotConfig(
 
 	// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
 	defaultDestText := ""
-	if !IsTopLevelCache(serverParentCGData) {
+	if !isTopLevelCache(serverParentCGData) {
 		invalidDS := &tc.DeliveryServiceNullableV30{}
 		invalidDS.ID = util.IntPtr(-1)
 		tryAllPrimariesBeforeSecondary := false

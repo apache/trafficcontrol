@@ -143,10 +143,10 @@ func getParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupN
 	}, nil
 }
 
-// IsTopLevelCache returns whether server is a top-level cache, as defined by traditional CacheGroup parentage.
+// isTopLevelCache returns whether server is a top-level cache, as defined by traditional CacheGroup parentage.
 // This does not consider Topologies, and should not be used if the Delivery Service being considered has a Topology.
 // Takes a ServerParentCacheGroupData, which may be created via GetParentCacheGroupData.
-func IsTopLevelCache(s serverParentCacheGroupData) bool {
+func isTopLevelCache(s serverParentCacheGroupData) bool {
 	return (s.ParentType == tc.CacheGroupOriginTypeName || s.ParentID == InvalidID) &&
 		(s.SecondaryParentType == tc.CacheGroupOriginTypeName || s.SecondaryParentID == InvalidID)
 }
