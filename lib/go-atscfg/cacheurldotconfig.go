@@ -29,12 +29,6 @@ import (
 const ContentTypeCacheURLDotConfig = ContentTypeTextASCII
 const LineCommentCacheURLDotConfig = LineCommentHash
 
-type CacheURLDS struct {
-	OrgServerFQDN string
-	QStringIgnore int
-	CacheURL      string
-}
-
 func MakeCacheURLDotConfig(
 	fileName string,
 	server *tc.ServerNullable,
@@ -82,7 +76,7 @@ func MakeCacheURLDotConfig(
 		dsesWithServers = append(dsesWithServers, ds)
 	}
 
-	dses, dsWarns := DeliveryServicesToCacheURLDSes(dsesWithServers)
+	dses, dsWarns := deliveryServicesToCacheURLDSes(dsesWithServers)
 	warnings = append(warnings, dsWarns...)
 
 	text := makeHdrComment(hdrComment)
@@ -153,10 +147,16 @@ func MakeCacheURLDotConfig(
 	}, nil
 }
 
+type cacheURLDS struct {
+	OrgServerFQDN string
+	QStringIgnore int
+	CacheURL      string
+}
+
 // DeliveryServicesToCacheURLDSes returns the "CacheURLDS" map, and any warnings.
-func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]CacheURLDS, []string) {
+func deliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]cacheURLDS, []string) {
 	warnings := []string{}
-	sDSes := map[tc.DeliveryServiceName]CacheURLDS{}
+	sDSes := map[tc.DeliveryServiceName]cacheURLDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil || ds.Active == nil {
 			warnings = append(warnings, fmt.Sprintf("atscfg.DeliveryServicesToCacheURLDSes got DS %+v with nil values! Skipping!", ds))
@@ -165,7 +165,7 @@ func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) (map[t
 		if !*ds.Active {
 			continue
 		}
-		sds := CacheURLDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		sds := cacheURLDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
 		if ds.CacheURL != nil {
 			sds.CacheURL = *ds.CacheURL
 		}
