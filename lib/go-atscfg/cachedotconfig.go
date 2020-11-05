@@ -37,15 +37,15 @@ func MakeCacheDotConfig(
 	hdrComment string,
 ) (Cfg, error) {
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
-		return MakeCacheDotConfigMid(server, deliveryServices, hdrComment)
+		return makeCacheDotConfigMid(server, deliveryServices, hdrComment)
 	} else {
-		return MakeCacheDotConfigEdge(server, servers, deliveryServices, deliveryServiceServers, hdrComment)
+		return makeCacheDotConfigEdge(server, servers, deliveryServices, deliveryServiceServers, hdrComment)
 	}
 }
 
 // MakeCacheDotConfig makes the ATS cache.config config file.
 // profileDSes must be the list of delivery services, which are assigned to severs, for which this profile is assigned. It MUST NOT contain any other delivery services. Note DSesToProfileDSes may be helpful if you have a []tc.DeliveryServiceNullable, for example from traffic_ops/client.
-func MakeCacheDotConfigEdge(
+func makeCacheDotConfigEdge(
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
 	deliveryServices []tc.DeliveryServiceNullableV30,
@@ -87,7 +87,7 @@ func MakeCacheDotConfigEdge(
 		dsIDs[*dss.DeliveryService] = struct{}{}
 	}
 
-	profileDSes := []ProfileDS{}
+	profileDSes := []profileDS{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil || ds.Type == nil || ds.OrgServerFQDN == nil {
 			continue // TODO warn? err?
@@ -102,7 +102,7 @@ func MakeCacheDotConfigEdge(
 			continue
 		}
 		origin := *ds.OrgServerFQDN
-		profileDSes = append(profileDSes, ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
+		profileDSes = append(profileDSes, profileDS{Type: *ds.Type, OriginFQDN: &origin})
 	}
 
 	lines := map[string]struct{}{} // use a "set" for lines, to avoid duplicates, since we're looking up by profile
@@ -144,17 +144,17 @@ func MakeCacheDotConfigEdge(
 	}, nil
 }
 
-type ProfileDS struct {
+type profileDS struct {
 	Type       tc.DSType
 	OriginFQDN *string
 }
 
-// DSesToProfileDSes is a helper function to convert a []tc.DeliveryServiceNullable to []ProfileDS.
+// dsesToProfileDSes is a helper function to convert a []tc.DeliveryServiceNullable to []ProfileDS.
 // Note this does not check for nil values. If any DeliveryService's Type or OrgServerFQDN may be nil, the returned ProfileDS should be checked for DSTypeInvalid and nil, respectively.
-func DSesToProfileDSes(dses []tc.DeliveryServiceNullable) []ProfileDS {
-	pdses := []ProfileDS{}
+func dsesToProfileDSes(dses []tc.DeliveryServiceNullable) []profileDS {
+	pdses := []profileDS{}
 	for _, ds := range dses {
-		pds := ProfileDS{}
+		pds := profileDS{}
 		if ds.Type != nil {
 			pds.Type = *ds.Type
 		}

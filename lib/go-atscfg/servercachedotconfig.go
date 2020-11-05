@@ -29,7 +29,7 @@ import (
 
 const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
 
-func MakeCacheDotConfigMid(
+func makeCacheDotConfigMid(
 	server *tc.ServerNullable,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	hdrComment string,
@@ -43,7 +43,7 @@ func MakeCacheDotConfigMid(
 		return Cfg{}, makeErr(warnings, "server cache.config generation called for non-Mid server, this is a code error and should never happen! Please file a bug.")
 	}
 
-	dses := map[tc.DeliveryServiceName]ServerCacheConfigDS{}
+	dses := map[tc.DeliveryServiceName]serverCacheConfigDS{}
 	for _, ds := range deliveryServices {
 		if ds.XMLID == nil || ds.Active == nil || ds.OrgServerFQDN == nil || ds.Type == nil {
 			// TODO orgserverfqdn is nil for some DSes - MSO? Verify.
@@ -53,7 +53,7 @@ func MakeCacheDotConfigMid(
 		if !ServerCacheDotConfigIncludeInactiveDSes && !*ds.Active {
 			continue
 		}
-		dses[tc.DeliveryServiceName(*ds.XMLID)] = ServerCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
+		dses[tc.DeliveryServiceName(*ds.XMLID)] = serverCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
 	}
 
 	text := makeHdrComment(hdrComment)
@@ -70,7 +70,7 @@ func MakeCacheDotConfigMid(
 		}
 		seenOrigins[ds.OrgServerFQDN] = struct{}{}
 
-		originFQDN, originPort := GetOriginFQDNAndPort(ds.OrgServerFQDN)
+		originFQDN, originPort := getOriginFQDNAndPort(ds.OrgServerFQDN)
 		if originPort != nil {
 			lines = append(lines, `dest_domain=`+originFQDN+` port=`+strconv.Itoa(*originPort)+` scheme=http action=never-cache`+"\n")
 		} else {
@@ -89,7 +89,7 @@ func MakeCacheDotConfigMid(
 }
 
 // TODO unit test
-func GetOriginFQDNAndPort(origin string) (string, *int) {
+func getOriginFQDNAndPort(origin string) (string, *int) {
 	origin = strings.TrimSpace(origin)
 	origin = strings.Replace(origin, `https://`, ``, -1)
 	origin = strings.Replace(origin, `http://`, ``, -1)
@@ -119,7 +119,7 @@ func GetOriginFQDNAndPort(origin string) (string, *int) {
 	return hostName, &port
 }
 
-type ServerCacheConfigDS struct {
+type serverCacheConfigDS struct {
 	OrgServerFQDN string
 	Type          tc.DSType
 }
