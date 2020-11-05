@@ -438,10 +438,10 @@ func paramsToMultiMap(params []tc.Parameter) map[string][]string {
 	return mp
 }
 
-// GetServerIPAddress gets the old IPv4 tc.Server.IPAddress from the new tc.Server.Interfaces.
+// getServerIPAddress gets the old IPv4 tc.Server.IPAddress from the new tc.Server.Interfaces.
 // If no IPv4 address set as a ServiceAddress exists, returns nil
 // Malformed addresses are ignored and skipped.
-func GetServerIPAddress(sv *tc.ServerNullable) net.IP {
+func getServerIPAddress(sv *tc.ServerNullable) net.IP {
 	for _, iFace := range sv.Interfaces {
 		for _, addr := range iFace.IPAddresses {
 			if !addr.ServiceAddress {
@@ -468,7 +468,7 @@ func GetServerIPAddress(sv *tc.ServerNullable) net.IP {
 	return nil
 }
 
-// GetServerServiceAddresses returns the first "service" addresses for IPv4 and IPv6 that it finds.
+// getServiceAddresses returns the first "service" addresses for IPv4 and IPv6 that it finds.
 // If an IPv4 or IPv6 "service" address is not found, returns nil for that IP.
 // If no IPv4 address set as a ServiceAddress exists, returns nil
 // Malformed addresses are ignored and skipped.

@@ -170,8 +170,8 @@ func (ss ServersWithParamsSortByRank) Less(i, j int) bool {
 		return ss[i].Params.Port < ss[j].Params.Port
 	}
 
-	iIP := GetServerIPAddress(&ss[i].ServerNullable)
-	jIP := GetServerIPAddress(&ss[j].ServerNullable)
+	iIP := getServerIPAddress(&ss[i].ServerNullable)
+	jIP := getServerIPAddress(&ss[j].ServerNullable)
 
 	if iIP == nil {
 		if jIP != nil {
@@ -919,7 +919,7 @@ func serverParentStr(sv *tc.ServerNullable, svParams ProfileCache) (string, erro
 	host := ""
 	if svParams.UseIP {
 		// TODO get service interface here
-		ip := GetServerIPAddress(sv)
+		ip := getServerIPAddress(sv)
 		if ip == nil {
 			return "", errors.New("server params Use IP, but has no valid IPv4 Service Address")
 		}
@@ -1346,7 +1346,7 @@ func GetOriginServersAndProfileCaches(
 			continue
 		}
 
-		ipAddr := GetServerIPAddress(&cgServer)
+		ipAddr := getServerIPAddress(&cgServer)
 		if ipAddr == nil {
 			warnings = append(warnings, "getting origin servers: got server with no valid IP Address, skipping!")
 			continue
