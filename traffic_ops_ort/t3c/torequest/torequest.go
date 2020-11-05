@@ -212,6 +212,7 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 	}
 
 	args := []string{
+		"--dir=" + config.TSConfigDir,
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(r.Cfg.TOTimeoutMS), 10),
 		"--traffic-ops-disable-proxy=" + strconv.FormatBool(r.Cfg.ReverseProxyDisable),
 		"--traffic-ops-user=" + r.Cfg.TOUser,
