@@ -31,22 +31,6 @@ const ChkconfigParamConfigFile = `chkconfig`
 const ContentTypeChkconfig = ContentTypeTextASCII
 const LineCommentChkconfig = LineCommentHash
 
-type ChkConfigEntry struct {
-	Name string `json:"name"`
-	Val  string `json:"value"`
-}
-
-type ChkConfigEntries []ChkConfigEntry
-
-func (e ChkConfigEntries) Len() int { return len(e) }
-func (e ChkConfigEntries) Less(i, j int) bool {
-	if e[i].Name != e[j].Name {
-		return e[i].Name < e[j].Name
-	}
-	return e[i].Val < e[j].Val
-}
-func (e ChkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
-
 // MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakeChkconfig(
@@ -56,15 +40,15 @@ func MakeChkconfig(
 
 	serverParams = filterParams(serverParams, ChkconfigParamConfigFile, "", "", "")
 
-	chkconfig := []ChkConfigEntry{}
+	chkconfig := []chkConfigEntry{}
 	for _, param := range serverParams {
-		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
+		chkconfig = append(chkconfig, chkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 
-	sort.Sort(ChkConfigEntries(chkconfig))
+	sort.Sort(chkConfigEntries(chkconfig))
 
 	bts, err := json.Marshal(&chkconfig)
-	if err != nil { // should never happen
+	if err != nil {
 		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVals: "+err.Error())
 	}
 
@@ -75,3 +59,19 @@ func MakeChkconfig(
 		Warnings:    warnings,
 	}, nil
 }
+
+type chkConfigEntry struct {
+	Name string
+	Val  string
+}
+
+type chkConfigEntries []chkConfigEntry
+
+func (e chkConfigEntries) Len() int { return len(e) }
+func (e chkConfigEntries) Less(i, j int) bool {
+	if e[i].Name != e[j].Name {
+		return e[i].Name < e[j].Name
+	}
+	return e[i].Val < e[j].Val
+}
+func (e chkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }

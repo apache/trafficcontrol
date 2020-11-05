@@ -171,7 +171,7 @@ func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 	return nil
 }
 
-func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
+func GetChkconfig(cfg config.TCCfg) ([]ChkConfigEntry, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
@@ -180,14 +180,19 @@ func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
-	chkconfig := []atscfg.ChkConfigEntry{}
+	chkconfig := []ChkConfigEntry{}
 	for _, param := range params {
 		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
 			continue
 		}
-		chkconfig = append(chkconfig, atscfg.ChkConfigEntry{Name: param.Name, Val: param.Value})
+		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 	return chkconfig, nil
+}
+
+type ChkConfigEntry struct {
+	Name string `json:"name"`
+	Val  string `json:"value"`
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
