@@ -3927,12 +3927,10 @@
     ],
     "serviceCategories": [
         {
-            "name": "serviceCategory1",
-            "tenant": "tenant3"
+            "name": "serviceCategory1"
         },
         {
-            "name": "barServiceCategory2",
-            "tenant": "tenant4"
+            "name": "barServiceCategory2"
         }
     ],
     "staticdnsentries": [

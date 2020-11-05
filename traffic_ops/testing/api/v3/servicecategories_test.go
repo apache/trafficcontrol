@@ -34,10 +34,16 @@ func TestServiceCategories(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestServiceCategories(t)
 		UpdateTestServiceCategories(t)
 		GetTestServiceCategories(t)
 		GetTestServiceCategoriesIMSAfterChange(t, header)
+		UpdateTestServiceCategoriesWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestServiceCategoriesWithHeaders(t, header)
 	})
 }
 
@@ -131,6 +137,22 @@ func SortTestServiceCategories(t *testing.T) {
 	}
 }
 
+func UpdateTestServiceCategoriesWithHeaders(t *testing.T, h http.Header) {
+	firstServiceCategory := tc.ServiceCategory{}
+	if len(testData.ServiceCategories) > 0 {
+		firstServiceCategory = testData.ServiceCategories[0]
+	} else {
+		t.Fatalf("cannot UPDATE Service Category, test data does not have service categories")
+	}
+	_, reqInf, err := TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, firstServiceCategory, h)
+	if err == nil {
+		t.Errorf("attempting to update service category with headers - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("expected status code: %d, actual: %d", http.StatusPreconditionFailed, reqInf.StatusCode)
+	}
+}
+
 func UpdateTestServiceCategories(t *testing.T) {
 	firstServiceCategory := tc.ServiceCategory{}
 	if len(testData.ServiceCategories) > 0 {
@@ -151,7 +173,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		remoteServiceCategory.Name = "ServiceCategory2"
 
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, remoteServiceCategory)
+		alert, _, err = TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, remoteServiceCategory, nil)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
@@ -171,7 +193,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		}
 
 		// revert back to original name
-		alert, _, err = TOSession.UpdateServiceCategoryByName(remoteServiceCategory.Name, firstServiceCategory)
+		alert, _, err = TOSession.UpdateServiceCategoryByName(remoteServiceCategory.Name, firstServiceCategory, nil)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}

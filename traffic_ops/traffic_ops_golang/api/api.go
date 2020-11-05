@@ -1016,11 +1016,20 @@ func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (er
 	return nil, nil, http.StatusOK
 }
 
-// GetLastUpdated checks for the resource in the database, and returns its last_updated timestamp, if available.
+// GetLastUpdated checks for the resource by ID in the database, and returns its last_updated timestamp, if available.
 func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "id", ID, tableName)
+}
+
+// GetLastUpdatedByName checks for the resource by name in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdatedByName(tx *sqlx.Tx, name string, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "name", name, tableName)
+}
+
+func getLastUpdatedByIdentifier(tx *sqlx.Tx, IDColumn string, IDValue interface{}, tableName string) (*time.Time, bool, error) {
 	lastUpdated := time.Time{}
 	found := false
-	rows, err := tx.Query(fmt.Sprintf(`select last_updated from %s where id=$1`, pq.QuoteIdentifier(tableName)), ID)
+	rows, err := tx.Query(fmt.Sprintf(`select last_updated from %s where %s = $1`, pq.QuoteIdentifier(tableName), pq.QuoteIdentifier(IDColumn)), IDValue)
 	if err != nil {
 		return nil, found, errors.New("querying last_updated: " + err.Error())
 	}
