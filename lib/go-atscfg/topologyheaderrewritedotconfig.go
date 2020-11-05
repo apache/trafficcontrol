@@ -191,7 +191,7 @@ func GetTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct
 		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
 			continue
 		}
-		if !HasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
+		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
 			continue
 		}
 		count++

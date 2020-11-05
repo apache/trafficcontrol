@@ -549,6 +549,16 @@ func getATSMajorVersion(serverParams []tc.Parameter) (int, []string) {
 	return atsMajorVer, warnings
 }
 
+// hasRequiredCapabilities returns whether the given caps has all the required capabilities in the given reqCaps.
+func hasRequiredCapabilities(caps map[ServerCapability]struct{}, reqCaps map[ServerCapability]struct{}) bool {
+	for reqCap, _ := range reqCaps {
+		if _, ok := caps[reqCap]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 // makeErr takes a list of warnings and an error string, and combines them to a single error.
 // Configs typically generate a list of warnings as they go. When an error is encountered, we want to combine the warnings encountered and include them in the returned error message, since they're likely hints as to why the error occurred.
 func makeErr(warnings []string, err string) error {

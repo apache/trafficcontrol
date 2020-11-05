@@ -121,7 +121,7 @@ func GetServerConfigRemapDotConfigForMid(
 	warnings := []string{}
 	midRemaps := map[string]string{}
 	for _, ds := range dses {
-		if !HasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 
@@ -240,7 +240,7 @@ func GetServerConfigRemapDotConfigForEdge(
 
 	for _, ds := range dses {
 		for _, dsRegex := range dsRegexes[tc.DeliveryServiceName(*ds.XMLID)] {
-			if !HasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+			if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 				continue
 			}
 

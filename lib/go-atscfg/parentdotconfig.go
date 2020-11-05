@@ -63,189 +63,8 @@ const ParentConfigCacheParamUseIP = "use_ip_address"
 const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
 
-// TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
-const DeliveryServicesAllParentsKey = "all_parents"
-
-type ParentConfigDS struct {
-	Name                 tc.DeliveryServiceName
-	QStringIgnore        tc.QStringIgnore
-	OriginFQDN           string
-	MultiSiteOrigin      bool
-	OriginShield         string
-	Type                 tc.DSType
-	QStringHandling      string
-	RequiredCapabilities map[ServerCapability]struct{}
-	Topology             string
-}
-
-type ParentConfigDSTopLevel struct {
-	ParentConfigDS
-	MSOAlgorithm                       string
-	MSOParentRetry                     string
-	MSOUnavailableServerRetryResponses string
-	MSOMaxSimpleRetries                string
-	MSOMaxUnavailableServerRetries     string
-}
-
-type ParentInfo struct {
-	Host            string
-	Port            int
-	Domain          string
-	Weight          string
-	UseIP           bool
-	Rank            int
-	IP              string
-	PrimaryParent   bool
-	SecondaryParent bool
-	Capabilities    map[ServerCapability]struct{}
-}
-
-func (p ParentInfo) Format() string {
-	host := ""
-	if p.UseIP {
-		host = p.IP
-	} else {
-		host = p.Host + "." + p.Domain
-	}
-	return host + ":" + strconv.Itoa(p.Port) + "|" + p.Weight + ";"
-}
-
 type OriginHost string
 type OriginFQDN string
-
-type ParentInfos map[OriginHost]ParentInfo
-
-type ParentInfoSortByRank []ParentInfo
-
-func (s ParentInfoSortByRank) Len() int      { return len(([]ParentInfo)(s)) }
-func (s ParentInfoSortByRank) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s ParentInfoSortByRank) Less(i, j int) bool {
-	if s[i].Rank != s[j].Rank {
-		return s[i].Rank < s[j].Rank
-	} else if s[i].Host != s[j].Host {
-		return s[i].Host < s[j].Host
-	} else if s[i].Domain != s[j].Domain {
-		return s[i].Domain < s[j].Domain
-	} else if s[i].Port != s[j].Port {
-		return s[i].Port < s[j].Port
-	}
-	return s[i].IP < s[j].IP
-}
-
-type ServerWithParams struct {
-	tc.ServerNullable
-	Params ProfileCache
-}
-
-type ServersWithParamsSortByRank []ServerWithParams
-
-func (ss ServersWithParamsSortByRank) Len() int      { return len(ss) }
-func (ss ServersWithParamsSortByRank) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
-func (ss ServersWithParamsSortByRank) Less(i, j int) bool {
-	if ss[i].Params.Rank != ss[j].Params.Rank {
-		return ss[i].Params.Rank < ss[j].Params.Rank
-	}
-
-	if ss[i].HostName == nil {
-		if ss[j].HostName != nil {
-			return true
-		}
-	} else if ss[j].HostName == nil {
-		return false
-	} else if ss[i].HostName != ss[j].HostName {
-		return *ss[i].HostName < *ss[j].HostName
-	}
-
-	if ss[i].DomainName == nil {
-		if ss[j].DomainName != nil {
-			return true
-		}
-	} else if ss[j].DomainName == nil {
-		return false
-	} else if ss[i].DomainName != ss[j].DomainName {
-		return *ss[i].DomainName < *ss[j].DomainName
-	}
-
-	if ss[i].Params.Port != ss[j].Params.Port {
-		return ss[i].Params.Port < ss[j].Params.Port
-	}
-
-	iIP := getServerIPAddress(&ss[i].ServerNullable)
-	jIP := getServerIPAddress(&ss[j].ServerNullable)
-
-	if iIP == nil {
-		if jIP != nil {
-			return true
-		}
-	} else if jIP == nil {
-		return false
-	}
-	return bytes.Compare(iIP, jIP) <= 0
-}
-
-type ParentConfigDSTopLevelSortByName []ParentConfigDSTopLevel
-
-func (s ParentConfigDSTopLevelSortByName) Len() int      { return len(([]ParentConfigDSTopLevel)(s)) }
-func (s ParentConfigDSTopLevelSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s ParentConfigDSTopLevelSortByName) Less(i, j int) bool {
-	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
-}
-
-type DSesSortByName []tc.DeliveryServiceNullableV30
-
-func (s DSesSortByName) Len() int      { return len(s) }
-func (s DSesSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s DSesSortByName) Less(i, j int) bool {
-	if s[i].XMLID == nil {
-		return true
-	}
-	if s[j].XMLID == nil {
-		return false
-	}
-	return *s[i].XMLID < *s[j].XMLID
-}
-
-type ProfileCache struct {
-	Weight     string
-	Port       int
-	UseIP      bool
-	Rank       int
-	NotAParent bool
-}
-
-func DefaultProfileCache() ProfileCache {
-	return ProfileCache{
-		Weight:     "0.999",
-		Port:       0,
-		UseIP:      false,
-		Rank:       1,
-		NotAParent: false,
-	}
-}
-
-// CGServer is the server table data needed when selecting the servers assigned to a cachegroup.
-type CGServer struct {
-	ServerID       ServerID
-	ServerHost     string
-	ServerIP       string
-	ServerPort     int
-	CacheGroupID   int
-	CacheGroupName string
-	Status         int
-	Type           int
-	ProfileID      ProfileID
-	ProfileName    string
-	CDN            int
-	TypeName       string
-	Domain         string
-	Capabilities   map[ServerCapability]struct{}
-}
-
-type OriginURI struct {
-	Scheme string
-	Host   string
-	Port   string
-}
 
 func MakeParentDotConfig(
 	dses []tc.DeliveryServiceNullableV30,
@@ -289,7 +108,7 @@ func MakeParentDotConfig(
 	cacheIsTopLevel := isTopLevelCache(serverParentCGData)
 	serverCDNDomain := cdn.DomainName
 
-	sort.Sort(DSesSortByName(dses))
+	sort.Sort(dsesSortByName(dses))
 
 	hdr := makeHdrComment(hdrComment)
 
@@ -417,13 +236,13 @@ func MakeParentDotConfig(
 		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
 	}
 
-	originServers, profileCaches, orgProfWarns, err := GetOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities, dsRequiredCapabilities)
+	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities, dsRequiredCapabilities)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "getting origin servers and profile caches: "+err.Error())
 	}
 
-	parentInfos := MakeParentInfo(serverParentCGData, serverCDNDomain, profileCaches, originServers)
+	parentInfos := makeParentInfo(serverParentCGData, serverCDNDomain, profileCaches, originServers)
 
 	dsOrigins, dsOriginWarns := makeDSOrigins(dss, dses, servers)
 	warnings = append(warnings, dsOriginWarns...)
@@ -467,7 +286,7 @@ func MakeParentDotConfig(
 
 		// TODO put these in separate functions. No if-statement should be this long.
 		if ds.Topology != nil && *ds.Topology != "" {
-			txt, topoWarnings, err := GetTopologyParentConfigLine(
+			txt, topoWarnings, err := getTopologyParentConfigLine(
 				server,
 				servers,
 				&ds,
@@ -497,7 +316,7 @@ func MakeParentDotConfig(
 				parentQStr = "consider"
 			}
 
-			orgURI, orgWarns, err := GetOriginURI(*ds.OrgServerFQDN)
+			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
 				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
@@ -535,11 +354,11 @@ func MakeParentDotConfig(
 			roundRobin := `round_robin=consistent_hash`
 			goDirect := `go_direct=false`
 
-			parents, secondaryParents, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
+			parents, secondaryParents, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
 			warnings = append(warnings, parentWarns...)
 
 			text := ""
-			orgURI, orgWarns, err := GetOriginURI(*ds.OrgServerFQDN)
+			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
 				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
@@ -584,7 +403,7 @@ func MakeParentDotConfig(
 		invalidDS := &tc.DeliveryServiceNullableV30{}
 		invalidDS.ID = util.IntPtr(-1)
 		tryAllPrimariesBeforeSecondary := false
-		parents, secondaryParents, parentWarns := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer, tryAllPrimariesBeforeSecondary)
+		parents, secondaryParents, parentWarns := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, tryAllPrimariesBeforeSecondary)
 		warnings = append(warnings, parentWarns...)
 		defaultDestText = `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
@@ -608,7 +427,188 @@ func MakeParentDotConfig(
 	}, nil
 }
 
-type ParentDSParams struct {
+type parentConfigDS struct {
+	Name                 tc.DeliveryServiceName
+	QStringIgnore        tc.QStringIgnore
+	OriginFQDN           string
+	MultiSiteOrigin      bool
+	OriginShield         string
+	Type                 tc.DSType
+	QStringHandling      string
+	RequiredCapabilities map[ServerCapability]struct{}
+	Topology             string
+}
+
+type parentConfigDSTopLevel struct {
+	parentConfigDS
+	MSOAlgorithm                       string
+	MSOParentRetry                     string
+	MSOUnavailableServerRetryResponses string
+	MSOMaxSimpleRetries                string
+	MSOMaxUnavailableServerRetries     string
+}
+
+type parentInfo struct {
+	Host            string
+	Port            int
+	Domain          string
+	Weight          string
+	UseIP           bool
+	Rank            int
+	IP              string
+	PrimaryParent   bool
+	SecondaryParent bool
+	Capabilities    map[ServerCapability]struct{}
+}
+
+func (p parentInfo) Format() string {
+	host := ""
+	if p.UseIP {
+		host = p.IP
+	} else {
+		host = p.Host + "." + p.Domain
+	}
+	return host + ":" + strconv.Itoa(p.Port) + "|" + p.Weight + ";"
+}
+
+type parentInfos map[OriginHost]parentInfo
+
+type parentInfoSortByRank []parentInfo
+
+func (s parentInfoSortByRank) Len() int      { return len(s) }
+func (s parentInfoSortByRank) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s parentInfoSortByRank) Less(i, j int) bool {
+	if s[i].Rank != s[j].Rank {
+		return s[i].Rank < s[j].Rank
+	} else if s[i].Host != s[j].Host {
+		return s[i].Host < s[j].Host
+	} else if s[i].Domain != s[j].Domain {
+		return s[i].Domain < s[j].Domain
+	} else if s[i].Port != s[j].Port {
+		return s[i].Port < s[j].Port
+	}
+	return s[i].IP < s[j].IP
+}
+
+type serverWithParams struct {
+	tc.ServerNullable
+	Params profileCache
+}
+
+type serversWithParamsSortByRank []serverWithParams
+
+func (ss serversWithParamsSortByRank) Len() int      { return len(ss) }
+func (ss serversWithParamsSortByRank) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss serversWithParamsSortByRank) Less(i, j int) bool {
+	if ss[i].Params.Rank != ss[j].Params.Rank {
+		return ss[i].Params.Rank < ss[j].Params.Rank
+	}
+
+	if ss[i].HostName == nil {
+		if ss[j].HostName != nil {
+			return true
+		}
+	} else if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName != ss[j].HostName {
+		return *ss[i].HostName < *ss[j].HostName
+	}
+
+	if ss[i].DomainName == nil {
+		if ss[j].DomainName != nil {
+			return true
+		}
+	} else if ss[j].DomainName == nil {
+		return false
+	} else if ss[i].DomainName != ss[j].DomainName {
+		return *ss[i].DomainName < *ss[j].DomainName
+	}
+
+	if ss[i].Params.Port != ss[j].Params.Port {
+		return ss[i].Params.Port < ss[j].Params.Port
+	}
+
+	iIP := getServerIPAddress(&ss[i].ServerNullable)
+	jIP := getServerIPAddress(&ss[j].ServerNullable)
+
+	if iIP == nil {
+		if jIP != nil {
+			return true
+		}
+	} else if jIP == nil {
+		return false
+	}
+	return bytes.Compare(iIP, jIP) <= 0
+}
+
+type parentConfigDSTopLevelSortByName []parentConfigDSTopLevel
+
+func (s parentConfigDSTopLevelSortByName) Len() int      { return len(s) }
+func (s parentConfigDSTopLevelSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s parentConfigDSTopLevelSortByName) Less(i, j int) bool {
+	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
+}
+
+type dsesSortByName []tc.DeliveryServiceNullableV30
+
+func (s dsesSortByName) Len() int      { return len(s) }
+func (s dsesSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s dsesSortByName) Less(i, j int) bool {
+	if s[i].XMLID == nil {
+		return true
+	}
+	if s[j].XMLID == nil {
+		return false
+	}
+	return *s[i].XMLID < *s[j].XMLID
+}
+
+type profileCache struct {
+	Weight     string
+	Port       int
+	UseIP      bool
+	Rank       int
+	NotAParent bool
+}
+
+func defaultProfileCache() profileCache {
+	return profileCache{
+		Weight:     "0.999",
+		Port:       0,
+		UseIP:      false,
+		Rank:       1,
+		NotAParent: false,
+	}
+}
+
+// cgServer is the server table data needed when selecting the servers assigned to a cachegroup.
+type cgServer struct {
+	ServerID       ServerID
+	ServerHost     string
+	ServerIP       string
+	ServerPort     int
+	CacheGroupID   int
+	CacheGroupName string
+	Status         int
+	Type           int
+	ProfileID      ProfileID
+	ProfileName    string
+	CDN            int
+	TypeName       string
+	Domain         string
+	Capabilities   map[ServerCapability]struct{}
+}
+
+type originURI struct {
+	Scheme string
+	Host   string
+	Port   string
+}
+
+// TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
+const deliveryServicesAllParentsKey = "all_parents"
+
+type parentDSParams struct {
 	Algorithm                       string
 	ParentRetry                     string
 	UnavailableServerRetryResponses string
@@ -622,9 +622,9 @@ type ParentDSParams struct {
 // If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
 // Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices.
 //      Topology DSes use them for all DSes, MSO and non-MSO.
-func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigParams map[string]map[string]string) (ParentDSParams, []string) {
+func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigParams map[string]map[string]string) (parentDSParams, []string) {
 	warnings := []string{}
-	params := ParentDSParams{}
+	params := parentDSParams{}
 	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 	if isMSO {
 		params.Algorithm = ParentConfigDSParamDefaultMSOAlgorithm
@@ -696,7 +696,7 @@ func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigPara
 }
 
 // GetTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error
-func GetTopologyParentConfigLine(
+func getTopologyParentConfigLine(
 	server *tc.ServerNullable,
 	servers []tc.ServerNullable,
 	ds *tc.DeliveryServiceNullableV30,
@@ -706,18 +706,18 @@ func GetTopologyParentConfigLine(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
-	dsParams ParentDSParams,
+	dsParams parentDSParams,
 	atsMajorVer int,
 	dsOrigins map[ServerID]struct{},
 ) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
 
-	if !HasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+	if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 		return "", warnings, nil
 	}
 
-	orgURI, orgWarns, err := GetOriginURI(*ds.OrgServerFQDN)
+	orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 	warnings = append(warnings, orgWarns...)
 	if err != nil {
 		return "", warnings, errors.New("Malformed ds '" + *ds.XMLID + "' origin  URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
@@ -739,7 +739,7 @@ func GetTopologyParentConfigLine(
 	}
 	// TODO add Topology/Capabilities to remap.config
 
-	parents, secondaryParents, parentWarnings, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
+	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
 		return "", warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
@@ -875,10 +875,10 @@ func getTopologyQueryString(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfilesMap) (ProfileCache, []string) {
+func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfilesMap) (profileCache, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
-	profileCache := DefaultProfileCache()
+	profileCache := defaultProfileCache()
 	if sv.TCPPort != nil {
 		profileCache.Port = *sv.TCPPort
 	}
@@ -912,7 +912,7 @@ func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfiles
 	return profileCache, warnings
 }
 
-func serverParentStr(sv *tc.ServerNullable, svParams ProfileCache) (string, error) {
+func serverParentStr(sv *tc.ServerNullable, svParams profileCache) (string, error) {
 	if svParams.NotAParent {
 		return "", nil
 	}
@@ -931,7 +931,7 @@ func serverParentStr(sv *tc.ServerNullable, svParams ProfileCache) (string, erro
 }
 
 // GetTopologyParents returns the parents, secondary parents, any warnings, and any error.
-func GetTopologyParents(
+func getTopologyParents(
 	server *tc.ServerNullable,
 	ds *tc.DeliveryServiceNullableV30,
 	servers []tc.ServerNullable,
@@ -946,7 +946,7 @@ func GetTopologyParents(
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
 	if serverIsLastTier {
-		orgURI, orgWarns, err := GetOriginURI(*ds.OrgServerFQDN) // TODO pass, instead of calling again
+		orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN) // TODO pass, instead of calling again
 		warnings = append(warnings, orgWarns...)
 		if err != nil {
 			return nil, nil, warnings, err
@@ -991,16 +991,16 @@ func GetTopologyParents(
 	parentStrs := []string{}
 	secondaryParentStrs := []string{}
 
-	serversWithParams := []ServerWithParams{}
+	serversWithParams := []serverWithParams{}
 	for _, sv := range servers {
 		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
 		warnings = append(warnings, parentWarns...)
-		serversWithParams = append(serversWithParams, ServerWithParams{
+		serversWithParams = append(serversWithParams, serverWithParams{
 			ServerNullable: sv,
 			Params:         serverParentParams,
 		})
 	}
-	sort.Sort(ServersWithParamsSortByRank(serversWithParams))
+	sort.Sort(serversWithParamsSortByRank(serversWithParams))
 
 	for _, sv := range serversWithParams {
 		if sv.ID == nil {
@@ -1030,7 +1030,7 @@ func GetTopologyParents(
 			continue
 		}
 
-		if !HasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 		if *sv.Cachegroup == parentCG {
@@ -1055,7 +1055,7 @@ func GetTopologyParents(
 }
 
 // GetOriginURI returns the URL, any warnings, and any error.
-func GetOriginURI(fqdn string) (*url.URL, []string, error) {
+func getOriginURI(fqdn string) (*url.URL, []string, error) {
 	warnings := []string{}
 
 	orgURI, err := url.Parse(fqdn) // TODO verify origin is always a host:port
@@ -1078,7 +1078,7 @@ func GetOriginURI(fqdn string) (*url.URL, []string, error) {
 func getParentStrs(
 	ds *tc.DeliveryServiceNullableV30,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
-	parentInfos []ParentInfo,
+	parentInfos []parentInfo,
 	atsMajorVer int,
 	tryAllPrimariesBeforeSecondary bool,
 ) (string, string, []string) {
@@ -1086,10 +1086,10 @@ func getParentStrs(
 	parentInfo := []string{}
 	secondaryParentInfo := []string{}
 
-	sort.Sort(ParentInfoSortByRank(parentInfos))
+	sort.Sort(parentInfoSortByRank(parentInfos))
 
 	for _, parent := range parentInfos { // TODO fix magic key
-		if !HasRequiredCapabilities(parent.Capabilities, dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(parent.Capabilities, dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 
@@ -1135,7 +1135,7 @@ func getParentStrs(
 // getMSOParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines for MSO, and any warnings.
 func getMSOParentStrs(
 	ds *tc.DeliveryServiceNullableV30,
-	parentInfos []ParentInfo,
+	parentInfos []parentInfo,
 	atsMajorVer int,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	msoAlgorithm string,
@@ -1144,19 +1144,19 @@ func getMSOParentStrs(
 	warnings := []string{}
 	// TODO determine why MSO is different, and if possible, combine with getParentAndSecondaryParentStrs.
 
-	rankedParents := ParentInfoSortByRank(parentInfos)
+	rankedParents := parentInfoSortByRank(parentInfos)
 	sort.Sort(rankedParents)
 
-	parentInfo := []string{}
+	parentInfoTxt := []string{}
 	secondaryParentInfo := []string{}
 	nullParentInfo := []string{}
-	for _, parent := range ([]ParentInfo)(rankedParents) {
-		if !HasRequiredCapabilities(parent.Capabilities, dsRequiredCapabilities[*ds.ID]) {
+	for _, parent := range ([]parentInfo)(rankedParents) {
+		if !hasRequiredCapabilities(parent.Capabilities, dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 
 		if parent.PrimaryParent {
-			parentInfo = append(parentInfo, parent.Format())
+			parentInfoTxt = append(parentInfoTxt, parent.Format())
 		} else if parent.SecondaryParent {
 			secondaryParentInfo = append(secondaryParentInfo, parent.Format())
 		} else {
@@ -1164,20 +1164,20 @@ func getMSOParentStrs(
 		}
 	}
 
-	if len(parentInfo) == 0 {
+	if len(parentInfoTxt) == 0 {
 		// If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
 		// as the secondary parent list and clear the null parent list.
 		if len(secondaryParentInfo) == 0 {
 			secondaryParentInfo = nullParentInfo
 			nullParentInfo = []string{}
 		}
-		parentInfo = secondaryParentInfo
+		parentInfoTxt = secondaryParentInfo
 		secondaryParentInfo = []string{} // TODO should thi be '= secondary'? Currently emulates Perl
 	}
 
 	// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
 	seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-	parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
+	parentInfoTxt, seen = util.RemoveStrDuplicates(parentInfoTxt, seen)
 	secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
 	nullParentInfo, seen = util.RemoveStrDuplicates(nullParentInfo, seen)
 
@@ -1195,24 +1195,24 @@ func getMSOParentStrs(
 	secondaryParents := ""
 
 	if atsMajorVer >= 6 && msoAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
-		parents = `parent="` + strings.Join(parentInfo, "") + `"`
+		parents = `parent="` + strings.Join(parentInfoTxt, "") + `"`
 		secondaryParents = ` secondary_parent="` + secondaryParentStr + `"`
 		secondaryModeStr, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVer, dsName)
 		warnings = append(warnings, secondaryModeWarnings...)
 		secondaryParents += secondaryModeStr
 	} else {
-		parents = `parent="` + strings.Join(parentInfo, "") + secondaryParentStr + `"`
+		parents = `parent="` + strings.Join(parentInfoTxt, "") + secondaryParentStr + `"`
 	}
 	return parents, secondaryParents, warnings
 }
 
-func MakeParentInfo(
+func makeParentInfo(
 	serverParentCGData serverParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
-	profileCaches map[ProfileID]ProfileCache, // getServerParentCacheGroupProfiles(tx, server)
-	originServers map[OriginHost][]CGServer, // getServerParentCacheGroupProfiles(tx, server)
-) map[OriginHost][]ParentInfo {
-	parentInfos := map[OriginHost][]ParentInfo{}
+	profileCaches map[ProfileID]profileCache, // getServerParentCacheGroupProfiles(tx, server)
+	originServers map[OriginHost][]cgServer, // getServerParentCacheGroupProfiles(tx, server)
+) map[OriginHost][]parentInfo {
+	parentInfos := map[OriginHost][]parentInfo{}
 
 	// note servers also contains an "all" key
 	for originHost, servers := range originServers {
@@ -1226,7 +1226,7 @@ func MakeParentInfo(
 			// 	continue
 			// }
 
-			parentInf := ParentInfo{
+			parentInf := parentInfo{
 				Host:            row.ServerHost,
 				Port:            profile.Port,
 				Domain:          row.Domain,
@@ -1257,28 +1257,18 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	return re.MatchString(s)
 }
 
-// HasRequiredCapabilities returns whether the given caps has all the required capabilities in the given reqCaps.
-func HasRequiredCapabilities(caps map[ServerCapability]struct{}, reqCaps map[ServerCapability]struct{}) bool {
-	for reqCap, _ := range reqCaps {
-		if _, ok := caps[reqCap]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
 // GetOriginServersAndProfileCaches returns the origin servers, ProfileCaches, any warnings, and any error.
-func GetOriginServersAndProfileCaches(
+func getOriginServersAndProfileCaches(
 	cgServers map[int]tc.ServerNullable,
 	parentServerDSes map[int]map[int]struct{},
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []tc.DeliveryServiceNullableV30,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
-) (map[OriginHost][]CGServer, map[ProfileID]ProfileCache, []string, error) {
+) (map[OriginHost][]cgServer, map[ProfileID]profileCache, []string, error) {
 	warnings := []string{}
-	originServers := map[OriginHost][]CGServer{}  // "deliveryServices" in Perl
-	profileCaches := map[ProfileID]ProfileCache{} // map[profileID]ProfileCache
+	originServers := map[OriginHost][]cgServer{}  // "deliveryServices" in Perl
+	profileCaches := map[ProfileID]profileCache{} // map[profileID]ProfileCache
 
 	dsIDMap := map[int]tc.DeliveryServiceNullableV30{}
 	for _, ds := range dses {
@@ -1307,74 +1297,74 @@ func GetOriginServersAndProfileCaches(
 		}
 	}
 
-	dsOrigins, dsOriginWarns, err := GetDSOrigins(allDSMap)
+	dsOrigins, dsOriginWarns, err := getDSOrigins(allDSMap)
 	warnings = append(warnings, dsOriginWarns...)
 	if err != nil {
 		return nil, nil, warnings, errors.New("getting DS origins: " + err.Error())
 	}
 
-	profileParams, profParamWarns := GetParentConfigProfileParams(cgServers, profileParentConfigParams)
+	profileParams, profParamWarns := getParentConfigProfileParams(cgServers, profileParentConfigParams)
 	warnings = append(warnings, profParamWarns...)
 
-	for _, cgServer := range cgServers {
-		if cgServer.ID == nil {
+	for _, cgSv := range cgServers {
+		if cgSv.ID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil ID, skipping!")
 			continue
-		} else if cgServer.HostName == nil {
+		} else if cgSv.HostName == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil HostName, skipping!")
 			continue
-		} else if cgServer.TCPPort == nil {
+		} else if cgSv.TCPPort == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TCPPort, skipping!")
 			continue
-		} else if cgServer.CachegroupID == nil {
+		} else if cgSv.CachegroupID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CachegroupID, skipping!")
 			continue
-		} else if cgServer.StatusID == nil {
+		} else if cgSv.StatusID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil StatusID, skipping!")
 			continue
-		} else if cgServer.TypeID == nil {
+		} else if cgSv.TypeID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
-		} else if cgServer.ProfileID == nil {
+		} else if cgSv.ProfileID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil ProfileID, skipping!")
 			continue
-		} else if cgServer.CDNID == nil {
+		} else if cgSv.CDNID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
-		} else if cgServer.DomainName == nil {
+		} else if cgSv.DomainName == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil DomainName, skipping!")
 			continue
 		}
 
-		ipAddr := getServerIPAddress(&cgServer)
+		ipAddr := getServerIPAddress(&cgSv)
 		if ipAddr == nil {
 			warnings = append(warnings, "getting origin servers: got server with no valid IP Address, skipping!")
 			continue
 		}
 
-		realCGServer := CGServer{
-			ServerID:     ServerID(*cgServer.ID),
-			ServerHost:   *cgServer.HostName,
+		realCGServer := cgServer{
+			ServerID:     ServerID(*cgSv.ID),
+			ServerHost:   *cgSv.HostName,
 			ServerIP:     ipAddr.String(),
-			ServerPort:   *cgServer.TCPPort,
-			CacheGroupID: *cgServer.CachegroupID,
-			Status:       *cgServer.StatusID,
-			Type:         *cgServer.TypeID,
-			ProfileID:    ProfileID(*cgServer.ProfileID),
-			CDN:          *cgServer.CDNID,
-			TypeName:     cgServer.Type,
-			Domain:       *cgServer.DomainName,
-			Capabilities: serverCapabilities[*cgServer.ID],
+			ServerPort:   *cgSv.TCPPort,
+			CacheGroupID: *cgSv.CachegroupID,
+			Status:       *cgSv.StatusID,
+			Type:         *cgSv.TypeID,
+			ProfileID:    ProfileID(*cgSv.ProfileID),
+			CDN:          *cgSv.CDNID,
+			TypeName:     cgSv.Type,
+			Domain:       *cgSv.DomainName,
+			Capabilities: serverCapabilities[*cgSv.ID],
 		}
 
-		if cgServer.Type == tc.OriginTypeName {
-			for dsID, _ := range parentServerDSes[*cgServer.ID] { // map[serverID][]dsID
+		if cgSv.Type == tc.OriginTypeName {
+			for dsID, _ := range parentServerDSes[*cgSv.ID] { // map[serverID][]dsID
 				orgURI := dsOrigins[dsID]
 				if orgURI == nil {
 					// warnings = append(warnings, fmt.Sprintf(("ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
 					continue
 				}
-				if HasRequiredCapabilities(serverCapabilities[*cgServer.ID], dsRequiredCapabilities[dsID]) {
+				if hasRequiredCapabilities(serverCapabilities[*cgSv.ID], dsRequiredCapabilities[dsID]) {
 					orgHost := OriginHost(orgURI.Host)
 					originServers[orgHost] = append(originServers[orgHost], realCGServer)
 				} else {
@@ -1382,13 +1372,13 @@ func GetOriginServersAndProfileCaches(
 				}
 			}
 		} else {
-			originServers[DeliveryServicesAllParentsKey] = append(originServers[DeliveryServicesAllParentsKey], realCGServer)
+			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], realCGServer)
 		}
 
 		if _, profileCachesHasProfile := profileCaches[realCGServer.ProfileID]; !profileCachesHasProfile {
-			if profileCache, profileParamsHasProfile := profileParams[*cgServer.Profile]; !profileParamsHasProfile {
-				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", *cgServer.ProfileID))
-				profileCaches[realCGServer.ProfileID] = DefaultProfileCache()
+			if profileCache, profileParamsHasProfile := profileParams[*cgSv.Profile]; !profileParamsHasProfile {
+				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", *cgSv.ProfileID))
+				profileCaches[realCGServer.ProfileID] = defaultProfileCache()
 			} else {
 				profileCaches[realCGServer.ProfileID] = profileCache
 			}
@@ -1399,12 +1389,12 @@ func GetOriginServersAndProfileCaches(
 }
 
 // GetParentConfigProfileParams returns the parent config profile params, and any warnings.
-func GetParentConfigProfileParams(
+func getParentConfigProfileParams(
 	cgServers map[int]tc.ServerNullable,
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
-) (map[string]ProfileCache, []string) {
+) (map[string]profileCache, []string) {
 	warnings := []string{}
-	parentConfigServerCacheProfileParams := map[string]ProfileCache{} // map[profileName]ProfileCache
+	parentConfigServerCacheProfileParams := map[string]profileCache{} // map[profileName]ProfileCache
 	for _, cgServer := range cgServers {
 		if cgServer.Profile == nil {
 			warnings = append(warnings, "getting parent config profile params: server has nil profile, skipping!")
@@ -1412,7 +1402,7 @@ func GetParentConfigProfileParams(
 		}
 		profileCache, ok := parentConfigServerCacheProfileParams[*cgServer.Profile]
 		if !ok {
-			profileCache = DefaultProfileCache()
+			profileCache = defaultProfileCache()
 		}
 		params, ok := profileParentConfigParams[*cgServer.Profile]
 		if !ok {
@@ -1456,9 +1446,9 @@ func GetParentConfigProfileParams(
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI, any warnings, and any error.
-func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*OriginURI, []string, error) {
+func getDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*originURI, []string, error) {
 	warnings := []string{}
-	dsOrigins := map[int]*OriginURI{}
+	dsOrigins := map[int]*originURI{}
 	for _, ds := range dses {
 		if ds.ID == nil {
 			return nil, warnings, errors.New("ds has nil ID")
@@ -1493,7 +1483,7 @@ func GetDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*OriginUR
 				warnings = append(warnings, "parsing ds '"+*ds.XMLID+"' OrgServerFQDN '"+*ds.OrgServerFQDN+"': "+"unknown scheme '"+scheme+"' and no port, leaving port empty!")
 			}
 		}
-		dsOrigins[*ds.ID] = &OriginURI{Scheme: scheme, Host: host, Port: port}
+		dsOrigins[*ds.ID] = &originURI{Scheme: scheme, Host: host, Port: port}
 	}
 	return dsOrigins, warnings, nil
 }
