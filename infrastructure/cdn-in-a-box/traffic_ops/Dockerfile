@@ -83,7 +83,14 @@ ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 # Start with the existing traffic_ops/app/local directory
 COPY traffic_ops/app/local local
 RUN cpanm Carton && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 carton  && \
+    export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
+    echo 'Running carton...' && \
+    [[ -d "${PERL5LIB}/x86_64-linux-thread-multi" ]]; existing_install=$? && \
+    if ! carton && [[ $existing_install -eq 0 ]]; then \
+        rm -rf "$PERL5LIB" && \
+        echo 'Removed modules, retrying carton...' && \
+        carton || exit 1; \
+    fi && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
 RUN ./install_goose.sh
 
