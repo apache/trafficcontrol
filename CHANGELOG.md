@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5005: Traffic Monitor cannot be upgraded independently of Traffic Ops
 - Fixed an issue with Traffic Router failing to authenticate if secrets are changed
 - Fixed #4825 - Traffic Monitor error log spamming "incomparable stat type int"
+- Fixed #4899 - Traffic Monitor Web UI showing incorrect delivery service availability states
 - Fixed #4845 - issue with ATS logging.yaml generation (missing newlines when filters are used)
 - Fixed ORT atstccfg to use log appending and log rotation
 - Fixed a bug in ATS remap.config generation that caused a double range directive if there was a `__RANGE_DIRECTIVE__` override
