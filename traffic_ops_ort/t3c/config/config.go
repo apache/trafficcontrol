@@ -33,6 +33,7 @@ import (
 )
 
 var TSHome string = "/opt/trafficserver"
+var TSConfigDir string = "/opt/trafficserver/etc/trafficserver"
 
 const (
 	StatusDir          = "/opt/ort/status"
@@ -248,24 +249,30 @@ func GetCfg() (Cfg, error) {
 	if *toPassPtr == "" {
 		toPass = os.Getenv("TO_PASS")
 	}
+
 	// set TSHome
+	var tsHome = ""
 	if *tsHomePtr != "" {
-		TSHome = *tsHomePtr
-		fmt.Printf("\nset TSHome from command line: '%s'\n\n", TSHome)
+		tsHome = *tsHomePtr
+		fmt.Printf("set TSHome from command line: '%s'\n\n", TSHome)
 	}
-	if *tsHomePtr == "" {
-		tsHome := os.Getenv("TS_HOME") // check for the environment variable.
+	if *tsHomePtr == "" { // evironment or rpm check.
+		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
-			fmt.Printf("\nset TSHome from TS_HOME environment variable '%s'\n\n", TSHome)
+			fmt.Printf("set TSHome from TS_HOME environment variable '%s'\n", TSHome)
 		} else { // finally check using the config file listing from the rpm package.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
-				TSHome = tsHome
-				fmt.Printf("\nset TSHome from the RPM config file  list '%s'\n\n", TSHome)
+				fmt.Printf("set TSHome from the RPM config file  list '%s'\n", tsHome)
 			} else {
-				fmt.Printf("\nno override for TSHome was found, using the configured default: '%s'\n\n", TSHome)
+				fmt.Printf("no override for TSHome was found, using the configured default: '%s'\n", TSHome)
 			}
 		}
+	}
+	if tsHome != "" {
+		TSHome = tsHome
+		TSConfigDir = tsHome + "/etc/trafficserver"
+		fmt.Printf("TSHome: %s, TSConfigDir: %s\n", TSHome, TSConfigDir)
 	}
 
 	usageStr := "basic usage: t3c  --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
