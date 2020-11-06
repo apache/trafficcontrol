@@ -739,11 +739,12 @@ type ServerPutStatus struct {
 }
 
 type ServerInfo struct {
-	CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID        int    `json:"cdnId" db:"cdn_id"`
-	DomainName   string `json:"domainName" db:"domain_name"`
-	HostName     string `json:"hostName" db:"host_name"`
-	Type         string `json:"type" db:"server_type"`
+	Cachegroup   string
+	CachegroupID int
+	CDNID        int
+	DomainName   string
+	HostName     string
+	Type         string
 }
 
 type ServerDetail struct {
