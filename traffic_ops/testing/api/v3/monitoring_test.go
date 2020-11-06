@@ -32,7 +32,7 @@ func TestMonitoring(t *testing.T) {
 // This MUST NOT be run after a different function in the same Test creates a Snapshot, or the test will be invalid.
 // This prevents a critical bug of upgrading to 4.x bringing a CDN down until a Snapshot is performed.
 func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
-	server := tc.ServerNullable{}
+	server := tc.ServerV30{}
 	for _, sv := range testData.Servers {
 		if sv.Type != "EDGE" {
 			continue
@@ -54,7 +54,7 @@ func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
 
 func AllCDNsCanSnapshot(t *testing.T) {
 
-	serversByHost := make(map[string]tc.ServerNullable)
+	serversByHost := make(map[string]tc.ServerV30)
 
 	for _, server := range testData.Servers {
 		serversByHost[*server.HostName] = server
