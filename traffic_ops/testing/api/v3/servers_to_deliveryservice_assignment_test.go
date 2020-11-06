@@ -45,7 +45,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
 
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -103,7 +103,7 @@ func AssignTestDeliveryService(t *testing.T) {
 }
 
 func AssignIncorrectTestDeliveryService(t *testing.T) {
-	var server *tc.ServerNullable
+	var server *tc.ServerV30
 	for _, s := range testData.Servers {
 		if s.CDNName != nil && *s.CDNName == "cdn2" {
 			server = &s
@@ -120,7 +120,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", hostname)
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
@@ -168,7 +168,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 }
 
 func AssignTopologyBasedDeliveryService(t *testing.T) {
-	var server *tc.ServerNullable
+	var server *tc.ServerV30
 	for _, s := range testData.Servers {
 		if s.CDNName != nil && *s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
 			server = &s
@@ -181,7 +181,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {

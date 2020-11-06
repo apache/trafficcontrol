@@ -90,13 +90,13 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs))
 	}
 
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
 	if err != nil {
 		t.Fatalf("error updating server with hostname %s without moving it to a different cachegroup: %s", *server.HostName, err.Error())
 	}
 
 	*server.CachegroupID = *cgs[0].ID
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
 	if err == nil {
 		t.Fatalf("expected an error moving server with id %s to a different cachegroup, received no error", *server.HostName)
 	}
@@ -120,7 +120,7 @@ func UpdateTestServerStatus(t *testing.T) {
 	params.Add("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
@@ -156,12 +156,12 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Keeping the status same, perform an update and make sure that statusLastUpdated didnt change
 	remoteServer.StatusID = &originalStatusID
 
-	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err := TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(&idParam)
+	resp, _, err = TOSession.GetServersWithHdr(&idParam, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
@@ -183,12 +183,12 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
 	remoteServer.StatusID = &updatedStatusID
 
-	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(&idParam)
+	resp, _, err = TOSession.GetServersWithHdr(&idParam, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
@@ -209,12 +209,12 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
 	remoteServer.StatusID = &originalStatusID
 
-	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(&idParam)
+	resp, _, err = TOSession.GetServersWithHdr(&idParam, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
@@ -363,7 +363,7 @@ func CreateTestServers(t *testing.T) {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		resp, _, err := TOSession.CreateServer(server)
+		resp, _, err := TOSession.CreateServerWithHdr(server, nil)
 		t.Log("Response: ", *server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
@@ -383,14 +383,14 @@ func CreateTestBlankFields(t *testing.T) {
 	originalHost := server.HostName
 
 	server.HostName = util.StrPtr("")
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
 	if err == nil {
 		t.Fatal("should not be able to update server with blank HostName")
 	}
 
 	server.HostName = originalHost
 	server.DomainName = util.StrPtr("")
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
 	if err == nil {
 		t.Fatal("should not be able to update server with blank DomainName")
 	}
@@ -414,7 +414,7 @@ func CreateTestServerWithoutProfileId(t *testing.T) {
 
 	*server.Profile = ""
 	server.ProfileID = nil
-	response, reqInfo, errs := TOSession.CreateServer(server)
+	response, reqInfo, errs := TOSession.CreateServerWithHdr(server, nil)
 	t.Log("Response: ", *server.HostName, " ", response)
 	if reqInfo.StatusCode != 400 {
 		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
@@ -422,7 +422,7 @@ func CreateTestServerWithoutProfileId(t *testing.T) {
 
 	//Reverting it back for further tests
 	*server.Profile = originalProfile
-	response, _, errs = TOSession.CreateServer(server)
+	response, _, errs = TOSession.CreateServerWithHdr(server, nil)
 	t.Log("Response: ", *server.HostName, " ", response)
 	if errs != nil {
 		t.Fatalf("could not CREATE servers: %v", errs)
@@ -708,7 +708,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	}
 	xmppId := "unique"
 	server := serversResp.Response[0]
-	_, _, err = TOSession.CreateServer(tc.ServerNullable{
+	_, _, err = TOSession.CreateServerWithHdr(tc.ServerV30{
 		CommonServerProperties: tc.CommonServerProperties{
 			Cachegroup: server.Cachegroup,
 			CDNName:    server.CDNName,
@@ -729,7 +729,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 			XMPPID:       &xmppId,
 		},
 		Interfaces: server.Interfaces,
-	})
+	}, nil)
 
 	if err == nil {
 		t.Error("expected an error when updating a server with an ipaddress that already exists on another server with the same profile")
@@ -760,7 +760,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	if !changed {
 		t.Fatal("did not find ip address to update")
 	}
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
 	if err != nil {
 		t.Fatalf("expected update to pass: %s", err)
 	}
@@ -823,7 +823,7 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
 
-	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err := TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
@@ -872,7 +872,7 @@ func UpdateTestServers(t *testing.T) {
 
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
-	al, reqInf, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	al, reqInf, err := TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil && reqInf.StatusCode != http.StatusBadRequest {
 		t.Logf("error making sure that XMPPID does not get updated, %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
 	}
@@ -880,7 +880,7 @@ func UpdateTestServers(t *testing.T) {
 	//Change back hostname and xmppid to its original name for other tests to pass
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
-	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alert, _, err := TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
 	}
@@ -919,7 +919,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Attempt Update - should fail
-	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*remoteServer.ID, remoteServer, nil)
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	} else {

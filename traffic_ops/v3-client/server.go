@@ -39,7 +39,18 @@ func needAndCanFetch(id *int, name *string) bool {
 }
 
 // CreateServer creates a Server.
-func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+// Deprecated: CreateServer will be removed in 6.0. Use CreateServerWithHdr.
+func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
+	upgraded, err := server.ToNullable().Upgrade()
+	if err != nil {
+		return tc.Alerts{}, ReqInf{}, fmt.Errorf("upgrading server: %v", err)
+	}
+	return to.CreateServerWithHdr(upgraded, nil)
+}
+
+// CreateServerWithHdr creates the given server, with whatever headers are
+// passed added to the request.
+func (to *Session) CreateServerWithHdr(server tc.ServerV30, hdr http.Header) (tc.Alerts, ReqInf, error) {
 
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
@@ -114,7 +125,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, hdr)
 	reqInf.RemoteAddr = remoteAddr
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -128,7 +139,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerV30, header http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -156,8 +167,12 @@ func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerNullable, hea
 
 // UpdateServerByID updates a Server by ID.
 // Deprecated: UpdateServerByID will be removed in 6.0. Use UpdateServerByIDWithHdr.
-func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
-	return to.UpdateServerByIDWithHdr(id, server, nil)
+func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
+	upgraded, err := server.ToNullable().Upgrade()
+	if err != nil {
+		return tc.Alerts{}, ReqInf{}, fmt.Errorf("upgrading server: %v", err)
+	}
+	return to.UpdateServerByIDWithHdr(id, upgraded, nil)
 }
 
 // GetServersWithHdr retrieves a list of servers using the given optional query
@@ -193,13 +208,33 @@ func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
 // Deprecated: GetServers will be removed in 6.0. Use GetServersWithHdr.
-func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf, error) {
-	return to.GetServersWithHdr(params, nil)
+func (to *Session) GetServers(params *url.Values) ([]tc.Server, ReqInf, error) {
+	srvs, inf, err := to.GetServersWithHdr(params, nil)
+	if err != nil {
+		return []tc.Server{}, inf, err
+	}
+
+	servers := make([]tc.Server, 0, len(srvs.Response))
+	for _, srv := range srvs.Response {
+		nullable := tc.ServerNullable(srv)
+		v2, err := nullable.ToServerV2()
+		if err != nil {
+			return []tc.Server{}, inf, fmt.Errorf("converting server to v2: %v", err)
+		}
+		servers = append(servers, v2.ToNonNullable())
+	}
+	return servers, inf, nil
 }
 
-func (to *Session) GetFirstServerWithHdr(params *url.Values, header http.Header) (tc.ServerNullable, ReqInf, error) {
-	serversResponse, reqInf, err := to.GetServers(params)
-	var firstServer tc.ServerNullable
+// GetFirstServer returns the first server in a servers GET response.
+// If no servers match, an error is returned.
+// The 'params' parameter can be used to optionally pass URL "query string
+// parameters" in the request.
+// It returns, in order, the API response that Traffic Ops returned, a request
+// info object, and any error that occurred.
+func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerV30, ReqInf, error) {
+	serversResponse, reqInf, err := to.GetServersWithHdr(params, nil)
+	var firstServer tc.ServerV30
 	if err != nil || reqInf.StatusCode == http.StatusNotModified {
 		return firstServer, reqInf, err
 	}
@@ -209,17 +244,6 @@ func (to *Session) GetFirstServerWithHdr(params *url.Values, header http.Header)
 
 	err = fmt.Errorf("unable to find server matching params %v", *params)
 	return firstServer, reqInf, err
-}
-
-// GetFirstServer returns the first server in a servers GET response.
-// If no servers match, an error is returned.
-// The 'params' parameter can be used to optionally pass URL "query string
-// parameters" in the request.
-// It returns, in order, the API response that Traffic Ops returned, a request
-// info object, and any error that occurred.
-// Deprecated: GetFirstServer will be removed in 6.0. Use GetFirstServerWithHdr.
-func (to *Session) GetFirstServer(params *url.Values) (tc.ServerNullable, ReqInf, error) {
-	return to.GetFirstServerWithHdr(params, nil)
 }
 
 func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header http.Header) ([]tc.ServerDetailV30, ReqInf, error) {
@@ -276,7 +300,7 @@ func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, t
 	params := url.Values{}
 	params.Add("hostName", n)
 
-	resp, reqInf, err := to.GetServers(&params)
+	resp, reqInf, err := to.GetServersWithHdr(&params, nil)
 	if err != nil {
 		return "", resp.Alerts, reqInf, err
 	}
@@ -304,7 +328,7 @@ func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 
 func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header http.Header) ([]string, tc.Alerts, ReqInf, error) {
 	var serverlst []string
-	resp, reqInf, err := to.GetServers(nil)
+	resp, reqInf, err := to.GetServersWithHdr(nil, nil)
 	if err != nil {
 		return serverlst, resp.Alerts, reqInf, err
 	}
