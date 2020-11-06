@@ -577,27 +577,28 @@ func (s Server) ToNullable() ServerNullableV2 {
 	}
 }
 
+func coerceBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+func coerceInt(i *int) int {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func coerceString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 // ToNonNullable converts the ServerNullableV2 safely to a Server structure.
 func (s ServerNullableV2) ToNonNullable() Server {
-	coerceBool := func(b *bool) bool {
-		if b == nil {
-			return false
-		}
-		return *b
-	}
-	coerceInt := func(i *int) int {
-		if i == nil {
-			return 0
-		}
-		return *i
-	}
-	coerceString := func(s *string) string {
-		if s == nil {
-			return ""
-		}
-		return *s
-	}
-
 	ret := Server{
 		Cachegroup:     coerceString(s.Cachegroup),
 		CachegroupID:   coerceInt(s.CachegroupID),
