@@ -27,10 +27,11 @@ on:
     paths:
       - GO_VERSION
       - "**.go"
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, read_for_review, synchronize]
 
 jobs:
   format:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:

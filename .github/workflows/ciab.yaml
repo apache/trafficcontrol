@@ -55,10 +55,11 @@ on:
       - 'misc/**'
       - 'NOTICE'
       - 'traffic_control/java'
-    types: [ opened, reopened, edited, synchronize ]
+    types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
   traffic_monitor:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -74,6 +75,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   traffic_ops:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -89,6 +91,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   traffic_ops_ort:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -104,6 +107,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   traffic_portal:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -119,6 +123,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   traffic_router:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -141,6 +146,7 @@ jobs:
           path: ${{ github.workspace }}/dist/*.rpm
 
   traffic_stats:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -156,6 +162,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   grove:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -171,6 +178,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   grovetccfg:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -186,6 +194,7 @@ jobs:
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
   ciab-build:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     needs:
       - traffic_monitor
@@ -201,6 +210,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: ${{ github.workspace }}/dist/
+      - name: Cache Perl modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/traffic_ops/app/local
+          key: ${{ runner.os }}-cpan-${{ hashFiles('cache/**.tar.gz') }}
+          restore-keys: |
+            ${{ runner.os }}-cpan-
       - name: Build CDN-in-a-Box images
         uses: ./.github/actions/build-ciab
       - name: Start CDN-in-a-Box

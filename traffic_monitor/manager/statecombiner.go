@@ -65,18 +65,25 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	return combinedStates, combineState
 }
 
-func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
+func combineCacheState(
+	cacheName tc.CacheName,
+	localCacheState tc.IsAvailable,
+	events health.ThreadsafeEvents,
+	peerOptimistic bool,
+	peerStates peer.CRStatesPeersThreadsafe,
+	combinedStates peer.CRStatesThreadsafe,
+	overrideMap map[tc.CacheName]bool,
+	toData todata.TOData,
+) {
+
 	overrideCondition := ""
-	available := false
-	ipv4Available := false
-	ipv6Available := false
+	available := localCacheState.Ipv4Available || localCacheState.Ipv6Available
+	ipv4Available := localCacheState.Ipv4Available
+	ipv6Available := localCacheState.Ipv6Available
 	override := overrideMap[cacheName]
 
-	if localCacheState.IsAvailable {
-		available = true // we don't care about the peers, we got a "good one", and we're optimistic
-		ipv4Available = localCacheState.Ipv4Available
-		ipv6Available = localCacheState.Ipv6Available
-
+	if localCacheState.Ipv4Available && localCacheState.Ipv6Available {
+		// we don't care about the peers, we got a "good one", and we're optimistic
 		if override {
 			overrideCondition = "cleared; healthy locally"
 			overrideMap[cacheName] = false
@@ -108,8 +115,8 @@ func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, e
 
 			if len(onlineOnPeers) > 0 {
 				available = true
-				ipv4Available = len(ipv4OnlineOnPeers) > 0
-				ipv6Available = len(ipv6OnlineOnPeers) > 0
+				ipv4Available = ipv4Available || len(ipv4OnlineOnPeers) > 0 // optimistically accept true from local or peer
+				ipv6Available = ipv6Available || len(ipv6OnlineOnPeers) > 0 // optimistically accept true from local or peer
 
 				if !override {
 					overrideCondition = fmt.Sprintf("detected; healthy on (at least) %s", strings.Join(onlineOnPeers, ", "))
@@ -134,13 +141,8 @@ func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, e
 func combineDSState(
 	deliveryServiceName tc.DeliveryServiceName,
 	localDeliveryService tc.CRStatesDeliveryService,
-	events health.ThreadsafeEvents,
-	peerOptimistic bool,
 	peerStates peer.CRStatesPeersThreadsafe,
-	localStates tc.CRStates,
 	combinedStates peer.CRStatesThreadsafe,
-	overrideMap map[tc.CacheName]bool,
-	toData todata.TOData,
 ) {
 	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 	if localDeliveryService.IsAvailable {
@@ -199,11 +201,11 @@ func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.
 
 func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
-		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
+		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, combinedStates, overrideMap, toData)
 	}
 
 	for deliveryServiceName, localDeliveryService := range localStates.DeliveryService {
-		combineDSState(deliveryServiceName, localDeliveryService, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
+		combineDSState(deliveryServiceName, localDeliveryService, peerStates, combinedStates)
 	}
 
 	pruneCombinedDSState(combinedStates, localStates, peerStates)
