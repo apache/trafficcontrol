@@ -285,7 +285,7 @@ func writeNetworkCfg(w io.Writer, r isoRequest, nameservers []string) error {
 	cfg.addOpt("NAMESERVER", strings.Join(nameservers, ","))
 	cfg.addOpt("HOSTNAME", r.fqdn())
 	cfg.addOpt("NETWORKING_IPV6", "yes")
-	cfg.addIP("IPV6ADDR", r.IP6Address)
+	cfg.addOpt("IPV6ADDR", r.IP6Address)
 	cfg.addIP("IPV6_DEFAULTGW", r.IP6Gateway)
 	if isBonded {
 		cfg.addOpt("BONDING_OPTS", "miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4")
@@ -359,7 +359,7 @@ func (c *configWriter) addOpt(name, value string) {
 	fmt.Fprintf(&c.b, "%s=%q", name, value)
 }
 
-// addIP adds an IP option to the config. It handles the
+// addIP adds an IPv4 option to the config. It handles the
 // case where the given IP is empty/nil.
 func (c *configWriter) addIP(name string, ip net.IP) {
 	// Avoid using `<nil>`, i.e. net.IP{}.String() = <nil>
