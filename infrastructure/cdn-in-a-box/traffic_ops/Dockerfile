@@ -82,8 +82,8 @@ ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 
 # Start with the existing traffic_ops/app/local directory
 COPY traffic_ops/app/local local
-RUN cpanm -l ./local Carton && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
+RUN cpanm Carton && \
+    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 carton  && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
 RUN ./install_goose.sh
 
