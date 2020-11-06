@@ -97,7 +97,7 @@ RUN rpm -Uvh /$(basename $TRAFFIC_OPS_RPM) && \
 
 # Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
 # build (should never happen - Perl is supposed to be going away)
-RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
+RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 carton && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
