@@ -81,7 +81,7 @@ WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 
 # Start with the existing traffic_ops/app/local directory
-COPY traffic_ops/app/local local
+COPY infrastructure/cdn-in-a-box/traffic_ops/local local
 RUN cpanm Carton && \
     export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
     echo 'Running carton...' && \

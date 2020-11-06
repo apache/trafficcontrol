@@ -215,7 +215,7 @@ jobs:
           CENTOS_VERSION: 7
         uses: actions/cache@v2
         with:
-          path: ${{ github.workspace }}/traffic_ops/app/local
+          path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic_ops/local
           key: ${{ runner.os }}-cpan-centos-${{ env.CENTOS_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
           restore-keys: |
             ${{ runner.os }}-cpan-centos-${{ env.CENTOS_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
