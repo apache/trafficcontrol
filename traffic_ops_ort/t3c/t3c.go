@@ -113,14 +113,6 @@ func main() {
 		}
 	}
 
-	log.Debugf("Preparing to fetch the config files for %s, cfg.RunMode: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.RunMode, syncdsUpdate)
-
-	err = trops.GetConfigFileList()
-	if err != nil {
-		log.Errorf("Unable to continue: %s\n", err)
-		os.Exit(ConfigFilesError)
-	}
-
 	if cfg.RunMode == config.Revalidate {
 		log.Infoln("======== Revalidating, no package processing needed ========")
 	} else {
@@ -139,6 +131,12 @@ func main() {
 		}
 	}
 
+	log.Debugf("Preparing to fetch the config files for %s, cfg.RunMode: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.RunMode, syncdsUpdate)
+	err = trops.GetConfigFileList()
+	if err != nil {
+		log.Errorf("Unable to continue: %s\n", err)
+		os.Exit(ConfigFilesError)
+	}
 	syncdsUpdate, err = trops.ProcessConfigFiles()
 	if err != nil {
 		log.Errorf("Error while processing config files: %s\n", err.Error())
