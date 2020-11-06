@@ -74,7 +74,7 @@ elif x509v3_init; then
 		x509v3_dump_env
     # Save newly generated certs for future restarts.
     rsync -av "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR/"
-    chmod 777 "$X509_CA_PERSIST_DIR"
+    chmod -R 777 "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR"
     sync
     echo "GENERATE CERTS FROM $X509_CA_DIR to $X509_CA_PERSIST_DIR"
     sleep 4
