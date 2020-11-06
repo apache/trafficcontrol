@@ -79,8 +79,11 @@ ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffi
 
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
-RUN cpanm -l ./local Carton && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
+
+# Start with the existing traffic_ops/app/local directory
+COPY traffic_ops/app/local local
+RUN cpanm Carton && \
+    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 carton  && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
 RUN ./install_goose.sh
 
@@ -94,7 +97,7 @@ RUN rpm -Uvh /$(basename $TRAFFIC_OPS_RPM) && \
 
 # Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
 # build (should never happen - Perl is supposed to be going away)
-RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
+RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 carton && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 ADD infrastructure/cdn-in-a-box/enroller/server_template.json \

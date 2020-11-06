@@ -23,6 +23,9 @@ docs/build/*
 /grove/grove
 /grove/grovetccfg/grovetccfg
 local
+!/traffic_ops/app/local/
+/traffic_ops/app/local/*
+!/traffic_ops/app/local/.gitkeep
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
 traffic_ops/app/log/*.log
