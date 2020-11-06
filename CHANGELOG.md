@@ -123,6 +123,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5197 - Allows users to assign topology-based DS to ORG servers [Related Github issue](https://github.com/apache/trafficcontrol/issues/5197)
 - Fixed #5161 - Fixes topology name character validation [Related Github issue](https://github.com/apache/trafficcontrol/issues/5161)
 - Fixed #5237 - /isos API endpoint rejecting valid IPv6 addresses with CIDR-notation network prefixes.
+- Fixed an issue with Traffic Monitor to fix peer polling to work as expected
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.

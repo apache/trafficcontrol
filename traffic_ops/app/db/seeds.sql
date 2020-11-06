@@ -950,4 +950,5 @@ insert into last_deleted (table_name) VALUES ('type') ON CONFLICT (table_name) D
 insert into last_deleted (table_name) VALUES ('user_role') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('server_capability') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('server_server_capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('service_category') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('deliveryservices_required_capability') ON CONFLICT (table_name) DO NOTHING;

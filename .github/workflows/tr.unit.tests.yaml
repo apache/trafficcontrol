@@ -25,10 +25,11 @@ on:
   pull_request:
     paths:
       - traffic_router/**
-    types: [ opened, reopened, edited, synchronize ]
+    types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
   tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
