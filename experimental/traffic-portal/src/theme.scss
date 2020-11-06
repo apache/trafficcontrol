@@ -11,30 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import '../../../theme.scss';
-:host {
-	flex: auto;
-	display: flex;
-	flex-direction: column;
-	cursor: wait;
-}
-#container {
-	text-align: center;
-	flex: auto;
-	display: flex;
-	flex-direction: column;
 
-	#svg-container {
-		width: 20%;
-		max-width: 10em;
-		min-width: 2em;
-		margin: auto;
-		svg {
-			margin-bottom: 1.2em;
-		}
-	}
-}
-
-#spacer {
-	flex: auto;
-}
+$theme_main: #2A3F54;
+$theme_secondary: #337AB7;
+$theme_tertiary: #2E6DA4;
+$error: #E74C3C;
+$warning: #F0B37E;
+$success: #1ABB9C;

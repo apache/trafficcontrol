@@ -14,12 +14,7 @@
 
 /* You can add global styles to this file, and also import other style files */
 
-$theme_main: #2A3F54;
-$theme_secondary: #337AB7;
-$theme_tertiary: #2E6DA4;
-$error: #E74C3C;
-$warning: #F0B37E;
-$success: #1ABB9C;
+@import './theme.scss';
 
 body {
 	background-color: white;
