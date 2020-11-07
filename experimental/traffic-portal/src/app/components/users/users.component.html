@@ -17,5 +17,5 @@ limitations under the License.
 	<article id="users" [hidden]="loading">
 		<user-card *ngFor="let user of users" [hidden]="!fuzzy(user)" [user]="user" [roleMap]="rolesMap"></user-card>
 	</article>
-	<div id="loading" *ngIf="loading"><loading></loading></div>
+	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </main>

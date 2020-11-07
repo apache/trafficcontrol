@@ -26,7 +26,7 @@ import { orderBy } from "../../utils";
  * UsersComponent is the controller for the "users" page.
  */
 @Component({
-	selector: "users",
+	selector: "tp-users",
 	styleUrls: ["./users.component.scss"],
 	templateUrl: "./users.component.html"
 })

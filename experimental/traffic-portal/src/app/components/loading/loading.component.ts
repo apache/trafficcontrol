@@ -15,7 +15,7 @@ import { Component } from "@angular/core";
 
 /** LoadingComponent is the controller for a spinning "loading" icon. */
 @Component({
-	selector: "loading",
+	selector: "tp-loading",
 	styleUrls: ["./loading.component.scss"],
 	templateUrl: "./loading.component.html"
 })

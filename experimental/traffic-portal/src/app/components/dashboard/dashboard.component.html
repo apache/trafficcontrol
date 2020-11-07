@@ -17,6 +17,6 @@ limitations under the License.
 	<article id="deliveryservices" [hidden]="loading">
 		<ds-card *ngFor="let ds of filteredDSes; trackBy: tracker" [deliveryService]="ds" [now]="now" [today]="today"></ds-card>
 	</article>
-	<div id="loading" *ngIf="loading"><loading></loading></div>
+	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </main>
 <a id="new" *ngIf=canCreateDeliveryServices title="Create a new Delivery Service" routerLink="/new.Delivery.Service">+</a>

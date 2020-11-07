@@ -94,15 +94,12 @@ export class UserService extends APIService {
 	}
 
 	/** Fetches the Role with the given ID */
-	public getRoles (id: number): Observable<Role | null>;
-	/** Fetches the Role with the given Name */
-	public getRoles (name: string): Observable<Role | null>;
+	public getRoles (nameOrID: number | string): Observable<Role | null>;
 	/** Fetches all Roles */
 	public getRoles (): Observable<Array<Role>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops
-	 * @param name Optionally, the name of a single Role which will be fetched
-	 * @param id Optionally, the integral, unique identifier of a single Role which will be fetched
+	 * @param nameOrID Optionally, the name or integral, unique identifier of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
 	 * @returns an Observable that will emit either an Array of Roles, or a single Role, depending on whether
 	 * `name`/`id` was passed

@@ -34,7 +34,6 @@ export class ServerService extends APIService {
 		const path = `/api/${this.API_VERSION}/servers`;
 		return this.get(path).pipe(map(
 			r => {
-				const servers = r.body.response as Array<Server>;
 				return (r.body.response as Array<Server>).map(
 					s => {
 						if (s.lastUpdated) {

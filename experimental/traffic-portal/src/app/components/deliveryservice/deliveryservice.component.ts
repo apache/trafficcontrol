@@ -26,7 +26,7 @@ import { DeliveryServiceService } from "../../services/api";
  * details page.
  */
 @Component({
-	selector: "deliveryservice",
+	selector: "tp-deliveryservice",
 	styleUrls: ["./deliveryservice.component.scss"],
 	templateUrl: "./deliveryservice.component.html"
 })

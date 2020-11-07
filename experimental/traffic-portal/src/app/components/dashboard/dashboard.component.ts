@@ -28,7 +28,7 @@ import { orderBy, fuzzyScore } from "../../utils";
  * of the Delivery Services in their Tenancy.
  */
 @Component({
-	selector: "dash",
+	selector: "tp-dash",
 	styleUrls: ["./dashboard.component.scss"],
 	templateUrl: "./dashboard.component.html"
 })

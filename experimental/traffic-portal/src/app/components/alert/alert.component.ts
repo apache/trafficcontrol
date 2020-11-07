@@ -21,7 +21,7 @@ import { AlertService } from "../../services";
  * AlertComponent is the controller for alert message popups.
  */
 @Component({
-	selector: "alert",
+	selector: "tp-alert",
 	styleUrls: ["./alert.component.scss"],
 	templateUrl: "./alert.component.html"
 })

@@ -26,15 +26,7 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 
 	/** The SSH URL to use. */
 	public get href(): SafeUrl {
-		const currentUser = this.auth.currentUserValue;
-		console.log("current user:", currentUser);
-		let uname = "";
-		if (currentUser) {
-			uname = currentUser.username;
-		}
-		console.log("uname:", uname);
-		const url = `ssh://${uname}@${this.value}`;
-		console.log("url:", url);
+		const url = `ssh://${this.username}@${this.value}`;
 		return this.sanitizer.bypassSecurityTrustUrl(url);
 	}
 

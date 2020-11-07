@@ -155,7 +155,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	private destroyChart(): void {
 		if (this.chart) {
 			this.chart.clear();
-			this.chart.destroy();
+			(this.chart.destroy as ()=>void)();
 			this.chart = null;
 			if (this.ctx) {
 				this.ctx.clearRect(0, 0, this.element.nativeElement.width, this.element.nativeElement.height);

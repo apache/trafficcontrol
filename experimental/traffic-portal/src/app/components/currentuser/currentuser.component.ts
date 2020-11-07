@@ -23,7 +23,7 @@ import { AuthenticationService } from "../../services";
  * CurrentuserComponent is the controller for the current user's profile page.
  */
 @Component({
-	selector: "currentuser",
+	selector: "tp-currentuser",
 	styleUrls: ["./currentuser.component.scss"],
 	templateUrl: "./currentuser.component.html"
 })

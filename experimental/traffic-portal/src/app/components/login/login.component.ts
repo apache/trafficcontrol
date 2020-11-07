@@ -23,7 +23,7 @@ import { AuthenticationService } from "../../services";
  * LoginComponent is the controller for the user login form.
  */
 @Component({
-	selector: "login",
+	selector: "tp-login",
 	styleUrls: ["./login.component.scss"],
 	templateUrl: "./login.component.html"
 })
