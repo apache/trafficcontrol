@@ -1,14 +1,10 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component } from "@angular/core";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 
-import { Subscription } from "rxjs";
+import { ICellRendererAngularComp } from "ag-grid-angular";
+import { ICellRendererParams } from "ag-grid-community";
 
 import { AuthenticationService } from "../../../services";
-
-interface InitParams {
-	/** the cell's value */
-	value: string;
-}
 
 /**
  * SSHCellRendererComponent is an AG-Grid cell renderer that provides ssh:// links as content.
@@ -18,10 +14,7 @@ interface InitParams {
 	styleUrls: ["./ssh-cell-renderer.component.scss"],
 	templateUrl: "./ssh-cell-renderer.component.html"
 })
-export class SSHCellRendererComponent implements OnInit, OnDestroy {
-
-	private user: Subscription;
-	private username = "";
+export class SSHCellRendererComponent implements ICellRendererAngularComp {
 
 	/** The IP address or hostname to which the SSH link will point. */
 	public get value(): string {
@@ -29,39 +22,50 @@ export class SSHCellRendererComponent implements OnInit, OnDestroy {
 	}
 	private val = "";
 
+	private username = "";
+
 	/** The SSH URL to use. */
 	public get href(): SafeUrl {
-		const url = `ssh://${this.username}@${this.value}`;
+		const currentUser = this.auth.currentUserValue;
+		console.log("current user:", currentUser);
+		let uname = "";
+		if (currentUser) {
+			uname = currentUser.username;
+		}
+		console.log("uname:", uname);
+		const url = `ssh://${uname}@${this.value}`;
+		console.log("url:", url);
 		return this.sanitizer.bypassSecurityTrustUrl(url);
 	}
 
-	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) { }
+	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) {
+		this.auth.updateCurrentUser().subscribe(
+			success => {
+				if (success) {
+					const cu = this.auth.currentUserValue;
+					if (cu) {
+						this.username = cu.username;
+					}
+				}
+			}
+		);
+		const u = this.auth.currentUserValue;
+		if (u) {
+			this.username = u.username;
+		}
+	}
 
-	/** Called by the AG-Grid API at initalization */
-	public init(params: InitParams): void {
+	/** Called when the value changes - I don't think this will ever happen. */
+	public refresh(params: ICellRendererParams): boolean {
 		this.val = params.value;
+		console.log("refreshed:", params);
+		return true;
 	}
 
 	/** called after ag-grid is initalized */
-	public agInit(params: unknown): void {
-		console.log(params);
+	public agInit(params: ICellRendererParams): void {
+		console.log("has value?:", Object.prototype.hasOwnProperty.call(params, "value"));
+		console.log("getval:", params.getValue());
+		this.val = params.value;
 	}
-
-	/** Called when the Angular view is initialized, sets up the username for the SSH links */
-	public ngOnInit(): void {
-		this.user = this.auth.currentUser.subscribe(
-			u => {
-				if (!u) {
-					return;
-				}
-				this.username = u.username || "";
-			}
-		);
-	}
-
-	/** Cleans up resources when the component is no longer rendered. */
-	public ngOnDestroy(): void {
-		this.user.unsubscribe();
-	}
-
 }

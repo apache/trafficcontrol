@@ -39,8 +39,6 @@ import { InvalidationJobsComponent } from "./components/invalidation-jobs/invali
 import { LoadingComponent } from "./components/loading/loading.component";
 import { LoginComponent } from "./components/login/login.component";
 import { NewDeliveryServiceComponent } from "./components/new-delivery-service/new-delivery-service.component";
-import { ServerCardComponent } from "./components/servers-page/server-card/server-card.component";
-import { ServersPageComponent } from "./components/servers-page/servers-page.component";
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
 import { SSHCellRendererComponent } from "./components/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TpHeaderComponent } from "./components/tp-header/tp-header.component";
@@ -85,8 +83,6 @@ Chart.plugins.register({
 		OpenableDirective,
 		CustomvalidityDirective,
 		CurrentuserComponent,
-		ServersPageComponent,
-		ServerCardComponent,
 		ServersTableComponent
 	],
 	entryComponents: [

@@ -32,7 +32,6 @@ const routes: Routes = [
 	{ path: "deliveryservice/:id", component: DeliveryserviceComponent},
 	{ path: "deliveryservice/:id/invalidation-jobs", component: InvalidationJobsComponent},
 	{ path: "servers", component: ServersTableComponent},
-	{ path: "serverstbl", component: ServersTableComponent}
 ];
 
 /**

@@ -1,8 +1,8 @@
 <tp-header [title]="'Servers'"></tp-header>
 <main>
-	<div>
+	<!-- <div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-	</div>
+	</div> -->
 	<!-- <ag-grid-angular [rowData]="filteredServers" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components"></ag-grid-angular> -->
 	<ag-grid-angular [rowData]="servers | async" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components"></ag-grid-angular>
 </main>

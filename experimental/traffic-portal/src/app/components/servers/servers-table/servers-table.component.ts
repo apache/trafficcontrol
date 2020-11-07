@@ -3,53 +3,18 @@ import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
-import { Server } from "../../../models/server";
+import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
+import { IPV4, serviceInterface } from "../../../utils";
 import { SSHCellRendererComponent } from "../../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 
-// class SSHCellRenderer {
-// 	private eGui: HTMLAnchorElement;
-// 	private username: string;
-
-// 	constructor (u: string) {
-// 		this.username = u;
-// 	}
-
-// 	/** Input parameters used to set up the element that will be returned. */
-// 	public init(params: {value: string}): void {
-// 		this.eGui = document.createElement("A") as HTMLAnchorElement;
-// 		this.eGui.href = `ssh://${this.username}@${params.value}`;
-// 		this.eGui.setAttribute("target", "_blank");
-// 		this.eGui.textContent = params.value;
-// 	}
-
-// 	/** Returns the HTML Element to put in the cell. */
-// 	public getGui(): HTMLElement {
-// 		return this.eGui;
-// 	}
-// }
-
-interface UpdateCellRendererOptions {
-	/** the value being rendered */
-	value: boolean;
-}
-
-class UpdateCellRenderer {
-	private eGui: HTMLElement;
-
-	/** Input parameters used to set up the element that will be returned. */
-	public init(params: UpdateCellRendererOptions): void {
-		this.eGui = document.createElement("I");
-		this.eGui.setAttribute("aria-hidden", "true");
-		this.eGui.setAttribute("title", String(params.value));
-		this.eGui.classList.add("fa", "fa-lg");
-		if (params.value) {
-			this.eGui.classList.add("fa-clock-o");
-		} else {
-			this.eGui.classList.add("fa-check");
-		}
-	}
+interface AugmentedServer extends Server {
+	/** The server's IPv4 service address */
+	ipv4Address: string;
+	/** The server's IPv6 service address */
+	ipv6Address: string;
 }
 
 /**
@@ -64,7 +29,7 @@ class UpdateCellRenderer {
 export class ServersTableComponent implements OnInit, OnDestroy {
 
 	/** All of the servers which should appear in the table. */
-	public servers: Observable<Array<Server>>;
+	public servers: Observable<Array<AugmentedServer>>;
 	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -182,7 +147,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		},
 		{
 			cellRenderer: "sshCellRenderer",
-			field: "ipAddress",
+			field: "ipv4Address",
 			filter: true,
 			headerName: "Network IP",
 			hide: false,
@@ -283,20 +248,39 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.servers = this.api.getServers();
-		// this.api.getServers().subscribe(
-		// 	(r: Array<Server>) => {
-		// 		this.servers = r || [];
-		// 	}
-		// );
-
-		// this.userSubscription = this.auth.currentUser.subscribe(
-		// 	u => {
-		// 		if (u && u.username) {
-		// 			this.components.sshCellRenderer = new SSHCellRenderer(u.username);
-		// 		}
-		// 	}
-		// );
+		this.servers = this.api.getServers().pipe(map(
+			x => {
+				return x.map(
+					s => {
+						const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
+						let inf: Interface;
+						try {
+							inf = serviceInterface(aug.interfaces);
+						} catch (e) {
+							console.error(`server #${s.id}:`, e);
+							return aug;
+						}
+						for (const ip of inf.ipAddresses) {
+							if (!ip.serviceAddress) {
+								continue;
+							}
+							if (IPV4.test(ip.address)) {
+								if (aug.ipv4Address !== "") {
+									console.warn("found more than one IPv4 service address for server:", s.id);
+								}
+								aug.ipv4Address = ip.address;
+							} else {
+								if (aug.ipv6Address !== "") {
+									console.warn("found more than one IPv6 service address for server:", s.id);
+								}
+								aug.ipv6Address = ip.address;
+							}
+						}
+						return aug;
+					}
+				);
+			}
+		));
 
 		this.route.queryParamMap.subscribe(
 			m => {
