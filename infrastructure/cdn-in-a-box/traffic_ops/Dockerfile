@@ -73,7 +73,9 @@ RUN yum install -y          \
         postgresql96-devel  \
         postgresql96-libs   \
         tar &&              \
-    yum -y clean all && mkdir -p /opt/traffic_ops/app/public
+    yum -y clean all && \
+    mkdir -p /opt/traffic_ops/app/public && \
+    cpanm Carton
 
 ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
 
@@ -82,8 +84,7 @@ ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 
 # Start with the existing traffic_ops/app/local directory
 COPY infrastructure/cdn-in-a-box/traffic_ops/local local
-RUN cpanm Carton && \
-    export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
+RUN export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
     echo 'Running carton...' && \
     [[ -d "${PERL5LIB}/x86_64-linux-thread-multi" ]]; existing_install=$? && \
     if ! carton && [[ $existing_install -eq 0 ]]; then \
