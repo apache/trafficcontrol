@@ -33,7 +33,7 @@ docker_compose='docker-compose -f ./docker-compose.yml -f ./docker-compose.readi
 $docker_compose up -d $logged_services $other_services;
 $docker_compose logs -f $logged_services &
 # Copy built Perl modules for caching
-docker cp "$(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local" "${GITHUB_WORKSPACE}/traffic_ops/app" &
+docker cp "$(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local" "${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box/traffic_ops" &
 
 echo 'Waiting for the readiness container to exit...';
 if ! timeout 12m $docker_compose logs -f readiness >/dev/null; then
