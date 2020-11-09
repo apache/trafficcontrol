@@ -40,7 +40,7 @@ RUN set -o nounset -o errexit && \
     else \
         use_repo='--repo=pgdg96'; \
     fi; \
-    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
     dnf -y $use_repo -- install postgresql96; \
     dnf -y install epel-release; \
     dnf -y install      \
