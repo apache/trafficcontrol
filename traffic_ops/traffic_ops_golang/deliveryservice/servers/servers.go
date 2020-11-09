@@ -368,7 +368,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 
 	ds, ok, err := GetDSInfo(inf.Tx.Tx, *dsId)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryserviceserver getting delivery service info for ID %d: %v", *dsId, err))
 		return
 	}
 	if !ok {
@@ -381,7 +381,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	serverInfos, err := dbhelpers.GetServerInfosFromIDs(inf.Tx.Tx, servers)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
@@ -439,7 +439,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	ds, ok, err := GetDSInfoByName(inf.Tx.Tx, dsName)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("ds servers getting delivery service info for xmlID %s: %v", dsName, err))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
@@ -457,7 +457,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	serverInfos, err := dbhelpers.GetServerInfosFromHostNames(inf.Tx.Tx, serverNames)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
@@ -517,17 +517,17 @@ func validateDSS(tx *sql.Tx, ds DSInfo, servers []tc.ServerInfo) (error, error, 
 	}
 	for _, s := range servers {
 		if s.Type != tc.OriginTypeName {
-			return errors.New("only servers of type ORG may be assigned to topology-based delivery services"), nil, http.StatusBadRequest
+			return fmt.Errorf("only servers of type %s may be assigned to topology-based delivery services", tc.OriginTypeName), nil, http.StatusBadRequest
 		}
 	}
 
 	cachegroups, sysErr := dbhelpers.GetTopologyCachegroups(tx, *ds.Topology)
 	if sysErr != nil {
-		return nil, fmt.Errorf("validating ORG servers in topology %s: %v", *ds.Topology, sysErr), http.StatusInternalServerError
+		return nil, fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, sysErr), http.StatusInternalServerError
 	}
 	userErr := CheckServersInCachegroups(servers, cachegroups)
 	if userErr != nil {
-		return fmt.Errorf("validating ORG servers in topology %s: %v", *ds.Topology, userErr), nil, http.StatusBadRequest
+		return fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, userErr), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }

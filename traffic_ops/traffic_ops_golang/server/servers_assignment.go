@@ -145,7 +145,7 @@ FROM
   deliveryservice ds
   JOIN topology_cachegroup tc ON tc.topology = ds.topology
 WHERE
-  ds.id = ANY($1::bigint[])
+  ds.id = ANY($1::BIGINT[])
 GROUP BY ds.xml_id, tc.topology
 HAVING NOT ($2 = ANY(ARRAY_AGG(tc.cachegroup)))
 `
@@ -166,7 +166,7 @@ HAVING NOT ($2 = ANY(ARRAY_AGG(tc.cachegroup)))
 		invalid = append(invalid, fmt.Sprintf("%s (%s)", topology, xmlID))
 	}
 	if len(invalid) > 0 {
-		return fmt.Errorf("ORG server cachegroup (%s) not found in the following topologies: %s", originCachegroup, strings.Join(invalid, ", ")), nil, http.StatusBadRequest
+		return fmt.Errorf("%s server cachegroup (%s) not found in the following topologies: %s", tc.OriginTypeName, originCachegroup, strings.Join(invalid, ", ")), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }
