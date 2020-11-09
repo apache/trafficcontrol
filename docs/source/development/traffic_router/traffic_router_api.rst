@@ -150,7 +150,8 @@ Response Structure
 	},
 	"locationByFederation": "not found",
 	"requestIp": "69.241.118.34",
-	"locationByCoverageZone": "not found"
+	"locationByCoverageZone": "not found",
+	"locationByDeepCoverageZone": "not found"
 	}
 
 .. _tr-api-crs-locations:
