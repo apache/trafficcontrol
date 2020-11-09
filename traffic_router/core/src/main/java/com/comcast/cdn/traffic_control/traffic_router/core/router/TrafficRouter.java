@@ -1349,6 +1349,27 @@ public class TrafficRouter {
 		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false, null, requestVersion); // default is not deep
 	}
 
+	/**
+	 * Finds the deep coverage zone location information for a give IP address.
+	 * @param ip
+	 * @return deep coverage zone location
+	 */
+	public CacheLocation getDeepCoverageZoneLocationByIP(final String ip) {
+		final NetworkNode networkNode = getDeepNetworkNode(ip);
+
+		if (networkNode == null) {
+			return null;
+		}
+
+		final CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
+
+		if (cacheLocation != null) {
+			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
+		}
+
+		return cacheLocation;
+	}
+
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep, final Track track, final IPVersions requestVersion) {
 		final NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
