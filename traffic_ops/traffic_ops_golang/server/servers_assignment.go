@@ -112,6 +112,12 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+		if strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
+			if userErr, sysErr, status := checkOriginInTopologies(inf.Tx.Tx, serverInfo.Cachegroup, dsList); userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+				return
+			}
+		}
 	}
 
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
@@ -124,6 +130,45 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+// checkOriginInTopologies checks to make sure the given ORG server's cachegroup belongs
+// to the topologies of the given delivery services.
+func checkOriginInTopologies(tx *sql.Tx, originCachegroup string, dsList []int) (error, error, int) {
+	// get the delivery services that don't have originCachegroup in their topology
+	q := `
+SELECT
+  ds.xml_id,
+  tc.topology,
+  ARRAY_AGG(tc.cachegroup)
+FROM
+  deliveryservice ds
+  JOIN topology_cachegroup tc ON tc.topology = ds.topology
+WHERE
+  ds.id = ANY($1::BIGINT[])
+GROUP BY ds.xml_id, tc.topology
+HAVING NOT ($2 = ANY(ARRAY_AGG(tc.cachegroup)))
+`
+	rows, err := tx.Query(q, pq.Array(dsList), originCachegroup)
+	if err != nil {
+		return nil, errors.New("querying deliveryservice topologies: " + err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+
+	invalid := []string{}
+	for rows.Next() {
+		xmlID := ""
+		topology := ""
+		cachegroups := []string{}
+		if err := rows.Scan(&xmlID, &topology, pq.Array(&cachegroups)); err != nil {
+			return nil, errors.New("scanning deliveryservice topologies: " + err.Error()), http.StatusInternalServerError
+		}
+		invalid = append(invalid, fmt.Sprintf("%s (%s)", topology, xmlID))
+	}
+	if len(invalid) > 0 {
+		return fmt.Errorf("%s server cachegroup (%s) not found in the following topologies: %s", tc.OriginTypeName, originCachegroup, strings.Join(invalid, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
 }
 
 func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.ServerInfo, dsList []int, user *auth.CurrentUser) (int, error, error) {
