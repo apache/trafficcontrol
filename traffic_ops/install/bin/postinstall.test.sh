@@ -32,7 +32,16 @@ mkdir "$ROOT_DIR/etc/pki/tls/private";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/public/routing";
 mkdir "$ROOT_DIR/opt/traffic_ops/app/db";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
-echo "{\"hypnotoad\":{\"listen\":[\"https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key\"]}}" > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf";
+cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
+{
+	"hypnotoad": {
+		"listen": [
+			"https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key"
+		]
+	}
+}
+EOF
+
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
