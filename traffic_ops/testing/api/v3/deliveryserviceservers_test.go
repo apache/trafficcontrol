@@ -31,6 +31,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		DeleteTestDeliveryServiceServers(t)
 		AssignServersToTopologyBasedDeliveryService(t)
+		AssignOriginsToTopologyBasedDeliveryServices(t)
 		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
 	})
 }
@@ -55,8 +56,8 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
-	serversResp, _, err := TOSession.GetServers(nil)
-	servers := []tc.ServerNullable{}
+	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	servers := []tc.ServerV30{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
 			servers = append(servers, s)
@@ -67,7 +68,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	}
 	serverNames := []string{}
 	for _, s := range servers {
-		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() && s.HostName != nil {
+		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
 			serverNames = append(serverNames, *s.HostName)
 		} else {
 			t.Fatalf("expected only EDGE servers in cdn '%s', actual: %v", *ds[0].CDNName, servers)
@@ -89,6 +90,75 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("creating deliveryserviceserver assignment for topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 }
+
+func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
+	// attempt to assign ORG server to a topology-based DS while the ORG server's cachegroup doesn't belong to the topology
+	params := url.Values{}
+	params.Add("hostName", "denver-mso-org-01")
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("unable to GET server: %v", err)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("GET server expected length: 1, actual: %d", len(resp.Response))
+	}
+	orgServer := resp.Response[0]
+	_, reqInf, err := TOSession.AssignServersToDeliveryService([]string{*orgServer.HostName}, "ds-top-req-cap")
+	if err == nil {
+		t.Fatal("assigning ORG server to topology-based delivery service while the ORG server's cachegroup does not belong to the topology - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning ORG server to topology-based delivery service while the ORG server's cachegroup does not belong to the topology - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+	params = url.Values{}
+	params.Set("xmlId", "ds-top-req-cap")
+	ds, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service 'ds-top-req-cap': %s", err.Error())
+	}
+	if len(ds) != 1 {
+		t.Fatalf("expected one delivery service: 'ds-top-req-cap', actual: %v", len(ds))
+	}
+	if ds[0].Topology == nil {
+		t.Fatal("expected delivery service: 'ds-top-req-cap' to have a non-nil Topology, actual: nil")
+	}
+	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{*orgServer.ID}, false)
+	if err == nil {
+		t.Fatal("creating deliveryserviceserver assignment for ORG server to topology-based delivery service while the ORG server's cachegroup does not belong to the topology - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("creating deliveryserviceserver assignment for ORG server to topology-based delivery service while the ORG server's cachegroup does not belong to the topology - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+
+	// attempt to assign ORG server to a topology-based DS while the ORG server's cachegroup belongs to the topology
+	_, reqInf, err = TOSession.AssignServersToDeliveryService([]string{*orgServer.HostName}, "ds-top")
+	if err != nil {
+		t.Fatalf("assigning ORG server to topology-based delivery service while the ORG server's cachegroup belongs to the topology - expected: no error, actual: %v", err)
+	}
+	if reqInf.StatusCode < http.StatusOK || reqInf.StatusCode >= http.StatusMultipleChoices {
+		t.Fatalf("assigning ORG server to topology-based delivery service while the ORG server's cachegroup belongs to the topology - expected: 200-level status code, actual: %d", reqInf.StatusCode)
+	}
+	params = url.Values{}
+	params.Set("xmlId", "ds-top")
+	ds, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
+	}
+	if len(ds) != 1 {
+		t.Fatalf("expected one delivery service: 'ds-top', actual: %v", len(ds))
+	}
+	if ds[0].Topology == nil {
+		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
+	}
+	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{*orgServer.ID}, true)
+	if err != nil {
+		t.Fatalf("creating deliveryserviceserver assignment for ORG server to topology-based delivery service while the ORG server's cachegroup belongs to the topology - expected: no error, actual: %v", err)
+	}
+	if reqInf.StatusCode < http.StatusOK || reqInf.StatusCode >= http.StatusMultipleChoices {
+		t.Fatalf("creating deliveryserviceserver assignment for ORG server to topology-based delivery service while the ORG server's cachegroup belongs to the topology - expected: 200-level status code, actual: %d", reqInf.StatusCode)
+	}
+}
+
 func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T) {
 	params := url.Values{}
 	params.Set("xmlId", "ds1")
@@ -178,7 +248,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
-			resp, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
@@ -213,7 +283,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestMSODSServerWithReqCap(t *testing.T) {
-	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil)
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("msods1"), nil, nil)
 	if err != nil {
 		t.Fatalf("GET delivery service required capabilites: %v", err)
 	}
@@ -226,7 +296,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// TODO: DON'T hard-code server hostnames!
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("GET server denver-mso-org-01: %v", err)
 	}
@@ -241,7 +311,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Make sure server has no caps to ensure test correctness
-	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil)
+	sccs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(s.ID, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v", err)
 	}
@@ -250,7 +320,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
-	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID)
+	eServers, _, err := TOSession.GetDeliveryServicesEligibleWithHdr(*dsReqCap[0].DeliveryServiceID, nil)
 	if err != nil {
 		t.Fatalf("GET delivery service msods1 eligible servers: %v", err)
 	}
@@ -307,7 +377,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	dsServers, _, err := TOSession.GetDeliveryServiceServers()
+	dsServers, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}
@@ -327,7 +397,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
-	dsServers, _, err = TOSession.GetDeliveryServiceServers()
+	dsServers, _, err = TOSession.GetDeliveryServiceServersWithHdr(nil)
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}
@@ -344,8 +414,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.ServerNullable) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.ServerV30) {
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -353,7 +423,7 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.Serve
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	resp, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServersWithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Servers: %v", err)
 	}
@@ -371,5 +441,5 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.Serve
 	}
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
-	return tc.DeliveryServiceNullable{}, tc.ServerNullable{}
+	return tc.DeliveryServiceNullableV30{}, tc.ServerV30{}
 }

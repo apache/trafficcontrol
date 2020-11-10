@@ -35,6 +35,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.PropertiesAndCaches;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -117,12 +118,19 @@ public class DataExporter {
 			final List<Object> federationsList = federationExporter.getMatchingFederations(cidrAddress);
 
 			if (federationsList.isEmpty()) {
-				map.put("locationByFederation", "not found");
+				map.put("locationByFederation", NOT_FOUND_MESSAGE);
 			} else {
 				map.put("locationByFederation", federationsList);
 			}
 		} catch (NetworkNodeException e) {
 			map.put("locationByFederation", NOT_FOUND_MESSAGE);
+		}
+
+		final CacheLocation clFromDCZ = trafficRouterManager.getTrafficRouter().getDeepCoverageZoneLocationByIP(ip);
+		if (clFromDCZ != null) {
+			map.put("locationByDeepCoverageZone", new PropertiesAndCaches(clFromDCZ));
+		} else {
+			map.put("locationByDeepCoverageZone", NOT_FOUND_MESSAGE);
 		}
 
 		return map;

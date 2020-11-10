@@ -111,16 +111,12 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}
-		servers := resp.Response
+		servers := resp
 		if len(servers) != 1 {
 			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}
 		server := servers[0]
-		if server.ID == nil {
-			t.Errorf("Server %s had nil ID", serverName)
-			continue
-		}
-		serverID := *server.ID
+		serverID := server.ID
 
 		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(serverID)
 

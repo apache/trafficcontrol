@@ -49,7 +49,7 @@ The image that takes the takes the longest to build is the ``trafficops-perl`` i
 .. code-block:: shell
 	:caption: Make a local copy of CPAN modules used by Traffic Ops Perl
 
-	docker cp $(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local ../../traffic_ops/app
+	docker cp $(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local traffic_ops
 
 Usage
 -----

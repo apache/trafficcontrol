@@ -26,9 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/jmoiron/sqlx"
 
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -39,14 +38,14 @@ func TestValidateDSSAssignments(t *testing.T) {
 		ID:    0,
 		CDNID: &cdnID,
 	}
-	var servers []dbhelpers.ServerHostNameCDNIDAndType
-	server := dbhelpers.ServerHostNameCDNIDAndType{
+	var servers []tc.ServerInfo
+	server := tc.ServerInfo{
 		HostName: "serverHost",
 		CDNID:    0,
 		Type:     "",
 	}
 	servers = append(servers, server)
-	userErr := ValidateDSSAssignments(ds, servers)
+	userErr, _, _ := validateDSS(nil, ds, servers)
 	if userErr == nil {
 		t.Fatalf("Expected user error with mismatching ds and server CDN IDs, got no error instead")
 	}
@@ -54,7 +53,7 @@ func TestValidateDSSAssignments(t *testing.T) {
 		t.Errorf("Expected error details %v, got %v", expected, userErr.Error())
 	}
 	servers[0].CDNID = 1
-	userErr = ValidateDSSAssignments(ds, servers)
+	userErr, _, _ = validateDSS(nil, ds, servers)
 	if userErr != nil {
 		t.Fatalf("Expected no user error, got %v", userErr.Error())
 	}

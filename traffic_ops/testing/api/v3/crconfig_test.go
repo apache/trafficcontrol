@@ -55,11 +55,11 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
-	servers := resp.Response
+	servers := resp
 	serverID := 0
 	for _, server := range servers {
-		if server.Type == "EDGE" && server.CDNName != nil && *server.CDNName == "cdn1" && server.ID != nil {
-			serverID = *server.ID
+		if server.Type == "EDGE" && server.CDNName == "cdn1" {
+			serverID = server.ID
 			break
 		}
 	}

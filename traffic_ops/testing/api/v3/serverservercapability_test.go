@@ -312,8 +312,8 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 	// dtrc-edge-01 and dtrc-edge-02 (capabilities = ram, disk) are assigned to
 	// ds-top-req-cap (topology = top-for-ds-req; required capabilities = ram, disk) and
 	// ds-top-req-cap2 (topology = top-for-ds-req2; required capabilities = ram)
-	var edge1 tc.ServerNullable
-	var edge2 tc.ServerNullable
+	var edge1 tc.ServerV30
+	var edge2 tc.ServerV30
 
 	servers, _, err := TOSession.GetServersWithHdr(nil, nil)
 	if err != nil {

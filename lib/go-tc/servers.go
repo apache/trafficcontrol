@@ -34,7 +34,7 @@ import (
 
 // ServersV3Response is the format of a response to a GET request for /servers.
 type ServersV3Response struct {
-	Response []ServerNullable `json:"response"`
+	Response []ServerV30 `json:"response"`
 	Summary  struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
@@ -348,6 +348,9 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 	return legacyDetails, errors.New("no service addresses found")
 }
 
+// Server is a non-"nullable" representation of a Server as it appeared in API
+// version 2.0
+// Deprecated: Please use versioned and nullable structures from now on.
 type Server struct {
 	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     int                 `json:"cachegroupId" db:"cachegroup_id"`
@@ -574,11 +577,97 @@ func (s Server) ToNullable() ServerNullableV2 {
 	}
 }
 
+func coerceBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+func coerceInt(i *int) int {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func coerceString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+// ToNonNullable converts the ServerNullableV2 safely to a Server structure.
+func (s ServerNullableV2) ToNonNullable() Server {
+	ret := Server{
+		Cachegroup:     coerceString(s.Cachegroup),
+		CachegroupID:   coerceInt(s.CachegroupID),
+		CDNID:          coerceInt((s.CDNID)),
+		CDNName:        coerceString(s.CDNName),
+		DomainName:     coerceString(s.DomainName),
+		FQDN:           s.FQDN,
+		FqdnTime:       s.FqdnTime,
+		GUID:           coerceString(s.GUID),
+		HostName:       coerceString(s.HostName),
+		HTTPSPort:      coerceInt(s.HTTPSPort),
+		ID:             coerceInt(s.ID),
+		ILOIPAddress:   coerceString(s.ILOIPAddress),
+		ILOIPGateway:   coerceString(s.ILOIPGateway),
+		ILOIPNetmask:   coerceString(s.ILOIPNetmask),
+		ILOPassword:    coerceString(s.ILOPassword),
+		ILOUsername:    coerceString(s.ILOUsername),
+		InterfaceMtu:   coerceInt(s.InterfaceMtu),
+		InterfaceName:  coerceString(s.InterfaceName),
+		IP6Address:     coerceString(s.IP6Address),
+		IP6IsService:   coerceBool(s.IP6IsService),
+		IP6Gateway:     coerceString(s.IP6Gateway),
+		IPAddress:      coerceString(s.IPAddress),
+		IPIsService:    coerceBool(s.IPIsService),
+		IPGateway:      coerceString(s.IPGateway),
+		IPNetmask:      coerceString(s.IPNetmask),
+		MgmtIPAddress:  coerceString(s.MgmtIPAddress),
+		MgmtIPGateway:  coerceString(s.MgmtIPGateway),
+		MgmtIPNetmask:  coerceString(s.MgmtIPNetmask),
+		OfflineReason:  coerceString(s.OfflineReason),
+		PhysLocation:   coerceString(s.PhysLocation),
+		PhysLocationID: coerceInt(s.PhysLocationID),
+		Profile:        coerceString(s.Profile),
+		ProfileDesc:    coerceString(s.ProfileDesc),
+		ProfileID:      coerceInt(s.ProfileID),
+		Rack:           coerceString(s.Rack),
+		RevalPending:   coerceBool(s.RevalPending),
+		RouterHostName: coerceString(s.RouterHostName),
+		RouterPortName: coerceString(s.RouterPortName),
+		Status:         coerceString(s.Status),
+		StatusID:       coerceInt(s.StatusID),
+		TCPPort:        coerceInt(s.TCPPort),
+		Type:           s.Type,
+		TypeID:         coerceInt(s.TypeID),
+		UpdPending:     coerceBool(s.UpdPending),
+		XMPPID:         coerceString(s.XMPPID),
+		XMPPPasswd:     coerceString(s.XMPPPasswd),
+	}
+
+	if s.DeliveryServices == nil {
+		ret.DeliveryServices = nil
+	} else {
+		ret.DeliveryServices = *s.DeliveryServices
+	}
+
+	if s.LastUpdated == nil {
+		ret.LastUpdated = TimeNoMod{}
+	} else {
+		ret.LastUpdated = *s.LastUpdated
+	}
+
+	return ret
+}
+
 // Upgrade upgrades the ServerNullableV2 to the new ServerNullable structure.
 //
 // Note that this makes "shallow" copies of all underlying data, so changes to
 // the original will affect the upgraded copy.
-func (s ServerNullableV2) Upgrade() (ServerNullable, error) {
+func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -588,7 +677,7 @@ func (s ServerNullableV2) Upgrade() (ServerNullable, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 
-	upgraded := ServerNullable{
+	upgraded := ServerV30{
 		CommonServerProperties: s.CommonServerProperties,
 	}
 
@@ -650,11 +739,12 @@ type ServerPutStatus struct {
 }
 
 type ServerInfo struct {
-	CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID        int    `json:"cdnId" db:"cdn_id"`
-	DomainName   string `json:"domainName" db:"domain_name"`
-	HostName     string `json:"hostName" db:"host_name"`
-	Type         string `json:"type" db:"server_type"`
+	Cachegroup   string
+	CachegroupID int
+	CDNID        int
+	DomainName   string
+	HostName     string
+	Type         string
 }
 
 type ServerDetail struct {

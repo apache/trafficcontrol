@@ -527,36 +527,6 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
-// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
-func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
-	q := `
-SELECT
-  s.cachegroup as cachegroup_id,
-  s.cdn_id as cdn_id,
-  s.domain_name as domain_name,
-  s.host_name as host_name,
-  t.name as server_type
-FROM
-  server s
-JOIN type t ON s.type = t.id
-WHERE s.id = $1
-`
-	row := tc.ServerInfo{}
-	if err := tx.QueryRow(q, serverID).Scan(
-		&row.CachegroupID,
-		&row.CDNID,
-		&row.DomainName,
-		&row.HostName,
-		&row.Type,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return row, false, nil
-		}
-		return row, false, fmt.Errorf("querying server id %d: %v", serverID, err.Error())
-	}
-	return row, true, nil
-}
-
 // GetServerInterfaces, given the IDs of one or more servers, returns all of their network
 // interfaces mapped by their ids, or an error if one occurs during retrieval.
 func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfo, error) {
@@ -708,68 +678,70 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
-type ServerHostNameCDNIDAndType struct {
-	HostName string
-	CDNID    int
-	Type     string
-}
-
-// GetServerHostNamesAndTypesFromIDs returns the server's hostname, cdn ID and associated type name
-func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameCDNIDAndType, error) {
-	qry := `
+// language=sql
+const getServerInfoBaseQuery = `
 SELECT
+  s.cachegroup,
+  c.name,
   s.host_name,
+  s.domain_name,
   s.cdn_id,
   t.name
 FROM
   server s JOIN type t ON s.type = t.id
-WHERE
-  s.id = ANY($1)
+  JOIN cachegroup c on s.cachegroup = c.id
+`
+
+// GetServerInfosFromIDs returns the ServerInfo structs of the given server IDs or an error if any occur.
+func GetServerInfosFromIDs(tx *sql.Tx, ids []int) ([]tc.ServerInfo, error) {
+	qry := getServerInfoBaseQuery + `
+WHERE s.id = ANY($1)
 `
 	rows, err := tx.Query(qry, pq.Array(ids))
 	if err != nil {
-		return nil, errors.New("querying server host names and types: " + err.Error())
+		return nil, errors.New("querying server info: " + err.Error())
 	}
-	defer log.Close(rows, "error closing rows")
+	return scanServerInfoRows(rows)
+}
 
-	servers := []ServerHostNameCDNIDAndType{}
+// GetServerInfosFromHostNames returns the ServerInfo structs of the given server host names or an error if any occur.
+func GetServerInfosFromHostNames(tx *sql.Tx, hostNames []string) ([]tc.ServerInfo, error) {
+	qry := getServerInfoBaseQuery + `
+WHERE s.host_name = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(hostNames))
+	if err != nil {
+		return nil, errors.New("querying server info: " + err.Error())
+	}
+	return scanServerInfoRows(rows)
+}
+
+func scanServerInfoRows(rows *sql.Rows) ([]tc.ServerInfo, error) {
+	defer log.Close(rows, "error closing rows")
+	servers := []tc.ServerInfo{}
 	for rows.Next() {
-		s := ServerHostNameCDNIDAndType{}
-		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
-			return nil, errors.New("scanning server host name and type: " + err.Error())
+		s := tc.ServerInfo{}
+		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type); err != nil {
+			return nil, errors.New("scanning server info: " + err.Error())
 		}
 		servers = append(servers, s)
 	}
 	return servers, nil
 }
 
-// GetServerTypesCdnIdFromHostNames returns the host names, server cdn and types of the given server host names or an error if any occur.
-func GetServerTypesCdnIdFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameCDNIDAndType, error) {
-	qry := `
-SELECT
-  s.host_name,
-  s.cdn_id,
-  t.name
-FROM
-  server s JOIN type t ON s.type = t.id
-WHERE
-  s.host_name = ANY($1)
-`
-	rows, err := tx.Query(qry, pq.Array(hostNames))
+// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
+func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
+	servers, err := GetServerInfosFromIDs(tx, []int{serverID})
 	if err != nil {
-		return nil, errors.New("querying server host names and types: " + err.Error())
+		return tc.ServerInfo{}, false, fmt.Errorf("getting server info: %v", err)
 	}
-	defer log.Close(rows, "error closing rows")
-
-	servers := []ServerHostNameCDNIDAndType{}
-	for rows.Next() {
-		s := ServerHostNameCDNIDAndType{}
-		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
-			return nil, errors.New("scanning server host name and type: " + err.Error())
-		}
-		servers = append(servers, s)
+	if len(servers) == 0 {
+		return tc.ServerInfo{}, false, nil
 	}
-	return servers, nil
+	if len(servers) != 1 {
+		return tc.ServerInfo{}, false, fmt.Errorf("getting server info - expected row count: 1, actual: %d", len(servers))
+	}
+	return servers[0], true, nil
 }
 
 func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
@@ -865,6 +837,20 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 		err = fmt.Errorf("querying topologies: %s", err)
 	}
 	return count > 0, err
+}
+
+// GetTopologyCachegroups returns the set of cachegroup names for the given topology.
+func GetTopologyCachegroups(tx *sql.Tx, name string) ([]string, error) {
+	q := `
+	SELECT ARRAY_AGG(tc.cachegroup)
+	FROM topology_cachegroup tc
+	WHERE tc.topology = $1
+	`
+	cachegroups := []string{}
+	if err := tx.QueryRow(q, name).Scan(pq.Array(&cachegroups)); err != nil {
+		return nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+	}
+	return cachegroups, nil
 }
 
 // GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
