@@ -83,7 +83,7 @@ POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 # Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
 # OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
-class Question():
+class Question:
 	"""
 	Question represents a single question to be asked of the user, to determine a configuration
 	value.
@@ -155,7 +155,7 @@ class User(typing.NamedTuple):
 	#: The user's password - IN PLAINTEXT.
 	password: str
 
-class SSLConfig():
+class SSLConfig:
 	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
 
 	def __init__(self, gen_cert: bool, cfg_map: typing.Dict[str, str]):
@@ -723,7 +723,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	logging.info(log_msg, certpath)
 
 	cdn_conf_path = os.path.join(root, "opt/traffic_ops/app/conf/cdn.conf")
-	cdn_conf = None
+
 	try:
 		with open(cdn_conf_path) as conf_file:
 			cdn_conf = json.load(conf_file)
@@ -1055,7 +1055,6 @@ no_database: bool
 			return 1
 		return 0
 
-	user_input = None
 	if not cfile:
 		logging.info("No input file given - using defaults")
 		user_input = DEFAULTS
