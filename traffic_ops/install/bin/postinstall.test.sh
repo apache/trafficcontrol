@@ -254,7 +254,8 @@ if grep -q 'ERROR' $ROOT_DIR/stderr; then
 fi
 
 USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
-USERS_TEST="
+
+/usr/bin/python3 <<EOF
 import json
 import sys
 
@@ -288,9 +289,7 @@ if not password.startswith('SCRYPT:16384:8:1:') or len(password.split(':')) != 6
 	exit(1)
 
 exit(0)
-"
-
-/usr/bin/python3 -c "$USERS_TEST";
+EOF
 
 POST_INSTALL_JSON="$ROOT_DIR/opt/traffic_ops/install/data/json/post_install.json";
 if [[ "$(cat $POST_INSTALL_JSON)" != "{}" ]]; then
