@@ -246,7 +246,7 @@ EOF
 
 "$MY_DIR/postinstall.py" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(whoami)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
 
-if [[ ! -z "$(grep 'ERROR' $ROOT_DIR/stderr)" ]]; then
+if grep -q 'ERROR' $ROOT_DIR/stderr; then
 	echo "Errors found in script logs" >&2;
 	cat "$ROOT_DIR/stderr";
 	cat "$ROOT_DIR/stdout";
