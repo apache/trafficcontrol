@@ -23,7 +23,7 @@ if [[ ! -x /usr/bin/python3 ]]; then
 	exit 1;
 fi
 
-ROOT_DIR="$(mktemp -d)";
+readonly ROOT_DIR="$(mktemp -d)";
 
 trap 'rm -rf $ROOT_DIR' EXIT;
 
@@ -45,7 +45,7 @@ EOF
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
-MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+readonly MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )";
 
 cat <<- EOF > "$ROOT_DIR/defaults.json"
 {
@@ -262,7 +262,7 @@ if grep -q 'ERROR' $ROOT_DIR/stderr; then
 	exit 1;
 fi
 
-USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
+readonly USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
 
 /usr/bin/python3 <<EOF
 import json
@@ -300,29 +300,29 @@ if not password.startswith('SCRYPT:16384:8:1:') or len(password.split(':')) != 6
 exit(0)
 EOF
 
-POST_INSTALL_JSON="$ROOT_DIR/opt/traffic_ops/install/data/json/post_install.json";
+readonly POST_INSTALL_JSON="$ROOT_DIR/opt/traffic_ops/install/data/json/post_install.json";
 if [[ "$(cat $POST_INSTALL_JSON)" != "{}" ]]; then
 	echo "Incorrect post_install.json, expected: {}, got: $(cat $POST_INSTALL_JSON)" >&2;
 	exit 1;
 fi
 
-PROFILES_JSON_EXPECTED="{
+readonly PROFILES_JSON_EXPECTED="{
 	\"tm.url\": \"https://localhost\",
 	\"cdn_name\": \"kabletown_cdn\",
 	\"dns_subdomain\": \"cdn1.kabletown.net\"
 }";
 
-PROFILES_JSON_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/install/data/json/profiles.json)";
+readonly PROFILES_JSON_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/install/data/json/profiles.json)";
 if [[ "$PROFILES_JSON_ACTUAL" != "$PROFILES_JSON_EXPECTED" ]]; then
 	echo "Incorrect profiles.json, expected: $PROFILES_JSON_EXPECTED, got: $PROFILES_JSON_ACTUAL" >&2;
 	exit 1;
 fi
 
-DB_CONF_EXPECTED="production:
+readonly DB_CONF_EXPECTED="production:
     driver: postgres
     open: host=localhost port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable";
 
-DB_CONF_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/app/db/dbconf.yml)";
+readonly DB_CONF_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/app/db/dbconf.yml)";
 if [[ "$DB_CONF_ACTUAL" != "$DB_CONF_EXPECTED" ]]; then
 	echo "Incorrect dbconf.yml, expected:" >&2;
 	echo "$DB_CONF_EXPECTED" >&2;
@@ -331,7 +331,7 @@ if [[ "$DB_CONF_ACTUAL" != "$DB_CONF_EXPECTED" ]]; then
 	exit 1;
 fi
 
-CDN_CONF_TEST="
+/usr/bin/python3 <<EOF
 import json
 import string
 import sys
@@ -389,12 +389,9 @@ if conf['traffic_ops_golang']['log_location_event'] != '$ROOT_DIR/var/log/traffi
 	exit(1)
 
 exit(0)
-";
+EOF
 
-/usr/bin/python3 -c "$CDN_CONF_TEST";
-
-
-DATABASE_CONF_EXPECTED='{
+readonly DATABASE_CONF_EXPECTED='{
 	"type": "Pg",
 	"dbname": "traffic_ops",
 	"hostname": "localhost",
@@ -404,28 +401,28 @@ DATABASE_CONF_EXPECTED='{
 	"description": "Pg database on localhost:5432"
 }';
 
-DATABASE_CONF_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/app/conf/production/database.conf)";
+readonly DATABASE_CONF_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/app/conf/production/database.conf)";
 if [[ "$DATABASE_CONF_ACTUAL" != "$DATABASE_CONF_EXPECTED" ]]; then
 	echo "Incorrect database.conf, expected: $DATABASE_CONF_EXPECTED, got $DATABASE_CONF_ACTUAL" >&2;
 	exit 1;
 fi
 
-CSR_FILE="$ROOT_DIR/etc/pki/tls/certs/localhost.csr";
-CSR_FILE_TYPE="$(file $CSR_FILE)";
+readonly CSR_FILE="$ROOT_DIR/etc/pki/tls/certs/localhost.csr";
+readonly CSR_FILE_TYPE="$(file $CSR_FILE)";
 if [[ "$CSR_FILE_TYPE" != "$CSR_FILE: PEM certificate request" ]]; then
 	echo "Incorrect csr file, expected a PEM certificate request, got: $CSR_FILE_TYPE" >&2;
 	exit 1;
 fi
 
-CERT_FILE="$ROOT_DIR/etc/pki/tls/certs/localhost.crt";
-CERT_FILE_TYPE="$(file $CERT_FILE)";
+readonly CERT_FILE="$ROOT_DIR/etc/pki/tls/certs/localhost.crt";
+readonly CERT_FILE_TYPE="$(file $CERT_FILE)";
 if [[ "$CERT_FILE_TYPE" != "$CERT_FILE: PEM certificate" ]]; then
 	echo "Incorrect cert file, expected a PEM certificate, got: $CERT_FILE_TYPE" >&2;
 	exit 1;
 fi
 
-KEY_FILE="$ROOT_DIR/etc/pki/tls/private/localhost.key";
-KEY_FILE_TYPE="$(file $KEY_FILE)";
+readonly KEY_FILE="$ROOT_DIR/etc/pki/tls/private/localhost.key";
+readonly KEY_FILE_TYPE="$(file $KEY_FILE)";
 if [[ "$KEY_FILE_TYPE" != "$KEY_FILE: PEM RSA private key" ]]; then
 	echo "Incorrect key file, expected PEM RSA private key, got: $KEY_FILE_TYPE" >&2;
 	exit 1;
