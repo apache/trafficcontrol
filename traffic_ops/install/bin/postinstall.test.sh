@@ -47,6 +47,8 @@ mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
 readonly MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )";
 
+# defaults.json is used as input into the `--cfile` option of postinstall.py
+# for testing purposes
 cat <<- EOF > "$ROOT_DIR/defaults.json"
 {
 	"/opt/traffic_ops/app/conf/production/database.conf": [
