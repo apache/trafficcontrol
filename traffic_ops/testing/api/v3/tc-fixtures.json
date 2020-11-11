@@ -4218,12 +4218,16 @@
             "description": "a topology",
             "nodes": [
                 {
-                    "cachegroup": "dtrc1",
+                    "cachegroup": "multiOriginCachegroup",
                     "parents": []
                 },
                 {
-                    "cachegroup": "dtrc2",
+                    "cachegroup": "dtrc1",
                     "parents": [0]
+                },
+                {
+                    "cachegroup": "dtrc2",
+                    "parents": [1]
                 }
             ]
         }

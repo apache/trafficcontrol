@@ -343,7 +343,6 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 // EnsureTopologyBasedRequiredCapabilities ensures that at least one server per cachegroup
 // in this delivery service's topology has this delivery service's required capabilities.
 func EnsureTopologyBasedRequiredCapabilities(tx *sql.Tx, dsID int, topology string, requiredCapabilities []string) (error, error, int) {
-	// language=sql
 	q := `
 SELECT
   s.id,
@@ -357,6 +356,7 @@ JOIN topology_cachegroup tc ON tc.cachegroup = c.name
 WHERE
   s.cdn_id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)
   AND tc.topology = $2
+  AND c.type != (SELECT id FROM type WHERE name = '` + tc.CacheGroupOriginTypeName + `')
 GROUP BY s.id, s.cdn_id, c.name
 `
 	rows, err := tx.Query(q, dsID, topology)
