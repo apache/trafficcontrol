@@ -328,7 +328,6 @@ func (topology TOTopology) validateDSRequiredCapabilities() error {
 	for cdn := range cdnMap {
 		CDNs = append(CDNs, cdn)
 	}
-	// language=sql
 	q := `
 SELECT
   s.id,
@@ -341,6 +340,7 @@ JOIN cachegroup c ON c.id = s.cachegroup
 WHERE
   c.name = ANY($1)
   AND s.cdn_id = ANY($2)
+  AND c.type != (SELECT id FROM type WHERE name = '` + tc.CacheGroupOriginTypeName + `')
 GROUP BY s.id, s.cdn_id, c.name
 `
 	rows, err := tx.Query(q, pq.Array(cachegroups), pq.Array(CDNs))
