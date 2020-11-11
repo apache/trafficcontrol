@@ -77,6 +77,6 @@
       "write_timeout" : {{ to_go_write_timeout }},
       "supported_ds_metrics" : {{ to_go_supported_ds_metrics | to_json }},
       "plugins": {{ to_plugin_config.keys() | list | to_json }},
-      "plugin_config" : "{{ to_plugin_config | to_nice_json(indent=2) }}"
+      "plugin_config" : {{ to_plugin_config | to_nice_json(indent=2) }}
    }
 }
