@@ -54,7 +54,10 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
-		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
+		// Assign this server to a created cache-group, needed for Topologies tests
+		pageData.cachegroup.all(by.tagName("option")).then(function(options) {
+		    options[options.length-1].click();
+		});
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
@@ -123,9 +126,10 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(pageData.submitButton.isEnabled()).toBe(false);
 		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
 		expect(pageData.submitButton.isEnabled()).toBe(true);
-		pageData.submitButton.click();
-		element.all(by.css('tbody tr')).then(function(totalRows) {
-			expect(totalRows.length).toBe(1);
+		pageData.submitButton.click().then(function() {
+			element.all(by.css('tbody tr')).then(function(totalRows) {
+				expect(totalRows.length).toBe(1);
+			});
 		});
 	});
 
@@ -136,11 +140,4 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.viewDeliveryServicesMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/[0-9]+/delivery-services");
 	});
-
-	it('should ensure you cannot clone delivery service assignments because there are no delivery services assigned to the server', function() {
-		console.log('Ensure you cannot clone delivery service assignments for ' + mockVals.hostName);
-		pageData.moreBtn.click();
-		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
-	});
-
 });
