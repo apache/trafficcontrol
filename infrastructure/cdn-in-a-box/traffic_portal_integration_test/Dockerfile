@@ -26,14 +26,21 @@ RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
 # Installs the Google Chrome dnf repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
-RUN dnf install -y \
+RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+        utils_package=yum-utils; \
+    else \
+        utils_package=dnf-utils; \
+    fi && \
+    dnf install -y \
         bind-utils \
         # jq is in EPEL
         epel-release \
+        GConf2 \
         git \
         google-chrome-stable \
         java-1.8.0-openjdk \
-        net-tools && \
+        net-tools \
+        $utils_package && \
     dnf -y install jq && \
     dnf -y clean all
 
@@ -70,8 +77,8 @@ RUN jq ' \
     mv conf.json.tmp conf.json
 
 RUN webdriver-manager clean && \
-	repoquery --installed --qf='%{version}' google-chrome-stable | \
-		xargs webdriver-manager update --versions.chrome
+    repoquery --installed --qf='%{version}' google-chrome-stable | \
+        xargs webdriver-manager update --versions.chrome
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
      infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \
