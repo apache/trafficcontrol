@@ -1,0 +1,346 @@
+{
+	"cliOptions": {
+		"exclude": [
+			"e2e/**",
+			"dist/**"
+		]
+	},
+	"rules": {
+		"align": [
+			true,
+			"arguments",
+			"elements",
+			"members",
+			"parameters",
+			"statements"
+		],
+		"array-type": false,
+		"arrow-parens": false,
+		"arrow-return-shorthand": true,
+		"await-promise": true,
+		"callable-types": true,
+		"class-name": true,
+		"comment-format": [
+			true,
+			"check-space"
+		],
+		"completed-docs": [
+			true,
+			"\/\\*\n\\* Licensed under the Apache License, Version 2.0 (the \"License\");\n\\* you may not use this file except in compliance with the License.\n\\* You may obtain a copy of the License at\n\\*\n\\*      http://www.apache.org/licenses/LICENSE-2.0\n\\*\n\\* Unless required by applicable law or agreed to in writing, software\n\\* distributed under the License is distributed on an \"AS IS\" BASIS,\n\\* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n\\* See the License for the specific language governing permissions and\n\\* limitations under the License.\n\\*\/",
+			"\/*\n* Licensed under the Apache License, Version 2.0 (the \"License\");\n* you may not use this file except in compliance with the License.\n* You may obtain a copy of the License at\n*\n*      http://www.apache.org/licenses/LICENSE-2.0\n*\n* Unless required by applicable law or agreed to in writing, software\n* distributed under the License is distributed on an \"AS IS\" BASIS,\n* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n* See the License for the specific language governing permissions and\n* limitations under the License.\n*\/",
+			"enforce-trailing-newline",
+			{
+				"classes": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"enums": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			"enum-members",
+			{
+				"functions": {
+					"overloads": true,
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"interfaces": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"namespaces": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"types": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"variables": {
+					"visibilities": [
+					"exported"
+					]
+				}
+			},
+			{
+				"methods": {
+					"overloads": true,
+					"privacies": [
+					"public"
+					]
+				}
+			},
+			{
+				"properties": {
+					"privacies": [
+					"public"
+					]
+				}
+			}
+		],
+		"component-class-suffix": true,
+		"component-selector": [
+			true,
+			"element",
+			"",
+			"kebab-case"
+		],
+		"curly": true,
+		"deprecation": {
+			"severity": "warn"
+		},
+		"directive-class-suffix": true,
+		"directive-selector": [
+			true,
+			"attribute",
+			"",
+			"camelCase"
+		],
+		"encoding": true,
+		"eofline": true,
+		"forin": true,
+		"function-constructor": true,
+		"import-blacklist": [
+			true,
+			"rxjs/Rx"
+		],
+		"import-spacing": true,
+		"indent": [
+			true,
+			"tabs"
+		],
+		"interface-name": false,
+		"interface-over-type-literal": true,
+		"jsdoc-format": [
+			true,
+			"check-multiline-start"
+		],
+		"label-position": true,
+		"linebreak-style": [
+			true,
+			"LF"
+		],
+		"max-classes-per-file": false,
+		"max-line-length": [
+			true,
+			140
+		],
+		"member-access": true,
+		"member-ordering": [
+			true,
+			{
+				"order": [
+					"static-field",
+					"instance-field",
+					"static-method",
+					"instance-method"
+				]
+			}
+		],
+		"new-parens": true,
+		"no-angle-bracket-type-assertion": true,
+		"no-arg": true,
+		"no-boolean-literal-compare": true,
+		"no-conflicting-lifecycle": true,
+		"no-consecutive-blank-lines": false,
+		"no-console": [
+			true,
+			"info",
+			"time",
+			"timeEnd",
+			"trace"
+		],
+		"no-construct": true,
+		"no-debugger": true,
+		"no-duplicate-imports": true,
+		"no-duplicate-super": true,
+		"no-duplicate-switch-case": true,
+		"no-duplicate-variable": true,
+		"no-dynamic-delete": true,
+		"no-empty": true,
+		"no-empty-interface": true,
+		"no-eval": true,
+		"no-floating-promises": false,
+		"no-host-metadata-property": true,
+		"no-inferrable-types": [
+			true,
+			"ignore-params"
+		],
+		"no-inferred-empty-object-type": true,
+		"no-input-rename": true,
+		"no-inputs-metadata-property": true,
+		"no-invalid-template-strings": true,
+		"no-invalid-this": true,
+		"no-misused-new": true,
+		"no-non-null-assertion": true,
+		"no-output-native": true,
+		"no-output-on-prefix": true,
+		"no-output-rename": true,
+		"no-outputs-metadata-property": true,
+		"no-redundant-jsdoc": true,
+		"no-require-imports": true,
+		"no-reference": true,
+		"no-return-await": true,
+		"no-shadowed-variable": true,
+		"no-sparse-arrays": true,
+		"no-string-literal": true,
+		"no-string-throw": true,
+		"no-switch-case-fall-through": true,
+		"no-tautology-expression": true,
+		"no-this-assignment": true,
+		"no-trailing-whitespace": true,
+		"no-unnecessary-initializer": true,
+		"no-unnecessary-qualifier": false,
+		"no-unnecessary-type-assertion": true,
+		"no-unsafe-finally": true,
+		"no-unused-expression": true,
+		"no-unused-variable": true,
+		"no-use-before-declare": true,
+		"no-var-keyword": true,
+		"no-var-requires": false,
+		"number-literal-format": true,
+		"object-literal-key-quotes": [
+			true,
+			"as-needed"
+		],
+		"object-literal-sort-keys": true,
+		"one-line": [
+			true,
+			"check-open-brace",
+			"check-catch",
+			"check-else",
+			"check-whitespace"
+		],
+		"one-variable-per-declaration": true,
+		"ordered-imports": [
+			true,
+			{
+				"grouped-imports": true,
+				"groups": [
+					{
+						"name": "zone.js",
+						"match": "^zone.js",
+						"order": 0
+					},
+					{
+						"name": "Angular Packages",
+						"match": "^@(angular|nguniversal)",
+						"order": 10
+					},
+					{
+						"name": "RxJS Packages",
+						"match": "^rxjs",
+						"order": 20
+					},
+					{
+						"name": "NodeJS standard library",
+						"match": "^(assert|async_hooks|buffer|child_process|cluster|console|crypto|dgram|dns|domain|events|fs|http[2s]?|inspector|net|os|path|perf_hooks|process|punycode|querystring|readline|repl|stream|string_decoder|timers|tls|trace_events|tty|url|util|v[8m]|wasi|worker_threads|zlib)$",
+						"order": 25
+					},
+					{
+						"name": "NPM packages",
+						"match": "^[^\\.]",
+						"order": 27
+					},
+					{
+						"name": "Local Imports",
+						"match": "^\\./",
+						"order": 30
+					},
+					{
+						"name": "External Imports",
+						"match": "^\\.\\./",
+						"order": 40
+					}
+				],
+				"named-imports-order": "any"
+			}
+		],
+		"prefer-const": true,
+		"prefer-for-of": true,
+		"prefer-function-over-method": false,
+		"prefer-method-signature": true,
+		"prefer-object-spread": true,
+		"prefer-readonly": true,
+		"prefer-template": true,
+		"prefer-while": true,
+		"promise-function-async": true,
+		"quotemark": [
+			true,
+			"double",
+			"avoid-escape"
+		],
+		"radix": true,
+		"restrict-plus-operands": true,
+		"semicolon": [
+			true,
+			"always"
+		],
+		"static-this": true,
+		"trailing-comma": false,
+		"triple-equals": [
+			true,
+			"allow-null-check"
+		],
+		"type-literal-delimiter": [
+			true,
+			{
+				"singleLine": "always"
+			}
+		],
+		"typedef": [
+			true,
+			"array-destructuring",
+			"call-signature",
+			"member-variable",
+			"object-destructuring",
+			"parameter",
+			"property-declaration"
+		],
+		"unified-signatures": true,
+		"unnecessary-bind": true,
+		"unnecessary-constructor": true,
+		"unnecessary-else": true,
+		"use-default-type-parameter": true,
+		"use-isnan": true,
+		"use-pipe-transform-interface": true,
+		"variable-name": {
+			"options": [
+				"ban-keywords",
+				"check-format",
+				"require-const-for-all-caps"
+			]
+		},
+		"whitespace": [
+			true,
+			"check-decl",
+			"check-module",
+			"check-separator",
+			"check-rest-spread",
+			"check-type",
+			"check-typecast",
+			"check-type-operator"
+		]
+	},
+	"rulesDirectory": [
+		"codelyzer"
+	]
+}

@@ -36,14 +36,15 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-RUN curl -LO https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xvzf go1.14.2.linux-amd64.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
-    rm go1.14.2.linux-amd64.tar.gz
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+	tar -C /usr/local -xvzf go.tar.gz && \
+	ln -s /usr/local/go/bin/go /usr/bin/go && \
+	rm go.tar.gz
 
 ###
 
-ADD build/clean_build.sh /
-CMD /clean_build.sh traffic_stats
+CMD /trafficcontrol/build/clean_build.sh traffic_stats
 
 # vi:syntax=Dockerfile

@@ -427,6 +427,10 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	return params, intParams, nil, nil, 0
 }
 
+// ParseValidator objects can make use of api.Parse to handle parsing and
+// validating at the same time.
+//
+// TODO: Rework validation to be able to return system-level errors
 type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
@@ -993,4 +997,76 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	} else {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
+}
+
+// CheckIfUnModified checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
+// In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
+// error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
+func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
+	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
+	if err == nil && found == false {
+		return errors.New("no " + tableName + " found with this id"), nil, http.StatusNotFound
+	}
+	if err != nil {
+		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
+	return nil, nil, http.StatusOK
+}
+
+// GetLastUpdated checks for the resource by ID in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "id", ID, tableName)
+}
+
+// GetLastUpdatedByName checks for the resource by name in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdatedByName(tx *sqlx.Tx, name string, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "name", name, tableName)
+}
+
+func getLastUpdatedByIdentifier(tx *sqlx.Tx, IDColumn string, IDValue interface{}, tableName string) (*time.Time, bool, error) {
+	lastUpdated := time.Time{}
+	found := false
+	rows, err := tx.Query(fmt.Sprintf(`select last_updated from %s where %s = $1`, pq.QuoteIdentifier(tableName), pq.QuoteIdentifier(IDColumn)), IDValue)
+	if err != nil {
+		return nil, found, errors.New("querying last_updated: " + err.Error())
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, found, nil
+	}
+	found = true
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return nil, found, errors.New("scanning last_updated: " + err.Error())
+	}
+	return &lastUpdated, found, nil
+}
+
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
+func IsUnmodified(h http.Header, lastUpdated time.Time) bool {
+	unmodifiedTime, ok := rfc.GetUnmodifiedTime(h)
+	if !ok {
+		return true // no IUS/IM header: unmodified, proceed with normal update
+	}
+	return !lastUpdated.After(unmodifiedTime)
+}
+
+// FormatLastModified trims the time string and formats it according to RFC1123.
+func FormatLastModified(t time.Time) string {
+	return rfc.FormatHTTPDate(t.Truncate(time.Second).Add(time.Second))
+}
+
+// AddLastModifiedHdr adds the "last modified" header to the response.
+func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
+	w.Header().Add(rfc.LastModified, FormatLastModified(t))
+}
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
 }

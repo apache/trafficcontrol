@@ -36,10 +36,14 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
+// TOType is a needed type alias to define functions on.
 type TOType struct {
 	api.APIInfoImpl `json:"-"`
 	tc.TypeNullable
+}
+
+func (v *TOType) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "type")
 }
 
 func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -103,14 +107,15 @@ func (typ *TOType) Validate() error {
 }
 
 func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(tp.APIInfo(), "name")
 	return api.GenericRead(h, tp, useIMS)
 }
 
-func (tp *TOType) Update() (error, error, int) {
+func (tp *TOType) Update(h http.Header) (error, error, int) {
 	if !tp.AllowMutation(false) {
 		return errors.New("can not update type"), nil, http.StatusBadRequest
 	}
-	return api.GenericUpdate(tp)
+	return api.GenericUpdate(h, tp)
 }
 
 func (tp *TOType) Delete() (error, error, int) {

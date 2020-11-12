@@ -18,8 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPrivateCrtKey;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import java.math.BigInteger;
 import java.security.PrivateKey;
@@ -27,9 +25,12 @@ import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings({"PMD.CyclomaticComplexity"})
 public class CertificateDataConverter {
 	private static final Logger log = Logger.getLogger(CertificateDataConverter.class);
 
@@ -108,19 +109,28 @@ public class CertificateDataConverter {
 		return false;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	private boolean hostCompare(final String hostAlias, final String subject) {
 		if (hostAlias.contains(subject) || subject.contains(hostAlias)) {
 			return true;
 		}
-		final String[] chopped = subject.split("CN=", 2);
-		if (chopped != null && chopped.length > 1) {
-			String chop = chopped[1];
-			chop = chop.replaceFirst("\\*\\.", ".");
-			chop = chop.split(",", 2)[0];
-			if (chop.length()>0 && (hostAlias.contains(chop) || chop.contains(hostAlias))) {
-				return true;
+
+		// Parse subjectName out of Common Name
+		// If no CN= present, then subjectName is a SAN and needs only wildcard removal
+		String subjectName = subject;
+		if (subjectName.contains("CN=")) {
+			final String[] chopped = subjectName.split("CN=", 2);
+			if (chopped != null && chopped.length > 1) {
+				final String chop = chopped[1];
+				subjectName = chop.split(",", 2)[0];
 			}
 		}
+
+		subjectName = subjectName.replaceFirst("\\*\\.", ".");
+		if (subjectName.length() > 0 && (hostAlias.contains(subjectName) || subjectName.contains(hostAlias))) {
+			return true;
+		}
+
 		return false;
 	}
 
@@ -128,15 +138,15 @@ public class CertificateDataConverter {
 		BigInteger privModulus = null;
 		if (privateKey instanceof BCRSAPrivateCrtKey) {
 			privModulus = ((BCRSAPrivateCrtKey) privateKey).getModulus();
-		} else if (privateKey instanceof RSAPrivateCrtKeyImpl) {
-			privModulus = ((RSAPrivateCrtKeyImpl) privateKey).getModulus();
+		} else if (privateKey instanceof RSAPrivateCrtKeySpec) {
+			privModulus = ((RSAPrivateCrtKeySpec) privateKey).getModulus();
 		} else {
 			return false;
 		}
 		BigInteger pubModulus = null;
 		final PublicKey publicKey = certificate.getPublicKey();
-		if ((publicKey instanceof RSAPublicKeyImpl)) {
-			pubModulus = ((RSAPublicKeyImpl) publicKey).getModulus();
+		if ((publicKey instanceof RSAPublicKeySpec)) {
+			pubModulus = ((RSAPublicKeySpec) publicKey).getModulus();
 		} else {
 			final String[] keyparts = publicKey.toString().split(System.getProperty("line.separator"));
 			for (final String part : keyparts) {

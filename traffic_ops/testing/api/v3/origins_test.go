@@ -16,11 +16,13 @@ package v3
 */
 
 import (
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
@@ -28,12 +30,55 @@ import (
 
 func TestOrigins(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, Topologies, DeliveryServices, Coordinates, Origins}, func() {
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestOrigins(t)
+		UpdateTestOriginsWithHeaders(t, header)
 		GetTestOrigins(t)
 		NotFoundDeleteTest(t)
 		OriginTenancyTest(t)
 		VerifyPaginationSupport(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestOriginsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Origins) > 0 {
+		firstOrigin := testData.Origins[0]
+		if firstOrigin.Name == nil {
+			t.Fatalf("couldn't get the name of test origin server")
+		}
+		// Retrieve the origin by name so we can get the id for the Update
+		resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
+		if err != nil {
+			t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteOrigin := resp[0]
+			if remoteOrigin.ID == nil {
+				t.Fatalf("couldn't get the ID of the response origin server")
+			}
+			updatedPort := 4321
+			updatedFQDN := "updated.example.com"
+
+			// update port and FQDN values on origin
+			remoteOrigin.Port = &updatedPort
+			remoteOrigin.FQDN = &updatedFQDN
+			_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func CreateTestOrigins(t *testing.T) {
@@ -76,30 +121,34 @@ func UpdateTestOrigins(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
 	}
-	remoteOrigin := resp[0]
-	updatedPort := 4321
-	updatedFQDN := "updated.example.com"
+	if len(resp) > 0 {
+		remoteOrigin := resp[0]
+		updatedPort := 4321
+		updatedFQDN := "updated.example.com"
 
-	// update port and FQDN values on origin
-	remoteOrigin.Port = &updatedPort
-	remoteOrigin.FQDN = &updatedFQDN
-	updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
-	if err != nil {
-		t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
-	}
+		// update port and FQDN values on origin
+		remoteOrigin.Port = &updatedPort
+		remoteOrigin.FQDN = &updatedFQDN
+		updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
+		if err != nil && updResp != nil {
+			t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
+		}
 
-	// Retrieve the origin to check port and FQDN values were updated
-	resp, _, err = TOSession.GetOriginByID(*remoteOrigin.ID)
-	if err != nil {
-		t.Errorf("cannot GET Origin by ID: %v - %v", *remoteOrigin.Name, err)
-	}
+		// Retrieve the origin to check port and FQDN values were updated
+		resp, _, err = TOSession.GetOriginByID(*remoteOrigin.ID)
+		if err != nil {
+			t.Errorf("cannot GET Origin by ID: %v - %v", *remoteOrigin.Name, err)
+		}
 
-	respOrigin := resp[0]
-	if *respOrigin.Port != updatedPort {
-		t.Errorf("results do not match actual: %d, expected: %d", *respOrigin.Port, updatedPort)
-	}
-	if *respOrigin.FQDN != updatedFQDN {
-		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.FQDN, updatedFQDN)
+		if len(resp) > 0 {
+			respOrigin := resp[0]
+			if *respOrigin.Port != updatedPort {
+				t.Errorf("results do not match actual: %d, expected: %d", *respOrigin.Port, updatedPort)
+			}
+			if *respOrigin.FQDN != updatedFQDN {
+				t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.FQDN, updatedFQDN)
+			}
+		}
 	}
 }
 

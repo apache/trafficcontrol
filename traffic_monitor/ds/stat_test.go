@@ -20,13 +20,17 @@ package ds
  */
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 
+	tc_log "github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
@@ -35,6 +39,22 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
+
+func checkLogOutput(t *testing.T, buffer *bytes.Buffer, toData todata.TOData, caches []tc.CacheName) {
+	output := buffer.String()
+	for _, cacheName := range caches {
+		match, err := regexp.MatchString(string(cacheName)+".*not found in DeliveryServices", output)
+		if err != nil {
+			t.Fatalf("cannot match cache name %s against output", cacheName)
+		}
+		if toData.ServerTypes[cacheName] != tc.CacheTypeMid && !match {
+			t.Fatalf("expected to find info-level message about cache %s with cache type %s not being found in DeliveryServices, no message found", cacheName, toData.ServerTypes[cacheName])
+		}
+		if toData.ServerTypes[cacheName] == tc.CacheTypeMid && match {
+			t.Fatalf("expected not to find info-level message about cache %s with cache type %s not being found in DeliveryServices, but message was found", cacheName, toData.ServerTypes[cacheName])
+		}
+	}
+}
 
 func TestCreateStats(t *testing.T) {
 	toData := getMockTOData()
@@ -66,11 +86,23 @@ func TestCreateStats(t *testing.T) {
 
 	lastStatsVal := lastStatsThs.Get()
 	lastStatsCopy := lastStatsVal.Copy()
+
 	dsStats, err := CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, now, monitorConfig, events, localCRStates)
 
 	if err != nil {
 		t.Fatalf("CreateStats err expected: nil, actual: " + err.Error())
 	}
+
+	serverDeliveryServices := toData.ServerDeliveryServices
+	toData.ServerDeliveryServices = map[tc.CacheName][]tc.DeliveryServiceName{} // temporarily unassign servers to generate warnings about caches not assigned to delivery services
+	buffer := bytes.NewBuffer(make([]byte, 0, 10000))
+	tc_log.Info = log.New(buffer, "TestAddAvailabilityDataNotFoundInDeliveryService", log.Lshortfile)
+	_, err = CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, now, monitorConfig, events, localCRStates)
+	if err != nil {
+		t.Fatalf("CreateStats err expected: nil, actual: " + err.Error())
+	}
+	checkLogOutput(t, buffer, toData, caches)
+	toData.ServerDeliveryServices = serverDeliveryServices
 
 	lastStatsThs.Set(*lastStatsCopy)
 

@@ -521,5 +521,13 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
 });
 
 trafficPortal.config(function ($httpProvider) {
-    $httpProvider.interceptors.push('authInterceptor');
+        $httpProvider.interceptors.push('authInterceptor');
+
+        // disabling caching for TP until it utilizes If-Modified-Since
+        if (!$httpProvider.defaults.headers.get) {
+                $httpProvider.defaults.headers.get = {};
+        }
+        $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+        $httpProvider.defaults.headers.get['Expires'] = 0;
 });

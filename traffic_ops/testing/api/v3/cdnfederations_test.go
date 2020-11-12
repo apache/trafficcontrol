@@ -17,22 +17,58 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"net/http"
+	"sort"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, CDNFederations}, func() {
+		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestCDNFederationsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCDNFederationsWithHeaders(t, header)
 	})
 }
 
+func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
+	for _, id := range fedIDs {
+		fed, _, err := TOSession.GetCDNFederationsByIDWithHdr("foo", id, h)
+		if err != nil {
+			t.Errorf("cannot GET federation by id: %v", err)
+		}
+		if fed != nil && len(fed.Response) > 0 {
+			expectedCName := "new.cname."
+			fed.Response[0].CName = &expectedCName
+			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "foo", id, h)
+			if err == nil {
+				t.Errorf("Expected an error saying precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
 func TestFederationFederationResolvers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations, FederationResolvers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, CDNFederations, FederationResolvers}, func() {
 		AssignTestFederationFederationResolvers(t)
 		GetTestFederationFederationResolvers(t)
 	})
@@ -64,6 +100,50 @@ func CreateTestCDNFederations(t *testing.T) {
 	}
 }
 
+// This test will not work unless a given CDN has more than one federation associated with it.
+func SortTestCDNFederations(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+
+	//Create a new federation under the same CDN
+	cname := "bar.foo."
+	ttl := 50
+	description := "test"
+	f := tc.CDNFederation{ID: nil, CName: &cname, TTL: &ttl, Description: &description, LastUpdated: nil}
+	data, _, err := TOSession.CreateCDNFederationByName(f, "cdn1")
+	if err != nil {
+		t.Errorf("could not POST federations: " + err.Error())
+	}
+	bytes, _ := json.Marshal(data)
+	t.Logf("POST Response: %s\n", bytes)
+	id := *data.Response.ID
+
+	//Get list of federations for one type of cdn
+	resp, _, err := TOSession.GetCDNFederationsByNameWithHdrReturnList("cdn1", header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].CName)
+	}
+
+	// Check if list was sorted
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+
+	// Delete the newly created federation
+	resp1, _, err1 := TOSession.DeleteCDNFederationByID("cdn1", id)
+	if err != nil {
+		t.Errorf("cannot DELETE federation by id: '%d' %v", id, err1)
+	}
+	bytes, _ = json.Marshal(resp1)
+	t.Logf("DELETE Response: %s\n", bytes)
+}
+
 func UpdateTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
@@ -89,7 +169,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		t.Logf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
-			log.Errorln("CName is nil after updating")
+			t.Error("CName is nil after updating")
 		} else if *resp2.Response[0].CName != expectedCName {
 			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
 		}

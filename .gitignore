@@ -23,6 +23,9 @@ docs/build/*
 /grove/grove
 /grove/grovetccfg/grovetccfg
 local
+!/infrastructure/cdn-in-a-box/traffic_ops/local/
+/infrastructure/cdn-in-a-box/traffic_ops/local/*
+!/infrastructure/cdn-in-a-box/traffic_ops/local/.gitkeep
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
 traffic_ops/app/log/*.log
@@ -43,12 +46,14 @@ traffic_router/*.log
 *.pyc
 bin/docker-compose
 /.m2
+/.github/actions/**/node_modules/
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz
 # Editor/IDE configuration files
 *.sublime-project
 *.sublime-workspace
 .vscode/
+*.code-workspace
 *.pydevproject
 .idea/
 .project
@@ -64,4 +69,3 @@ local.tar.gz
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
 junit/
-

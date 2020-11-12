@@ -27,7 +27,7 @@ Due to limitations in the way parameters are passed in Ansible Dynamic Inventory
 ```bash session
 export TO_USER=<my.to.username>
 export TO_PASSWORD=<my.to.password>
-export TO_URL=to.kabletown.invalid
+export TO_URL=<functional TrafficOps server fqdn or IP>
 ```
 Failure to set login credentials will result in a valid, but empty response.
 

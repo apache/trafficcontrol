@@ -15,7 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine3.11 AS base
+FROM alpine:3.11 AS base
+
+COPY GO_VERSION /
+RUN set -o errexit; \
+    go_version=$(cat /GO_VERSION); \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz; \
+    tar -C /usr/local -xvzf go.tar.gz; \
+    ln -s /usr/local/go/bin/go /usr/bin/go; \
+    rm go.tar.gz; \
+    architecture=$(uname -m); \
+    mkdir lib64; \
+    # Use musl libc where the go binary expects glibc
+    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2; \
+    # Test the go binary
+    go version
+ENV GOPATH=/go
+ENV PATH="${PATH}:${GOPATH}/bin"
 
 RUN apk --no-cache add gcc musl-dev git
 
@@ -25,10 +42,12 @@ WORKDIR /go/src/github.com/apache/trafficcontrol
 
 RUN go get golang.org/x/crypto/ed25519\
            golang.org/x/crypto/scrypt\
+           golang.org/x/net/idna\
            golang.org/x/net/ipv4\
            golang.org/x/net/ipv6\
            golang.org/x/net/publicsuffix\
-           golang.org/x/sys/unix
+           golang.org/x/sys/unix\
+           golang.org/x/text/secure/bidirule
 
 FROM base AS lint
 

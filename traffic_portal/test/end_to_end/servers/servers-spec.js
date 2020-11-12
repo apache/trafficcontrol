@@ -54,7 +54,10 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
-		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
+		// Assign this server to a created cache-group, needed for Topologies tests
+		pageData.cachegroup.all(by.tagName("option")).then(function(options) {
+		    options[options.length-1].click();
+		});
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
@@ -75,10 +78,37 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(tableColumns.count()).toBe(9);
 	});
 
+	it('should clear column filter when column is hidden', function() {
+		// Confirm we have rows
+		let rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+
+		// Filter one of our columns
+		let firstHeaderCell = element.all(by.css('.ag-header-cell')).first();
+		firstHeaderCell.all(by.css('span.ag-header-cell-menu-button')).first().click();
+		let filterContainer = element(by.css("div.ag-filter"));
+		let filterCell = filterContainer.all(by.css('.ag-input-field-input')).first();
+		filterCell.sendKeys("nothingshouldmatchthis", protractor.Key.ENTER);
+
+		// Wait for ag-grid to process changes
+		browser.sleep(1000);
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).toBe(0);
+
+		// Hide filtered column
+		let columnToggle = element(by.id('toggleColumns')).click();
+		columnToggle.all(by.css('input[type=checkbox]:checked')).first().click();
+
+		// Wait for ag-grid again
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+	});
+
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click();
+		let row = element(by.cssContainingText('.ag-cell', mockVals.hostName));
+		browser.actions().click(row).perform();
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');
@@ -96,9 +126,10 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(pageData.submitButton.isEnabled()).toBe(false);
 		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
 		expect(pageData.submitButton.isEnabled()).toBe(true);
-		pageData.submitButton.click();
-		element.all(by.css('tbody tr')).then(function(totalRows) {
-			expect(totalRows.length).toBe(1);
+		pageData.submitButton.click().then(function() {
+			element.all(by.css('tbody tr')).then(function(totalRows) {
+				expect(totalRows.length).toBe(1);
+			});
 		});
 	});
 
@@ -109,11 +140,4 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.viewDeliveryServicesMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/[0-9]+/delivery-services");
 	});
-
-	it('should ensure you cannot clone delivery service assignments because there are no delivery services assigned to the server', function() {
-		console.log('Ensure you cannot clone delivery service assignments for ' + mockVals.hostName);
-		pageData.moreBtn.click();
-		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
-	});
-
 });

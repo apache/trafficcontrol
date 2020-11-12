@@ -59,6 +59,9 @@ Built: %(date) by %{getenv: USER}
 		# update version referenced in the source
 		sed -i.bak 's/__VERSION__/%{version}-%{release}/g' app/lib/UI/Utils.pm
 
+		# update the go version referenced in install_go.sh
+		sed -i.bak 's/__GO_VERSION__/%{go_version}/g' install/bin/install_go.sh
+
 		# copy traffic_ops_golang binary
 		godir=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 		( mkdir -p "$godir" && \

@@ -264,6 +264,7 @@ Glossary
 	Origins
 	origin server
 	origin servers
+	Origin Servers
 		The source of content for the CDN. Usually a redundant HTTP/1.1 webserver.
 
 	ORT

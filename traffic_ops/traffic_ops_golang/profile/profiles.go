@@ -54,6 +54,10 @@ type TOProfile struct {
 	tc.ProfileNullable
 }
 
+func (v *TOProfile) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "profile")
+}
+
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOProfile) InsertQuery() string           { return insertQuery() }
 func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
@@ -243,9 +247,9 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) Update() (error, error, int) { return api.GenericUpdate(pr) }
-func (pr *TOProfile) Create() (error, error, int) { return api.GenericCreate(pr) }
-func (pr *TOProfile) Delete() (error, error, int) { return api.GenericDelete(pr) }
+func (pr *TOProfile) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pr) }
+func (pr *TOProfile) Create() (error, error, int)              { return api.GenericCreate(pr) }
+func (pr *TOProfile) Delete() (error, error, int)              { return api.GenericDelete(pr) }
 
 func updateQuery() string {
 	query := `UPDATE

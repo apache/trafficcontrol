@@ -21,6 +21,7 @@ package util
 
 import (
 	"crypto/sha512"
+	"fmt"
 
 	"encoding/binary"
 	"encoding/json"
@@ -60,6 +61,12 @@ func ToNumeric(v interface{}) (float64, bool) {
 		return float64(i), true
 	case uint:
 		return float64(i), true
+	case string:
+		n, err := strconv.ParseFloat(fmt.Sprintf("%v", v), 64)
+		if err != nil {
+			return 0.0, false
+		}
+		return n, true
 	default:
 		return 0.0, false
 	}

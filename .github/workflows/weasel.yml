@@ -21,11 +21,11 @@ on:
   push:
   create:
   pull_request:
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   weasel:
-
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:

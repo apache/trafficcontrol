@@ -22,7 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li><a href="#!/delivery-services">Delivery Services</a></li>
             <li><a name="dsLink" ng-href="{{'#!/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type}}">{{::deliveryService.xmlId}}</a></li>
-            <li class="active">Servers <small ng-if="deliveryService.topology">[via {{deliveryService.topology}} Topology]</small></li>
+            <li class="active">Servers <small ng-if="deliveryService.topology">[via <a href="#!/topologies/edit?name={{deliveryService.topology}}">{{deliveryService.topology}}</a> Topology]</small></li>
         </ol>
         <div class="pull-right">
             <div class="form-inline" role="search">
@@ -53,10 +53,10 @@ under the License.
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                         <li role="menuitem">
-                            <button type="button" name="selectServersMenuItem" title="{{(!deliveryService.topology) ? 'Assign servers to delivery service' : 'Servers cannot be manually assigned to topology-based delivery services'}}" ng-disabled="deliveryService.topology" ng-click="selectServers()">Assign Servers</button>
+                            <button type="button" name="selectServersMenuItem" title="Assign {{(deliveryService.topology) ? 'ORG ' : ''}}servers to delivery service" ng-click="selectServers()">Assign {{(deliveryService.topology) ? 'ORG ' : ''}}Servers</button>
                         </li>
                         <li class="divider"></li>
-                        <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearColFilters()">Clear Column Filters</button></li>
+                        <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearTableFilters()">Clear Table Filters</button></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="exportCSV()">Export CSV</button></li>
                     </ul>
                 </div>
@@ -69,14 +69,15 @@ under the License.
     </div>
 </div>
 
-<menu class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
+<menu id="context-menu" class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
     <ul>
         <li role="menuitem">
             <a ng-href="#!/servers/{{server.id}}" target="_blank">Open in New Tab</a>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <button type="button" ng-click="confirmRemoveServer(server, $event)" ng-disabled="deliveryService.topology || (!isEdge(server) && !isOrigin(server))">Remove Server from Delivery Service</button>
+            <button type="button" ng-if="!deliveryService.topology" ng-click="confirmRemoveServer(server, $event)" ng-disabled="(!isEdge(server) && !isOrigin(server))">Remove {{server.type}} Server</button>
+            <button type="button" ng-if="deliveryService.topology" ng-click="confirmRemoveServer(server, $event)" ng-disabled="!isOrigin(server)">Remove {{server.type}} Server</button>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
@@ -105,7 +106,7 @@ under the License.
         </li>
         <hr class="divider"/>
         <li role="menuitem" ng-show="isCache(server)">
-            <a ng-href="#!/servers/{{server.id}}/capabilities">Manage Capabilities</a>
+            <a ng-href="#!/servers/{{server.id}}/capabilities">Manage Server Capabilities</a>
         </li>
         <li role="menuitem" ng-show="isEdge(server) || isOrigin(server)">
             <a ng-href="#!/servers/{{server.id}}/delivery-services">Manage Delivery Services</a>

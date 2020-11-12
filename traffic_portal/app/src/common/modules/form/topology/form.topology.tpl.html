@@ -24,8 +24,31 @@ under the License.
             <li class="active">{{::topologyName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button type="button" class="btn btn-primary" title="View Cache Groups" ng-click="viewCacheGroups(topology)">View Cache Groups</button>
-            <button type="button" class="btn btn-primary" title="View Delivery Services" ng-click="viewDeliveryServices(topology)">View Delivery Services</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem">
+                        <button type="button" name="viewDeliveryServicesMenuItem" title="View Delivery Services" ng-click="viewDeliveryServices()">View Delivery Services</button>
+                    </li>
+                    <li class="divider"></li>
+                    <li role="menuitem">
+                        <button type="button" name="viewCacheGroupsMenuItem" title="View Cache Groups" ng-click="viewCacheGroups()">View Cache Groups</button>
+                    </li>
+                    <li role="menuitem">
+                        <button type="button" name="viewServersMenuItem" title="View Servers" ng-click="viewServers()">View Servers</button>
+                    </li>
+                    <li class="divider"></li>
+                    <li role="menuitem">
+                        <button type="button" title="Queue Server Updates for {{::topology.name}} Topology" ng-click="confirmTopologyQueueServerUpdates(topology)">Queue Server Updates</button>
+                    </li>
+                    <li role="menuitem">
+                        <button type="button" title="Clear Server Updates for {{::topology.name}} Topology" ng-click="confirmTopologyClearServerUpdates(topology)">Clear Server Updates</button>
+                    </li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -35,9 +58,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="topology.name" ng-disabled="!settings.isNew" pattern="[A-Za-z0-9]([A-Za-z\-0-9]*[A-Za-z0-9])?" required autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" ng-disabled="!settings.isNew" pattern="^[a-zA-Z0-9\-_]+$" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No special characters, periods, underscores, or spaces and cannot begin or end with a hyphen</small>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">Alphanumeric, dash, or underscore characters only</small>
                     <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

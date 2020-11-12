@@ -11,9 +11,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM golang:1.14.2
+FROM debian:buster
 MAINTAINER dev@trafficcontrol.apache.org
 ARG DIR=github.com/apache/trafficcontrol
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        # gcc is a CGO dependency
+        gcc \
+        git \
+        # libc6-dev is a CGO dependency
+        libc6-dev \
+        wget && \
+    apt-get clean
+
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go.tar.gz
+ENV GOPATH=/go
+ENV PATH="${PATH}:${GOPATH}/bin"
 
 ADD traffic_ops /go/src/$DIR/traffic_ops
 ADD lib /go/src/$DIR/lib

@@ -22,7 +22,6 @@ package request
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"time"
@@ -34,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -42,6 +42,10 @@ import (
 type TODeliveryServiceRequest struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceRequestNullable
+}
+
+func (v *TODeliveryServiceRequest) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "deliveryservice_request")
 }
 
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -88,6 +92,7 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
 		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
 		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
+		"createdAt":  dbhelpers.WhereColumnInfo{Column: "r.created_at"},
 		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
 		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
 		"xmlId":      dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"},
@@ -198,7 +203,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (req *TODeliveryServiceRequest) Update() (error, error, int) {
+func (req *TODeliveryServiceRequest) Update(h http.Header) (error, error, int) {
 	if req.ID == nil {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
@@ -226,7 +231,7 @@ func (req *TODeliveryServiceRequest) Update() (error, error, int) {
 	userID := tc.IDNoMod(req.APIInfo().User.ID)
 	req.LastEditedByID = &userID
 
-	return api.GenericUpdate(req)
+	return api.GenericUpdate(h, req)
 }
 
 // Creator implements the tc.Creator interface
@@ -274,7 +279,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, error, int) {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 
-	st := tc.RequestStatus(0)
+	st := tc.RequestStatusInvalid
 	if err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *req.ID).Scan(&st); err != nil {
 		return nil, errors.New("dsr delete querying status: " + err.Error()), http.StatusBadRequest
 	}
@@ -359,7 +364,7 @@ type deliveryServiceRequestAssignment struct {
 }
 
 // Update assignee only
-func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
+func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 	if req.ID == nil {
@@ -382,6 +387,11 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 	assigneeID := req.AssigneeID
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
+
+	userErr, sysErr, statusCode := api.CheckIfUnModified(h, req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 
 	// LastEditedBy field should not change with status update
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
@@ -422,7 +432,7 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
+func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition
@@ -446,6 +456,10 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
+	existingLastUpdated := current.LastUpdated
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		return api.ParseDBError(err)

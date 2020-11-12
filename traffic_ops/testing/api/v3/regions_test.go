@@ -16,12 +16,13 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,11 +34,40 @@ func TestRegions(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestRegions(t)
 		UpdateTestRegions(t)
+		UpdateTestRegionsWithHeaders(t, header)
 		GetTestRegions(t)
 		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestRegionsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Regions) > 0 {
+		firstRegion := testData.Regions[0]
+		// Retrieve the Region by region so we can get the id for the Update
+		resp, _, err := TOSession.GetRegionByNameWithHdr(firstRegion.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteRegion := resp[0]
+			remoteRegion.Name = "OFFLINE-TEST"
+			_, reqInf, err := TOSession.UpdateRegionByIDWithHdr(remoteRegion.ID, remoteRegion, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
 }
 
 func GetTestRegionsIMS(t *testing.T) {
@@ -90,6 +120,25 @@ func CreateTestRegions(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE region: %v", err)
 		}
+	}
+}
+
+func SortTestRegions(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetRegionsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

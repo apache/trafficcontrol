@@ -56,8 +56,15 @@ public class RouterSslUtil extends SSLUtilBase {
 
     @Override
     @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
-    public SSLContext createSSLContext(final List<String> negotiableProtocols) throws Exception {
+    public SSLContext createSSLContextInternal(final List<String> negotiableProtocols) throws Exception {
         return new OpenSSLContext(certificate, negotiableProtocols);
+    }
+
+    @Override
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
+    public boolean isTls13RenegAuthAvailable() {
+        // As per the Tomcat 8.5.57 source, this should be false for JSSE, and true for openSSL implementations.
+        return true;
     }
 
     @Override

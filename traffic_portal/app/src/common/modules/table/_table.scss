@@ -208,3 +208,36 @@ div.dropdown button.menu-item-button {
         background-color: #f5f5f5;
     }
 }
+
+.jobs-table {
+  .ag-row.active-job {
+    background-color: #dff0d8;
+  }
+  .ag-row.expired-job {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.ds-requests-table {
+  .ag-row.draft-request {
+    background-color: #e2e3e5;
+  }
+  .ag-row.submitted-request {
+    background-color: #dff0d8;
+  }
+  .ag-row.pending-request {
+    background-color: #fff3cd;
+  }
+  .ag-row.completed-request {
+    background-color: #fcfcfc;
+  }
+  .ag-row.rejected-request {
+    background-color: #f8d7da;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}

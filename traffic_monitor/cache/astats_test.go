@@ -41,10 +41,34 @@ func TestAstatsJson(t *testing.T) {
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
 	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
-	_, _, err = astatsParse("testCache", file, ctx)
+	stats, misc, err := astatsParse("testCache", file, ctx)
 
 	if err != nil {
 		t.Error(err)
+	}
+	if len(stats.Interfaces) != 1 {
+		t.Errorf("Expected exactly one interface, got %d", len(stats.Interfaces))
+		if len(stats.Interfaces) < 1 {
+			t.FailNow()
+		}
+	}
+
+	// Floating-Point arithmetic...
+	if misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"] != float64(296727207) {
+		t.Errorf("Expected 296727207 for remap_stats edge-cache in_bytes, got %.10f", misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"])
+	}
+
+	if stats.Loadavg.One != float64(.3) {
+		t.Errorf("Incorrect one-minute loadavg, expected roughly 0.3, got '%.10f'", stats.Loadavg.One)
+	}
+	if stats.Loadavg.Five != float64(.12) {
+		t.Errorf("Incorrect five-minute loadavg, expected roughly 0.12, got %.10f", stats.Loadavg.Five)
+	}
+	if stats.Loadavg.Fifteen != float64(.21) {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected roughly 0.21, got %.10f", stats.Loadavg.Fifteen)
+	}
+	if stats.Loadavg.CurrentProcesses != 803 {
+		t.Errorf("Incorrect current_processes, expected 1, got %d", stats.Loadavg.CurrentProcesses)
 	}
 }
 
@@ -73,10 +97,35 @@ func TestAstatsCSV(t *testing.T) {
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
 	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/csv")
-	_, _, err = astatsParse("testCache", file, ctx)
+	stats, misc, err := astatsParse("testCache", file, ctx)
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	if len(stats.Interfaces) != 1 {
+		t.Errorf("Expected exactly one interface, got %d", len(stats.Interfaces))
+		if len(stats.Interfaces) < 1 {
+			t.FailNow()
+		}
+	}
+
+	// Floating-Point arithmetic...
+	if misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"] != float64(296727207) {
+		t.Errorf("Expected 296727207 for remap_stats edge-cache in_bytes, got %.10f", misc["plugin.remap_stats.edge-cache-0.delivery.service.zero.in_bytes"])
+	}
+
+	if stats.Loadavg.One != float64(.3) {
+		t.Errorf("Incorrect one-minute loadavg, expected roughly 0.3, got '%.10f'", stats.Loadavg.One)
+	}
+	if stats.Loadavg.Five != float64(.12) {
+		t.Errorf("Incorrect five-minute loadavg, expected roughly 0.12, got %.10f", stats.Loadavg.Five)
+	}
+	if stats.Loadavg.Fifteen != float64(.21) {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected roughly 0.21, got %.10f", stats.Loadavg.Fifteen)
+	}
+	if stats.Loadavg.CurrentProcesses != 803 {
+		t.Errorf("Incorrect current_processes, expected 1, got %d", stats.Loadavg.CurrentProcesses)
 	}
 }
 

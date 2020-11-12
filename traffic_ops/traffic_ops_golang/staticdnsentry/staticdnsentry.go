@@ -39,6 +39,10 @@ type TOStaticDNSEntry struct {
 	tc.StaticDNSEntryNullable
 }
 
+func (v *TOStaticDNSEntry) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "staticdnsentry")
+}
+
 func (v *TOStaticDNSEntry) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOStaticDNSEntry) InsertQuery() string           { return insertQuery() }
 func (v *TOStaticDNSEntry) NewReadObj() interface{}       { return &tc.StaticDNSEntryNullable{} }
@@ -134,10 +138,13 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 }
 
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(en.APIInfo(), "host")
 	return api.GenericRead(h, en, useIMS)
 }
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
-func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
+func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
+	return api.GenericUpdate(h, en)
+}
 func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
 func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (

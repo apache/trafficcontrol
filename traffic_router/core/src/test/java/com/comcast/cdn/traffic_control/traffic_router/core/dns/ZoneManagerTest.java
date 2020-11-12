@@ -51,6 +51,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -108,8 +109,8 @@ public class ZoneManagerTest {
 			final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
 			for (InetAddress source : netMap.values()) {
-				final CacheLocation location = trafficRouter.getCoverageZoneCacheLocation(source.getHostAddress(), ds);
-				final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
+				final CacheLocation location = trafficRouter.getCoverageZoneCacheLocation(source.getHostAddress(), ds, IPVersions.IPV4ONLY);
+				final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location, IPVersions.IPV4ONLY);
 
 				if (caches == null) {
 					continue;

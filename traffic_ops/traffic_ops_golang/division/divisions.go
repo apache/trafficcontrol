@@ -40,6 +40,10 @@ type TODivision struct {
 	tc.DivisionNullable
 }
 
+func (v *TODivision) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "division")
+}
+
 func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODivision) InsertQuery() string           { return insertQuery() }
 func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -105,10 +109,11 @@ func (dv *TODivision) Read(h http.Header, useIMS bool) ([]interface{}, error, er
 	if strings.HasSuffix(params["name"], ".json") {
 		params["name"] = params["name"][:len(params["name"])-len(".json")]
 	}
+	api.DefaultSort(dv.APIInfo(), "name")
 	return api.GenericRead(h, dv, useIMS)
 }
-func (dv *TODivision) Update() (error, error, int) { return api.GenericUpdate(dv) }
-func (dv *TODivision) Delete() (error, error, int) { return api.GenericDelete(dv) }
+func (dv *TODivision) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, dv) }
+func (dv *TODivision) Delete() (error, error, int)              { return api.GenericDelete(dv) }
 
 func insertQuery() string {
 	return `INSERT INTO division (name) VALUES (:name) RETURNING id,last_updated`

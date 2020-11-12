@@ -25,7 +25,8 @@ export INFRA_FQDN="$INFRA_SUBDOMAIN.$TLD_DOMAIN"
 export DB_FQDN="$DB_SERVER.$INFRA_FQDN"
 export DNS_FQDN="$DNS_SERVER.$INFRA_FQDN"
 export EDGE_FQDN="$EDGE_HOST.$INFRA_FQDN"
-export MID_FQDN="$MID_HOST.$INFRA_FQDN"
+export MID_01_FQDN="$MID_01_HOST.$INFRA_FQDN"
+export MID_02_FQDN="$MID_02_HOST.$INFRA_FQDN"
 export ORIGIN_FQDN="$ORIGIN_HOST.$INFRA_FQDN"
 export SMTP_FQDN="$SMTP_HOST.$INFRA_FQDN"
 export TO_FQDN="$TO_HOST.$INFRA_FQDN"
@@ -40,7 +41,7 @@ export TO_URL=${TO_URL:-https://$TO_FQDN:$TO_PORT}
 export TO_USER=${TO_USER:-$TO_ADMIN_USER}
 export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
 
-export TO_API_VERSION=${TO_API_VERSION:-"2.0"}
+export TO_API_VERSION=${TO_API_VERSION:-"3.0"}
 
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
@@ -226,6 +227,11 @@ to-enroll() {
 		"mid" )
 			export MY_TYPE="MID"
 			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_STATUS="REPORTED"
+			;;
+		"origin" )
+			export MY_TYPE="ORG"
+			export MY_PROFILE="ORG_MSO"
 			export MY_STATUS="REPORTED"
 			;;
 		"tm" )

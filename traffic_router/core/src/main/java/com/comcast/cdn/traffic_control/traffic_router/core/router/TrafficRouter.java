@@ -31,6 +31,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
@@ -194,7 +195,7 @@ public class TrafficRouter {
 	 *            the DeliveryService to check
 	 * @return collection of supported caches
 	 */
-	public List<Cache> getSupportingCaches(final List<Cache> caches, final DeliveryService ds) {
+	public List<Cache> getSupportingCaches(final List<Cache> caches, final DeliveryService ds, final IPVersions requestVersion) {
 		final List<Cache> supportingCaches = new ArrayList<Cache>();
 
 		for (final Cache cache : caches) {
@@ -202,7 +203,7 @@ public class TrafficRouter {
 				continue;
 			}
 
-			if (cache.hasAuthority() ? cache.isAvailable() : true) {
+			if (!cache.hasAuthority() || (cache.isAvailable(requestVersion))) {
 				supportingCaches.add(cache);
 			}
 		}
@@ -324,7 +325,7 @@ public class TrafficRouter {
 	 * only "Maxmind" and "Neustar" are supported)
 	 * @param deliveryServiceId Currently only used for logging error information, should be an
 	 * identifier for a Delivery Service
-	 * @return A {@link #GeolocationService} that can be used to geo-locate clients <em>or</em>
+	 * @return A {@link GeolocationService} that can be used to geo-locate clients <em>or</em>
 	 * {@code null} if an error occurs.
 	 */
 	private GeolocationService getGeolocationService(final String geolocationProvider, final String deliveryServiceId) {
@@ -368,7 +369,7 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Retrives a location for a given client being served a given Delivery Service.
+	 * Retrieves a location for a given client being served a given Delivery Service.
 	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
 	 * an IP address, but trailing port number specifications are stripped.
 	 * @param deliveryService The Delivery Service being served to the client.
@@ -379,7 +380,7 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Gets a {@link #List} of {@link Cache}s that are capabable of serving a given Delivery Service.
+	 * Gets a {@link List} of {@link Cache}s that are capabable of serving a given Delivery Service.
 	 * <p>
 	 * The caches chosen are from the closest, non-empty, cache location to the client's physical
 	 * location, up to the Location Limit ({@link DeliveryService#getLocationLimit()}) of the
@@ -387,11 +388,11 @@ public class TrafficRouter {
 	 * </p>
 	 * @param ds The Delivery Service being served.
 	 * @param clientLocation The physical location of the requesting client.
-	 * @param track The {@link #Track} object on which a result location shall be set, should one be found
-	 * @return A {@link #List} of {@link Cache}s that should be used to service a request should such a collection be found, or
+	 * @param track The {@link Track} object on which a result location shall be set, should one be found
+	 * @return A {@link List} of {@link Cache}s that should be used to service a request should such a collection be found, or
 	 * {@code null} if the no applicable {@link Cache}s could be found.
 	 */
-	public List<Cache> getCachesByGeo(final DeliveryService ds, final Geolocation clientLocation, final Track track) throws GeolocationException {
+	public List<Cache> getCachesByGeo(final DeliveryService ds, final Geolocation clientLocation, final Track track, final IPVersions requestVersion) throws GeolocationException {
 		int locationsTested = 0;
 
 		final int locationLimit = ds.getLocationLimit();
@@ -401,7 +402,7 @@ public class TrafficRouter {
 		final List<CacheLocation> cacheLocations = (List<CacheLocation>) orderLocations(cacheLocations1, clientLocation);
 
 		for (final CacheLocation location : cacheLocations) {
-			final List<Cache> caches = selectCaches(location, ds);
+			final List<Cache> caches = selectCaches(location, ds, requestVersion);
 			if (caches != null) {
 				track.setResultLocation(location.getGeolocation());
 				if (track.getResultLocation().equals(GEO_ZERO_ZERO)) {
@@ -427,7 +428,7 @@ public class TrafficRouter {
 	 * </p>
 	 * @param request The HTTP request made by the client.
 	 * @param ds The Delivery Service being served.
-	 * @param track The {@link #Track} object that tracks how requests are served
+	 * @param track The {@link Track} object that tracks how requests are served
 	 */
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
 		return selectCaches(request, ds, track, true);
@@ -437,7 +438,7 @@ public class TrafficRouter {
 	 * Selects {@link Cache}s to serve a request for a Delivery Service.
 	 * @param request The HTTP request made by the client.
 	 * @param ds The Delivery Service being served.
-	 * @param track The {@link #Track} object that tracks how requests are served
+	 * @param track The {@link Track} object that tracks how requests are served
 	 * @param enableDeep Sets whether or not "Deep Caching" may be used.
 	 */
 	@SuppressWarnings("PMD.CyclomaticComplexity")
@@ -445,23 +446,24 @@ public class TrafficRouter {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
 		final boolean useDeep = enableDeep && (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
+		final IPVersions requestVersion = request.getClientIP().contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
 
 		if (useDeep) {
 			// Deep caching is enabled. See if there are deep caches available
-			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
+			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds, requestVersion);
 			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
 				// Found deep caches for this client, and there are caches that might be available there.
 				result = ResultType.DEEP_CZ;
 			} else {
 				// No deep caches for this client, would have used them if there were any. Fallback to regular CZ
-				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
+				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, requestVersion);
 			}
 		} else {
 			// Deep caching not enabled for this Delivery Service; use the regular CZ
-			cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, useDeep, track);
+			cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, false, track, requestVersion);
 		}
 
-		List<Cache>caches = selectCachesByCZ(ds, cacheLocation, track, result);
+		List<Cache>caches = selectCachesByCZ(ds, cacheLocation, track, result, requestVersion);
 
 		if (caches != null) {
 			return caches;
@@ -470,17 +472,28 @@ public class TrafficRouter {
 		if (ds.isCoverageZoneOnly()) {
 			if (ds.getGeoRedirectUrl() != null) {
 				//use the NGB redirect
-				caches = enforceGeoRedirect(track, ds, request.getClientIP(), null);
+				caches = enforceGeoRedirect(track, ds, request.getClientIP(), null, requestVersion);
 			} else {
 				track.setResult(ResultType.MISS);
 				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			}
 		} else if (track.continueGeo) {
 			// continue Geo can be disabled when backup group is used -- ended up an empty cache list if reach here
-			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
+			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track, requestVersion);
 		}
 
 		return caches;
+	}
+
+	/**
+	 * Returns whether or not a Delivery Service has a valid miss location.
+	 * @param deliveryService The Delivery Service being served.
+	 */
+	public boolean isValidMissLocation(final DeliveryService deliveryService) {
+		if (deliveryService.getMissLocation() != null && deliveryService.getMissLocation().getLatitude() != 0.0 && deliveryService.getMissLocation().getLongitude() != 0.0) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -489,9 +502,9 @@ public class TrafficRouter {
 	 * @param deliveryService The Delivery Service being served.
 	 * @param cacheLocation A selected {@link CacheLocation} from which {@link Cache}s will be
 	 * extracted based on the client's location.
-	 * @param track The {@link #Track} object that tracks how requests are served
+	 * @param track The {@link Track} object that tracks how requests are served
 	 */
-	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
+	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track, final IPVersions requestVersion) throws GeolocationException {
 		Geolocation clientLocation = null;
 
 		try {
@@ -506,24 +519,28 @@ public class TrafficRouter {
 				LOGGER.debug(String
 						.format("client is blocked by geolimit, use the NGB redirect url: %s",
 								deliveryService.getGeoRedirectUrl()));
-				return enforceGeoRedirect(track, deliveryService, clientIp, track.getClientGeolocation());
+				return enforceGeoRedirect(track, deliveryService, clientIp, track.getClientGeolocation(), requestVersion);
 			} else {
 				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 				return null;
 			}
 		}
 
-		if (clientLocation.isDefaultLocation() && defaultGeolocationsOverride.containsKey(clientLocation.getCountryCode())) {
-			clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+		track.setResult(ResultType.GEO);
+		if (clientLocation.isDefaultLocation() && getDefaultGeoLocationsOverride().containsKey(clientLocation.getCountryCode())) {
+			if (isValidMissLocation(deliveryService)) {
+				clientLocation = deliveryService.getMissLocation();
+				track.setResult(ResultType.GEO_DS);
+			} else {
+				clientLocation = getDefaultGeoLocationsOverride().get(clientLocation.getCountryCode());
+			}
 		}
 
-		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
+		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track, requestVersion);
 
 		if (caches == null || caches.isEmpty()) {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
-
-		track.setResult(ResultType.GEO);
 		return caches;
 	}
 
@@ -722,8 +739,9 @@ public class TrafficRouter {
 			return result;
 		}
 
-		final CacheLocation cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, false, track);
-		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
+		final IPVersions requestVersion = request.getQueryType() == Type.AAAA ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
+		final CacheLocation cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, false, track, requestVersion);
+		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track, requestVersion);
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
@@ -754,7 +772,7 @@ public class TrafficRouter {
 		}
 
 		if (track.continueGeo) {
-			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
+			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track, requestVersion);
 		}
 
 		if (caches != null) {
@@ -919,15 +937,15 @@ public class TrafficRouter {
 	 * Selects caches to service requests for a Delivery Service from a cache location based on
 	 * Coverage Zone configuration.
 	 * <p>
-	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track)}
+	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track, IPVersions)}
 	 * with a 'null' "track" argument.
 	 * </p>
 	 * @param ds The Delivery Service being served.
 	 * @param cacheLocation The location from which caches will be selected.
 	 * @return All of the caches in the given location capable of serving ds.
 	 */
-	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
-		return selectCachesByCZ(ds, cacheLocation, null);
+	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final IPVersions requestVersion) {
+		return selectCachesByCZ(ds, cacheLocation, null, requestVersion);
 	}
 
 	/**
@@ -939,23 +957,23 @@ public class TrafficRouter {
 	 * @return All of the caches in the given location capable of serving the identified Delivery
 	 * Service.
 	 */
-	public List<Cache> selectCachesByCZ(final String deliveryServiceId, final String cacheLocationId, final Track track) {
-		return selectCachesByCZ(cacheRegister.getDeliveryService(deliveryServiceId), cacheRegister.getCacheLocation(cacheLocationId), track);
+	public List<Cache> selectCachesByCZ(final String deliveryServiceId, final String cacheLocationId, final Track track, final IPVersions requestVersion) {
+		return selectCachesByCZ(cacheRegister.getDeliveryService(deliveryServiceId), cacheRegister.getCacheLocation(cacheLocationId), track, requestVersion);
 	}
 
 	/**
 	 * Selects caches to service requests for a Delivery Service from a cache location based on
 	 * Coverage Zone Configuration.
 	 * <p>
-	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track, ResultType)}
-	 * with the "result" argument set to {@link #ResultType.CZ}.
+	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track, ResultType, IPVersions)}
+	 * with the "result" argument set to {@link ResultType#CZ}.
 	 * </p>
 	 * @param ds The Delivery Service being served.
 	 * @param cacheLocation The location from which caches will be selected
 	 * @return All of the caches in the given location capable of serving ds.
 	 */
-	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		return selectCachesByCZ(ds, cacheLocation, track, ResultType.CZ); // ResultType.CZ was the original default before DDC
+	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final IPVersions requestVersion) {
+		return selectCachesByCZ(ds, cacheLocation, track, ResultType.CZ, requestVersion); // ResultType.CZ was the original default before DDC
 	}
 
 	/**
@@ -965,7 +983,7 @@ public class TrafficRouter {
 	 * Obviously, at this point, the location from which to select caches must already be known.
 	 * So it's totally possible that that decision wasn't made based on Coverage Zones at all,
 	 * that's just the default routing result chosen by a common caller of this method
-	 * ({@link #selectCachesByCZ(DeliveryService, CacheLocation, Track)}).
+	 * ({@link #selectCachesByCZ(DeliveryService, CacheLocation, Track, IPVersions)}).
 	 * </p>
 	 * @param ds The Delivery Service being served.
 	 * @param cacheLocation The location from which caches will be selected.
@@ -973,12 +991,12 @@ public class TrafficRouter {
 	 * This is used for tracking routing results.
 	 * @return All of the caches in the given location capable of serving ds.
 	 */
-	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final ResultType result) {
+	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final ResultType result, final IPVersions requestVersion) {
 		if (cacheLocation == null || ds == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
 
-		final List<Cache> caches = selectCaches(cacheLocation, ds);
+		final List<Cache> caches = selectCaches(cacheLocation, ds, requestVersion);
 
 		if (caches != null && track != null) {
 			track.setResult(result);
@@ -1028,9 +1046,6 @@ public class TrafficRouter {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 			List<Cache> caches = selectCaches(request, ds, track);
 
-			if (caches != null) {
-				caches = editCacheListForIpVersion(!request.getClientIP().contains(":"), caches);
-			}
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
@@ -1178,11 +1193,7 @@ public class TrafficRouter {
 
 		routeResult.setDeliveryService(deliveryService);
 
-		List<Cache> caches = selectCaches(request, deliveryService, track);
-		if (caches != null) {
-			caches = editCacheListForIpVersion(!request.getClientIP().contains(":"), caches);
-		}
-
+		final List<Cache> caches = selectCaches(request, deliveryService, track);
 		if (caches == null || caches.isEmpty()) {
 			if (track.getResult() == ResultType.GEO_REDIRECT) {
 				routeResult.setUrl(new URL(deliveryService.getGeoRedirectUrl()));
@@ -1218,18 +1229,6 @@ public class TrafficRouter {
 		routeResult.setUrl(new URL(uriString));
 
 		return routeResult;
-	}
-
-	private List<Cache> editCacheListForIpVersion(final boolean requestIsIpv4, final List<Cache> caches) {
-		final List<Cache> removeCaches = new ArrayList<>();
-		for (final Cache cache : caches) {
-			if ((!requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV4ONLY) ||
-					requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV6ONLY) {
-				removeCaches.add(cache);
-			}
-		}
-		caches.removeAll(removeCaches);
-		return caches;
 	}
 
 	/**
@@ -1346,12 +1345,33 @@ public class TrafficRouter {
 		return null;
 	}
 
-	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId) {
-		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false, null); // default is not deep
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final IPVersions requestVersion) {
+		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false, null, requestVersion); // default is not deep
+	}
+
+	/**
+	 * Finds the deep coverage zone location information for a give IP address.
+	 * @param ip
+	 * @return deep coverage zone location
+	 */
+	public CacheLocation getDeepCoverageZoneLocationByIP(final String ip) {
+		final NetworkNode networkNode = getDeepNetworkNode(ip);
+
+		if (networkNode == null) {
+			return null;
+		}
+
+		final CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
+
+		if (cacheLocation != null) {
+			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
+		}
+
+		return cacheLocation;
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep, final Track track) {
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep, final Track track, final IPVersions requestVersion) {
 		final NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
 		final LocalizationMethod localizationMethod = useDeep ? LocalizationMethod.DEEP_CZ : LocalizationMethod.CZ;
 
@@ -1371,7 +1391,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
+		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService, requestVersion).isEmpty()) {
 			return cacheLocation;
 		}
 
@@ -1391,7 +1411,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
+		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService, requestVersion).isEmpty()) {
 			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
 			networkNode.setLocation(cacheLocation);
 			return cacheLocation;
@@ -1403,7 +1423,7 @@ public class TrafficRouter {
 				if (bkCacheLocation != null && !bkCacheLocation.isEnabledFor(localizationMethod)) {
 					continue;
 				}
-				if (bkCacheLocation != null && !getSupportingCaches(bkCacheLocation.getCaches(), deliveryService).isEmpty()) {
+				if (bkCacheLocation != null && !getSupportingCaches(bkCacheLocation.getCaches(), deliveryService, requestVersion).isEmpty()) {
 					LOGGER.debug("Got backup CZ cache group " + bkCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
 					if (track != null) {
 						track.setFromBackupCzGroup(true);
@@ -1424,7 +1444,7 @@ public class TrafficRouter {
 		// Check whether the CZF entry has a geolocation and use it if so.
 		List<CacheLocation> availableLocations = cacheRegister.filterAvailableCacheLocations(deliveryServiceId);
 		availableLocations = filterEnabledLocations(availableLocations, localizationMethod);
-		final CacheLocation closestCacheLocation = getClosestCacheLocation(availableLocations, networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+		final CacheLocation closestCacheLocation = getClosestCacheLocation(availableLocations, networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId), requestVersion);
 
 		if (closestCacheLocation != null) {
 			LOGGER.debug("Got closest CZ cache group " + closestCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
@@ -1441,16 +1461,16 @@ public class TrafficRouter {
 				.collect(Collectors.toList());
 	}
 
-	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
-		return getCoverageZoneCacheLocation(ip, deliveryService, true, null);
+	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final IPVersions requestVersion) {
+		return getCoverageZoneCacheLocation(ip, deliveryService, true, null, requestVersion);
 	}
 
-	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep, final Track track) {
-		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), useDeep, track);
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep, final Track track, final IPVersions requestVersion) {
+		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), useDeep, track, requestVersion);
 	}
 
-	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
-		return getCoverageZoneCacheLocation(ip, deliveryService.getId());
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final IPVersions requestVersion) {
+		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), requestVersion);
 	}
 
 	/**
@@ -1501,8 +1521,9 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, useDeep, null);
-		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation);
+		final IPVersions requestVersion = ip.contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
+		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, useDeep, null, requestVersion);
+		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation, requestVersion);
 
 		if (caches == null || caches.isEmpty()) {
 			return null;
@@ -1543,15 +1564,16 @@ public class TrafficRouter {
 			return null;
 		}
 
+		final IPVersions requestVersion = ip.contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
 		List<Cache> caches = null;
 		if (deliveryService.isCoverageZoneOnly() && deliveryService.getGeoRedirectUrl() != null) {
 			//use the NGB redirect
-			caches = enforceGeoRedirect(StatTracker.getTrack(), deliveryService, ip, null);
+			caches = enforceGeoRedirect(StatTracker.getTrack(), deliveryService, ip, null, requestVersion);
 		} else {
-			final CacheLocation cacheLocation = getCoverageZoneCacheLocation(ip, deliveryServiceId);
+			final CacheLocation cacheLocation = getCoverageZoneCacheLocation(ip, deliveryServiceId, requestVersion);
 
 			try {
-				caches = selectCachesByGeo(ip, deliveryService, cacheLocation, StatTracker.getTrack());
+				caches = selectCachesByGeo(ip, deliveryService, cacheLocation, StatTracker.getTrack(), requestVersion);
 			} catch (GeolocationException e) {
 				LOGGER.warn("Failed gettting list of caches by geolocation for ip " + ip + " delivery service id '" + deliveryServiceId + "'");
 			}
@@ -1697,7 +1719,7 @@ public class TrafficRouter {
 	 * File given a clients IP and request.
 	 * @param ip The client's IP address
 	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
-	 * @param requestPath The client's HTTP request
+	 * @param request The client's HTTP request
 	 * @return A cache object chosen to serve the client's request
 	 */
 	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request) {
@@ -1707,8 +1729,9 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, false, null);
-		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation);
+		final IPVersions requestVersion = ip.contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
+		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, false, null, requestVersion);
+		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation, requestVersion);
 
 		if (caches == null || caches.isEmpty()) {
 			return null;
@@ -1748,7 +1771,7 @@ public class TrafficRouter {
 	 * Chooses a target Delivery Service of a given Delivery Service to service a given request and
 	 * {@link #XTC_STEERING_OPTION} value.
 	 *
-	 * @param deliveryServiceId The "xml_id" of the Delivery Service being requested
+	 * @param deliveryService The DeliveryService being requested
 	 * @param request The client's HTTP request
 	 * @param xtcSteeringOption The value of the client's {@link #XTC_STEERING_OPTION} HTTP Header.
 	 * @return The chosen target Delivery Service, or null if one could not be determined.
@@ -1807,7 +1830,7 @@ public class TrafficRouter {
 		return locations;
 	}
 
-	private CacheLocation getClosestCacheLocation(final List<CacheLocation> cacheLocations, final Geolocation clientLocation, final DeliveryService deliveryService) {
+	private CacheLocation getClosestCacheLocation(final List<CacheLocation> cacheLocations, final Geolocation clientLocation, final DeliveryService deliveryService, final IPVersions requestVersion) {
 		if (clientLocation == null) {
 			return null;
 		}
@@ -1815,7 +1838,7 @@ public class TrafficRouter {
 	    final List<CacheLocation> orderedLocations = (List<CacheLocation>) orderLocations(cacheLocations, clientLocation);
 
 		for (final CacheLocation cacheLocation : orderedLocations) {
-			if (!getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
+			if (!getSupportingCaches(cacheLocation.getCaches(), deliveryService, requestVersion).isEmpty()) {
 				return cacheLocation;
 			}
 		}
@@ -1832,12 +1855,12 @@ public class TrafficRouter {
 	 *            the delivery service for the request
 	 * @return the selected cache or null if none can be found
 	 */
-	private List<Cache> selectCaches(final CacheLocation location, final DeliveryService ds) {
+	private List<Cache> selectCaches(final CacheLocation location, final DeliveryService ds, final IPVersions requestVersion) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Trying location: " + location.getId());
 		}
 
-		final List<Cache> caches = getSupportingCaches(location.getCaches(), ds);
+		final List<Cache> caches = getSupportingCaches(location.getCaches(), ds, requestVersion);
 		if (caches.isEmpty()) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("No online, supporting caches were found at location: "
@@ -1887,7 +1910,7 @@ public class TrafficRouter {
 		return dnssecZoneDiffingEnabled;
 	}
 
-	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation) {
+	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation, final IPVersions requestVersion) {
 		final String urlType = ds.getGeoRedirectUrlType();
 		track.setResult(ResultType.GEO_REDIRECT);
 
@@ -1929,7 +1952,7 @@ public class TrafficRouter {
 		List<Cache> caches = null;
 
 		try {
-			caches = getCachesByGeo(ds, clientLocation, track);
+			caches = getCachesByGeo(ds, clientLocation, track, requestVersion);
 		} catch (GeolocationException e) {
 			LOGGER.error("Failed getting caches by geolocation " + e.getMessage());
 		}
@@ -1985,5 +2008,9 @@ public class TrafficRouter {
 		}
 
 		return edgeHTTPRoutingLimit;
+	}
+
+	public Map<String, Geolocation> getDefaultGeoLocationsOverride() {
+		return defaultGeolocationsOverride;
 	}
 }

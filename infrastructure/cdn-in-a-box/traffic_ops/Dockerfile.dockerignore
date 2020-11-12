@@ -25,5 +25,6 @@
 *
 !infrastructure/cdn-in-a-box/
 !traffic_ops/app/cpanfile
+!infrastructure/cdn-in-a-box/traffic_ops/local/
 !traffic_ops/install/bin/install_goose.sh
 !traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz

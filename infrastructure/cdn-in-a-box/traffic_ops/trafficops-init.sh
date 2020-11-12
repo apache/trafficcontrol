@@ -36,18 +36,28 @@ while ! to-ping 2>/dev/null; do
 done
 
 # NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
-endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers deliveryservice_servers"
+endpoints="cdns types divisions regions phys_locations tenants users cachegroups profiles parameters servers topologies deliveryservices deliveryservice_servers"
 vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 waitfor() {
-    local endpoint="$1"
-    local field="$2"
-    local value="$3"
+    local endpoint="$1"; shift
+    local field="$1"; shift
+    local value="$1"; shift
+    local responseField="$1"
+    if [[ -z "$responseField" ]]; then
+      responseField="$field"
+    else
+      shift
+    fi
+    local additionalQueryString="$1"
+    if [[ -n "$additionalQueryString" ]]; then
+      shift
+    fi
 
     while true; do
-        v=$(to-get "api/2.0/$endpoint?$field=$value" | jq -r --arg field "$field" '.response[][$field]')
-        if [[ $v == $value ]]; then
-            break
+        v="$(to-get "api/${TO_API_VERSION}/${endpoint}?${field}=${value}${additionalQueryString}" | jq -r --arg field "$responseField" '.response[][$field]')";
+        if [[ "$v" == "$value" ]]; then
+          break
         fi
         echo "waiting for $endpoint $field=$value"
         sleep 3
@@ -68,6 +78,15 @@ delayfor() {
                 waitfor servers hostName "$s"
             done
             ;;
+        topologies)
+            for cachegroup_name in $(jq -r '.nodes[] | .cachegroup' <"$f"); do
+              waitfor cachegroups name "$cachegroup_name"
+              cachegroup="$(to-get "api/${TO_API_VERSION}/cachegroups?name=${cachegroup_name}")"
+              cachegroup_id="$(<<<"$cachegroup" jq '.response[] | .id')"
+              cachegroup_type="$(<<<"$cachegroup" jq -r '.response[] | .typeName')"
+              waitfor servers cachegroup "$cachegroup_id" cachegroupId "&type=${cachegroup_type%_LOC}"
+            done
+            ;;
     esac
 }
 
@@ -77,14 +96,19 @@ load_data_from() {
         echo "Failed to load data from '$dir': directory does not exist"
     fi
     cd "$dir"
+
     local status=0
+    local has_ds_servers=''
+    if ls deliveryservice_servers/'*.json'; then
+      has_ds_servers='true'
+    fi
     for d in $endpoints; do
-        [[ -d $d ]] || continue
         # Let containers know to write out server.json
-        if [[ "$d" = "deliveryservice_servers" ]] ; then
+        if [[ "$d" = 'topologies' ]]; then
            touch "$ENROLLER_DIR/initial-load-done"
            sync
         fi
+        [[ -d $d ]] || continue
         for f in "$d"/*.json; do
             echo "Loading $f"
             delayfor "$f"

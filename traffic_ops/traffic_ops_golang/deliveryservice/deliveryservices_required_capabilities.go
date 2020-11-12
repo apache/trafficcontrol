@@ -23,19 +23,20 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
@@ -164,7 +165,7 @@ func (rc RequiredCapability) Validate() error {
 }
 
 // Update implements the api.CRUDer interface.
-func (rc *RequiredCapability) Update() (error, error, int) {
+func (rc *RequiredCapability) Update(http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 
@@ -265,7 +266,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	// Ensure DS type is only of HTTP*, DNS* types
-	dsType, dsExists, err := dbhelpers.GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
+	dsType, reqCaps, topology, dsExists, err := dbhelpers.GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -282,16 +283,27 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return usrErr, sysErr, rCode
 	}
 
-	usrErr, sysErr, rCode = rc.ensureDSServerCap()
-	if usrErr != nil || sysErr != nil {
-		return usrErr, sysErr, rCode
+	if topology == nil {
+		usrErr, sysErr, rCode = rc.ensureDSServerCap()
+		if usrErr != nil || sysErr != nil {
+			return usrErr, sysErr, rCode
+		}
+	} else {
+		newReqCaps := append(reqCaps, *rc.RequiredCapability)
+		usrErr, sysErr, rCode = EnsureTopologyBasedRequiredCapabilities(rc.APIInfo().Tx.Tx, *rc.DeliveryServiceID, *topology, newReqCaps)
+		if usrErr != nil {
+			return fmt.Errorf("cannot add required capability: %v", usrErr), sysErr, rCode
+		}
+		if sysErr != nil {
+			return usrErr, sysErr, rCode
+		}
 	}
 
 	rows, err := rc.APIInfo().Tx.NamedQuery(rcInsertQuery(), rc)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing rows in RequiredCapability.Create()")
 
 	rowsAffected := 0
 	for rows.Next() {
@@ -326,6 +338,78 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+// EnsureTopologyBasedRequiredCapabilities ensures that at least one server per cachegroup
+// in this delivery service's topology has this delivery service's required capabilities.
+func EnsureTopologyBasedRequiredCapabilities(tx *sql.Tx, dsID int, topology string, requiredCapabilities []string) (error, error, int) {
+	q := `
+SELECT
+  s.id,
+  s.cdn_id,
+  c.name,
+  ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
+FROM server s
+LEFT JOIN server_server_capability ssc ON ssc.server = s.id
+JOIN cachegroup c ON c.id = s.cachegroup
+JOIN topology_cachegroup tc ON tc.cachegroup = c.name
+WHERE
+  s.cdn_id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)
+  AND tc.topology = $2
+  AND c.type != (SELECT id FROM type WHERE name = '` + tc.CacheGroupOriginTypeName + `')
+GROUP BY s.id, s.cdn_id, c.name
+`
+	rows, err := tx.Query(q, dsID, topology)
+	if err != nil {
+		return nil, fmt.Errorf("querying server capabilities in EnsureTopologyBasedRequiredCapabilities: %v", err), http.StatusInternalServerError
+	}
+	cachegroupServers, serverCapabilities, _, err := dbhelpers.ScanCachegroupsServerCapabilities(rows)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if len(serverCapabilities) == 0 {
+		return fmt.Errorf("topology %s contains no servers in this delivery service's CDN; "+
+			"therefore, this delivery service's required capabilities cannot be satisfied", topology), nil, http.StatusBadRequest
+	}
+
+	invalidCachegroups := GetInvalidCachegroupsForRequiredCapabilities(cachegroupServers, serverCapabilities, requiredCapabilities)
+	if len(invalidCachegroups) > 0 {
+		return fmt.Errorf("the following cachegroups in this delivery service's topology do not contain at least one server with the required capabilities: %s", strings.Join(invalidCachegroups, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
+// GetInvalidCachegroupsForRequiredCapabilities returns the cachegroups that are invalid w.r.t. the given
+// `requiredCapabilities` of a delivery service. `cachegroupServers` is a map of cachegroup names to
+// server IDs that belong to the delivery service's CDN. `serverCapabilities` is a map of those server IDs to
+// their set of capabilities.
+func GetInvalidCachegroupsForRequiredCapabilities(
+	cachegroupServers map[string][]int,
+	serverCapabilities map[int]map[string]struct{},
+	requiredCapabilities []string,
+) []string {
+
+	invalidCachegroups := []string{}
+	for cachegroup, servers := range cachegroupServers {
+		cgIsValid := false
+		for _, server := range servers {
+			serverHasCapabilities := true
+			for _, dsReqCap := range requiredCapabilities {
+				if _, ok := serverCapabilities[server][dsReqCap]; !ok {
+					serverHasCapabilities = false
+					break
+				}
+			}
+			if serverHasCapabilities {
+				cgIsValid = true
+				break
+			}
+		}
+		if !cgIsValid {
+			invalidCachegroups = append(invalidCachegroups, cachegroup)
+		}
+	}
+	return invalidCachegroups
 }
 
 func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {

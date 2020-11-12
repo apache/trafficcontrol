@@ -52,6 +52,18 @@ func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationRes
 	return to.GetCDNFederationsByNameWithHdr(CDNName, nil)
 }
 
+func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, ReqInf, error) {
+	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
+	resp := struct {
+		Response []tc.CDNFederation `json:"response"`
+	}{}
+	inf, err := get(to, url, &resp, header)
+	if err != nil {
+		return nil, inf, err
+	}
+	return resp.Response, inf, nil
+}
+
 func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)
@@ -64,7 +76,7 @@ func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederat
 	return to.GetCDNFederationsByIDWithHdr(CDNName, ID, nil)
 }
 
-func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
+func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName string, ID int, h http.Header) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
 	jsonReq, err := json.Marshal(f)
 	if err != nil { //There is no remoteAddr for ReqInf at this point
 		return nil, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
@@ -72,8 +84,13 @@ func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, 
 
 	data := tc.UpdateCDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
-	inf, err := makeReq(to, "PUT", url, jsonReq, &data, nil)
+	inf, err := makeReq(to, "PUT", url, jsonReq, &data, h)
 	return &data, inf, err
+}
+
+// Deprecated: UpdateCDNFederationsByID will be removed in 6.0. Use UpdateCDNFederationsByIDWithHdr.
+func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
+	return to.UpdateCDNFederationsByIDWithHdr(f, CDNName, ID, nil)
 }
 
 func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, ReqInf, error) {

@@ -24,13 +24,14 @@ on:
       - docs/source/**
       - traffic_control/clients/python/**
   pull_request:
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, read_for_review, synchronize]
     paths:
       - docs/source/**
       - traffic_control/clients/python/**
 
 jobs:
   documentation:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

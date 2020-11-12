@@ -41,6 +41,19 @@ var JobService = function($http, ENV) {
 		);
 	};
 
+	this.deleteJob = function(id) {
+		return $http.delete(ENV.api['root'] + 'jobs', {params: {id: id}}).then(
+			function(result) {
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+				throw err;
+			}
+		);
+	};
+
+
 };
 
 JobService.$inject = ['$http', 'ENV'];

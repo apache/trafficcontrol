@@ -65,9 +65,9 @@ Ansible groups and hostvars specifying the component name must be provided and w
 Like the systems being allocated to a particular component name, they must also be assigned to a particular DNS NS Delegation name where relevant or the ``ALL`` cdn as needed by the component.
 The NS Delegation name is what you would find in DNS for Traffic Router to be authoritative for.  In this example it's ``MKGA`` rather than the CDN Name which is ``Kabletown2.0``.
 
-It is not recommended that an ::term::`origin` be used by more than one ::term::`delivery service` or it could lead to inconsistent behavior and conflated log data at the ::term::`Mid-tier`.
-As a workaround to this it is better for a lab to create DNS CNAME for each ::term::`delivery service` pointing at a particular ::term::`origin` and return that set of names as a CSV hostvar ds_names on each ::term::`origin`.
-These names will later be translated to additional inventory hosts used only for the creation of server objects in Traffic Ops and assignment to ::term::`delivery services`.
+It is not recommended that an :term:`origin server` be used by more than one :term:`Delivery Service` or it could lead to inconsistent behavior and conflated log data at the :term:`Mid-tier`.
+As a workaround to this it is better for a lab to create DNS CNAME for each :term:`Delivery Service` pointing at a particular :term:`origin server` and return that set of names as a CSV hostvar ds_names on each :term:`origin server`.
+These names will later be translated to additional inventory hosts used only for the creation of server objects in Traffic Ops and assignment to :term:`Delivery Services`.
 
 Steady-state OS Layer
 ---------------------

@@ -207,8 +207,8 @@ services:
     volumes:
       - shared:/shared
 
-  # mid cache
-  mid:
+  # mid cache 1
+  mid-01:
     privileged: True
     build:
       context: ../..
@@ -216,7 +216,20 @@ services:
     domainname: infra.ciab.test
     env_file:
       - variables.env
-    hostname: mid
+    hostname: mid-01
+    volumes:
+      - shared:/shared
+
+  # mid cache 2
+  mid-02:
+    privileged: True
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: mid-02
     volumes:
       - shared:/shared
 
@@ -240,6 +253,7 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
+    domainname: infra.ciab.test
     depends_on:
       - dns
     env_file:

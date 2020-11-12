@@ -28,10 +28,7 @@ RUN yum -y install epel-release \
   && yum clean all \
   && pip install --upgrade pip \
   && pip install --upgrade setuptools \
-  && pip install --upgrade pyOpenSSL \
-  && pip install --upgrade python-gilt \
-  && pip install --upgrade paramiko \
-  && pip install --upgrade Jinja2
+  && pip install --upgrade pyOpenSSL python-gilt paramiko Jinja2
 RUN mkdir -p /opt/atc/ && mkdir ~/.ssh && echo -e "Host *\n   StrictHostKeyChecking no\n   UserKnownHostsFile=/dev/null" > ~/.ssh/config
 COPY . /opt/atc
 

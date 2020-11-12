@@ -20,6 +20,7 @@ name: Go Unit Tests
 on:
   push:
     paths:
+      - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
@@ -29,16 +30,18 @@ on:
   create:
   pull_request:
     paths:
+      - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
       - traffic_stats/**.go
-    types: [opened, reopened, edited, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   test:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:

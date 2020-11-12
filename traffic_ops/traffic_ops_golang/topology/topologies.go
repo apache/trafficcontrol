@@ -20,8 +20,13 @@ package topology
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -29,11 +34,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"net/http"
-	"time"
 )
 
 // TOTopology is a type alias on which we can define functions.
@@ -130,8 +136,15 @@ func (topology *TOTopology) Validate() error {
 
 	for index, node := range topology.Nodes {
 		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = topology.checkForEdgeParents(cacheGroups, index)
-
 	}
+
+	cacheGroupIds := make([]int, len(cacheGroupNames))
+	for index, cacheGroup := range cacheGroups {
+		cacheGroupIds[index] = *cacheGroup.ID
+	}
+	rules["empty cachegroups"] = CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, false, nil)
+	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
+
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
 		return err
@@ -146,13 +159,75 @@ func (topology *TOTopology) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(rules))
 }
 
+func CheckForEmptyCacheGroups(tx *sqlx.Tx, cacheGroupIds []int, cachegroupsInTopology bool, excludeServerIds []int) error {
+	if excludeServerIds == nil {
+		excludeServerIds = []int{}
+	}
+	var (
+		baseError   = errors.New("unable to check for cachegroups with no servers")
+		systemError = "checking for cachegroups with no servers: %s"
+		query       = selectEmptyCacheGroupsQuery(cachegroupsInTopology)
+		parameters  = map[string]interface{}{
+			"cachegroup_ids":     pq.Array(cacheGroupIds),
+			"exclude_server_ids": pq.Array(excludeServerIds),
+		}
+	)
+
+	rows, err := tx.NamedQuery(query, parameters)
+	if err != nil {
+		log.Errorf(systemError, err.Error())
+		return baseError
+	}
+
+	var (
+		serverCount int
+		cacheGroup  string
+		cacheGroups []string
+		topologies  []string
+	)
+	defer log.Close(rows, "unable to close DB connection when checking for cachegroups with no servers")
+	for rows.Next() {
+		var scanTo = []interface{}{&cacheGroup, &serverCount}
+		var topologiesForRow []string
+		if cachegroupsInTopology {
+			scanTo = append(scanTo, pq.Array(&topologiesForRow))
+		}
+		if err := rows.Scan(scanTo...); err != nil {
+			log.Errorf(systemError, err.Error())
+			return baseError
+		}
+		if serverCount != 0 {
+			break
+		}
+		cacheGroups = append(cacheGroups, cacheGroup)
+		if cachegroupsInTopology {
+			topologies = append(topologies, topologiesForRow...)
+		}
+	}
+
+	if len(cacheGroups) > 0 {
+		errMessage := "cachegroups with no servers in them: " + strings.Join(cacheGroups, ", ")
+		if cachegroupsInTopology {
+			errMessage += " in topologies: " + strings.Join(topologies, ", ")
+		}
+		err = errors.New(errMessage)
+	}
+	return err
+}
+
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
-	where := `WHERE name != $1`
-	query := selectQueryWithParentNames() + where +
-		` UNION ` + selectNonTopologyCacheGroupsQuery() +
-		` UNION ` + selectNonTopologyParentCacheGroupsQuery()
-	rows, err := topology.ReqInfo.Tx.Query(query, topology.Name)
+	where := `WHERE name != :topology_name`
+	query := selectQueryWithParentNames() + where + `
+		UNION ` + selectNonTopologyCacheGroupsQuery() + `
+		UNION ` + selectNonTopologyParentCacheGroupsQuery()
+
+	parameters := map[string]interface{}{
+		"topology_name":    topology.Name,
+		"edge_type_prefix": strings.ToLower(tc.EdgeTypePrefix) + "%",
+		"mid_type_prefix":  strings.ToLower(tc.MidTypePrefix) + "%",
+	}
+	rows, err := topology.ReqInfo.Tx.NamedQuery(query, parameters)
 	if err != nil {
 		return nil, nil, baseError
 	}
@@ -231,6 +306,125 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 	}
 
 	return nodes, topologiesByCacheGroup, nil
+}
+
+func (topology TOTopology) validateDSRequiredCapabilities() error {
+	baseError := errors.New("unable to verify that delivery service required capabilities are satisfied")
+	tx := topology.APIInfo().Tx.Tx
+	dsRequiredCapabilities, dsCDNs, err := getDSRequiredCapabilitiesByTopology(topology.Name, tx)
+	if err != nil {
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		return baseError
+	}
+	if len(dsRequiredCapabilities) == 0 {
+		return nil
+	}
+	cachegroups := topology.getCachegroupNames()
+	cdnMap := make(map[int]struct{})
+	for _, cdn := range dsCDNs {
+		cdnMap[cdn] = struct{}{}
+	}
+	CDNs := []int{}
+	for cdn := range cdnMap {
+		CDNs = append(CDNs, cdn)
+	}
+	q := `
+SELECT
+  s.id,
+  s.cdn_id,
+  c.name,
+  ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
+FROM server s
+LEFT JOIN server_server_capability ssc ON ssc.server = s.id
+JOIN cachegroup c ON c.id = s.cachegroup
+WHERE
+  c.name = ANY($1)
+  AND s.cdn_id = ANY($2)
+  AND c.type != (SELECT id FROM type WHERE name = '` + tc.CacheGroupOriginTypeName + `')
+GROUP BY s.id, s.cdn_id, c.name
+`
+	rows, err := tx.Query(q, pq.Array(cachegroups), pq.Array(CDNs))
+	if err != nil {
+		log.Errorf("querying server capabilities in topology.validateDSRequiredCapabilities: %v", err)
+		return baseError
+	}
+	cachegroupServers, serverCapabilities, serverCDNs, err := dbhelpers.ScanCachegroupsServerCapabilities(rows)
+	if err != nil {
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		return baseError
+	}
+
+	cdnCachegroupServers := make(map[int]map[string][]int)
+	for _, cdn := range dsCDNs {
+		if _, ok := cdnCachegroupServers[cdn]; !ok {
+			cdnCachegroupServers[cdn] = make(map[string][]int)
+		}
+	}
+	for cg, servers := range cachegroupServers {
+		for _, s := range servers {
+			cdnCachegroupServers[serverCDNs[s]][cg] = append(cdnCachegroupServers[serverCDNs[s]][cg], s)
+		}
+	}
+
+	invalidDSes := []string{}
+	for ds, dsReqCaps := range dsRequiredCapabilities {
+		invalidCachegroups := deliveryservice.GetInvalidCachegroupsForRequiredCapabilities(cdnCachegroupServers[dsCDNs[ds]], serverCapabilities, dsReqCaps)
+		if len(invalidCachegroups) > 0 {
+			invalidDSes = append(invalidDSes, fmt.Sprintf("%s: cachegroups [%s] do not meet required capabilities", ds, strings.Join(invalidCachegroups, ", ")))
+		}
+	}
+	if len(invalidDSes) > 0 {
+		return errors.New("cannot update topology. The following delivery services would not be satisfied: " + strings.Join(invalidDSes, "; "))
+	}
+
+	return nil
+}
+
+// getDSRequiredCapabilitiesByTopology returns a map of DS xml_id to required capabilities,
+// a map of xml_id to cdn_id, and an error (if one occurs).
+func getDSRequiredCapabilitiesByTopology(name string, tx *sql.Tx) (map[string][]string, map[string]int, error) {
+	q := `
+SELECT
+  d.xml_id,
+  d.cdn_id,
+  ARRAY_AGG(drc.required_capability) AS required_capabilities
+FROM deliveryservice d
+JOIN deliveryservices_required_capability drc ON d.id = drc.deliveryservice_id
+WHERE
+  d.topology = $1
+GROUP BY d.xml_id, d.cdn_id
+`
+	rows, err := tx.Query(q, name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying delivery service required capabilities by topology: %v", err)
+	}
+	defer log.Close(rows, "closing rows in getDSRequiredCapabilitiesByTopology")
+
+	requiredCapabilities := make(map[string][]string)
+	dsCdnIDs := make(map[string]int)
+	for rows.Next() {
+		xmlID := ""
+		cdnID := 0
+		reqCaps := []string{}
+		if err := rows.Scan(&xmlID, &cdnID, pq.Array(&reqCaps)); err != nil {
+			return nil, nil, fmt.Errorf("scanning delivery service required capabilities by topology: %v", err)
+		}
+		requiredCapabilities[xmlID] = reqCaps
+		dsCdnIDs[xmlID] = cdnID
+	}
+	return requiredCapabilities, dsCdnIDs, nil
+}
+
+func (topology TOTopology) getCachegroupNames() []string {
+	cgSet := make(map[string]struct{})
+	for _, n := range topology.Nodes {
+		cgSet[n.Cachegroup] = struct{}{}
+	}
+	cachegroups := make([]string, 0, len(cgSet))
+	for c := range cgSet {
+		cachegroups = append(cachegroups, c)
+	}
+	return cachegroups
 }
 
 // Implementation of the Identifier, Validator interface functions
@@ -434,8 +628,8 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 }
 
 // Update is a requirement of the api.Updater interface.
-func (topology *TOTopology) Update() (error, error, int) {
-	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
+func (topology *TOTopology) Update(h http.Header) (error, error, int) {
+	topologies, userErr, sysErr, errCode, _ := topology.Read(h, false)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -496,11 +690,6 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	topology.Topology = topologies[0].(tc.Topology)
-
-	var cachegroups []string
-	for _, node := range topology.Nodes {
-		cachegroups = append(cachegroups, node.Cachegroup)
-	}
 	return api.GenericOptionsDelete(topology)
 }
 
@@ -563,6 +752,37 @@ JOIN topology_cachegroup tc on t.name = tc.topology
 	return query
 }
 
+func selectEmptyCacheGroupsQuery(cachegroupsInTopology bool) string {
+	var joinTopologyCachegroups string
+	var topologyNames string
+	if cachegroupsInTopology {
+		// language=SQL
+		topologyNames = `
+		, ARRAY_AGG(tc.topology)
+`
+		// language=SQL
+		joinTopologyCachegroups = `
+		JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
+`
+	}
+	// language=SQL
+	query := fmt.Sprintf(`
+		SELECT
+			c."name",
+			COUNT(*) FILTER (
+			    WHERE s.id IS NOT NULL
+			    AND NOT(s."id" = ANY(CAST(:exclude_server_ids AS INT[])))
+			) AS server_count %s
+		FROM cachegroup c
+		%s
+		LEFT JOIN "server" s ON c.id = s.cachegroup
+		WHERE c."id" = ANY(CAST(:cachegroup_ids AS BIGINT[]))
+		GROUP BY c."name"
+		ORDER BY server_count
+	`, topologyNames, joinTopologyCachegroups)
+	return query
+}
+
 func selectNonTopologyCacheGroupsQuery() string {
 	query := `
 SELECT 'non-topology cachegroups' AS name, c."name" AS cachegroup,
@@ -573,8 +793,8 @@ SELECT 'non-topology cachegroups' AS name, c."name" AS cachegroup,
 	)
 FROM cachegroup c
 JOIN "type" t ON c."type" = t.id
-WHERE (t.name = 'EDGE_LOC'
-OR t.name = 'MID_LOC')
+WHERE (LOWER(t.name) LIKE :edge_type_prefix
+OR LOWER(t.name) LIKE :mid_type_prefix)
 AND (c.parent_cachegroup_id IS NOT NULL
 OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `
@@ -593,8 +813,8 @@ FROM cachegroup c
 JOIN "type" t ON c."type" = t.id
 JOIN cachegroup pc2 ON c.parent_cachegroup_id = pc2.id
 	OR c.secondary_parent_cachegroup_id = pc2.id
-WHERE (t.name = 'EDGE_LOC'
-OR t.name = 'MID_LOC')
+WHERE (LOWER(t.name) LIKE :edge_type_prefix
+OR LOWER(t.name) LIKE :mid_type_prefix)
 AND (c.parent_cachegroup_id IS NOT NULL
 OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `

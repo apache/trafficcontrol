@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // These are the API endpoints used by the various Delivery Service-related client methods.
@@ -73,7 +74,11 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the XMLID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_sslkeys.html
-	API_DELIVERY_SERVICE_XMLID_SSL_KEYS = API_DELIVERY_SERVICES + "/xmlid/%s/sslkeys"
+	API_DELIVERY_SERVICE_XMLID_SSL_KEYS = API_DELIVERY_SERVICES + "/xmlId/%s/sslkeys"
+
+	// API_DELIVERY_SERVICE_GENERATE_SSL_KEYS is the API path on which Traffic Ops will generate new SSL keys
+	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_sslkeys_generate.html
+	API_DELIVERY_SERVICE_GENERATE_SSL_KEYS = API_DELIVERY_SERVICES + "/sslkeys/generate"
 
 	// API_DELIVERY_SERVICE_URI_SIGNING_KEYS is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URI-signing keys used by a Delivery Service identified
@@ -374,9 +379,9 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
-// UpdateDeliveryServiceV30 replaces the Delivery Service identified by the
+// UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	bts, err := json.Marshal(ds)
 	if err != nil {
@@ -384,7 +389,7 @@ func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullabl
 	}
 
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -403,14 +408,18 @@ func (to *Session) UpdateDeliveryServiceV30(id int, ds tc.DeliveryServiceNullabl
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// UpdateDeliveryServiceV30.
+// UpdateDeliveryServiceV30WithHdr.
 func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+	return to.UpdateDeliveryServiceNullableWithHdr(id, ds, nil)
+}
+
+func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data)
+	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data, header)
 	if err != nil {
 		return nil, err
 	}
@@ -497,6 +506,46 @@ func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.De
 	return data.Response, reqInf, nil
 }
 
+// GenerateSSLKeysForDS generates ssl keys for a given cdn
+func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields tc.SSLKeyRequestFields) (string, ReqInf, error) {
+	version := util.JSONIntStr(1)
+	request := tc.DeliveryServiceSSLKeysReq{
+		BusinessUnit:    sslFields.BusinessUnit,
+		CDN:             util.StrPtr(CDNName),
+		City:            sslFields.City,
+		Country:         sslFields.Country,
+		DeliveryService: util.StrPtr(XMLID),
+		HostName:        sslFields.HostName,
+		Key:             util.StrPtr(XMLID),
+		Organization:    sslFields.Organization,
+		State:           sslFields.State,
+		Version:         &version,
+	}
+	jsonReq, err := json.Marshal(request)
+	if err != nil {
+		return "", ReqInf{}, err
+	}
+	response := struct {
+		Response string `json:"response"`
+	}{}
+	reqInf, err := post(to, API_DELIVERY_SERVICE_GENERATE_SSL_KEYS, jsonReq, &response)
+	if err != nil {
+		return "", reqInf, err
+	}
+	return response.Response, reqInf, nil
+}
+
+func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, ReqInf, error) {
+	resp := struct {
+		Response string `json:"resposne"`
+	}{}
+	reqInf, err := del(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &resp)
+	if err != nil {
+		return "", reqInf, err
+	}
+	return resp.Response, reqInf, nil
+}
+
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
 // Deprecated: GetDeliveryServiceSSLKeysByID will be removed in 6.0. Use GetDeliveryServiceSSLKeysByIDWithHdr.
@@ -568,9 +617,9 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 	return []byte(data), reqInf, nil
 }
 
-// SafeDeliveryServiceUpdateV30 updates the "safe" fields of the Delivery
+// SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafeUpdateRequest) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	req, err := json.Marshal(r)
 	if err != nil {
@@ -578,7 +627,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 	}
 
 	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -594,7 +643,7 @@ func (to *Session) SafeDeliveryServiceUpdateV30(id int, r tc.DeliveryServiceSafe
 //
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
-// SafeDeliveryServiceUpdateV30.
+// SafeDeliveryServiceUpdateV30WithHdr.
 func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var reqInf ReqInf
 	var resp tc.DeliveryServiceSafeUpdateResponse
@@ -604,7 +653,7 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 		return resp.Response, reqInf, err
 	}
 
-	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp); err != nil {
+	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp, nil); err != nil {
 		return resp.Response, reqInf, err
 	}
 

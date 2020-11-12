@@ -64,20 +64,6 @@ func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter,
 	return m, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
 }
 
-func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(dses) == 0 {
-		return -1, errors.New("no deliveryservice with name " + n)
-	}
-	if dses[0].ID == nil {
-		return -1, errors.New("Delivery service " + n + " has a nil ID")
-	}
-	return *dses[0].ID, err
-}
-
 // enrollType takes a json file and creates a Type object using the TO API
 func enrollType(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
@@ -185,16 +171,42 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 	return err
 }
 
+func enrollTopology(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var s tc.Topology
+	err := dec.Decode(&s)
+	if err != nil && err != io.EOF {
+		log.Infof("error decoding Topology: %s\n", err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateTopology(s)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			log.Infof("topology %s already exists\n", s.Name)
+			return nil
+		}
+		log.Infof("error creating Topology: %s\n", err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.DeliveryServiceNullable
+	var s tc.DeliveryServiceNullableV30
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)
 		return err
 	}
 
-	alerts, err := toSession.CreateDeliveryServiceNullable(&s)
+	alerts, _, err := toSession.CreateDeliveryServiceV30(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
@@ -222,7 +234,8 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
+	params := url.Values{"xmlId": []string{dss.XmlId}}
+	dses, _, err := toSession.GetDeliveryServicesV30WithHdr(nil, params)
 	if err != nil {
 		return err
 	}
@@ -234,11 +247,11 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 	dsID := *dses[0].ID
 
-	params := &url.Values{}
+	params = url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params)
+		servers, _, err := toSession.GetServersWithHdr(&params, nil)
 		if err != nil {
 			return err
 		}
@@ -348,7 +361,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n)
+				profiles, _, err := toSession.GetProfileByNameWithHdr(n, nil)
 				if err != nil {
 					return err
 				}
@@ -525,7 +538,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name)
+	profiles, _, err := toSession.GetProfileByNameWithHdr(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -547,7 +560,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name)
+		profiles, _, err = toSession.GetProfileByNameWithHdr(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -622,14 +635,14 @@ func enrollProfile(toSession *session, r io.Reader) error {
 // enrollServer takes a json file and creates a Server object using the TO API
 func enrollServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.ServerNullable
+	var s tc.ServerV30
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding Server: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServer(s)
+	alerts, _, err := toSession.CreateServerWithHdr(s, nil)
 	if err != nil {
 		log.Infof("error creating Server: %s\n", err)
 		return err
@@ -660,7 +673,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 		const (
 			processed = ".processed"
 			rejected  = ".rejected"
-			retry  = ".retry"
+			retry     = ".retry"
 		)
 		originalNameRegex := regexp.MustCompile(`(\.retry)*$`)
 
@@ -859,6 +872,7 @@ func main() {
 		"types":                   enrollType,
 		"cdns":                    enrollCDN,
 		"cachegroups":             enrollCachegroup,
+		"topologies":              enrollTopology,
 		"profiles":                enrollProfile,
 		"parameters":              enrollParameter,
 		"servers":                 enrollServer,

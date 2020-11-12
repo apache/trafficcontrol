@@ -55,11 +55,11 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
-	servers := resp.Response
+	servers := resp
 	serverID := 0
 	for _, server := range servers {
-		if server.Type == "EDGE" && server.CDNName != nil && *server.CDNName == "cdn1" && server.ID != nil {
-			serverID = *server.ID
+		if server.Type == "EDGE" && server.CDNName == "cdn1" {
+			serverID = server.ID
 			break
 		}
 	}
@@ -137,6 +137,23 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
+	}
+
+	crcBtsNew, _, err := TOSession.GetCRConfigNew(cdn)
+	if err != nil {
+		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
+	}
+	crcNew := tc.CRConfig{}
+	if err := json.Unmarshal(crcBtsNew, &crcNew); err != nil {
+		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
+	}
+
+	if len(crcNew.DeliveryServices) != len(crc.DeliveryServices) {
+		t.Errorf("/new endpoint returned a different snapshot. DeliveryServices length expected %v, was %v", len(crc.DeliveryServices), len(crcNew.DeliveryServices))
+	}
+
+	if *crcNew.Stats.TMHost != "" {
+		t.Errorf("update to snapshot not captured in /new endpoint")
 	}
 }
 

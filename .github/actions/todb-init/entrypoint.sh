@@ -18,6 +18,23 @@
 
 set -e
 
+download_go() {
+  go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
+  wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
+  tar -C /usr/local -xzf go.tar.gz
+  rm go.tar.gz
+  export PATH="${PATH}:${GOROOT}/bin"
+  go version
+}
+download_go
+GOPATH="$(mktemp -d)"
+export PATH="${GOPATH}/bin:${PATH}" GOPATH
+
+apk add --no-cache git gcc gettext postgresql-client musl-dev
+go get -v bitbucket.org/liamstask/goose/cmd/goose
+mv $GOPATH/bin/goose /bin/ &&\
+	apk del git gcc musl-dev
+
 cd "traffic_ops/app/db"
 
 mv /dbconf.yml ./

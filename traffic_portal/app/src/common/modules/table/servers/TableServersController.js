@@ -299,6 +299,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	$scope.pageSize = 100;
 
+	$scope.mouseDownSelectionText = "";
+
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
@@ -306,13 +308,12 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			updateCellRenderer: UpdateCellRenderer
 		},
 		columnDefs: columns,
+		enableCellTextSelection:true,
+		suppressMenuHide: true,
+		multiSortKey: 'ctrl',
+		alwaysShowVerticalScroll: true,
 		defaultColDef: {
 			filter: true,
-			onCellClicked: function(params) {
-					locationUtils.navigateToPath('/servers/' + params.data.id);
-					// Event is outside the digest cycle, so we need to trigger one.
-					$scope.$apply();
-				},
 			sortable: true,
 			resizable: true,
 			tooltip: defaultTooltip
@@ -321,20 +322,60 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		pagination: true,
 		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
-		onColumnResized: function(params) {
-			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
-		},
 		tooltipShowDelay: 500,
 		allowContextMenuWithControlKey: true,
 		preventDefaultOnContextMenu: true,
+		colResizeDefault: "shift",
+		onColumnVisible: function(params) {
+			if (params.visible){
+				return;
+			}
+		    for (let column of params.columns) {
+				if (column.filterActive) {
+					const filterModel = $scope.gridOptions.api.getFilterModel();
+					if (column.colId in filterModel) {
+						delete filterModel[column.colId];
+						$scope.gridOptions.api.setFilterModel(filterModel);
+					}
+				}
+			}
+		},
 		onCellContextMenu: function(params) {
 			$scope.showMenu = true;
-			$scope.menuStyle.left = String(params.event.pageX) + "px";
-			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.menuStyle.left = String(params.event.clientX) + "px";
+			$scope.menuStyle.top = String(params.event.clientY) + "px";
+			$scope.menuStyle.bottom = "unset";
+			$scope.menuStyle.right = "unset";
+			$scope.$apply();
+			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+
+			if (boundingRect.bottom > window.innerHeight){
+				$scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
+				$scope.menuStyle.top = "unset";
+			}
+			if (boundingRect.right > window.innerWidth) {
+				$scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
+				$scope.menuStyle.left = "unset";
+			}
 			$scope.server = params.data;
 			$scope.$apply();
 		},
-		colResizeDefault: "shift"
+		onCellMouseDown: function() {
+			$scope.mouseDownSelectionText = window.getSelection().toString();
+		},
+		onRowClicked: function(params) {
+			const selection = window.getSelection().toString();
+			if(selection === "" || selection === $scope.mouseDownSelectionText) {
+				locationUtils.navigateToPath('/servers/' + params.data.id);
+				// Event is outside the digest cycle, so we need to trigger one.
+				$scope.$apply();
+			}
+			$scope.mouseDownSelectionText = "";
+		},
+		onColumnResized: function(params) {
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+		},
+
 	};
 
 	/** These three functions are used by the context menu to determine what functionality to provide for a server. */
@@ -377,7 +418,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			fileName: "servers.csv",
 		};
 		$scope.gridOptions.api.exportDataAsCsv(params);
-	}
+	};
 
 	/**** Context menu functions ****/
 
@@ -537,7 +578,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		localStorage.setItem(tableName + "_page_size", value);
 	};
 
-	$scope.clearColFilters = function() {
+	$scope.clearTableFilters = function() {
+		// clear the quick search
+		$scope.quickSearch = '';
+		$scope.onQuickSearchChanged();
+		// clear any column filters
 		$scope.gridOptions.api.setFilterModel(null);
 	};
 

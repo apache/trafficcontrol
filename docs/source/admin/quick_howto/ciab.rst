@@ -44,6 +44,13 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
+The image that takes the takes the longest to build is the ``trafficops-perl`` image. In order to avoid needing to download, build, and test 239 Perl CPAN modules each time you rebuild the image from scratch, you can run the following command while running CDN in a Box in order to skip building the Perl modules next time:
+
+.. code-block:: shell
+	:caption: Make a local copy of CPAN modules used by Traffic Ops Perl
+
+	docker cp $(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local traffic_ops
+
 Usage
 -----
 In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
@@ -59,6 +66,9 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000   | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Second Mid-Tier Cache (parent   | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	| of the first Mid-Tier Cache)    |                                                                |                                       |                                           |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Mock Origin Server              | Example web page served on port 9200                           | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+

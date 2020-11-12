@@ -45,6 +45,10 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
+func (v *TOTenant) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "tenant")
+}
+
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -131,7 +135,7 @@ func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, err
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK, nil
 	}
-
+	api.DefaultSort(ten.APIInfo(), "name")
 	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
@@ -198,7 +202,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx.Tx)
 }
 
-func (tn *TOTenant) Update() (error, error, int) { return api.GenericUpdate(tn) }
+func (tn *TOTenant) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, tn) }
 
 func (ten *TOTenant) Delete() (error, error, int) {
 	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)

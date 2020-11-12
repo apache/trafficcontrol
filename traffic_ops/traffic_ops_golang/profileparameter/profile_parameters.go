@@ -102,8 +102,8 @@ func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
 func (pp *TOProfileParameter) Validate() error {
 
 	errs := validation.Errors{
-		"profile":   validation.Validate(pp.ProfileID, validation.Required),
-		"parameter": validation.Validate(pp.ParameterID, validation.Required),
+		"profileId":   validation.Validate(pp.ProfileID, validation.Required),
+		"parameterId": validation.Validate(pp.ParameterID, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
@@ -152,10 +152,11 @@ parameter) VALUES (
 :parameter_id) RETURNING profile, parameter, last_updated`
 }
 
-func (pp *TOProfileParameter) Update() (error, error, int) {
+func (pp *TOProfileParameter) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(pp.APIInfo(), "parameter")
 	return api.GenericRead(h, pp, useIMS)
 }
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
