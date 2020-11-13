@@ -32,6 +32,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -1601,6 +1603,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// func checkServerIsOnlyOneAssignedToADeliveryService(id int) (int, error, error) {
+
+// }
+
+// Delete is the handler for DELETE requests to the /servers API endpoint.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
