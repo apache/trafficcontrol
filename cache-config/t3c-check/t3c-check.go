@@ -29,12 +29,8 @@ import (
 )
 
 var commands = map[string]struct{}{
-	"apply":    struct{}{},
-	"check":    struct{}{},
-	"diff":     struct{}{},
-	"generate": struct{}{},
-	"request":  struct{}{},
-	"update":   struct{}{},
+	"refs":   struct{}{},
+	"reload": struct{}{},
 }
 
 const ExitCodeSuccess = 0
@@ -62,7 +58,7 @@ func main() {
 		os.Exit(ExitCodeUnknownCommand)
 	}
 
-	app := "t3c-" + cmd
+	app := "t3c-check-" + cmd
 	args := append([]string{app}, os.Args[2:]...)
 
 	ex, err := os.Executable()
@@ -82,19 +78,18 @@ func main() {
 }
 
 func usageStr() string {
-	return `usage: t3c [--help]
+	return `usage: t3c-check [--help]
        <command> [<args>]
 
-For the arguments of a command, see 't3c <command> --help'.
+t3c-check has commands for checking things about new config files, such as
+whether they can be safely applied or if a service reload or restart will
+be required.
+
+For the arguments of a command, see 't3c-check <command> --help'.
 
 These are the available commands:
 
-  apply     generate and apply configuration
-
-  diff      diff config files, with logic like ignoring comments
-  generate  generate configuration from Traffic Ops data
-  request   request Traffic Ops data
-  update    update a cache's queue and reval status in Traffic Ops
-  verify    verify a config file can be applied
+  reload  if a reload or restart is needed
+  refs    if a config file's referenced plugins and files are valid
 `
 }

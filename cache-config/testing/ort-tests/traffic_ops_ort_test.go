@@ -121,13 +121,12 @@ func TestMain(m *testing.M) {
 	os.Exit(rc)
 }
 
-func runVerify(config_file string) error {
+func runCheckRefs(config_file string) error {
 	args := []string{
-		"verify",
 		"--log-location-debug=test.log",
 		config_file,
 	}
-	cmd := exec.Command("t3c", args...)
+	cmd := exec.Command("t3c-check-refs", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out
