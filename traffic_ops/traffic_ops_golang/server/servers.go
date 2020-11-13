@@ -623,7 +623,7 @@ and p.id = $1
 			if err != nil {
 				errs = append(errs, errors.New("unable to determine service address uniqueness"))
 			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
-				errs = append(errs, errors.New(fmt.Sprintf("there exists a server with id %v on the same profile that has the same service address %s", id, ipaddress)))
+				errs = append(errs, fmt.Errorf("there exists a server with id %v on the same profile that has the same service address %s", id, ipaddress))
 			}
 		}
 	}
@@ -631,6 +631,7 @@ and p.id = $1
 	return serviceInterface, util.JoinErrs(errs)
 }
 
+// Read is the handler for GET requests to /servers.
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime *time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -703,6 +704,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, legacyServers)
 }
 
+// ReadID is the handler for GET requests to /servers/{{ID}}.
 func ReadID(w http.ResponseWriter, r *http.Request) {
 	alternative := "GET /servers with query parameter id"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
@@ -773,21 +775,24 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup":       {"s.cachegroup", api.IsInt},
-		"parentCachegroup": {"cg.parent_cachegroup_id", api.IsInt},
-		"cdn":              {"s.cdn_id", api.IsInt},
-		"id":               {"s.id", api.IsInt},
-		"hostName":         {"s.host_name", nil},
-		"physLocation":     {"s.phys_location", api.IsInt},
-		"profileId":        {"s.profile", api.IsInt},
-		"status":           {"st.name", nil},
-		"topology":         {"tc.topology", nil},
-		"type":             {"t.name", nil},
-		"dsId":             {"dss.deliveryservice", nil},
+		"cachegroup":       {Column: "s.cachegroup", Checker: api.IsInt},
+		"parentCachegroup": {Column: "cg.parent_cachegroup_id", Checker: api.IsInt},
+		"cdn":              {Column: "s.cdn_id", Checker: api.IsInt},
+		"id":               {Column: "s.id", Checker: api.IsInt},
+		"hostName":         {Column: "s.host_name", Checker: nil},
+		"physLocation":     {Column: "s.phys_location", Checker: api.IsInt},
+		"profileId":        {Column: "s.profile", Checker: api.IsInt},
+		"status":           {Column: "st.name", Checker: nil},
+		"topology":         {Column: "tc.topology", Checker: nil},
+		"type":             {Column: "t.name", Checker: nil},
+		"dsId":             {Column: "dss.deliveryservice", Checker: nil},
 	}
 
 	if version.Major >= 3 {
-		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{"cg.name", nil}
+		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
+			Column:  "cg.name",
+			Checker: nil,
+		}
 	}
 
 	usesMids := false
@@ -1094,11 +1099,11 @@ func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error
 	return nil, nil, http.StatusOK
 }
 
-func updateStatusLastUpdatedTime(id int, status_last_updated_time *time.Time, tx *sql.Tx) (error, error, int) {
+func updateStatusLastUpdatedTime(id int, statusLastUpdatedTime *time.Time, tx *sql.Tx) (error, error, int) {
 	query := `UPDATE server SET
 	status_last_updated=$1
 WHERE id=$2 `
-	if _, err := tx.Exec(query, status_last_updated_time, id); err != nil {
+	if _, err := tx.Exec(query, statusLastUpdatedTime, id); err != nil {
 		return errors.New("updating status last updated: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
@@ -1170,6 +1175,7 @@ func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// Update is the handler for PUT requests to /servers.
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -1388,11 +1394,11 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		var prevID int
 		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
@@ -1457,11 +1463,11 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		var prevID int
 		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
@@ -1528,11 +1534,11 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		var prevID int
 		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if server with id %d exists", *server.ID)))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("server with id %d already exists. Please do not provide an id.", *server.ID)), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
@@ -1585,6 +1591,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Create is the handler for POST requests to /servers.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -1633,7 +1640,7 @@ func getDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]in
 		var dsID int
 		err = rows.Scan(&dsID)
 		if err != nil {
-			return ids, fmt.Errorf("scanning: %v")
+			return ids, fmt.Errorf("scanning: %v", err)
 		}
 		ids = append(ids, dsID)
 	}
