@@ -333,6 +333,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM profile;
 	DELETE FROM parameter;
 	DELETE FROM profile_parameter;
+	DELETE FROM topology;
 	DELETE FROM cachegroup;
 	DELETE FROM coordinate;
 	DELETE FROM type;
