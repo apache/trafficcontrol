@@ -9,7 +9,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added locationByDeepCoverageZone to the `crs/stats/ip/{ip}` endpoint in the Traffic Router API
 
 ### Fixed
-- Fixed #5274 - CDN in a Box's Traffic Vault image failed to build due to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
+- [#5274](https://github.com/apache/trafficcontrol/issues/5274) - CDN in a Box's Traffic Vault image failed to build due 
+    to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
+- [#5069](https://github.com/apache/trafficcontrol/issues/5069) - For LetsEncryptDnsChallengerWatcher in Traffic Router,
+    the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 
 ## [5.0.0] - 2020-10-20
 ### Added
