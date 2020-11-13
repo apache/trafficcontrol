@@ -597,7 +597,7 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
-SELECT s.ID, ip.address FROM server s 
+SELECT s.ID, ip.address FROM server s
 JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
@@ -1603,9 +1603,43 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func checkServerIsOnlyOneAssignedToADeliveryService(id int) (int, error, error) {
+const lastServerOfDSesQuery = `
+SELECT "deliveryservice"
+FROM deliveryservice_server
+WHERE "deliveryservice" IN (
+	SELECT deliveryservice_server.deliveryservice
+	FROM deliveryservice_server
+	INNER JOIN deliveryservice
+	ON deliveryservice_server.deliveryservice = deliveryservice.id
+	WHERE deliveryservice_server."server" = $1
+	AND deliveryservice.active
+)
+GROUP BY "deliveryservice"
+HAVING COUNT("server") = 1;
+`
 
-// }
+func getDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]int, error) {
+	var ids []int
+	if tx == nil {
+		return ids, errors.New("nil transaction")
+	}
+
+	rows, err := tx.Query(lastServerOfDSesQuery, id)
+	if err != nil {
+		return ids, fmt.Errorf("querying: %v", err)
+	}
+
+	for rows.Next() {
+		var dsID int
+		err = rows.Scan(&dsID)
+		if err != nil {
+			return ids, fmt.Errorf("scanning: %v")
+		}
+		ids = append(ids, dsID)
+	}
+
+	return ids, nil
+}
 
 // Delete is the handler for DELETE requests to the /servers API endpoint.
 func Delete(w http.ResponseWriter, r *http.Request) {
@@ -1625,6 +1659,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
+
+	if dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx); err != nil {
+		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	} else if len(dsIDs) > 0 {
+		alerts := make([]tc.Alert, 0, len(dsIDs))
+		for _, dsID := range dsIDs {
+			alert := tc.Alert{
+				Level: tc.ErrorLevel.String(),
+				Text:  fmt.Sprintf("deleting server #%d would leave active Delivery Service #%d without any assigned servers", id, dsID),
+			}
+			alerts = append(alerts, alert)
+		}
+		api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+	}
 
 	var servers []tc.ServerNullable
 	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
