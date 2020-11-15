@@ -38,6 +38,11 @@ services:
     volumes:
       - shared:/shared
       - ../../junit:/junit
+
+  trafficops-perl:
+    environment:
+      LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-false}
+
 volumes:
   junit:
   shared:
