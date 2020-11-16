@@ -29,13 +29,13 @@ ARG CENTOS_VERSION=8
 # Makes CENTOS_VERSION available in later layers without needing to specify it again
 ENV CENTOS_VERSION=$CENTOS_VERSION
 
-RUN if [[ "$CENTOS_VERSION" == 7* ]]; then \
+RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
 RUN set -o nounset -o errexit && \
     mkdir -p /etc/cron.d; \
-    if [[ "$CENTOS_VERSION" == 7* ]]; then \
+    if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
         use_repo=''; \
     else \
         use_repo='--repo=pgdg96'; \
@@ -62,7 +62,7 @@ FROM trafficops-common-deps as trafficops-perl-deps
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN if [[ "${CENTOS_VERSION:0:1}" -ge 8 ]]; then \
+RUN if [[ "${CENTOS_VERSION%%.*}" -ge 8 ]]; then \
         enable_repo='--enablerepo=PowerTools' || exit 1; \
     fi && \
     dnf -y --allowerasing $enable_repo install \
