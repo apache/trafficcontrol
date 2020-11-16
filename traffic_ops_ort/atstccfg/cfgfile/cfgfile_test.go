@@ -75,7 +75,7 @@ func TestWriteConfigs(t *testing.T) {
 func TestPreprocessConfigFile(t *testing.T) {
 	// the TCP port replacement is fundamentally different for 80 vs non-80, so test both
 	{
-		server := &tc.ServerNullable{}
+		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(8080)
 		server.Interfaces = []tc.ServerInterfaceInfo{
 			tc.ServerInterfaceInfo{
@@ -101,7 +101,7 @@ func TestPreprocessConfigFile(t *testing.T) {
 	}
 
 	{
-		server := &tc.ServerNullable{}
+		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(80)
 		server.Interfaces = []tc.ServerInterfaceInfo{
 			tc.ServerInterfaceInfo{
@@ -221,11 +221,11 @@ func randDSS() tc.DeliveryServiceServer {
 	}
 }
 
-func randDS() *tc.DeliveryServiceNullableV30 {
+func randDS() *atscfg.DeliveryService {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := atscfg.DeliveryService{}
 	ds.EcsEnabled = *randBool()
 	ds.RangeSliceBlockSize = randInt()
 	ds.ConsistentHashRegex = randStr()
@@ -307,8 +307,8 @@ func randDS() *tc.DeliveryServiceNullableV30 {
 	return &ds
 }
 
-func randServer() *tc.ServerNullable {
-	sv := &tc.ServerNullable{}
+func randServer() *atscfg.Server {
+	sv := &atscfg.Server{}
 	sv.Cachegroup = randStr()
 	sv.CachegroupID = randInt()
 	sv.CDNID = randInt()
@@ -524,11 +524,11 @@ func MakeFakeTOData() *config.TOData {
 			*randParam(),
 			*randParam(),
 		},
-		DeliveryServices: []tc.DeliveryServiceNullableV30{
+		DeliveryServices: []atscfg.DeliveryService{
 			ds0,
 			ds1,
 		},
-		Servers: []tc.ServerNullable{
+		Servers: []atscfg.Server{
 			*sv1,
 			*sv2,
 		},

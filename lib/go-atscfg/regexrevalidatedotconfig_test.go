@@ -38,7 +38,7 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	ds := makeGenericDS()
 	ds.CDNName = &cdnName
 	ds.XMLID = util.StrPtr("myds")
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 
 	params := makeParamsFromMapArr("GLOBAL", RegexRevalidateFileName, map[string][]string{
 		RegexRevalidateMaxRevalDurationDaysParamName: []string{"42"},

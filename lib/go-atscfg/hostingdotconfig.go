@@ -42,7 +42,7 @@ func MakeHostingDotConfig(
 	server *Server,
 	servers []Server,
 	serverParams []tc.Parameter,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	topologies []tc.Topology,
 	hdrComment string,
@@ -108,7 +108,7 @@ func MakeHostingDotConfig(
 
 	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 
-	filteredDSes := []tc.DeliveryServiceNullableV30{}
+	filteredDSes := []DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify

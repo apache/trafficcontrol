@@ -31,7 +31,7 @@ const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-ats
 
 func makeCacheDotConfigMid(
 	server *Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}

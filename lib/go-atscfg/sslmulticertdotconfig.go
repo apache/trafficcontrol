@@ -33,7 +33,7 @@ const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
 func MakeSSLMultiCertDotConfig(
 	server *Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -73,7 +73,7 @@ type sslMultiCertDS struct {
 }
 
 // deliveryServicesToSSLMultiCertDSes returns the "SSLMultiCertDS" map, and any warnings.
-func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]sslMultiCertDS, []string) {
+func DeliveryServicesToSSLMultiCertDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]sslMultiCertDS, []string) {
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
 	for _, ds := range dses {

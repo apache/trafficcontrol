@@ -86,7 +86,7 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 	servers := []Server{*server, *mid0, *mid1, *mid2}
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 	dss := makeDSS(servers, dses)
 
 	fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
@@ -170,7 +170,7 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 	servers := []Server{*server, *mid0, *mid1, *mid2}
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 	dss := makeDSS(servers, dses)
 
 	// assignedMids := []HeaderRewriteServer{

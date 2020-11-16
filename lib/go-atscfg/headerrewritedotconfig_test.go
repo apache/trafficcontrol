@@ -68,7 +68,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	sv2.Status = &sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 
 	dss := makeDSS(servers, dses)
 
@@ -142,7 +142,7 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	sv2.Status = &sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 
 	dss := makeDSS(servers, dses)
 

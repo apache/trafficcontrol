@@ -31,7 +31,7 @@ const LineCommentRegexRemapDotConfig = LineCommentHash
 func MakeRegexRemapDotConfig(
 	fileName string,
 	server *Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -51,7 +51,7 @@ func MakeRegexRemapDotConfig(
 	}
 
 	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent deliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	for _, dsesDS := range deliveryServices {
 		if dsesDS.XMLID == nil {
 			continue // TODO log?
@@ -65,7 +65,7 @@ func MakeRegexRemapDotConfig(
 		return Cfg{}, makeErr(warnings, "delivery service '"+dsName+"' not found! Do you have a regex_remap_*.config location Parameter for a delivery service that doesn't exist?")
 	}
 
-	dses, dsWarns := deliveryServicesToCDNDSes([]tc.DeliveryServiceNullableV30{ds})
+	dses, dsWarns := deliveryServicesToCDNDSes([]DeliveryService{ds})
 	warnings = append(warnings, dsWarns...)
 
 	text := makeHdrComment(hdrComment)
@@ -94,7 +94,7 @@ type cdnDS struct {
 }
 
 // deliveryServicesToCDNDSes returns the CDNDSes and any warnings.
-func deliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]cdnDS, []string) {
+func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]cdnDS, []string) {
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]cdnDS{}
 	for _, ds := range dses {

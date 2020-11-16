@@ -74,8 +74,8 @@ func New(cookies string, url *url.URL, user string, pass string, insecure bool, 
 // GetCDNDeliveryServices returns the deliveryservices, whether this client's version is unsupported by the server, and any error.
 // Note if the server returns a 404 or 503, this returns false and a nil error.
 // Users should check the "not supported" bool, and use the vendored TOClient if it's set, and set proper defaults for the new feature(s).
-func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullableV30, net.Addr, bool, error) {
-	deliveryServices := []tc.DeliveryServiceNullableV30{}
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService, net.Addr, bool, error) {
+	deliveryServices := []atscfg.DeliveryService{}
 	toAddr := net.Addr(nil)
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
@@ -89,8 +89,8 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 			}
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dses := obj.(*[]tc.DeliveryServiceNullableV30)
-		*dses = toDSes
+		dses := obj.(*[]atscfg.DeliveryService)
+		*dses = atscfg.ToDeliveryServices(toDSes)
 		toAddr = reqInf.RemoteAddr
 		return nil
 	})
@@ -172,7 +172,7 @@ func (cl *TOClient) GetServers() ([]atscfg.Server, net.Addr, bool, error) {
 		}
 
 		servers := obj.(*[]atscfg.Server)
-		*servers = serversToAtscfg(toServers.Response)
+		*servers = atscfg.ToServers(toServers.Response)
 		toAddr = reqInf.RemoteAddr
 		return nil
 	})
@@ -183,14 +183,6 @@ func (cl *TOClient) GetServers() ([]atscfg.Server, net.Addr, bool, error) {
 		return nil, nil, false, errors.New("getting servers: " + err.Error())
 	}
 	return servers, toAddr, false, nil
-}
-
-func serversToAtscfg(servers []tc.ServerV30) []atscfg.Server {
-	as := []atscfg.Server{}
-	for _, sv := range servers {
-		as = append(as, atscfg.Server(sv))
-	}
-	return as
 }
 
 func IsUnsupportedErr(err error) bool {

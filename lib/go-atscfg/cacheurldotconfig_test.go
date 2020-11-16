@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -44,7 +43,7 @@ func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []DeliveryService{*ds0}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
@@ -83,7 +82,7 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []DeliveryService{*ds0}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
@@ -126,7 +125,7 @@ func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []DeliveryService{*ds0}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
@@ -169,7 +168,7 @@ func TestMakeCacheURLDotConfigQStringFile(t *testing.T) {
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
-	dses := []tc.DeliveryServiceNullableV30{*ds0}
+	dses := []DeliveryService{*ds0}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)

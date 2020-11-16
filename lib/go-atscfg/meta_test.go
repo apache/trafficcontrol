@@ -49,14 +49,14 @@ func TestMakeMetaConfig(t *testing.T) {
 	server.Type = "EDGE"
 
 	// uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
-	// dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{"mydsname": {}}
+	// dses := map[tc.DeliveryServiceName]DeliveryService{"mydsname": {}}
 
 	cgs := []tc.CacheGroupNullable{}
 	topologies := []tc.Topology{}
 
 	cfgPath := "/etc/foo/trafficserver"
 
-	deliveryServices := []tc.DeliveryServiceNullableV30{}
+	deliveryServices := []DeliveryService{}
 	dss := []tc.DeliveryServiceServer{}
 	globalParams := []tc.Parameter{}
 

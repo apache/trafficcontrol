@@ -54,7 +54,7 @@ func TestMakeCacheDotConfig(t *testing.T) {
 	ds2Type := tc.DSTypeHTTPNoCache
 	ds2.Type = &ds2Type
 
-	dses := []tc.DeliveryServiceNullableV30{*ds0, *ds1, *ds2}
+	dses := []DeliveryService{*ds0, *ds1, *ds2}
 
 	dss := makeDSS(servers, dses)
 

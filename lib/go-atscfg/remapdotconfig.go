@@ -38,7 +38,7 @@ const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 
 func MakeRemapDotConfig(
 	server *Server,
-	unfilteredDSes []tc.DeliveryServiceNullableV30,
+	unfilteredDSes []DeliveryService,
 	dss []tc.DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	serverParams []tc.Parameter,
@@ -111,7 +111,7 @@ func MakeRemapDotConfig(
 func getServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
 	profilesCacheKeyConfigParams map[int]map[string]string,
-	dses []tc.DeliveryServiceNullableV30,
+	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	header string,
 	server *Server,
@@ -226,7 +226,7 @@ func getServerConfigRemapDotConfigForEdge(
 	cacheURLConfigParams map[string]string,
 	profilesCacheKeyConfigParams map[int]map[string]string,
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
-	dses []tc.DeliveryServiceNullableV30,
+	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	atsMajorVersion int,
 	header string,
@@ -308,7 +308,7 @@ func buildEdgeRemapLine(
 	server *Server,
 	pData map[string]string,
 	text string,
-	ds tc.DeliveryServiceNullableV30,
+	ds DeliveryService,
 	dsRegex tc.DeliveryServiceRegex,
 	mapFrom string,
 	mapTo string,
@@ -432,7 +432,7 @@ func buildEdgeRemapLine(
 
 // makeDSTopologyHeaderRewriteTxt returns the appropriate header rewrite remap line text for the given DS on the given server, and any error.
 // May be empty, if the DS has no header rewrite for the server's position in the topology.
-func makeDSTopologyHeaderRewriteTxt(ds tc.DeliveryServiceNullableV30, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (string, error) {
+func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (string, error) {
 	placement, err := getTopologyPlacement(cg, topology, cacheGroups, &ds)
 	if err != nil {
 		return "", errors.New("getting topology placement: " + err.Error())
@@ -459,7 +459,7 @@ type remapLine struct {
 // MakeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
 // Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
 func makeEdgeDSDataRemapLines(
-	ds tc.DeliveryServiceNullableV30,
+	ds DeliveryService,
 	dsRegex tc.DeliveryServiceRegex,
 	server *Server,
 	cdnDomain string,
@@ -586,7 +586,7 @@ func makeServerPackageParamData(server *Server, serverParams []tc.Parameter) (ma
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
 // Returns the filtered delivery services, and any warnings
-func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) ([]tc.DeliveryServiceNullableV30, []string) {
+func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []DeliveryService, cacheKeyParams []tc.Parameter) ([]DeliveryService, []string) {
 	warnings := []string{}
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
 
@@ -624,7 +624,7 @@ func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []tc.D
 		useInactive = true
 	}
 
-	filteredDSes := []tc.DeliveryServiceNullableV30{}
+	filteredDSes := []DeliveryService{}
 	for _, ds := range dses {
 		if ds.Topology == nil {
 			ds.Topology = util.StrPtr("")
@@ -668,7 +668,7 @@ func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []tc.D
 
 // makeDSProfilesCacheKeyConfigParams returns a map[ProfileID][ParamName]ParamValue for the cache key params for each profile.
 // Returns the params, any warnings, and any error.
-func makeDSProfilesCacheKeyConfigParams(server *Server, dses []tc.DeliveryServiceNullableV30, cacheKeyParams []tc.Parameter) (map[int]map[string]string, []string, error) {
+func makeDSProfilesCacheKeyConfigParams(server *Server, dses []DeliveryService, cacheKeyParams []tc.Parameter) (map[int]map[string]string, []string, error) {
 	warnings := []string{}
 	cacheKeyParamsWithProfiles, err := tcParamsToParamsWithProfiles(cacheKeyParams)
 	if err != nil {

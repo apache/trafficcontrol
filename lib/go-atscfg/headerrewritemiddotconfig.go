@@ -33,7 +33,7 @@ const HeaderRewriteMidPrefix = "hdr_rw_mid_"
 
 func MakeHeaderRewriteMidDotConfig(
 	fileName string,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	server *Server,
 	servers []Server,
@@ -47,7 +47,7 @@ func MakeHeaderRewriteMidDotConfig(
 
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewriteMidPrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	tcDS := tc.DeliveryServiceNullableV30{}
+	tcDS := DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue

@@ -66,7 +66,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 		"https://origin4.example.net/",
 		"http://origin5.example.net/",
 	}
-	dses := []tc.DeliveryServiceNullableV30{}
+	dses := []DeliveryService{}
 	for _, origin := range origins {
 		ds := makeGenericDS()
 		ds.CDNName = &cdnName
@@ -172,7 +172,7 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	dsType2 := tc.DSTypeHTTP
 	dsTopologyWithoutServer.Type = &dsType2
 
-	dses := []tc.DeliveryServiceNullableV30{*dsTopology, *dsTopologyWithoutServer}
+	dses := []DeliveryService{*dsTopology, *dsTopologyWithoutServer}
 
 	topologies := []tc.Topology{
 		tc.Topology{

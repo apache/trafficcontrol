@@ -45,7 +45,7 @@ const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
 func MakeRegexRevalidateDotConfig(
 	server *Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	globalParams []tc.Parameter,
 	jobs []tc.Job,
 	hdrComment string,

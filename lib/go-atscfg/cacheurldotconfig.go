@@ -32,7 +32,7 @@ const LineCommentCacheURLDotConfig = LineCommentHash
 func MakeCacheURLDotConfig(
 	fileName string,
 	server *Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,
 ) (Cfg, error) {
@@ -60,7 +60,7 @@ func MakeCacheURLDotConfig(
 		dssMap[*dss.DeliveryService] = append(dssMap[*dss.DeliveryService], *dss.Server)
 	}
 
-	dsesWithServers := []tc.DeliveryServiceNullableV30{}
+	dsesWithServers := []DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil {
 			warnings = append(warnings, "Delivery Service had nil id, skipping!")
@@ -154,7 +154,7 @@ type cacheURLDS struct {
 }
 
 // DeliveryServicesToCacheURLDSes returns the "CacheURLDS" map, and any warnings.
-func deliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullableV30) (map[tc.DeliveryServiceName]cacheURLDS, []string) {
+func deliveryServicesToCacheURLDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]cacheURLDS, []string) {
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]cacheURLDS{}
 	for _, ds := range dses {

@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -44,7 +43,7 @@ func TestMakeRegexRemapDotConfig(t *testing.T) {
 	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
 	ds.RegexRemap = util.StrPtr("myregexremap")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 
 	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
 	if err != nil {
@@ -95,7 +94,7 @@ func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
 	ds1.CacheURL = util.StrPtr("https://othercacheurl.net")
 	ds1.RegexRemap = util.StrPtr("otherregexremap")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds, *ds1}
+	dses := []DeliveryService{*ds, *ds1}
 
 	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
 	if err != nil {
@@ -149,7 +148,7 @@ func TestMakeRegexRemapDotConfigReplaceReturns(t *testing.T) {
 	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
 	ds.RegexRemap = util.StrPtr("myregexremap__RETURN__mypostnewline")
 
-	dses := []tc.DeliveryServiceNullableV30{*ds}
+	dses := []DeliveryService{*ds}
 
 	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
 	if err != nil {

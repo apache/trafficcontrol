@@ -163,8 +163,8 @@ func makeGenericServer() *Server {
 	return server
 }
 
-func makeGenericDS() *tc.DeliveryServiceNullableV30 {
-	ds := &tc.DeliveryServiceNullableV30{}
+func makeGenericDS() *DeliveryService {
+	ds := &DeliveryService{}
 	ds.ID = util.IntPtr(42)
 	ds.XMLID = util.StrPtr("ds1")
 	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
@@ -178,7 +178,7 @@ func makeGenericDS() *tc.DeliveryServiceNullableV30 {
 
 // makeDSS creates DSS as an outer product of every server and ds given.
 // The given servers and dses must all have non-nil, unique IDs.
-func makeDSS(servers []Server, dses []tc.DeliveryServiceNullableV30) []tc.DeliveryServiceServer {
+func makeDSS(servers []Server, dses []DeliveryService) []tc.DeliveryServiceServer {
 	dss := []tc.DeliveryServiceServer{}
 	for _, sv := range servers {
 		for _, ds := range dses {

@@ -37,7 +37,7 @@ func MakeConfigFilesList(
 	configDir string,
 	server *Server,
 	serverParams []tc.Parameter,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	globalParams []tc.Parameter,
 	cacheGroupArr []tc.CacheGroupNullable,
@@ -143,7 +143,7 @@ func addMetaObjConfigDir(
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
+	dses map[tc.DeliveryServiceName]DeliveryService,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 ) ([]CfgMeta, []string, error) {
@@ -292,7 +292,7 @@ func addMetaObjConfigDir(
 }
 
 // getURISignedDSes returns the URI-signed Delivery Services, and any warnings.
-func getURISignedDSes(dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30) ([]tc.DeliveryServiceName, []string) {
+func getURISignedDSes(dses map[tc.DeliveryServiceName]DeliveryService) ([]tc.DeliveryServiceName, []string) {
 	warnings := []string{}
 
 	uriSignedDSes := []tc.DeliveryServiceName{}
@@ -319,10 +319,10 @@ func getURISignedDSes(dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable
 
 // filterConfigFileDSes returns the DSes that should have config files for the given server.
 // Returns the delivery services and any warnings.
-func filterConfigFileDSes(server *Server, deliveryServices []tc.DeliveryServiceNullableV30, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30, []string) {
+func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]DeliveryService, []string) {
 	warnings := []string{}
 
-	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{}
+	dses := map[tc.DeliveryServiceName]DeliveryService{}
 
 	if tc.CacheTypeFromString(server.Type) != tc.CacheTypeMid {
 		dsIDs := map[int]struct{}{}

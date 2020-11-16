@@ -47,7 +47,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 	fileName string,
 	server *Server,
 	servers []Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	topologies []tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	requiredCapabilities map[int]map[ServerCapability]struct{},
@@ -79,7 +79,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 		return Cfg{}, makeErr(warnings, "topology header rewrite called for unknown tier: '"+fileName+"'")
 	}
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	for _, ids := range deliveryServices {
 		if ids.XMLID == nil || *ids.XMLID != dsName {
 			continue

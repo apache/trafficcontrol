@@ -32,7 +32,7 @@ const LineCommentCacheDotConfig = LineCommentHash
 func MakeCacheDotConfig(
 	server *Server,
 	servers []Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,
 ) (Cfg, error) {
@@ -48,7 +48,7 @@ func MakeCacheDotConfig(
 func makeCacheDotConfigEdge(
 	server *Server,
 	servers []Server,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,
 ) (Cfg, error) {

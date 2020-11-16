@@ -56,6 +56,34 @@ type Server tc.ServerV30
 // but to only have to change it here, and the places where breaking symbol changes were made.
 type DeliveryService tc.DeliveryServiceNullableV30
 
+// ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
+func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService {
+	ad := []DeliveryService{}
+	for _, ds := range dses {
+		ad = append(ad, DeliveryService(ds))
+	}
+	return ad
+}
+
+// OldToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+func OldToDeliveryServices(dses []tc.DeliveryServiceNullable) []DeliveryService {
+	ad := []DeliveryService{}
+	for _, ds := range dses {
+		upgradedDS := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)}
+		ad = append(ad, DeliveryService(upgradedDS))
+	}
+	return ad
+}
+
+// ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
+func ToServers(servers []tc.ServerV30) []Server {
+	as := []Server{}
+	for _, sv := range servers {
+		as = append(as, Server(sv))
+	}
+	return as
+}
+
 // CfgFile is all the information necessary to create an ATS config file, including the file name, path, data, and metadata.
 // This is provided as a convenience and unified structure for users. The lib/go-atscfg library doesn't actually use or return this. See ATSConfigFileData.
 type CfgFile struct {
@@ -269,7 +297,7 @@ type TopologyPlacement struct {
 // - Whether the cachegroup is the last tier in the topology.
 // - Whether the cachegroup is in the topology at all.
 // - Whether it's the first, inner, or last cache tier before the Origin.
-func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *tc.DeliveryServiceNullableV30) (TopologyPlacement, error) {
+func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *DeliveryService) (TopologyPlacement, error) {
 	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 
 	serverNode := tc.TopologyNode{}

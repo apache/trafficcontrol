@@ -33,7 +33,7 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 	server := makeGenericServer()
 	server.CDNName = util.StrPtr("mycdn")
 
-	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) tc.DeliveryServiceNullableV30 {
+	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
 		ds.XMLID = util.StrPtr(name)
 		ds.Type = &dsType
@@ -42,7 +42,7 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 		return *ds
 	}
 
-	dses := []tc.DeliveryServiceNullableV30{
+	dses := []DeliveryService{
 		makeDS("my-https-ds", tc.DSTypeHTTP, 1 /* https */, "https://my-https-ds.example.net"),
 		makeDS("my-https-and-http-ds", tc.DSTypeHTTP, 2 /* https and http */, "https://my-https-and-http-ds.example.net"),
 		makeDS("my-https-to-http-ds", tc.DSTypeHTTP, 3 /* https to http */, "https://my-https-to-http-ds.example.net"),
@@ -78,7 +78,7 @@ func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
 	server := makeGenericServer()
 	server.CDNName = util.StrPtr("mycdn")
 
-	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) tc.DeliveryServiceNullableV30 {
+	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
 		ds.XMLID = util.StrPtr(name)
 		ds.Type = &dsType
@@ -88,7 +88,7 @@ func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
 	}
 
 	// http-only DSes have no SSL, should be excluded
-	dses := []tc.DeliveryServiceNullableV30{
+	dses := []DeliveryService{
 		makeDS("myds", tc.DSTypeHTTP, 0 /* http */, "https://myds.example.net"),
 	}
 

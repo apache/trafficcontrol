@@ -41,7 +41,7 @@ const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connection
 
 func MakeHeaderRewriteDotConfig(
 	fileName string,
-	deliveryServices []tc.DeliveryServiceNullableV30,
+	deliveryServices []DeliveryService,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	server *Server,
 	servers []Server,
@@ -51,7 +51,7 @@ func MakeHeaderRewriteDotConfig(
 
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewritePrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	tcDS := tc.DeliveryServiceNullableV30{}
+	tcDS := DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.XMLID == nil {
 			warnings = append(warnings, "deliveryServices had DS with nil xmlId (name)")
@@ -224,7 +224,7 @@ func headerRewriteServerFromServerNotNullable(sv tc.Server) (headerRewriteServer
 	return headerRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
 }
 
-func headerRewriteDSFromDS(ds *tc.DeliveryServiceNullableV30) (headerRewriteDS, error) {
+func headerRewriteDSFromDS(ds *DeliveryService) (headerRewriteDS, error) {
 	errs := []error{}
 	if ds.ID == nil {
 		errs = append(errs, errors.New("ID cannot be nil"))

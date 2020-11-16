@@ -35,7 +35,7 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 	server.HostName = &serverName
 	server.Type = tc.MidTypePrefix + "_CUSTOM"
 
-	makeDS := func(name string, origin string, dsType tc.DSType) tc.DeliveryServiceNullableV30 {
+	makeDS := func(name string, origin string, dsType tc.DSType) DeliveryService {
 		ds := makeGenericDS()
 		ds.XMLID = util.StrPtr(name)
 		ds.OrgServerFQDN = util.StrPtr(origin)
@@ -43,7 +43,7 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 		return *ds
 	}
 
-	dses := []tc.DeliveryServiceNullableV30{
+	dses := []DeliveryService{
 		makeDS("ds0", "https://ds0.example.test/path", tc.DSTypeHTTP),
 		makeDS("ds1", "https://ds1.example.test:4321/path", tc.DSTypeDNS),
 		makeDS("ds2", "https://ds2.example.test:4321", tc.DSTypeHTTP),

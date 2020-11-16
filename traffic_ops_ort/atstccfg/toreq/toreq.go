@@ -311,16 +311,16 @@ func (cl *TOClient) GetServerProfileParameters(profileName string) ([]tc.Paramet
 	return serverProfileParameters, toAddr, nil
 }
 
-func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullable, net.Addr, error) {
-	deliveryServices := []tc.DeliveryServiceNullable{}
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService, net.Addr, error) {
+	deliveryServices := []atscfg.DeliveryService{}
 	toAddr := net.Addr(nil)
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
 		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dses := obj.(*[]tc.DeliveryServiceNullable)
-		*dses = toDSes
+		dses := obj.(*[]atscfg.DeliveryService)
+		*dses = atscfg.OldToDeliveryServices(toDSes)
 		toAddr = reqInf.RemoteAddr
 		return nil
 	})
