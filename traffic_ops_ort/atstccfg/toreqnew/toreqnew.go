@@ -38,6 +38,7 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -156,8 +157,8 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 	return status, toAddr, false, nil
 }
 
-func (cl *TOClient) GetServers() ([]tc.ServerV30, net.Addr, bool, error) {
-	servers := []tc.ServerV30{}
+func (cl *TOClient) GetServers() ([]atscfg.Server, net.Addr, bool, error) {
+	servers := []atscfg.Server{}
 	toAddr := net.Addr(nil)
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
@@ -169,8 +170,9 @@ func (cl *TOClient) GetServers() ([]tc.ServerV30, net.Addr, bool, error) {
 			}
 			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		servers := obj.(*[]tc.ServerV30)
-		*servers = toServers.Response
+
+		servers := obj.(*[]atscfg.Server)
+		*servers = serversToAtscfg(toServers.Response)
 		toAddr = reqInf.RemoteAddr
 		return nil
 	})
@@ -181,6 +183,14 @@ func (cl *TOClient) GetServers() ([]tc.ServerV30, net.Addr, bool, error) {
 		return nil, nil, false, errors.New("getting servers: " + err.Error())
 	}
 	return servers, toAddr, false, nil
+}
+
+func serversToAtscfg(servers []tc.ServerV30) []atscfg.Server {
+	as := []atscfg.Server{}
+	for _, sv := range servers {
+		as = append(as, atscfg.Server(sv))
+	}
+	return as
 }
 
 func IsUnsupportedErr(err error) bool {

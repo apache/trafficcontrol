@@ -31,7 +31,7 @@ func TestMakeCacheDotConfig(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
 	server.Profile = &serverProfile
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 
 	ds0 := makeGenericDS()
 	ds0.ID = util.IntPtr(420)

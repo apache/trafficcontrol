@@ -89,7 +89,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
@@ -210,7 +210,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 	mid2.CachegroupID = util.IntPtr(423)
 	setIP(mid1, "192.168.2.4")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1, *mid2}
+	servers := []Server{*server, *mid0, *mid1, *mid2}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{
@@ -348,7 +348,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
@@ -471,7 +471,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -605,7 +605,7 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -749,7 +749,7 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -899,7 +899,7 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1043,7 +1043,7 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1183,7 +1183,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	origin1.Type = tc.OriginTypeName
 	origin1.TypeID = util.IntPtr(991)
 
-	servers := []tc.ServerNullable{*server, *origin0, *origin1}
+	servers := []Server{*server, *origin0, *origin1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1347,7 +1347,7 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 	origin1.Type = tc.OriginTypeName
 	origin1.TypeID = util.IntPtr(991)
 
-	servers := []tc.ServerNullable{*server, *origin0, *origin1}
+	servers := []Server{*server, *origin0, *origin1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1523,7 +1523,7 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 	origin1.Type = tc.OriginTypeName
 	origin1.TypeID = util.IntPtr(991)
 
-	servers := []tc.ServerNullable{*server, *origin0, *origin1}
+	servers := []Server{*server, *origin0, *origin1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1679,7 +1679,7 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1834,7 +1834,7 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 	mid1.ID = util.IntPtr(46)
 	setIP(mid1, "192.168.2.3")
 
-	servers := []tc.ServerNullable{*server, *mid0, *mid1}
+	servers := []Server{*server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -1918,8 +1918,8 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 	}
 }
 
-func makeTestParentServer() *tc.ServerNullable {
-	server := &tc.ServerNullable{}
+func makeTestParentServer() *Server {
+	server := &Server{}
 	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("myCDN")
 	server.Cachegroup = util.StrPtr("cg0")

@@ -30,7 +30,7 @@ const ContentTypeATSDotRules = ContentTypeTextASCII
 const LineCommentATSDotRules = LineCommentHash
 
 func MakeATSDotRules(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

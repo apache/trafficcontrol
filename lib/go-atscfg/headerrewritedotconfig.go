@@ -43,8 +43,8 @@ func MakeHeaderRewriteDotConfig(
 	fileName string,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -175,7 +175,7 @@ type headerRewriteServer struct {
 	Status     tc.CacheStatus
 }
 
-func headerRewriteServersFromServers(servers []tc.ServerNullable) ([]headerRewriteServer, error) {
+func headerRewriteServersFromServers(servers []Server) ([]headerRewriteServer, error) {
 	hServers := []headerRewriteServer{}
 	for _, sv := range servers {
 		hsv, err := headerRewriteServerFromServer(sv)
@@ -187,7 +187,7 @@ func headerRewriteServersFromServers(servers []tc.ServerNullable) ([]headerRewri
 	return hServers, nil
 }
 
-func headerRewriteServerFromServer(sv tc.ServerNullable) (headerRewriteServer, error) {
+func headerRewriteServerFromServer(sv Server) (headerRewriteServer, error) {
 	if sv.HostName == nil {
 		return headerRewriteServer{}, errors.New("server host name must not be nil")
 	}

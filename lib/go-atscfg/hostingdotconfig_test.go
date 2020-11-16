@@ -74,7 +74,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 		dses = append(dses, *ds)
 	}
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, nil, hdr)
@@ -201,7 +201,7 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 		},
 	}
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dss := makeDSS(servers, dses)
 
 	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, topologies, hdr)

@@ -237,7 +237,7 @@ func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 //   require the potential fields to be omitted to generate correctly.
 type TOData struct {
 	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
-	Servers []tc.ServerNullable
+	Servers []atscfg.Server
 
 	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
 	CacheGroups []tc.CacheGroupNullable
@@ -261,7 +261,7 @@ type TOData struct {
 	DeliveryServiceServers []tc.DeliveryServiceServer
 
 	// Server must be the server we're fetching configs from
-	Server *tc.ServerNullable
+	Server *atscfg.Server
 
 	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
 	Jobs []tc.Job

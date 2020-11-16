@@ -36,7 +36,7 @@ const LineCommentLoggingDotConfig = LineCommentHash
 // MakeStorageDotConfig creates storage.config for a given ATS Profile.
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeLoggingDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrCommentTxt string,
 ) (Cfg, error) {

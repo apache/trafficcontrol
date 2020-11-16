@@ -39,8 +39,8 @@ const ServerHostingDotConfigMidIncludeInactive = false
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
 func MakeHostingDotConfig(
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	serverParams []tc.Parameter,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
@@ -62,7 +62,7 @@ func MakeHostingDotConfig(
 	params, paramWarns := paramsToMap(filterParams(serverParams, HostingConfigParamConfigFile, "", "", ""))
 	warnings = append(warnings, paramWarns...)
 
-	cdnServers := map[tc.CacheName]tc.ServerNullable{}
+	cdnServers := map[tc.CacheName]Server{}
 	for _, sv := range servers {
 		if sv.HostName == nil {
 			warnings = append(warnings, "TO Servers had server missing HostName, skipping!")

@@ -31,7 +31,7 @@ const LineCommentURLSig = LineCommentHash
 
 func MakeURLSigConfig(
 	fileName string,
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	allURLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys,
 	hdrComment string,

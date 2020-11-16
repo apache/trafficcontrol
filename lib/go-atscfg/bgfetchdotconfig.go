@@ -19,15 +19,11 @@ package atscfg
  * under the License.
  */
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
 const LineCommentBGFetchDotConfig = LineCommentHash
 
 func MakeBGFetchDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}

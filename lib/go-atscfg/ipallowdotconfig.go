@@ -49,8 +49,8 @@ const DefaultCoalesceNumberV6 = 5
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
 	serverParams []tc.Parameter,
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	cacheGroups []tc.CacheGroupNullable,
 	hdrComment string,
 ) (Cfg, error) {
@@ -319,7 +319,7 @@ type ipAllowServer struct {
 	IP6Address string
 }
 
-type serversSortByName []tc.ServerNullable
+type serversSortByName []Server
 
 func (ss serversSortByName) Len() int      { return len(ss) }
 func (ss serversSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }

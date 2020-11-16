@@ -29,7 +29,7 @@ const ContentTypeSysctlDotConf = ContentTypeTextASCII
 const LineCommentSysctlDotConf = LineCommentHash
 
 func MakeSysCtlDotConf(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

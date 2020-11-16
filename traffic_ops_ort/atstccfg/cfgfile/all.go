@@ -36,7 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
@@ -151,7 +150,7 @@ var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 // PreprocessConfigFile does global preprocessing on the given config file cfgFile.
 // This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
 // These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
+func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 	if server.TCPPort != nil && *server.TCPPort != 80 && *server.TCPPort != 0 {
 		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(*server.TCPPort), -1)
 	} else {

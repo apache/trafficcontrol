@@ -110,15 +110,15 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	}
 }
 
-func setIP(sv *tc.ServerNullable, ipAddress string) {
+func setIP(sv *Server, ipAddress string) {
 	setIPInfo(sv, "", ipAddress, "")
 }
 
-func setIP6(sv *tc.ServerNullable, ip6Address string) {
+func setIP6(sv *Server, ip6Address string) {
 	setIPInfo(sv, "", "", ip6Address)
 }
 
-func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip6Address string) {
+func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address string) {
 	sv.Interfaces = []tc.ServerInterfaceInfo{
 		tc.ServerInterfaceInfo{
 			Name: interfaceName,
@@ -140,8 +140,8 @@ func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip
 	}
 }
 
-func makeGenericServer() *tc.ServerNullable {
-	server := &tc.ServerNullable{}
+func makeGenericServer() *Server {
+	server := &Server{}
 	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("myCDN")
 	server.Cachegroup = util.StrPtr("cg0")
@@ -178,7 +178,7 @@ func makeGenericDS() *tc.DeliveryServiceNullableV30 {
 
 // makeDSS creates DSS as an outer product of every server and ds given.
 // The given servers and dses must all have non-nil, unique IDs.
-func makeDSS(servers []tc.ServerNullable, dses []tc.DeliveryServiceNullableV30) []tc.DeliveryServiceServer {
+func makeDSS(servers []Server, dses []tc.DeliveryServiceNullableV30) []tc.DeliveryServiceServer {
 	dss := []tc.DeliveryServiceServer{}
 	for _, sv := range servers {
 		for _, ds := range dses {

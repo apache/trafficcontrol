@@ -29,7 +29,7 @@ const ContentTypeDropQStringDotConfig = ContentTypeTextASCII
 const LineCommentDropQStringDotConfig = LineCommentHash
 
 func MakeDropQStringDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

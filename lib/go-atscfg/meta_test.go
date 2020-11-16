@@ -28,7 +28,7 @@ import (
 )
 
 func TestMakeMetaConfig(t *testing.T) {
-	server := &tc.ServerNullable{}
+	server := &Server{}
 	server.CachegroupID = util.IntPtr(42)
 	server.Cachegroup = util.StrPtr("cg0")
 	server.CDNName = util.StrPtr("mycdn")

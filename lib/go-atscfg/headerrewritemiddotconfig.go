@@ -35,8 +35,8 @@ func MakeHeaderRewriteMidDotConfig(
 	fileName string,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	cacheGroups []tc.CacheGroupNullable,
 	hdrComment string,
 ) (Cfg, error) {

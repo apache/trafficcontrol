@@ -30,8 +30,8 @@ const ContentTypeCacheDotConfig = ContentTypeTextASCII
 const LineCommentCacheDotConfig = LineCommentHash
 
 func MakeCacheDotConfig(
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,
@@ -46,8 +46,8 @@ func MakeCacheDotConfig(
 // MakeCacheDotConfig makes the ATS cache.config config file.
 // profileDSes must be the list of delivery services, which are assigned to severs, for which this profile is assigned. It MUST NOT contain any other delivery services. Note DSesToProfileDSes may be helpful if you have a []tc.DeliveryServiceNullable, for example from traffic_ops/client.
 func makeCacheDotConfigEdge(
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,

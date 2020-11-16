@@ -87,7 +87,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		toData.Servers = servers
 		toIPs.Store(toAddr, nil)
 
-		server := &tc.ServerNullable{}
+		server := &atscfg.Server{}
 		for _, toServer := range servers {
 			if toServer.HostName != nil && *toServer.HostName == cfg.CacheHostName {
 				server = &toServer

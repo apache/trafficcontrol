@@ -43,7 +43,7 @@ func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(0)
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dses := []tc.DeliveryServiceNullableV30{*ds0}
 	dss := makeDSS(servers, dses)
 
@@ -82,7 +82,7 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(1)
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dses := []tc.DeliveryServiceNullableV30{*ds0}
 	dss := makeDSS(servers, dses)
 
@@ -125,7 +125,7 @@ func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(0)
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dses := []tc.DeliveryServiceNullableV30{*ds0}
 	dss := makeDSS(servers, dses)
 
@@ -168,7 +168,7 @@ func TestMakeCacheURLDotConfigQStringFile(t *testing.T) {
 	ds0.QStringIgnore = util.IntPtr(0)
 	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	servers := []tc.ServerNullable{*server}
+	servers := []Server{*server}
 	dses := []tc.DeliveryServiceNullableV30{*ds0}
 	dss := makeDSS(servers, dses)
 

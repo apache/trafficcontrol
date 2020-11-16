@@ -35,7 +35,7 @@ type CfgMeta struct {
 // MakeMetaObj returns the list of config files, any warnings, and any errors.
 func MakeConfigFilesList(
 	configDir string,
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
@@ -138,7 +138,7 @@ locationParamsFor:
 func addMetaObjConfigDir(
 	configFiles []CfgMeta,
 	configDir string,
-	server *tc.ServerNullable,
+	server *Server,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
@@ -319,7 +319,7 @@ func getURISignedDSes(dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable
 
 // filterConfigFileDSes returns the DSes that should have config files for the given server.
 // Returns the delivery services and any warnings.
-func filterConfigFileDSes(server *tc.ServerNullable, deliveryServices []tc.DeliveryServiceNullableV30, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30, []string) {
+func filterConfigFileDSes(server *Server, deliveryServices []tc.DeliveryServiceNullableV30, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30, []string) {
 	warnings := []string{}
 
 	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30{}

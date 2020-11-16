@@ -29,7 +29,7 @@ const ContentTypePluginDotConfig = ContentTypeTextASCII
 const LineCommentPluginDotConfig = LineCommentHash
 
 func MakePluginDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

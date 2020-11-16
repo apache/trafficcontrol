@@ -30,7 +30,7 @@ import (
 const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
 
 func makeCacheDotConfigMid(
-	server *tc.ServerNullable,
+	server *Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	hdrComment string,
 ) (Cfg, error) {

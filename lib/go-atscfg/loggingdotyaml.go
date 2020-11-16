@@ -32,7 +32,7 @@ const ContentTypeLoggingDotYAML = "application/yaml; charset=us-ascii" // Note Y
 const LineCommentLoggingDotYAML = LineCommentHash
 
 func MakeLoggingDotYAML(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

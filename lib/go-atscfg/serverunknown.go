@@ -30,7 +30,7 @@ const ContentTypeServerUnknownConfig = ContentTypeTextASCII
 
 func MakeServerUnknown(
 	fileName string,
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

@@ -30,7 +30,7 @@ const LineCommentRegexRemapDotConfig = LineCommentHash
 
 func MakeRegexRemapDotConfig(
 	fileName string,
-	server *tc.ServerNullable,
+	server *Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	hdrComment string,
 ) (Cfg, error) {

@@ -31,7 +31,7 @@ const ContentTypeRecordsDotConfig = ContentTypeTextASCII
 const LineCommentRecordsDotConfig = LineCommentHash
 
 func MakeRecordsDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {
@@ -64,7 +64,7 @@ func MakeRecordsDotConfig(
 
 // addRecordsDotConfigOverrides modifies the records.config text and adds any overrides.
 // Returns the modified text and any warnings.
-func addRecordsDotConfigOverrides(txt string, server *tc.ServerNullable) (string, []string) {
+func addRecordsDotConfigOverrides(txt string, server *Server) (string, []string) {
 	warnings := []string{}
 	txt, ipWarns := addRecordsDotConfigOutgoingIP(txt, server)
 	warnings = append(warnings, ipWarns...)
@@ -72,7 +72,7 @@ func addRecordsDotConfigOverrides(txt string, server *tc.ServerNullable) (string
 }
 
 // addRecordsDotConfigOutgoingIP returns the outgoing IP added to the config text, and any warnings.
-func addRecordsDotConfigOutgoingIP(txt string, server *tc.ServerNullable) (string, []string) {
+func addRecordsDotConfigOutgoingIP(txt string, server *Server) (string, []string) {
 	warnings := []string{}
 
 	outgoingIPConfig := `proxy.local.outgoing_ip_to_bind`

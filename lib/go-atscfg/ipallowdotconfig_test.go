@@ -38,7 +38,7 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		ParamCoalesceNumberV6:  []string{"4"},
 	})
 
-	svs := []tc.ServerNullable{
+	svs := []Server{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
 		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
 		*makeIPAllowChild("child2", "192.168.2.150", ""),
@@ -70,7 +70,7 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		},
 	}
 
-	sv := &tc.ServerNullable{}
+	sv := &Server{}
 	sv.HostName = util.StrPtr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
@@ -116,7 +116,7 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		ParamCoalesceNumberV6:  []string{"4"},
 	})
 
-	svs := []tc.ServerNullable{
+	svs := []Server{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
 		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
 		*makeIPAllowChild("child2", "192.168.2.150", ""),
@@ -146,7 +146,7 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		},
 	}
 
-	sv := &tc.ServerNullable{}
+	sv := &Server{}
 	sv.HostName = util.StrPtr("server0")
 	sv.Type = string(tc.CacheTypeEdge)
 	sv.Cachegroup = cgs[0].Name
@@ -198,7 +198,7 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 		ParamCoalesceNumberV6:  []string{"100"},
 	})
 
-	svs := []tc.ServerNullable{
+	svs := []Server{
 		*makeIPAllowChild("child0", "192.168.2.1", "2001:DB8:1::1/64"),
 		*makeIPAllowChild("child1", "192.168.2.100/30", "2001:DB8:2::1/64"),
 		*makeIPAllowChild("child2", "192.168.2.150", ""),
@@ -230,7 +230,7 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 		},
 	}
 
-	sv := &tc.ServerNullable{}
+	sv := &Server{}
 	sv.HostName = util.StrPtr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
@@ -266,8 +266,8 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 	}
 }
 
-func makeIPAllowChild(name string, ip string, ip6 string) *tc.ServerNullable {
-	sv := &tc.ServerNullable{}
+func makeIPAllowChild(name string, ip string, ip6 string) *Server {
+	sv := &Server{}
 	sv.Cachegroup = util.StrPtr("childcg")
 	sv.HostName = util.StrPtr("child0")
 	sv.Type = tc.MonitorTypeName

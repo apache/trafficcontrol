@@ -32,7 +32,7 @@ const ContentTypeLogsDotXML = `text/xml`
 const LineCommentLogsDotXML = `<!--`
 
 func MakeLogsXMLDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrCommentTxt string,
 ) (Cfg, error) {

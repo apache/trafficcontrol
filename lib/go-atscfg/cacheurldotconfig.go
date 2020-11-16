@@ -31,7 +31,7 @@ const LineCommentCacheURLDotConfig = LineCommentHash
 
 func MakeCacheURLDotConfig(
 	fileName string,
-	server *tc.ServerNullable,
+	server *Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	hdrComment string,

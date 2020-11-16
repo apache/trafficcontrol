@@ -30,7 +30,7 @@ const ContentTypeAstatsDotConfig = ContentTypeTextASCII
 const LineCommentAstatsDotConfig = LineCommentHash
 
 func MakeAStatsDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {

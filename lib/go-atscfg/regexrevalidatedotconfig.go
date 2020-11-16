@@ -44,7 +44,7 @@ const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
 const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
 func MakeRegexRevalidateDotConfig(
-	server *tc.ServerNullable,
+	server *Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	globalParams []tc.Parameter,
 	jobs []tc.Job,

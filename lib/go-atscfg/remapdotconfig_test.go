@@ -8250,8 +8250,8 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 }
 
-func makeTestRemapServer() *tc.ServerNullable {
-	server := &tc.ServerNullable{}
+func makeTestRemapServer() *Server {
+	server := &Server{}
 	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("mycdn")
 	server.Cachegroup = util.StrPtr("cg0")

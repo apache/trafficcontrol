@@ -68,8 +68,8 @@ type OriginFQDN string
 
 func MakeParentDotConfig(
 	dses []tc.DeliveryServiceNullableV30,
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	topologies []tc.Topology,
 	tcServerParams []tc.Parameter,
 	tcParentConfigParams []tc.Parameter,
@@ -183,7 +183,7 @@ func MakeParentDotConfig(
 
 	nameTopologies := makeTopologyNameMap(topologies)
 
-	cgServers := map[int]tc.ServerNullable{} // map[serverID]server
+	cgServers := map[int]Server{} // map[serverID]server
 	for _, sv := range servers {
 		if sv.ID == nil {
 			warnings = append(warnings, "TO servers had server with missing ID, skipping!")
@@ -491,7 +491,7 @@ func (s parentInfoSortByRank) Less(i, j int) bool {
 }
 
 type serverWithParams struct {
-	tc.ServerNullable
+	Server
 	Params profileCache
 }
 
@@ -528,8 +528,8 @@ func (ss serversWithParamsSortByRank) Less(i, j int) bool {
 		return ss[i].Params.Port < ss[j].Params.Port
 	}
 
-	iIP := getServerIPAddress(&ss[i].ServerNullable)
-	jIP := getServerIPAddress(&ss[j].ServerNullable)
+	iIP := getServerIPAddress(&ss[i].Server)
+	jIP := getServerIPAddress(&ss[j].Server)
 
 	if iIP == nil {
 		if jIP != nil {
@@ -697,8 +697,8 @@ func getParentDSParams(ds tc.DeliveryServiceNullableV30, profileParentConfigPara
 
 // GetTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error
 func getTopologyParentConfigLine(
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	ds *tc.DeliveryServiceNullableV30,
 	serverParams map[string]string,
 	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
@@ -875,7 +875,7 @@ func getTopologyQueryString(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfilesMap) (profileCache, []string) {
+func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profileCache, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	profileCache := defaultProfileCache()
@@ -912,7 +912,7 @@ func serverParentageParams(sv *tc.ServerNullable, params []parameterWithProfiles
 	return profileCache, warnings
 }
 
-func serverParentStr(sv *tc.ServerNullable, svParams profileCache) (string, error) {
+func serverParentStr(sv *Server, svParams profileCache) (string, error) {
 	if svParams.NotAParent {
 		return "", nil
 	}
@@ -932,9 +932,9 @@ func serverParentStr(sv *tc.ServerNullable, svParams profileCache) (string, erro
 
 // GetTopologyParents returns the parents, secondary parents, any warnings, and any error.
 func getTopologyParents(
-	server *tc.ServerNullable,
+	server *Server,
 	ds *tc.DeliveryServiceNullableV30,
-	servers []tc.ServerNullable,
+	servers []Server,
 	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.confign
 	topology tc.Topology,
 	serverIsLastTier bool,
@@ -996,8 +996,8 @@ func getTopologyParents(
 		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
 		warnings = append(warnings, parentWarns...)
 		serversWithParams = append(serversWithParams, serverWithParams{
-			ServerNullable: sv,
-			Params:         serverParentParams,
+			Server: sv,
+			Params: serverParentParams,
 		})
 	}
 	sort.Sort(serversWithParamsSortByRank(serversWithParams))
@@ -1034,7 +1034,7 @@ func getTopologyParents(
 			continue
 		}
 		if *sv.Cachegroup == parentCG {
-			parentStr, err := serverParentStr(&sv.ServerNullable, sv.Params)
+			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
 			}
@@ -1043,7 +1043,7 @@ func getTopologyParents(
 			}
 		}
 		if *sv.Cachegroup == secondaryParentCG {
-			parentStr, err := serverParentStr(&sv.ServerNullable, sv.Params)
+			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
 			}
@@ -1259,7 +1259,7 @@ func unavailableServerRetryResponsesValid(s string) bool {
 
 // GetOriginServersAndProfileCaches returns the origin servers, ProfileCaches, any warnings, and any error.
 func getOriginServersAndProfileCaches(
-	cgServers map[int]tc.ServerNullable,
+	cgServers map[int]Server,
 	parentServerDSes map[int]map[int]struct{},
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []tc.DeliveryServiceNullableV30,
@@ -1390,7 +1390,7 @@ func getOriginServersAndProfileCaches(
 
 // GetParentConfigProfileParams returns the parent config profile params, and any warnings.
 func getParentConfigProfileParams(
-	cgServers map[int]tc.ServerNullable,
+	cgServers map[int]Server,
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 ) (map[string]profileCache, []string) {
 	warnings := []string{}
@@ -1489,7 +1489,7 @@ func getDSOrigins(dses map[int]tc.DeliveryServiceNullableV30) (map[int]*originUR
 }
 
 // makeDSOrigins returns the DS Origins and any warnings.
-func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, servers []tc.ServerNullable) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
+func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNullableV30, servers []Server) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
 	warnings := []string{}
 	dssMap := map[DeliveryServiceID]map[ServerID]struct{}{}
 	for _, dss := range dsses {
@@ -1505,7 +1505,7 @@ func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []tc.DeliveryServiceNu
 		dssMap[dsID][serverID] = struct{}{}
 	}
 
-	svMap := map[ServerID]tc.ServerNullable{}
+	svMap := map[ServerID]Server{}
 	for _, sv := range servers {
 		if sv.ID == nil {
 			warnings = append(warnings, "got server with missing ID, skipping!")

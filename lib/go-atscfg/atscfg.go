@@ -46,6 +46,16 @@ type TopologyName string
 type CacheGroupType string
 type ServerCapability string
 
+// Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
+// This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
+// but to only have to change it here, and the places where breaking symbol changes were made.
+type Server tc.ServerV30
+
+// DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
+// This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
+// but to only have to change it here, and the places where breaking symbol changes were made.
+type DeliveryService tc.DeliveryServiceNullableV30
+
 // CfgFile is all the information necessary to create an ATS config file, including the file name, path, data, and metadata.
 // This is provided as a convenience and unified structure for users. The lib/go-atscfg library doesn't actually use or return this. See ATSConfigFileData.
 type CfgFile struct {
@@ -88,7 +98,7 @@ type serverParentCacheGroupData struct {
 // getParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
-func getParentCacheGroupData(server *tc.ServerNullable, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (serverParentCacheGroupData, error) {
+func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (serverParentCacheGroupData, error) {
 	if server.Cachegroup == nil || *server.Cachegroup == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
 	} else if server.HostName == nil || *server.HostName == "" {
@@ -215,7 +225,7 @@ func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 }
 
 // topologyIncludesServerNullable returns whether the given topology includes the given server.
-func topologyIncludesServerNullable(topology tc.Topology, server *tc.ServerNullable) (bool, error) {
+func topologyIncludesServerNullable(topology tc.Topology, server *Server) (bool, error) {
 	if server.Cachegroup == nil {
 		return false, errors.New("server missing Cachegroup")
 	}
@@ -441,7 +451,7 @@ func paramsToMultiMap(params []tc.Parameter) map[string][]string {
 // getServerIPAddress gets the old IPv4 tc.Server.IPAddress from the new tc.Server.Interfaces.
 // If no IPv4 address set as a ServiceAddress exists, returns nil
 // Malformed addresses are ignored and skipped.
-func getServerIPAddress(sv *tc.ServerNullable) net.IP {
+func getServerIPAddress(sv *Server) net.IP {
 	for _, iFace := range sv.Interfaces {
 		for _, addr := range iFace.IPAddresses {
 			if !addr.ServiceAddress {
@@ -472,7 +482,7 @@ func getServerIPAddress(sv *tc.ServerNullable) net.IP {
 // If an IPv4 or IPv6 "service" address is not found, returns nil for that IP.
 // If no IPv4 address set as a ServiceAddress exists, returns nil
 // Malformed addresses are ignored and skipped.
-func getServiceAddresses(sv *tc.ServerNullable) (net.IP, net.IP) {
+func getServiceAddresses(sv *Server) (net.IP, net.IP) {
 	v4 := net.IP(nil)
 	v6 := net.IP(nil)
 	for _, iFace := range sv.Interfaces {

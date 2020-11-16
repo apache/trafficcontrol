@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strconv"
 	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
@@ -31,7 +29,7 @@ const LineCommentSetDSCPDotConfig = LineCommentHash
 
 func MakeSetDSCPDotConfig(
 	fileName string,
-	server *tc.ServerNullable,
+	server *Server,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}

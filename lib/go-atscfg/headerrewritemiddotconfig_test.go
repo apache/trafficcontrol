@@ -85,7 +85,7 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	mCG.Type = &mCGType
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
-	servers := []tc.ServerNullable{*server, *mid0, *mid1, *mid2}
+	servers := []Server{*server, *mid0, *mid1, *mid2}
 	dses := []tc.DeliveryServiceNullableV30{*ds}
 	dss := makeDSS(servers, dses)
 
@@ -169,7 +169,7 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 	mCG.Type = &mCGType
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
-	servers := []tc.ServerNullable{*server, *mid0, *mid1, *mid2}
+	servers := []Server{*server, *mid0, *mid1, *mid2}
 	dses := []tc.DeliveryServiceNullableV30{*ds}
 	dss := makeDSS(servers, dses)
 

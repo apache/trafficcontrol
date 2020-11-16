@@ -45,8 +45,8 @@ func LastHeaderRewriteConfigFileName(dsName string) string {
 
 func MakeTopologyHeaderRewriteDotConfig(
 	fileName string,
-	server *tc.ServerNullable,
-	servers []tc.ServerNullable,
+	server *Server,
+	servers []Server,
 	deliveryServices []tc.DeliveryServiceNullableV30,
 	topologies []tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
@@ -170,7 +170,7 @@ func MakeTopologyHeaderRewriteDotConfig(
 // It returns all servers in CG with the Capabilities of ds in cg.
 // It will not be the number of servers for Delivery Services not using Topologies, which use DeliveryService-Server assignments instead.
 // Returns the server count, and any warnings.
-func getTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []tc.ServerNullable, serverCapabilities map[int]map[ServerCapability]struct{}) (int, []string) {
+func getTopologyDSServerCount(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) (int, []string) {
 	warnings := []string{}
 	count := 0
 	for _, sv := range servers {

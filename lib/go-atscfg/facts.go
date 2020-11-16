@@ -19,15 +19,11 @@ package atscfg
  * under the License.
  */
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 const ContentType12MFacts = ContentTypeTextASCII
 const LineComment12MFacts = LineCommentHash
 
 func Make12MFacts(
-	server *tc.ServerNullable,
+	server *Server,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
