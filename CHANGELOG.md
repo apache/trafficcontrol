@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5069](https://github.com/apache/trafficcontrol/issues/5069) - For LetsEncryptDnsChallengerWatcher in Traffic Router,
     the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 - [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
+- [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
 
 ## [5.0.0] - 2020-10-20
 ### Added
