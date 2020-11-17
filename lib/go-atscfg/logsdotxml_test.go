@@ -26,20 +26,26 @@ import (
 
 func TestMakeLogsXMLDotConfig(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
+	hdr := "myHeaderComment"
+	paramData := makeParamsFromMap("serverProfile", LogsXMLFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",
 		"LogFormat.Format":         "myFormat",
 		"LogObject.Filename":       "myFilename",
 		"LogObject.RollingEnabled": "myRollingEnabled",
 		"LogFormat.Invalid":        "ShouldNotBeHere",
 		"LogObject.Invalid":        "ShouldNotBeHere",
+	})
+
+	server := makeGenericServer()
+	server.Profile = &profileName
+
+	cfg, err := MakeLogsXMLDotConfig(server, paramData, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakeLogsXMLDotConfig(profileName, paramData, toolName, toURL)
-
-	testXMLComment(t, txt, profileName, toolName, toURL)
+	testXMLComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "myFormatName") {
 		t.Errorf("expected config to contain LogFormat.Name 'myFormatName', actual: '%v'", txt)
@@ -58,7 +64,7 @@ func TestMakeLogsXMLDotConfig(t *testing.T) {
 	}
 }
 
-func testXMLComment(t *testing.T, txt string, objName string, toolName string, toURL string) {
+func testXMLComment(t *testing.T, txt string, hdr string) {
 	commentLine := strings.SplitN(txt, "\n", 2)[0] // SplitN always returns at least 1 element, no need to check len before indexing
 
 	if !strings.HasPrefix(strings.TrimSpace(commentLine), "<!--") {
@@ -67,13 +73,7 @@ func testXMLComment(t *testing.T, txt string, objName string, toolName string, t
 	if !strings.HasSuffix(strings.TrimSpace(commentLine), "-->") {
 		t.Errorf("expected ending comment on first line, actual: '" + commentLine + "'")
 	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toolName '" + toolName + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toURL '" + toURL + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, objName) {
-		t.Errorf("expected profile '" + objName + "' in comment, actual: '" + commentLine + "'")
+	if !strings.Contains(commentLine, hdr) {
+		t.Errorf("expected header comment '" + hdr + "' in comment, actual: '" + commentLine + "'")
 	}
 }

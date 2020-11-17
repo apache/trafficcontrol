@@ -42,8 +42,8 @@ func hello(d ModifyFilesData) []config.ATSConfigFile {
 	fi.Text = "Hello, World!\n"
 	fi.ContentType = "text/plain"
 	fi.LineComment = ""
-	fi.FileNameOnDisk = "hello.txt"
-	fi.Location = "/opt/trafficserver/etc/trafficserver/"
+	fi.Name = "hello.txt"
+	fi.Path = "/opt/trafficserver/etc/trafficserver/"
 
 	d.Files = append(d.Files, fi)
 	return d.Files

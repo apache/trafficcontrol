@@ -23,35 +23,36 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeRegexRemapDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
+
+	dsName := "myds"
+
+	server := makeGenericServer()
+	server.CDNName = &cdnName
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
-		"myds": CDNDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-			RegexRemap:    "myregexremap",
-		},
-	}
+	ds := makeGenericDS()
+	ds.XMLID = &dsName
+	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
+	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
+	ds.RegexRemap = util.StrPtr("myregexremap")
 
-	txt := MakeRegexRemapDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	dses := []DeliveryService{*ds}
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")
@@ -69,37 +70,40 @@ func TestMakeRegexRemapDotConfig(t *testing.T) {
 }
 
 func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
+
+	dsName := "myds"
+
+	server := makeGenericServer()
+	server.CDNName = &cdnName
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
-		"myds": CDNDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-			RegexRemap:    "myregexremap",
-		},
-		"otherds": CDNDS{
-			OrgServerFQDN: "https://otherorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://othercacheurl.net",
-			RegexRemap:    "otherregexremap",
-		},
-	}
+	ds := makeGenericDS()
+	ds.XMLID = &dsName
+	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
+	ds.RegexRemap = util.StrPtr("myregexremap")
 
-	txt := MakeRegexRemapDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	ds1 := makeGenericDS()
+	ds1.XMLID = util.StrPtr("otherds")
+	ds1.OrgServerFQDN = util.StrPtr("https://otherorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
+	ds1.QStringIgnore = util.IntPtr(0)
+	ds1.CacheURL = util.StrPtr("https://othercacheurl.net")
+	ds1.RegexRemap = util.StrPtr("otherregexremap")
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	dses := []DeliveryService{*ds, *ds1}
+
+	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")
@@ -115,43 +119,45 @@ func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
 		t.Errorf("expected: regex remap to contain regex remap, actual: '%v'", txt)
 	}
 
-	if strings.Contains(txt, "mycacheurl") {
+	if strings.Contains(txt, "othercacheurl") {
 		t.Errorf("expected: regex remap to not contain other cacheurl, actual: '%v'", txt)
 	}
-	if strings.Contains(txt, "myorigin") {
+	if strings.Contains(txt, "otherorigin") {
 		t.Errorf("expected: regex remap to not contain other org server fqdn, actual: '%v'", txt)
 	}
 	if strings.Contains(txt, "otherregexremap") {
-		t.Errorf("expected: regex remap to contain other regex remap, actual: '%v'", txt)
+		t.Errorf("expected: regex remap to not contain other regex remap, actual: '%v'", txt)
 	}
 }
 
 func TestMakeRegexRemapDotConfigReplaceReturns(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
+
+	dsName := "myds"
+
+	server := makeGenericServer()
+	server.CDNName = &cdnName
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
-		"myds": CDNDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-			RegexRemap:    "myregexremap__RETURN__mypostnewline",
-		},
-	}
+	ds := makeGenericDS()
+	ds.XMLID = &dsName
+	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
+	ds.RegexRemap = util.StrPtr("myregexremap__RETURN__mypostnewline")
 
-	txt := MakeRegexRemapDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	dses := []DeliveryService{*ds}
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeRegexRemapDotConfig(fileName, server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")

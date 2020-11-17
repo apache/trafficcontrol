@@ -20,313 +20,75 @@ package atscfg
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"path/filepath"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-type ConfigProfileParams struct {
-	FileNameOnDisk string
-	Location       string
-	URL            string
+type CfgMeta struct {
+	Name string
+	Path string
 }
 
-// APIVersion is the Traffic Ops API version for config fiels.
-// This is used to generate the meta config, which has API paths.
-// Note the version in the meta config is not used by the atstccfg generator, which isn't actually an API.
-// TODO change the config system to not use old API paths, and remove this.
-const APIVersion = "2.0"
-
-// requiredFiles is a constant (because Go doesn't allow const slices).
-// Note these are not exhaustive. This is only used to error if these are missing.
-// The presence of these is no guarantee the location Parameters are complete and correct.
-func requiredFiles() []string {
-	return []string{
-		"cache.config",
-		"hosting.config",
-		"ip_allow.config",
-		"parent.config",
-		"plugin.config",
-		"records.config",
-		"remap.config",
-		"storage.config",
-		"volume.config",
-	}
-}
-
-func MakeMetaConfig(
-	server *tc.ServerNullable,
-	tmURL string, // global tm.url Parameter
-	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
-	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
-	uriSignedDSes []tc.DeliveryServiceName,
-	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
-	cacheGroupArr []tc.CacheGroupNullable,
-	topologies []tc.Topology,
-) string {
-	configDir := "" // this should only be used for Traffic Ops, which doesn't have a local ATS install config directory (and thus will fail if any location Parameters are missing or relative).
-	return MetaObjToMetaConfig(MakeMetaObj(server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies, configDir))
-}
-
-func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData, err error) string {
-	if err != nil {
-		return "error creating meta config: " + err.Error()
-	}
-	bts, err := json.Marshal(atsData)
-	if err != nil {
-		// should never happen
-		log.Errorln("marshalling meta config: " + err.Error())
-		bts = []byte("error encoding to json, see log for details")
-	}
-	return string(bts)
-}
-
-// AddMetaObjConfigDir takes the Meta Object generated from TO data, and the ATS config directory
-// and prepends the config directory to all relative paths,
-// and creates MetaObj entries for all required config files which have no location parameter.
-// If configDir is empty and any location Parameters have relative paths, returns an error.
-func AddMetaObjConfigDir(
-	metaObj tc.ATSConfigMetaData,
+// MakeMetaObj returns the list of config files, any warnings, and any errors.
+func MakeConfigFilesList(
 	configDir string,
-	server *tc.ServerNullable,
-	tmURL string, // global tm.url Parameter
-	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
-	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
-	uriSignedDSes []tc.DeliveryServiceName,
-	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
+	server *Server,
+	serverParams []tc.Parameter,
+	deliveryServices []DeliveryService,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	globalParams []tc.Parameter,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
-) (tc.ATSConfigMetaData, error) {
+) ([]CfgMeta, []string, error) {
+	warnings := []string{}
+
 	if server.Cachegroup == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing Cachegroup")
-	}
-
-	cacheGroups, err := MakeCGMap(cacheGroupArr)
-	if err != nil {
-		return tc.ATSConfigMetaData{}, errors.New("making CG map: " + err.Error())
-	}
-
-	// Note there may be multiple files with the same name in different directories.
-	configFilesM := map[string][]tc.ATSConfigMetaDataConfigFile{} // map[fileShortName]tc.ATSConfigMetaDataConfigFile
-	for _, fi := range metaObj.ConfigFiles {
-		configFilesM[fi.FileNameOnDisk] = append(configFilesM[fi.FileNameOnDisk], fi)
-	}
-
-	// add all strictly required files, all of which should be in the base config directory.
-	// If they don't exist, create them.
-	// If they exist with a relative path, prepend configDir.
-	// If any exist with a relative path, or don't exist, and configDir is empty, return an error.
-	for _, fileName := range requiredFiles() {
-		if _, ok := configFilesM[fileName]; ok {
-			continue
-		}
-		if configDir == "" {
-			return metaObj, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
-		}
-		configFilesM[fileName] = []tc.ATSConfigMetaDataConfigFile{{
-			FileNameOnDisk: fileName,
-			Location:       configDir,
-			Scope:          string(getServerScope(fileName, server.Type, nil)),
-		}}
-	}
-
-	for fileName, fis := range configFilesM {
-		newFis := []tc.ATSConfigMetaDataConfigFile{}
-		for _, fi := range fis {
-			if !filepath.IsAbs(fi.Location) {
-				if configDir == "" {
-					return metaObj, errors.New("file '" + fileName + "' has location Parameter with relative path '" + fi.Location + "', but ATS config directory was not found.")
-				}
-				absPath := filepath.Join(configDir, fi.Location)
-				fi.Location = absPath
-			}
-			newFis = append(newFis, fi)
-		}
-		configFilesM[fileName] = newFis
-	}
-
-	nameTopologies := MakeTopologyNameMap(topologies)
-
-	for _, ds := range dses {
-		if ds.XMLID == nil {
-			log.Errorln("meta config generation got Delivery Service with nil XMLID - not considering!")
-			continue
-		}
-
-		err := error(nil)
-		// Note we log errors, but don't return them.
-		// If an individual DS has an error, we don't want to break the rest of the CDN.
-		if ds.Topology != nil && *ds.Topology != "" {
-			topology := nameTopologies[TopologyName(*ds.Topology)]
-
-			placement := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, &ds)
-			if placement.IsFirstCacheTier {
-				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
-					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
-					scope := tc.ATSConfigMetaDataConfigFileScopeServers
-					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-						log.Errorln("meta config generation: " + err.Error())
-					}
-				}
-			}
-			if placement.IsInnerCacheTier {
-				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" || ds.MaxOriginConnections != nil {
-					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
-					scope := tc.ATSConfigMetaDataConfigFileScopeServers
-					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-						log.Errorln("meta config generation: " + err.Error())
-					}
-				}
-			}
-			if placement.IsLastCacheTier {
-				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" || ds.MaxOriginConnections != nil {
-					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
-					scope := tc.ATSConfigMetaDataConfigFileScopeServers
-					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-						log.Errorln("meta config generation: " + err.Error())
-					}
-				}
-			}
-		} else if strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
-			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
-				strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
-				fileName := "hdr_rw_" + *ds.XMLID + ".config"
-				scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-					log.Errorln("meta config generation: " + err.Error())
-				}
-			}
-		} else if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
-				ds.Type != nil && ds.Type.UsesMidCache() &&
-				strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-				fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
-				scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-					log.Errorln("meta config generation: " + err.Error())
-				}
-			}
-		}
-		if ds.RegexRemap != nil {
-			configFile := "regex_remap_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
-			}
-		}
-		if ds.CacheURL != nil {
-			configFile := "cacheurl_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
-			}
-		}
-		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
-			configFile := "url_sig_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeProfiles
-			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
-			}
-		}
-		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
-			configFile := "uri_signing_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeProfiles
-			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
-			}
-		}
-	}
-
-	newFiles := []tc.ATSConfigMetaDataConfigFile{}
-	for _, fis := range configFilesM {
-		for _, fi := range fis {
-			newFiles = append(newFiles, fi)
-		}
-	}
-	metaObj.ConfigFiles = newFiles
-	return metaObj, nil
-}
-
-// ensureConfigFile ensures files contains the given fileName. If so, returns files unmodified.
-// If not, if configDir is empty, returns an error.
-// If not, and configDir is nonempty, creates the given file, configDir location, and scope, and returns files.
-func ensureConfigFile(files map[string][]tc.ATSConfigMetaDataConfigFile, fileName string, configDir string, scope tc.ATSConfigMetaDataConfigFileScope) (map[string][]tc.ATSConfigMetaDataConfigFile, error) {
-	if _, ok := files[fileName]; ok {
-		return files, nil
-	}
-	if configDir == "" {
-		return files, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
-	}
-	files[fileName] = []tc.ATSConfigMetaDataConfigFile{{
-		FileNameOnDisk: fileName,
-		Location:       configDir,
-		Scope:          string(scope),
-	}}
-	return files, nil
-}
-
-func MakeMetaObj(
-	server *tc.ServerNullable,
-	tmURL string, // global tm.url Parameter
-	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
-	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
-	uriSignedDSes []tc.DeliveryServiceName,
-	scopeParams map[string]string, // map[configFileName]scopeParam
-	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullableV30,
-	cacheGroupArr []tc.CacheGroupNullable,
-	topologies []tc.Topology,
-	configDir string,
-) (tc.ATSConfigMetaData, error) {
-	if server.ProfileID == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing ProfileID")
+		return nil, warnings, errors.New("this server missing Cachegroup")
+	} else if server.CachegroupID == nil {
+		return nil, warnings, errors.New("this server missing CachegroupID")
+	} else if server.ProfileID == nil {
+		return nil, warnings, errors.New("server missing ProfileID")
 	} else if server.TCPPort == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing TCPPort")
+		return nil, warnings, errors.New("server missing TCPPort")
 	} else if server.HostName == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing HostName")
+		return nil, warnings, errors.New("server missing HostName")
 	} else if server.CDNID == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing CDNID")
+		return nil, warnings, errors.New("server missing CDNID")
 	} else if server.CDNName == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing CDNName")
+		return nil, warnings, errors.New("server missing CDNName")
 	} else if server.ID == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing ID")
+		return nil, warnings, errors.New("server missing ID")
 	} else if server.Profile == nil {
-		return tc.ATSConfigMetaData{}, errors.New("server missing Profile")
+		return nil, warnings, errors.New("server missing Profile")
 	}
 
+	tmURL, tmReverseProxyURL := getTOURLAndReverseProxy(globalParams)
 	if tmURL == "" {
-		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
+		warnings = append(warnings, "global tm.url parameter missing or empty! Setting empty in meta config!")
 	}
 
-	atsData := tc.ATSConfigMetaData{
-		Info: tc.ATSConfigMetaDataInfo{
-			ProfileID:         int(*server.ProfileID),
-			TOReverseProxyURL: tmReverseProxyURL,
-			TOURL:             tmURL,
-			ServerPort:        *server.TCPPort,
-			ServerName:        *server.HostName,
-			CDNID:             *server.CDNID,
-			CDNName:           *server.CDNName,
-			ServerID:          *server.ID,
-			ProfileName:       *server.Profile,
-		},
-		ConfigFiles: []tc.ATSConfigMetaDataConfigFile{},
-	}
+	dses, dsWarns := filterConfigFileDSes(server, deliveryServices, deliveryServiceServers)
+	warnings = append(warnings, dsWarns...)
 
-	if locationParams["remap.config"].Location != "" {
-		configLocation := locationParams["remap.config"].Location
+	locationParams := getLocationParams(serverParams)
+
+	uriSignedDSes, signDSWarns := getURISignedDSes(dses)
+	warnings = append(warnings, signDSWarns...)
+
+	configFiles := []CfgMeta{}
+
+	if locationParams["remap.config"].Path != "" {
+		configLocation := locationParams["remap.config"].Path
 		for _, ds := range uriSignedDSes {
 			cfgName := "uri_signing_" + string(ds) + ".config"
 			// If there's already a parameter for it, don't clobber it. The user may wish to override the location.
 			if _, ok := locationParams[cfgName]; !ok {
 				p := locationParams[cfgName]
-				p.FileNameOnDisk = cfgName
-				p.Location = configLocation
+				p.Name = cfgName
+				p.Path = configLocation
 				locationParams[cfgName] = p
 			}
 		}
@@ -347,7 +109,7 @@ locationParamsFor:
 				if strings.HasPrefix(cfgFile, prefix) {
 					dsName := strings.TrimSuffix(strings.TrimPrefix(cfgFile, prefix), ".config")
 					if _, ok := dses[tc.DeliveryServiceName(dsName)]; !ok {
-						log.Warnln("Server Profile had 'location' Parameter '" + cfgFile + "', but delivery Service '" + dsName + "' is not assigned to this Server! Not including in meta config!")
+						warnings = append(warnings, "server profile had 'location' Parameter '"+cfgFile+"', but delivery Service '"+dsName+"' is not assigned to this Server! Not including in meta config!")
 						continue locationParamsFor
 					}
 					break prefixFor // if it has a prefix, don't check the next prefix. This is important for hdr_rw_mid_, which will match hdr_rw_ and result in a "ds name" of "mid_x" if we don't continue here.
@@ -355,78 +117,339 @@ locationParamsFor:
 			}
 		}
 
-		atsCfg := tc.ATSConfigMetaDataConfigFile{
-			FileNameOnDisk: cfgParams.FileNameOnDisk,
-			Location:       cfgParams.Location,
+		atsCfg := CfgMeta{
+			Name: cfgParams.Name,
+			Path: cfgParams.Path,
 		}
 
-		scope := getServerScope(cfgFile, server.Type, scopeParams)
+		configFiles = append(configFiles, atsCfg)
+	}
 
-		if cfgParams.URL != "" {
-			// TODO this is legacy, from when a custom URL could be set via Parameters.
-			//      verify nobody is relying on it in a production system, and remove.
-			scope = tc.ATSConfigMetaDataConfigFileScopeCDNs
+	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies)
+	warnings = append(warnings, configDirWarns...)
+	return configFiles, warnings, err
+}
+
+// addMetaObjConfigDir takes the Meta Object generated from TO data, and the ATS config directory
+// and prepends the config directory to all relative paths,
+// and creates MetaObj entries for all required config files which have no location parameter.
+// If configDir is empty and any location Parameters have relative paths, returns an error.
+// Returns the amended config files list, any warnings, and any error.
+func addMetaObjConfigDir(
+	configFiles []CfgMeta,
+	configDir string,
+	server *Server,
+	tmURL string, // global tm.url Parameter
+	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
+	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
+	uriSignedDSes []tc.DeliveryServiceName,
+	dses map[tc.DeliveryServiceName]DeliveryService,
+	cacheGroupArr []tc.CacheGroupNullable,
+	topologies []tc.Topology,
+) ([]CfgMeta, []string, error) {
+	warnings := []string{}
+
+	if server.Cachegroup == nil {
+		return nil, warnings, errors.New("server missing Cachegroup")
+	}
+
+	cacheGroups, err := makeCGMap(cacheGroupArr)
+	if err != nil {
+		return nil, warnings, errors.New("making CG map: " + err.Error())
+	}
+
+	// Note there may be multiple files with the same name in different directories.
+	configFilesM := map[string][]CfgMeta{} // map[fileShortName]CfgMeta
+	for _, fi := range configFiles {
+		configFilesM[fi.Name] = append(configFilesM[fi.Path], fi)
+	}
+
+	// add all strictly required files, all of which should be in the base config directory.
+	// If they don't exist, create them.
+	// If they exist with a relative path, prepend configDir.
+	// If any exist with a relative path, or don't exist, and configDir is empty, return an error.
+	for _, fileName := range requiredFiles() {
+		if _, ok := configFilesM[fileName]; ok {
+			continue
+		}
+		if configDir == "" {
+			return nil, warnings, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
+		}
+		configFilesM[fileName] = []CfgMeta{{
+			Name: fileName,
+			Path: configDir,
+		}}
+	}
+
+	for fileName, fis := range configFilesM {
+		newFis := []CfgMeta{}
+		for _, fi := range fis {
+			if !filepath.IsAbs(fi.Path) {
+				if configDir == "" {
+					return nil, warnings, errors.New("file '" + fileName + "' has location Parameter with relative path '" + fi.Path + "', but ATS config directory was not found.")
+				}
+				absPath := filepath.Join(configDir, fi.Path)
+				fi.Path = absPath
+			}
+			newFis = append(newFis, fi)
+		}
+		configFilesM[fileName] = newFis
+	}
+
+	nameTopologies := makeTopologyNameMap(topologies)
+
+	for _, ds := range dses {
+		if ds.XMLID == nil {
+			warnings = append(warnings, "got Delivery Service with nil XMLID - not considering!")
+			continue
 		}
 
-		atsCfg.Scope = string(scope)
+		err := error(nil)
+		// Note we log errors, but don't return them.
+		// If an individual DS has an error, we don't want to break the rest of the CDN.
+		if ds.Topology != nil && *ds.Topology != "" {
+			topology := nameTopologies[TopologyName(*ds.Topology)]
 
-		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
+			placement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, &ds)
+			if err != nil {
+				return nil, warnings, errors.New("getting topology placement: " + err.Error())
+			}
+			if placement.IsFirstCacheTier {
+				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
+						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
+					}
+				}
+			}
+			if placement.IsInnerCacheTier {
+				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
+						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
+					}
+				}
+			}
+			if placement.IsLastCacheTier {
+				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
+						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
+					}
+				}
+			}
+		} else if strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+				strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+				fileName := "hdr_rw_" + *ds.XMLID + ".config"
+				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
+					warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
+				}
+			}
+		} else if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+				ds.Type != nil && ds.Type.UsesMidCache() &&
+				strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+				fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
+					warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
+				}
+			}
+		}
+		if ds.RegexRemap != nil {
+			configFile := "regex_remap_" + *ds.XMLID + ".config"
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
+				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
+			}
+		}
+		if ds.CacheURL != nil {
+			configFile := "cacheurl_" + *ds.XMLID + ".config"
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
+				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
+			}
+		}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
+			configFile := "url_sig_" + *ds.XMLID + ".config"
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
+				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
+			}
+		}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
+			configFile := "uri_signing_" + *ds.XMLID + ".config"
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
+				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
+			}
+		}
 	}
 
-	return AddMetaObjConfigDir(atsData, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies)
+	newFiles := []CfgMeta{}
+	for _, fis := range configFilesM {
+		for _, fi := range fis {
+			newFiles = append(newFiles, fi)
+		}
+	}
+	return newFiles, warnings, nil
 }
 
-func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {
-	switch {
-	case cfgFile == "cache.config" && tc.CacheTypeFromString(serverType) == tc.CacheTypeMid:
-		return tc.ATSConfigMetaDataConfigFileScopeServers
-	default:
-		return getScope(cfgFile, scopeParams)
+// getURISignedDSes returns the URI-signed Delivery Services, and any warnings.
+func getURISignedDSes(dses map[tc.DeliveryServiceName]DeliveryService) ([]tc.DeliveryServiceName, []string) {
+	warnings := []string{}
+
+	uriSignedDSes := []tc.DeliveryServiceName{}
+	for _, ds := range dses {
+		if ds.ID == nil {
+			warnings = append(warnings, "got delivery service with no id, skipping!")
+			continue
+		}
+		if ds.XMLID == nil {
+			warnings = append(warnings, "got delivery service with no xmlId (name), skipping!")
+			continue
+		}
+		if _, ok := dses[tc.DeliveryServiceName(*ds.XMLID)]; !ok {
+			continue // skip: this ds isn't assigned to this server, this is normal
+		}
+		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
+			continue // not signed, so not in our list of signed dses to make config files for.
+		}
+		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
+	}
+
+	return uriSignedDSes, warnings
+}
+
+// filterConfigFileDSes returns the DSes that should have config files for the given server.
+// Returns the delivery services and any warnings.
+func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]DeliveryService, []string) {
+	warnings := []string{}
+
+	dses := map[tc.DeliveryServiceName]DeliveryService{}
+
+	if tc.CacheTypeFromString(server.Type) != tc.CacheTypeMid {
+		dsIDs := map[int]struct{}{}
+		for _, ds := range deliveryServices {
+			if ds.ID == nil {
+				warnings = append(warnings, "got delivery service with no ID, skipping!")
+				continue
+			}
+			dsIDs[*ds.ID] = struct{}{}
+		}
+
+		// TODO verify?
+		//		serverIDs := []int{server.ID}
+
+		dssMap := map[int]struct{}{}
+		for _, dss := range deliveryServiceServers {
+			if dss.Server == nil || dss.DeliveryService == nil {
+				warnings = append(warnings, "got deliveryservice-server with nil values, skipping!")
+				continue
+			}
+			if *dss.Server != *server.ID {
+				continue
+			}
+			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+				continue
+			}
+			dssMap[*dss.DeliveryService] = struct{}{}
+		}
+
+		for _, ds := range deliveryServices {
+			if ds.ID == nil {
+				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
+				continue
+			}
+			if ds.XMLID == nil {
+				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
+				continue
+			}
+			if _, ok := dssMap[*ds.ID]; !ok && ds.Topology == nil {
+				continue
+			}
+			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
+		}
+	} else {
+		for _, ds := range deliveryServices {
+			if ds.ID == nil {
+				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
+				continue
+			}
+			if ds.XMLID == nil {
+				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
+				continue
+			}
+			if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
+				continue
+			}
+			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
+		}
+	}
+	return dses, warnings
+}
+
+// getTOURLAndReverseProxy returns the toURL and toReverseProxyURL if they exist, or empty strings if they don't.
+func getTOURLAndReverseProxy(globalParams []tc.Parameter) (string, string) {
+	toReverseProxyURL := ""
+	toURL := ""
+	for _, param := range globalParams {
+		if param.Name == "tm.rev_proxy.url" {
+			toReverseProxyURL = param.Value
+		} else if param.Name == "tm.url" {
+			toURL = param.Value
+		}
+		if toReverseProxyURL != "" && toURL != "" {
+			break
+		}
+	}
+	return toURL, toReverseProxyURL
+}
+
+func getLocationParams(serverParams []tc.Parameter) map[string]configProfileParams {
+	locationParams := map[string]configProfileParams{}
+	for _, param := range serverParams {
+		if param.Name == "location" {
+			p := locationParams[param.ConfigFile]
+			p.Name = param.ConfigFile
+			p.Path = param.Value
+			locationParams[param.ConfigFile] = p
+		}
+	}
+	return locationParams
+}
+
+type configProfileParams struct {
+	Name string
+	Path string
+}
+
+// requiredFiles is a constant (because Go doesn't allow const slices).
+// Note these are not exhaustive. This is only used to error if these are missing.
+// The presence of these is no guarantee the location Parameters are complete and correct.
+func requiredFiles() []string {
+	return []string{
+		"cache.config",
+		"hosting.config",
+		"ip_allow.config",
+		"parent.config",
+		"plugin.config",
+		"records.config",
+		"remap.config",
+		"storage.config",
+		"volume.config",
 	}
 }
 
-const DefaultScope = tc.ATSConfigMetaDataConfigFileScopeServers
-
-// getScope returns the ATSConfigMetaDataConfigFileScope for the given config file, and potentially the given server. If the config is not a Server scope, i.e. was part of an endpoint which does not include a server name or id, the server may be nil.
-func getScope(cfgFile string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {
-	switch {
-	case cfgFile == "ip_allow.config",
-		cfgFile == "parent.config",
-		cfgFile == "hosting.config",
-		cfgFile == "packages",
-		cfgFile == "chkconfig",
-		cfgFile == "remap.config",
-		strings.HasPrefix(cfgFile, "to_ext_") && strings.HasSuffix(cfgFile, ".config"):
-		return tc.ATSConfigMetaDataConfigFileScopeServers
-	case cfgFile == "12M_facts",
-		cfgFile == "50-ats.rules",
-		cfgFile == "astats.config",
-		cfgFile == "cache.config",
-		cfgFile == "drop_qstring.config",
-		cfgFile == "logs_xml.config",
-		cfgFile == "logging.config",
-		cfgFile == "logging.yaml",
-		cfgFile == "plugin.config",
-		cfgFile == "records.config",
-		cfgFile == "storage.config",
-		cfgFile == "volume.config",
-		cfgFile == "sysctl.conf",
-		strings.HasPrefix(cfgFile, "url_sig_") && strings.HasSuffix(cfgFile, ".config"),
-		strings.HasPrefix(cfgFile, "uri_signing_") && strings.HasSuffix(cfgFile, ".config"):
-		return tc.ATSConfigMetaDataConfigFileScopeProfiles
-	case cfgFile == "bg_fetch.config",
-		cfgFile == "regex_revalidate.config",
-		cfgFile == SSLMultiCertConfigFileName,
-		strings.HasPrefix(cfgFile, "cacheurl") && strings.HasSuffix(cfgFile, ".config"),
-		strings.HasPrefix(cfgFile, "hdr_rw_") && strings.HasSuffix(cfgFile, ".config"),
-		strings.HasPrefix(cfgFile, "regex_remap_") && strings.HasSuffix(cfgFile, ".config"),
-		strings.HasPrefix(cfgFile, "set_dscp_") && strings.HasSuffix(cfgFile, ".config"):
-		return tc.ATSConfigMetaDataConfigFileScopeCDNs
+// ensureConfigFile ensures files contains the given fileName. If so, returns files unmodified.
+// If not, if configDir is empty, returns an error.
+// If not, and configDir is nonempty, creates the given file, configDir location, and returns files.
+func ensureConfigFile(files map[string][]CfgMeta, fileName string, configDir string) (map[string][]CfgMeta, error) {
+	if _, ok := files[fileName]; ok {
+		return files, nil
 	}
-
-	scope, ok := scopeParams[cfgFile]
-	if !ok {
-		scope = string(DefaultScope)
+	if configDir == "" {
+		return files, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
 	}
-	return tc.ATSConfigMetaDataConfigFileScope(scope)
+	files[fileName] = []CfgMeta{{
+		Name: fileName,
+		Path: configDir,
+	}}
+	return files, nil
 }

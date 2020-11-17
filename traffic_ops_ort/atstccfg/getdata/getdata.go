@@ -82,7 +82,7 @@ const SystemInfoParamConfigFile = `global`
 // This is identical to the /api/1.x/system/info endpoint, except it does not include a '{response: {parameters:' wrapper.
 //
 func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
-	paramArr, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
+	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
 	if err != nil {
 		return errors.New("getting system info parameters: " + err.Error())
 	}
@@ -99,7 +99,7 @@ func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
 // WriteStatuses writes the Traffic Ops statuses to output.
 // Note this is identical to /api/1.x/statuses except it omits the '{response:' wrapper.
 func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
-	statuses, err := cfg.TOClient.GetStatuses()
+	statuses, _, err := cfg.TOClient.GetStatuses()
 	if err != nil {
 		return errors.New("getting statuses: " + err.Error())
 	}
@@ -112,10 +112,10 @@ func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
 // WriteUpdateStatus writes the Traffic Ops server update status to output.
 // Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
 func WriteServerUpdateStatus(cfg config.TCCfg, output io.Writer) error {
-	status, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	status, _, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	if err == nil && unsupported {
 		log.Warnln("ORT newer than Traffic Ops, falling back to previous API Delivery Services!")
-		status, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+		status, _, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	}
 	if err != nil {
 		return errors.New("getting server update status: " + err.Error())
@@ -139,23 +139,30 @@ func WritePackages(cfg config.TCCfg, output io.Writer) error {
 	return nil
 }
 
-func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+func GetPackages(cfg config.TCCfg) ([]Package, error) {
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
+	} else if server.Profile == nil {
+		return nil, errors.New("getting server: nil profile")
 	}
-	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
 	if err != nil {
-		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 	}
-	packages := []atscfg.Package{}
+	packages := []Package{}
 	for _, param := range params {
 		if param.ConfigFile != atscfg.PackagesParamConfigFile {
 			continue
 		}
-		packages = append(packages, atscfg.Package{Name: param.Name, Version: param.Value})
+		packages = append(packages, Package{Name: param.Name, Version: param.Value})
 	}
 	return packages, nil
+}
+
+type Package struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 // WriteChkconfig writes the chkconfig for cfg.CacheHostName to output.
@@ -171,23 +178,30 @@ func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 	return nil
 }
 
-func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
-	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+func GetChkconfig(cfg config.TCCfg) ([]ChkConfigEntry, error) {
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
+	} else if server.Profile == nil {
+		return nil, errors.New("getting server: nil profile")
 	}
-	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
 	if err != nil {
-		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 	}
-	chkconfig := []atscfg.ChkConfigEntry{}
+	chkconfig := []ChkConfigEntry{}
 	for _, param := range params {
 		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
 			continue
 		}
-		chkconfig = append(chkconfig, atscfg.ChkConfigEntry{Name: param.Name, Val: param.Value})
+		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 	return chkconfig, nil
+}
+
+type ChkConfigEntry struct {
+	Name string `json:"name"`
+	Val  string `json:"value"`
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
