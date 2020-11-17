@@ -335,7 +335,7 @@ func canUpdate(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost) error {
 	err := tx.QueryRow(`
 select name from type as t 
 where t.id=$1`,
-dsr.Type).Scan(&name)
+		dsr.Type).Scan(&name)
 	if err != nil {
 		return err
 	}
