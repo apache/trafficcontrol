@@ -53,7 +53,7 @@ func TestValidateDSRegexOrderExisting(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(regex.Type).WillReturnRows(rows)
 	mock.ExpectCommit()
 	tx := db.MustBegin().Tx
-	err = validateDSRegex(tx, regex, 1)
+	err = validateDSRegex(tx, regex, 1, false)
 	if err == nil {
 		t.Fatalf("Expected error '%v' but got none", expected)
 	}
@@ -82,8 +82,45 @@ func TestValidateDSRegex(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(regex.Type).WillReturnRows(rows)
 	mock.ExpectCommit()
 	tx := db.MustBegin().Tx
-	err = validateDSRegex(tx, regex, 1)
+	err = validateDSRegex(tx, regex, 1, true)
 	if err != nil {
 		t.Fatalf("Expected no error but got %v", err.Error())
+	}
+}
+
+func TestUpdateImmutableRegex(t *testing.T) {
+	expected := `'setNumber' cannot update regex with set number 0 and type HOST_REGEXP`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+	cols := []string{"name", "use_in_table"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		"HOST_REGEXP",
+		"regex",
+	)
+	cols2 := []string{"deliveryservice"}
+	rows2 := sqlmock.NewRows(cols2)
+
+	cols3 := []string{"name"}
+	rows3 := sqlmock.NewRows(cols3)
+	rows3 = rows3.AddRow("HOST_REGEXP")
+	regex := tc.DeliveryServiceRegexPost{Type: 33, SetNumber: 0, Pattern: ".*"}
+	mock.ExpectBegin()
+	mock.ExpectQuery("select").WithArgs(1, regex.SetNumber).WillReturnRows(rows2)
+	mock.ExpectQuery("select").WithArgs(regex.Type).WillReturnRows(rows3)
+	mock.ExpectQuery("SELECT").WithArgs(regex.Type).WillReturnRows(rows)
+	mock.ExpectCommit()
+	tx := db.MustBegin().Tx
+	err = validateDSRegex(tx, regex, 1, false)
+	if err == nil {
+		t.Fatalf("Expected error forbidding updates to regex with set number 0 and type HOST_REGEXP, but got none")
+	}
+	if err.Error() != expected {
+		t.Fatalf("expected error detail to be %v, but got %v instead", expected, err.Error())
 	}
 }

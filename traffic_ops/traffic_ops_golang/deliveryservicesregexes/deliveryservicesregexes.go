@@ -223,7 +223,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], true); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -300,7 +300,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], false); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -329,8 +329,24 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
+// canUpdate checks to see if the current regex can be updated. If the current regex has a set number of 0, and a type of HOST_REGEXP, it cannot be updated.
+func canUpdate(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost) error {
+	var name string
+	err := tx.QueryRow(`
+select name from type as t 
+where t.id=$1`,
+dsr.Type).Scan(&name)
+	if err != nil {
+		return err
+	}
+	if name == "HOST_REGEXP" && dsr.SetNumber == 0 {
+		return errors.New("cannot update regex with set number 0 and type HOST_REGEXP")
+	}
+	return nil
+}
+
 // Validate POST/PUT regex struct
-func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
+func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int, new bool) error {
 	var ds int
 	var setNumberErr error
 	if dsr.SetNumber < 0 {
@@ -340,12 +356,22 @@ func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) erro
 select deliveryservice from deliveryservice_regex
 where deliveryservice = $1 and set_number = $2`,
 		dsID, dsr.SetNumber).Scan(&ds)
-	if err == nil {
-		setNumberErr = errors.New("cannot add regex, another regex with the same order exists")
+	if new {
+		// If its a new regex, then another shouldn't exist with the same set number
+		if err == nil {
+			setNumberErr = errors.New("cannot add regex, another regex with the same order exists")
+		} else {
+			setNumberErr = nil
+		}
 	} else {
-		setNumberErr = nil
+		// Cannot update a regex with set number = 0 and type = HOST_REGEXP
+		e := canUpdate(tx, dsr)
+		if e != nil {
+			setNumberErr = e
+		} else {
+			setNumberErr = err
+		}
 	}
-
 	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
 
 	errs := validation.Errors{
