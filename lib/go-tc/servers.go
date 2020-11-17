@@ -807,6 +807,7 @@ type ServerInfo struct {
 	CDNID        int
 	DomainName   string
 	HostName     string
+	ID           int
 	Type         string
 }
 

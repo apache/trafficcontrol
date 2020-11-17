@@ -689,7 +689,8 @@ SELECT
   s.host_name,
   s.domain_name,
   s.cdn_id,
-  t.name
+  t.name,
+  s.id
 FROM
   server s JOIN type t ON s.type = t.id
   JOIN cachegroup c on s.cachegroup = c.id
@@ -724,7 +725,7 @@ func scanServerInfoRows(rows *sql.Rows) ([]tc.ServerInfo, error) {
 	servers := []tc.ServerInfo{}
 	for rows.Next() {
 		s := tc.ServerInfo{}
-		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type); err != nil {
+		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type, &s.ID); err != nil {
 			return nil, errors.New("scanning server info: " + err.Error())
 		}
 		servers = append(servers, s)
