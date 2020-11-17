@@ -140,6 +140,8 @@ There also exist TP and TO integration tests containers. Both of these container
 
 	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+
 variables.env
 """""""""""""
 .. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
@@ -225,6 +227,8 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Ubuntu (Linux)
 Advanced Usage
 ==============
 This section will be amended as functionality is added to the CDN in a Box project.
+
+.. _ciab-enroller:
 
 The Enroller
 ------------

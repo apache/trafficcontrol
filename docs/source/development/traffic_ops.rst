@@ -336,6 +336,9 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 	Specify the path to the `Test Configuration File`_. If not specified, it will attempt to read a file named ``traffic-ops-test.conf`` in the working directory.
 
 	.. seealso:: `Configuring the Integration Tests`_ for a detailed explanation of the format of this configuration file.
+
+.. _dev-traffic-ops-fixtures:
+
 .. option:: --fixtures FIXTURES
 
 	Specify the path to a file containing static data for the tests to use. This should almost never be used, because many of the tests depend on the data having a certain content and structure. If not specified, it will attempt to read a file named ``tc-fixtures.json`` in the working directory.

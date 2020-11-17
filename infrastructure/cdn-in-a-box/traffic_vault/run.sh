@@ -26,6 +26,4 @@ TO_URL=https://${TO_FQDN}:${TO_PORT}
 TO_USER=$TV_USER
 TO_PASSWORD=$TV_PASSWORD
 
-to-enroll "tv" ALL "" "8088" "8088" || (while true; do echo "enroll failed."; sleep 3 ; done)
-
 ${RIAK_HOME}/riak-cluster.sh
