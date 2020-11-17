@@ -112,7 +112,7 @@ func GetSSLMultiCertDotConfigCertAndKeyName(dsName tc.DeliveryServiceName, ds ss
 	return cerName, keyName
 }
 
-// getSSLMultiCertDotConfigDeliveryServices takes a list of delivery services, and returns the delivery services which will be inserted into the config by MakeSSLMultiCertDotConfig.
+// GetSSLMultiCertDotConfigDeliveryServices takes a list of delivery services, and returns the delivery services which will be inserted into the config by MakeSSLMultiCertDotConfig.
 // This is public, so users can see which Delivery Services are used, without parsing the config file.
 // For example, this is useful to determine which certificates are needed.
 func GetSSLMultiCertDotConfigDeliveryServices(dses map[tc.DeliveryServiceName]sslMultiCertDS) map[tc.DeliveryServiceName]sslMultiCertDS {

@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
+const ServerCacheDotConfigIncludeInactiveDSes = false
 
 func makeCacheDotConfigMid(
 	server *Server,

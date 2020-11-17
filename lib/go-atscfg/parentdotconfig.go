@@ -1054,7 +1054,7 @@ func getTopologyParents(
 	return parentStrs, secondaryParentStrs, warnings, nil
 }
 
-// GetOriginURI returns the URL, any warnings, and any error.
+// getOriginURI returns the URL, any warnings, and any error.
 func getOriginURI(fqdn string) (*url.URL, []string, error) {
 	warnings := []string{}
 
@@ -1257,7 +1257,7 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	return re.MatchString(s)
 }
 
-// GetOriginServersAndProfileCaches returns the origin servers, ProfileCaches, any warnings, and any error.
+// getOriginServersAndProfileCaches returns the origin servers, ProfileCaches, any warnings, and any error.
 func getOriginServersAndProfileCaches(
 	cgServers map[int]Server,
 	parentServerDSes map[int]map[int]struct{},
@@ -1445,7 +1445,7 @@ func getParentConfigProfileParams(
 	return parentConfigServerCacheProfileParams, warnings
 }
 
-// GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI, any warnings, and any error.
+// getDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI, any warnings, and any error.
 func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, error) {
 	warnings := []string{}
 	dsOrigins := map[int]*originURI{}

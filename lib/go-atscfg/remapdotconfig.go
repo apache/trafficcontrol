@@ -107,7 +107,7 @@ func MakeRemapDotConfig(
 	}, nil
 }
 
-// GetServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
+// getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
 	profilesCacheKeyConfigParams map[int]map[string]string,
@@ -221,7 +221,7 @@ func getServerConfigRemapDotConfigForMid(
 	return text, warnings, nil
 }
 
-// GetServerConfigRemapDotConfigForEdge returns the remap lines, any warnings, and any error
+// getServerConfigRemapDotConfigForEdge returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForEdge(
 	cacheURLConfigParams map[string]string,
 	profilesCacheKeyConfigParams map[int]map[string]string,
@@ -456,7 +456,7 @@ type remapLine struct {
 	To   string
 }
 
-// MakeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
+// makeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
 // Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
 func makeEdgeDSDataRemapLines(
 	ds DeliveryService,
