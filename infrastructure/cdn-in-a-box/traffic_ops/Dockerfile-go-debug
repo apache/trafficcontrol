@@ -17,12 +17,19 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops debugging container image
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7 as get-delve
-RUN yum -y install epel-release && \
-    yum -y install golang && \
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} as get-delve
+ARG CENTOS_VERSION=8
+
+RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
+RUN dnf -y install epel-release && \
+    dnf -y install golang git && \
     go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops-go

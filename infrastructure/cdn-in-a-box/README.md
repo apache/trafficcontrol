@@ -30,7 +30,7 @@ minimal CDN for full system testing.
 The containers run on Docker, and require Docker (tested v17.05.0-ce) and Docker
 Compose (tested v1.9.0) to build and run. On most 'nix systems these can be installed
 via the distribution's package manager under the names `docker-ce` and
-`docker-compose`, respectively (e.g. `sudo yum install docker-ce`).
+`docker-compose`, respectively (e.g. `sudo dnf install docker-ce`).
 
 Each container (except the origin) requires an `.rpm` file to install the Traffic Control
 component for which it is responsible. You can download these `*.rpm` files from an archive
