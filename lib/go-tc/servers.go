@@ -744,19 +744,27 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	return upgraded, nil
 }
 
-// ServerNullable represents an ATC server, as returned by the TO API.
-type ServerNullable struct {
+// ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
+type ServerV30 struct {
 	CommonServerProperties
 	Interfaces        []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
-// ServerV30 is the server struct to be used by the TO API
-type ServerV30 ServerNullable
+// ServerNullable represents an ATC server, as returned by the TO API.
+// Deprecated: please use versioned structures instead of this alias from now on.
+type ServerNullable ServerV30
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
 // if possible. If the conversion could not be performed, an error is returned.
 func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
+	nullable := ServerV30(*s)
+	return nullable.ToServerV2()
+}
+
+// ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
+// if possible. If the conversion could not be performed, an error is returned.
+func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
 			CommonServerProperties: s.CommonServerProperties,
