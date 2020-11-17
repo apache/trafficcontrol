@@ -48,8 +48,8 @@ class _MetaPackage(type):
 			                                                     stdout=subprocess.PIPE)
 			                                              .communicate()[0].decode().splitlines()
 			                                    if not p.endswith("is not installed")]
-			pack.installArgs = ["/bin/yum", "install", "-y"]
-			pack.uninstallArgs = ["/bin/yum", "remove", "-y"]
+			pack.installArgs = ["/bin/dnf", "install", "-y"]
+			pack.uninstallArgs = ["/bin/dnf", "remove", "-y"]
 
 		elif DISTRO in {'ubuntu', 'linuxmint', 'debian'}:
 			concat = '='

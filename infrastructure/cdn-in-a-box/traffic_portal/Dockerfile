@@ -17,10 +17,16 @@
 
 ############################################################
 # Dockerfile to build Traffic Portal container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
+ARG CENTOS_VERSION=8
+
+RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 
@@ -30,16 +36,16 @@ ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
 ARG TO_HOST=$TO_HOST
 
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
-RUN yum install -y \
+RUN dnf install -y \
     epel-release && \
-    yum install -y \
+    dnf install -y \
       jq \
       nodejs \
       openssl \
       gettext \
       bind-utils \
       net-tools && \
-    yum clean all || \
+    dnf clean all || \
     echo "ERROR INSTALLING PACKAGES"
 
 ADD $TRAFFIC_PORTAL_RPM /

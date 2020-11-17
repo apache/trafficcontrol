@@ -158,6 +158,7 @@ will be returned indicating that overlap exists.
 - Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
 - Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
 - Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
+- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.

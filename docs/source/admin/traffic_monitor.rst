@@ -23,7 +23,7 @@ Installing Traffic Monitor
 ==========================
 The following are hard requirements requirements for Traffic Monitor to operate:
 
-* CentOS 7+
+* CentOS 7 or later
 * Successful install of Traffic Ops (usually on a separate machine)
 * Administrative access to the Traffic Ops (usually on a separate machine)
 
