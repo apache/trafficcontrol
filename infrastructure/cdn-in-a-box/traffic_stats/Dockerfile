@@ -19,20 +19,26 @@
 # Based on CentOS
 ############################################################
 
-FROM centos:7
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION}
+ARG CENTOS_VERSION=8
+
+RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
 
-RUN yum install -y epel-release && \
-    yum install -y \
+RUN dnf install -y epel-release && \
+    dnf install -y \
         jq \
         nmap-ncat \
         net-tools \
         gettext \
         bind-utils \
         openssl && \
-    yum clean all
+    dnf clean all
 
 ADD $TRAFFIC_TS_RPM /
 RUN rpm -Uvh /$(basename $TRAFFIC_TS_RPM) && \

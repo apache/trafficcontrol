@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 - [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
 
+### Changed
+- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
