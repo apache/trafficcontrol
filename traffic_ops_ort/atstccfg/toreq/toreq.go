@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 )
 
@@ -169,20 +169,37 @@ func (cl *TOClient) GetServers() ([]atscfg.Server, net.Addr, error) {
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.
 // This is necessary, because the Traffic Ops API 1.x client doesn't return the same type as the latest client.
-func serversToLatest(svs []tc.Server) ([]atscfg.Server, error) {
+func serversToLatest(svs []tc.ServerV1) ([]atscfg.Server, error) {
 	nss := []atscfg.Server{}
 	for _, sv := range svs {
-		svn, err := sv.ToNullable().Upgrade()
+		svLatest, err := serverToLatest(&sv)
 		if err != nil {
-			return nil, errors.New("upgrading: " + err.Error())
+			return nil, err // serverToLatest adds context
 		}
-		nss = append(nss, atscfg.Server(svn))
+		nss = append(nss, atscfg.Server(*svLatest))
 	}
 	return nss, nil
 }
 
-func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, net.Addr, error) {
-	server := tc.Server{}
+// serverToLatest converts a tc.Server to tc.ServerV30.
+// This is necessary, because the Traffic Ops API 1.x client doesn't return the same type as the latest client.
+func serverToLatest(sv *tc.ServerV1) (*atscfg.Server, error) {
+	svn := sv.ToNullable()
+	sv2 := tc.ServerNullableV2{
+		ServerNullableV11: svn,
+		IPIsService:       util.BoolPtr(true),
+		IP6IsService:      util.BoolPtr(svn.IP6Address != nil && *svn.IP6Address != ""),
+	}
+	svLatest, err := sv2.Upgrade()
+	if err != nil {
+		return nil, errors.New("upgrading: " + err.Error())
+	}
+	asv := atscfg.Server(svLatest)
+	return &asv, nil
+}
+
+func (cl *TOClient) GetServerByHostName(serverHostName string) (*atscfg.Server, net.Addr, error) {
+	server := atscfg.Server{}
 	toAddr := net.Addr(nil)
 	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
 		toServers, reqInf, err := cl.C.GetServerByHostName(serverHostName)
@@ -191,15 +208,19 @@ func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, net.A
 		} else if len(toServers) < 1 {
 			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': no servers returned")
 		}
-		server := obj.(*tc.Server)
-		*server = toServers[0]
+		asv, err := serverToLatest(&toServers[0])
+		if err != nil {
+			return errors.New("converting server to latest version: " + err.Error())
+		}
+		server := obj.(*atscfg.Server)
+		*server = *asv
 		toAddr = reqInf.RemoteAddr
 		return nil
 	})
 	if err != nil {
-		return tc.Server{}, nil, errors.New("getting server name '" + serverHostName + "': " + err.Error())
+		return nil, nil, errors.New("getting server name '" + serverHostName + "': " + err.Error())
 	}
-	return server, toAddr, nil
+	return &server, toAddr, nil
 }
 
 func (cl *TOClient) GetCacheGroups() ([]tc.CacheGroupNullable, net.Addr, error) {

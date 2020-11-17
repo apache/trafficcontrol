@@ -79,6 +79,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		// TODO TOAPI add /servers?cdn=1 query param
 		servers, toAddr, unsupported, err := cfg.TOClientNew.GetServers()
 		if err == nil && unsupported {
+			log.Warnln("Traffic Ops newer than ORT, falling back to previous API Servers!")
 			servers, toAddr, err = cfg.TOClient.GetServers()
 		}
 		if err != nil {
