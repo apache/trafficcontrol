@@ -23,42 +23,46 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeSetDSCPDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
-	dscpNumStr := "42"
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr("mycdn")
 
-	txt := MakeSetDSCPDotConfig(cdnName, toToolName, toURL, dscpNumStr)
+	hdr := "myHeaderComment"
+	fileName := "set_dscp_42.config"
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeSetDSCPDotConfig(fileName, server, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")
 	}
 
-	if !strings.Contains(txt, dscpNumStr) {
-		t.Errorf("expected: dscp number '"+dscpNumStr+"' in config, actual '%v'", txt)
+	if !strings.Contains(txt, "42") {
+		t.Errorf("expected: dscp number '42' in config, actual '%v'", txt)
 	}
 }
 
 func TestMakeSetDSCPDotConfigNonNumber(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
-	dscpNumStr := "42a"
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr("mycdn")
 
-	txt := MakeSetDSCPDotConfig(cdnName, toToolName, toURL, dscpNumStr)
+	hdr := "myHeaderComment"
+	fileName := "set_dscp_42a.config"
+
+	cfg, err := MakeSetDSCPDotConfig(fileName, server, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	if !strings.Contains(strings.ToLower(txt), "error") {
 		t.Errorf("expected: error from non-number dscp, actual '%v'", txt)

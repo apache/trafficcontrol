@@ -21,20 +21,31 @@ package atscfg
 
 import (
 	"strconv"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const VolumeFileName = StorageFileName
 const ContentTypeVolumeDotConfig = ContentTypeTextASCII
 const LineCommentVolumeDotConfig = LineCommentHash
 
 // MakeVolumeDotConfig creates volume.config for a given ATS Profile.
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeVolumeDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	text := GenericHeaderComment(profileName, toToolName, toURL)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, VolumeFileName, "", "", ""))
+	warnings = append(warnings, paramWarns...)
+
+	text := makeHdrComment(hdrComment)
 
 	numVolumes := getNumVolumes(paramData)
 
@@ -56,7 +67,13 @@ func MakeVolumeDotConfig(
 	if text == "" {
 		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeVolumeDotConfig,
+		LineComment: LineCommentVolumeDotConfig,
+		Warnings:    warnings,
+	}, nil
 }
 
 func volumeText(volume string, numVolumes int) string {

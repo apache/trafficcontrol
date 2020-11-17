@@ -20,10 +20,11 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const LoggingYAMLFileName = "logging.yaml"
@@ -31,12 +32,20 @@ const ContentTypeLoggingDotYAML = "application/yaml; charset=us-ascii" // Note Y
 const LineCommentLoggingDotYAML = LineCommentHash
 
 func MakeLoggingDotYAML(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, LoggingYAMLFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Profile")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, LoggingYAMLFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	hdr := makeHdrComment(hdrComment)
 
 	// note we use the same const as logs.xml - this isn't necessarily a requirement, and we may want to make separate variables in the future.
 	maxLogObjects := MaxLogObjects
@@ -53,7 +62,7 @@ func MakeLoggingDotYAML(
 			format := paramData[logFormatField+".Format"]
 			if format == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				log.Errorf("Profile '%v' has logging.yaml format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", profileName, logFormatField)
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.yaml format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", *server.Profile, logFormatField))
 			}
 			text += " - name: " + logFormatName + " \n"
 			text += "   format: '" + format + "'\n"
@@ -70,7 +79,7 @@ func MakeLoggingDotYAML(
 			filter := paramData[logFilterField+".Filter"]
 			if filter == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				log.Errorf("Profile '%v' has logging.yaml filter '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", profileName, logFilterField)
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.yaml filter '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", *server.Profile, logFilterField))
 			}
 			logFilterType := paramData[logFilterField+".Type"]
 			if logFilterType == "" {
@@ -130,5 +139,10 @@ func MakeLoggingDotYAML(
 		}
 	}
 
-	return text
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeLoggingDotYAML,
+		LineComment: LineCommentLoggingDotYAML,
+		Warnings:    warnings,
+	}, nil
 }

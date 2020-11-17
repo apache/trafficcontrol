@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"math/rand"
 	"mime/multipart"
@@ -30,36 +31,51 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(toData *config.TOData, revalOnly bool, dir string) ([]config.ATSConfigFile, error) {
-	meta, err := GetMeta(toData, dir)
+func GetAllConfigs(
+	toData *config.TOData,
+	revalOnly bool,
+	dir string,
+	appVersion string,
+	toURL string,
+	toIPs []net.Addr,
+) ([]config.ATSConfigFile, error) {
+	if toData.Server.HostName == nil {
+		return nil, errors.New("server hostname is nil")
+	}
+
+	configFiles, warnings, err := MakeConfigFilesList(toData, dir)
+	logWarnings("generating config files list: ", warnings)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
 	}
 
+	genTime := time.Now()
+	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, toURL, toIPs, genTime)
+
 	hasSSLMultiCertConfig := false
 	configs := []config.ATSConfigFile{}
-	for _, fi := range meta.ConfigFiles {
-		if revalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
+	for _, fi := range configFiles {
+		if revalOnly && fi.Name != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, lineComment, err := GetConfigFile(toData, fi)
+		txt, contentType, lineComment, err := GetConfigFile(toData, fi, hdrCommentTxt)
 		if err != nil {
-			return nil, errors.New("getting config file '" + fi.FileNameOnDisk + "': " + err.Error())
+			return nil, errors.New("getting config file '" + fi.Name + "': " + err.Error())
 		}
-		if fi.FileNameOnDisk == atscfg.SSLMultiCertConfigFileName {
+		if fi.Name == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
 		txt = PreprocessConfigFile(toData.Server, txt)
-		configs = append(configs, config.ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType, LineComment: lineComment})
+		configs = append(configs, config.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, ContentType: contentType, LineComment: lineComment})
 	}
 
 	if hasSSLMultiCertConfig {
@@ -100,14 +116,14 @@ func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 		hdr := map[string][]string{
 			rfc.ContentType:   {cfg.ContentType},
 			HdrLineComment:    {cfg.LineComment},
-			HdrConfigFilePath: {filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
+			HdrConfigFilePath: {filepath.Join(cfg.Path, cfg.Name)},
 		}
 		partW, err := w.CreatePart(hdr)
 		if err != nil {
-			return errors.New("creating multipart part for config file '" + cfg.FileNameOnDisk + "': " + err.Error())
+			return errors.New("creating multipart part for config file '" + cfg.Name + "': " + err.Error())
 		}
 		if _, err := io.WriteString(partW, cfg.Text); err != nil {
-			return errors.New("writing to multipart part for config file '" + cfg.FileNameOnDisk + "': " + err.Error())
+			return errors.New("writing to multipart part for config file '" + cfg.Name + "': " + err.Error())
 		}
 	}
 
@@ -123,10 +139,10 @@ type ATSConfigFiles []config.ATSConfigFile
 func (p ATSConfigFiles) Len() int      { return len(p) }
 func (p ATSConfigFiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p ATSConfigFiles) Less(i, j int) bool {
-	if p[i].Location != p[j].Location {
-		return p[i].Location < p[j].Location
+	if p[i].Path != p[j].Path {
+		return p[i].Path < p[j].Path
 	}
-	return p[i].FileNameOnDisk < p[j].FileNameOnDisk
+	return p[i].Name < p[j].Name
 }
 
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
@@ -134,7 +150,7 @@ var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 // PreprocessConfigFile does global preprocessing on the given config file cfgFile.
 // This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
 // These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
+func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 	if server.TCPPort != nil && *server.TCPPort != 80 && *server.TCPPort != 0 {
 		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(*server.TCPPort), -1)
 	} else {
@@ -181,4 +197,30 @@ func PreprocessConfigFile(server *tc.ServerNullable, cfgFile string) string {
 	}
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
 	return cfgFile
+}
+
+func makeHeaderComment(serverHostName string, appVersion string, toURL string, toIPs []net.Addr, genTime time.Time) string {
+	return fmt.Sprintf(
+		`DO NOT EDIT - Generated for %v by %v from %v ips %v on %v`,
+		serverHostName,
+		appVersion,
+		toURL,
+		makeIPStr(toIPs),
+		genTime.UTC().Format(time.RFC3339Nano),
+	)
+}
+
+func makeIPStr(ips []net.Addr) string {
+	ipStrM := map[string]struct{}{} // use a map to de-duplicate
+	for _, ip := range ips {
+		if ip == nil {
+			continue // shouldn't happen, but not really an error if it does
+		}
+		ipStrM[ip.String()] = struct{}{}
+	}
+	ipStrArr := []string{}
+	for ipStr, _ := range ipStrM {
+		ipStrArr = append(ipStrArr, ipStr)
+	}
+	return `(` + strings.Join(ipStrArr, `,`) + `)`
 }
