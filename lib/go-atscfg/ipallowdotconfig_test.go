@@ -99,6 +99,26 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 
 	lines = lines[1:] // remove comment line
 
+	/* Test that PUSH and PURGE are denied ere the allowance of anything else. */
+	{
+		ip4deny := false
+		ip6deny := false
+	eachLine:
+		for i, line := range lines {
+			switch {
+			case strings.Contains(line, `0.0.0.0-255.255.255.255`) && strings.Contains(line, `ip_deny`) && strings.Contains(line, `PUSH`) && strings.Contains(line, `PURGE`):
+				ip4deny = true
+			case strings.Contains(line, `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`) && strings.Contains(line, `ip_deny`) && strings.Contains(line, `PUSH`) && strings.Contains(line, `PURGE`):
+				ip6deny = true
+			case strings.Contains(line, `ip_allow`):
+				if !(ip4deny && ip6deny) {
+					t.Errorf("Expected denies for PUSH and PURGE before any ips are allowed; pre-denial allowance on line %d.", i+1)
+				}
+				break eachLine
+			}
+		}
+	}
+
 	for _, expected := range expecteds {
 		if !strings.Contains(txt, expected) {
 			t.Errorf("expected %+v actual '%v'\n", expected, txt)
