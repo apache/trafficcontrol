@@ -610,3 +610,7 @@ func makeErr(warnings []string, err string) error {
 func makeErrf(warnings []string, format string, v ...interface{}) error {
 	return makeErr(warnings, fmt.Sprintf(format, v...))
 }
+
+func GetConfigFile(prefix string, xmlId string) string {
+	return prefix + xmlId + ConfigSuffix
+}

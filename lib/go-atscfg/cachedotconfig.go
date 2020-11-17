@@ -79,7 +79,8 @@ func makeCacheDotConfigEdge(
 	dsIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn? err?
+			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+			continue
 		}
 		if _, ok := profileServerIDsMap[*dss.Server]; !ok {
 			continue
@@ -89,14 +90,24 @@ func makeCacheDotConfigEdge(
 
 	profileDSes := []profileDS{}
 	for _, ds := range deliveryServices {
-		if ds.ID == nil || ds.Type == nil || ds.OrgServerFQDN == nil {
-			continue // TODO warn? err?
+		if ds.ID == nil {
+			warnings = append(warnings, "deliveryservices had ds with nil id, skipping!")
+			continue
+		}
+		if ds.Type == nil {
+			warnings = append(warnings, "deliveryservices had ds with nil type, skipping!")
+			continue
+		}
+		if ds.OrgServerFQDN == nil {
+			continue // this is normal for steering and anymap dses
 		}
 		if *ds.Type == tc.DSTypeInvalid {
-			continue // TODO warn? err?
+			warnings = append(warnings, "deliveryservices had ds with invalid type, skipping!")
+			continue
 		}
 		if *ds.OrgServerFQDN == "" {
-			continue // TODO warn? err?
+			warnings = append(warnings, "deliveryservices had ds with empty origin, skipping!")
+			continue
 		}
 		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
 			continue

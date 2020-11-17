@@ -81,7 +81,8 @@ func MakeHeaderRewriteDotConfig(
 	dsServerIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn?
+			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+			continue
 		}
 		if *dss.DeliveryService != *tcDS.ID {
 			continue
@@ -96,7 +97,7 @@ func MakeHeaderRewriteDotConfig(
 			continue
 		}
 		if server.ID == nil {
-			warnings = append(warnings, "servers had server with missing kid, skipping!")
+			warnings = append(warnings, "servers had server with missing id, skipping!")
 			continue
 		}
 		if *server.CDNName != *tcDS.CDNName {

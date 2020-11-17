@@ -110,10 +110,11 @@ func MakeHeaderRewriteMidDotConfig(
 	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
 	for _, cg := range cacheGroups {
 		if cg.Name == nil {
-			continue // TODO warn?
+			warnings = append(warnings, "cachegroups had cachegroup with nil name, skipping!")
+			continue
 		}
 		if cg.ParentName == nil {
-			continue // TODO warn?
+			continue // this is normal for top-level cachegroups
 		}
 		if _, ok := serverCGs[tc.CacheGroupName(*cg.Name)]; !ok {
 			continue
