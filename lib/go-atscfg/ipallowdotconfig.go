@@ -268,6 +268,22 @@ func MakeIPAllowDotConfig(
 		// order matters, so sort before adding the denys
 		sort.Sort(ipAllowDatas(ipAllowDat))
 
+		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
+		if isMid { // Edges already deny PUSH and PURGE
+			ipAllowData = append([]IPAllowData{
+				{
+					Src:    `0.0.0.0-255.255.255.255`,
+					Action: ActionDeny,
+					Method: `PUSH|PURGE`,
+				},
+				{
+					Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
+					Action: ActionDeny,
+					Method: `PUSH|PURGE`,
+				},
+			}, ipAllowData...)
+		}
+
 		// end with a deny
 		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
