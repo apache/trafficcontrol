@@ -24,69 +24,94 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+// UpdateStatusHandler is the handler for PUT requests to the /servers/{{ID}}/status API endpoint.
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	reqObj := tc.ServerPutStatus{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 
-	serverInfo, exists, err := dbhelpers.GetServerInfo(inf.IntParams["id"], inf.Tx.Tx)
+	id := inf.IntParams["id"]
+	serverInfo, exists, err := dbhelpers.GetServerInfo(id, tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if !exists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("server ID %d not found", inf.IntParams["id"]), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("server ID %d not found", id), nil)
 		return
 	}
 
 	status := tc.StatusNullable{}
 	statusExists := false
 	if reqObj.Status.Name != nil {
-		status, statusExists, err = dbhelpers.GetStatusByName(*reqObj.Status.Name, inf.Tx.Tx)
+		status, statusExists, err = dbhelpers.GetStatusByName(*reqObj.Status.Name, tx)
 	} else if reqObj.Status.ID != nil {
-		status, statusExists, err = dbhelpers.GetStatusByID(*reqObj.Status.ID, inf.Tx.Tx)
+		status, statusExists, err = dbhelpers.GetStatusByID(*reqObj.Status.ID, tx)
 	} else {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("status is required"), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("status is required"), nil)
 		return
 	}
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if !statusExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid status (does not exist)"), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("invalid status (does not exist)"), nil)
 		return
 	}
 
 	if *status.Name == tc.CacheStatusAdminDown.String() || *status.Name == tc.CacheStatusOffline.String() {
 		if reqObj.OfflineReason == nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("offlineReason is required for "+tc.CacheStatusAdminDown.String()+" or "+tc.CacheStatusOffline.String()+" status"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("offlineReason is required for "+tc.CacheStatusAdminDown.String()+" or "+tc.CacheStatusOffline.String()+" status"), nil)
 			return
 		}
 		*reqObj.OfflineReason = inf.User.UserName + ": " + *reqObj.OfflineReason
 	} else {
 		reqObj.OfflineReason = nil
 	}
-	if err := updateServerStatusAndOfflineReason(inf.IntParams["id"], *status.ID, reqObj.OfflineReason, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+
+	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(id, tx)
+	if *status.Name != "ONLINE" && *status.Name != "REPORTED" && *status.ID != existingStatus {
+		dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		if err != nil {
+			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if len(dsIDs) > 0 {
+			alerts := make([]tc.Alert, 0, len(dsIDs))
+			for _, dsID := range dsIDs {
+				alert := tc.Alert{
+					Level: tc.SuccessLevel.String(),
+					Text:  fmt.Sprintf("setting server status to '%s' would leave Delivery Service #%d with no 'ONLINE' or 'REPORTED' servers", *status.Name, dsID),
+				}
+				alerts = append(alerts, alert)
+			}
+			api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+			return
+		}
+	}
+	if err := updateServerStatusAndOfflineReason(existingStatus, *status.ID, id, existingStatusUpdatedTime, reqObj.OfflineReason, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	offlineReason := ""
@@ -97,13 +122,13 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	// queue updates on child servers if server is ^EDGE or ^MID
 	if strings.HasPrefix(serverInfo.Type, tc.CacheTypeEdge.String()) || strings.HasPrefix(serverInfo.Type, tc.CacheTypeMid.String()) {
-		if err := queueUpdatesOnChildCaches(inf.Tx.Tx, serverInfo.CDNID, serverInfo.CachegroupID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		if err := queueUpdatesOnChildCaches(tx, serverInfo.CDNID, serverInfo.CachegroupID); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 		msg += " and queued updates on all child caches"
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, msg)
 }
 
@@ -156,28 +181,27 @@ WHERE (server.cdn_id = $1
 // checkExistingStatusInfo returns the existing status and status_last_updated values for the server in question
 func checkExistingStatusInfo(serverID int, tx *sql.Tx) (int, time.Time) {
 	status := 0
-	var status_last_updated time.Time
+	var statusLastUpdated time.Time
 	q := `SELECT status,
-status_last_updated 
+status_last_updated
 FROM server
 WHERE id = $1`
 	response, err := tx.Query(q, serverID)
 	if err != nil {
 		log.Errorf("couldn't get status/ status_last_updated for server with id %v", serverID)
-		return status, status_last_updated
+		return status, statusLastUpdated
 	}
 	defer response.Close()
 	for response.Next() {
-		if err := response.Scan(&status, &status_last_updated); err != nil {
+		if err := response.Scan(&status, &statusLastUpdated); err != nil {
 			log.Errorf("couldn't get status/ status_last_updated of server with id %v, err: %v", serverID, err.Error())
 		}
 	}
-	return status, status_last_updated
+	return status, statusLastUpdated
 }
 
 // updateServerStatusAndOfflineReason updates a server's status and offline_reason and returns an error (if one occurs).
-func updateServerStatusAndOfflineReason(serverID, statusID int, offlineReason *string, tx *sql.Tx) error {
-	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(serverID, tx)
+func updateServerStatusAndOfflineReason(existingStatus, statusID, serverID int, existingStatusUpdatedTime time.Time, offlineReason *string, tx *sql.Tx) error {
 	newStatusUpdatedTime := time.Now()
 	// Set the status_last_updated time to the current time ONLY IF the new status is different from the old one
 	if existingStatus == statusID {
