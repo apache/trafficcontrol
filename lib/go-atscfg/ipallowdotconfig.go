@@ -270,7 +270,7 @@ func MakeIPAllowDotConfig(
 
 		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
 		if isMid { // Edges already deny PUSH and PURGE
-			ipAllowData = append([]IPAllowData{
+			ipAllowDat = append([]ipAllowData{
 				{
 					Src:    `0.0.0.0-255.255.255.255`,
 					Action: ActionDeny,
@@ -281,7 +281,7 @@ func MakeIPAllowDotConfig(
 					Action: ActionDeny,
 					Method: `PUSH|PURGE`,
 				},
-			}, ipAllowData...)
+			}, ipAllowDat...)
 		}
 
 		// end with a deny
