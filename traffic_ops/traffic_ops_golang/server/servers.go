@@ -32,8 +32,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -1258,18 +1256,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
-		}
-
-		cacheGroupIds := []int{*originals[0].CachegroupID}
-		serverIds := []int{*originals[0].ID}
-
-		// TODO: version-independent check?
-		if *original.CachegroupID != *server.CachegroupID {
-			if err = topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
-				userErr = fmt.Errorf("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: %v", err)
-				api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
-				return
-			}
 		}
 	} else if inf.Version.Major == 2 {
 		var legacyServer tc.ServerNullableV2
