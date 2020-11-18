@@ -21,7 +21,9 @@ package v3
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -164,14 +166,6 @@ func updateSingleTopology(topology tc.Topology) error {
 }
 
 func UpdateTestTopologies(t *testing.T) {
-	firstTopName := testData.Topologies[0].Name
-	for _, top := range testData.Topologies {
-		top.Name = firstTopName
-		if err := updateSingleTopology(top); err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-	// Revert test topologies
 	for _, topology := range testData.Topologies {
 		if err := updateSingleTopology(topology); err != nil {
 			t.Fatalf(err.Error())
@@ -187,6 +181,62 @@ func UpdateTestTopologies(t *testing.T) {
 	_, _, err = TOSession.UpdateTopology(top.Name, *top)
 	if err == nil {
 		t.Errorf("making invalid update to topology - expected: error, actual: nil")
+	}
+
+	// attempt to add a cachegroup that only has caches in one CDN while the topology is assigned to DSes from multiple CDNs
+	top, _, err = TOSession.GetTopologyWithHdr("top-used-by-cdn1-and-cdn2", nil)
+	if err != nil {
+		t.Fatalf("cannot GET topology: %v", err)
+	}
+	params := url.Values{}
+	params.Add("topology", "top-used-by-cdn1-and-cdn2")
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET delivery services: %v", err)
+	}
+	if len(dses) < 2 {
+		t.Fatalf("expected at least 2 delivery services assigned to topology top-used-by-cdn1-and-cdn2, actual: %d", len(dses))
+	}
+	foundCDN1 := false
+	foundCDN2 := false
+	for _, ds := range dses {
+		if *ds.CDNName == "cdn1" {
+			foundCDN1 = true
+		} else if *ds.CDNName == "cdn2" {
+			foundCDN2 = true
+		}
+	}
+	if !foundCDN1 || !foundCDN2 {
+		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
+	}
+	cgs, _, err := TOSession.GetCacheGroupNullableByNameWithHdr("cdn1-only", nil)
+	if err != nil {
+		t.Fatalf("unable to GET cachegroup by name: %v", err)
+	}
+	if len(cgs) != 1 {
+		t.Fatalf("expected: to get 1 cachegroup named 'cdn1-only', actual: got %d", len(cgs))
+	}
+	params = url.Values{}
+	params.Add("cachegroup", strconv.Itoa(*cgs[0].ID))
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("unable to GET servers by cachegroup: %v", err)
+	}
+	for _, s := range servers.Response {
+		if *s.Cachegroup != "cdn1-only" {
+			t.Fatalf("GET servers by cachegroup 'cdn1-only' - expected: only servers in cachegroup 'cdn1-only', actual: got server in %s", *s.Cachegroup)
+		}
+		if *s.CDNName != "cdn1" {
+			t.Fatalf("expected: servers in cachegroup 'cdn1-only' to only be in cdn1, actual: servers in cdn %s", *s.CDNName)
+		}
+	}
+	top.Nodes = append(top.Nodes, tc.TopologyNode{
+		Cachegroup: "cdn1-only",
+		Parents:    []int{0},
+	})
+	_, _, err = TOSession.UpdateTopology(top.Name, *top)
+	if err == nil {
+		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
 }
 
