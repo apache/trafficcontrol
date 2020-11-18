@@ -881,6 +881,51 @@ WHERE
 	return dses, nil
 }
 
+// GetDeliveryServiceCDNsByTopology returns a slice of CDN IDs for all delivery services
+// assigned to the given topology.
+func GetDeliveryServiceCDNsByTopology(tx *sql.Tx, topology string) ([]int, error) {
+	q := `
+SELECT
+  COALESCE(ARRAY_AGG(DISTINCT d.cdn_id), '{}'::BIGINT[])
+FROM
+  deliveryservice d
+WHERE
+  d.topology = $1
+`
+	cdnIDs := []int64{}
+	if err := tx.QueryRow(q, topology).Scan(pq.Array(&cdnIDs)); err != nil {
+		return nil, fmt.Errorf("in GetDeliveryServiceCDNsByTopology: querying deliveryservices by topology '%s': %v", topology, err)
+	}
+	res := make([]int, len(cdnIDs))
+	for i, id := range cdnIDs {
+		res[i] = int(id)
+	}
+	return res, nil
+}
+
+// CheckCachegroupHasTopologyBasedDeliveryServicesOnCDN returns true if the given cachegroup is assigned to
+// any topologies with delivery services assigned on the given CDN.
+func CachegroupHasTopologyBasedDeliveryServicesOnCDN(tx *sql.Tx, cachegroupID int, CDNID int) (bool, error) {
+	q := `
+SELECT EXISTS(
+  SELECT
+    1
+  FROM cachegroup c
+  JOIN topology_cachegroup tc on c.name = tc.cachegroup
+  JOIN topology t ON tc.topology = t.name
+  JOIN deliveryservice d on t.name = d.topology
+  WHERE
+    c.id = $1
+    AND d.cdn_id = $2
+)
+`
+	res := false
+	if err := tx.QueryRow(q, cachegroupID, CDNID).Scan(&res); err != nil {
+		return false, fmt.Errorf("in CachegroupHasTopologyBasedDeliveryServicesOnCDN: %v", err)
+	}
+	return res, nil
+}
+
 // GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by
 // userID on the Delivery Service identified by xmlid. If no such federation exists, the boolean
 // returned will be 'false', while the error indicates unexpected errors that occurred when querying.
