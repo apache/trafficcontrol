@@ -109,7 +109,14 @@ ln -s "$PWD" "$srcdir/trafficcontrol"
 cd "$srcdir/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 
-go get ./...
+/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
+	golang.org/x/crypto/ed25519 \
+	golang.org/x/crypto/scrypt \
+	golang.org/x/net/idna \
+	golang.org/x/net/ipv4 \
+	golang.org/x/net/ipv6 \
+	golang.org/x/sys/unix \
+	golang.org/x/text/secure/bidirule
 go build .
 
 echo "
