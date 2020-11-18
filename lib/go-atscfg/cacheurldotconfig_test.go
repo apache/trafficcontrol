@@ -23,78 +23,84 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	server := makeGenericServer()
+	cdnName := "mycdn"
+	server.CDNName = &cdnName
+
+	hdr := "myHeaderComment"
 
 	fileName := "cacheurl_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CacheURLDS{
-		"myds": CacheURLDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-		},
-	}
+	ds0 := makeGenericDS()
+	ds0.ID = util.IntPtr(420)
+	ds0.XMLID = util.StrPtr("myds")
+	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
+	ds0.QStringIgnore = util.IntPtr(0)
+	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	txt := MakeCacheURLDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	servers := []Server{*server}
+	dses := []DeliveryService{*ds0}
+	dss := makeDSS(servers, dses)
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '"+hdr+"', actual: %v", txt)
 	}
 
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
-		t.Errorf("expected: header comment, actual: missing")
+		t.Errorf("expected: header comment, actual: %v", txt)
 	}
 
 	if !strings.Contains(txt, "mycacheurl") {
-		t.Errorf("expected: contains cacheurl, actual: missing")
+		t.Errorf("expected: contains cacheurl, actual: %v", txt)
 	}
 }
 
 func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	server := makeGenericServer()
+	cdnName := "mycdn"
+	server.CDNName = &cdnName
+
+	hdr := "myHeaderComment"
 
 	fileName := "cacheurl.config"
 
-	dses := map[tc.DeliveryServiceName]CacheURLDS{
-		"myds": CacheURLDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 1,
-			CacheURL:      "https://mycacheurl.net",
-		},
-	}
+	ds0 := makeGenericDS()
+	ds0.ID = util.IntPtr(420)
+	ds0.XMLID = util.StrPtr("ds0")
+	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
+	ds0.QStringIgnore = util.IntPtr(1)
+	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	txt := MakeCacheURLDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	servers := []Server{*server}
+	dses := []DeliveryService{*ds0}
+	dss := makeDSS(servers, dses)
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '"+hdr+"', actual: %v", txt)
 	}
 
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
-		t.Errorf("expected: header comment, actual: missing")
+		t.Errorf("expected: header comment, actual: %v", txt)
 	}
 
 	if !strings.Contains(txt, "myorigin") {
-		t.Errorf("expected: contains origin, actual: missing")
+		t.Errorf("expected: contains origin, actual: %v", txt)
 	}
 
 	if strings.Contains(txt, "mycacheurl") {
@@ -103,30 +109,33 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 }
 
 func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	server := makeGenericServer()
+	cdnName := "mycdn"
+	server.CDNName = &cdnName
+
+	hdr := "myHeaderComment"
 
 	fileName := "cacheurl.config"
 
-	dses := map[tc.DeliveryServiceName]CacheURLDS{
-		"myds": CacheURLDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-		},
-	}
+	ds0 := makeGenericDS()
+	ds0.ID = util.IntPtr(420)
+	ds0.XMLID = util.StrPtr("ds0")
+	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
+	ds0.QStringIgnore = util.IntPtr(0)
+	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	txt := MakeCacheURLDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	servers := []Server{*server}
+	dses := []DeliveryService{*ds0}
+	dss := makeDSS(servers, dses)
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
@@ -143,30 +152,33 @@ func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
 }
 
 func TestMakeCacheURLDotConfigQStringFile(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	server := makeGenericServer()
+	cdnName := "mycdn"
+	server.CDNName = &cdnName
+
+	hdr := "myHeaderComment"
 
 	fileName := "cacheurl_qstring.config"
 
-	dses := map[tc.DeliveryServiceName]CacheURLDS{
-		"myds": CacheURLDS{
-			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-			QStringIgnore: 0,
-			CacheURL:      "https://mycacheurl.net",
-		},
-	}
+	ds0 := makeGenericDS()
+	ds0.ID = util.IntPtr(420)
+	ds0.XMLID = util.StrPtr("ds0")
+	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
+	ds0.QStringIgnore = util.IntPtr(0)
+	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
-	txt := MakeCacheURLDotConfig(cdnName, toToolName, toURL, fileName, dses)
+	servers := []Server{*server}
+	dses := []DeliveryService{*ds0}
+	dss := makeDSS(servers, dses)
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeCacheURLDotConfig(fileName, server, dses, dss, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment '" + hdr + "', actual: missing")
 	}
 
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {

@@ -22,24 +22,23 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeBGFetchDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	cdnName := "mycdn"
 
-	txt := MakeBGFetchDotConfig(cdnName, toToolName, toURL)
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	server := makeGenericServer()
+	server.CDNName = &cdnName
+	hdr := "myHeaderComment"
+
+	cfg, err := MakeBGFetchDotConfig(server, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment '" + hdr + "', actual: missing")
 	}
 
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {

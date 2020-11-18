@@ -577,6 +577,61 @@ func (s Server) ToNullable() ServerNullableV2 {
 	}
 }
 
+func (s ServerV1) ToNullable() ServerNullableV11 {
+	return ServerNullableV11{
+		CommonServerProperties: CommonServerProperties{
+			Cachegroup:       &s.Cachegroup,
+			CachegroupID:     &s.CachegroupID,
+			CDNID:            &s.CDNID,
+			CDNName:          &s.CDNName,
+			DeliveryServices: &s.DeliveryServices,
+			DomainName:       &s.DomainName,
+			FQDN:             s.FQDN,
+			FqdnTime:         s.FqdnTime,
+			GUID:             &s.GUID,
+			HostName:         &s.HostName,
+			HTTPSPort:        &s.HTTPSPort,
+			ID:               &s.ID,
+			ILOIPAddress:     &s.ILOIPAddress,
+			ILOIPGateway:     &s.ILOIPGateway,
+			ILOIPNetmask:     &s.ILOIPNetmask,
+			ILOPassword:      &s.ILOPassword,
+			ILOUsername:      &s.ILOUsername,
+			LastUpdated:      &s.LastUpdated,
+			MgmtIPAddress:    &s.MgmtIPAddress,
+			MgmtIPGateway:    &s.MgmtIPGateway,
+			MgmtIPNetmask:    &s.MgmtIPNetmask,
+			OfflineReason:    &s.OfflineReason,
+			PhysLocation:     &s.PhysLocation,
+			PhysLocationID:   &s.PhysLocationID,
+			Profile:          &s.Profile,
+			ProfileDesc:      &s.ProfileDesc,
+			ProfileID:        &s.ProfileID,
+			Rack:             &s.Rack,
+			RevalPending:     &s.RevalPending,
+			RouterHostName:   &s.RouterHostName,
+			RouterPortName:   &s.RouterPortName,
+			Status:           &s.Status,
+			StatusID:         &s.StatusID,
+			TCPPort:          &s.TCPPort,
+			Type:             s.Type,
+			TypeID:           &s.TypeID,
+			UpdPending:       &s.UpdPending,
+			XMPPID:           &s.XMPPID,
+			XMPPPasswd:       &s.XMPPPasswd,
+		},
+		LegacyInterfaceDetails: LegacyInterfaceDetails{
+			InterfaceMtu:  &s.InterfaceMtu,
+			InterfaceName: &s.InterfaceName,
+			IPAddress:     &s.IPAddress,
+			IPGateway:     &s.IPGateway,
+			IPNetmask:     &s.IPNetmask,
+			IP6Address:    &s.IP6Address,
+			IP6Gateway:    &s.IP6Gateway,
+		},
+	}
+}
+
 func coerceBool(b *bool) bool {
 	if b == nil {
 		return false

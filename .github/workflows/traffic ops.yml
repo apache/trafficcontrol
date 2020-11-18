@@ -20,17 +20,25 @@ name: Traffic Ops Go client/API integration tests
 on:
   push:
     paths:
+      - .github/actions/todb-init/**
+      - .github/actions/to-integration-tests/**
+      - '.github/workflows/traffic ops.yml'
       - GO_VERSION
-      - traffic_ops/traffic_ops_golang/**.go
-      - traffic_ops/testing/api/**.go
+      - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
   create:
   pull_request:
     paths:
+      - .github/actions/todb-init/**
+      - .github/actions/to-integration-tests/**
+      - '.github/workflows/traffic ops.yml'
       - GO_VERSION
-      - traffic_ops/traffic_ops_golang/**.go
-      - traffic_ops/testing/api/**.go
+      - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:

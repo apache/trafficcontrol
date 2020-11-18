@@ -26,17 +26,25 @@ import (
 
 func TestMakeSysCtlDotConf(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
 	paramData := map[string]string{
 		"param0": "val0",
 		"param1": "val1",
 		"param2": "val2",
 	}
 
-	txt := MakeSysCtlDotConf(profileName, paramData, toolName, toURL)
+	server := makeGenericServer()
+	server.Profile = &profileName
 
-	testComment(t, txt, profileName, toolName, toURL)
+	params := makeParamsFromMap(*server.Profile, SysctlFileName, paramData)
+
+	cfg, err := MakeSysCtlDotConf(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
 
 	txt = strings.Replace(txt, " ", "", -1)
 

@@ -141,7 +141,11 @@ traffic_router_zonemanager_timeout() {
   mv "$modified_crconfig" $crconfig_path;
 }
 
-traffic_router_zonemanager_timeout
+if [[ "$LOAD_TRAFFIC_OPS_DATA" == true ]]; then
+	traffic_router_zonemanager_timeout
 
-# Load required data at the top level
-load_data_from /traffic_ops_data
+	# Load required data at the top level
+	load_data_from /traffic_ops_data
+else
+	touch "$ENROLLER_DIR/initial-load-done"
+fi

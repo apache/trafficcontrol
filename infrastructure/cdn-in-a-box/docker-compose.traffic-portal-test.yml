@@ -41,6 +41,10 @@ services:
       - shared:/shared
       - ../../junit:/junit
 
+  trafficops-perl:
+    environment:
+      DIG_IP_RETRY: ${DIG_IP_RETRY:-0}
+
 volumes:
   shared:
     external: false

@@ -20,12 +20,12 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -43,52 +43,82 @@ const RegexRevalidateMinTTL = time.Hour
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
 const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
-type Job struct {
-	AssetURL string
-	PurgeEnd time.Time
-}
-
-type Jobs []Job
-
-func (jb Jobs) Len() int      { return len(jb) }
-func (jb Jobs) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
-func (jb Jobs) Less(i, j int) bool {
-	if jb[i].AssetURL == jb[j].AssetURL {
-		return jb[i].PurgeEnd.Before(jb[j].PurgeEnd)
-	}
-	return strings.Compare(jb[i].AssetURL, jb[j].AssetURL) < 0
-}
-
 func MakeRegexRevalidateDotConfig(
-	cdnName tc.CDNName,
-	params map[string][]string, // params on profile GLOBAL fileName RegexRevalidateFileName
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	jobs []tc.Job, // jobs should be jobs on DSes on this cdn
-) string {
+	server *Server,
+	deliveryServices []DeliveryService,
+	globalParams []tc.Parameter,
+	jobs []tc.Job,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server CDNName missing")
+	}
+
+	params := paramsToMultiMap(filterParams(globalParams, RegexRevalidateFileName, "", "", ""))
+
+	dsNames := map[string]struct{}{}
+	for _, ds := range deliveryServices {
+		if ds.XMLID == nil {
+			warnings = append(warnings, "got Delivery Service from Traffic Ops with a nil xmlId! Skipping!")
+			continue
+		}
+		dsNames[*ds.XMLID] = struct{}{}
+	}
+
+	dsJobs := []tc.Job{}
+	for _, job := range jobs {
+		if _, ok := dsNames[job.DeliveryService]; !ok {
+			continue
+		}
+		dsJobs = append(dsJobs, job)
+	}
 
 	// TODO: add cdn, startTime query params to /jobs endpoint
-	err := error(nil)
 
 	maxDays := DefaultMaxRevalDurationDays
 	if maxDaysStrs := params[RegexRevalidateMaxRevalDurationDaysParamName]; len(maxDaysStrs) > 0 {
 		sort.Strings(maxDaysStrs)
+		err := error(nil)
 		if maxDays, err = strconv.Atoi(maxDaysStrs[0]); err != nil { // just use the first, if there were multiple params
-			log.Warnln("making regex revalidate config: max days param '" + maxDaysStrs[0] + "' is not an integer, using default value!")
+			warnings = append(warnings, "max days param '"+maxDaysStrs[0]+"' is not an integer, using default value!")
 			maxDays = DefaultMaxRevalDurationDays
 		}
 	}
 
 	maxReval := time.Duration(maxDays) * time.Hour * 24
 
-	cfgJobs := filterJobs(jobs, maxReval, RegexRevalidateMinTTL)
+	cfgJobs, jobWarns := filterJobs(dsJobs, maxReval, RegexRevalidateMinTTL)
+	warnings = append(warnings, jobWarns...)
 
-	txt := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	txt := makeHdrComment(hdrComment)
 	for _, job := range cfgJobs {
 		txt += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10) + "\n"
 	}
 
-	return txt
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeRegexRevalidateDotConfig,
+		LineComment: LineCommentRegexRevalidateDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type job struct {
+	AssetURL string
+	PurgeEnd time.Time
+}
+
+type jobsSort []job
+
+func (jb jobsSort) Len() int      { return len(jb) }
+func (jb jobsSort) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
+func (jb jobsSort) Less(i, j int) bool {
+	if jb[i].AssetURL == jb[j].AssetURL {
+		return jb[i].PurgeEnd.Before(jb[j].PurgeEnd)
+	}
+	return strings.Compare(jb[i].AssetURL, jb[j].AssetURL) < 0
 }
 
 // filterJobs returns only jobs which:
@@ -97,7 +127,10 @@ func MakeRegexRevalidateDotConfig(
 //   - have a start time later than (now + maxReval days). That is, we don't query jobs older than maxReval in the past.
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
-func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) []Job {
+// Returns the filtered jobs, and any warnings.
+func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]job, []string) {
+	warnings := []string{}
+
 	jobMap := map[string]time.Time{}
 	for _, job := range jobs {
 		if job.DeliveryService == "" {
@@ -115,7 +148,7 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) []J
 		ttlHoursStr = strings.TrimSuffix(ttlHoursStr, `h`)
 		ttlHours, err := strconv.Atoi(ttlHoursStr)
 		if err != nil {
-			log.Errorf("job %+v has unexpected parameters ttl format, config generation skipping!\n", job)
+			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", job))
 			continue
 		}
 
@@ -128,7 +161,7 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) []J
 
 		jobStartTime, err := time.Parse(tc.JobTimeFormat, job.StartTime)
 		if err != nil {
-			log.Errorf("job %+v has unexpected time format, config generation skipping!\n", job)
+			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected time format, config generation skipping!\n", job))
 			continue
 		}
 
@@ -150,11 +183,11 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) []J
 		}
 	}
 
-	newJobs := []Job{}
+	newJobs := []job{}
 	for assetURL, purgeEnd := range jobMap {
-		newJobs = append(newJobs, Job{AssetURL: assetURL, PurgeEnd: purgeEnd})
+		newJobs = append(newJobs, job{AssetURL: assetURL, PurgeEnd: purgeEnd})
 	}
-	sort.Sort(Jobs(newJobs))
+	sort.Sort(jobsSort(newJobs))
 
-	return newJobs
+	return newJobs, warnings
 }

@@ -29,6 +29,7 @@ package toreqnew
 
 import (
 	"errors"
+	"net"
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
@@ -37,6 +38,7 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -72,8 +74,9 @@ func New(cookies string, url *url.URL, user string, pass string, insecure bool, 
 // GetCDNDeliveryServices returns the deliveryservices, whether this client's version is unsupported by the server, and any error.
 // Note if the server returns a 404 or 503, this returns false and a nil error.
 // Users should check the "not supported" bool, and use the vendored TOClient if it's set, and set proper defaults for the new feature(s).
-func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullableV30, bool, error) {
-	deliveryServices := []tc.DeliveryServiceNullableV30{}
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService, net.Addr, bool, error) {
+	deliveryServices := []atscfg.DeliveryService{}
+	toAddr := net.Addr(nil)
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
 		params := url.Values{}
@@ -86,22 +89,24 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 			}
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dses := obj.(*[]tc.DeliveryServiceNullableV30)
-		*dses = toDSes
+		dses := obj.(*[]atscfg.DeliveryService)
+		*dses = atscfg.ToDeliveryServices(toDSes)
+		toAddr = reqInf.RemoteAddr
 		return nil
 	})
 	if unsupported {
-		return nil, true, nil
+		return nil, nil, true, nil
 	}
 	if err != nil {
-		return nil, false, errors.New("getting delivery services: " + err.Error())
+		return nil, nil, false, errors.New("getting delivery services: " + err.Error())
 	}
-	return deliveryServices, false, nil
+	return deliveryServices, toAddr, false, nil
 }
 
-func (cl *TOClient) GetTopologies() ([]tc.Topology, bool, error) {
+func (cl *TOClient) GetTopologies() ([]tc.Topology, net.Addr, bool, error) {
 	topologies := []tc.Topology{}
 	unsupported := false
+	toAddr := net.Addr(nil)
 	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
 		toTopologies, reqInf, err := cl.C.GetTopologies()
 		if err != nil {
@@ -113,20 +118,22 @@ func (cl *TOClient) GetTopologies() ([]tc.Topology, bool, error) {
 		}
 		topologies := obj.(*[]tc.Topology)
 		*topologies = toTopologies
+		toAddr = reqInf.RemoteAddr
 		return nil
 	})
 	if unsupported {
-		return nil, true, nil
+		return nil, nil, true, nil
 	}
 	if err != nil {
-		return nil, false, errors.New("getting topologies: " + err.Error())
+		return nil, nil, false, errors.New("getting topologies: " + err.Error())
 	}
-	return topologies, false, nil
+	return topologies, toAddr, false, nil
 }
 
-func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.ServerUpdateStatus, bool, error) {
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.ServerUpdateStatus, net.Addr, bool, error) {
 	status := tc.ServerUpdateStatus{}
 	unsupported := false
+	toAddr := net.Addr(nil)
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
 		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName))
 		if err != nil {
@@ -138,19 +145,21 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 		}
 		status := obj.(*tc.ServerUpdateStatus)
 		*status = toStatus
+		toAddr = reqInf.RemoteAddr
 		return nil
 	})
 	if unsupported {
-		return tc.ServerUpdateStatus{}, true, nil
+		return tc.ServerUpdateStatus{}, nil, true, nil
 	}
 	if err != nil {
-		return tc.ServerUpdateStatus{}, false, errors.New("getting server update status: " + err.Error())
+		return tc.ServerUpdateStatus{}, nil, false, errors.New("getting server update status: " + err.Error())
 	}
-	return status, false, nil
+	return status, toAddr, false, nil
 }
 
-func (cl *TOClient) GetServers() ([]tc.ServerV30, bool, error) {
-	servers := []tc.ServerV30{}
+func (cl *TOClient) GetServers() ([]atscfg.Server, net.Addr, bool, error) {
+	servers := []atscfg.Server{}
+	toAddr := net.Addr(nil)
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
 		toServers, reqInf, err := cl.C.GetServersWithHdr(nil, nil)
@@ -161,17 +170,19 @@ func (cl *TOClient) GetServers() ([]tc.ServerV30, bool, error) {
 			}
 			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		servers := obj.(*[]tc.ServerV30)
-		*servers = toServers.Response
+
+		servers := obj.(*[]atscfg.Server)
+		*servers = atscfg.ToServers(toServers.Response)
+		toAddr = reqInf.RemoteAddr
 		return nil
 	})
 	if unsupported {
-		return nil, true, nil
+		return nil, nil, true, nil
 	}
 	if err != nil {
-		return nil, false, errors.New("getting servers: " + err.Error())
+		return nil, nil, false, errors.New("getting servers: " + err.Error())
 	}
-	return servers, false, nil
+	return servers, toAddr, false, nil
 }
 
 func IsUnsupportedErr(err error) bool {

@@ -22,7 +22,7 @@ package plugin
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -37,8 +37,8 @@ func TestPlugin(t *testing.T) {
 			fi.Text = "testfile\n"
 			fi.ContentType = "text/plain"
 			fi.LineComment = ""
-			fi.FileNameOnDisk = "testfile.txt"
-			fi.Location = "/opt/trafficserver/etc/trafficserver/"
+			fi.Name = "testfile.txt"
+			fi.Path = "/opt/trafficserver/etc/trafficserver/"
 			d.Files = append(d.Files, fi)
 			return d.Files
 		},
@@ -74,7 +74,7 @@ func TestPlugin(t *testing.T) {
 	}
 
 	if modifyFilesData.TOData.Server == nil {
-		modifyFilesData.TOData.Server = &tc.ServerNullable{}
+		modifyFilesData.TOData.Server = &atscfg.Server{}
 	}
 	modifyFilesData.TOData.Server.HostName = util.StrPtr("testplugin")
 	newFiles = plugins.ModifyFiles(modifyFilesData)
