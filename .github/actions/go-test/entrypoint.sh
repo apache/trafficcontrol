@@ -40,6 +40,13 @@ ln -s "$PWD" "$srcdir/trafficcontrol"
 cd "$srcdir/trafficcontrol"
 
 # Need to fetch golang.org/x/* dependencies
-/usr/local/go/bin/go get -v $INPUT_DIR
+/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
+	golang.org/x/crypto/ed25519 \
+	golang.org/x/crypto/scrypt \
+	golang.org/x/net/idna \
+	golang.org/x/net/ipv4 \
+	golang.org/x/net/ipv6 \
+	golang.org/x/sys/unix \
+	golang.org/x/text/secure/bidirule
 /usr/local/go/bin/go test -v $INPUT_DIR
 exit $?
