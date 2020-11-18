@@ -26,7 +26,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 	"net"
 	"net/http"
 	"strconv"
@@ -43,6 +42,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -1194,14 +1194,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("the server doesn't exist, cannot update"), nil)
 		return
 	}
+	origServer := origSer[0]
 	originalXMPPID := ""
 	originalStatusID := 0
 	changeXMPPID := false
-	if origSer[0].XMPPID != nil {
-		originalXMPPID = *origSer[0].XMPPID
+	if origServer.XMPPID != nil {
+		originalXMPPID = *origServer.XMPPID
 	}
-	if origSer[0].Status != nil {
-		originalStatusID = *origSer[0].StatusID
+	if origServer.Status != nil {
+		originalStatusID = *origServer.StatusID
 	}
 
 	var server tc.ServerNullableV2
@@ -1220,21 +1221,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if newServer.StatusID != nil && *newServer.StatusID != originalStatusID {
 			newServer.StatusLastUpdated = &currentTime
 		} else {
-			newServer.StatusLastUpdated = origSer[0].StatusLastUpdated
+			newServer.StatusLastUpdated = origServer.StatusLastUpdated
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
-		}
-
-		cacheGroupIds := []int{*origSer[0].CachegroupID}
-		serverIds := []int{*origSer[0].ID}
-		if *origSer[0].CachegroupID != *newServer.CachegroupID {
-			if err = topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
-				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
-				return
-			}
 		}
 
 		server, err = newServer.ToServerV2()
@@ -1288,6 +1280,24 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			ServerNullableV11: legacyServer,
 			IPIsService:       util.BoolPtr(true),
 			IP6IsService:      util.BoolPtr(true),
+		}
+	}
+
+	if *origServer.CachegroupID != *server.CachegroupID || *origServer.CDNID != *server.CDNID {
+		hasDSOnCDN, err := dbhelpers.CachegroupHasTopologyBasedDeliveryServicesOnCDN(inf.Tx.Tx, *origServer.CachegroupID, *origServer.CDNID)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		CDNIDs := []int{}
+		if hasDSOnCDN {
+			CDNIDs = append(CDNIDs, *origServer.CDNID)
+		}
+		cacheGroupIds := []int{*origServer.CachegroupID}
+		serverIds := []int{*origServer.ID}
+		if err = topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
+			return
 		}
 	}
 
@@ -1624,13 +1634,21 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id))
 		return
 	}
-	if version.Major >= 3 {
-		cacheGroupIds := []int{*servers[0].CachegroupID}
-		serverIds := []int{*servers[0].ID}
-		if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, true, serverIds); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
-			return
-		}
+	server := servers[0]
+	cacheGroupIds := []int{*server.CachegroupID}
+	serverIds := []int{*server.ID}
+	hasDSOnCDN, err := dbhelpers.CachegroupHasTopologyBasedDeliveryServicesOnCDN(inf.Tx.Tx, *server.CachegroupID, *server.CDNID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	CDNIDs := []int{}
+	if hasDSOnCDN {
+		CDNIDs = append(CDNIDs, *server.CDNID)
+	}
+	if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
+		return
 	}
 
 	userErr, sysErr, errCode = deleteInterfaces(id, tx)
@@ -1651,8 +1669,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("incorrect number of rows affected: %d", rowsAffected))
 		return
 	}
-
-	server := servers[0]
 
 	if inf.Version.Major >= 3 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
