@@ -23,11 +23,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
 	"github.com/lib/pq"
 )
@@ -839,18 +842,51 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	return count > 0, err
 }
 
-// GetTopologyCachegroups returns the set of cachegroup names for the given topology.
-func GetTopologyCachegroups(tx *sql.Tx, name string) ([]string, error) {
-	q := `
-	SELECT ARRAY_AGG(tc.cachegroup)
-	FROM topology_cachegroup tc
-	WHERE tc.topology = $1
-	`
-	cachegroups := []string{}
-	if err := tx.QueryRow(q, name).Scan(pq.Array(&cachegroups)); err != nil {
-		return nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+// CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
+// empty with respect to the Delivery Service's CDN.
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
+
+	if ds.Topology == nil {
+		return statusCode, userErr, sysErr
 	}
-	return cachegroups, nil
+
+	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+	}
+	if len(cacheGroupIDs) == 0 {
+		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+	}
+
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, ds.CDNID, err.Error()), nil
+	}
+
+	return statusCode, userErr, sysErr
+}
+
+// GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup
+// names for the given topology, or any error.
+func GetTopologyCachegroups(tx *sql.Tx, name string) ([]int, []string, error) {
+	q := `
+	SELECT ARRAY_AGG(c.id), ARRAY_AGG(tc.cachegroup)
+	FROM topology_cachegroup tc
+	JOIN cachegroup c ON tc.cachegroup = c."name"
+	WHERE tc.topology = $1
+`
+	int64Ids := []int64{}
+	names := []string{}
+	if err := tx.QueryRow(q, name).Scan(pq.Array(&int64Ids), pq.Array(&names)); err != nil {
+		return nil, nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+	}
+
+	ids := make([]int, len(int64Ids))
+	for index, int64Id := range int64Ids {
+		ids[index] = int(int64Id)
+	}
+
+	return ids, names, nil
 }
 
 // GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
