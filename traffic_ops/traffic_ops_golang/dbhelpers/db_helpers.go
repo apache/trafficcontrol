@@ -866,7 +866,8 @@ func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, e
 	return statusCode, userErr, sysErr
 }
 
-// GetTopologyCachegroups returns a map of cachegroup names by cachegroup id for the given topology.
+// GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup
+// names for the given topology, or any error.
 func GetTopologyCachegroups(tx *sql.Tx, name string) ([]int, []string, error) {
 	q := `
 	SELECT ARRAY_AGG(c.id), ARRAY_AGG(tc.cachegroup)
