@@ -634,7 +634,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getting Cache Group %s: %s", cacheGroupName, err.Error())
 	}
-	if len(cdns) != expectedSize {
+	if len(cachegroups) != expectedSize {
 		t.Fatalf("expected %d Cache Group with name %s but instead received %d Cache Groups", expectedSize, cacheGroupName, len(cachegroups))
 	}
 	cachegroup := cachegroups[0]
@@ -665,7 +665,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getting Profile %s: %s", profileCopy.Name, err.Error())
 	}
-	if len(servers.Response) != expectedSize {
+	if len(profiles) != expectedSize {
 		t.Fatalf("expected %d Profile with name %s but instead received %d Profiles", expectedSize, profileCopy.Name, len(profiles))
 	}
 	profile := profiles[0]
