@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-FROM centos:7
+FROM centos:7 AS common-dependencies
 
 MAINTAINER dev@trafficcontrol.apache.org
 
@@ -31,6 +31,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	yum -y clean all
 
 ### traffic_stats specific requirements
+FROM common-dependencies AS traffic-stats
+
 RUN	yum -y install \
 		git  \
 		rpm-build && \
