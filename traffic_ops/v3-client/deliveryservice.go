@@ -206,11 +206,13 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNu
 	return to.GetDeliveryServicesByCDNIDWithHdr(cdnID, nil)
 }
 
-func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullable, ReqInf, error) {
+// GetDeliveryServiceNullableWithHdr fetches the Delivery Service with the given ID.
+func (to *Session) GetDeliveryServiceNullableWithHdr(id int, header http.Header) (*tc.DeliveryServiceNullableV30, ReqInf, error) {
 	data := struct {
-		Response []tc.DeliveryServiceNullable `json:"response"`
+		Response []tc.DeliveryServiceNullableV30 `json:"response"`
 	}{}
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data, header)
+	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICES, id)
+	reqInf, err := get(to, route, &data, header)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -229,7 +231,17 @@ func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Head
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
 func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
-	return to.GetDeliveryServiceNullableWithHdr(id, nil)
+	data := struct {
+		Response []tc.DeliveryServiceNullable `json:"response"`
+	}{}
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data, nil)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	if len(data.Response) == 0 {
+		return nil, reqInf, nil
+	}
+	return &data.Response[0], reqInf, nil
 }
 
 func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {

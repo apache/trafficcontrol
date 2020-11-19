@@ -412,6 +412,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Disassociate server from DS
+	setInactive(t, *dsID)
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*dsID, sID)
 	if err != nil {
 		t.Fatalf("could not DELETE the server %v from ds %v: %v", sID, *dsID, err)
