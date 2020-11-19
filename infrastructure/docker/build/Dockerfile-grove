@@ -29,6 +29,7 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	yum -y install \
 		git \
 		rpm-build \
+		rsync \
 		epel-release && \
 	yum -y clean all
 
