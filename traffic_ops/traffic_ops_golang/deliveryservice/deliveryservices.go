@@ -809,7 +809,8 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 				return nil, status, userErr, sysErr
 			}
 		}
-		userErr, sysErr, status := checkOriginInCacheGroupTopology(tx, *ds.ID)
+
+		userErr, sysErr, status := dbhelpers.CheckOriginServerInCacheGroupTopology(tx, *ds.ID, *ds.Topology)
 		if userErr != nil || sysErr != nil {
 			return nil, status, userErr, sysErr
 		}
@@ -1743,36 +1744,6 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return xmlID, true, nil
-}
-
-func checkOriginInCacheGroupTopology(tx *sql.Tx, dsID int) (error, error, int) {
-	q := `
-	SELECT d.xml_id, tc.topology 
-	FROM topology_cachegroup tc
-		INNER JOIN deliveryservice d on d.topology = tc.topology
-		INNER JOIN topology_cachegroup_parents tcp on tcp.parent = tc.id
-	WHERE d.id=$1
-	`
-
-	rows, err := tx.Query(q, dsID)
-
-	if err != nil {
-		return nil, errors.New("querying deliveryservice topology's cachegroup: " + err.Error()), http.StatusInternalServerError
-	}
-	defer log.Close(rows, "error closing rows")
-	var dsTopo string
-	for rows.Next() {
-		xmlID := ""
-		topology := ""
-		if err := rows.Scan(&xmlID, &topology); err != nil {
-			return nil, errors.New("scanning deliveryservice topolog's cachegroup: " + err.Error()), http.StatusInternalServerError
-		}
-		dsTopo = fmt.Sprintf("%s-(%s)", xmlID, topology)
-	}
-	if len(dsTopo) <= 0 {
-		return fmt.Errorf("%s server cachegroup not found in the following deliveryservices's topology: %s", tc.OriginTypeName, dsTopo), nil, http.StatusBadRequest
-	}
-	return nil, nil, http.StatusOK
 }
 
 func selectQuery() string {

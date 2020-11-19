@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -1008,4 +1009,50 @@ GROUP BY t.name, ds.topology
 		return tc.DSTypeInvalid, nil, nil, false, errors.New("querying type from delivery service: " + err.Error())
 	}
 	return dsType, reqCap, topology, true, nil
+}
+
+// CheckOriginServerInCacheGroupTopology checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
+func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type in a delivery service
+	q := `
+		SELECT s2.host_name, c.name 
+		FROM server s2
+			INNER JOIN deliveryservice_server ds ON ds.server = s2.id
+			inner join type t on t.id = s2.type
+			INNER JOIN cachegroup c ON c.id = s2.cachegroup
+		WHERE ds.deliveryservice=$1 and t.name='ORG'
+		GROUP BY s2.host_name, c.name
+	`
+
+	serverName := ""
+	cacheGroupName := ""
+	rows, err := tx.Query(q, dsID)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	for rows.Next() {
+		if err := rows.Scan(&serverName, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+	}
+	fmt.Println("CacheName:", cacheGroupName)
+
+	servers := make(map[string]string)
+	servers[cacheGroupName] = serverName
+	fmt.Println(servers)
+
+	if len(servers) > 0 {
+		cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
+		if sysErr != nil {
+			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
+		}
+		for _, cg := range cachegroups {
+			if _, ok := servers[cg]; ok {
+				return nil, nil, http.StatusOK
+			} else {
+				fmt.Printf("server %s doesnot exists in cachegroup %s", servers[cg], cg)
+			}
+		}
+	}
+	return nil, nil, http.StatusOK
 }
