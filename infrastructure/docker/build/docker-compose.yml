@@ -20,74 +20,74 @@ version: '2'
 services:
   source:
     image: apache/traffic_source_tarballer:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-source
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-source
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_monitor_build:
     image: apache/traffic_monitor_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_build:
     image: apache/traffic_ops_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_ort_build:
     image: apache/traffic_ops_ort_builder:master
-    # build:
-    #   dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
-    #   context: ../../..
+    build:
+       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+       context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_portal_build:
     image: apache/traffic_portal_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_router_build:
     image: apache/traffic_router_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.m2:/root/.m2:z
 
   traffic_stats_build:
     image: apache/traffic_stats_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   grove_build:
     image: apache/traffic_grove_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-grove
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grove
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
   grovetccfg_build:
     image: apache/traffic_grovetccfg_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -99,8 +99,8 @@ services:
 
   docs:
     image: apache/traffic_docs_builder:master
-    #build:
-    #  dockerfile: infrastructure/docker/build/Dockerfile-docs
-    #  context: ../../..
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-docs
+      context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
