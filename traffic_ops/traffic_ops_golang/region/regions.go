@@ -95,7 +95,10 @@ func (region *TORegion) GetType() string {
 
 func (region *TORegion) Validate() error {
 	if len(region.Name) < 1 {
-		return errors.New(`Region 'name' is required.`)
+		return errors.New(`region 'name' is required`)
+	}
+	if region.DivisionName == "" || region.Division == 0 {
+		return errors.New(`region 'division' and 'divisionName' are required`)
 	}
 	return nil
 }
