@@ -56,6 +56,7 @@ func TestDeliveryServices(t *testing.T) {
 		GetTestDeliveryServicesIMSAfterChange(t, header)
 		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
 		GetTestDeliveryServices(t)
+		GetInactiveTestDeliveryServices(t)
 		GetTestDeliveryServicesCapacity(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
@@ -393,6 +394,31 @@ func GetTestDeliveryServices(t *testing.T) {
 	}
 	if cnt > 2 {
 		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
+	}
+}
+
+func GetInactiveTestDeliveryServices(t *testing.T) {
+	actualDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	totalDSes := len(actualDSes)
+	params := url.Values{}
+	params.Set("active", strconv.FormatBool(false))
+	inactiveDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+	}
+	if len(inactiveDSes) != 0 {
+		t.Errorf("expected none of the delivery services to be inactive, but got %v inactive", len(inactiveDSes))
+	}
+	params.Set("active", strconv.FormatBool(true))
+	activeDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, activeDSes)
+	}
+	if len(activeDSes) != totalDSes {
+		t.Errorf("expected all of the delivery services to be active, but got %v active", len(activeDSes))
 	}
 }
 
