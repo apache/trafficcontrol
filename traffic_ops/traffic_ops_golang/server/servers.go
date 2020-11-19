@@ -1738,6 +1738,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			alerts = append(alerts, alert)
 		}
 		api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+		return
 	}
 
 	var servers []tc.ServerNullable

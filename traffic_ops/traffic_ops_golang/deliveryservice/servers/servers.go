@@ -341,7 +341,7 @@ const verifyStatusesQuery = `
 SELECT status.name = 'ONLINE' OR status.name = 'REPORTED'
 FROM server
 INNER JOIN status ON server.status = status.id
-WHERE server.id IN ($1)
+WHERE server.id = ANY($1::BIGINT[])
 `
 
 func verifyStatuses(ids []int, tx *sql.Tx) (bool, error) {
@@ -357,6 +357,7 @@ func verifyStatuses(ids []int, tx *sql.Tx) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("querying: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var isAvailable bool
@@ -614,7 +615,7 @@ func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.S
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, fmt.Errorf("validating server capabilities: %v", err), http.StatusInternalServerError
 	}
 
 	for _, name := range nonOriginServerNames {
