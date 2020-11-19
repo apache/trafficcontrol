@@ -27,6 +27,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
+		git \
+		rpm-build \
 		epel-release && \
 	yum -y clean all
 
@@ -35,12 +37,10 @@ FROM common-dependencies AS traffic-portal
 
 RUN	yum -y install \
 		gcc \
-		git \
 		libffi-devel \
 		make \
 		nodejs \
 		npm \
-		rpm-build \
 		ruby-devel \
 		rubygems
 

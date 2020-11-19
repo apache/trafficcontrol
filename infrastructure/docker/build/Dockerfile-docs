@@ -27,6 +27,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
+		git \
+		rpm-build \
 		epel-release && \
 	yum -y clean all
 
@@ -38,8 +40,6 @@ RUN	yum -y install \
 		python36 \
 		python36-pip \
 		python36-psutil \
-		git \
-		rpm-build \
 		make && \
 	yum -y clean all
 RUN	python3 -m pip install --upgrade setuptools && \

@@ -27,6 +27,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
+		git \
+		rpm-build \
 		epel-release && \
 	yum -y clean all
 
@@ -35,9 +37,7 @@ FROM common-dependencies AS traffic-monitor
 
 RUN	yum -y install \
 		# gcc is necessary in case -gcflags 'all=-N -l' is passed to go build
-		gcc \
-		git \
-		rpm-build && \
+		gcc && \
 	yum -y clean all
 
 COPY GO_VERSION /

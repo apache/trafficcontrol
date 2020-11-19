@@ -27,6 +27,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
+		git \
+		rpm-build \
 		epel-release && \
 	yum -y clean all
 
@@ -36,12 +38,10 @@ FROM common-dependencies AS traffic-ops
 RUN	yum -y install \
 		expat-devel \
 		gcc \
-		git \
 		libcurl-devel \
 		make \
 		openssl-devel \
 		perl-ExtUtils-MakeMaker \
-		rpm-build \
 		tar && \
 	yum -y clean all
 
