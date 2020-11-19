@@ -33,7 +33,7 @@ Release Notes v3.0
 
 System Requirements
 ===================
-* Centos 7.2
+* Centos 7.9 or CentOS 8.2
 * OpenSSL >= 1.0.2 installed
 * JDK >= 8.0 installed or available in an accessible :manpage:`yum(8)` repository
 * :abbr:`APR (Apache Portable Runtime)` >= 1.4.8-3 installed or available in an accessible :manpage:`yum(8)` repository

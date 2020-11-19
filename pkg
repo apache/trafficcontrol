@@ -82,14 +82,20 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
+# Mark RHEL_VERSION for export, although it is not set yet
+export RHEL_VERSION
+RUN_OPTIONS=(-e RHEL_VERSION)
+
 # Parse command line arguments
 verbose=0
-while getopts :?bdlpqv opt; do
+while getopts :?78bdlpqv opt; do
 	case $opt in
 		\?)
 			PROJECTS=`$SELF -l | sed "s/^/  - /"`
 			<<-HELP_TEXT cat
 			Usage: $SELF [options] [projects]
+			  -7    Build RPMs targeting CentOS 7 (default)
+			  -8    Build RPMs targeting CentOS 8
 			  -b    Build builder Docker images before building projects
 			  -d    Disable compiler optimizations for debugging.
 			  -l    List available projects.
@@ -102,6 +108,12 @@ while getopts :?bdlpqv opt; do
 			$PROJECTS
 			HELP_TEXT
 			exit 0
+			;;
+		7)
+			RHEL_VERSION=7
+			;;
+		8)
+			RHEL_VERSION=8
 			;;
 		b)
 			build_images=1
