@@ -33,6 +33,7 @@ import (
 
 const InvalidID = -1
 const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
+// todo also unused
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 const LineCommentHash = "#"
@@ -243,6 +244,7 @@ func trimParamUnderscoreNumSuffix(paramName string) string {
 }
 
 // topologyIncludesServer returns whether the given topology includes the given server.
+// todo also unused
 func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 	for _, node := range topology.Nodes {
 		if node.Cachegroup == server.Cachegroup {
@@ -607,10 +609,7 @@ func makeErr(warnings []string, err string) error {
 }
 
 // makeErrf is a convenience for formatting errors for makeErr.
+// todo also unused, maybe remove?
 func makeErrf(warnings []string, format string, v ...interface{}) error {
 	return makeErr(warnings, fmt.Sprintf(format, v...))
-}
-
-func GetConfigFile(prefix string, xmlId string) string {
-	return prefix + xmlId + ConfigSuffix
 }

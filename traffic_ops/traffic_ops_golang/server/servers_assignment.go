@@ -56,14 +56,9 @@ FROM deliveryservice
 LEFT OUTER JOIN cdn ON cdn.id=deliveryservice.cdn_id
 WHERE deliveryservice.id = ANY($1)
 `
-const RemapFile = "remap.config"
-const ConfigSuffix = ".config"
-const RegexRemapPrefix = "regex_remap_"
-const CacheUrlPrefix = "cacheurl_"
-const HeaderRewritePrefix = "hdr_rw_"
 
 func getConfigFile(prefix string, xmlId string) string {
-	return prefix + xmlId + ConfigSuffix
+	return prefix + xmlId + `.config`
 }
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
@@ -277,9 +272,10 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 
 	//need remap config location
 	var atsConfigLocation string
-	if err := tx.QueryRow("SELECT value FROM parameter " +
-		"WHERE name = 'location'" +
-		" AND config_file = '" + RemapFile + "'").Scan(&atsConfigLocation); err != nil {
+	if err := tx.QueryRow(
+		`SELECT value FROM parameter
+		WHERE name = 'location'
+		AND config_file = 'remap.config'`).Scan(&atsConfigLocation); err != nil {
 		return nil, errors.New("scanning location parameter: " + err.Error())
 	}
 	if strings.HasSuffix(atsConfigLocation, "/") {
@@ -311,19 +307,19 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		}
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
-			param := getConfigFile(HeaderRewritePrefix, xmlID.String)
+			param := getConfigFile(`hdr_rw_`, xmlID.String)
 			if edgeHeaderRewrite.Valid && len(edgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = getConfigFile(RegexRemapPrefix, xmlID.String)
+			param = getConfigFile(`regex_remap_`, xmlID.String)
 			if regexRemap.Valid && len(regexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = getConfigFile(CacheUrlPrefix, xmlID.String)
+			param = getConfigFile(`cacheurl_`, xmlID.String)
 			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {
