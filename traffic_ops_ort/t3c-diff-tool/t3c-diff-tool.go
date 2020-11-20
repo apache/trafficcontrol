@@ -22,6 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/traffic_ops_ort/t3cutil"
@@ -61,7 +62,11 @@ func main() {
 
 	if trops != disk {
 		different = true
-		fmt.Println(diff.Diff(disk, trops))
+		match := regexp.MustCompile(`(?m)^\+.*|^\-.*`)
+		changes := diff.Diff(disk, trops)
+		for _, diff := range match.FindAllString(changes, -1) {
+			fmt.Println(diff)
+		}
 	}
 	fmt.Println(different)
 }
