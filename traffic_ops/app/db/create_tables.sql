@@ -1284,7 +1284,8 @@ ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 
 CREATE TABLE IF NOT EXISTS snapshot (
     cdn text NOT NULL,
-    content json NOT NULL,
+    crconfig json NOT NULL,
+    monitoring json NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT snapshot_pkey PRIMARY KEY (cdn)
 );
@@ -3178,4 +3179,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-
