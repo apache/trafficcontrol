@@ -357,6 +357,58 @@ CREATE TABLE IF NOT EXISTS coordinate (
     CONSTRAINT coordinate_pkey PRIMARY KEY (id)
 );
 
+
+ALTER TABLE coordinate OWNER TO traffic_ops;
+
+--
+-- Name: topology; Type: TABLE; Schema: public: Owner: traffic_ops
+--
+
+CREATE TABLE topology (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE topology OWNER TO traffic_ops;
+
+--
+-- Name: topology_cachegroup; Type: TABLE; Schema: public: Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS topology_cachegroup (
+    id BIGSERIAL PRIMARY KEY,
+    topology text NOT NULL,
+    cachegroup text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT topology_cachegroup_topology_fkey FOREIGN KEY (topology) REFERENCES topology(name) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT unique_topology_cachegroup UNIQUE (topology, cachegroup)
+);
+
+
+ALTER TABLE topology_cachegroup SET OWNER TO traffic_ops;
+
+--
+-- Name: topology_cachegroup_parents; Type: TABLE; Schema: public: Owner: traffic_ops
+--
+
+CREATE TABLE topology_cachegroup_parents (
+    child bigint NOT NULL,
+    parent bigint NOT NULL,
+    rank integer NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT topology_cachegroup_parents_rank_check CHECK (rank = 1 OR rank = 2),
+    CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT unique_child_rank UNIQUE (child, rank),
+    CONSTRAINT unique_child_parent UNIQUE (child, parent)
+);
+
+
+ALTER TABLE topology_cachegroup_parents SET OWNER TO traffic_ops;
+
 --
 -- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
@@ -419,6 +471,7 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     max_origin_connections bigint NOT NULL DEFAULT 0,
     ecs_enabled boolean NOT NULL DEFAULT false,
     range_slice_block_size integer,
+    topology text,
     CONSTRAINT deliveryservice_range_slice_block_size CHECK (range_slice_block_size >= 262144 AND range_slice_block_size <= 33554432),
     CONSTRAINT deliveryservice_max_origin_connections_check CHECK (max_origin_connections >= 0),
     CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
@@ -2029,6 +2082,14 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryse
     CREATE INDEX IF NOT EXISTS idx_89525_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
 END IF;
 
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryservice' AND column_name = 'topology') THEN
+    --
+    -- Name: deliveryservice_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX deliveryservice_topology_fkey ON deliveryservice USING btree (topology);
+END IF;
+
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'division' AND column_name = 'name') THEN
     --
     -- Name: idx_89531_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2452,6 +2513,38 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'to_extensi
     CREATE UNIQUE INDEX IF NOT EXISTS idx_89776_id_unique ON to_extension USING btree (id);
 END IF;
 
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup' AND column_name = 'cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_cachegroup_fkey ON topology_cachegroup USING btree (cachegroup);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup' AND column_name = 'topology_cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_topology_fkey ON topology_cachegroup USING btree (topology);
+END IF;
+
+IF EXISTS(SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup_parents' AND column_name = 'child') THEN
+    --
+    -- Name: topology_cachegroup_parents_child_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
+END IF;
+
+IF EXISTS(SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup_parents' AND column_name = 'parent') THEN
+    --
+    -- Name: topology_cachegroup_parents_parents_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
+END IF;
+
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cachegroup' AND column_name = 'coordinate') THEN
     --
     -- Name: cachegroup_coordinate_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2569,6 +2662,9 @@ DECLARE
         'steering_target',
         'tenant',
         'tm_user',
+        'topology',
+        'topology_cachegroup',
+        'topology_cachegroup_parents',
         'type',
         'user_role'
     ] AS VARCHAR[]);
@@ -2629,6 +2725,15 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY deliveryservice
         ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn_id) REFERENCES cdn(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_topology_fkey' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: deliveryservice_topology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT deliveryservice_topology_fkey FOREIGN KEY (topology) REFERENCES topology (name) ON UPDATE CASCADE ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cdn2' AND table_name = 'server') THEN
