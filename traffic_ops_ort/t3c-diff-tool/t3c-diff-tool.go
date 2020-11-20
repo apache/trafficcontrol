@@ -45,14 +45,14 @@ func main() {
 		getopt.PrintUsage(os.Stdout)
 		os.Exit(1)
 	}
-	tropsInput := t3cutil.ReadFile(*tropsFile)
+	trafOpsInput := t3cutil.ReadFile(*tropsFile)
 	diskInput := t3cutil.ReadFile(*diskFile)
 
-	tropsData := strings.Split(string(tropsInput), "\n")
-	tropsData = t3cutil.UnencodeFilter(tropsData)
-	tropsData = t3cutil.CommentsFilter(tropsData)
-	trops := strings.Join(tropsData, "\n")
-	trops = t3cutil.NewLineFilter(trops)
+	trOpsData := strings.Split(string(trafOpsInput), "\n")
+	trOpsData = t3cutil.UnencodeFilter(trOpsData)
+	trOpsData = t3cutil.CommentsFilter(trOpsData)
+	trOps := strings.Join(trOpsData, "\n")
+	trOps = t3cutil.NewLineFilter(trOps)
 
 	diskData := strings.Split(string(diskInput), "\n")
 	diskData = t3cutil.UnencodeFilter(diskData)
@@ -60,10 +60,10 @@ func main() {
 	disk := strings.Join(diskData, "\n")
 	disk = t3cutil.NewLineFilter(disk)
 
-	if trops != disk {
+	if trOps != disk {
 		different = true
 		match := regexp.MustCompile(`(?m)^\+.*|^\-.*`)
-		changes := diff.Diff(disk, trops)
+		changes := diff.Diff(disk, trOps)
 		for _, diff := range match.FindAllString(changes, -1) {
 			fmt.Println(diff)
 		}
