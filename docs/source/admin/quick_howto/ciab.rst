@@ -44,12 +44,12 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
-By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``CENTOS_VERSION`` `build arg <https://docs.docker.com/engine/reference/builder/#arg>`_ to ``7`` (it defaults to ``8``):
+By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``RHEL_VERSION`` `build arg <https://docs.docker.com/engine/reference/builder/#arg>`_ to ``7`` (it defaults to ``8``):
 
 .. code-block:: shell
 	:caption: Building CDN in a Box to run CentOS 7 instead of CentOS 8
 
-	docker-compose build --parallel --build-arg CENTOS_VERSION=7
+	docker-compose build --parallel --build-arg RHEL_VERSION=7
 
 The image that takes the takes the longest to build is the ``trafficops-perl`` image. In order to avoid needing to download, build, and test 239 Perl CPAN modules each time you rebuild the image from scratch, you can run the following command while running CDN in a Box in order to skip building the Perl modules next time:
 

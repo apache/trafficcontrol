@@ -22,9 +22,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
 
 ### Changed
-- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+- Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
 - Traffic Ops: removed change log entry created during server update/revalidation unqueue
-
 
 ## [5.0.0] - 2020-10-20
 ### Added

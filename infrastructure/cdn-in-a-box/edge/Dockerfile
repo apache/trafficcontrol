@@ -21,18 +21,18 @@
 # Based on CentOS 8
 ############################################################
 
-ARG CENTOS_VERSION=8
-FROM centos:${CENTOS_VERSION} AS common-cache-server-layers
-ARG CENTOS_VERSION=8
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} AS common-cache-server-layers
+ARG RHEL_VERSION=8
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
 EXPOSE 80
 
 RUN dnf -y install epel-release && \
-    if [[ "${CENTOS_VERSION%%.*}" -ge 8 ]]; then \
+    if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
         additional_packages='compat-openssl10 pkgconf-pkg-config' || \
         exit 1; \
     else \
@@ -81,7 +81,7 @@ RUN dnf -y install epel-release && \
         perl-URI                \
         tcl                     \
         $additional_packages && \
-    if [[ "${CENTOS_VERSION%%.*}" -eq 8 ]]; then \
+    if [[ "${RHEL_VERSION%%.*}" -eq 8 ]]; then \
         set -- \
             # Pretend that we have the right library versions.
             # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
