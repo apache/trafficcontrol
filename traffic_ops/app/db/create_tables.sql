@@ -416,6 +416,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
     consistent_hash_regex text,
+    max_origin_connections bigint NOT NULL DEFAULT 0,
+    CONSTRAINT deliveryservice_max_origin_connections_check CHECK (max_origin_connections >= 0),
     CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
     CONSTRAINT idx_89502_primary PRIMARY KEY (id, type)
 );
