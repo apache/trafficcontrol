@@ -48,9 +48,10 @@ Usage
 
 Options
 
--q      Quiet mode. Suppresses output.
--v      Verbose mode. Lists all build output.
--l      List available projects.
+-d    Disable compiler optimizations for debugging.
+-l    List available projects.
+-q    Quiet mode. Supresses output.
+-v    Verbose mode. Lists all build output.
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
