@@ -87,16 +87,18 @@ verbose=0
 while getopts :qvld? opt; do
 	case $opt in
 		\?)
-			PROJECTS=`$SELF -l | sed "s/^/		- /"`
-			echo "Usage: $SELF [options] [projects]"
-			echo "	-q	Quiet mode. Supresses output."
-			echo "	-v	Verbose mode. Lists all build output."
-			echo "	-l	List available projects."
-			echo "	-d	Disable compiler optimizations for debugging."
-			echo
-			echo "	If no projects are listed, all projects will be packaged."
-			echo "	Valid projects:"
-			cat <<< "$PROJECTS"
+			PROJECTS=`$SELF -l | sed "s/^/  - /"`
+			<<-HELP_TEXT cat
+			Usage: $SELF [options] [projects]
+			  -q    Quiet mode. Supresses output.
+			  -v    Verbose mode. Lists all build output.
+			  -l    List available projects.
+			  -d    Disable compiler optimizations for debugging.
+
+			If no projects are listed, all projects will be packaged.
+			Valid projects:
+			$PROJECTS
+			HELP_TEXT
 			exit 0
 			;;
 		q)
