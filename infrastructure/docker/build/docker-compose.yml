@@ -23,6 +23,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-source
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -31,6 +33,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -39,14 +43,18 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_ort_build:
     image: apache/traffic_ops_ort_builder:master
     build:
-       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
-       context: ../../..
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+      context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -55,6 +63,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -63,6 +73,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.m2:/root/.m2:z
@@ -72,6 +84,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -80,6 +94,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grove
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -88,6 +104,8 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
@@ -102,5 +120,7 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-docs
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
