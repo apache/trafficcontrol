@@ -1620,6 +1620,18 @@ END IF;
 END$$;
 
 --
+-- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS server_capability (
+    name TEXT PRIMARY KEY,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT name_empty CHECK (length(name) > 0)
+);
+
+ALTER TABLE server_capability OWNER TO traffic_ops;
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
@@ -2483,6 +2495,7 @@ DECLARE
         'role',
         'role_capability',
         'server',
+        'server_capability',
         'servercheck',
         'snapshot',
         'staticdnsentry',
