@@ -1648,6 +1648,22 @@ CREATE TABLE IF NOT EXISTS server_server_capability (
 ALTER TABLE server_server_capability OWNER TO traffic_ops;
 
 --
+-- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservices_required_capability (
+    required_capability TEXT NOT NULL,
+    deliveryservice_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+
+    PRIMARY KEY (deliveryservice_id, required_capability),
+    CONSTRAINT fk_deliveryservice_id FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE,
+    CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON DELETE RESTRICT
+);
+
+ALTER TABLE deliveryservices_required_capability OWNER TO traffic_ops;
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
@@ -2488,6 +2504,7 @@ DECLARE
         'deliveryservice_regex',
         'deliveryservice_request',
         'deliveryservice_request_comment',
+        'deliveryservices_required_capability',
         'deliveryservice_server',
         'deliveryservice_tmuser',
         'division',
