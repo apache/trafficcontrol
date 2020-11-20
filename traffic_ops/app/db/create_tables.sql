@@ -571,6 +571,17 @@ ALTER TABLE division_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE division_id_seq OWNED BY division.id;
 
+--
+-- Name: dnschallenges; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS dnschallenges (
+    fqdn text NOT NULL,
+    record text NOT NULL
+);
+
+
+ALTER TABLE dnschallenges OWNER TO traffic_ops;
 
 --
 -- Name: federation; Type: TABLE; Schema: public; Owner: traffic_ops
