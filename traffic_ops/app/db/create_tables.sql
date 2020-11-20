@@ -418,6 +418,8 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     consistent_hash_regex text,
     max_origin_connections bigint NOT NULL DEFAULT 0,
     ecs_enabled boolean NOT NULL DEFAULT false,
+    range_slice_block_size integer,
+    CONSTRAINT deliveryservice_range_slice_block_size CHECK (range_slice_block_size >= 262144 AND range_slice_block_size <= 33554432),
     CONSTRAINT deliveryservice_max_origin_connections_check CHECK (max_origin_connections >= 0),
     CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
     CONSTRAINT idx_89502_primary PRIMARY KEY (id, type)
