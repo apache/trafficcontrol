@@ -1632,6 +1632,22 @@ CREATE TABLE IF NOT EXISTS server_capability (
 ALTER TABLE server_capability OWNER TO traffic_ops;
 
 --
+-- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS server_server_capability (
+    server_capability TEXT NOT NULL,
+    server bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+
+    PRIMARY KEY (server, server_capability),
+    CONSTRAINT fk_server FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE,
+    CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT
+);
+
+ALTER TABLE server_server_capability OWNER TO traffic_ops;
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
@@ -2496,6 +2512,7 @@ DECLARE
         'role_capability',
         'server',
         'server_capability',
+        'server_server_capability',
         'servercheck',
         'snapshot',
         'staticdnsentry',
