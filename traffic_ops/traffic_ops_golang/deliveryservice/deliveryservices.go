@@ -606,7 +606,6 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
-	fmt.Println(*ds.Topology)
 
 	res, status, userErr, sysErr := updateV30(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
