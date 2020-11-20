@@ -857,6 +857,19 @@ ALTER TABLE job_status_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 
+--
+-- Name: lets_encrypt_account; Type: Table; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS lets_encrypt_account (
+    email text NOT NULL,
+    private_key text NOT NULL,
+    uri text NOT NULL,
+    PRIMARY KEY (email)
+);
+
+
+ALTER TABLE lets_encrypt_account OWNER TO traffic_ops;
 
 --
 -- Name: log; Type: TABLE; Schema: public; Owner: traffic_ops
