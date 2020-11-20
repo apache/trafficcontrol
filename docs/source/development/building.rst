@@ -48,9 +48,11 @@ Usage
 
 Options
 
+-b    Build builder Docker images before building projects
 -d    Disable compiler optimizations for debugging.
 -l    List available projects.
--q    Quiet mode. Supresses output.
+-p    Pull builder Docker images, do not build them (default)
+-q    Quiet mode. Supresses output. (default)
 -v    Verbose mode. Lists all build output.
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:

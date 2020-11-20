@@ -51,10 +51,20 @@ TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
 TS_SOURCE := $(wildcard ../../traffic_stats/**/*)
 
-.PHONY: clean very-clean all nearly-all debug native
+.PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
 all: cache/traffic_ops_ort.rpm traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
+
+ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
+PKG_FLAGS += -b
+ifneq ($(MAKECMDGOALS),build-builders)
+MAKECMDGOALS := $(filter-out build-builders,$(MAKECMDGOALS))
+build-builders: $(MAKECMDGOALS)
+else
+build-builders: all
+endif
+endif
 
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
 PKG_FLAGS += -d
@@ -76,6 +86,16 @@ MAKECMDGOALS := $(filter-out native,$(MAKECMDGOALS))
 native: $(MAKECMDGOALS)
 else
 native: all
+endif
+endif
+
+ifneq ($(filter pull-builders,$(MAKECMDGOALS)),)
+PKG_FLAGS += -p
+ifneq ($(MAKECMDGOALS),pull-builders)
+MAKECMDGOALS := $(filter-out pull-builders,$(MAKECMDGOALS))
+pull-builders: $(MAKECMDGOALS)
+else
+pull-builders: all
 endif
 endif
 
