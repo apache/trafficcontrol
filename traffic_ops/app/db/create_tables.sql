@@ -445,6 +445,21 @@ ALTER TABLE deliveryservice_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE deliveryservice_id_seq OWNED BY deliveryservice.id;
 
+--
+-- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservice_consistent_hash_query_param (
+    name TEXT NOT NULL,
+    deliveryservice_id bigint NOT NULL,
+
+    CONSTRAINT name_empty CHECK (length(name) > 0),
+    CONSTRAINT name_reserved CHECK (name NOT IN ('format','trred')),
+    CONSTRAINT fk_deliveryservice FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE,
+    PRIMARY KEY (name, deliveryservice_id)
+);
+
+ALTER TABLE deliveryservice_consistent_hash_query_param OWNER TO traffic_ops;
 
 --
 -- Name: deliveryservice_regex; Type: TABLE; Schema: public; Owner: traffic_ops
