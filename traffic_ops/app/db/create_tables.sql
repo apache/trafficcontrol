@@ -415,6 +415,7 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
+    consistent_hash_regex text,
     CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
     CONSTRAINT idx_89502_primary PRIMARY KEY (id, type)
 );
