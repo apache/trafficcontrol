@@ -62,10 +62,10 @@ func main() {
 
 	if trOps != disk {
 		different = true
-		match := regexp.MustCompile(`(?m)^\+.*|^\-.*`)
+		match := regexp.MustCompile(`(?m)^\+.*|^-.*`)
 		changes := diff.Diff(disk, trOps)
-		for _, diff := range match.FindAllString(changes, -1) {
-			fmt.Println(diff)
+		for _, change := range match.FindAllString(changes, -1) {
+			fmt.Println(change)
 		}
 	}
 	fmt.Println(different)
