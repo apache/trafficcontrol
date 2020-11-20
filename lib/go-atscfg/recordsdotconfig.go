@@ -22,7 +22,6 @@ package atscfg
 import (
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -32,41 +31,60 @@ const ContentTypeRecordsDotConfig = ContentTypeTextASCII
 const LineCommentRecordsDotConfig = LineCommentHash
 
 func MakeRecordsDotConfig(
-	server *tc.ServerNullable,
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
-	txt := GenericProfileConfig(paramData, RecordsSeparator)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server profile missing")
+	}
+
+	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	hdr := makeHdrComment(hdrComment)
+	txt := genericProfileConfig(params, RecordsSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
 	txt = replaceLineSuffixes(txt, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
 	txt = hdr + txt
 
-	txt = addRecordsDotConfigOverrides(txt, server)
+	txt, overrideWarns := addRecordsDotConfigOverrides(txt, server)
+	warnings = append(warnings, overrideWarns...)
 
-	return txt
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeRecordsDotConfig,
+		LineComment: LineCommentRecordsDotConfig,
+		Warnings:    warnings,
+	}, nil
 }
 
-func addRecordsDotConfigOverrides(txt string, server *tc.ServerNullable) string {
-	txt = addRecordsDotConfigOutgoingIP(txt, server)
-	return txt
+// addRecordsDotConfigOverrides modifies the records.config text and adds any overrides.
+// Returns the modified text and any warnings.
+func addRecordsDotConfigOverrides(txt string, server *Server) (string, []string) {
+	warnings := []string{}
+	txt, ipWarns := addRecordsDotConfigOutgoingIP(txt, server)
+	warnings = append(warnings, ipWarns...)
+	return txt, warnings
 }
 
-func addRecordsDotConfigOutgoingIP(txt string, server *tc.ServerNullable) string {
+// addRecordsDotConfigOutgoingIP returns the outgoing IP added to the config text, and any warnings.
+func addRecordsDotConfigOutgoingIP(txt string, server *Server) (string, []string) {
+	warnings := []string{}
+
 	outgoingIPConfig := `proxy.local.outgoing_ip_to_bind`
 	if strings.Contains(txt, outgoingIPConfig) {
-		log.Warnln("records.config had a proxy.local.outgoing_ip_to_bind Parameter! Using Parameter, not setting Outgoing IP from Server")
-		return txt
+		warnings = append(warnings, "records.config had a proxy.local.outgoing_ip_to_bind Parameter! Using Parameter, not setting Outgoing IP from Server")
+		return txt, warnings
 	}
 
 	v4, v6 := getServiceAddresses(server)
 	if v4 == nil {
-		log.Errorln("Generating records.config: server had no IPv4 service address, cannot set " + outgoingIPConfig + "!")
-		return txt
+		warnings = append(warnings, "server had no IPv4 service address, cannot set "+outgoingIPConfig+"!")
+		return txt, warnings
 	}
 
 	txt = txt + `LOCAL ` + outgoingIPConfig + ` STRING ` + v4.String()
@@ -74,7 +92,7 @@ func addRecordsDotConfigOutgoingIP(txt string, server *tc.ServerNullable) string
 		txt += ` [` + v6.String() + `]`
 	}
 	txt += "\n"
-	return txt
+	return txt, warnings
 }
 
 func replaceLineSuffixes(txt string, suffix string, newSuffix string) string {

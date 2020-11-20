@@ -59,6 +59,7 @@ services:
       context: .
       dockerfile: traffic_ops/Dockerfile-go
       args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
         TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     depends_on:
       - db
@@ -80,6 +81,7 @@ services:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
       args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
         TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     depends_on:
       - db
@@ -87,6 +89,9 @@ services:
     domainname: infra.ciab.test
     env_file:
       - variables.env
+    environment:
+      DIG_IP_RETRY: ${DIG_IP_RETRY:-10}
+      LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-true}
     hostname: trafficops-perl
     image: trafficops-perl
     # TODO: change to expose: "60443" to limit to containers
@@ -101,6 +106,7 @@ services:
       context: .
       dockerfile: traffic_portal/Dockerfile
       args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
         TRAFFIC_PORTAL_RPM: traffic_portal/traffic_portal.rpm
     depends_on:
       - enroller
@@ -118,6 +124,7 @@ services:
       context: .
       dockerfile: traffic_monitor/Dockerfile
       args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
         TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
     depends_on:
       - enroller
@@ -135,6 +142,7 @@ services:
       context: .
       dockerfile: traffic_router/Dockerfile
       args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
         TRAFFIC_ROUTER_RPM: traffic_router/traffic_router.rpm
         TOMCAT_RPM: traffic_router/tomcat.rpm
     depends_on:
@@ -151,6 +159,8 @@ services:
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile
+      args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
     image: trafficstats
     depends_on:
       - enroller

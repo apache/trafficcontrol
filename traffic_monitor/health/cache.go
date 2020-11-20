@@ -87,6 +87,9 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 
 }
 
+// EvalCacheWithStatusInfo evaluates whether the given cache should be marked
+// available, taking the server's configured Status into account as well as its
+// polling information.
 func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfigMap, status tc.CacheStatus, serverStatus string) (bool, string, string) {
 	availability := AvailableStr
 	if !result.Available {
@@ -143,6 +146,8 @@ func EvalInterface(infVitals map[string]cache.Vitals, inf tc.ServerInterfaceInfo
 	return true, ""
 }
 
+// EvalAggregate calculates the availability of a cache server as an aggregate
+// of server metrics and metrics of its network interfaces.
 func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
@@ -322,7 +327,7 @@ func CalcAvailability(
 			Ipv6Available: availStatus.Available.IPv6,
 		})
 
-		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || !available.IsAvailable || !availStatus.ProcessedAvailable {
+		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != lastStatus.ProcessedAvailable {
 			protocol := "IPv4"
 			if !availStatus.LastCheckedIPv4 {
 				protocol = "IPv6"

@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -57,6 +56,11 @@ FROM deliveryservice
 LEFT OUTER JOIN cdn ON cdn.id=deliveryservice.cdn_id
 WHERE deliveryservice.id = ANY($1)
 `
+
+func getConfigFile(prefix string, xmlId string) string {
+	const configSuffix = `.config`
+	return prefix + xmlId + configSuffix
+}
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -269,7 +273,11 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 
 	//need remap config location
 	var atsConfigLocation string
-	if err := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + atscfg.RemapFile + "'").Scan(&atsConfigLocation); err != nil {
+	const remapFile = `remap.config`
+	if err := tx.QueryRow(
+		`SELECT value FROM parameter
+		WHERE name = 'location'
+		AND config_file = '` + remapFile + `'`).Scan(&atsConfigLocation); err != nil {
 		return nil, errors.New("scanning location parameter: " + err.Error())
 	}
 	if strings.HasSuffix(atsConfigLocation, "/") {
@@ -299,21 +307,24 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
+		const headerRewritePrefix = `hdr_rw_`
+		const regexRemapPrefix = `regex_remap_`
+		const cacheURLPrefix = `cacheurl_`
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
-			param := atscfg.GetConfigFile(atscfg.HeaderRewritePrefix, xmlID.String)
+			param := getConfigFile(headerRewritePrefix, xmlID.String)
 			if edgeHeaderRewrite.Valid && len(edgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = atscfg.GetConfigFile(atscfg.RegexRemapPrefix, xmlID.String)
+			param = getConfigFile(regexRemapPrefix, xmlID.String)
 			if regexRemap.Valid && len(regexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = atscfg.GetConfigFile(atscfg.CacheUrlPrefix, xmlID.String)
+			param = getConfigFile(cacheURLPrefix, xmlID.String)
 			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {

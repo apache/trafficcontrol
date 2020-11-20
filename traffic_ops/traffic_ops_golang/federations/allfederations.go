@@ -237,7 +237,15 @@ func tryIfModifiedSinceQuery(header http.Header, tx *sql.Tx, param string, imsQu
 		return runSecond, max
 	}
 
-	rows, err := tx.Query(imsQuery, param)
+	var rows *sql.Rows
+	var err error
+
+	if param == "" {
+		rows, err = tx.Query(imsQuery)
+	} else {
+		rows, err = tx.Query(imsQuery, param)
+	}
+
 	if err != nil {
 		log.Warnf("Couldn't get the max last updated time: %v", err)
 		return runSecond, max

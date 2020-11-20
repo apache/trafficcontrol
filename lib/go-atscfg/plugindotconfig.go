@@ -19,22 +19,39 @@ package atscfg
  * under the License.
  */
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 const PluginSeparator = " "
 const PluginFileName = "plugin.config"
 const ContentTypePluginDotConfig = ContentTypeTextASCII
 const LineCommentPluginDotConfig = LineCommentHash
 
 func MakePluginDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
-	txt := GenericProfileConfig(paramData, PluginSeparator)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server profile missing")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, PluginFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	hdr := makeHdrComment(hdrComment)
+	txt := genericProfileConfig(paramData, PluginSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
 	txt = hdr + txt
-	return txt
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypePluginDotConfig,
+		LineComment: LineCommentPluginDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

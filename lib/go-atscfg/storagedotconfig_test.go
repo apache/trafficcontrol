@@ -26,8 +26,11 @@ import (
 
 func TestMakeStorageDotConfig(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	hdr := "myHeaderComment"
+
+	server := makeGenericServer()
+	server.Profile = &profileName
+
 	paramData := map[string]string{
 		"Drive_Prefix":      "/dev/sd",
 		"Drive_Letters":     "a,b,c,d,e",
@@ -36,6 +39,8 @@ func TestMakeStorageDotConfig(t *testing.T) {
 		"SSD_Drive_Prefix":  "/dev/ss",
 		"SSD_Drive_Letters": "i,j,k",
 	}
+
+	params := makeParamsFromMap(*server.Profile, StorageFileName, paramData)
 
 	/*
 	   # DO NOT EDIT - Generated for myProfile by myToolName (https://myto.example.net) on Thu
@@ -53,9 +58,13 @@ func TestMakeStorageDotConfig(t *testing.T) {
 	   	/dev/ssk volume=3
 	*/
 
-	txt := MakeStorageDotConfig(profileName, paramData, toolName, toURL)
+	cfg, err := MakeStorageDotConfig(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if count := strings.Count(txt, "\n"); count != 12 { // one line for each drive letter, plus the comment
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '"+txt+"' count %v", count)

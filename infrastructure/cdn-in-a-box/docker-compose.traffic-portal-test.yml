@@ -31,6 +31,8 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_portal_integration_test/Dockerfile
+      args:
+        CENTOS_VERSION: ${CENTOS_VERSION:-8}
     env_file:
       - variables.env
     hostname: portal-integration
@@ -38,6 +40,10 @@ services:
     volumes:
       - shared:/shared
       - ../../junit:/junit
+
+  trafficops-perl:
+    environment:
+      DIG_IP_RETRY: ${DIG_IP_RETRY:-0}
 
 volumes:
   shared:

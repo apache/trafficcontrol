@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Added
 - Traffic Ops: added validation for assigning ORG servers to topology-based delivery services
+- Traffic Ops: added validation for topology updates and server updates/deletions to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
+- Traffic Ops: added validation for delivery service updates to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
 - Added locationByDeepCoverageZone to the `crs/stats/ip/{ip}` endpoint in the Traffic Router API
+
+### Fixed
+- [#5274](https://github.com/apache/trafficcontrol/issues/5274) - CDN in a Box's Traffic Vault image failed to build due 
+    to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
+- [#5069](https://github.com/apache/trafficcontrol/issues/5069) - For LetsEncryptDnsChallengerWatcher in Traffic Router,
+    the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
+- [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
+
+### Changed
+- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
 
 ## [5.0.0] - 2020-10-20
 ### Added

@@ -22,17 +22,35 @@ package atscfg
 import (
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeDropQStringDotConfig(t *testing.T) {
-	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
 	dropQStringVal := "myDropQStringVal"
+	profileName := "myProfile"
 
-	txt := MakeDropQStringDotConfig(profileName, toolName, toURL, &dropQStringVal)
+	server := makeGenericServer()
+	server.Profile = &profileName
 
-	testComment(t, txt, profileName, toolName, toURL)
+	params := []tc.Parameter{
+		{
+			Name:       DropQStringDotConfigParamName,
+			ConfigFile: DropQStringDotConfigFileName,
+			Value:      dropQStringVal,
+			Profiles:   []byte(`["` + profileName + `"]`),
+		},
+	}
+
+	hdr := "myHeaderComment"
+
+	cfg, err := MakeDropQStringDotConfig(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, dropQStringVal) {
 		t.Errorf("expected dropQStringVal '"+dropQStringVal+"' actual comment, actual: '%v'", txt)

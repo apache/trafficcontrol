@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -36,13 +37,10 @@ import java.util.List;
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(LetsEncryptDnsChallengeWatcher.class);
     public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/2.0/letsencrypt/dnsrecords/";
-    private static final String configFile = "/opt/traffic_router/db/cr-config.json";
 
+    private String configFile;
     private ConfigHandler configHandler;
-
-    public void setConfigHandler(final ConfigHandler configHandler) {
-        this.configHandler = configHandler;
-    }
+    private Path databasesDirectory;
 
     public LetsEncryptDnsChallengeWatcher() {
         setDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
@@ -134,7 +132,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
     private String readConfigFile() {
         try {
-            final InputStream is = new FileInputStream(configFile);
+            final InputStream is = new FileInputStream(databasesDirectory.resolve(configFile).toString());
             final BufferedReader buf = new BufferedReader(new InputStreamReader(is));
             String line = buf.readLine();
             final StringBuilder sb = new StringBuilder();
@@ -144,7 +142,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             }
             return sb.toString();
         } catch (Exception e) {
-            LOGGER.error("Could not read cr-config file.");
+            LOGGER.error("Could not read cr-config file " + configFile + ".");
             return null;
         }
     }
@@ -178,4 +176,18 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
         return newStaticDnsEntriesNode;
     }
 
+    public void setConfigHandler(final ConfigHandler configHandler) {
+        this.configHandler = configHandler;
+    }
+    public ConfigHandler getConfigHandler() {
+        return this.configHandler;
+    }
+
+    public void setDatabasesDirectory(final Path databasesDirectory) {
+        this.databasesDirectory = databasesDirectory;
+    }
+
+    public void setConfigFile(final String configFile) {
+        this.configFile = configFile;
+    }
 }

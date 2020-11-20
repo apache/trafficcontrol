@@ -20,30 +20,40 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const StorageFileName = "storage.config"
 const ContentTypeStorageDotConfig = ContentTypeTextASCII
 const LineCommentStorageDotConfig = LineCommentHash
 
 // MakeStorageDotConfig creates storage.config for a given ATS Profile.
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeStorageDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, StorageFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
 	text := ""
 
 	nextVolume := 1
 	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
 		driveLetters := strings.TrimSpace(paramData["Drive_Letters"])
 		if driveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has Drive_Prefix parameter, but no Drive_Letters; creating anyway", profileName)
+			warnings = append(warnings, fmt.Sprintf("profile %+v has Drive_Prefix parameter, but no Drive_Letters; creating anyway", *server.Profile))
 		}
 		text += makeStorageVolumeText(drivePrefix, driveLetters, nextVolume)
 		nextVolume++
@@ -52,7 +62,7 @@ func MakeStorageDotConfig(
 	if ramDrivePrefix := paramData["RAM_Drive_Prefix"]; ramDrivePrefix != "" {
 		ramDriveLetters := strings.TrimSpace(paramData["RAM_Drive_Letters"])
 		if ramDriveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", profileName)
+			warnings = append(warnings, fmt.Sprintf("profile %+v has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", *server.Profile))
 		}
 		text += makeStorageVolumeText(ramDrivePrefix, ramDriveLetters, nextVolume)
 		nextVolume++
@@ -61,7 +71,7 @@ func MakeStorageDotConfig(
 	if ssdDrivePrefix := paramData["SSD_Drive_Prefix"]; ssdDrivePrefix != "" {
 		ssdDriveLetters := strings.TrimSpace(paramData["SSD_Drive_Letters"])
 		if ssdDriveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", profileName)
+			warnings = append(warnings, fmt.Sprintf("profile %+v has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", *server.Profile))
 		}
 		text += makeStorageVolumeText(ssdDrivePrefix, ssdDriveLetters, nextVolume)
 		nextVolume++
@@ -70,9 +80,15 @@ func MakeStorageDotConfig(
 	if text == "" {
 		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	hdr := makeHdrComment(hdrComment)
 	text = hdr + text
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeStorageDotConfig,
+		LineComment: LineCommentStorageDotConfig,
+		Warnings:    warnings,
+	}, nil
 }
 
 func makeStorageVolumeText(prefix string, letters string, volume int) string {

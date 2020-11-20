@@ -21,20 +21,29 @@ package atscfg
 
 import (
 	"strconv"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"strings"
 )
 
 const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
 const LineCommentSetDSCPDotConfig = LineCommentHash
 
 func MakeSetDSCPDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dscpNumStr string,
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	fileName string,
+	server *Server,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	}
+
+	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
+	dscpNumStr := fileName
+	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")
+	dscpNumStr = strings.TrimSuffix(dscpNumStr, ".config")
+
+	text := makeHdrComment(hdrComment)
 
 	if _, err := strconv.Atoi(dscpNumStr); err != nil {
 		// TODO warn? We don't generally warn for client errors, because it can be an attack vector. Provide a more informative error return? Return a 404?
@@ -43,5 +52,11 @@ func MakeSetDSCPDotConfig(
 	}
 
 	text += `cond %{REMAP_PSEUDO_HOOK}` + "\n" + `set-conn-dscp ` + dscpNumStr + ` [L]` + "\n"
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeSetDSCPDotConfig,
+		LineComment: LineCommentSetDSCPDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

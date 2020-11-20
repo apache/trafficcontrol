@@ -20,9 +20,11 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -30,14 +32,123 @@ import (
 const HeaderRewriteMidPrefix = "hdr_rw_mid_"
 
 func MakeHeaderRewriteMidDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	ds HeaderRewriteDS,
-	assignedMids []HeaderRewriteServer, // the mids assigned to ds (mids whose cachegroup is the parent of the cachegroup of any edge assigned to this ds)
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	fileName string,
+	deliveryServices []DeliveryService,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	server *Server,
+	servers []Server,
+	cacheGroups []tc.CacheGroupNullable,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing CDNName")
+	}
 
+	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewriteMidPrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
+
+	tcDS := DeliveryService{}
+	for _, ds := range deliveryServices {
+		if ds.XMLID == nil || *ds.XMLID != dsName {
+			continue
+		}
+		tcDS = ds
+		break
+	}
+	if tcDS.ID == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' not found")
+	}
+
+	if tcDS.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' missing cdn")
+	}
+
+	ds, err := headerRewriteDSFromDS(&tcDS)
+	if err != nil {
+		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
+	}
+
+	assignedServers := map[int]struct{}{}
+	for _, dss := range deliveryServiceServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue
+		}
+		if *dss.DeliveryService != *tcDS.ID {
+			continue
+		}
+		assignedServers[*dss.Server] = struct{}{}
+	}
+
+	serverCGs := map[tc.CacheGroupName]struct{}{}
+	for _, sv := range servers {
+		if sv.CDNName == nil {
+			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
+			continue
+		} else if sv.ID == nil {
+			warnings = append(warnings, "TO returned Servers server with missing ID, skipping!")
+			continue
+		} else if sv.Status == nil {
+			warnings = append(warnings, "TO returned Servers server with missing Status, skipping!")
+			continue
+		} else if sv.Cachegroup == nil {
+			warnings = append(warnings, "TO returned Servers server with missing Cachegroup, skipping!")
+			continue
+		}
+
+		if sv.CDNName != server.CDNName {
+			continue
+		}
+		if _, ok := assignedServers[*sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {
+			continue
+		}
+		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
+			continue
+		}
+		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
+	}
+
+	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
+	for _, cg := range cacheGroups {
+		if cg.Name == nil {
+			warnings = append(warnings, "cachegroups had cachegroup with nil name, skipping!")
+			continue
+		}
+		if cg.ParentName == nil {
+			continue // this is normal for top-level cachegroups
+		}
+		if _, ok := serverCGs[tc.CacheGroupName(*cg.Name)]; !ok {
+			continue
+		}
+		parentCGs[*cg.ParentName] = struct{}{}
+	}
+
+	assignedMids := []headerRewriteServer{}
+	for _, server := range servers {
+		if server.CDNName == nil {
+			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
+			continue
+		}
+		if server.Cachegroup == nil {
+			warnings = append(warnings, "TO returned Servers server with missing Cachegroup, skipping!")
+			continue
+		}
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := parentCGs[*server.Cachegroup]; !ok {
+			continue
+		}
+		cfgServer, err := headerRewriteServerFromServer(server)
+		if err != nil {
+			warnings = append(warnings, "failed to make header rewrite server,skipping! : "+err.Error())
+			continue
+		}
+		assignedMids = append(assignedMids, cfgServer)
+	}
+
+	text := makeHdrComment(hdrComment)
+
+	fmt.Printf("DEBUG moc %v usesmid %v assignedmids %v\n", ds.MaxOriginConnections, ds.Type.UsesMidCache(), len(assignedMids))
 	// write a header rewrite rule if maxOriginConnections > 0 and the ds DOES use mids
 	if ds.MaxOriginConnections > 0 && ds.Type.UsesMidCache() {
 		dsOnlineMidCount := 0
@@ -64,5 +175,11 @@ func MakeHeaderRewriteMidDotConfig(
 	}
 
 	text += "\n"
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeHeaderRewriteDotConfig,
+		LineComment: LineCommentHeaderRewriteDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

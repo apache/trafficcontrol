@@ -19,11 +19,48 @@ package atscfg
  * under the License.
  */
 
+import (
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
 const LineCommentURISigningDotConfig = ""
 
 func MakeURISigningConfig(
-	uriSigningKeysBts []byte,
-) string {
-	return string(uriSigningKeysBts)
+	fileName string,
+	uriSigningKeys map[tc.DeliveryServiceName][]byte,
+) (Cfg, error) {
+	warnings := []string{}
+
+	dsName := getDSFromURISigningConfigFileName(fileName)
+	if dsName == "" {
+		return Cfg{}, makeErr(warnings, "getting ds name: malformed config file '"+fileName+"'")
+	}
+
+	uriSigningKeyBts, ok := uriSigningKeys[dsName]
+	if !ok {
+		warnings = append(warnings, "no keys fetched for ds '"+string(dsName)+"!")
+		uriSigningKeyBts = []byte{}
+	}
+
+	return Cfg{
+		Text:        string(uriSigningKeyBts),
+		ContentType: ContentTypeURISigningDotConfig,
+		LineComment: LineCommentURISigningDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+// getDSFromURISigningConfigFileName returns the DS of a URI Signing config file name.
+// For example, "uri_signing_foobar.config" returns "foobar".
+// If the given string is shorter than len("uri_signing_a.config"), the empty string is returned.
+func getDSFromURISigningConfigFileName(fileName string) tc.DeliveryServiceName {
+	if !strings.HasPrefix(fileName, "uri_signing_") || !strings.HasSuffix(fileName, ".config") || len(fileName) <= len("uri_signing_")+len(".config") {
+		return ""
+	}
+	fileName = fileName[len("uri_signing_"):]
+	fileName = fileName[:len(fileName)-len(".config")]
+	return tc.DeliveryServiceName(fileName)
 }

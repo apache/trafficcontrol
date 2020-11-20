@@ -36,18 +36,14 @@ func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
 	configs := []config.ATSConfigFile{
 		{
-			ATSConfigMetaDataConfigFile: tc.ATSConfigMetaDataConfigFile{
-				FileNameOnDisk: "config0.txt",
-				Location:       "/my/config0/location",
-			},
+			Name:        "config0.txt",
+			Path:        "/my/config0/location",
 			Text:        "config0",
 			ContentType: "text/plain",
 		},
 		{
-			ATSConfigMetaDataConfigFile: tc.ATSConfigMetaDataConfigFile{
-				FileNameOnDisk: "config1.txt",
-				Location:       "/my/config1/location",
-			},
+			Name:        "config1.txt",
+			Path:        "/my/config1/location",
 			Text:        "config2,foo",
 			ContentType: "text/csv",
 		},
@@ -79,7 +75,7 @@ func TestWriteConfigs(t *testing.T) {
 func TestPreprocessConfigFile(t *testing.T) {
 	// the TCP port replacement is fundamentally different for 80 vs non-80, so test both
 	{
-		server := &tc.ServerNullable{}
+		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(8080)
 		server.Interfaces = []tc.ServerInterfaceInfo{
 			tc.ServerInterfaceInfo{
@@ -105,7 +101,7 @@ func TestPreprocessConfigFile(t *testing.T) {
 	}
 
 	{
-		server := &tc.ServerNullable{}
+		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(80)
 		server.Interfaces = []tc.ServerInterfaceInfo{
 			tc.ServerInterfaceInfo{
@@ -143,7 +139,8 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	toData := MakeFakeTOData()
 	revalOnly := false
 	cfgPath := "/etc/trafficserver/"
-	configs, err := GetAllConfigs(toData, revalOnly, cfgPath)
+
+	configs, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -156,7 +153,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath)
+		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
@@ -224,11 +221,11 @@ func randDSS() tc.DeliveryServiceServer {
 	}
 }
 
-func randDS() *tc.DeliveryServiceNullableV30 {
+func randDS() *atscfg.DeliveryService {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := atscfg.DeliveryService{}
 	ds.EcsEnabled = *randBool()
 	ds.RangeSliceBlockSize = randInt()
 	ds.ConsistentHashRegex = randStr()
@@ -310,8 +307,8 @@ func randDS() *tc.DeliveryServiceNullableV30 {
 	return &ds
 }
 
-func randServer() *tc.ServerNullable {
-	sv := &tc.ServerNullable{}
+func randServer() *atscfg.Server {
+	sv := &atscfg.Server{}
 	sv.Cachegroup = randStr()
 	sv.CachegroupID = randInt()
 	sv.CDNID = randInt()
@@ -505,11 +502,6 @@ func MakeFakeTOData() *config.TOData {
 			*randParam(),
 			*randParam(),
 		},
-		ScopeParams: []tc.Parameter{
-			*randParam(),
-			*randParam(),
-			*randParam(),
-		},
 		ServerParams: []tc.Parameter{
 			// configLocation := locationParams["remap.config"].Location
 			tc.Parameter{
@@ -532,23 +524,21 @@ func MakeFakeTOData() *config.TOData {
 			*randParam(),
 			*randParam(),
 		},
-		DeliveryServices: []tc.DeliveryServiceNullableV30{
+		DeliveryServices: []atscfg.DeliveryService{
 			ds0,
 			ds1,
 		},
-		Servers: []tc.ServerNullable{
+		Servers: []atscfg.Server{
 			*sv1,
 			*sv2,
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,
-		TOToolName:             *randStr(),
-		TOURL:                  *randStr(),
 		Jobs: []tc.Job{
 			*randJob(),
 			*randJob(),
 		},
-		CDN: *randCDN(),
+		CDN: randCDN(),
 		DeliveryServiceRegexes: []tc.DeliveryServiceRegexes{
 			*dsr0,
 			*dsr1,
