@@ -1189,9 +1189,9 @@ CREATE TABLE IF NOT EXISTS server (
     xmpp_id text,
     xmpp_passwd text,
     interface_name text NOT NULL,
-    ip_address text NOT NULL,
-    ip_netmask text NOT NULL,
-    ip_gateway text NOT NULL,
+    ip_address text,
+    ip_netmask text,
+    ip_gateway text,
     ip6_address text,
     ip6_gateway text,
     interface_mtu bigint DEFAULT '9000'::bigint NOT NULL,
@@ -1218,7 +1218,12 @@ CREATE TABLE IF NOT EXISTS server (
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
     reval_pending boolean NOT NULL DEFAULT FALSE,
-    CONSTRAINT idx_89709_primary PRIMARY KEY (id, cachegroup, type, status, profile)
+    ip_address_is_service boolean DEFAULT true,
+    ip6_address_is_service boolean DEFAULT true,
+    CONSTRAINT idx_89709_primary PRIMARY KEY (id, cachegroup, type, status, profile),
+    CONSTRAINT need_at_least_one_ip CHECK (ip_address IS NOT NULL OR ip6_address IS NOT NULL OR ip_address = '' OR ip6_address = ''),
+    CONSTRAINT need_gateway_if_ip CHECK (ip_address IS NULL OR ip_address = '' OR ip_gateway IS NOT NULL)
+    CONSTRAINT need_netmask_if_ip CHECK (ip_address IS NULL OR ip_address = '' OR ip_netmask IS NOT NULL)
 );
 
 
