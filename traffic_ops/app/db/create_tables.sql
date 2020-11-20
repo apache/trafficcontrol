@@ -790,6 +790,41 @@ ALTER TABLE hwinfo_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 
+--
+-- Name: interface; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS interface (
+	max_bandwidth bigint DEFAULT NULL,
+	monitor boolean NOT NULL,
+	mtu bigint DEFAULT 1500,
+	name text NOT NULL,
+	server bigint NOT NULL,
+	PRIMARY KEY (name, server),
+    CONSTRAINT interface_max_bandwidth_check CHECK(max_bandwidth IS NULL OR max_bandwidth >= 0),
+    CONSTRAINT interface_mtu_check CHECK (mtu IS NULL OR mtu > 1280),
+    CONSTRAINT interface_name_check CHECK (name != ''),
+);
+
+
+ALTER TABLE interface OWNER TO traffic_ops;
+
+--
+-- Name: ip_address; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS ip_address (
+	address inet NOT NULL,
+	gateway inet,
+	interface text NOT NULL,
+	server bigint NOT NULL,
+	service_address boolean NOT NULL DEFAULT FALSE,
+	PRIMARY KEY (address, interface, server),
+    CONSTRAINT ip_address_gateway_check CHECK (gateway IS NULL OR (family(gateway) = 4 AND masklen(gateway) = 32) OR (family(gateway) = 6 AND masklen(gateway) = 128))
+);
+
+
+ALTER TABLE ip_address OWNER TO traffic_ops;
 
 --
 -- Name: job; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -2700,6 +2735,33 @@ END$$;
 
 -- New code block to deallocate table_name variable to avoid identifier collision
 DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_interface_fkey' AND table_name = 'ip_address') THEN
+    --
+    -- Name: ip_address_interface_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY ip_address
+	    ADD CONSTRAINT ip_address_interface_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE RESTRICT ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_server_fkey' AND table_name = 'ip_address') THEN
+    --
+    -- Name: ip_address_server_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY ip_address
+	ADD CONSTRAINT ip_address_server_fkey FOREIGN KEY (interface, server) REFERENCES interface(name, server) ON DELETE RESTRICT ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'interface_server_fkey' AND table_name = 'interface') THEN
+    --
+    -- Name: interface_server_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY interface
+        ADD CONSTRAINT interface_server_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE RESTRICT ON UPDATE CASCADE;
+END IF;
+
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsparameters1' AND table_name = 'profile_parameter') THEN
     --
     -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
