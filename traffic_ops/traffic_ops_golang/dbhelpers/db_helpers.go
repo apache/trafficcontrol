@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -1119,7 +1119,7 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 	}
 
 	if len(servers) > 0 {
-		cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
+		_, cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
 		if sysErr != nil {
 			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
 		}
@@ -1136,7 +1136,7 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 		}
 	}
 	if len(offendingSCG) > 0 {
-		return nil, errors.New("list of server-cachegroup not present in DS: " + strings.Join(offendingSCG, ", ")), http.StatusBadRequest
+		return errors.New("list of server-cachegroup: " + strings.Join(offendingSCG, ", ") + " not present in this DS"), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }
