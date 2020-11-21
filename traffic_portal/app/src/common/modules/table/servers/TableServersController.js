@@ -45,30 +45,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	/**
-	 * Gets text with which to file a status tooltip.
-	 * @returns {string | undefined} The offline reason if the server is offline, otherwise nothing.
-	 */
-	function offlineReasonTooltip(params) {
-		if (!params.value || !serverUtils.isOffline(params.value)) {
-			return;
-		}
-		return params.value + ': ' + params.data.offlineReason;
-	}
-
-	/**
-	 * Gets value to display a default tooltip.
-	 */
-	function defaultTooltip(params) {
-		return params.value;
-	}
-
-	/**
 	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
 		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
-
 
 	/**** Constants, scope data, etc. ****/
 
@@ -246,7 +227,12 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "Status",
 			field: "status",
 			hide: false,
-			tooltip: offlineReasonTooltip
+			tooltipValueGetter: function(params) {
+				if (!params.value || !serverUtils.isOffline(params.value)) {
+					return;
+				}
+				return params.value + ': ' + params.data.offlineReason;
+			}
 		},
 		{
 			headerName: "TCP Port",
@@ -316,7 +302,9 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			filter: true,
 			sortable: true,
 			resizable: true,
-			tooltip: defaultTooltip
+			tooltipValueGetter: function(param) {
+				return param.value;
+			}
 		},
 		rowData: servers,
 		pagination: true,
