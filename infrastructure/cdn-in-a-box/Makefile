@@ -30,7 +30,7 @@ $(error This makefile MUST be run from within its directory)
 endif
 
 ifeq ($(RHEL_VERSION),)
-	RHEL_VERSION := 8
+	export RHEL_VERSION := 8
 else
 	RHEL_VERSION := $(shell echo $(RHEL_VERSION) | cut -f1 -d.)
 endif
