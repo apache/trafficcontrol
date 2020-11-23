@@ -18,6 +18,6 @@
 
 BEGIN;
 
-SELECT FROM deliveryservice WHERE active IS TRUE;
+SELECT FROM deliveryservice WHERE active = 'PRIMED';
 
 ROLLBACK;

@@ -23,13 +23,13 @@ ADD COLUMN active_flag boolean DEFAULT FALSE NOT NULL;
 
 UPDATE deliveryservice
 SET active_flag = FALSE
-WHERE active IS 'PRIMED' OR active IS 'INACTIVE';
+WHERE active = 'PRIMED' OR active = 'INACTIVE';
 
 UPDATE deliveryservice
 SET active_flag = TRUE
-WHERE active IS 'ACTIVE';
+WHERE active = 'ACTIVE';
 
-ALTER TABLE deliveryservice DROP COLUMN active_state;
+ALTER TABLE deliveryservice DROP COLUMN active;
 ALTER TABLE deliveryservice RENAME COLUMN active_flag TO active;
 DROP TYPE ds_active_state;
 
