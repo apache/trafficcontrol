@@ -95,7 +95,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
         tar &&              \
     dnf -y clean all && \
     mkdir -p /opt/traffic_ops/app/public && \
-    cpanm Carton
+    cpanm --quiet --notest Carton &&\
+    cpanm --quiet --notest App::Sqitch
 
 ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
 
@@ -136,6 +137,8 @@ ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
     infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
     infrastructure/cdn-in-a-box/variables.env \
     /
+
+RUN ls -lR /opt/traffic_ops/app/db/
 
 COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
