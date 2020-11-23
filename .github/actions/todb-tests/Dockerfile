@@ -15,9 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.12
-
-RUN apk add --no-cache bash
+FROM sqitch:1.1.0
 
 COPY entrypoint.sh /
 
