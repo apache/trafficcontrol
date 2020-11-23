@@ -4315,11 +4315,12 @@ BEGIN
                     CREATE TRIGGER %s
                     AFTER DELETE ON %s
                     FOR EACH ROW
-                        EXECUTE PROCEDURE public.%s_last_updated();
+                        EXECUTE PROCEDURE public.%s_last_updated(''%s'');
                 ',
                 QUOTE_IDENT(trigger_name),
                 QUOTE_IDENT(table_name),
-                QUOTE_IDENT(trigger_name)
+                QUOTE_IDENT(trigger_name),
+                QUOTE_IDENT(table_name)
             );
         END IF;
     END LOOP;
