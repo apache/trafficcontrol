@@ -1029,6 +1029,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"signingAlgorithm": {"ds.signing_algorithm", nil},
 		"topology":         {"ds.topology", nil},
 		"serviceCategory":  {"ds.service_category", nil},
+		"active":           {"ds.active", api.IsBool},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
