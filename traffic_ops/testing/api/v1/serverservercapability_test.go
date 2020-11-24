@@ -205,6 +205,15 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	}
 
 	for _, dsServer := range dsServers {
+		if dsServer.DeliveryService == nil {
+			t.Error("nil DeliveryService property")
+			continue
+		}
+		if dsServer.Server == nil {
+			t.Error("nil Server property")
+			continue
+		}
+		setInactive(t, *dsServer.DeliveryService)
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server)
 		if err != nil {
 			t.Fatalf("could not DELETE the server %v from ds %v: %v", *dsServer.Server, *dsServer.DeliveryService, err)

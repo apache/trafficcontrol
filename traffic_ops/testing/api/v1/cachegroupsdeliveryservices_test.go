@@ -16,6 +16,7 @@ package v1
 */
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -111,6 +112,30 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 			if !found {
 				t.Errorf("post succeeded, but didn't assign delivery service %v to server", dsID)
 			}
+		}
+	}
+}
+
+func setInactive(t *testing.T, dsID int) {
+	strID := strconv.Itoa(dsID)
+	ds, _, err := TOSession.GetDeliveryServiceNullable(strID)
+	if err != nil {
+		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
+		return
+	}
+	if ds == nil {
+		t.Errorf("Got null or undefined Delivery Service for #%d", dsID)
+		return
+	}
+	if ds.Active == nil {
+		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
+		ds.Active = new(bool)
+	}
+	if *ds.Active {
+		*ds.Active = false
+		_, err = TOSession.UpdateDeliveryServiceNullable(strID, ds)
+		if err != nil {
+			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 		}
 	}
 }
