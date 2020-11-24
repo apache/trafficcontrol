@@ -1350,7 +1350,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			alerts := make([]tc.Alert, 0, len(dsIDs))
 			for _, dsID := range dsIDs {
 				alert := tc.Alert{
-					Level: tc.SuccessLevel.String(),
+					Level: tc.ErrorLevel.String(),
 					Text:  fmt.Sprintf("setting server status to '%s' would leave Delivery Service #%d with no 'ONLINE' or 'REPORTED' servers", *status.Name, dsID),
 				}
 				alerts = append(alerts, alert)
