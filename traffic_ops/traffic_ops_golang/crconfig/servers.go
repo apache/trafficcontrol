@@ -276,7 +276,7 @@ func getServerDSNames(cdn string, tx *sql.Tx) (map[tc.CacheName][]tc.DeliverySer
 		AND ds.active = true
 	 	AND dt.name != '` + string(tc.DSTypeAnyMap) + `'
 		AND p.routing_disabled = false
-		AND (st.name = 'REPORTED' OR st.name = 'ONLINE' OR st.name = 'ADMIN_DOWN')`
+		AND (st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')`
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying server deliveryservice names: " + err.Error())
@@ -326,7 +326,7 @@ func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tc.CacheName]map[
 	WHERE ds.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 		AND ds.active = true
 		AND dt.name != '` + string(tc.DSTypeAnyMap) + `'
-		AND rt.name = 'HOST_REGEXP'
+		AND rt.name = '` + tc.DSMatchTypeHostRegex.String() + `'
 	ORDER BY dsr.set_number ASC`
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
@@ -412,7 +412,7 @@ func getServerParams(cdn string, tx *sql.Tx) (map[string]ServerParams, error) {
 			(p.name = 'api.port') OR
 			(p.name = 'secure.api.port')
 		)
-	AND (st.name = 'REPORTED' OR st.name = 'ONLINE' OR st.name = 'ADMIN_DOWN')`
+		AND (st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')`
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying server parameters: " + err.Error())
