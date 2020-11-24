@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
@@ -696,10 +698,12 @@ SELECT
   s.domain_name,
   s.cdn_id,
   t.name,
-  s.id
+  s.id,
+  status.name
 FROM
   server s JOIN type t ON s.type = t.id
   JOIN cachegroup c on s.cachegroup = c.id
+  JOIN status on status.id = s.status
 `
 
 // GetServerInfosFromIDs returns the ServerInfo structs of the given server IDs or an error if any occur.
@@ -731,7 +735,7 @@ func scanServerInfoRows(rows *sql.Rows) ([]tc.ServerInfo, error) {
 	servers := []tc.ServerInfo{}
 	for rows.Next() {
 		s := tc.ServerInfo{}
-		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type, &s.ID); err != nil {
+		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type, &s.ID, &s.Status); err != nil {
 			return nil, errors.New("scanning server info: " + err.Error())
 		}
 		servers = append(servers, s)

@@ -62,77 +62,141 @@ func getConfigFile(prefix string, xmlId string) string {
 	return prefix + xmlId + configSuffix
 }
 
+const lastServerInActiveDeliveryServicesQuery = `
+SELECT deliveryservice_server.deliveryservice
+FROM deliveryservice_server
+INNER JOIN server ON server.id = deliveryservice_server.server
+INNER JOIN status ON status.id = server.status
+WHERE deliveryservice IN (
+	SELECT deliveryservice_server.deliveryservice
+	FROM deliveryservice_server
+	INNER JOIN deliveryservice ON deliveryservice.id = deliveryservice_server.deliveryservice
+	WHERE deliveryservice_server.server=$1
+	AND deliveryservice.active IS TRUE
+)
+AND NOT (deliveryservice_server.deliveryservice = ANY($2::BIGINT[]))
+AND (status.name = 'ONLINE' OR status.name = 'REPORTED')
+GROUP BY deliveryservice_server.deliveryservice
+HAVING COUNT(deliveryservice_server.server) = 1
+`
+
+func checkForLastServerInActiveDeliveryServices(serverID int, dsIDs []int, tx *sql.Tx) ([]int, error) {
+	log.Debugf("TEST: checking last server #%d in DSes: %v", serverID, dsIDs)
+	violations := []int{}
+	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, pq.Array(dsIDs))
+	if err != nil {
+		return violations, fmt.Errorf("querying: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var violation int
+		if err = rows.Scan(&violation); err != nil {
+			return violations, fmt.Errorf("scanning: %v", err)
+		}
+		violations = append(violations, violation)
+	}
+
+	log.Debugf("TEST: violations: %v", violations)
+
+	return violations, nil
+}
+
+// AssignDeliveryServicesToServerHandler is the handler for POST requests to /servers/{{ID}}/deliveryservices.
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	dsList := []int{}
 	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("payload must be a list of integers representing delivery service ids"), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("payload must be a list of integers representing delivery service ids"), nil)
 		return
 	}
 
 	replaceQueryParameter := inf.Params["replace"]
 	replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	server := inf.IntParams["id"]
 
-	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
+	serverInfo, ok, err := dbhelpers.GetServerInfo(server, tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 		return
 	}
 
 	if !strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
-		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, inf.Tx.Tx)
+		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, tx)
 		if usrErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+			api.HandleErr(w, r, tx, status, usrErr, sysErr)
 			return
 		}
 	}
 
 	// We already know the CDN exists because that's part of the serverInfo query above
-	serverCDN, _, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(serverInfo.CDNID))
+	serverCDN, _, err := dbhelpers.GetCDNNameFromID(tx, int64(serverInfo.CDNID))
 	if err != nil {
 		sysErr = fmt.Errorf("Failed to get CDN name from ID: %v", err)
 		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
 	if len(dsList) > 0 {
-		if errCode, userErr, sysErr = checkTenancyAndCDN(inf.Tx.Tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		if errCode, userErr, sysErr = checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 		if strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
-			if userErr, sysErr, status := checkOriginInTopologies(inf.Tx.Tx, serverInfo.Cachegroup, dsList); userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+			if userErr, sysErr, status := checkOriginInTopologies(tx, serverInfo.Cachegroup, dsList); userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, status, userErr, sysErr)
 				return
 			}
 		}
 	}
 
-	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
-		return
-	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
+	if replace && (serverInfo.Status == tc.CacheStatusOnline.String() || serverInfo.Status == tc.CacheStatusReported.String()) {
+		currentDSIDs, err := checkForLastServerInActiveDeliveryServices(server, dsList, tx)
+		if err != nil {
+			sysErr = fmt.Errorf("checking for deliveryservices to which server #%d is the last assigned: %v", server, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if len(currentDSIDs) > 0 {
+			alerts := make([]tc.Alert, 0, len(currentDSIDs))
+			for _, dsID := range currentDSIDs {
+				alert := tc.Alert{
+					Level: tc.ErrorLevel.String(),
+					Text:  fmt.Sprintf("Delivery Service assignment would leave Delivery Service #%d without any assigned ONLINE or REPORTED servers", dsID),
+				}
+				alerts = append(alerts, alert)
+			}
+			api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+			return
+		}
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
+	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, tx)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
+		return
+		// TODO: Where does this 'ok' come from?
+	} else if !ok {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
+	}
+
+	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 

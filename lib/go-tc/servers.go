@@ -808,6 +808,7 @@ type ServerInfo struct {
 	DomainName   string
 	HostName     string
 	ID           int
+	Status       string
 	Type         string
 }
 
