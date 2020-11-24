@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops: added a feature to get delivery services filtered by the `active` flag
 - Traffic Ops: added validation for assigning ORG servers to topology-based delivery services
 - Traffic Ops: added validation for topology updates and server updates/deletions to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
 - Traffic Ops: added validation for delivery service updates to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
