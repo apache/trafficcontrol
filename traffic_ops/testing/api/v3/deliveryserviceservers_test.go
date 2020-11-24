@@ -116,38 +116,23 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	}
 	cacheGroupID := *cacheGroups[0].ID
 
-	profiles, _, err := TOSession.GetProfileByCDNIDWithHdr(cdnID, nil)
-	if err != nil {
-		t.Fatalf("Could not fetch Profiles: %v", err)
+	profile := tc.Profile{
+		CDNID:       cdnID,
+		Description: "test",
+		Name:        xmlid,
+		Type:        "ATS_PROFILE",
 	}
-	var profile tc.Profile
-	if len(profiles) < 1 {
-		t.Logf("No Profiles found in CDN #%d - have to create one", cdnID)
-		profile = tc.Profile{
-			CDNID:       cdnID,
-			Description: "test",
-			Name:        xmlid,
-			Type:        "ATS_PROFILE",
-		}
-		alerts, _, err := TOSession.CreateProfile(profile)
-		t.Logf("Alerts from creating Profile: %s", strings.Join(alerts.ToStrings(), ", "))
-		if err != nil {
-			t.Fatalf("Failed to create new Profile in CDN #%d: %v", cdnID, err)
-		}
-		profiles, _, err = TOSession.GetProfileByNameWithHdr(profile.Name, nil)
-		if err != nil {
-			t.Fatalf("Could not fetch Profile '%s' after creation: %v", profile.Name, err)
-		}
-		if len(profiles) != 1 {
-			t.Fatalf("Expected exactly one Profile named '%s'; got: %d", profile.Name, len(profiles))
-		}
-		defer func() {
-			alerts, _, err := TOSession.DeleteProfileByID(profiles[0].ID)
-			t.Logf("Alerts from deleting Profile: %s", strings.Join(alerts.ToStrings(), ", "))
-			if err != nil {
-				t.Errorf("Failed to clean up Profile: %v", err)
-			}
-		}()
+	alerts, _, err := TOSession.CreateProfile(profile)
+	t.Logf("Alerts from creating Profile: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err != nil {
+		t.Fatalf("Failed to create new Profile in CDN #%d: %v", cdnID, err)
+	}
+	profiles, _, err := TOSession.GetProfileByNameWithHdr(profile.Name, nil)
+	if err != nil {
+		t.Fatalf("Could not fetch Profile '%s' after creation: %v", profile.Name, err)
+	}
+	if len(profiles) != 1 {
+		t.Fatalf("Expected exactly one Profile named '%s'; got: %d", profile.Name, len(profiles))
 	}
 	profile = profiles[0]
 
@@ -227,7 +212,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 			},
 		},
 	}
-	alerts, _, err := TOSession.CreateServerWithHdr(server, nil)
+	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
 	}
@@ -277,11 +262,9 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true)
 	t.Logf("Alerts from removing Delivery Service from server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
-		if err == nil {
-			t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
-		} else {
-			t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v", err)
-		}
+		t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
+	} else {
+		t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v", err)
 	}
 
 	server.StatusID = &badStatusID
@@ -300,7 +283,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	}
 
 	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
-	t.Logf("Alerts from updating server status: %s", strings.Join(alertsPtr.ToStrings(), ", "))
+	t.Logf("Alerts from updating server status: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
 	} else {
@@ -335,9 +318,11 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	}
 
 	// Cleanup
-	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+	resp, err := TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
 	if err != nil {
 		t.Errorf("Failed to delete Delivery Service: %v", err)
+	} else {
+		t.Logf("Alerts from deleting Delivery Service: %v", resp.Alerts)
 	}
 
 	alerts, _, err = TOSession.DeleteServerByID(*server.ID)
@@ -350,6 +335,12 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err != nil {
 		t.Errorf("Failed to delete server: %v", err)
+	}
+
+	alerts, _, err = TOSession.DeleteProfileByID(profiles[0].ID)
+	t.Logf("Alerts from deleting Profile: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err != nil {
+		t.Errorf("Failed to clean up Profile: %v", err)
 	}
 }
 
