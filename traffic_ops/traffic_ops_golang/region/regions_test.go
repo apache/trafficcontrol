@@ -132,7 +132,7 @@ func TestValidation(t *testing.T) {
 	testTORegionNoDivision := TORegion{Region: testRegionNoDivision}
 	errs = test.SortErrors(test.SplitErrors(testTORegionNoDivision.Validate()))
 	if len(errs) == 0 {
-		t.Errorf(`expected an error with a nil division name, received no error`)
+		t.Errorf(`expected an error with a nil division id, received no error`)
 	} else {
 		t.Logf(`Got expected error validating region with no division: %s`, errs[0].Error())
 	}
