@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM sqitch:1.1.0
+FROM sqitch/sqitch:1.1.0
 
 COPY entrypoint.sh /
 
