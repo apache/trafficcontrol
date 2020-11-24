@@ -30,6 +30,15 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	};
 	SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
 
+	function ILOCellRenderer() {}
+	ILOCellRenderer.prototype.init = function(params) {
+		this.eGui = document.createElement("A");
+		this.eGui.href = "https://" + params.value;
+		this.eGui.setAttribute("target", "_blank");
+		this.eGui.textContent = params.value;
+	};
+	ILOCellRenderer.prototype.getGui = function() { return this.eGui;};
+
 	function UpdateCellRenderer() {}
 	UpdateCellRenderer.prototype.init = function(params) {
 		this.eGui = document.createElement("I");
@@ -71,6 +80,10 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 
 	/**** Constants, scope data, etc. ****/
+
+	function openCellInNewWindow(event) {
+		window.open(event.cell.cellValue, "_blank");
+	}
 
 	/** The columns of the ag-grid table */
 	const columns = [
@@ -115,15 +128,15 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			cellRenderer: "iloCellRenderer",
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "ILO IP Gateway",
 			field: "iloIpGateway",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			cellRenderer: "iloCellRenderer",
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "ILO IP Netmask",
@@ -168,7 +181,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Mgmt IP Netmask",
@@ -176,7 +189,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Network Gateway",
@@ -184,7 +197,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Network IP",
@@ -192,7 +205,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: false,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Network MTU",
@@ -304,6 +317,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
+			iloCellRenderer: ILOCellRenderer,
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
