@@ -146,6 +146,15 @@ func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	for _, ds := range dss.Response {
+		if ds.DeliveryService == nil {
+			t.Error("nil DeliveryService property")
+			continue
+		}
+		if ds.Server == nil {
+			t.Error("nil Server property")
+			continue
+		}
+		setInactive(t, *ds.DeliveryService)
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
 		if err != nil {
 			t.Errorf("deleting delivery service servers: " + err.Error() + "\n")
