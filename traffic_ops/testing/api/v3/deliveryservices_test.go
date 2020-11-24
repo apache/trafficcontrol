@@ -398,27 +398,26 @@ func GetTestDeliveryServices(t *testing.T) {
 }
 
 func GetInactiveTestDeliveryServices(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
-	}
-	totalDSes := len(actualDSes)
 	params := url.Values{}
 	params.Set("active", strconv.FormatBool(false))
 	inactiveDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, inactiveDSes)
 	}
-	if len(inactiveDSes) != 0 {
-		t.Errorf("expected none of the delivery services to be inactive, but got %v inactive", len(inactiveDSes))
+	for _, ds := range inactiveDSes {
+		if *ds.Active != false {
+			t.Errorf("expected all delivery services to be inactive, but got atleast one active DS")
+		}
 	}
 	params.Set("active", strconv.FormatBool(true))
 	activeDSes, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, activeDSes)
 	}
-	if len(activeDSes) != totalDSes {
-		t.Errorf("expected all of the delivery services to be active, but got %v active", len(activeDSes))
+	for _, ds := range activeDSes {
+		if *ds.Active != true {
+			t.Errorf("expected all delivery services to be active, but got atleast one inactive DS")
+		}
 	}
 }
 
