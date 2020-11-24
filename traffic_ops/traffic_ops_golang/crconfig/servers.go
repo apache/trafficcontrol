@@ -34,14 +34,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// Names prefixes for each type of server to appear in CDN Snapshots.
-const (
-	RouterTypeName  = "CCR"
-	MonitorTypeName = "RASCAL"
-	EdgeTypePrefix  = "EDGE"
-	MidTypePrefix   = "MID"
-)
-
 func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 	map[string]tc.CRConfigTrafficOpsServer,
 	map[string]tc.CRConfigRouter,
