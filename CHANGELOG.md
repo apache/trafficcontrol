@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: added validation for delivery service updates to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
 - Added locationByDeepCoverageZone to the `crs/stats/ip/{ip}` endpoint in the Traffic Router API
 - Traffic Portal: upgraded change log UI table to use more powerful/performant ag-grid component
-- Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days)
+- Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
 
 
 ### Fixed
