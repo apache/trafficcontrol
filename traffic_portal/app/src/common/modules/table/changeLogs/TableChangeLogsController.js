@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, $uibModal, dateUtils, propertiesModel) {
+var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, $uibModal, dateUtils, propertiesModel, messageModel) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -127,7 +127,7 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 	$scope.changeDays = function() {
 		const params = {
 			title: 'Change Number of Days',
-			message: 'Enter the number of days of change logs you need access to.',
+			message: 'Enter the number of days of change logs you need access to (between 1 and 365).',
 			type: 'number'
 		};
 		const modalInstance = $uibModal.open({
@@ -141,9 +141,12 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 			}
 		});
 		modalInstance.result.then(function(days) {
-			if (parseInt(days, 10)) {
-				propertiesModel.properties.changeLogs.days = parseInt(days, 10);
+			let numOfDays = parseInt(days, 10);
+			if (numOfDays >= 1 && numOfDays <= 365) {
+				propertiesModel.properties.changeLogs.days = numOfDays;
 				$state.reload();
+			} else {
+				messageModel.setMessages([{level: 'error', text: 'Number of days must be between 1 and 365' }], false);
 			}
 		}, function () {
 			console.log('Cancelled');
@@ -257,5 +260,5 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 
 };
 
-TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', '$uibModal', 'dateUtils', 'propertiesModel'];
+TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', '$uibModal', 'dateUtils', 'propertiesModel', 'messageModel'];
 module.exports = TableChangeLogsController;
