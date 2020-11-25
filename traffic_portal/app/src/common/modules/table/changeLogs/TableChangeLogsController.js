@@ -17,7 +17,7 @@
  * under the License.
  */
 
-	var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, dateUtils) {
+var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, dateUtils, propertiesModel) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -71,6 +71,7 @@
 		}
 	];
 
+	$scope.days = (propertiesModel.properties.changeLogs) ? propertiesModel.properties.changeLogs.days : 7;
 
 	/** All of the change logs - lastUpdated fields converted to actual Date */
 	$scope.changeLogs = changeLogs.map(
@@ -229,5 +230,5 @@
 
 };
 
-TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', 'dateUtils'];
+TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', 'dateUtils', 'propertiesModel'];
 module.exports = TableChangeLogsController;
