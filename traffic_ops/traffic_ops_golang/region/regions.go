@@ -98,7 +98,7 @@ func (region *TORegion) Validate() error {
 		return errors.New(`region 'name' is required`)
 	}
 	if region.Division == 0 {
-		return errors.New(`region 'division' is are required`)
+		return errors.New(`region 'division' is required`)
 	}
 	return nil
 }
