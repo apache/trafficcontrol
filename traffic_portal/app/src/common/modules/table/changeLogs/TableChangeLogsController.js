@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, dateUtils, propertiesModel) {
+var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, $uibModal, dateUtils, propertiesModel) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -121,6 +121,33 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 			}
 		},
 		colResizeDefault: "shift"
+	};
+
+	/** Allows the user to change the number of days queried for change logs. */
+	$scope.changeDays = function() {
+		const params = {
+			title: 'Change Number of Days',
+			message: 'Enter the number of days of change logs you need access to.',
+			type: 'number'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+			controller: 'DialogInputController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function(days) {
+			if (parseInt(days, 10)) {
+				propertiesModel.properties.changeLogs.days = parseInt(days, 10);
+				$state.reload();
+			}
+		}, function () {
+			console.log('Cancelled');
+		});
 	};
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
@@ -230,5 +257,5 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 
 };
 
-TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', 'dateUtils', 'propertiesModel'];
+TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', '$uibModal', 'dateUtils', 'propertiesModel'];
 module.exports = TableChangeLogsController;
