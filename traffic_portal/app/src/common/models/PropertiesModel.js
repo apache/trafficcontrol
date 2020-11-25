@@ -21,6 +21,7 @@ var PropertiesModel = function() {
 	this.loaded = false;
 
 	this.setProperties = function(properties) {
+		if (this.loaded == true) return;
 		this.properties = properties;
 		this.loaded = true;
 	};
