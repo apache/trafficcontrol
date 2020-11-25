@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.changeLogs.list', [])
 								return 'changeLogs';
 							},
 							changeLogs: function(changeLogService, propertiesModel) {
-								let days = (propertiesModel.properties.changeLogs) ? propertiesModel.properties.changeLogs.days : 7;
+								const days = (propertiesModel.properties.changeLogs) ? propertiesModel.properties.changeLogs.days : 7;
 								return changeLogService.getChangeLogs({ days: days });
 							}
 						}
