@@ -203,6 +203,10 @@
         "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_server.js?which="
       }
     },
+    "changeLogs": {
+      "_comment": "Change log settings",
+      "days": 7
+    },
     "customMenu": {
       "_comments": "These are custom items you want to add to the menu. 'items' is an array of hashes where each hash has 'name' (the menu item name), 'embed' (true|false to determine if content is embedded in TP or not), and 'url' (the url of the content)",
       "name": "Other",
