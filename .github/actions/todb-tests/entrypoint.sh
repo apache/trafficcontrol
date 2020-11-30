@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e;
+set -ex;
 
 cd traffic_ops/app/db;
 sqitch target add test db:pg://traffic_ops:twelve@localhost/traffic_ops

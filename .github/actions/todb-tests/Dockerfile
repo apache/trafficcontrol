@@ -17,6 +17,8 @@
 
 FROM sqitch/sqitch:1.1.0
 
+USER root
+
 COPY entrypoint.sh /
 
 ENTRYPOINT /entrypoint.sh
