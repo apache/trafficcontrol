@@ -1228,9 +1228,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if original.StatusLastUpdated == nil {
-		sysErr = errors.New("original server had no Last Updated time")
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+		log.Warnln("original server had no Status Last Updated time")
+		if original.LastUpdated == nil {
+			sysErr = errors.New("original server had no Last Updated time")
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		original.StatusLastUpdated = &original.LastUpdated.Time
 	}
 
 	originalXMPPID := *original.XMPPID
