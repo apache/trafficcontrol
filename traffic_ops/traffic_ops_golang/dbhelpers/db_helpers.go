@@ -1111,6 +1111,7 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 	if err != nil {
 		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
 	}
+	defer log.Close(rows, "error closing rows")
 	for rows.Next() {
 		if err := rows.Scan(&serverName, &cacheGroupName); err != nil {
 			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
@@ -1131,12 +1132,12 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 		for cg, s := range servers {
 			_, ok := topoCachegroups[cg]
 			if !ok {
-				offendingSCG = append(offendingSCG, fmt.Sprintf("%s-%s", s, cg))
+				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
 			}
 		}
 	}
 	if len(offendingSCG) > 0 {
-		return errors.New("list of server-cachegroup: " + strings.Join(offendingSCG, ", ") + " not present in this DS"), nil, http.StatusBadRequest
+		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }
