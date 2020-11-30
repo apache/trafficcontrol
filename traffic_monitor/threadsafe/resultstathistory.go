@@ -497,7 +497,7 @@ func LegacyStatsMarshall(
 	stats := generateStats(statResultHistory, statInfo, combinedStates, monitorConfig, statMaxKbpses, filter, params)
 	skippedCaches, legacyStats := stats.ToLegacy(monitorConfig)
 	if len(skippedCaches) > 0 {
-		log.Errorln(strings.Join(skippedCaches, "\n"))
+		log.Warnln(strings.Join(skippedCaches, "\n"))
 	}
 
 	json := jsoniter.ConfigFastest // TODO make configurable

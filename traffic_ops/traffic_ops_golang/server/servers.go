@@ -1362,7 +1362,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces, StatusLastUpdated: &statusLastUpdatedTime})
-	} else if inf.Version.Minor <= 1 {
+	} else if inf.Version.Major == 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
