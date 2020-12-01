@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: added a feature to get delivery services filtered by the `active` flag
 - Traffic Portal: upgraded change log UI table to use more powerful/performant ag-grid component
 - Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
+- [#5319](https://github.com/apache/trafficcontrol/issues/5319) - Added support for building RPMs that target CentOS 8
 
 ### Fixed
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5188)
@@ -163,7 +164,8 @@ will be returned indicating that overlap exists.
 - Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
 - Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
 - Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
-- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+- Traffic Ops: removed change log entry created during server update/revalidation unqueue
+- Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
 - Traffic Ops: removed change log entry created during server update/revalidation unqueue
 
 ### Deprecated

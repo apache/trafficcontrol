@@ -20,7 +20,7 @@ Building Traffic Control
 ************************
 The build steps for Traffic Control components are all pretty much the same, despite that they are written in a variety of different languages and frameworks. This is accomplished by using Docker.
 
-.. note:: Currently, both listed methods of building Traffic Control components will produce ``*.rpm`` files, meaning that the support of these components is limited to RedHat-based distributions - and none of them are currently tested (or guaranteed to work) outside of CentOS7, specifically.
+.. note:: Currently, both listed methods of building Traffic Control components will produce ``*.rpm`` files, meaning that the support of these components is limited to RedHat-based distributions - and none of them are currently tested (or guaranteed to work) outside of CentOS 7 and CentOS 8, specifically.
 
 Downloading Traffic Control
 ===========================
@@ -48,9 +48,14 @@ Usage
 
 Options
 
--q      Quiet mode. Suppresses output.
--v      Verbose mode. Lists all build output.
--l      List available projects.
+-7    Build RPMs targeting CentOS 7 (default)
+-8    Build RPMs targeting CentOS 8
+-b    Build builder Docker images before building projects
+-d    Disable compiler optimizations for debugging.
+-l    List available projects.
+-p    Pull builder Docker images, do not build them (default)
+-q    Quiet mode. Supresses output. (default)
+-v    Verbose mode. Lists all build output.
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
@@ -162,7 +167,12 @@ This is the equivalent of running
 
 If any component fails to build, no further component builds will be attempted.
 
-Regardless of which OS the RPMs were built on, they are meant to be installed on CentOS 7. The exception is if the RPMs were built on CentOS 8, in which case the target OS for the RPMs is CentOS 8.
+By default, the RPMs will be built targeting CentOS 7. CentOS 8 is also a supported build target. You can choose which CentOS version to build for (7, 8, etc.) by setting the ``RHEL_VERSION`` environment variable:
+
+.. code-block:: shell
+	:caption: Building RPMs that target CentOS 8 without the build host needing to be CentOS 8
+
+	export RHEL_VERSION=8
 
 .. warning:: Although there are no known issues with natively-built RPMs, the official, supported method of building the RPMs is by using :ref:`pkg <pkg>` or :ref:`docker-compose <build-with-dc>`. Use natively-built RPMs at your own risk.
 

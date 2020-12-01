@@ -32,7 +32,7 @@ services:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_portal_integration_test/Dockerfile
       args:
-        CENTOS_VERSION: ${CENTOS_VERSION:-8}
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     env_file:
       - variables.env
     hostname: portal-integration

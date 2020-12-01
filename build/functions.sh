@@ -124,11 +124,17 @@ getVersion() {
 
 # ---------------------------------------
 getRhelVersion() {
-	local releasever
+	local releasever=${RHEL_VERSION:-}
+	if [ -n "$releasever" ]; then
+		echo "el${releasever}"
+		return
+	fi
+
 	local redhat_release=/etc/redhat-release
 	local default_version=7
 	if [ -e $redhat_release ]; then
 		releasever="$(rpm -q --qf '%{version}' -f $redhat_release)"
+		releasever="${releasever%%.*}"
 	else
 		echo "${redhat_release} not found, defaulting to major release ${default_version}" >/dev/stderr
 		releasever=${default_version}
@@ -176,7 +182,7 @@ checkEnvironment() {
 		return 1
 	fi
 
-	TC_VERSION='' BUILD_NUMBER='' RHEL_VERSION='' RPMBUILD='' DIST=''
+	TC_VERSION='' BUILD_NUMBER='' RPMBUILD='' DIST=''
 	TC_VERSION="$(getVersion "$TC_DIR")"
 	BUILD_NUMBER="$(getBuildNumber)"
 	GO_VERSION="$(getGoVersion "$TC_DIR")"

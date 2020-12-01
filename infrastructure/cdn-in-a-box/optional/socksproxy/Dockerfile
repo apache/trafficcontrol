@@ -19,11 +19,11 @@
 # Dockerfile to build optional CiaB Socks Proxy
 # Based on CentOS 8
 ############################################################
-ARG CENTOS_VERSION=8
-FROM centos:${CENTOS_VERSION}
-ARG CENTOS_VERSION=8
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
