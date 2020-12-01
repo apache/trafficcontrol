@@ -122,6 +122,7 @@ Response Structure
 
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
+:maxRequestHeaderSize: The :ref:`ds-max-request-header-size`
 :midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
 :missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -247,6 +248,7 @@ Response Structure
 			"zyx"
 		],
 		"maxOriginConnections": 0,
+		"maxRequestHeaderSize": 131072,
 		"ecsEnabled": false,
 		"rangeSliceBlockSize": null,
 		"topology": null
@@ -305,6 +307,7 @@ Request Structure
 :longDesc2:                 An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :maxDnsAnswers:             The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections:      The :ref:`ds-max-origin-connections`
+:maxRequestHeaderSize:      The :ref:`ds-max-request-header-size`
 :midHeaderRewrite:          A set of :ref:`ds-mid-header-rw-rules`
 :missLat:                   The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:                  The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -359,6 +362,7 @@ Request Structure
 		"missLat": 0,
 		"missLong": 0,
 		"maxOriginConnections": 0,
+		"maxRequestHeaderSize": 131072,
 		"multiSiteOrigin": false,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
 		"protocol": 0,
@@ -428,6 +432,7 @@ Response Structure
 
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
+:maxRequestHeaderSize: The :ref:`ds-max-request-header-size`
 :midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
 :missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -521,6 +526,7 @@ Response Structure
 			],
 			"maxDnsAnswers": null,
 			"maxOriginConnections": 0,
+			"maxRequestHeaderSize": 131072,
 			"midHeaderRewrite": null,
 			"missLat": -1,
 			"missLong": -1,
