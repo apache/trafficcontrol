@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: optional/vnc/Dockerfile
       args:
-        CENTOS_VERSION: 8
+        RHEL_VERSION: 8
         VNC_BUILD_USER: "ciabuser"
     depends_on:
       - dns

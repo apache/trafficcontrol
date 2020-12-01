@@ -15,18 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-ARG CENTOS_VERSION=8
-FROM centos:${CENTOS_VERSION} as os-dependencies
-ARG CENTOS_VERSION=8
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as os-dependencies
+ARG RHEL_VERSION=8
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
 # Installs the Google Chrome dnf repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         utils_package=yum-utils; \
     else \
         utils_package=dnf-utils; \
