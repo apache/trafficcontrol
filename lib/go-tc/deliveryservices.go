@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
@@ -32,6 +33,8 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
+const MaxUint = ^uint(0)
+const MaxInt = int(MaxUint >> 1)
 
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
@@ -172,11 +175,12 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullableV30 struct {
 	DeliveryServiceNullableV15
-	Topology           *string `json:"topology" db:"topology"`
-	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
-	InnerHeaderRewrite *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
-	LastHeaderRewrite  *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
-	ServiceCategory    *string `json:"serviceCategory" db:"service_category"`
+	Topology             *string `json:"topology" db:"topology"`
+	FirstHeaderRewrite   *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
+	InnerHeaderRewrite   *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
+	LastHeaderRewrite    *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
+	ServiceCategory      *string `json:"serviceCategory" db:"service_category"`
+	RequestMaxHeaderSize *int    `json:"requestMaxHeaderSize" db:"request_max_header_size"`
 }
 
 // Deprecated: Use versioned structures only from now on.
@@ -532,8 +536,25 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
+// GetGlobalMaxRequestHeaderSize returns the global max request header size, if specified
+func GetGlobalMaxRequestHeaderSize(tx *sql.Tx) int {
+	var val int
+	row := tx.QueryRow(`SELECT value FROM parameter WHERE name='proxy.config.http.request_header_max_size'`)
+	if err := row.Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			// no global default specified
+			log.Warnln("no default global max request header size specified")
+			return MaxInt
+		}
+		log.Warnln("error getting global max request header size: %v, using 0", err.Error())
+		return 0
+	}
+	return val
+}
+
 func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
+	globalMaxRequestHeaderSize := GetGlobalMaxRequestHeaderSize(tx)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
@@ -560,6 +581,9 @@ func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	}
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
+	}
+	if ds.RequestMaxHeaderSize != nil && *ds.RequestMaxHeaderSize > globalMaxRequestHeaderSize {
+		errs = append(errs, errors.New(fmt.Sprintf("cannot have the DS specific max request header size %d to be greater than the default value %d", *ds.RequestMaxHeaderSize, globalMaxRequestHeaderSize)))
 	}
 	if len(errs) == 0 {
 		return nil

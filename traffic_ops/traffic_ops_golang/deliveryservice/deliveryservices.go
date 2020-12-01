@@ -324,6 +324,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
 		&ds.ServiceCategory,
+		&ds.RequestMaxHeaderSize,
 	)
 
 	if err != nil {
@@ -595,6 +596,7 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 	}
 	ds.ID = &id
 
+	fmt.Println("Srijeet 1 before update ", ds.RequestMaxHeaderSize)
 	res, status, userErr, sysErr := updateV30(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
@@ -797,6 +799,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 			}
 		}
 	}
+	fmt.Println("Srijeet request header size is ", ds.RequestMaxHeaderSize)
 
 	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
@@ -858,6 +861,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
 		&ds.ServiceCategory,
+		&ds.RequestMaxHeaderSize,
 		&ds.ID)
 
 	if err != nil {
@@ -1261,6 +1265,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.LongDesc2,
 			&ds.MaxDNSAnswers,
 			&ds.MaxOriginConnections,
+			&ds.RequestMaxHeaderSize,
 			&ds.MidHeaderRewrite,
 			&ds.MissLat,
 			&ds.MissLong,
@@ -1771,6 +1776,7 @@ ds.long_desc_1,
 ds.long_desc_2,
 ds.max_dns_answers,
 ds.max_origin_connections,
+ds.request_max_header_size,
 ds.mid_header_rewrite,
 COALESCE(ds.miss_lat, 0.0),
 COALESCE(ds.miss_long, 0.0),
@@ -1876,8 +1882,9 @@ topology=$55,
 first_header_rewrite=$56,
 inner_header_rewrite=$57,
 last_header_rewrite=$58,
-service_category=$59
-WHERE id=$60
+service_category=$59,
+request_max_header_size=$60
+WHERE id=$61
 RETURNING last_updated
 `
 }
@@ -1943,9 +1950,10 @@ range_slice_block_size,
 first_header_rewrite,
 inner_header_rewrite,
 last_header_rewrite,
-service_category
+service_category,
+request_max_header_size
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)
 RETURNING id, last_updated
 `
 }
