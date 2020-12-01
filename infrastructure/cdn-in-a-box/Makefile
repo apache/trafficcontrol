@@ -103,8 +103,6 @@ pull-builders: all
 endif
 endif
 
-#.PHONY: native
-
 # Actual output rpm recipies
 traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
 	cp -f $? $@
