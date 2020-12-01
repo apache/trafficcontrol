@@ -15,8 +15,8 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE deliveryservice ADD COLUMN request_max_header_size int DEFAULT 131072;
+ALTER TABLE deliveryservice ADD COLUMN max_request_header_size int DEFAULT 131072;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE deliveryservice DROP COLUMN request_max_header_size;
+ALTER TABLE deliveryservice DROP COLUMN max_request_header_size;

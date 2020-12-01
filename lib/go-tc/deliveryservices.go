@@ -180,7 +180,7 @@ type DeliveryServiceNullableV30 struct {
 	InnerHeaderRewrite   *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
 	LastHeaderRewrite    *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
 	ServiceCategory      *string `json:"serviceCategory" db:"service_category"`
-	RequestMaxHeaderSize *int    `json:"requestMaxHeaderSize" db:"request_max_header_size"`
+	MaxRequestHeaderSize *int    `json:"maxRequestHeaderSize" db:"max_request_header_size"`
 }
 
 // Deprecated: Use versioned structures only from now on.
@@ -582,8 +582,8 @@ func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
 	}
-	if ds.RequestMaxHeaderSize != nil && *ds.RequestMaxHeaderSize > globalMaxRequestHeaderSize {
-		errs = append(errs, errors.New(fmt.Sprintf("cannot have the DS specific max request header size %d to be greater than the default value %d", *ds.RequestMaxHeaderSize, globalMaxRequestHeaderSize)))
+	if ds.MaxRequestHeaderSize != nil && *ds.MaxRequestHeaderSize > globalMaxRequestHeaderSize {
+		errs = append(errs, errors.New(fmt.Sprintf("cannot have the DS specific max request header size %d to be greater than the default value %d", *ds.MaxRequestHeaderSize, globalMaxRequestHeaderSize)))
 	}
 	if len(errs) == 0 {
 		return nil
