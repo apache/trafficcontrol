@@ -899,35 +899,18 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 		t.Errorf("cannot assign server to Delivery Services: %v", err)
 	}
 
-	//Get Topology node to update and remove ORG server nodes
-	resp, _, err := TOSession.GetTopologyWithHdr(*remoteDS[0].Topology, nil)
-	if err != nil {
-		t.Fatalf("couldn't find any topologies: %v", err)
-	}
-	var p []int
-	var origNodes []tc.TopologyNode
-	newNodes := []tc.TopologyNode{{Id: 0, Cachegroup: "topology-edge-cg-01", Parents: p, LastUpdated: nil}}
-	if *remoteDS[0].Topology == resp.Name {
-		origNodes = resp.Nodes
-		resp.Nodes = newNodes
-	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
-	if err != nil {
-		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
-	}
-
-	// Update DS
-	newLongDesc := ""
-	*remoteDS[0].LongDesc = newLongDesc
-	_, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	//Update DS's Topology to a non-ORG server's cachegroup
+	origTopo := *remoteDS[0].Topology
+	*remoteDS[0].Topology = "4-tiers"
+	ds, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err == nil {
-		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v - %v but update was success", err, reqInf.StatusCode)
+		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v, but update was successful", ds.XMLID)
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected to fail since ORG server's cachegroup not part of DS. Expecte:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
+		t.Fatalf("expected to fail since ORG server's topology not part of DS. Expected:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
 	}
 
-	// Retrieve the DS to check if longDesc was updated with missing ORG server
+	// Retrieve the DS to check if topology was updated with missing ORG server
 	params.Set("id", strconv.Itoa(*remoteDS[0].ID))
 	apiResp, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
 	if err != nil {
@@ -938,12 +921,11 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 	}
 
 	//Set topology back to as it was for further testing
-	resp.Nodes = origNodes
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
+	remoteDS[0].Topology = &origTopo
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err != nil {
 		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
 	}
-
 }
 
 func GetAccessibleToTest(t *testing.T) {
