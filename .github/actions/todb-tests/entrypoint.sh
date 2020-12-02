@@ -21,9 +21,9 @@ set -ex;
 cd traffic_ops/app/db;
 sqitch target add test db:pg://traffic_ops:twelve@localhost/traffic_ops
 
-psql -d postgresql://traffic_ops:twelve@localhost/traffic_ops <./create_tables.sql;
-psql -d postgresql://traffic_ops:twelve@localhost/traffic_ops <./patches.sql;
-psql -d postgresql://traffic_ops:twelve@localhost/traffic_ops <./seeds.sql;
+psql -d postgresql://traffic_ops:twelve@postgres/traffic_ops <./create_tables.sql;
+psql -d postgresql://traffic_ops:twelve@postgres/traffic_ops <./patches.sql;
+psql -d postgresql://traffic_ops:twelve@postgres/traffic_ops <./seeds.sql;
 
 sqitch deploy test;
 sqitch verify test;
