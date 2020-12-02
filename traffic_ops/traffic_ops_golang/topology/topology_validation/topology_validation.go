@@ -25,11 +25,12 @@ package topology_validation
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 // CheckForEmptyCacheGroups checks if the cachegroups are empty (altogether) or empty in any of the given CDN IDs.
