@@ -73,6 +73,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal: upgraded change log UI table to use more powerful/performant ag-grid component
 - Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
 - [#5319](https://github.com/apache/trafficcontrol/issues/5319) - Added support for building RPMs that target CentOS 8
+- Traffic Ops: Added validation to ensure assigned ORG server cachegroups are in the topology when updating a delivery service
 
 ### Fixed
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5188)
