@@ -80,9 +80,9 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 
 			var cacheStats tc.Stats
 			stats := []string{ATSCurrentConnectionsStat, tc.StatNameBandwidth}
-			cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
+			cacheStats, _, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
 			if err != nil {
-				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
+				legacyCacheStats, _, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
 				if err != nil {
 					errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 					continue
