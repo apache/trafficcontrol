@@ -1132,8 +1132,10 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 		}
 		// put slice values into map for Topology's validation
 		topoCacheGroupNames := make(map[string]string)
-		for _, currentCG := range topologyCGNames {
-			topoCacheGroupNames[currentCG] = ""
+		if topologyCGNames != nil {
+			for _, currentCG := range topologyCGNames {
+				topoCacheGroupNames[currentCG] = ""
+			}
 		}
 
 		for cg, s := range servers {
@@ -1141,9 +1143,11 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 			if !DSCGOk {
 				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
 			}
-			_, currentTopoCGOk := topoCacheGroupNames[cg]
-			if !currentTopoCGOk {
-				offendingSTCG = append(offendingSTCG, fmt.Sprintf("%s (%s)", cg, s))
+			if topologyCGNames != nil {
+				_, currentTopoCGOk := topoCacheGroupNames[cg]
+				if !currentTopoCGOk {
+					offendingSTCG = append(offendingSTCG, fmt.Sprintf("%s (%s)", cg, s))
+				}
 			}
 		}
 	}
@@ -1151,7 +1155,7 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
 	}
 	if len(offendingSTCG) > 0 {
-		return errors.New("the following ORG server's cachegroup is part of delivery service and is not allowed to be removed from the DS's topology (" + dsTopology + "): " + strings.Join(offendingSTCG, ", ")), nil, http.StatusBadRequest
+		return errors.New("the following ORG server's cachegroup is part of delivery service's cachegroup and not allowed to be removed from the DS's topology (" + dsTopology + "): " + strings.Join(offendingSTCG, ", ")), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }
