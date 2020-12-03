@@ -5,9 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops: added a feature to get delivery services filtered by the `active` flag
 - Traffic Ops: added validation for assigning ORG servers to topology-based delivery services
 - Traffic Ops: added validation for topology updates and server updates/deletions to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
+- Traffic Ops: added validation for delivery service updates to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
 - Added locationByDeepCoverageZone to the `crs/stats/ip/{ip}` endpoint in the Traffic Router API
+- Traffic Portal: upgraded change log UI table to use more powerful/performant ag-grid component
+- Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
+- [#5319](https://github.com/apache/trafficcontrol/issues/5319) - Added support for building RPMs that target CentOS 8
+- Traffic Ops: Added validation to ensure assigned ORG server cachegroups are in the topology when updating a delivery service
 
 ### Fixed
 - [#5274](https://github.com/apache/trafficcontrol/issues/5274) - CDN in a Box's Traffic Vault image failed to build due 
@@ -17,7 +23,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
 
 ### Changed
-- Updated CDN in a Box to CentOS 8 and added `CENTOS_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+- Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+- Traffic Ops: removed change log entry created during server update/revalidation unqueue
 
 ## [5.0.0] - 2020-10-20
 ### Added

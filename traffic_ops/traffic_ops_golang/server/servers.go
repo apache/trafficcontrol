@@ -42,7 +42,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -1295,7 +1295,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		cacheGroupIds := []int{*origServer.CachegroupID}
 		serverIds := []int{*origServer.ID}
-		if err = topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
+		if err = topology_validation.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology, so it cannot be moved to another cachegroup: "+err.Error()), nil)
 			return
 		}
@@ -1362,7 +1362,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces, StatusLastUpdated: &statusLastUpdatedTime})
-	} else if inf.Version.Minor <= 1 {
+	} else if inf.Version.Major == 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
@@ -1646,7 +1646,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if hasDSOnCDN {
 		CDNIDs = append(CDNIDs, *server.CDNID)
 	}
-	if err := topology.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
+	if err := topology_validation.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
 		return
 	}

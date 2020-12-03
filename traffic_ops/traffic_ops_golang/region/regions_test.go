@@ -23,11 +23,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-	"github.com/jmoiron/sqlx"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestRegions() []tc.Region {
@@ -46,7 +47,6 @@ func getTestRegions() []tc.Region {
 
 	return regions
 }
-
 func TestReadRegions(t *testing.T) {
 
 	mockDB, mock, err := sqlmock.New()
@@ -107,5 +107,33 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("Region must be Identifier")
+	}
+}
+func TestValidation(t *testing.T) {
+	testRegion := tc.Region{
+		DivisionName: "west",
+		Division:     77,
+		ID:           1,
+		Name:         "region1",
+		LastUpdated:  tc.TimeNoMod{Time: time.Now()},
+	}
+	testTORegion := TORegion{Region: testRegion}
+	errs := test.SortErrors(test.SplitErrors(testTORegion.Validate()))
+
+	if len(errs) > 0 {
+		t.Errorf(`expected no errors,  got %v`, errs)
+	}
+
+	testRegionNoDivision := tc.Region{
+		ID:          1,
+		Name:        "region1",
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+	}
+	testTORegionNoDivision := TORegion{Region: testRegionNoDivision}
+	errs = test.SortErrors(test.SplitErrors(testTORegionNoDivision.Validate()))
+	if len(errs) == 0 {
+		t.Errorf(`expected an error with a nil division id, received no error`)
+	} else {
+		t.Logf(`Got expected error validating region with no division: %s`, errs[0].Error())
 	}
 }

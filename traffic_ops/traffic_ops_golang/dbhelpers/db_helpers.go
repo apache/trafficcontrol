@@ -23,12 +23,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -839,18 +842,51 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	return count > 0, err
 }
 
-// GetTopologyCachegroups returns the set of cachegroup names for the given topology.
-func GetTopologyCachegroups(tx *sql.Tx, name string) ([]string, error) {
-	q := `
-	SELECT ARRAY_AGG(tc.cachegroup)
-	FROM topology_cachegroup tc
-	WHERE tc.topology = $1
-	`
-	cachegroups := []string{}
-	if err := tx.QueryRow(q, name).Scan(pq.Array(&cachegroups)); err != nil {
-		return nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+// CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
+// empty with respect to the Delivery Service's CDN.
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
+
+	if ds.Topology == nil {
+		return statusCode, userErr, sysErr
 	}
-	return cachegroups, nil
+
+	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+	}
+	if len(cacheGroupIDs) == 0 {
+		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+	}
+
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, ds.CDNID, err.Error()), nil
+	}
+
+	return statusCode, userErr, sysErr
+}
+
+// GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup
+// names for the given topology, or any error.
+func GetTopologyCachegroups(tx *sql.Tx, name string) ([]int, []string, error) {
+	q := `
+	SELECT ARRAY_AGG(c.id), ARRAY_AGG(tc.cachegroup)
+	FROM topology_cachegroup tc
+	JOIN cachegroup c ON tc.cachegroup = c."name"
+	WHERE tc.topology = $1
+`
+	int64Ids := []int64{}
+	names := []string{}
+	if err := tx.QueryRow(q, name).Scan(pq.Array(&int64Ids), pq.Array(&names)); err != nil {
+		return nil, nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+	}
+
+	ids := make([]int, len(int64Ids))
+	for index, int64Id := range int64Ids {
+		ids[index] = int(int64Id)
+	}
+
+	return ids, names, nil
 }
 
 // GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
@@ -1053,4 +1089,55 @@ GROUP BY t.name, ds.topology
 		return tc.DSTypeInvalid, nil, nil, false, errors.New("querying type from delivery service: " + err.Error())
 	}
 	return dsType, reqCap, topology, true, nil
+}
+
+// CheckOriginServerInCacheGroupTopology checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
+func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type in a delivery service
+	q := `
+		SELECT s.host_name, c.name 
+		FROM server s
+			INNER JOIN deliveryservice_server ds ON ds.server = s.id
+			INNER JOIN type t ON t.id = s.type
+			INNER JOIN cachegroup c ON c.id = s.cachegroup
+		WHERE ds.deliveryservice=$1 AND t.name=$2
+	`
+
+	serverName := ""
+	cacheGroupName := ""
+	servers := make(map[string]string)
+	var offendingSCG []string
+	rows, err := tx.Query(q, dsID, tc.OriginTypeName)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+	for rows.Next() {
+		if err := rows.Scan(&serverName, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+		servers[cacheGroupName] = serverName
+	}
+
+	if len(servers) > 0 {
+		_, cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
+		if sysErr != nil {
+			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
+		}
+		// put slice values into map
+		topoCachegroups := make(map[string]string)
+		for _, cg := range cachegroups {
+			topoCachegroups[cg] = ""
+		}
+		for cg, s := range servers {
+			_, ok := topoCachegroups[cg]
+			if !ok {
+				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
+			}
+		}
+	}
+	if len(offendingSCG) > 0 {
+		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
 }

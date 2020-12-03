@@ -35,6 +35,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 )
 
 func GetDataFuncs() map[string]func(config.TCCfg, io.Writer) error {
@@ -206,10 +208,21 @@ type ChkConfigEntry struct {
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
 func SetUpdateStatus(cfg config.TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
-	// TODO change this to an API path, when one exists
+	reqInf, err := cfg.TOClientNew.C.SetUpdateServerStatuses(string(serverName), &queue, &revalPending)
+	if err != nil && toreqnew.IsUnsupportedErr(err) {
+		err = setUpdateStatusLegacy(cfg, serverName, queue, revalPending)
+	}
+	if err != nil {
+		return errors.New("setting update statuses (Traffic Ops '" + toreq.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
+	}
+	return nil
+}
+
+// setUpdateStatusLegacy sets the queue and reval status of serverName in Traffic Ops,
+// using the legacy pre-2.0 /update endpoint.
+func setUpdateStatusLegacy(cfg config.TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
 	path := `/update/` + string(serverName) + `?updated=` + jsonBoolStr(queue) + `&reval_updated=` + jsonBoolStr(revalPending)
 	// C and RawRequest should generally never be used, but the alternatve here is to manually get the cookie and do an http.Get. We need to hit a non-API endpoint, no API endpoint exists for what we need.
-	// TODO move to a func in TOClient?
 	resp, _, err := cfg.TOClient.C.RawRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return errors.New("setting update statuses: " + err.Error())

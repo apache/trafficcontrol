@@ -24,7 +24,7 @@ under the License.
 <div class="modal-body">
     <p ng-bind-html="params.message"></p>
     <form name="inputForm" novalidate>
-        <input type="text" class="form-control" ng-model="inputValue" ng-maxlength="256">
+        <input type="{{params.type ? params.type : 'text'}}" class="form-control" ng-model="inputValue" ng-maxlength="256">
     </form>
 </div>
 <div class="modal-footer">
