@@ -169,7 +169,6 @@ will be returned indicating that overlap exists.
 - Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
 - Traffic Ops: removed change log entry created during server update/revalidation unqueue
 - Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
-- Traffic Ops: removed change log entry created during server update/revalidation unqueue
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
