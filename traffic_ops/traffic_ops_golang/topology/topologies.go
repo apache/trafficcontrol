@@ -150,11 +150,17 @@ func (topology *TOTopology) Validate() error {
 	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
 	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
 
-	for i, _ := range dsCDNs {
-		userErr, sysErr, _ := dbhelpers.CheckOriginServerInCacheGroupTopology(topology.ReqInfo.Tx.Tx, dsCDNs[i], topology.Name)
-		if userErr != nil || sysErr != nil {
-			message := "failed to verify ORG server's cachegroup in DS's topology"
-			return fmt.Errorf("%s: %s", message, userErr.Error())
+	for _, cdnId := range dsCDNs {
+		err, dsId := dbhelpers.GetDSByCDNIdTopology(topology.ReqInfo.Tx.Tx, cdnId, topology.Name)
+		if err != nil {
+			return fmt.Errorf("failed to get a response from DB: %s", err)
+		}
+		for _, id := range dsId {
+			topoCachegroupNames := topology.getCachegroupNames()
+			userErr, sysErr, _ := dbhelpers.CheckOriginServerInCacheGroupTopology(topology.ReqInfo.Tx.Tx, id, topology.Name, topoCachegroupNames)
+			if userErr != nil || sysErr != nil {
+				return fmt.Errorf("%s", userErr.Error())
+			}
 		}
 	}
 

@@ -39,6 +39,7 @@ func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
+		UpdateValidateTopologyORGServerCacheGroup(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
 	})
 }
@@ -238,6 +239,10 @@ func UpdateTestTopologies(t *testing.T) {
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
+}
+
+func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
+
 }
 
 func DeleteTestTopologies(t *testing.T) {
