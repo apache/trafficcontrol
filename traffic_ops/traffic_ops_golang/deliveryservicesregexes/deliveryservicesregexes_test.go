@@ -126,7 +126,7 @@ func TestUpdateImmutableRegex(t *testing.T) {
 }
 
 func TestGetCurrentDetails(t *testing.T) {
-	expected := `cannot change a regex with an order of 0 and type name of HOST_REGEXP`
+	expected := `cannot change/ delete a regex with an order of 0 and type name of HOST_REGEXP`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)

@@ -277,7 +277,7 @@ where dsr.deliveryservice=$1 and r.id=$2`,
 		return err
 	}
 	if setNumber == 0 && typeName == "HOST_REGEXP" {
-		return errors.New("cannot change a regex with an order of 0 and type name of HOST_REGEXP")
+		return errors.New("cannot change/ delete a regex with an order of 0 and type name of HOST_REGEXP")
 	}
 	return nil
 }
@@ -426,6 +426,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	regexID := inf.IntParams["regexid"]
 
+	// Get current details to make sure that you're not trying to delete a regex that has set number = 0 and type = HOST_REGEXP
+	if err := getCurrentDetails(inf.Tx.Tx, dsID, regexID); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cannot delete regex: "+err.Error()), nil)
+		return
+	}
 	count := 0
 	if err := inf.Tx.Tx.QueryRow(`SELECT count(*) from deliveryservice_regex where deliveryservice = $1`, dsID).Scan(&count); err != nil {
 		if err == sql.ErrNoRows {
