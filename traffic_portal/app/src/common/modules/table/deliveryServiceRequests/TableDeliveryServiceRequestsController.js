@@ -309,7 +309,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			fileName: "delivery_service_requests.csv",
 		};
 		$scope.gridOptions.api.exportDataAsCsv(params);
-	}
+	};
 
 	$scope.onQuickSearchChanged = function() {
 		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
