@@ -124,3 +124,33 @@ func TestUpdateImmutableRegex(t *testing.T) {
 		t.Fatalf("expected error detail to be %v, but got %v instead", expected, err.Error())
 	}
 }
+
+func TestGetCurrentDetails(t *testing.T) {
+	expected := `cannot change a regex with an order of 0 and type name of HOST_REGEXP`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+	cols := []string{"set_number", "name"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		0,
+		"HOST_REGEXP",
+	)
+	dsID := 1
+	regexID := 3
+	mock.ExpectBegin()
+	mock.ExpectQuery("select").WithArgs(dsID, regexID).WillReturnRows(rows)
+	mock.ExpectCommit()
+	tx := db.MustBegin().Tx
+	err = getCurrentDetails(tx, dsID, regexID)
+	if err == nil {
+		t.Fatalf("Expected error forbidding updates to regex with set number 0 and type HOST_REGEXP, but got none")
+	}
+	if err.Error() != expected {
+		t.Fatalf("expected error detail to be %v, but got %v instead", expected, err.Error())
+	}
+}

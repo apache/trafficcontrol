@@ -263,6 +263,25 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
+func getCurrentDetails(tx *sql.Tx, dsID int, regexID int) error {
+	var setNumber int
+	var typeName string
+	err := tx.QueryRow(`
+select dsr.set_number, t.name 
+from deliveryservice_regex as dsr 
+join regex as r on dsr.regex = r.id 
+join type as t on t.id = r.type 
+where dsr.deliveryservice=$1 and r.id=$2`,
+		dsID, regexID).Scan(&setNumber, &typeName)
+	if err != nil {
+		return err
+	}
+	if setNumber == 0 && typeName == "HOST_REGEXP" {
+		return errors.New("cannot change a regex with an order of 0 and type name of HOST_REGEXP")
+	}
+	return nil
+}
+
 func Put(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
@@ -300,6 +319,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get current details to make sure that you're not trying to change a regex that has set number = 0 and type = HOST_REGEXP
+	if err := getCurrentDetails(tx, dsID, regexID); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
 	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], false); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
@@ -339,6 +363,7 @@ where t.id=$1`,
 	if err != nil {
 		return err
 	}
+	// Cannot have more than one regex with typename as "HOST_REGEXP" and set number as 0
 	if name == "HOST_REGEXP" && dsr.SetNumber == 0 {
 		return errors.New("cannot update regex with set number 0 and type HOST_REGEXP")
 	}
@@ -364,7 +389,7 @@ where deliveryservice = $1 and set_number = $2`,
 			setNumberErr = nil
 		}
 	} else {
-		// Cannot update a regex with set number = 0 and type = HOST_REGEXP
+		// Cannot update a regex, to set the new set number = 0 and type = HOST_REGEXP
 		e := canUpdate(tx, dsr)
 		if e != nil {
 			setNumberErr = e
