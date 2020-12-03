@@ -53,7 +53,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 		%__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
 
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
-		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf/config.js ${RPM_BUILD_ROOT}/etc/traffic_portal/.
+		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf/config.js ${RPM_BUILD_ROOT}/etc/traffic_portal/conf/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
