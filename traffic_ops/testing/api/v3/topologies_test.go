@@ -242,7 +242,36 @@ func UpdateTestTopologies(t *testing.T) {
 }
 
 func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
+	params := url.Values{}
+	params.Set("xmlId", "ds-top")
 
+	//Get the correct DS
+	remoteDS, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Errorf("cannot GET Delivery Services: %v", err)
+	}
+
+	//Assign ORG server to DS
+	assignServer := []string{"denver-mso-org-01"}
+	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS[0].XMLID)
+	if err != nil {
+		t.Errorf("cannot assign server to Delivery Services: %v", err)
+	}
+
+	//Get Topology node to update and remove ORG server nodes
+	resp, _, err := TOSession.GetTopologyWithHdr(*remoteDS[0].Topology, nil)
+	if err != nil {
+		t.Fatalf("couldn't find any topologies: %v", err)
+	}
+	var p []int
+	newNodes := []tc.TopologyNode{{Id: 0, Cachegroup: "topology-edge-cg-01", Parents: p, LastUpdated: nil}}
+	if *remoteDS[0].Topology == resp.Name {
+		resp.Nodes = newNodes
+	}
+	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
+	if err == nil {
+		t.Fatalf("shouldnot UPDATE topology:%v, but update was a success", *remoteDS[0].Topology)
+	}
 }
 
 func DeleteTestTopologies(t *testing.T) {
