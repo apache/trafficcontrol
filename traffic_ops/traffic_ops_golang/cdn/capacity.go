@@ -105,7 +105,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 		return CapacityResp{}, errors.New("getting profile thresholds: " + err.Error())
 	}
 
-	cap, err := getCapacityData(monitors, thresholds, client, tx)
+	cap, err := getCapacityData(monitors, thresholds, client, tx, monitorForwardProxy)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting capacity from monitors: " + err.Error())
 	} else if cap.Capacity == 0 {
@@ -123,7 +123,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 // getCapacityData attempts to get the CDN capacity from each monitor. If one fails, it tries the next.
 // The first monitor for which all data requests succeed is used.
 // Only if all monitors for a CDN fail is an error returned, from the last monitor tried.
-func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client, tx *sql.Tx) (CapData, error) {
+func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client, tx *sql.Tx, forwardProxyURL string) (CapData, error) {
 	cap := CapData{}
 	for cdn, monitorFQDNs := range monitors {
 		err := error(nil)
@@ -142,13 +142,16 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 				continue
 			}
 			statsToFetch := []string{tc.StatNameKBPS, tc.StatNameMaxKBPS}
-			if cacheStats, err = monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch); err != nil {
-				err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
-				log.Warnln("getCapacity failed to get CacheStatsNew from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying CacheStats" + err.Error())
-				legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
+			var monitorEndpoint string
+			if cacheStats, monitorEndpoint, err = monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch); err != nil {
+				proxyErr := ""
+				if forwardProxyURL != "" {
+					proxyErr = "using http proxy: " + forwardProxyURL + ", "
+				}
+				log.Warnln(proxyErr + "getCapacity failed to get '" + monitorEndpoint + "' from cdn '" + string(cdn) + "', Error: " + err.Error() + ", trying CacheStats")
+				legacyCacheStats, monitorEndpoint, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
 				if err != nil {
-					err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
-					log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
+					log.Warnln(proxyErr + "getCapacity failed to get '" + monitorEndpoint + "' from cdn '" + string(cdn) + "', Error: " + err.Error())
 					continue
 				}
 				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
