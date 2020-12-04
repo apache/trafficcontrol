@@ -80,7 +80,8 @@ CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 RIAKCONF=/opt/traffic_ops/app/conf/production/riak.conf
 mkdir -p /var/log/traffic_ops
-touch /var/log/traffic_ops/traffic_ops.log
+touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
+tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
 
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
