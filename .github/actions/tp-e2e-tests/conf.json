@@ -1,0 +1,36 @@
+{
+  "baseUrl": "https://localhost:8443",
+  "capabilities": {
+    "acceptInsecureCerts": true,
+    "browserName": "chrome",
+    "chromeOptions": {
+      "args": ["--disable-extensions", "--disable-gpu", "--headless", "--no-sandbox", "--ignore-certificate-errors"]
+    }
+  },
+  "framework": "jasmine",
+  "getPageTimeout": 90000,
+  "jasmineNodeOpts": {
+    "defaultTimeoutInterval": 90000
+  },
+  "params": {
+    "adminPassword": "twelve12",
+    "adminUser": "admin"
+  },
+  "logLevel": "INFO",
+  "suites": {
+    "allTests": [
+      "login/login-spec.js",
+      "CDNs/cdns-spec.js",
+      "cacheGroups/cache-groups-spec.js",
+      "profiles/profiles-spec.js",
+      "divisions/divisions-spec.js",
+      "regions/regions-spec.js",
+      "physLocations/phys-locations-spec.js",
+      "serverCapabilities/server-capabilities-spec.js",
+      "servers/servers-spec.js",
+      "topologies/topologies-spec.js",
+      "deliveryServices/delivery-services-spec.js",
+      "jobs/jobs-spec.js"
+    ]
+  }
+}
