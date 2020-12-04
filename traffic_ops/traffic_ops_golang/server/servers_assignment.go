@@ -171,15 +171,20 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		if len(currentDSIDs) > 0 {
-			alerts := make([]tc.Alert, 0, len(currentDSIDs))
-			for _, dsID := range currentDSIDs {
-				alert := tc.Alert{
-					Level: tc.ErrorLevel.String(),
-					Text:  fmt.Sprintf("Delivery Service assignment would leave Active Delivery Service #%d without any assigned '%s' or '%s' servers", dsID, tc.CacheStatusOnline, tc.CacheStatusReported),
+			alertText := "Delivery Service assignment would leave Active Delivery Service"
+			if len(currentDSIDs) == 1 {
+				alertText += fmt.Sprintf(" #%d", currentDSIDs[0])
+			} else if len(currentDSIDs) == 2 {
+				alertText += fmt.Sprintf("s #%d and #%d", currentDSIDs[0], currentDSIDs[1])
+			} else {
+				dsNums := make([]string, 0, len(currentDSIDs)-1)
+				for _, dsID := range currentDSIDs[:len(currentDSIDs)-1] {
+					dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
 				}
-				alerts = append(alerts, alert)
+				alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), currentDSIDs[len(currentDSIDs)-1])
 			}
-			api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+			alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
 			return
 		}
 	}
