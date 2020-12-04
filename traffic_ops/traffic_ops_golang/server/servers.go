@@ -1727,15 +1727,21 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	} else if len(dsIDs) > 0 {
-		alerts := make([]tc.Alert, 0, len(dsIDs))
-		for _, dsID := range dsIDs {
-			alert := tc.Alert{
-				Level: tc.ErrorLevel.String(),
-				Text:  fmt.Sprintf("deleting server #%d would leave active Delivery Service #%d without any assigned servers", id, dsID),
+		alertText := fmt.Sprintf("deleting server #%d would leave Active Delivery Service", id)
+		if len(dsIDs) == 1 {
+			alertText += fmt.Sprintf(" #%d", dsIDs[0])
+		} else if len(dsIDs) == 2 {
+			alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
+		} else {
+			dsNums := make([]string, 0, len(dsIDs)-1)
+			for _, dsID := range dsIDs[:len(dsIDs)-1] {
+				dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
 			}
-			alerts = append(alerts, alert)
+			alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
 		}
-		api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+		alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+
+		api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
 		return
 	}
 
