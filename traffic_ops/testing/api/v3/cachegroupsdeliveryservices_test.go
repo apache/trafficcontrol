@@ -18,6 +18,7 @@ package v3
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -137,7 +138,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 }
 
 func setInactive(t *testing.T, dsID int) {
-	ds, _, err := TOSession.GetDeliveryServiceNullableWithHdr(dsID, nil)
+	ds, _, err := TOSession.GetDeliveryServiceNullableWithHdr(strconv.Itoa(dsID), nil)
 	if err != nil {
 		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
 		return

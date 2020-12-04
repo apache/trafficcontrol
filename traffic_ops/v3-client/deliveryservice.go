@@ -207,11 +207,11 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNu
 }
 
 // GetDeliveryServiceNullableWithHdr fetches the Delivery Service with the given ID.
-func (to *Session) GetDeliveryServiceNullableWithHdr(id int, header http.Header) (*tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullableV30, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullableV30 `json:"response"`
 	}{}
-	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICES, id)
+	route := fmt.Sprintf("%s?id=%s", API_DELIVERY_SERVICES, id)
 	reqInf, err := get(to, route, &data, header)
 	if err != nil {
 		return nil, reqInf, err
