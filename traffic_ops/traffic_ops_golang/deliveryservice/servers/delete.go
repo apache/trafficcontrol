@@ -38,7 +38,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	delete(w, r, false)
 }
 
-// DeleteDeprecated is the deprecatation handler for deleting the association
+// DeleteDeprecated is the deprecation handler for deleting the association
 // between a Delivery Service and a Server.
 func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 	delete(w, r, true)
