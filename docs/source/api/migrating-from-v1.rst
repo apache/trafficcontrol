@@ -34,7 +34,7 @@ If you are using the ``github.com/apache/trafficcontrol/traffic_ops/client`` pac
 Python
 ______
 
-Update to a newer version of the `Apache-TrafficControl <https://pypi.org/project/Apache-TrafficControl>`_ package.
+Update to a newer version of the Apache-TrafficControl Python package.
 
 Updating endpoints manually
 ============================
