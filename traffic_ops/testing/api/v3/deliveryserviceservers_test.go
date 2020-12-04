@@ -17,13 +17,11 @@ package v3
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -46,121 +44,20 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 	})
 }
 
+const dssaTestingXMLID = "test-ds-server-assignments"
+
 func TryToRemoveLastServerInDeliveryService(t *testing.T) {
-	cdns, _, err := TOSession.GetCDNsWithHdr(nil)
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(dssaTestingXMLID, nil)
 	if err != nil {
-		t.Fatalf("Could not fetch CDNs: %v", err)
+		t.Fatalf("Unexpected error trying to get Delivery service with XMLID '%s': %v", dssaTestingXMLID, err)
 	}
-	if len(cdns) < 1 {
-		t.Fatal("Need at least one CDN to test removing the last server from a Delivery Service")
+	if len(dses) != 1 {
+		t.Fatalf("Expected exactly one Delivery service with XMLID '%s', got: %d", dssaTestingXMLID, len(dses))
 	}
-
-	cdnID := cdns[0].ID
-
-	user, _, err := TOSession.GetUserCurrentWithHdr(nil)
-	if err != nil {
-		t.Fatalf("Could not fetch current user: %v", err)
-	}
-	if user == nil {
-		t.Fatalf("Current user is null")
-	}
-	if user.TenantID == nil {
-		t.Fatalf("Current user has null Tenant ID")
-	}
-
-	types, _, err := TOSession.GetTypesWithHdr(nil, "deliveryservice")
-	if err != nil {
-		t.Fatalf("Could not fetch Types: %v", err)
-	}
-	if len(types) < 1 {
-		t.Fatal("Need at least one Type with 'useInTable' of 'deliveryservice' to create a Delivery Service")
-	}
-	dsTypeID := types[0].ID
-
-	xmlid := fmt.Sprintf("test-%d", time.Now().Unix())
-	ds := tc.DeliveryServiceNullableV30{
-		DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
-			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-							Active:                   new(bool),
-							AnonymousBlockingEnabled: new(bool),
-							CDNID:                    &cdnID,
-							DisplayName:              util.StrPtr("test"),
-							DSCP:                     new(int),
-							GeoLimit:                 new(int),
-							GeoProvider:              new(int),
-							InitialDispersion:        new(int),
-							IPV6RoutingEnabled:       new(bool),
-							LogsEnabled:              new(bool),
-							MissLat:                  new(float64),
-							MissLong:                 new(float64),
-							OrgServerFQDN:            util.StrPtr("https://example.com"),
-							Protocol:                 new(int),
-							QStringIgnore:            new(int),
-							RangeRequestHandling:     new(int),
-							RegionalGeoBlocking:      new(bool),
-							Signed:                   false,
-							TenantID:                 user.TenantID,
-							TypeID:                   &dsTypeID,
-							XMLID:                    &xmlid,
-						},
-					},
-				},
-			},
-		},
-	}
-	*ds.InitialDispersion = 1
-	*ds.Active = true
-	ds, _, err = TOSession.CreateDeliveryServiceV30(ds)
-	if err != nil {
-		t.Fatalf("Failed to create Delivery Service: %v", err)
-	}
+	ds := dses[0]
 	if ds.ID == nil {
-		t.Fatal("Delivery Service had null/undefined ID after creation")
+		t.Fatalf("Delivery Service '%s' has no ID", dssaTestingXMLID)
 	}
-
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
-	if err != nil {
-		t.Fatalf("Could not fetch Cache Groups: %v", err)
-	}
-	if len(cacheGroups) < 1 {
-		t.Fatal("Need at least one Cache Group for testing")
-	}
-	if cacheGroups[0].ID == nil {
-		t.Fatal("Got a Cache Group for testing with null or undefined ID")
-	}
-	cacheGroupID := *cacheGroups[0].ID
-
-	profile := tc.Profile{
-		CDNID:       cdnID,
-		Description: "test",
-		Name:        xmlid,
-		Type:        "ATS_PROFILE",
-	}
-	alerts, _, err := TOSession.CreateProfile(profile)
-	t.Logf("Alerts from creating Profile: %s", strings.Join(alerts.ToStrings(), ", "))
-	if err != nil {
-		t.Fatalf("Failed to create new Profile in CDN #%d: %v", cdnID, err)
-	}
-	profiles, _, err := TOSession.GetProfileByNameWithHdr(profile.Name, nil)
-	if err != nil {
-		t.Fatalf("Could not fetch Profile '%s' after creation: %v", profile.Name, err)
-	}
-	if len(profiles) != 1 {
-		t.Fatalf("Expected exactly one Profile named '%s'; got: %d", profile.Name, len(profiles))
-	}
-	profile = profiles[0]
-
-	physLocs, _, err := TOSession.GetPhysLocationsWithHdr(nil, nil)
-	if err != nil {
-		t.Fatalf("Could not fetch Physical Locations: %v", err)
-	}
-	if len(physLocs) < 1 {
-		t.Fatal("Need at least one Physical Location")
-	}
-	physLoc := physLocs[0]
 
 	statuses, _, err := TOSession.GetStatusesWithHdr(nil)
 	if err != nil {
@@ -170,79 +67,32 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Fatal("Need at least one Status")
 	}
 
-	var statusID int
 	var badStatusID int
 	found := false
-	foundBad := false
 	for _, status := range statuses {
-		if status.Name == "ONLINE" || status.Name == "REPORTED" {
-			statusID = status.ID
-			found = true
-			if foundBad {
-				break
-			}
-		} else {
+		if status.Name != tc.CacheStatusOnline.String() && status.Name != tc.CacheStatusReported.String() {
 			badStatusID = status.ID
-			foundBad = true
-			if found {
-				break
-			}
+			found = true
+			break
 		}
 	}
-	if !found || !foundBad {
-		t.Fatal("Need at least one status with the name 'ONLINE' or 'REPORTED' and at least one status with neither of those names")
+	if !found {
+		t.Fatalf("Need at least one status with a name other than '%s' or '%s'", tc.CacheStatusOnline, tc.CacheStatusReported)
 	}
 
-	types, _, err = TOSession.GetTypesWithHdr(nil, "server")
-	if err != nil {
-		t.Fatalf("Could not fetch Types: %v", err)
-	}
-	if len(types) < 1 {
-		t.Fatal("Need at least one Type with 'useInTable' of 'server' to create a server")
-	}
-	serverTypeID := types[0].ID
-
-	server := tc.ServerV30{
-		CommonServerProperties: tc.CommonServerProperties{
-			CachegroupID:   &cacheGroupID,
-			CDNID:          &cdnID,
-			DomainName:     &xmlid,
-			HostName:       &xmlid,
-			HTTPSPort:      util.IntPtr(443),
-			PhysLocationID: &physLoc.ID,
-			ProfileID:      &profile.ID,
-			RevalPending:   new(bool),
-			StatusID:       &statusID,
-			TCPPort:        util.IntPtr(80),
-			TypeID:         &serverTypeID,
-			UpdPending:     new(bool),
-		},
-		Interfaces: []tc.ServerInterfaceInfo{
-			{
-				Name: "eth0",
-				IPAddresses: []tc.ServerIPAddress{
-					{
-						Address:        "198.51.100.1",
-						ServiceAddress: true,
-					},
-				},
-			},
-		},
-	}
-	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
-	if err != nil {
-		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
-	}
+	// TODO: this isn't sufficient to define a single server, so there might be
+	// a better way to do this.
 	params := url.Values{}
-	params.Set("hostName", *server.HostName)
+	params.Set("hostName", dssaTestingXMLID)
+	params.Set("domainName", dssaTestingXMLID)
 	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("Could not fetch server after creation: %v", err)
+		t.Fatalf("Unexpected error fetching server '%s.%s': %v", dssaTestingXMLID, dssaTestingXMLID, err)
 	}
 	if len(servers.Response) != 1 {
-		t.Fatalf("Expected exactly 1 server with hostname '%s'; got: %d", *server.HostName, len(servers.Response))
+		t.Fatalf("Expected exactly one server with FQDN '%s.%s', got: %d", dssaTestingXMLID, dssaTestingXMLID, len(servers.Response))
 	}
-	server = servers.Response[0]
+	server := servers.Response[0]
 	if server.ID == nil {
 		t.Fatal("Server had null/undefined ID after creation")
 	}
@@ -266,7 +116,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err = TOSession.DeleteServerByID(*server.ID)
+	alerts, _, err := TOSession.DeleteServerByID(*server.ID)
 	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
@@ -305,8 +155,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
 	}
 
-	oldID := *server.ID
-	server.HostName = util.StrPtr(xmlid + "-quest")
+	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
 	server.ID = nil
 	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
 	if err != nil {
@@ -333,29 +182,11 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	}
 
 	// Cleanup
-	resp, err := TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
-	if err != nil {
-		t.Errorf("Failed to delete Delivery Service: %v", err)
-	} else {
-		t.Logf("Alerts from deleting Delivery Service: %v", resp.Alerts)
-	}
-
+	setInactive(t, *ds.ID)
 	alerts, _, err = TOSession.DeleteServerByID(*server.ID)
 	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err != nil {
 		t.Errorf("Failed to delete server: %v", err)
-	}
-
-	alerts, _, err = TOSession.DeleteServerByID(oldID)
-	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
-	if err != nil {
-		t.Errorf("Failed to delete server: %v", err)
-	}
-
-	alerts, _, err = TOSession.DeleteProfileByID(profiles[0].ID)
-	t.Logf("Alerts from deleting Profile: %s", strings.Join(alerts.ToStrings(), ", "))
-	if err != nil {
-		t.Errorf("Failed to clean up Profile: %v", err)
 	}
 }
 
