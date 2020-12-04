@@ -22,6 +22,37 @@ if ! curl -Lvsk "${fqdn}" >/dev/null 2>&1; then
   exit 1
 fi
 
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1)"
+# Insert Traffic Vault into server table
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO division(name) VALUES('adivision')"
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO region(name, division) VALUES('aregion', 1)"
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('aloc', 'aloc', 1, 'some place idk', 'Denver', 'CO', '88888')"
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO coordinate(name) VALUES('acoord')"
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO cdn(name, domain_name) VALUES('acdn', 'infra.ciab.test')"
+<<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
+WITH TYPE AS (SELECT id FROM type WHERE name = 'EDGE_LOC')
+INSERT INTO cachegroup(name, short_name, type, coordinate)
+SELECT 'acg', 'acg', TYPE.id, 1
+FROM TYPE
+QUERY
+<<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
+WITH TYPE AS (SELECT id FROM type WHERE name = 'RIAK'),
+PROFILE AS (SELECT id FROM profile WHERE name = 'RIAK_ALL'),
+STATUS AS (SELECT id FROM status WHERE name = 'ONLINE'),
+PHYS AS (SELECT id FROM phys_location WHERE name = 'aloc'),
+CDN AS (SELECT id FROM cdn WHERE name = 'acdn'),
+CG AS (SELECT id from cachegroup WHERE name = 'acg')
+INSERT INTO server(host_name, domain_name, cachegroup, type, status, profile, phys_location, cdn_id)
+SELECT 'trafficvault', 'infra.ciab.test', CG.ID, TYPE.id, STATUS.id, PROFILE.id, PHYS.id, CDN.id
+FROM TYPE
+JOIN STATUS ON 1=1
+JOIN PROFILE ON 1=1
+JOIN PHYS ON 1=1
+JOIN CDN ON 1=1
+JOIN CG ON 1=1
+QUERY
+
+
 download_go() {
 	. build/functions.sh
 	if verify_and_set_go_version; then
@@ -201,8 +232,8 @@ grunt dist
 cp "${resources}/config.js" ./conf/
 touch tp.log access.log
 sudo forever --minUptime 5000 --spinSleepTime 2000 -l ./tp.log start server.js &
-tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever Logs' &
-tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal Logs' &
+tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever' &
+tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal' &
 
 fqdn="https://localhost:8443/"
 while ! curl -Lvsk "${fqdn}api/3.0/ping" >/dev/null 2>&1; do
@@ -210,7 +241,6 @@ while ! curl -Lvsk "${fqdn}api/3.0/ping" >/dev/null 2>&1; do
   sleep 10
 done
 
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1)"
 
 cd "test/end_to_end"
 cp "${resources}/conf.json" .
