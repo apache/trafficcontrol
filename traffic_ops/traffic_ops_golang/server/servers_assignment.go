@@ -81,7 +81,6 @@ HAVING COUNT(deliveryservice_server.server) = 1
 `
 
 func checkForLastServerInActiveDeliveryServices(serverID int, dsIDs []int, tx *sql.Tx) ([]int, error) {
-	log.Debugf("TEST: checking last server #%d in DSes: %v", serverID, dsIDs)
 	violations := []int{}
 	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, pq.Array(dsIDs))
 	if err != nil {
@@ -96,8 +95,6 @@ func checkForLastServerInActiveDeliveryServices(serverID int, dsIDs []int, tx *s
 		}
 		violations = append(violations, violation)
 	}
-
-	log.Debugf("TEST: violations: %v", violations)
 
 	return violations, nil
 }
