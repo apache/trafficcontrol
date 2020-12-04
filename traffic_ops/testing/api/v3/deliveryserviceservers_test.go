@@ -29,6 +29,23 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+func TestDeliveryServiceServers(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+		DeleteTestDeliveryServiceServers(t)
+		AssignServersToTopologyBasedDeliveryService(t)
+		AssignOriginsToTopologyBasedDeliveryServices(t)
+		TryToRemoveLastServerInDeliveryService(t)
+		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
+	})
+}
+
+func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
+		CreateTestMSODSServerWithReqCap(t)
+	})
+}
+
 func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	cdns, _, err := TOSession.GetCDNsWithHdr(nil)
 	if err != nil {
@@ -342,23 +359,6 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to clean up Profile: %v", err)
 	}
-}
-
-func TestDeliveryServiceServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		DeleteTestDeliveryServiceServers(t)
-		AssignServersToTopologyBasedDeliveryService(t)
-		AssignOriginsToTopologyBasedDeliveryServices(t)
-		TryToRemoveLastServerInDeliveryService(t)
-		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
-	})
-}
-
-func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
-		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
-		CreateTestMSODSServerWithReqCap(t)
-	})
 }
 
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
