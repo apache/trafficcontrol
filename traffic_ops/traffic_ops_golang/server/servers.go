@@ -1433,7 +1433,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if inf.Version.Major <= 1 {
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", v2Server.ServerNullableV11)
 		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", v2Server)
 		}
 	}
 
