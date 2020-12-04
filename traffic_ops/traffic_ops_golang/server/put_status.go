@@ -35,6 +35,31 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+// InvalidStatusForDeliveryServicesAlertText returns a string describing that
+// setting a server to 'status' invalidates the Active delivery services
+// identified in 'dsIDs'.
+//
+// If 'dsIDs' is empty/nil, returns an empty string.
+func InvalidStatusForDeliveryServicesAlertText(status string, dsIDs []int) string {
+	if len(dsIDs) < 1 {
+		return ""
+	}
+	alertText := fmt.Sprintf("setting server status to '%s' would leave Active Delivery Service", status)
+	if len(dsIDs) == 1 {
+		alertText += fmt.Sprintf(" #%d", dsIDs[0])
+	} else if len(dsIDs) == 2 {
+		alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
+	} else {
+		dsNums := make([]string, 0, len(dsIDs)-1)
+		for _, dsID := range dsIDs[:len(dsIDs)-1] {
+			dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
+		}
+		alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
+	}
+	alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+	return alertText
+}
+
 // UpdateStatusHandler is the handler for PUT requests to the /servers/{{ID}}/status API endpoint.
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -99,19 +124,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(dsIDs) > 0 {
-			alertText := fmt.Sprintf("setting server status to '%s' would leave Delivery Service", *status.Name)
-			if len(dsIDs) == 1 {
-				alertText += fmt.Sprintf(" #%d", dsIDs[0])
-			} else if len(dsIDs) == 2 {
-				alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
-			} else {
-				dsNums := make([]string, 0, len(dsIDs)-1)
-				for _, dsID := range dsIDs[:len(dsIDs)-1] {
-					dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
-				}
-				alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
-			}
-			alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
 			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
 			return
 		}

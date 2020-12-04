@@ -1352,15 +1352,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(dsIDs) > 0 {
-			alerts := make([]tc.Alert, 0, len(dsIDs))
-			for _, dsID := range dsIDs {
-				alert := tc.Alert{
-					Level: tc.ErrorLevel.String(),
-					Text:  fmt.Sprintf("setting server status to '%s' would leave Delivery Service #%d with no 'ONLINE' or 'REPORTED' servers", *status.Name, dsID),
-				}
-				alerts = append(alerts, alert)
-			}
-			api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
+			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
 			return
 		}
 	}
