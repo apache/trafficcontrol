@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,7 +91,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(id, tx)
-	if *status.Name != "ONLINE" && *status.Name != "REPORTED" && *status.ID != existingStatus {
+	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) && *status.ID != existingStatus {
 		dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
@@ -98,15 +99,20 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(dsIDs) > 0 {
-			alerts := make([]tc.Alert, 0, len(dsIDs))
-			for _, dsID := range dsIDs {
-				alert := tc.Alert{
-					Level: tc.ErrorLevel.String(),
-					Text:  fmt.Sprintf("setting server status to '%s' would leave Delivery Service #%d with no 'ONLINE' or 'REPORTED' servers", *status.Name, dsID),
+			alertText := fmt.Sprintf("setting server status to '%s' would leave Delivery Service", *status.Name)
+			if len(dsIDs) == 1 {
+				alertText += fmt.Sprintf(" #%d", dsIDs[0])
+			} else if len(dsIDs) == 2 {
+				alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
+			} else {
+				dsNums := make([]string, 0, len(dsIDs)-1)
+				for _, dsID := range dsIDs[:len(dsIDs)-1] {
+					dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
 				}
-				alerts = append(alerts, alert)
+				alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
 			}
-			api.WriteAlerts(w, r, http.StatusConflict, tc.Alerts{Alerts: alerts})
+			alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
 			return
 		}
 	}

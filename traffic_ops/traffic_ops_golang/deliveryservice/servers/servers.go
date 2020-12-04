@@ -338,13 +338,13 @@ type DSServerIds struct {
 type TODSServerIds DSServerIds
 
 const verifyStatusesQuery = `
-SELECT status.name = 'ONLINE' OR status.name = 'REPORTED'
+SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
 FROM server
 INNER JOIN status ON server.status = status.id
 WHERE server.id = ANY($1::BIGINT[])
 `
 
-func verifyStatuses(ids []int, tx *sql.Tx) (bool, error) {
+func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
 	if len(ids) < 1 {
 		return false, nil
 	}
@@ -541,12 +541,12 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
 		}
-		ok, err := verifyStatuses(ids, tx)
+		ok, err := verifyAtLeastOneAvailableServer(ids, tx)
 		if err != nil {
 			return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
 		}
 		if !ok {
-			return fmt.Errorf("this server assignment leaves Delivery Service #%d without any 'ONLINE' or 'REPORTED' servers", ds.ID), nil, http.StatusConflict
+			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
 		}
 	}
 
