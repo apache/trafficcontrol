@@ -1364,7 +1364,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	server.ID = &id
 
 	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
