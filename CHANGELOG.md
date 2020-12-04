@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Added
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
+- #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 
 ## [5.0.0] - 2020-10-20
 ### Added
