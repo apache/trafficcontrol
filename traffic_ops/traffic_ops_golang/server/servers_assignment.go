@@ -175,7 +175,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 			for _, dsID := range currentDSIDs {
 				alert := tc.Alert{
 					Level: tc.ErrorLevel.String(),
-					Text:  fmt.Sprintf("Delivery Service assignment would leave Delivery Service #%d without any assigned ONLINE or REPORTED servers", dsID),
+					Text:  fmt.Sprintf("Delivery Service assignment would leave Active Delivery Service #%d without any assigned '%s' or '%s' servers", dsID, tc.CacheStatusOnline, tc.CacheStatusReported),
 				}
 				alerts = append(alerts, alert)
 			}
