@@ -182,6 +182,11 @@ type DeliveryServiceNullableV30 struct {
 	MaxRequestHeaderSize *int    `json:"maxRequestHeaderSize" db:"max_request_header_size"`
 }
 
+type DeliveryServiceNullableV31 struct {
+	DeliveryServiceNullableV30
+	MaxRequestHeaderSize *int `json:"maxRequestHeaderSize" db:"max_request_header_size"`
+}
+
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
 type DeliveryServiceNullableV15 struct {
