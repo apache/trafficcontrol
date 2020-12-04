@@ -21,6 +21,8 @@ on:
   push:
     paths:
       - .github/actions/todb-init/**
+      - .github/actions/tp-e2e-tests/**
+      - .github/workflows/tp.e2e.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
@@ -31,8 +33,8 @@ on:
   pull_request:
     paths:
       - .github/actions/todb-init/**
-      - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - .github/actions/tp-e2e-tests/**
+      - .github/workflows/tp.e2e.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
