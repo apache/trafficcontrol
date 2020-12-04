@@ -1204,6 +1204,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(originals) > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("too many servers by ID %d: %d", id, len(originals)))
+		return
 	}
 
 	original := originals[0]
