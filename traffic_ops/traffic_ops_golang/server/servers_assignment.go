@@ -75,7 +75,7 @@ WHERE deliveryservice IN (
 	AND deliveryservice.active IS TRUE
 )
 AND NOT (deliveryservice_server.deliveryservice = ANY($2::BIGINT[]))
-AND (status.name = 'ONLINE' OR status.name = 'REPORTED')
+AND (status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `')
 GROUP BY deliveryservice_server.deliveryservice
 HAVING COUNT(deliveryservice_server.server) = 1
 `
