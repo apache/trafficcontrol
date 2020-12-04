@@ -35,10 +35,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -142,7 +142,12 @@ func (topology *TOTopology) Validate() error {
 	for index, cacheGroup := range cacheGroups {
 		cacheGroupIds[index] = *cacheGroup.ID
 	}
-	rules["empty cachegroups"] = CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, false, nil)
+	dsCDNs, err := dbhelpers.GetDeliveryServiceCDNsByTopology(topology.ReqInfo.Tx.Tx, topology.Name)
+	if err != nil {
+		log.Errorf("validating topology: %v", err)
+		return errors.New("unable to validate topology")
+	}
+	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
 	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
 
 	/* Only perform further checks if everything so far is valid */
@@ -157,62 +162,6 @@ func (topology *TOTopology) Validate() error {
 	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()
 
 	return util.JoinErrs(tovalidate.ToErrors(rules))
-}
-
-func CheckForEmptyCacheGroups(tx *sqlx.Tx, cacheGroupIds []int, cachegroupsInTopology bool, excludeServerIds []int) error {
-	if excludeServerIds == nil {
-		excludeServerIds = []int{}
-	}
-	var (
-		baseError   = errors.New("unable to check for cachegroups with no servers")
-		systemError = "checking for cachegroups with no servers: %s"
-		query       = selectEmptyCacheGroupsQuery(cachegroupsInTopology)
-		parameters  = map[string]interface{}{
-			"cachegroup_ids":     pq.Array(cacheGroupIds),
-			"exclude_server_ids": pq.Array(excludeServerIds),
-		}
-	)
-
-	rows, err := tx.NamedQuery(query, parameters)
-	if err != nil {
-		log.Errorf(systemError, err.Error())
-		return baseError
-	}
-
-	var (
-		serverCount int
-		cacheGroup  string
-		cacheGroups []string
-		topologies  []string
-	)
-	defer log.Close(rows, "unable to close DB connection when checking for cachegroups with no servers")
-	for rows.Next() {
-		var scanTo = []interface{}{&cacheGroup, &serverCount}
-		var topologiesForRow []string
-		if cachegroupsInTopology {
-			scanTo = append(scanTo, pq.Array(&topologiesForRow))
-		}
-		if err := rows.Scan(scanTo...); err != nil {
-			log.Errorf(systemError, err.Error())
-			return baseError
-		}
-		if serverCount != 0 {
-			break
-		}
-		cacheGroups = append(cacheGroups, cacheGroup)
-		if cachegroupsInTopology {
-			topologies = append(topologies, topologiesForRow...)
-		}
-	}
-
-	if len(cacheGroups) > 0 {
-		errMessage := "cachegroups with no servers in them: " + strings.Join(cacheGroups, ", ")
-		if cachegroupsInTopology {
-			errMessage += " in topologies: " + strings.Join(topologies, ", ")
-		}
-		err = errors.New(errMessage)
-	}
-	return err
 }
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
@@ -749,37 +698,6 @@ SELECT t.name, tc.cachegroup,
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
 `
-	return query
-}
-
-func selectEmptyCacheGroupsQuery(cachegroupsInTopology bool) string {
-	var joinTopologyCachegroups string
-	var topologyNames string
-	if cachegroupsInTopology {
-		// language=SQL
-		topologyNames = `
-		, ARRAY_AGG(tc.topology)
-`
-		// language=SQL
-		joinTopologyCachegroups = `
-		JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
-`
-	}
-	// language=SQL
-	query := fmt.Sprintf(`
-		SELECT
-			c."name",
-			COUNT(*) FILTER (
-			    WHERE s.id IS NOT NULL
-			    AND NOT(s."id" = ANY(CAST(:exclude_server_ids AS INT[])))
-			) AS server_count %s
-		FROM cachegroup c
-		%s
-		LEFT JOIN "server" s ON c.id = s.cachegroup
-		WHERE c."id" = ANY(CAST(:cachegroup_ids AS BIGINT[]))
-		GROUP BY c."name"
-		ORDER BY server_count
-	`, topologyNames, joinTopologyCachegroups)
 	return query
 }
 

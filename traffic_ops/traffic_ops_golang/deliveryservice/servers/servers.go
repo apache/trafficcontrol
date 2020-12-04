@@ -521,7 +521,7 @@ func validateDSS(tx *sql.Tx, ds DSInfo, servers []tc.ServerInfo) (error, error, 
 		}
 	}
 
-	cachegroups, sysErr := dbhelpers.GetTopologyCachegroups(tx, *ds.Topology)
+	_, cachegroups, sysErr := dbhelpers.GetTopologyCachegroups(tx, *ds.Topology)
 	if sysErr != nil {
 		return nil, fmt.Errorf("validating %s servers in topology %s: %v", tc.OriginTypeName, *ds.Topology, sysErr), http.StatusInternalServerError
 	}

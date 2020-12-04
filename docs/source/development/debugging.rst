@@ -218,7 +218,7 @@ Traffic Router
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Router
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
 	mydc build trafficrouter
 	mydc up -d

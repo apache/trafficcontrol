@@ -21,3 +21,5 @@ curl -kvs -XPUT -H 'Content-Type:application/xml' "https://$TV_ADMIN_USER:$TV_AD
 curl -kvs -XPUT -H 'Content-Type:application/json' "https://$TV_ADMIN_USER:$TV_ADMIN_PASSWORD@$TV_FQDN:$TV_HTTPS_PORT/search/index/sslkeys" -d '{"schema":"sslkeys"}'
 
 curl -kvs -XPUT -H 'Content-Type:application/json' "https://$TV_ADMIN_USER:$TV_ADMIN_PASSWORD@$TV_FQDN:$TV_HTTPS_PORT/buckets/ssl/props" -d'{"props":{"search_index":"sslkeys"}}'
+
+to-enroll "tv" ALL "" "8088" "8088" || (while true; do echo "enroll failed."; sleep 3 ; done)

@@ -79,3 +79,13 @@ abbr {
 html, html body {
   overflow-x: auto;
 }
+
+.same {
+    font-weight: 700;
+    color: #050;
+}
+
+.none {
+    font-weight: 700;
+    color: #800;
+}

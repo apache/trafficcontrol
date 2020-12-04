@@ -21,7 +21,7 @@ Traffic Router Administration
 
 Requirements
 ============
-* CentOS 7
+* CentOS 7 or later
 * 4 CPUs
 * 8GB of RAM
 * Successful install of Traffic Ops (usually on another machine)

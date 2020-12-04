@@ -18,7 +18,6 @@
 ############################################################
 # Dockerfile to build Mid-Tier Cache container images for
 # Apache Traffic Control
-# Based on CentOS 7.2
 ############################################################
 
 FROM alpine:latest

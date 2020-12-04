@@ -102,20 +102,6 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.CreateChangeLogBuildMsg(
-		api.ApiChange,
-		api.Updated,
-		inf.User,
-		inf.Tx.Tx,
-		"server-update-status",
-		hostName,
-		map[string]interface{}{"host_name": hostName},
-	)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("writing changelog: "+err.Error()))
-		return
-	}
-
 	respMsg := "successfully set server '" + hostName + "'"
 	if hasUpdated {
 		respMsg += " updated=" + strconv.FormatBool(strToBool(updated))

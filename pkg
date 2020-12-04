@@ -82,38 +82,60 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
+# Mark RHEL_VERSION for export, although it is not set yet
+export RHEL_VERSION
+RUN_OPTIONS=(-e RHEL_VERSION)
+
 # Parse command line arguments
 verbose=0
-while getopts :qvld? opt; do
+while getopts :?78bdlpqv opt; do
 	case $opt in
 		\?)
-			PROJECTS=`$SELF -l | sed "s/^/		- /"`
-			echo "Usage: $SELF [options] [projects]"
-			echo "	-q	Quiet mode. Supresses output."
-			echo "	-v	Verbose mode. Lists all build output."
-			echo "	-l	List available projects."
-			echo "	-d	Disable compiler optimizations for debugging."
-			echo
-			echo "	If no projects are listed, all projects will be packaged."
-			echo "	Valid projects:"
-			cat <<< "$PROJECTS"
+			PROJECTS=`$SELF -l | sed "s/^/  - /"`
+			<<-HELP_TEXT cat
+			Usage: $SELF [options] [projects]
+			  -7    Build RPMs targeting CentOS 7 (default)
+			  -8    Build RPMs targeting CentOS 8
+			  -b    Build builder Docker images before building projects
+			  -d    Disable compiler optimizations for debugging.
+			  -l    List available projects.
+			  -p    Pull builder Docker images, do not build them (default)
+			  -q    Quiet mode. Supresses output. (default)
+			  -v    Verbose mode. Lists all build output.
+
+			If no projects are listed, all projects will be packaged.
+			Valid projects:
+			$PROJECTS
+			HELP_TEXT
 			exit 0
 			;;
-		q)
-			exec >/dev/null 2>&1
+		7)
+			RHEL_VERSION=7
 			;;
-		v)
-			verbose=1
+		8)
+			RHEL_VERSION=8
 			;;
-		l)
-			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
-			exit $?
+		b)
+			build_images=1
 			;;
 		d)
 			echo '-d is set! Disabling all compiler optimizations for debugging...';
 			# If DEBUG_BUILD is true, then Golang binaries will remain unoptimized and
 			# RPM packaging will not strip binaries.
 			RUN_OPTIONS+=(-e 'DEBUG_BUILD=true');
+			;;
+		l)
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
+			exit $?
+			;;
+		p)
+			build_images=0
+			;;
+		q)
+			exec >/dev/null 2>&1
+			;;
+		v)
+			verbose=1
 			;;
 	esac
 done
@@ -134,8 +156,11 @@ while (( "$#" )); do
 		if (( "$verbose" == 0 )); then
 			exec >/dev/null 2>&1
 		fi
-		"${COMPOSECMD[@]}" -f $COMPOSE_FILE pull $1 || exit 1
-		"${COMPOSECMD[@]}" -f $COMPOSE_FILE build --pull $1 || exit 1
+		if [[ $build_images -eq 1 ]]; then
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE build $1 || exit 1
+		else
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE pull $1 || exit 1
+		fi
 		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run "${RUN_OPTIONS[@]}" --rm $1 || exit 1
 	) || {
 		# Don't totally bail out, but make note of the failures.

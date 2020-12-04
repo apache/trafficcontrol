@@ -72,7 +72,7 @@ start_traffic_vault() {
 		sed -i '0,/^update-ca-certificates/d' /etc/riak/prestart.d/00-config.sh;
 
 		# Do not try to source to-access.sh
-		sed -i '/to-access\.sh/d' /etc/riak/{prestart.d,poststart.d}/*
+		sed -i '/to-access\.sh\|^to-enroll/d' /etc/riak/{prestart.d,poststart.d}/*
 	BASH_LINES
 
 	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
@@ -109,7 +109,14 @@ ln -s "$PWD" "$srcdir/trafficcontrol"
 cd "$srcdir/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 
-go get ./...
+/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
+	golang.org/x/crypto/ed25519 \
+	golang.org/x/crypto/scrypt \
+	golang.org/x/net/idna \
+	golang.org/x/net/ipv4 \
+	golang.org/x/net/ipv6 \
+	golang.org/x/sys/unix \
+	golang.org/x/text/secure/bidirule
 go build .
 
 echo "

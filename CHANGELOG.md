@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 - [#5191](https://github.com/apache/trafficcontrol/issues/5191) - Error from IMS requests to /federations/all
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
+- Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
+- #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 
 ## [5.0.0] - 2020-10-20
 ### Added
@@ -78,6 +80,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added `--traffic_ops_insecure=<0|1>` optional option to traffic_ops_ort.pl
 - Added User-Agent string to Traffic Router log output.
 - Added default sort logic to GET API calls using Read()
+- Traffic Ops: added validation for assigning ORG servers to topology-based delivery services
+- Added locationByDeepCoverageZone to the `crs/stats/ip/{ip}` endpoint in the Traffic Router API
+- Traffic Ops: added validation for topology updates and server updates/deletions to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
+- Traffic Ops: added validation for delivery service updates to ensure that topologies have at least one server per cachegroup in each CDN of any assigned delivery services
+- Traffic Ops: added a feature to get delivery services filtered by the `active` flag
+- Traffic Portal: upgraded change log UI table to use more powerful/performant ag-grid component
+- Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
+- [#5319](https://github.com/apache/trafficcontrol/issues/5319) - Added support for building RPMs that target CentOS 8
+- Traffic Ops: Added validation to ensure assigned ORG server cachegroups are in the topology when updating a delivery service
 
 ### Fixed
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5188)
@@ -137,6 +148,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5161 - Fixes topology name character validation [Related Github issue](https://github.com/apache/trafficcontrol/issues/5161)
 - Fixed #5237 - /isos API endpoint rejecting valid IPv6 addresses with CIDR-notation network prefixes.
 - Fixed an issue with Traffic Monitor to fix peer polling to work as expected
+- Fixed #5274 - CDN in a Box's Traffic Vault image failed to build due to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
+- #5069 - For LetsEncryptDnsChallengerWatcher in Traffic Router, the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
+- #5191 - Error from IMS requests to /federations/all
+
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
@@ -165,6 +180,8 @@ will be returned indicating that overlap exists.
 - Changed certificate loading code in Traffic Router to use Bouncy Castle instead of deprecated Sun libraries.
 - Changed deprecated AsyncHttpClient Java dependency to use new active mirror and updated to version 2.12.1.
 - Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
+- Traffic Ops: removed change log entry created during server update/revalidation unqueue
+- Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
