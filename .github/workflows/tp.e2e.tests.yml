@@ -20,17 +20,30 @@ name: TP E2E Tests
 on:
   push:
     paths:
+      - .github/actions/todb-init/**
+      - GO_VERSION
+      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
-      - .github/**
   create:
   pull_request:
     paths:
+      - .github/actions/todb-init/**
+      - .github/actions/to-integration-tests/**
+      - '.github/workflows/traffic ops.yml'
+      - GO_VERSION
+      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
-      - .github/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
   E2E_tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     services:
       hub:
