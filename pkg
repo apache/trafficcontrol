@@ -104,9 +104,9 @@ while getopts :?78abdf:lopqv opt; do
 			  -a           Build all projects, including optional ones.
 			  -b           Build builder Docker images before building projects
 			  -d           Disable compiler optimizations for debugging.
-			  -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE"
+			  -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
 			  -l           List available projects.
-			  -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT"
+			  -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT
 			  -p           Pull builder Docker images, do not build them (default)
 			  -q           Quiet mode. Supresses output. (default)
 			  -v           Verbose mode. Lists all build output.
