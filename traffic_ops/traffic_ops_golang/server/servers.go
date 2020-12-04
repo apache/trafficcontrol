@@ -1696,6 +1696,7 @@ func getDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]in
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var dsID int
