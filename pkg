@@ -196,9 +196,6 @@ while (( "$#" )); do
 			rm "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist"
 			[ $chained_exit == 0 ] || exit $chained_exit
 		fi
-
-		# Update the ownership of the artefacts to match the main repo.
-		chown -R "$(stat -c '%u:%g' .)" dist
 	) || {
 		# Don't totally bail out, but make note of the failures.
 		failure=1
