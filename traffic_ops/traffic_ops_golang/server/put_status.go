@@ -92,7 +92,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(id, tx)
 	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) && *status.ID != existingStatus {
-		dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)

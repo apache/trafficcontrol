@@ -1345,7 +1345,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) {
-		dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1686,7 +1686,7 @@ GROUP BY "deliveryservice"
 HAVING COUNT("server") = 1;
 `
 
-func getDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]int, error) {
+func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]int, error) {
 	var ids []int
 	if tx == nil {
 		return ids, errors.New("nil transaction")
@@ -1729,7 +1729,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	if dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx); err != nil {
+	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx); err != nil {
 		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
