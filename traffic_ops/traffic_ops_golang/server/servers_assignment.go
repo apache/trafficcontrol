@@ -184,7 +184,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 				alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), currentDSIDs[len(currentDSIDs)-1])
 			}
 			alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
-			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
+			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}
 	}

@@ -125,7 +125,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(dsIDs) > 0 {
 			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
-			api.WriteRespAlert(w, r, tc.ErrorLevel, alertText)
+			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}
 	}
