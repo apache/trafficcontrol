@@ -15,7 +15,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-set -e
 
 fqdn="http://localhost:4444/wd/hub/status"
 if ! curl -Lvsk "${fqdn}" >/dev/null 2>&1; then
@@ -202,8 +201,8 @@ grunt dist
 cp "${resources}/config.js" ./conf/
 touch tp.log access.log
 sudo forever --minUptime 5000 --spinSleepTime 2000 -l ./tp.log start server.js &
-tail -f tp.log &
-tail -f access.log &
+tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever Logs' &
+tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal Logs' &
 
 fqdn="https://localhost:8443/"
 while ! curl -Lvsk "${fqdn}api/3.0/ping" >/dev/null 2>&1; do
@@ -217,5 +216,12 @@ cd "test/end_to_end"
 cp "${resources}/conf.json" .
 
 sudo protractor ./conf.js
+CODE=$?
 
-exit $?
+echo "Stopping Traffic Vault..."
+docker kill "$trafficvault"
+echo 'Killing background jobs...';
+kill -9 $(jobs -p);
+
+exit $CODE
+
