@@ -29,10 +29,7 @@ The easiest way to switch to a new API version is to use the latest version of a
 Golang
 ------
 
-If you are using the **github.com/apache/trafficcontrol/traffic_ops/client** package, use the |to-client-library-godoc|_ package instead.
-
-.. |to-client-library-godoc| replace:: **github.com/apache/trafficcontrol/traffic_ops/v3-client**
-.. _to-client-library-godoc: https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/v3-client
+If you are using the ``github.com/apache/trafficcontrol/traffic_ops/client`` package, use the :atc-godoc:`traffic_ops/v3-client` package instead.
 
 Python
 ______
