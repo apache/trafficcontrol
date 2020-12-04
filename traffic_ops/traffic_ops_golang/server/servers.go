@@ -1344,7 +1344,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}
-	if *status.Name != "ONLINE" && *status.Name != "REPORTED" {
+	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) {
 		dsIDs, err := getDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
