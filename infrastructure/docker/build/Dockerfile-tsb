@@ -1,0 +1,42 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as tsb-build
+RUN yum clean all && yum -y install git
+COPY GO_VERSION /
+RUN curl -L https://dl.google.com/go/go$(cat /GO_VERSION).linux-amd64.tar.gz | tar -C /usr/local -xz && ln -s /usr/local/go/bin/go /usr/bin/go
+# Fetch tested version of tsb:
+# <2020-12-01T20:37:43+00:00!alficles@gmail.com>: Upgraded to go-yaml v3 and added comments to patches.
+RUN mkdir -p /go/src/github.com/comcast/tsb && cd /go/src/github.com/comcast/tsb && git init && git remote add origin https://github.com/comcast/tsb && git fetch --depth=1 origin 851be3e137b20ba5d2d1eefd07cd303dc5f53865 && git reset --hard FETCH_HEAD
+RUN cd /go/src/github.com/comcast/tsb && CGOENABLED=0 go build -o /usr/bin/tsb
+
+FROM centos:${RHEL_VERSION}
+MAINTAINER dev@trafficcontrol.apache.org
+
+RUN	yum -y install git sudo
+
+# The current configuration does not require docker-compose for tsb, so a dummy script is included instead of docker-compose.
+# If docker-compose is required, the docker socket will need to be mounted inside this container as well.
+#ADD	https://github.com/docker/compose/releases/download/1.26.2/docker-compose-Linux-x86_64 /usr/bin/docker-compose
+RUN	echo -e "#!/usr/bin/env bash\necho docker-compose is not supported in this container and the build command will not work.\nexit 1" > /usr/bin/docker-compose
+
+RUN	chmod +x /usr/bin/docker-compose
+COPY	--from=tsb-build /usr/bin/tsb /usr/bin/tsb
+RUN	git config --global user.email "dev@trafficcontrol.apache.org"
+RUN	git config --global user.name "Apache Traffic Control"
+CMD	["/usr/bin/tsb", "cd", "/opt/tsb-ats", "fetch", "prebuild"]

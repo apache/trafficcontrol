@@ -14,23 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 
-############################################################
-# Dockerfile to build Traffic Monitor debugging container image
-# Based on CentOS
-############################################################
-
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as get-delve
-ARG RHEL_VERSION=8
-
-RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
-        yum -y install dnf || exit 1; \
-    fi
-
-RUN dnf -y install epel-release && \
-    dnf -y install golang git && \
-    go get -u github.com/go-delve/delve/cmd/dlv
-
-FROM trafficmonitor
-COPY --from=get-delve /root/go/bin /usr/bin
+dist
+src

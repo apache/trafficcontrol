@@ -14,23 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 
-############################################################
-# Dockerfile to build Traffic Monitor debugging container image
-# Based on CentOS
-############################################################
+# Patch files, cannot bear comments
+cjose.pic.patch, Apache-2.0
+jansson.pic.patch, Apache-2.0
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as get-delve
-ARG RHEL_VERSION=8
-
-RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
-        yum -y install dnf || exit 1; \
-    fi
-
-RUN dnf -y install epel-release && \
-    dnf -y install golang git && \
-    go get -u github.com/go-delve/delve/cmd/dlv
-
-FROM trafficmonitor
-COPY --from=get-delve /root/go/bin /usr/bin
+# YAML files, but are manipulated with scripts that would strip comments.
+patches.yml, Apache-2.0
+repos.yml, Apache-2.0

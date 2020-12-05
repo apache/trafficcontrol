@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -1089,4 +1089,55 @@ GROUP BY t.name, ds.topology
 		return tc.DSTypeInvalid, nil, nil, false, errors.New("querying type from delivery service: " + err.Error())
 	}
 	return dsType, reqCap, topology, true, nil
+}
+
+// CheckOriginServerInCacheGroupTopology checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
+func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type in a delivery service
+	q := `
+		SELECT s.host_name, c.name 
+		FROM server s
+			INNER JOIN deliveryservice_server ds ON ds.server = s.id
+			INNER JOIN type t ON t.id = s.type
+			INNER JOIN cachegroup c ON c.id = s.cachegroup
+		WHERE ds.deliveryservice=$1 AND t.name=$2
+	`
+
+	serverName := ""
+	cacheGroupName := ""
+	servers := make(map[string]string)
+	var offendingSCG []string
+	rows, err := tx.Query(q, dsID, tc.OriginTypeName)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+	for rows.Next() {
+		if err := rows.Scan(&serverName, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+		servers[cacheGroupName] = serverName
+	}
+
+	if len(servers) > 0 {
+		_, cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
+		if sysErr != nil {
+			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
+		}
+		// put slice values into map
+		topoCachegroups := make(map[string]string)
+		for _, cg := range cachegroups {
+			topoCachegroups[cg] = ""
+		}
+		for cg, s := range servers {
+			_, ok := topoCachegroups[cg]
+			if !ok {
+				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
+			}
+		}
+	}
+	if len(offendingSCG) > 0 {
+		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
 }

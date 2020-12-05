@@ -28,6 +28,7 @@ Vendor:   Apache Software Foundation
 Packager: dev at trafficcontrol dot Apache dot org
 %{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-Digest-SHA}
 %{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
+%{?el8:Requires: perl-JSON, perl-libwww-perl, perl-Net-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
 
 
 %description
