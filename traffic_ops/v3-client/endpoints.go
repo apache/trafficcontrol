@@ -16,3 +16,4 @@
 package client
 
 const apiBase = "/api/3.0"
+const apiBaseV31 = "/api/3.1"

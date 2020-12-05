@@ -34,12 +34,24 @@ const (
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
 	API_DELIVERY_SERVICES = apiBase + "/deliveryservices"
 
+	// API_DELIVERY_SERVICES_V31 is the API path on which Traffic Ops serves Delivery Service
+	// information. More specific information is typically found on sub-paths of this.
+	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
+	API_DELIVERY_SERVICES_V31 = apiBaseV31 + "/deliveryservices"
+
 	// API_DELIVERY_SERVICE_ID is the API path on which Traffic Ops serves information about
 	// a specific Delivery Service identified by an integral, unique identifier. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
 	API_DELIVERY_SERVICE_ID = API_DELIVERY_SERVICES + "/%v"
+
+	// API_DELIVERY_SERVICE_ID is the API path on which Traffic Ops serves information about
+	// a specific Delivery Service identified by an integral, unique identifier. It is
+	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
+	// of the Delivery Service of interest).
+	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
+	API_DELIVERY_SERVICE_ID_V31 = API_DELIVERY_SERVICES_V31 + "/%v"
 
 	// API_DELIVERY_SERVICE_HEALTH is the API path on which Traffic Ops serves information about
 	// the 'health' of a specific Delivery Service identified by an integral, unique identifier. It is
@@ -144,6 +156,21 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetDeliveryServicesV31 returns all (tenant-visible) Delivery Services that
+// satisfy the passed query string parameters. See the API documentation for
+// information on the available parameters.
+func (to *Session) GetDeliveryServicesV31(header http.Header, params url.Values) ([]tc.DeliveryServiceV31, ReqInf, error) {
+	uri := API_DELIVERY_SERVICES_V31
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+
+	var data tc.DeliveryServicesResponseV31
+
+	reqInf, err := get(to, uri, &data, header)
+	return data.Response, reqInf, err
 }
 
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
@@ -400,6 +427,27 @@ func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryService
 
 }
 
+// UpdateDeliveryServiceV31 replaces the Delivery Service identified by the
+// integral, unique identifier 'id' with the one it's passed.
+func (to *Session) UpdateDeliveryServiceV31(id int, ds tc.DeliveryServiceV31, header http.Header) (tc.DeliveryServiceV31, ReqInf, error) {
+	var reqInf ReqInf
+	bts, err := json.Marshal(ds)
+	if err != nil {
+		return tc.DeliveryServiceV31{}, reqInf, err
+	}
+
+	var data tc.DeliveryServicesResponseV31
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID_V31, id), bts, &data, header)
+	if err != nil {
+		return tc.DeliveryServiceV31{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceV31{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+	}
+	return data.Response[0], reqInf, nil
+
+}
+
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
 //
@@ -615,6 +663,26 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 		return []byte{}, reqInf, err
 	}
 	return []byte(data), reqInf, nil
+}
+
+// SafeDeliveryServiceUpdateV31 updates the "safe" fields of the Delivery
+// Service identified by the integral, unique identifier 'id'.
+func (to *Session) SafeDeliveryServiceUpdateV31(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceV31, ReqInf, error) {
+	var reqInf ReqInf
+	req, err := json.Marshal(r)
+	if err != nil {
+		return tc.DeliveryServiceV31{}, reqInf, err
+	}
+
+	var data tc.DeliveryServiceSafeUpdateResponseV31
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
+	if err != nil {
+		return tc.DeliveryServiceV31{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceV31{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+	}
+	return data.Response[0], reqInf, nil
 }
 
 // SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
