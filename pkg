@@ -16,6 +16,7 @@
 SELF="${BASH_SOURCE[0]}"
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 COMPOSE_FILE=./infrastructure/docker/build/docker-compose.yml
+COMPOSE_FILE_OPT=./infrastructure/docker/build/docker-compose-opt.yml
 
 # Check for dependencies
 if ! which docker >/dev/null 2>&1; then
@@ -82,47 +83,87 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
+# Mark RHEL_VERSION for export, although it is not set yet
+export RHEL_VERSION
+RUN_OPTIONS=(-e RHEL_VERSION)
+
 # Parse command line arguments
 verbose=0
-while getopts :qvld? opt; do
+debug=0
+quiet=0
+all=0
+build_images=0
+while getopts :?78abdf:lopqv opt; do
 	case $opt in
 		\?)
-			PROJECTS=`$SELF -l | sed "s/^/		- /"`
-			echo "Usage: $SELF [options] [projects]"
-			echo "	-q	Quiet mode. Supresses output."
-			echo "	-v	Verbose mode. Lists all build output."
-			echo "	-l	List available projects."
-			echo "	-d	Disable compiler optimizations for debugging."
-			echo
-			echo "	If no projects are listed, all projects will be packaged."
-			echo "	Valid projects:"
-			cat <<< "$PROJECTS"
+			PROJECTS=`$SELF -l | sed "s/^/  - /"`
+			<<-HELP_TEXT cat
+			Usage: $SELF [options] [projects]
+			  -7           Build RPMs targeting CentOS 7 (default)
+			  -8           Build RPMs targeting CentOS 8
+			  -a           Build all projects, including optional ones.
+			  -b           Build builder Docker images before building projects
+			  -d           Disable compiler optimizations for debugging.
+			  -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
+			  -l           List available projects.
+			  -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT"
+			  -p           Pull builder Docker images, do not build them (default)
+			  -q           Quiet mode. Supresses output. (default)
+			  -v           Verbose mode. Lists all build output.
+
+			If no projects are listed, all projects will be packaged.
+			Valid projects:
+			$PROJECTS
+			HELP_TEXT
 			exit 0
 			;;
-		q)
-			exec >/dev/null 2>&1
+		7)
+			RHEL_VERSION=7
 			;;
-		v)
-			verbose=1
+		8)
+			RHEL_VERSION=8
 			;;
-		l)
-			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
-			exit $?
+		a)
+			all=1
+			;;
+		b)
+			build_images=1
 			;;
 		d)
 			echo '-d is set! Disabling all compiler optimizations for debugging...';
 			# If DEBUG_BUILD is true, then Golang binaries will remain unoptimized and
 			# RPM packaging will not strip binaries.
 			RUN_OPTIONS+=(-e 'DEBUG_BUILD=true');
+			debug=1
+			;;
+		f)
+			COMPOSE_FILE="$OPTARG"
+			;;
+		l)
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
+			exit $?
+			;;
+		o)
+			COMPOSE_FILE="$COMPOSE_FILE_OPT"
+			;;
+		p)
+			build_images=0
+			;;
+		q)
+			exec >/dev/null 2>&1
+			quiet=1
+			;;
+		v)
+			verbose=1
 			;;
 	esac
 done
 
 shift $((OPTIND-1))
 
-# If no specific packages are listed, run them all.
-if (( ! "$#" )); then
-	set -- `$SELF -l`
+# If no specific packages are listed, or -a is used, run them all.
+if (( ! "$#" || "$all" == 1 )); then
+	set -- `$SELF -f "$COMPOSE_FILE" -l`
 fi
 
 # Build each project in turn.
@@ -134,9 +175,27 @@ while (( "$#" )); do
 		if (( "$verbose" == 0 )); then
 			exec >/dev/null 2>&1
 		fi
-		"${COMPOSECMD[@]}" -f $COMPOSE_FILE pull $1 || exit 1
-		"${COMPOSECMD[@]}" -f $COMPOSE_FILE build --pull $1 || exit 1
+
+		# Build the project
+		if [[ $build_images -eq 1 ]]; then
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE build $1 || exit 1
+		else
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE pull $1 || exit 1
+		fi
 		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run "${RUN_OPTIONS[@]}" --rm $1 || exit 1
+
+		# Check for a chained compose file for this particular project.
+		# A chained compose file will be named exactly the same as main docker-compose, with .service added,
+		# where <service> is the name of the specific service to be chained. The file may be a symlink to another
+		# compose file, in which case the symlink will be followed before it is processed.
+		# A "dist" symlink will be temporarily created in that directory to facilitate the collation of artefacts.
+		if [ -e "$COMPOSE_FILE.$1" ] ; then
+			ln -sf "$(dirname -- "$(realpath -e -- "$SELF")")/dist" "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist" || exit 1
+			$SELF -f $(realpath -e "$COMPOSE_FILE.$1") $([ "$verbose" == 0 ] || echo "-v") $([ "$quiet" == 0 ] || echo "-q") $([ "$debug" == 0 ] || echo "-d") $([ "$build" == 0 ] || echo "-b") $("${COMPOSECMD[@]}" -f $(realpath -e "$COMPOSE_FILE.$1") config --services)
+			chained_exit=$?
+			rm "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist"
+			[ $chained_exit == 0 ] || exit $chained_exit
+		fi
 	) || {
 		# Don't totally bail out, but make note of the failures.
 		failure=1
@@ -145,7 +204,9 @@ while (( "$#" )); do
 	shift
 done
 
-if (( $failure )); then
+[ "$all" == 0 ] || $SELF -o $([ "$verbose" == 0 ] || echo "-v") $([ "$quiet" == 0 ] || echo "-q") $([ "$debug" == 0 ] || echo "-d") || failure=1
+
+if [[ ! -z $badproj ]]; then
 	echo "Failed to build$badproj."
 fi
 

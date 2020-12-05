@@ -50,6 +50,7 @@ func TestDeliveryServices(t *testing.T) {
 		GetTestDeliveryServicesV31(t)
 		UpdateTestDeliveryServices(t)
 		UpdateTestDeliveryServicesV31(t)
+		UpdateValidateORGServerCacheGroup(t)
 		UpdateTestDeliveryServicesWithHeaders(t, header)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
@@ -950,6 +951,53 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		})
 	}
 
+}
+
+// UpdateValidateORGServerCacheGroup validates ORG server's cachegroup are part of topology's cachegroup
+func UpdateValidateORGServerCacheGroup(t *testing.T) {
+	params := url.Values{}
+	params.Set("xmlId", "ds-top")
+
+	//Get the correct DS
+	remoteDS, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Errorf("cannot GET Delivery Services: %v", err)
+	}
+
+	//Assign ORG server to DS
+	assignServer := []string{"denver-mso-org-01"}
+	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS[0].XMLID)
+	if err != nil {
+		t.Errorf("cannot assign server to Delivery Services: %v", err)
+	}
+
+	//Update DS's Topology to a non-ORG server's cachegroup
+	origTopo := *remoteDS[0].Topology
+	*remoteDS[0].Topology = "4-tiers"
+	ds, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	if err == nil {
+		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v, but update was successful", ds.XMLID)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected to fail since ORG server's topology not part of DS. Expected:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
+	}
+
+	// Retrieve the DS to check if topology was updated with missing ORG server
+	params.Set("id", strconv.Itoa(*remoteDS[0].ID))
+	apiResp, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", *remoteDS[0].XMLID, err)
+	}
+	if len(apiResp) < 1 {
+		t.Fatalf("cannot GET Delivery Service by ID: %v - nil", *remoteDS[0].XMLID)
+	}
+
+	//Set topology back to as it was for further testing
+	remoteDS[0].Topology = &origTopo
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	if err != nil {
+		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
+	}
 }
 
 func GetAccessibleToTest(t *testing.T) {

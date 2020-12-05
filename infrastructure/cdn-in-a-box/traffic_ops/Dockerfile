@@ -23,24 +23,24 @@
 # Keep the trafficops-common-deps in Dockerfile the same as
 # trafficops-common-deps in Dockerfile-go to cache the same
 # layer.
-ARG CENTOS_VERSION=8
-FROM centos:${CENTOS_VERSION} as trafficops-common-deps
-ARG CENTOS_VERSION=8
-# Makes CENTOS_VERSION available in later layers without needing to specify it again
-ENV CENTOS_VERSION=$CENTOS_VERSION
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as trafficops-common-deps
+ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION=$RHEL_VERSION
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
 RUN set -o nounset -o errexit && \
     mkdir -p /etc/cron.d; \
-    if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+    if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         use_repo=''; \
     else \
         use_repo='--repo=pgdg96'; \
     fi; \
-    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
     dnf -y $use_repo -- install postgresql96; \
     dnf -y install epel-release; \
     dnf -y install      \
@@ -62,7 +62,7 @@ FROM trafficops-common-deps as trafficops-perl-deps
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -ge 8 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
         enable_repo='--enablerepo=PowerTools' || exit 1; \
     fi && \
     dnf -y --allowerasing $enable_repo install \

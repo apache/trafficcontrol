@@ -23,22 +23,22 @@
 # Keep the trafficops-common-deps in Dockerfile-go the same
 # as trafficops-common-deps in Dockerfile to cache the same
 # layer.
-ARG CENTOS_VERSION=8
-FROM centos:${CENTOS_VERSION} as trafficops-common-deps
-ARG CENTOS_VERSION=8
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as trafficops-common-deps
+ARG RHEL_VERSION=8
 
-RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
 RUN set -o nounset -o errexit && \
     mkdir -p /etc/cron.d; \
-    if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+    if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 	    include_repo=''; \
     else \
 	    include_repo='--repo=pgdg96'; \
     fi; \
-    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
     dnf -y $include_repo -- install postgresql96; \
     dnf -y install epel-release; \
     dnf -y install      \
