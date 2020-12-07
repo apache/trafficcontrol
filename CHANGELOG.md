@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
 - #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 
+### Fixed
+- [#5294](https://github.com/apache/trafficcontrol/issues/5294) - TP ag grid tables now properly persist column filters 
+    on page refresh.
+- [#5295](https://github.com/apache/trafficcontrol/issues/5295) - TP types/servers table now clears all filters instead
+    of just column filters
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
