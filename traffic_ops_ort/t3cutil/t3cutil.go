@@ -21,6 +21,7 @@ package t3cutil
 
 import (
 	"fmt"
+	"html"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -72,17 +73,12 @@ func UnencodeFilter(body []string) []string {
 	newlines = make([]string, 0)
 	sp := regexp.MustCompile(`\s+`)
 	el := regexp.MustCompile(`^\s+|\s+$`)
-	am := regexp.MustCompile(`amp;`)
-	lt := regexp.MustCompile(`&lt;`)
-	gt := regexp.MustCompile(`&gt;`)
 
 	for ii := range body {
 		s := body[ii]
 		s = sp.ReplaceAllString(s, " ")
 		s = el.ReplaceAllString(s, "")
-		s = am.ReplaceAllString(s, "")
-		s = lt.ReplaceAllString(s, "<")
-		s = gt.ReplaceAllString(s, ">")
+		s = html.UnescapeString(s)
 		s = strings.TrimSpace(s)
 		newlines = append(newlines, s)
 	}
