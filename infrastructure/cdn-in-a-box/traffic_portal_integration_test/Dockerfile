@@ -15,21 +15,34 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7 as os-dependencies
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as os-dependencies
+ARG RHEL_VERSION=8
 
-# Installs the Google Chrome yum repo
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
+# Installs the Google Chrome dnf repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
-RUN yum install -y \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        utils_package=yum-utils; \
+    else \
+        utils_package=dnf-utils; \
+    fi && \
+    dnf install -y \
         bind-utils \
         # jq is in EPEL
         epel-release \
+        GConf2 \
         git \
         google-chrome-stable \
         java-1.8.0-openjdk \
-        net-tools && \
-    yum -y install jq && \
-    yum -y clean all
+        net-tools \
+        $utils_package && \
+    dnf -y install jq && \
+    dnf -y clean all
 
 FROM os-dependencies AS node-dependencies
 # Download and install node
@@ -64,8 +77,8 @@ RUN jq ' \
     mv conf.json.tmp conf.json
 
 RUN webdriver-manager clean && \
-	repoquery --installed --qf='%{version}' google-chrome-stable | \
-		xargs webdriver-manager update --versions.chrome
+    repoquery --installed --qf='%{version}' google-chrome-stable | \
+        xargs webdriver-manager update --versions.chrome
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
      infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \

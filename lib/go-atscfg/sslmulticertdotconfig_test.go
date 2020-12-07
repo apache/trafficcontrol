@@ -24,41 +24,38 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeSSLMultiCertDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	hdr := "myHeaderComment"
 
-	dses := map[tc.DeliveryServiceName]SSLMultiCertDS{
-		"my-https-ds": SSLMultiCertDS{
-			Type:        tc.DSTypeHTTP,
-			Protocol:    1, // https and http
-			ExampleURLs: []string{"https://my-https-ds.example.net"},
-		},
-		"my-https-and-http-ds": SSLMultiCertDS{
-			Type:        tc.DSTypeHTTP,
-			Protocol:    2, // https and http
-			ExampleURLs: []string{"https://my-https-and-http-ds.example.net"},
-		},
-		"my-https-to-http-ds": SSLMultiCertDS{
-			Type:        tc.DSTypeHTTP,
-			Protocol:    3, // https to http
-			ExampleURLs: []string{"https://my-https-to-http-ds.example.net"},
-		},
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr("mycdn")
+
+	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
+		ds := makeGenericDS()
+		ds.XMLID = util.StrPtr(name)
+		ds.Type = &dsType
+		ds.Protocol = util.IntPtr(protocol)
+		ds.ExampleURLs = []string{exampleURL}
+		return *ds
 	}
 
-	txt := MakeSSLMultiCertDotConfig(cdnName, toToolName, toURL, dses)
+	dses := []DeliveryService{
+		makeDS("my-https-ds", tc.DSTypeHTTP, 1 /* https */, "https://my-https-ds.example.net"),
+		makeDS("my-https-and-http-ds", tc.DSTypeHTTP, 2 /* https and http */, "https://my-https-and-http-ds.example.net"),
+		makeDS("my-https-to-http-ds", tc.DSTypeHTTP, 3 /* https to http */, "https://my-https-to-http-ds.example.net"),
+	}
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeSSLMultiCertDotConfig(server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")
@@ -76,28 +73,33 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 }
 
 func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
-	toToolName := "my-to"
-	toURL := "my-to.example.net"
+	hdr := "myHeaderComment"
 
-	dses := map[tc.DeliveryServiceName]SSLMultiCertDS{
-		"myds": SSLMultiCertDS{
-			Type:        tc.DSTypeHTTP,
-			Protocol:    0, // http-only DSes have no SSL, should be excluded
-			ExampleURLs: []string{"https://myds.example.net"},
-		},
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr("mycdn")
+
+	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
+		ds := makeGenericDS()
+		ds.XMLID = util.StrPtr(name)
+		ds.Type = &dsType
+		ds.Protocol = util.IntPtr(protocol)
+		ds.ExampleURLs = []string{exampleURL}
+		return *ds
 	}
 
-	txt := MakeSSLMultiCertDotConfig(cdnName, toToolName, toURL, dses)
+	// http-only DSes have no SSL, should be excluded
+	dses := []DeliveryService{
+		makeDS("myds", tc.DSTypeHTTP, 0 /* http */, "https://myds.example.net"),
+	}
 
-	if !strings.Contains(txt, string(cdnName)) {
-		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	cfg, err := MakeSSLMultiCertDotConfig(server, dses, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(txt, toToolName) {
-		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
-	}
-	if !strings.Contains(txt, toURL) {
-		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	txt := cfg.Text
+
+	if !strings.Contains(txt, hdr) {
+		t.Errorf("expected: header comment text '" + hdr + "', actual: missing")
 	}
 	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
 		t.Errorf("expected: header comment, actual: missing")

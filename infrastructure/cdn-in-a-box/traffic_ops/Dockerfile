@@ -17,18 +17,33 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
 # Keep the trafficops-common-deps in Dockerfile the same as
 # trafficops-common-deps in Dockerfile-go to cache the same
 # layer.
-FROM centos:7 as trafficops-common-deps
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as trafficops-common-deps
+ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION=$RHEL_VERSION
 
-RUN mkdir /etc/cron.d && \
-    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum -y install epel-release && \
-    yum -y install      \
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
+RUN set -o nounset -o errexit && \
+    mkdir -p /etc/cron.d; \
+    if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        use_repo=''; \
+    else \
+        use_repo='--repo=pgdg96'; \
+    fi; \
+    dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+    dnf -y $use_repo -- install postgresql96; \
+    dnf -y install epel-release; \
+    dnf -y install      \
         jq              \
         bind-utils      \
         net-tools       \
@@ -38,15 +53,19 @@ RUN mkdir /etc/cron.d && \
         isomd5sum       \
         nmap-ncat       \
         openssl         \
-        postgresql96 && \
-    yum clean all
+        # Used to copy certs in "Shared SSL certificate generation" step
+        rsync;          \
+    dnf clean all
 
 FROM trafficops-common-deps as trafficops-perl-deps
 
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN yum install -y          \
+RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
+        enable_repo='--enablerepo=PowerTools' || exit 1; \
+    fi && \
+    dnf -y --allowerasing $enable_repo install \
         cpanminus           \
         expat-devel         \
         gcc-c++             \
@@ -67,13 +86,13 @@ RUN yum install -y          \
         perl-Digest-SHA1    \
         perl-JSON           \
         perl-libwww-perl    \
+        perl-Net-Pcap       \
         perl-TermReadKey    \
         perl-Test-CPAN-Meta \
         perl-WWW-Curl       \
         postgresql96-devel  \
-        postgresql96-libs   \
         tar &&              \
-    yum -y clean all && \
+    dnf -y clean all && \
     mkdir -p /opt/traffic_ops/app/public && \
     cpanm Carton
 

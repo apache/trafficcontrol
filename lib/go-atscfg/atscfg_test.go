@@ -24,32 +24,23 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestGenericHeaderComment(t *testing.T) {
-	objName := "foo"
-	toolName := "bar"
-	toURL := "url"
-
-	txt := GenericHeaderComment(objName, toolName, toURL)
-
-	testComment(t, txt, objName, toolName, toURL)
+	commentTxt := "foo"
+	txt := makeHdrComment(commentTxt)
+	testComment(t, txt, commentTxt)
 }
 
-func testComment(t *testing.T, txt string, objName string, toolName string, toURL string) {
+func testComment(t *testing.T, txt string, commentTxt string) {
 	commentLine := strings.SplitN(txt, "\n", 2)[0] // SplitN always returns at least 1 element, no need to check len before indexing
 
 	if !strings.HasPrefix(strings.TrimSpace(commentLine), "#") {
 		t.Errorf("expected comment on first line, actual: '" + commentLine + "'")
 	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toolName '" + toolName + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, toURL) {
-		t.Errorf("expected toURL '" + toURL + "' in comment, actual: '" + commentLine + "'")
-	}
-	if !strings.Contains(commentLine, objName) {
-		t.Errorf("expected profile '" + objName + "' in comment, actual: '" + commentLine + "'")
+	if !strings.Contains(commentLine, commentTxt) {
+		t.Errorf("expected comment text '" + commentTxt + "' in comment, actual: '" + commentLine + "'")
 	}
 }
 
@@ -106,154 +97,28 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	}
 
 	for input, expected := range inputExpected {
-		if actual, err := GetATSMajorVersionFromATSVersion(input); err != nil {
+		if actual, err := getATSMajorVersionFromATSVersion(input); err != nil {
 			t.Errorf("expected %v actual: error '%v'", expected, err)
 		} else if actual != expected {
 			t.Errorf("expected %v actual: %v", expected, actual)
 		}
 	}
 	for _, input := range errExpected {
-		if actual, err := GetATSMajorVersionFromATSVersion(input); err == nil {
+		if actual, err := getATSMajorVersionFromATSVersion(input); err == nil {
 			t.Errorf("input %v expected: error, actual: nil error '%v'", input, actual)
 		}
 	}
 }
 
-func TestServerInfoIsTopLevelCache(t *testing.T) {
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          "cgTypeUnknown",
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: "cgTypeUnknown",
-		}
-		if s.IsTopLevelCache() {
-			t.Errorf("expected server with non-origin parent types, and non-InvalidID parent IDs to not be top level, actual top level")
-		}
-	}
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            -1,
-			ParentCacheGroupType:          "cgTypeUnknown",
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: "cgTypeUnknown",
-		}
-		if s.IsTopLevelCache() {
-			t.Errorf("expected server with secondary parent non-origin type and non-InvalidID to not be top level, actual top level")
-		}
-	}
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          "cgTypeUnknown",
-			SecondaryParentCacheGroupID:   -1,
-			SecondaryParentCacheGroupType: "cgTypeUnknown",
-		}
-		if s.IsTopLevelCache() {
-			t.Errorf("expected server with parent non-origin type and non-InvalidID to not be top level, actual top level")
-		}
-	}
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            -1,
-			ParentCacheGroupType:          "cgTypeUnknown",
-			SecondaryParentCacheGroupID:   -1,
-			SecondaryParentCacheGroupType: "cgTypeUnknown",
-		}
-		if !s.IsTopLevelCache() {
-			t.Errorf("expected server with parent and secondary parents with InvalidID IDs to be top level, actual not top level")
-		}
-	}
-
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
-		}
-		if !s.IsTopLevelCache() {
-			t.Errorf("expected server with parent and secondary parents with origin-type to be top level, actual not top level")
-		}
-	}
-
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          "not origin",
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
-		}
-		if s.IsTopLevelCache() {
-			t.Errorf("expected server with parent valid ID and origin-type to be top level, actual top level")
-		}
-	}
-
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: "not origin",
-		}
-		if s.IsTopLevelCache() {
-			t.Errorf("expected server with secondary parent valid ID and not origin-type to not be top level, actual top level")
-		}
-	}
-
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
-			SecondaryParentCacheGroupID:   -1,
-			SecondaryParentCacheGroupType: "not origin",
-		}
-		if !s.IsTopLevelCache() {
-			t.Errorf("expected server with secondary parent invalid valid ID and parent origin type to be top level, actual not top level")
-		}
-	}
-
-	{
-		s := &ServerInfo{
-			ParentCacheGroupID:            -1,
-			ParentCacheGroupType:          "not origin",
-			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
-		}
-		if !s.IsTopLevelCache() {
-			t.Errorf("expected server with parent invalid valid ID and secondary parent origin type to be top level, actual not top level")
-		}
-	}
-}
-
-func TestGetConfigFile(t *testing.T) {
-	expected := "hdr_rw_my-xml-id.config"
-	cfgFile := GetConfigFile(HeaderRewritePrefix, "my-xml-id")
-	if cfgFile != expected {
-		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
-	}
-}
-
-func TestHeaderCommentUTC(t *testing.T) {
-	objName := "foo"
-	toolName := "bar"
-	toURL := "url"
-
-	txt := GenericHeaderComment(objName, toolName, toURL)
-	if !strings.Contains(txt, " UTC ") {
-		t.Error("Expected header comment to print time in UTC, actual '" + txt + "'")
-	}
-}
-
-func setIP(sv *tc.ServerNullable, ipAddress string) {
+func setIP(sv *Server, ipAddress string) {
 	setIPInfo(sv, "", ipAddress, "")
 }
 
-func setIP6(sv *tc.ServerNullable, ip6Address string) {
+func setIP6(sv *Server, ip6Address string) {
 	setIPInfo(sv, "", "", ip6Address)
 }
 
-func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip6Address string) {
+func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address string) {
 	sv.Interfaces = []tc.ServerInterfaceInfo{
 		tc.ServerInterfaceInfo{
 			Name: interfaceName,
@@ -273,4 +138,83 @@ func setIPInfo(sv *tc.ServerNullable, interfaceName string, ipAddress string, ip
 			ServiceAddress: true,
 		})
 	}
+}
+
+func makeGenericServer() *Server {
+	server := &Server{}
+	server.ProfileID = util.IntPtr(42)
+	server.CDNName = util.StrPtr("myCDN")
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CachegroupID = util.IntPtr(422)
+	server.DomainName = util.StrPtr("mydomain.example.net")
+	server.CDNID = util.IntPtr(43)
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(12443)
+	server.ID = util.IntPtr(44)
+	setIP(server, "192.168.2.1")
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("serverprofile")
+	server.TCPPort = util.IntPtr(80)
+	server.Type = "EDGE"
+	server.TypeID = util.IntPtr(91)
+	status := string(tc.CacheStatusReported)
+	server.Status = &status
+	server.StatusID = util.IntPtr(99)
+	return server
+}
+
+func makeGenericDS() *DeliveryService {
+	ds := &DeliveryService{}
+	ds.ID = util.IntPtr(42)
+	ds.XMLID = util.StrPtr("ds1")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	dsType := tc.DSTypeDNS
+	ds.Type = &dsType
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	return ds
+}
+
+// makeDSS creates DSS as an outer product of every server and ds given.
+// The given servers and dses must all have non-nil, unique IDs.
+func makeDSS(servers []Server, dses []DeliveryService) []tc.DeliveryServiceServer {
+	dss := []tc.DeliveryServiceServer{}
+	for _, sv := range servers {
+		for _, ds := range dses {
+			dss = append(dss, tc.DeliveryServiceServer{
+				Server:          util.IntPtr(*sv.ID),
+				DeliveryService: util.IntPtr(*ds.ID),
+			})
+		}
+	}
+	return dss
+}
+
+func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.Parameter {
+	params := []tc.Parameter{}
+	for name, vals := range paramM {
+		for _, val := range vals {
+			params = append(params, tc.Parameter{
+				Name:       name,
+				ConfigFile: configFile,
+				Value:      val,
+				Profiles:   []byte(`["` + profile + `"]`),
+			})
+		}
+	}
+	return params
+}
+
+func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.Parameter {
+	params := []tc.Parameter{}
+	for name, val := range paramM {
+		params = append(params, tc.Parameter{
+			Name:       name,
+			ConfigFile: configFile,
+			Value:      val,
+			Profiles:   []byte(`["` + profile + `"]`),
+		})
+	}
+	return params
 }

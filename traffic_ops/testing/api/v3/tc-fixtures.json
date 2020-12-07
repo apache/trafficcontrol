@@ -222,6 +222,13 @@
             "name": "dtrc3",
             "shortName": "dtrc3",
             "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "cdn1-only",
+            "shortName": "cdn1-only",
+            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [
@@ -1066,6 +1073,265 @@
             "type": "CLIENT_STEERING",
             "xmlId": "ds-client-steering",
             "anonymousBlockingEnabled": false
+        },
+        {
+            "active": true,
+            "cdnName": "cdn2",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "ds-forked-topology",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds-forked-topology\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "forked-topology",
+            "type": "HTTP",
+            "xmlId": "ds-forked-topology",
+            "anonymousBlockingEnabled": false
+        },
+        {
+            "active": true,
+            "cdnName": "cdn1",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "top-ds-in-cdn1",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.top-ds-in-cdn1\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-used-by-cdn1-and-cdn2",
+            "type": "HTTP",
+            "xmlId": "top-ds-in-cdn1",
+            "anonymousBlockingEnabled": false
+        },
+        {
+            "active": true,
+            "cdnName": "cdn2",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "top-ds-in-cdn2",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.top-ds-in-cdn2\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-used-by-cdn1-and-cdn2",
+            "type": "HTTP",
+            "xmlId": "top-ds-in-cdn2",
+            "anonymousBlockingEnabled": false
+        },
+        {
+            "active": false,
+            "cdnName": "cdn1",
+            "cacheurl": "cacheUrl1",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "inactiveDSDisplayName",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": "edgeHeader1\nedgeHeader2",
+            "exampleURLs": [
+                "http://ccr.inactiveds.example.net",
+                "https://ccr.inactiveds.example.net"
+            ],
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 15:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "d s inactive",
+            "longDesc1": "dsinactive",
+            "longDesc2": "dsinactive",
+            "matchList": [
+                {
+                    "pattern": ".*\\.dsinactive\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": "midHeader1\nmidHeader2",
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.example.net",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 2,
+            "qstringIgnore": 1,
+            "rangeRequestHandling": 0,
+            "regexRemap": "rr1\nrr2",
+            "regionalGeoBlocking": false,
+            "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua",
+            "routingName": "ccr-inactiveds",
+            "signed": false,
+            "signingAlgorithm": "url_sig",
+            "sslKeyVersion": 2,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "type": "HTTP",
+            "xmlId": "inactiveds",
+            "anonymousBlockingEnabled": true
         }
     ],
     "deliveryServicesRegexes": [
@@ -3426,6 +3692,90 @@
             "updPending": false
         },
         {
+            "cachegroup": "secondaryCachegroup",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "midInSecondaryCachegroupInCDN1",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:deed:beef::12/64",
+                            "gateway": "2001:db8:deed:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.7.15/24",
+                            "gateway": "192.0.7.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "cdn1-only",
+            "cdnName": "cdn1",
+            "domainName": "foo.kabletown.net",
+            "guid": null,
+            "hostName": "edge-in-cdn1-only",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "192.0.2.88/24",
+                            "gateway": "192.0.2.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2001:db8:f33d:beef::2/64",
+                            "gateway": "2001:db8:f33d:beef::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "",
+            "xmppPasswd": ""
+        },
+        {
             "cachegroup": "fallback1",
             "cdnName": "cdn2",
             "domainName": "kabletown.net",
@@ -3622,6 +3972,40 @@
             ],
             "physLocation": "Denver",
             "profile": "CDN2_MID",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-01",
+            "cdnName": "cdn1",
+            "domainName": "kabletown.net",
+            "hostName": "midInTopologyMidCg01InCDN1",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2001:db8:de4d:beef::12/64",
+                            "gateway": "2001:db8:de4d:beef::1",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "192.0.12.21/24",
+                            "gateway": "192.0.12.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4228,6 +4612,24 @@
                 {
                     "cachegroup": "dtrc2",
                     "parents": [1]
+                }
+            ]
+        },
+        {
+            "name": "top-used-by-cdn1-and-cdn2",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "dtrc1",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "dtrc2",
+                    "parents": [0]
+                },
+                {
+                    "cachegroup": "dtrc3",
+                    "parents": [0]
                 }
             ]
         }

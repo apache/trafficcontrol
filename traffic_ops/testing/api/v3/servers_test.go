@@ -60,16 +60,23 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	const cacheGroupName = "topology-mid-cg-01"
 	const moveToCacheGroup = "topology-mid-cg-02"
 	const topologyName = "forked-topology"
+	const cdnName = "cdn2"
 	const expectedLength = 1
+	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
+	if err != nil {
+		t.Fatalf("unable to GET CDN: %v", err)
+	}
+	cdnID := cdns[0].ID
 	params := url.Values{}
 	params.Add("cachegroupName", cacheGroupName)
 	params.Add("topology", topologyName)
+	params.Add("cdn", strconv.Itoa(cdnID))
 	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("getting server from cachegroup %s in topology %s: %s", cacheGroupName, topologyName, err.Error())
+		t.Fatalf("getting server from cdn %s from cachegroup %s in topology %s: %s", cdnName, cacheGroupName, topologyName, err.Error())
 	}
 	if len(servers.Response) != expectedLength {
-		t.Fatalf("expected to get %d server from cachegroup %s in topology %s, got %d servers", expectedLength, cacheGroupName, topologyName, len(servers.Response))
+		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
 	_, reqInf, err := TOSession.DeleteServerByID(*server.ID)
@@ -79,6 +86,28 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("expected a 400-level error deleting server with id %d, got status code %d: %s", *server.ID, reqInf.StatusCode, err.Error())
 	}
+
+	// attempt to move it to another CDN while it's the last server in the cachegroup in its CDN
+	cdns, _, err = TOSession.GetCDNByNameWithHdr("cdn1", nil)
+	if err != nil {
+		t.Fatalf("unable to GET CDN: %v", err)
+	}
+	newCDNID := cdns[0].ID
+	oldCDNID := *server.CDNID
+	server.CDNID = &newCDNID
+	profiles, _, err := TOSession.GetProfileByNameWithHdr("MID1", nil)
+	if err != nil {
+		t.Fatalf("unable to GET profile: %v", err)
+	}
+	newProfile := profiles[0].ID
+	oldProfile := *server.ProfileID
+	server.ProfileID = &newProfile
+	_, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
+	if err == nil {
+		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
+	}
+	server.CDNID = &oldCDNID
+	server.ProfileID = &oldProfile
 
 	params = url.Values{}
 	params.Add("name", moveToCacheGroup)
@@ -548,10 +577,11 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
-		"edge1-cdn1-cg3":    false,
-		"edge2-cdn1-cg3":    false,
-		"atlanta-mid-16":    false,
-		"edgeInCachegroup3": false,
+		"edge1-cdn1-cg3":                 false,
+		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-16":                 false,
+		"edgeInCachegroup3":              false,
+		"midInSecondaryCachegroupInCDN1": false,
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
@@ -562,7 +592,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	for _, server := range response.Response {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
-			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
+			t.Fatalf("expected hostnames %v, actual %s", expectedHostnames, *server.HostName)
 		}
 		expectedHostnames[*server.HostName] = true
 	}
@@ -600,14 +630,15 @@ func GetTestServersQueryParameters(t *testing.T) {
 	params.Del("dsId")
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
-		originHostname:             false,
-		"edge1-cdn1-cg3":           false,
-		"edge2-cdn1-cg3":           false,
-		"atlanta-mid-16":           false,
-		"atlanta-mid-17":           false,
-		"edgeInCachegroup3":        false,
-		"midInParentCachegroup":    false,
-		"midInSecondaryCachegroup": false,
+		originHostname:                   false,
+		"edge1-cdn1-cg3":                 false,
+		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-16":                 false,
+		"atlanta-mid-17":                 false,
+		"edgeInCachegroup3":              false,
+		"midInParentCachegroup":          false,
+		"midInSecondaryCachegroup":       false,
+		"midInSecondaryCachegroupInCDN1": false,
 	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
@@ -618,7 +649,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	for _, server := range response.Response {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
-			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
+			t.Fatalf("expected hostnames %v, actual %s", expectedHostnames, *server.HostName)
 		}
 		expectedHostnames[*server.HostName] = true
 	}

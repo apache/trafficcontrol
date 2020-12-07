@@ -65,6 +65,10 @@ local.tar.gz
 .projectile
 *.bak
 *.iml
+.anjuta/
+.anjuta_sym_db.db
+*.anjuta
+*.kateproject
 # built local binaries
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests

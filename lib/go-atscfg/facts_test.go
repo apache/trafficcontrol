@@ -25,13 +25,19 @@ import (
 )
 
 func TestMake12MFacts(t *testing.T) {
+	server := makeGenericServer()
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
+	server.Profile = &profileName
 
-	txt := Make12MFacts(profileName, toolName, toURL)
+	hdr := "myHeaderComment"
 
-	testComment(t, txt, profileName, toolName, toURL)
+	cfg, err := Make12MFacts(server, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
 
 	lines := strings.SplitN(txt, "\n", 2) // SplitN always returns at least 1 element, no need to check len before indexing
 	if len(lines) < 2 {

@@ -114,13 +114,13 @@ func main() {
 		os.Exit(config.ExitCodeSuccess)
 	}
 
-	toData, err := cfgfile.GetTOData(tccfg)
+	toData, toIPs, err := cfgfile.GetTOData(tccfg)
 	if err != nil {
 		log.Errorln("getting data from traffic ops: " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly, tccfg.Dir)
+	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly, tccfg.Dir, config.UserAgent, tccfg.TOClient.C.URL, toIPs)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)

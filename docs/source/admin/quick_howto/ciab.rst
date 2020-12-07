@@ -38,11 +38,20 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build --parallel`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
 
 .. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make native`` instead of ``make`` to build the RPMs quickly. Another option is running ``make -j4`` to build 4 components at once, if your computer can handle it.
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
+
+By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, it defaults to ``8``):
+
+.. code-block:: shell
+	:caption: Building CDN in a Box to run CentOS 7 instead of CentOS 8
+
+	export RHEL_VERSION=7
+	make # Builds RPMs for CentOS 7
+	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
 The image that takes the takes the longest to build is the ``trafficops-perl`` image. In order to avoid needing to download, build, and test 239 Perl CPAN modules each time you rebuild the image from scratch, you can run the following command while running CDN in a Box in order to skip building the Perl modules next time:
 
@@ -133,6 +142,8 @@ There also exist TP and TO integration tests containers. Both of these container
 
 	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+
 variables.env
 """""""""""""
 .. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
@@ -200,14 +211,14 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
 #. Import the CIAB intermediate :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Centos7
------------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on CentOS 8 (Linux)
+--------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
 #. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Ubuntu
-----------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on Ubuntu (Linux)
+------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/usr/local/share/ca-certificates/`.
 #. Run ``update-ca-certificates`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
@@ -218,6 +229,8 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Ubuntu
 Advanced Usage
 ==============
 This section will be amended as functionality is added to the CDN in a Box project.
+
+.. _ciab-enroller:
 
 The Enroller
 ------------

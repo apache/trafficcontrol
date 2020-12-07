@@ -66,6 +66,8 @@ Request Structure
 	| page              | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
 	|                   |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+    | active            | no       | Show only the :term:`Delivery Services` that have :ref:`ds-active` set or not based on this boolean (whether or not they are active)    |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------

@@ -19,13 +19,19 @@
 # Based on CentOS
 ############################################################
 
-FROM centos/systemd
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG RPM=traffic_monitor/traffic_monitor.rpm
 
-RUN yum install -y epel-release && \
-    yum install -y \
+RUN dnf install -y epel-release && \
+    dnf install -y \
         jq \
         nmap-ncat \
         iproute \
@@ -34,10 +40,10 @@ RUN yum install -y epel-release && \
         bind-utils \
         openssl \
         initscripts && \
-    yum clean all
+    dnf clean all
 
 ADD $RPM /
-RUN yum install -y  /$(basename $RPM) && \
+RUN rpm -Uvh  /$(basename $RPM) && \
     rm /$(basename $RPM)
 
 RUN mkdir -p /opt/traffic_monitor/conf

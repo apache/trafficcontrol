@@ -27,8 +27,12 @@ module.exports = angular.module('trafficPortal.private.changeLogs.list', [])
 						templateUrl: 'common/modules/table/changeLogs/table.changeLogs.tpl.html',
 						controller: 'TableChangeLogsController',
 						resolve: {
-							changeLogs: function(changeLogService) {
-								return changeLogService.getChangeLogs({ days: 3 });
+							tableName: function() {
+								return 'changeLogs';
+							},
+							changeLogs: function(changeLogService, propertiesModel) {
+								const days = (propertiesModel.properties.changeLogs) ? propertiesModel.properties.changeLogs.days : 7;
+								return changeLogService.getChangeLogs({ days: days });
 							}
 						}
 					}

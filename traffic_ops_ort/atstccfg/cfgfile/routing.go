@@ -20,177 +20,96 @@ package cfgfile
  */
 
 import (
-	"errors"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
-var scopeConfigFileFuncs = map[string]func(toData *config.TOData, fileName string) (string, string, string, error){
-	"cdns":     GetConfigFileCDN,
-	"servers":  GetConfigFileServer,
-	"profiles": GetConfigFileProfile,
-}
+// # DO NOT EDIT - Generated for odol-atsec-sea-22 by Traffic Ops (https://trafficops.comcast.net/) on Mon Oct 26 16:22:19 UTC 2020
 
 // GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
-func GetConfigFile(toData *config.TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, string, error) {
+func GetConfigFile(toData *config.TOData, fileInfo atscfg.CfgMeta, hdrCommentTxt string) (string, string, string, error) {
 	start := time.Now()
 	defer func() {
-		log.Infof("GetConfigFile %v took %v\n", fileInfo.FileNameOnDisk, time.Since(start).Round(time.Millisecond))
+		log.Infof("GetConfigFile %v took %v\n", fileInfo.Name, time.Since(start).Round(time.Millisecond))
 	}()
-	log.Infoln("GetConfigFile scope '" + fileInfo.Scope + "' fileName '" + fileInfo.FileNameOnDisk + "'")
-	if scopeConfigFileFunc, ok := scopeConfigFileFuncs[fileInfo.Scope]; ok {
-		return scopeConfigFileFunc(toData, fileInfo.FileNameOnDisk)
+	log.Infoln("GetConfigFile '" + fileInfo.Name + "'")
+
+	getConfigFile := getConfigFileFunc(fileInfo.Name)
+	cfg, err := getConfigFile(toData, fileInfo.Name, hdrCommentTxt)
+	logWarnings("getting config file '"+fileInfo.Name+"': ", cfg.Warnings)
+
+	if err != nil {
+		return "", "", "", err
 	}
-	return "", "", "", errors.New("unknown config file '" + fileInfo.FileNameOnDisk + "'")
+	return cfg.Text, cfg.ContentType, cfg.LineComment, nil
 }
+
+type ConfigFileFunc func(toData *config.TOData, fileName string, hdrCommentTxt string) (atscfg.Cfg, error)
 
 type ConfigFilePrefixSuffixFunc struct {
 	Prefix string
 	Suffix string
-	Func   func(toData *config.TOData, fileName string) (string, string, string, error)
+	Func   ConfigFileFunc
 }
 
-func GetConfigFileCDN(toData *config.TOData, fileName string) (string, string, string, error) {
-	if toData.Server.CDNName == nil {
-		return "", "", "", errors.New("server missing CDNName")
-	}
-	log.Infoln("GetConfigFileCDN cdn '" + *toData.Server.CDNName + "' fileName '" + fileName + "'")
+type ConfigFileLiteralFunc struct {
+	Name string
+	Func ConfigFileFunc
+}
 
-	txt := ""
-	contentType := ""
-	lineComment := ""
-	err := error(nil)
-	if getCfgFunc, ok := CDNConfigFileFuncs()[fileName]; ok {
-		txt, contentType, lineComment, err = getCfgFunc(toData)
-	} else {
-		for _, prefixSuffixFunc := range ConfigFileCDNPrefixSuffixFuncs {
-			if strings.HasPrefix(fileName, prefixSuffixFunc.Prefix) && strings.HasSuffix(fileName, prefixSuffixFunc.Suffix) && len(fileName) > len(prefixSuffixFunc.Prefix)+len(prefixSuffixFunc.Suffix) {
-				txt, contentType, lineComment, err = prefixSuffixFunc.Func(toData, fileName)
-				break
-			}
+func getConfigFileFunc(fileName string) ConfigFileFunc {
+	for _, lf := range configFileLiteralFuncs {
+		if fileName == lf.Name {
+			return lf.Func
 		}
 	}
-
-	if err == nil && txt == "" {
-		err = config.ErrNotFound
+	for _, psf := range configFilePrefixSuffixFuncs {
+		if strings.HasPrefix(fileName, psf.Prefix) && strings.HasSuffix(fileName, psf.Suffix) {
+			return psf.Func
+		}
 	}
-
-	if err != nil {
-		return "", "", "", err
-	}
-	return txt, contentType, lineComment, nil
+	return MakeUnknownConfig
 }
 
-func GetConfigFileProfile(toData *config.TOData, fileName string) (string, string, string, error) {
-	if toData.Server.Profile == nil {
-		return "", "", "", errors.New("server missing Profile")
-	}
-
-	log.Infoln("GetConfigFileProfile profile '" + *toData.Server.Profile + "' fileName '" + fileName + "'")
-
-	txt := ""
-	contentType := ""
-	lineComment := ""
-	err := error(nil)
-	if getCfgFunc, ok := ProfileConfigFileFuncs()[fileName]; ok {
-		txt, contentType, lineComment, err = getCfgFunc(toData)
-	} else if strings.HasPrefix(fileName, "url_sig_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("url_sig_")+len(".config") {
-		txt, contentType, lineComment, err = GetConfigFileProfileURLSigConfig(toData, fileName)
-	} else if strings.HasPrefix(fileName, "uri_signing_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("uri_signing")+len(".config") {
-		txt, contentType, lineComment, err = GetConfigFileProfileURISigningConfig(toData, fileName)
-	} else {
-		txt, contentType, lineComment, err = GetConfigFileProfileUnknownConfig(toData, fileName)
-	}
-
-	if err != nil {
-		return "", "", "", err
-	}
-	return txt, contentType, lineComment, nil
+var configFileLiteralFuncs = []ConfigFileLiteralFunc{
+	{"12M_facts", Make12MFacts},
+	{"50-ats.rules", MakeATSDotRules},
+	{"astats.config", MakeAstatsDotConfig},
+	{"bg_fetch.config", MakeBGFetchDotConfig},
+	{"cache.config", MakeCacheDotConfig},
+	{"cacheurl.config", MakeCacheURLPlain},
+	{"chkconfig", MakeChkconfig},
+	{"drop_qstring.config", MakeDropQStringDotConfig},
+	{"hosting.config", MakeHostingDotConfig},
+	{"ip_allow.config", MakeIPAllowDotConfig},
+	{"logging.config", MakeLoggingDotConfig},
+	{"logging.yaml", MakeLoggingDotYAML},
+	{"logs_xml.config", MakeLogsXMLDotConfig},
+	{"packages", MakePackages},
+	{"parent.config", MakeParentDotConfig},
+	{"plugin.config", MakePluginDotConfig},
+	{"records.config", MakeRecordsDotConfig},
+	{"regex_revalidate.config", MakeRegexRevalidateDotConfig},
+	{"remap.config", MakeRemapDotConfig},
+	{"ssl_multicert.config", MakeSSLMultiCertDotConfig},
+	{"storage.config", MakeStorageDotConfig},
+	{"sysctl.conf", MakeSysCtlDotConf},
+	{"volume.config", MakeVolumeDotConfig},
 }
 
-// ConfigFileFuncs returns a map[scope][configFile]configFileFunc.
-func ConfigFileFuncs() map[string]map[string]func(toData *config.TOData) (string, string, string, error) {
-	return map[string]map[string]func(toData *config.TOData) (string, string, string, error){
-		"cdns":     CDNConfigFileFuncs(),
-		"servers":  ServerConfigFileFuncs(),
-		"profiles": ProfileConfigFileFuncs(),
-	}
-}
-
-func CDNConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, string, error) {
-	return map[string]func(toData *config.TOData) (string, string, string, error){
-		"regex_revalidate.config": GetConfigFileCDNRegexRevalidateDotConfig,
-		"bg_fetch.config":         GetConfigFileCDNBGFetchDotConfig,
-		"ssl_multicert.config":    GetConfigFileCDNSSLMultiCertDotConfig,
-		"cacheurl.config":         GetConfigFileCDNCacheURLPlain,
-	}
-}
-
-var ConfigFileCDNPrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
-	{"hdr_rw_mid_", ".config", GetConfigFileCDNHeaderRewriteMid},
-	{"hdr_rw_", ".config", GetConfigFileCDNHeaderRewrite},
-	{"cacheurl", ".config", GetConfigFileCDNCacheURL},
-	{"regex_remap_", ".config", GetConfigFileCDNRegexRemap},
-	{"set_dscp_", ".config", GetConfigFileCDNSetDSCP},
-}
-
-func ProfileConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, string, error) {
-	return map[string]func(toData *config.TOData) (string, string, string, error){
-		"12M_facts":           GetConfigFileProfile12MFacts,
-		"50-ats.rules":        GetConfigFileProfileATSDotRules,
-		"astats.config":       GetConfigFileProfileAstatsDotConfig,
-		"cache.config":        GetConfigFileProfileCacheDotConfig,
-		"drop_qstring.config": GetConfigFileProfileDropQStringDotConfig,
-		"logging.config":      GetConfigFileProfileLoggingDotConfig,
-		"logging.yaml":        GetConfigFileProfileLoggingDotYAML,
-		"logs_xml.config":     GetConfigFileProfileLogsXMLDotConfig,
-		"plugin.config":       GetConfigFileProfilePluginDotConfig,
-		"records.config":      GetConfigFileProfileRecordsDotConfig,
-		"storage.config":      GetConfigFileProfileStorageDotConfig,
-		"sysctl.conf":         GetConfigFileProfileSysCtlDotConf,
-		"volume.config":       GetConfigFileProfileVolumeDotConfig,
-	}
-}
-
-func ServerConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, string, error) {
-	return map[string]func(toData *config.TOData) (string, string, string, error){
-		"parent.config":   GetConfigFileServerParentDotConfig,
-		"remap.config":    GetConfigFileServerRemapDotConfig,
-		"cache.config":    GetConfigFileServerCacheDotConfig,
-		"ip_allow.config": GetConfigFileServerIPAllowDotConfig,
-		"hosting.config":  GetConfigFileServerHostingDotConfig,
-		"packages":        GetConfigFileServerPackages,
-		"chkconfig":       GetConfigFileServerChkconfig,
-	}
-}
-
-func GetConfigFileServer(toData *config.TOData, fileName string) (string, string, string, error) {
-	if toData.Server.HostName == nil {
-		return "", "", "", errors.New("server missing HostName")
-	}
-
-	log.Infoln("GetConfigFileServer server '" + *toData.Server.HostName + "' fileName '" + fileName + "'")
-	txt := ""
-	contentType := ""
-	lineComment := ""
-	err := error(nil)
-
-	if strings.HasPrefix(fileName, atscfg.HeaderRewriteFirstPrefix) ||
-		strings.HasPrefix(fileName, atscfg.HeaderRewriteInnerPrefix) ||
-		strings.HasPrefix(fileName, atscfg.HeaderRewriteLastPrefix) {
-		txt, contentType, lineComment, err = GetConfigFileServerTopologyHeaderRewrite(toData, fileName)
-	} else if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
-		txt, contentType, lineComment, err = getCfgFunc(toData)
-	} else {
-		txt, contentType, lineComment, err = GetConfigFileServerUnknownConfig(toData, fileName)
-	}
-	if err != nil {
-		return "", "", "", err
-	}
-	return txt, contentType, lineComment, nil
+var configFilePrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
+	{"cacheurl", ".config", MakeCacheURL},
+	{atscfg.HeaderRewriteFirstPrefix, ".config", MakeTopologyHeaderRewrite},
+	{atscfg.HeaderRewriteInnerPrefix, ".config", MakeTopologyHeaderRewrite},
+	{atscfg.HeaderRewriteLastPrefix, ".config", MakeTopologyHeaderRewrite},
+	{"hdr_rw_mid_", ".config", MakeHeaderRewriteMid},
+	{"hdr_rw_", ".config", MakeHeaderRewrite},
+	{"regex_remap_", ".config", MakeRegexRemap},
+	{"set_dscp_", ".config", MakeSetDSCP},
+	{"url_sig_", ".config", MakeURLSigConfig},
+	{"uri_signing_", ".config", MakeURISigningConfig},
 }

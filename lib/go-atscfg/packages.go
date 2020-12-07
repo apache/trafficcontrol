@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const PackagesFileName = `packages`
@@ -32,39 +32,48 @@ const PackagesParamConfigFile = `package`
 const ContentTypePackages = ContentTypeTextASCII
 const LineCommentPackages = ""
 
-type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
+// MakePackages returns the 'packages' ATS config file endpoint.
+// This is a JSON object, and should be served with an 'application/json' Content-Type.
+func MakePackages(
+	serverParams []tc.Parameter,
+) (Cfg, error) {
+	warnings := []string{}
+
+	params := paramsToMultiMap(filterParams(serverParams, PackagesParamConfigFile, "", "", ""))
+
+	pkgs := []pkg{}
+	for name, versions := range params {
+		for _, version := range versions {
+			pkgs = append(pkgs, pkg{Name: name, Version: version})
+		}
+	}
+	sort.Sort(packages(pkgs))
+	bts, err := json.Marshal(&pkgs)
+	if err != nil {
+		// should never happen
+		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVersions: "+err.Error())
+	}
+
+	return Cfg{
+		Text:        string(bts),
+		ContentType: ContentTypePackages,
+		LineComment: LineCommentPackages,
+		Warnings:    warnings,
+	}, nil
 }
 
-type Packages []Package
+type pkg struct {
+	Name    string
+	Version string
+}
 
-func (ps Packages) Len() int { return len(ps) }
-func (ps Packages) Less(i, j int) bool {
+type packages []pkg
+
+func (ps packages) Len() int { return len(ps) }
+func (ps packages) Less(i, j int) bool {
 	if ps[i].Name != ps[j].Name {
 		return ps[i].Name < ps[j].Name
 	}
 	return ps[i].Version < ps[j].Version
 }
-func (ps Packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
-
-// MakePackages returns the 'packages' ATS config file endpoint.
-// This is a JSON object, and should be served with an 'application/json' Content-Type.
-func MakePackages(
-	params map[string][]string, // map[name]value - config file should always be 'package'
-) string {
-	packages := []Package{}
-	for name, versions := range params {
-		for _, version := range versions {
-			packages = append(packages, Package{Name: name, Version: version})
-		}
-	}
-	sort.Sort(Packages(packages))
-	bts, err := json.Marshal(&packages)
-	if err != nil {
-		// should never happen
-		log.Errorln("marshalling chkconfig NameVersions: " + err.Error())
-		bts = []byte("error encoding params to json, see Traffic Ops log for details")
-	}
-	return string(bts)
-}
+func (ps packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }

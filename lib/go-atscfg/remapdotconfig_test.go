@@ -28,14 +28,12 @@ import (
 )
 
 func TestMakeRemapDotConfig(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE")
 	ds.Type = &dsType
@@ -58,7 +56,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -120,16 +118,21 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
 	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+		t.Log(cfg.Warnings)
+		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	remapLine := txtLines[1]
@@ -148,12 +151,11 @@ func TestMakeRemapDotConfig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE")
 	ds.Type = &dsType
@@ -176,7 +178,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -244,11 +246,15 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -258,12 +264,11 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMid(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -286,7 +291,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -354,11 +359,15 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -382,12 +391,11 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -410,7 +418,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -478,11 +486,15 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -492,12 +504,11 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -520,7 +531,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	ds.Protocol = util.IntPtr(0)
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -588,11 +599,15 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -602,12 +617,11 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -631,7 +645,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := DeliveryService{}
 	ds2.ID = util.IntPtr(49)
 	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
 	ds2.Type = &dsType2
@@ -655,7 +669,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []DeliveryService{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -737,11 +751,15 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -751,12 +769,11 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -780,7 +797,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -848,11 +865,15 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -885,12 +906,11 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -914,7 +934,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -982,11 +1002,15 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1010,12 +1034,11 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1039,7 +1062,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1107,11 +1130,15 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1142,12 +1169,11 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1171,7 +1197,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1239,11 +1265,15 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1274,12 +1304,11 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1304,7 +1333,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1384,11 +1413,15 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1420,12 +1453,11 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1450,7 +1482,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1530,11 +1562,15 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1558,12 +1594,11 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1588,7 +1623,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1668,11 +1703,15 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1700,12 +1739,11 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -1730,7 +1768,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := DeliveryService{}
 	ds2.ID = util.IntPtr(48)
 	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
 	ds2.Type = &dsType2
@@ -1755,7 +1793,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []DeliveryService{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1835,11 +1873,15 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1849,13 +1891,12 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigAnyMap(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("ANY_MAP")
 	ds.Type = &dsType
@@ -1880,7 +1921,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	ds2 := tc.DeliveryServiceNullableV30{}
+	ds2 := DeliveryService{}
 	ds2.ID = util.IntPtr(49)
 	dsType2 := tc.DSType("ANY_MAP")
 	ds2.Type = &dsType2
@@ -1905,7 +1946,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds2.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds, ds2}
+	dses := []DeliveryService{ds, ds2}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -1999,12 +2040,16 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 	txt = strings.Replace(txt, "\n\n", "\n", -1)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2025,15 +2070,14 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	dses := []tc.DeliveryServiceNullableV30{}
+	dses := []DeliveryService{}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(1)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2060,7 +2104,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(2)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2087,7 +2131,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(3)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2114,7 +2158,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(4)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2141,7 +2185,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(5)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2168,7 +2212,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(6)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2195,7 +2239,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(7)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2222,7 +2266,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		dses = append(dses, ds)
 	}
 	{ // see regexes - nil pattern
-		ds := tc.DeliveryServiceNullableV30{}
+		ds := DeliveryService{}
 		ds.ID = util.IntPtr(8)
 		dsType := tc.DSType("HTTP_LIVE_NATNL")
 		ds.Type = &dsType
@@ -2425,11 +2469,15 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2440,13 +2488,12 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2471,7 +2518,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2551,11 +2598,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2583,13 +2634,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2614,7 +2664,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2694,11 +2744,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2726,13 +2780,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2757,7 +2810,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2837,11 +2890,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2869,13 +2926,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -2900,7 +2956,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -2980,11 +3036,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3012,13 +3072,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3043,7 +3102,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3123,11 +3182,15 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3151,13 +3214,12 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3182,7 +3244,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3268,11 +3330,15 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3296,13 +3362,12 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3327,7 +3392,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3413,11 +3478,15 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3441,13 +3510,12 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3472,7 +3540,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3558,11 +3626,15 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3590,13 +3662,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3621,7 +3692,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3707,11 +3778,15 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3739,13 +3814,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3770,7 +3844,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -3856,11 +3930,15 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3888,13 +3966,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -3919,7 +3996,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4005,11 +4082,15 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4032,13 +4113,12 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4063,7 +4143,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4149,11 +4229,15 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4176,13 +4260,12 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4207,7 +4290,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4293,11 +4376,15 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4320,13 +4407,12 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4351,7 +4437,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4437,11 +4523,15 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4464,13 +4554,12 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4495,7 +4584,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4581,11 +4670,15 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4608,13 +4701,12 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4639,7 +4731,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4725,11 +4817,15 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4750,13 +4846,12 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4781,7 +4876,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -4867,11 +4962,15 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4895,13 +4994,12 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	// Currently, if there's both a QString cachekey inclusion, and a cache key parameter,
 	// the make func adds both, and logs a warning.
 
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -4926,7 +5024,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5012,11 +5110,15 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5040,13 +5142,12 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5071,7 +5172,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5132,11 +5233,15 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5157,13 +5262,12 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testing.T) {
 
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5188,7 +5292,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5243,11 +5347,15 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5273,13 +5381,12 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCacheURL(t *testing.T) {
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5304,7 +5411,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5359,11 +5466,15 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5394,13 +5505,12 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5425,7 +5535,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5480,11 +5590,15 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5512,13 +5626,12 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 }
 
 func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5543,7 +5656,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5598,11 +5711,15 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5622,13 +5739,12 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5653,7 +5769,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5739,11 +5855,15 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5775,13 +5895,12 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5806,7 +5925,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -5892,11 +6011,15 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5920,13 +6043,12 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -5951,7 +6073,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6037,11 +6159,15 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6061,13 +6187,12 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6092,7 +6217,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6178,11 +6303,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6206,13 +6335,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6237,7 +6365,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6323,11 +6451,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6351,13 +6483,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6382,7 +6513,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6468,11 +6599,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6496,13 +6631,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6528,7 +6662,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6614,11 +6748,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6646,13 +6784,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6678,7 +6815,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6764,11 +6901,15 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6809,13 +6950,12 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6841,7 +6981,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	ds.Active = util.BoolPtr(true)
 	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -6927,11 +7067,15 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6966,13 +7110,12 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -6997,7 +7140,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7083,11 +7226,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7111,13 +7258,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7142,7 +7288,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7228,11 +7374,15 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7252,13 +7402,12 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7283,7 +7432,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7369,11 +7518,15 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7393,13 +7546,12 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7424,7 +7576,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7510,11 +7662,15 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7534,13 +7690,12 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
 	ds.Type = &dsType
@@ -7565,7 +7720,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7651,11 +7806,15 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7679,13 +7838,12 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7710,7 +7868,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7796,11 +7954,15 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7820,13 +7982,12 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7851,7 +8012,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -7937,11 +8098,15 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -7951,13 +8116,12 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
+	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("DNS_LIVE")
 	ds.Type = &dsType
@@ -7982,7 +8146,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	ds.Active = util.BoolPtr(true)
 
-	dses := []tc.DeliveryServiceNullableV30{ds}
+	dses := []DeliveryService{ds}
 
 	dss := []tc.DeliveryServiceServer{
 		tc.DeliveryServiceServer{
@@ -8068,11 +8232,15 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, *server.HostName, toToolName, toURL)
+	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -8082,8 +8250,8 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 }
 
-func makeTestRemapServer() *tc.ServerNullable {
-	server := &tc.ServerNullable{}
+func makeTestRemapServer() *Server {
+	server := &Server{}
 	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("mycdn")
 	server.Cachegroup = util.StrPtr("cg0")

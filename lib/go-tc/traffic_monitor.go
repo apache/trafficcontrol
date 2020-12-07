@@ -185,7 +185,7 @@ func (s *Stats) ToLegacy(monitorConfig TrafficMonitorConfigMap) ([]string, Legac
 			continue
 		}
 		monitorInterfaceStats, ok := cache.Interfaces[*legacyInterface.InterfaceName]
-		if !ok {
+		if !ok && len(cache.Interfaces) > 0 {
 			skippedCaches = append(skippedCaches, "Cache "+cacheName+" does not contain interface "+
 				*legacyInterface.InterfaceName)
 			continue
