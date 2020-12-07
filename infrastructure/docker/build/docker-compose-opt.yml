@@ -22,5 +22,7 @@ services:
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-tsb
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../../traffic_server/tsb:/opt/tsb-ats:z
