@@ -355,7 +355,10 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	keyPem := keyBuf.Bytes()
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
+	// remove extra line if LE returns it
+	trimmedCert := bytes.ReplaceAll(certificates.Certificate, []byte("\n\n"), []byte("\n"))
+
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(trimmedCert)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
