@@ -69,6 +69,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should toggle the visibility of the first table column ', function() {
+		console.log("Toggling visiblity of column");
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
@@ -79,6 +80,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should clear column filter when column is hidden', function() {
+		console.log("Clear filters when column is hidden");
 		// Confirm we have rows
 		let rows = element.all(by.css("div.ag-row"));
 		expect(rows.count()).not.toBe(0);

@@ -39,6 +39,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 	});
 
 	it('should compare profiles', function() {
+		console.log("Comparing profiles");
 		pageData.moreBtn.click();
 		pageData.compareProfilesMenuItem.click();
 		expect(pageData.compareSubmit.isEnabled()).toBe(false);
