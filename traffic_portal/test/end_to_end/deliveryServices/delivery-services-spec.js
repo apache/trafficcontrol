@@ -121,7 +121,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		//browser.sleep(2500);
 		element.all(by.id("deliveryServicesTable")).then(function() {
 			let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child th'));
 			expect(tableColumns.count()).toBe(11);
@@ -133,7 +132,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.searchFilter.clear().then(function() {
 			pageData.searchFilter.sendKeys(mockVals.anyMapXmlId);
 		});
-		//browser.sleep(1500);
 		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.anyMapXmlId.toString();

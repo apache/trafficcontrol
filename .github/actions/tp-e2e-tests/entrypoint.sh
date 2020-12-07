@@ -28,9 +28,9 @@ psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT IN
 psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO region(name, division) VALUES('aregion', 1)"
 psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('aloc', 'aloc', 1, 'some place idk', 'Denver', 'CO', '88888')"
 psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO coordinate(name) VALUES('acoord')"
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO cdn(name, domain_name) VALUES('acdn', 'infra.ciab.test')"
+psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO cdn(name, domain_name) VALUES('zcdn', 'infra.ciab.test')"
 <<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
-WITH TYPE AS (SELECT id FROM type WHERE name = 'EDGE_LOC')
+WITH TYPE AS (SELECT id FROM type WHERE name = 'TC_LOC')
 INSERT INTO cachegroup(name, short_name, type, coordinate)
 SELECT 'acg', 'acg', TYPE.id, 1
 FROM TYPE
@@ -40,7 +40,7 @@ WITH TYPE AS (SELECT id FROM type WHERE name = 'RIAK'),
 PROFILE AS (SELECT id FROM profile WHERE name = 'RIAK_ALL'),
 STATUS AS (SELECT id FROM status WHERE name = 'ONLINE'),
 PHYS AS (SELECT id FROM phys_location WHERE name = 'aloc'),
-CDN AS (SELECT id FROM cdn WHERE name = 'acdn'),
+CDN AS (SELECT id FROM cdn WHERE name = 'zcdn'),
 CG AS (SELECT id from cachegroup WHERE name = 'acg')
 INSERT INTO server(host_name, domain_name, cachegroup, type, status, profile, phys_location, cdn_id)
 SELECT 'trafficvault', 'infra.ciab.test', CG.ID, TYPE.id, STATUS.id, PROFILE.id, PHYS.id, CDN.id

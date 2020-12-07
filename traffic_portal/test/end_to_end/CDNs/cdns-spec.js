@@ -70,8 +70,6 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys(myDomainName + 'updated.com');
-		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
 		pageData.updateButton.click();
 		expect(pageData.domainName.getAttribute('value')).toEqual(myDomainName + 'updated.com');
 	});
