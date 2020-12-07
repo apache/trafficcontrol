@@ -31,7 +31,6 @@ import (
 )
 
 func main() {
-	different := false
 	tropsFile := getopt.StringLong("trops-file", 't', "", "Required: Config file name in Traffic Ops")
 	diskFile := getopt.StringLong("disk-file", 'd', "", "Required: Config file on disk")
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
@@ -61,12 +60,12 @@ func main() {
 	disk = t3cutil.NewLineFilter(disk)
 
 	if trOps != disk {
-		different = true
 		match := regexp.MustCompile(`(?m)^\+.*|^-.*`)
 		changes := diff.Diff(disk, trOps)
 		for _, change := range match.FindAllString(changes, -1) {
 			fmt.Println(change)
 		}
+	} else {
+		os.Exit(0)
 	}
-	fmt.Println(different)
 }
