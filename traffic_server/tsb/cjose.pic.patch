@@ -1,0 +1,10 @@
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 659e1c0..b8da1c3 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1,4 +1,4 @@
+-AM_CFLAGS =-std=gnu99 --pedantic -Wall -Werror -g -O2 -I$(top_builddir)/include
++AM_CFLAGS =-std=gnu99 --pedantic -Wall -Werror -g -O2 -I$(top_builddir)/include -fpic
+
+ lib_LTLIBRARIES=libcjose.la
+ libcjose_la_CPPFLAGS= -I$(topdir)/include
