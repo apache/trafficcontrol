@@ -63,7 +63,8 @@ EXPOSE 443
 ENV MOJO_MODE production
 
 RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
-        enable_repo='--enablerepo=PowerTools' || exit 1; \
+        # If you get "Unknown repo: 'powertools'", pull a newer centos:8 image
+        enable_repo='--enablerepo=powertools' || exit 1; \
     fi && \
     dnf -y --allowerasing $enable_repo install \
         cpanminus           \
