@@ -223,7 +223,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], true); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -263,6 +263,25 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
+func getCurrentDetails(tx *sql.Tx, dsID int, regexID int) error {
+	var setNumber int
+	var typeName string
+	err := tx.QueryRow(`
+select dsr.set_number, t.name 
+from deliveryservice_regex as dsr 
+join regex as r on dsr.regex = r.id 
+join type as t on t.id = r.type 
+where dsr.deliveryservice=$1 and r.id=$2`,
+		dsID, regexID).Scan(&setNumber, &typeName)
+	if err != nil {
+		return err
+	}
+	if setNumber == 0 && typeName == "HOST_REGEXP" {
+		return errors.New("cannot change/ delete a regex with an order of 0 and type name of HOST_REGEXP")
+	}
+	return nil
+}
+
 func Put(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
@@ -300,7 +319,12 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"]); err != nil {
+	// Get current details to make sure that you're not trying to change a regex that has set number = 0 and type = HOST_REGEXP
+	if err := getCurrentDetails(tx, dsID, regexID); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], false); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -329,8 +353,25 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
+// canUpdate checks to see if the current regex can be updated. If the current regex has a set number of 0, and a type of HOST_REGEXP, it cannot be updated.
+func canUpdate(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost) error {
+	var name string
+	err := tx.QueryRow(`
+select name from type as t 
+where t.id=$1`,
+		dsr.Type).Scan(&name)
+	if err != nil {
+		return err
+	}
+	// Cannot have more than one regex with typename as "HOST_REGEXP" and set number as 0
+	if name == "HOST_REGEXP" && dsr.SetNumber == 0 {
+		return errors.New("cannot update regex with set number 0 and type HOST_REGEXP")
+	}
+	return nil
+}
+
 // Validate POST/PUT regex struct
-func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) error {
+func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int, new bool) error {
 	var ds int
 	var setNumberErr error
 	if dsr.SetNumber < 0 {
@@ -340,12 +381,22 @@ func validateDSRegex(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost, dsID int) erro
 select deliveryservice from deliveryservice_regex
 where deliveryservice = $1 and set_number = $2`,
 		dsID, dsr.SetNumber).Scan(&ds)
-	if err == nil {
-		setNumberErr = errors.New("cannot add regex, another regex with the same order exists")
+	if new {
+		// If its a new regex, then another shouldn't exist with the same set number
+		if err == nil {
+			setNumberErr = errors.New("cannot add regex, another regex with the same order exists")
+		} else {
+			setNumberErr = nil
+		}
 	} else {
-		setNumberErr = nil
+		// Cannot update a regex, to set the new set number = 0 and type = HOST_REGEXP
+		e := canUpdate(tx, dsr)
+		if e != nil {
+			setNumberErr = e
+		} else {
+			setNumberErr = err
+		}
 	}
-
 	_, typeErr := tc.ValidateTypeID(tx, &dsr.Type, "regex")
 
 	errs := validation.Errors{
@@ -375,6 +426,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	regexID := inf.IntParams["regexid"]
 
+	// Get current details to make sure that you're not trying to delete a regex that has set number = 0 and type = HOST_REGEXP
+	if err := getCurrentDetails(inf.Tx.Tx, dsID, regexID); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cannot delete regex: "+err.Error()), nil)
+		return
+	}
 	count := 0
 	if err := inf.Tx.Tx.QueryRow(`SELECT count(*) from deliveryservice_regex where deliveryservice = $1`, dsID).Scan(&count); err != nil {
 		if err == sql.ErrNoRows {
