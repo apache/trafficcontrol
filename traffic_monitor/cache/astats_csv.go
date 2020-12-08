@@ -79,26 +79,35 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 	statMap := atsData.Ats
 
 	// Handle system specific values and remove them from the map for precomputing to not have issues
-	if stats.Loadavg, err = LoadavgFromRawLine(statMap["proc.loadavg"].(string)); err != nil {
+	if loadAvg, hadLoadAvg := statMap["proc.loadavg"].(string); !hadLoadAvg {
+		return stats, nil, fmt.Errorf("failed to parse loadavg line for cache '%s': %v", cacheName, "no proc.loadavg in Astats response")
+	} else if stats.Loadavg, err = LoadavgFromRawLine(loadAvg); err != nil {
 		return stats, nil, fmt.Errorf("parsing loadavg for cache '%s': %v", cacheName, err)
 	} else {
 		delete(statMap, "proc.loadavg")
 	}
 
-	if err := stats.AddInterfaceFromRawLine(statMap["proc.net.dev"].(string)); err != nil {
+	if procNetDev, hadProcNetDev := statMap["proc.net.dev"].(string); !hadProcNetDev {
+		return stats, nil, fmt.Errorf("failed to parse interface line for cache '%s': %v", cacheName, "no proc.net.dev in Astats response")
+	} else if err := stats.AddInterfaceFromRawLine(procNetDev); err != nil {
 		return stats, nil, fmt.Errorf("failed to parse interface line for cache '%s': %v", cacheName, err)
 	} else {
 		delete(statMap, "proc.net.dev")
 	}
 
-	if inf, ok := stats.Interfaces[statMap["inf.name"].(string)]; !ok {
+	if infName, hadinf := statMap["inf.name"].(string); !hadinf {
+		return stats, nil, fmt.Errorf("failed to parse inf line for cache '%s': %v", cacheName, "no inf.name in Astats response")
+	} else if inf, err := stats.Interfaces[infName]; !err {
 		return stats, nil, errors.New("/proc/net/dev line didn't match reported interface line")
 	} else {
-		inf.Speed = int64(statMap["inf.speed"].(float64)) //strconv.ParseInt(statMap["inf.speed"].(string), 10, 64)
-		stats.Interfaces[statMap["inf.name"].(string)] = inf
-		delete(statMap, "inf.speed")
-		delete(statMap, "inf.name")
-
+		if infSpeed, hadspeed := statMap["inf.speed"].(float64); !hadspeed {
+			return stats, nil, fmt.Errorf("failed to parse interface speed line for cache '%s': %v", cacheName, "no inf.speed in Astats response")
+		} else {
+			inf.Speed = int64(infSpeed)
+			stats.Interfaces[infName] = inf
+			delete(statMap, "inf.speed")
+			delete(statMap, "inf.name")
+		}
 	}
 
 	// Clean up other non-stats entries

@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +39,6 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
     private String configFile;
     private ConfigHandler configHandler;
-    private Path databasesDirectory;
 
     public LetsEncryptDnsChallengeWatcher() {
         setDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
@@ -106,7 +104,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
             return true;
         } catch (Exception e) {
-            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL + ": " + e.getMessage());
+            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL + ":", e);
         }
 
         return false;
@@ -119,7 +117,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             mapper.readValue(data, new TypeReference<HashMap<String, List<LetsEncryptDnsChallenge>>>() { });
             return true;
         } catch (Exception e) {
-            LOGGER.warn("Failed to build dns challenge data while verifying");
+            LOGGER.warn("Failed to build dns challenge data while verifying:", e);
         }
 
         return false;
@@ -142,7 +140,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             }
             return sb.toString();
         } catch (Exception e) {
-            LOGGER.error("Could not read cr-config file " + configFile + ".");
+            LOGGER.error("Could not read cr-config file " + configFile + ":", e);
             return null;
         }
     }
@@ -181,10 +179,6 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     }
     public ConfigHandler getConfigHandler() {
         return this.configHandler;
-    }
-
-    public void setDatabasesDirectory(final Path databasesDirectory) {
-        this.databasesDirectory = databasesDirectory;
     }
 
     public void setConfigFile(final String configFile) {
