@@ -215,12 +215,12 @@ jobs:
           RHEL_VERSION: 8
         uses: actions/cache@v2
         with:
-          path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic_ops/local
-          key: ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
+          path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-${{ env.RHEL_VERSION }}/local
+          key: ${{ runner.os }}-perl-cache-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
           restore-keys: |
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-
+            ${{ runner.os }}-perl-cache-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
+            ${{ runner.os }}-perl-cache-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-
+            ${{ runner.os }}-perl-cache-centos-${{ env.RHEL_VERSION }}-
       - name: Build CDN-in-a-Box images
         env:
           RHEL_VERSION: 8

@@ -103,7 +103,7 @@ WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 
 # Start with the existing traffic_ops/app/local directory
-COPY infrastructure/cdn-in-a-box/traffic_ops/local local
+COPY infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-${RHEL_VERSION:-8}/local local
 RUN export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
     echo 'Running carton...' && \
     [[ -d "${PERL5LIB}/x86_64-linux-thread-multi" ]]; existing_install=$? && \
