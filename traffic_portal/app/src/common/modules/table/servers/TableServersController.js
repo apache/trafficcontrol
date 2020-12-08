@@ -45,30 +45,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	/**
-	 * Gets text with which to file a status tooltip.
-	 * @returns {string | undefined} The offline reason if the server is offline, otherwise nothing.
-	 */
-	function offlineReasonTooltip(params) {
-		if (!params.value || !serverUtils.isOffline(params.value)) {
-			return;
-		}
-		return params.value + ': ' + params.data.offlineReason;
-	}
-
-	/**
-	 * Gets value to display a default tooltip.
-	 */
-	function defaultTooltip(params) {
-		return params.value;
-	}
-
-	/**
 	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
 	 */
 	function dateCellFormatter(params) {
 		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
-
 
 	/**** Constants, scope data, etc. ****/
 
@@ -246,7 +227,12 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "Status",
 			field: "status",
 			hide: false,
-			tooltip: offlineReasonTooltip
+			tooltipValueGetter: function(params) {
+				if (!params.value || !serverUtils.isOffline(params.value)) {
+					return;
+				}
+				return params.value + ': ' + params.data.offlineReason;
+			}
 		},
 		{
 			headerName: "TCP Port",
@@ -316,7 +302,9 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			filter: true,
 			sortable: true,
 			resizable: true,
-			tooltip: defaultTooltip
+			tooltipValueGetter: function(param) {
+				return param.value;
+			}
 		},
 		rowData: servers,
 		pagination: true,
@@ -330,9 +318,9 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			if (params.visible){
 				return;
 			}
-		    for (let column of params.columns) {
+			const filterModel = $scope.gridOptions.api.getFilterModel();
+			for (let column of params.columns) {
 				if (column.filterActive) {
-					const filterModel = $scope.gridOptions.api.getFilterModel();
 					if (column.colId in filterModel) {
 						delete filterModel[column.colId];
 						$scope.gridOptions.api.setFilterModel(filterModel);
@@ -375,7 +363,76 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		onColumnResized: function(params) {
 			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		},
+        onFirstDataRendered: function(event) {
+			try {
+				const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+				// apply any filter provided to the controller
+				Object.assign(filterState, filter);
+				$scope.gridOptions.api.setFilterModel(filterState);
+			} catch (e) {
+				console.error("Failure to load stored filter state:", e);
+			}
 
+			$scope.gridOptions.api.addEventListener("filterChanged", function() {
+				localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
+			});
+		},
+		onGridReady: function() {
+			try { // need to create the show/hide column checkboxes and bind to the current visibility
+				const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
+				if (colstates) {
+					if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
+						console.error("Failed to load stored column state: one or more columns not found");
+					}
+				} else {
+					$scope.gridOptions.api.sizeColumnsToFit();
+				}
+			} catch (e) {
+				console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
+			}
+
+			try {
+				const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
+				$scope.gridOptions.api.setSortModel(sortState);
+			} catch (e) {
+				console.error("Failure to load stored sort state:", e);
+			}
+
+			try {
+				$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
+				$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+			} catch (e) {
+				console.error("Failure to load stored quick search:", e);
+			}
+
+			try {
+				const ps = localStorage.getItem(tableName + "_page_size");
+				if (ps && ps > 0) {
+					$scope.pageSize = Number(ps);
+					$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
+				}
+			} catch (e) {
+				console.error("Failure to load stored page size:", e);
+			}
+
+			$scope.gridOptions.api.addEventListener("sortChanged", function() {
+				localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
+			});
+
+			$scope.gridOptions.api.addEventListener("columnMoved", function() {
+				localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			});
+
+			$scope.gridOptions.api.addEventListener("columnVisible", function() {
+				$scope.gridOptions.api.sizeColumnsToFit();
+				try {
+					const colStates = $scope.gridOptions.columnApi.getColumnState();
+					localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
+				} catch (e) {
+					console.error("Failed to store column defs to local storage:", e);
+				}
+			});
+		}
 	};
 
 	/** These three functions are used by the context menu to determine what functionality to provide for a server. */
@@ -489,7 +546,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 				messageModel.setMessages(fault.data.alerts, false);
 			}
 		);
-	};
+	}
 
 	$scope.confirmStatusUpdate = function(server, event) {
 		event.stopPropagation();
@@ -588,74 +645,6 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
-		try {
-			// need to create the show/hide column checkboxes and bind to the current visibility
-			const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
-			if (colstates) {
-				if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
-					console.error("Failed to load stored column state: one or more columns not found");
-				}
-			} else {
-				$scope.gridOptions.api.sizeColumnsToFit();
-			}
-		} catch (e) {
-			console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
-		}
-
-		try {
-			const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
-			// apply any filter provided to the controller
-			Object.assign(filterState, filter);
-			$scope.gridOptions.api.setFilterModel(filterState);
-		} catch (e) {
-			console.error("Failure to load stored filter state:", e);
-		}
-
-		$scope.gridOptions.api.addEventListener("filterChanged", function() {
-			localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
-		});
-
-		try {
-			const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
-			$scope.gridOptions.api.setSortModel(sortState);
-		} catch (e) {
-			console.error("Failure to load stored sort state:", e);
-		}
-
-		try {
-			$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
-			$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
-		} catch (e) {
-			console.error("Failure to load stored quick search:", e);
-		}
-
-		try {
-			const ps = localStorage.getItem(tableName + "_page_size");
-			if (ps && ps > 0) {
-				$scope.pageSize = Number(ps);
-				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
-			}
-		} catch (e) {
-			console.error("Failure to load stored page size:", e);
-		}
-
-		$scope.gridOptions.api.addEventListener("sortChanged", function() {
-			localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
-		});
-
-		$scope.gridOptions.api.addEventListener("columnMoved", function() {
-			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
-		});
-
-		$scope.gridOptions.api.addEventListener("columnVisible", function() {
-			$scope.gridOptions.api.sizeColumnsToFit();
-			try {
-				colStates = $scope.gridOptions.columnApi.getColumnState();
-				localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
-			} catch (e) {
-				console.error("Failed to store column defs to local storage:", e);
-			}
-		});
 
 		// clicks outside the context menu will hide it
 		$document.bind("click", function(e) {

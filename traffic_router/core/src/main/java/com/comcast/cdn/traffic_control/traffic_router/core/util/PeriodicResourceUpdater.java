@@ -272,6 +272,9 @@ public class PeriodicResourceUpdater {
 			final int code = response.getStatusCode();
 
 			if (code != 200) {
+				if (code >= 400) {
+					LOGGER.warn("failed to GET " + response.getUri() + " - returned status code " + code);
+				}
 				return code;
 			}
 
