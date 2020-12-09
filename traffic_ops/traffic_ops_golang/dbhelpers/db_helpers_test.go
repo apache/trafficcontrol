@@ -372,20 +372,21 @@ func TestGetCDNIDFromName(t *testing.T) {
 				"id",
 			})
 			mock.ExpectBegin()
+			expectedIDValue := 3
 			if testCase.storageError != nil {
 				mock.ExpectQuery("SELECT").WillReturnError(testCase.storageError)
 			} else {
 				if testCase.found {
-					rows = rows.AddRow(1)
+					rows = rows.AddRow(expectedIDValue)
 				}
 				mock.ExpectQuery("SELECT").WillReturnRows(rows)
 			}
 			mock.ExpectCommit()
 			id, exists, err := GetCDNIDFromName(db.MustBegin().Tx, "testCdn")
-			if testCase.storageError != nil && err == nil && id != 0 {
+			if testCase.storageError != nil && err == nil && id == expectedIDValue {
 				t.Errorf("Storage error expected: received no storage error")
 			}
-			if testCase.storageError == nil && err != nil && id != 0 {
+			if testCase.storageError == nil && err != nil && id == expectedIDValue {
 				t.Errorf("Storage error not expected: received storage error")
 			}
 			if testCase.found != exists && id == 0 {
