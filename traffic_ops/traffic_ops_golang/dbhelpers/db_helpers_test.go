@@ -389,6 +389,9 @@ func TestGetCDNIDFromName(t *testing.T) {
 			if testCase.storageError == nil && err != nil && id == expectedIDValue {
 				t.Errorf("Storage error not expected: received storage error")
 			}
+			if exists && testCase.storageError == nil && err == nil && id != expectedIDValue {
+				t.Errorf("Expected ID %d, but got %d", expectedIDValue, id)
+			}
 			if testCase.found != exists && id == 0 {
 				t.Errorf("Expected return exists: %t, actual %t", testCase.found, exists)
 			}
