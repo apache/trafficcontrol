@@ -17,7 +17,6 @@ package v3
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -962,6 +961,8 @@ func GetAccessibleToTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get tenant " + err.Error())
 	}
+	// TODO: document that all DSes added to the fixture data need to have the
+	// Tenant 'tenant1' unless you change this code
 	err = getByTenants(childTenant.ID, len(testData.DeliveryServices)-1)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -981,7 +982,7 @@ func getByTenants(tenantID int, expectedCount int) error {
 		return err
 	}
 	if len(deliveryServices) != expectedCount {
-		return errors.New(fmt.Sprintf("expected %v delivery service, got %v", expectedCount, len(deliveryServices)))
+		return fmt.Errorf("expected %v delivery service, got %v", expectedCount, len(deliveryServices))
 	}
 	return nil
 }
@@ -992,6 +993,10 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
+		if testDS.XMLID == nil {
+			t.Errorf("testing Delivery Service has no XMLID")
+			continue
+		}
 		var ds tc.DeliveryServiceNullableV30
 		found := false
 		for _, realDS := range dses {
@@ -1002,7 +1007,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("DeliveryService not found in Traffic Ops: %v", *ds.XMLID)
+			t.Errorf("DeliveryService not found in Traffic Ops: %v", *testDS.XMLID)
 			continue
 		}
 

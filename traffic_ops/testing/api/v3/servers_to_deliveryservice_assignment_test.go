@@ -68,7 +68,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, true)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, false)
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
 	}

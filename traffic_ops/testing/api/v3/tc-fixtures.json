@@ -1332,6 +1332,29 @@
             "type": "HTTP",
             "xmlId": "inactiveds",
             "anonymousBlockingEnabled": true
+        },
+        {
+            "active": true,
+            "anonymousBlockingEnabled": false,
+            "cdnName": "cdn1",
+            "displayName": "test",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": false,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "https://example.com",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenant": "tenant1",
+            "type": "HTTP",
+            "xmlId": "test-ds-server-assignments"
         }
     ],
     "deliveryServicesRegexes": [
@@ -4215,6 +4238,31 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "test-ds-server-assignments",
+            "hostName": "test-ds-server-assignments",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "name": "eth0",
+                    "ipAddresses": [
+                        {
+                            "address": "198.51.100.1",
+                            "serviceAddress": true
+                        }
+                    ]
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "revalPending": false,
+            "status": "ONLINE",
+            "tcpPort": 80,
+            "type": "EDGE",
             "updPending": false
         }
     ],

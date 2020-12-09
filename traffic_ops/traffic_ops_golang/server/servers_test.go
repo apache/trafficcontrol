@@ -94,7 +94,7 @@ func getTestServers() []ServerAndInterfaces {
 
 	iface := tc.ServerInterfaceInfo{
 		IPAddresses: []tc.ServerIPAddress{
-			tc.ServerIPAddress{
+			{
 				Address:        testServer.IPAddress,
 				Gateway:        nil,
 				ServiceAddress: true,
@@ -512,7 +512,7 @@ func TestV3Validations(t *testing.T) {
 
 	goodInterface := tc.ServerInterfaceInfo{
 		IPAddresses: []tc.ServerIPAddress{
-			tc.ServerIPAddress{
+			{
 				Address:        "127.0.0.1/32",
 				Gateway:        nil,
 				ServiceAddress: true,
@@ -524,7 +524,7 @@ func TestV3Validations(t *testing.T) {
 		Name:         "eth0",
 	}
 
-	testServer := tc.ServerNullable{
+	testServer := tc.ServerV30{
 		CommonServerProperties: tc.CommonServerProperties{
 			CDNID:          util.IntPtr(1),
 			HostName:       util.StrPtr("test"),
