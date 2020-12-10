@@ -32,8 +32,6 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
-const MaxUint = ^uint(0)
-const MaxInt = int(MaxUint >> 1)
 
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {

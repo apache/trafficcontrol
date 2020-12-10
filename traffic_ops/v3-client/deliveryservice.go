@@ -34,24 +34,12 @@ const (
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
 	API_DELIVERY_SERVICES = apiBase + "/deliveryservices"
 
-	// API_DELIVERY_SERVICES_V31 is the API path on which Traffic Ops serves Delivery Service
-	// information. More specific information is typically found on sub-paths of this.
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
-	API_DELIVERY_SERVICES_V31 = apiBaseV31 + "/deliveryservices"
-
 	// API_DELIVERY_SERVICE_ID is the API path on which Traffic Ops serves information about
 	// a specific Delivery Service identified by an integral, unique identifier. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
 	API_DELIVERY_SERVICE_ID = API_DELIVERY_SERVICES + "/%v"
-
-	// API_DELIVERY_SERVICE_ID is the API path on which Traffic Ops serves information about
-	// a specific Delivery Service identified by an integral, unique identifier. It is
-	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
-	// of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
-	API_DELIVERY_SERVICE_ID_V31 = API_DELIVERY_SERVICES_V31 + "/%v"
 
 	// API_DELIVERY_SERVICE_HEALTH is the API path on which Traffic Ops serves information about
 	// the 'health' of a specific Delivery Service identified by an integral, unique identifier. It is
@@ -162,7 +150,7 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
 func (to *Session) GetDeliveryServicesV31(header http.Header, params url.Values) ([]tc.DeliveryServiceV31, ReqInf, error) {
-	uri := API_DELIVERY_SERVICES_V31
+	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
 	}
@@ -437,7 +425,7 @@ func (to *Session) UpdateDeliveryServiceV31(id int, ds tc.DeliveryServiceV31, he
 	}
 
 	var data tc.DeliveryServicesResponseV31
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID_V31, id), bts, &data, header)
+	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data, header)
 	if err != nil {
 		return tc.DeliveryServiceV31{}, reqInf, err
 	}

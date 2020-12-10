@@ -23,6 +23,6 @@
 
 angular.module('config', [])
 
-.constant('ENV', { api: { root:'/api/3.0/', legacy: '/api/1.5/', deliveryServices: '/api/3.1/' } })
+.constant('ENV', { api: { root:'/api/3.1/', legacy: '/api/1.5/' } })
 
 ;
