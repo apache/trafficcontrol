@@ -175,9 +175,9 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
+	id := -1
 	cdn, ok := inf.Params["cdn"]
 	if !ok {
-		var id int
 		if deprecated {
 			id, ok = inf.IntParams["id"]
 			if !ok {
@@ -203,7 +203,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		}
 		cdn = name
 	} else {
-		_, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+		id, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
 		if err != nil {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN ID from name: "+err.Error()), deprecated, &alt)
 			return
@@ -235,7 +235,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(id)+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
 	if deprecated {
 		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(&alt), "SUCCESS")
 		return
