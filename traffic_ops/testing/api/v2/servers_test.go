@@ -144,8 +144,11 @@ func UpdateTestServers(t *testing.T) {
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = updatedXMPPID
 	al, _, err := TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
-	if err != nil {
-		t.Logf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", remoteServer.ID, hostName, err, al)
+	t.Logf("Alerts from changing server XMPPID: %v", al)
+	if err == nil {
+		t.Error("Didn't get expected error changing server XMPPID")
+	} else {
+		t.Logf("Got expected error trying to change server XMPPID: %v", err)
 	}
 
 	//Change back hostname and xmppid to its original name for other tests to pass
@@ -206,6 +209,17 @@ func DeleteTestServers(t *testing.T) {
 		}
 		if len(resp) > 0 {
 			respServer := resp[0]
+
+			dses, _, err := TOSession.GetServerIDDeliveryServices(respServer.ID)
+			for _, ds := range dses {
+				if ds.ID == nil {
+					t.Logf("got DS assigned to server #%d that has no ID - deletion may fail!", respServer.ID)
+					continue
+				}
+				if ds.Active == nil || *ds.Active {
+					setInactive(t, *ds.ID)
+				}
+			}
 
 			delResp, _, err := TOSession.DeleteServerByID(respServer.ID)
 			if err != nil {

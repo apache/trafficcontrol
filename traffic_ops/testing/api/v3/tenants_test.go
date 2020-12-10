@@ -84,9 +84,10 @@ func CreateTestTenants(t *testing.T) {
 
 		if err != nil {
 			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
-		}
-		if resp.Response.Name != ten.Name {
-			t.Errorf("expected tenant %+v; got %+v", ten, resp.Response)
+		} else if resp == nil {
+			t.Errorf("nil response")
+		} else if resp.Response.Name != ten.Name {
+			t.Errorf("expected tenant '%s'; got '%s'", ten.Name, resp.Response.Name)
 		}
 	}
 }

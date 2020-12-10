@@ -32,6 +32,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 		DeleteTestDeliveryServiceServers(t)
 		AssignServersToTopologyBasedDeliveryService(t)
 		AssignOriginsToTopologyBasedDeliveryServices(t)
+		TryToRemoveLastServerInDeliveryService(t)
 		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
 	})
 }
@@ -41,6 +42,152 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
 		CreateTestMSODSServerWithReqCap(t)
 	})
+}
+
+const dssaTestingXMLID = "test-ds-server-assignments"
+
+func TryToRemoveLastServerInDeliveryService(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(dssaTestingXMLID, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error trying to get Delivery service with XMLID '%s': %v", dssaTestingXMLID, err)
+	}
+	if len(dses) != 1 {
+		t.Fatalf("Expected exactly one Delivery service with XMLID '%s', got: %d", dssaTestingXMLID, len(dses))
+	}
+	ds := dses[0]
+	if ds.ID == nil {
+		t.Fatalf("Delivery Service '%s' has no ID", dssaTestingXMLID)
+	}
+
+	statuses, _, err := TOSession.GetStatusesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("Could not fetch Statuses: %v", err)
+	}
+	if len(statuses) < 1 {
+		t.Fatal("Need at least one Status")
+	}
+
+	var badStatusID int
+	found := false
+	for _, status := range statuses {
+		if status.Name != tc.CacheStatusOnline.String() && status.Name != tc.CacheStatusReported.String() {
+			badStatusID = status.ID
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("Need at least one status with a name other than '%s' or '%s'", tc.CacheStatusOnline, tc.CacheStatusReported)
+	}
+
+	// TODO: this isn't sufficient to define a single server, so there might be
+	// a better way to do this.
+	params := url.Values{}
+	params.Set("hostName", dssaTestingXMLID)
+	params.Set("domainName", dssaTestingXMLID)
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error fetching server '%s.%s': %v", dssaTestingXMLID, dssaTestingXMLID, err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatalf("Expected exactly one server with FQDN '%s.%s', got: %d", dssaTestingXMLID, dssaTestingXMLID, len(servers.Response))
+	}
+	server := servers.Response[0]
+	if server.ID == nil {
+		t.Fatal("Server had null/undefined ID after creation")
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true)
+	if err != nil {
+		t.Fatalf("Failed to assign server to Delivery Service: %v", err)
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{}, true)
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
+	}
+
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, *server.ID)
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
+	}
+
+	alerts, _, err := TOSession.DeleteServerByID(*server.ID)
+	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err == nil {
+		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v", err)
+	}
+
+	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true)
+	t.Logf("Alerts from removing Delivery Service from server: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
+	} else {
+		t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v", err)
+	}
+
+	server.StatusID = &badStatusID
+	putRequest := tc.ServerPutStatus{
+		Status:        util.JSONNameOrIDStr{ID: &badStatusID},
+		OfflineReason: util.StrPtr("test"),
+	}
+	alertsPtr, _, err := TOSession.UpdateServerStatus(*server.ID, putRequest)
+	if alertsPtr != nil {
+		t.Logf("Alerts from updating server status: %s", strings.Join(alertsPtr.ToStrings(), ", "))
+	}
+	if err == nil {
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
+	}
+
+	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
+	t.Logf("Alerts from updating server status: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err == nil {
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
+	}
+
+	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
+	server.ID = nil
+	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
+	if err != nil {
+		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
+	}
+	params.Set("hostName", *server.HostName)
+	servers, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Could not fetch server after creation: %v", err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatalf("Expected exactly 1 server with hostname '%s'; got: %d", *server.HostName, len(servers.Response))
+	}
+	server = servers.Response[0]
+	if server.ID == nil {
+		t.Fatal("Server had null/undefined ID after creation")
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true)
+	if err == nil {
+		t.Error("Didn't get expected error trying to replace the last server assigned to a Delivery Service with a server in a bad state")
+	} else {
+		t.Logf("Got expected error trying to replace the last server assigned to a Delivery Service with a server in a bad state: %v", err)
+	}
+
+	// Cleanup
+	setInactive(t, *ds.ID)
+	alerts, _, err = TOSession.DeleteServerByID(*server.ID)
+	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
+	if err != nil {
+		t.Errorf("Failed to delete server: %v", err)
+	}
 }
 
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
@@ -371,6 +518,9 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	if ds.ID == nil {
 		t.Fatalf("Got a delivery service with a nil ID %+v", ds)
 	}
+	if ds.Active == nil {
+		t.Fatalf("Got a Delivery Service with nil 'Active': %+v", ds)
+	}
 
 	_, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true)
 	if err != nil {
@@ -391,6 +541,14 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 	if !found {
 		t.Error("POST delivery service servers returned success, but ds-server not in GET")
+	}
+
+	if *ds.Active {
+		*ds.Active = false
+		_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+		if err != nil {
+			t.Errorf("Setting Delivery Service #%d to inactive", *ds.ID)
+		}
 	}
 
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(*ds.ID, *server.ID); err != nil {

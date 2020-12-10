@@ -467,18 +467,24 @@ func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[in
 
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
-	var caps []string
-	q := `SELECT ARRAY(SELECT drc.required_capability FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = $1 ORDER BY drc.required_capability);`
+	q := `
+	SELECT required_capability
+	FROM deliveryservices_required_capability
+	WHERE deliveryservice_id = $1
+	ORDER BY required_capability`
 	rows, err := tx.Query(q, id)
 	if err != nil {
 		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
 	}
 	defer rows.Close()
 
+	caps := []string{}
 	for rows.Next() {
-		if err := rows.Scan(pq.Array(&caps)); err != nil {
+		var cap string
+		if err := rows.Scan(&cap); err != nil {
 			return nil, errors.New("scanning capability: " + err.Error())
 		}
+		caps = append(caps, cap)
 	}
 	return caps, nil
 }
@@ -689,10 +695,13 @@ SELECT
   s.host_name,
   s.domain_name,
   s.cdn_id,
-  t.name
+  t.name,
+  s.id,
+  status.name
 FROM
   server s JOIN type t ON s.type = t.id
   JOIN cachegroup c on s.cachegroup = c.id
+  JOIN status on status.id = s.status
 `
 
 // GetServerInfosFromIDs returns the ServerInfo structs of the given server IDs or an error if any occur.
@@ -724,7 +733,7 @@ func scanServerInfoRows(rows *sql.Rows) ([]tc.ServerInfo, error) {
 	servers := []tc.ServerInfo{}
 	for rows.Next() {
 		s := tc.ServerInfo{}
-		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type); err != nil {
+		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type, &s.ID, &s.Status); err != nil {
 			return nil, errors.New("scanning server info: " + err.Error())
 		}
 		servers = append(servers, s)
