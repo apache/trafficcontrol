@@ -259,6 +259,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	}
 
 	//Get Topology node to update and remove ORG server nodes
+	origTopo := *remoteDS[0].Topology
 	resp, _, err := TOSession.GetTopologyWithHdr(*remoteDS[0].Topology, nil)
 	if err != nil {
 		t.Fatalf("couldn't find any topologies: %v", err)
@@ -270,7 +271,14 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	}
 	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
 	if err == nil {
-		t.Fatalf("shouldnot UPDATE topology:%v, but update was a success", *remoteDS[0].Topology)
+		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
+	}
+
+	//Set topology back to as it was for further testing
+	remoteDS[0].Topology = &origTopo
+	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	if err != nil {
+		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
 	}
 }
 
