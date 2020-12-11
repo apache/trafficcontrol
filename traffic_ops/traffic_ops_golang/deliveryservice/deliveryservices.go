@@ -46,15 +46,15 @@ import (
 
 type TODeliveryService struct {
 	api.APIInfoImpl
-	tc.DeliveryServiceV31
+	tc.DeliveryServiceNullableV30
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceV30)
+	return json.Marshal(ds.DeliveryServiceNullableV30)
 }
 
 func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceV30)
+	return json.Unmarshal(data, ds.DeliveryServiceNullableV30)
 }
 
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
@@ -1476,7 +1476,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV31, error, error, int, *time.Time) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullableV30, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
@@ -1511,7 +1511,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.DeliveryServiceV31{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.DeliveryServiceNullableV30{}, nil, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -1676,21 +1676,21 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceV31, error, error, int) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullableV30, error, error, int) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
-	dses := []tc.DeliveryServiceV31{}
+	dses := []tc.DeliveryServiceNullableV30{}
 	dsCDNDomains := map[string]string{}
 
 	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceV31{}
+		ds := tc.DeliveryServiceNullableV30{}
 		cdnDomain := ""
 		err := rows.Scan(&ds.Active,
 			&ds.AnonymousBlockingEnabled,
