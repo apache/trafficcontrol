@@ -352,7 +352,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
 		&ds.ServiceCategory,
-		&ds.MaxRequestHeaderSize,
+		&ds.MaxRequestHeaderBytes,
 	)
 
 	if err != nil {
@@ -943,7 +943,7 @@ SELECT
   ds.inner_header_rewrite,
   ds.last_header_rewrite,
   ds.service_category,
-  ds.max_request_header_size
+  ds.max_request_header_bytes
 FROM
   deliveryservice ds
 WHERE
@@ -954,7 +954,7 @@ WHERE
 		&dsV31.InnerHeaderRewrite,
 		&dsV31.LastHeaderRewrite,
 		&dsV31.ServiceCategory,
-		&dsV31.MaxRequestHeaderSize,
+		&dsV31.MaxRequestHeaderBytes,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV31.ID), nil
@@ -1095,7 +1095,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
 		&ds.ServiceCategory,
-		&ds.MaxRequestHeaderSize,
+		&ds.MaxRequestHeaderBytes,
 		&ds.ID)
 
 	if err != nil {
@@ -1731,7 +1731,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.LongDesc2,
 			&ds.MaxDNSAnswers,
 			&ds.MaxOriginConnections,
-			&ds.MaxRequestHeaderSize,
+			&ds.MaxRequestHeaderBytes,
 			&ds.MidHeaderRewrite,
 			&ds.MissLat,
 			&ds.MissLong,
@@ -2242,7 +2242,7 @@ ds.long_desc_1,
 ds.long_desc_2,
 ds.max_dns_answers,
 ds.max_origin_connections,
-ds.max_request_header_size,
+ds.max_request_header_bytes,
 ds.mid_header_rewrite,
 COALESCE(ds.miss_lat, 0.0),
 COALESCE(ds.miss_long, 0.0),
@@ -2349,7 +2349,7 @@ first_header_rewrite=$56,
 inner_header_rewrite=$57,
 last_header_rewrite=$58,
 service_category=$59,
-max_request_header_size=$60
+max_request_header_bytes=$60
 WHERE id=$61
 RETURNING last_updated
 `
@@ -2553,7 +2553,7 @@ first_header_rewrite,
 inner_header_rewrite,
 last_header_rewrite,
 service_category,
-max_request_header_size
+max_request_header_bytes
 )
 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)
 RETURNING id, last_updated

@@ -428,7 +428,7 @@
             "type": "HTTP",
             "xmlId": "ds1",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -497,7 +497,7 @@
             "type": "HTTP_LIVE",
             "xmlId": "ds2",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -566,7 +566,7 @@
             "type": "HTTP_LIVE",
             "xmlId": "ds3",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -625,7 +625,7 @@
             "type": "ANY_MAP",
             "xmlId": "anymap-ds",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -685,7 +685,7 @@
             "type": "HTTP_LIVE",
             "xmlId": "ds-test-minor-versions",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -753,7 +753,7 @@
             "type": "HTTP_LIVE",
             "xmlId": "msods1",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -821,7 +821,7 @@
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds1nat",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -889,7 +889,7 @@
             "firstHeaderRewrite": "first header rewrite",
             "innerHeaderRewrite": "inner header rewrite",
             "lastHeaderRewrite": "last header rewrite",
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -954,7 +954,7 @@
             "type": "HTTP",
             "xmlId": "ds-top-req-cap",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1019,7 +1019,7 @@
             "type": "HTTP",
             "xmlId": "ds-top-req-cap2",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1083,7 +1083,7 @@
             "type": "CLIENT_STEERING",
             "xmlId": "ds-client-steering",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1148,7 +1148,7 @@
             "type": "HTTP",
             "xmlId": "ds-forked-topology",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1213,7 +1213,7 @@
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn1",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1278,7 +1278,7 @@
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn2",
             "anonymousBlockingEnabled": false,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": false,
@@ -1346,7 +1346,7 @@
             "type": "HTTP",
             "xmlId": "inactiveds",
             "anonymousBlockingEnabled": true,
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1370,7 +1370,7 @@
             "tenant": "tenant1",
             "type": "HTTP",
             "xmlId": "test-ds-server-assignments",
-            "maxRequestHeaderSize": 131072
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [

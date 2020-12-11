@@ -209,7 +209,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 				},
 			},
 		},
-		MaxRequestHeaderSize: nil,
+		MaxRequestHeaderBytes: nil,
 	}
 
 	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
@@ -470,7 +470,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
-	remoteDS.MaxRequestHeaderSize = &updatedMaxRequestHeaderSize
+	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
 
 	if updateResp, _, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
@@ -488,11 +488,11 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	resp := apiResp[0]
 
-	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections || *resp.MaxRequestHeaderSize != updatedMaxRequestHeaderSize {
+	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections || *resp.MaxRequestHeaderBytes != updatedMaxRequestHeaderSize {
 		t.Errorf("long description do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
 		t.Errorf("max DNS answers do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
 		t.Errorf("max origin connections do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
-		t.Errorf("max request header sizes do not match actual: %v, expected: %v", resp.MaxRequestHeaderSize, updatedMaxRequestHeaderSize)
+		t.Errorf("max request header sizes do not match actual: %v, expected: %v", resp.MaxRequestHeaderBytes, updatedMaxRequestHeaderSize)
 	}
 }
 

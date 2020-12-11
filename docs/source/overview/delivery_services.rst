@@ -527,11 +527,11 @@ Max Origin Connections
 ----------------------
 The maximum number of TCP connections individual :term:`Mid-tier cache servers` are allowed to make to the `Origin Server Base URL`. A value of ``0`` in this field indicates that there is no maximum.
 
-.. _ds-max-request-header-size:
+.. _ds-max-request-header-bytes:
 
-Max Request Header Size
------------------------
-The maximum size of the request header that is allowed for this Delivery Service.
+Max Request Header Bytes
+------------------------
+The maximum size(in bytes) of the request header that is allowed for this Delivery Service.
 
 .. _ds-mid-header-rw-rules:
 

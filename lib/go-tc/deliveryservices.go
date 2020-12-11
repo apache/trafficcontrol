@@ -191,7 +191,7 @@ type DeliveryServiceV30 struct {
 
 type DeliveryServiceV31 struct {
 	DeliveryServiceV30
-	MaxRequestHeaderSize *int `json:"maxRequestHeaderSize" db:"max_request_header_size"`
+	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
 }
 
 type DeliveryServiceNullableV30 DeliveryServiceV31
@@ -387,8 +387,8 @@ func (ds *DeliveryServiceNullableV30) Sanitize() {
 		ds.DeepCachingType = &s
 	}
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
-	if ds.MaxRequestHeaderSize == nil {
-		ds.MaxRequestHeaderSize = util.IntPtr(DefaultMaxHeaderSize)
+	if ds.MaxRequestHeaderBytes == nil {
+		ds.MaxRequestHeaderBytes = util.IntPtr(DefaultMaxHeaderSize)
 	}
 }
 

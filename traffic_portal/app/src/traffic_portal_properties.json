@@ -143,7 +143,7 @@
           "regionalGeoBlocking": false,
           "anonymousBlockingEnabled": false,
           "ecsEnabled": false,
-          "maxRequestHeaderSize": 131072
+          "maxRequestHeaderBytes": 131072
         },
         "HTTP": {
           "routingName": "cdn",
@@ -166,7 +166,7 @@
           "anonymousBlockingEnabled": false,
           "consistentHashQueryParams": [],
           "ecsEnabled": false,
-          "maxRequestHeaderSize": 131072
+          "maxRequestHeaderBytes": 131072
         },
         "STEERING": {
           "dscp": 0,
