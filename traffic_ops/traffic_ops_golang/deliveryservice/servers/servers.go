@@ -337,6 +337,43 @@ type DSServerIds struct {
 
 type TODSServerIds DSServerIds
 
+const verifyStatusesQuery = `
+SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
+FROM server
+INNER JOIN status ON server.status = status.id
+WHERE server.id = ANY($1::BIGINT[])
+`
+
+func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
+	if len(ids) < 1 {
+		return false, nil
+	}
+
+	if tx == nil {
+		return false, errors.New("nil transaction")
+	}
+
+	rows, err := tx.Query(verifyStatusesQuery, pq.Array(ids))
+	if err != nil {
+		return false, fmt.Errorf("querying: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var isAvailable bool
+		err = rows.Scan(&isAvailable)
+		if err != nil {
+			return false, fmt.Errorf("scanning: %v", err)
+		}
+		if isAvailable {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// GetReplaceHandler is the handler for POST requests to the /deliveryserviceserver API endpoint.
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
@@ -385,7 +422,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos)
+	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, *payload.Replace)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -461,7 +498,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos)
+	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, false)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -493,10 +530,24 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
-func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo) (error, error, int) {
+func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
 	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, status
+	}
+
+	if ds.Active && replace {
+		ids := make([]int, 0, len(serverInfos))
+		for _, inf := range serverInfos {
+			ids = append(ids, inf.ID)
+		}
+		ok, err := verifyAtLeastOneAvailableServer(ids, tx)
+		if err != nil {
+			return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
+		}
+		if !ok {
+			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		}
 	}
 
 	userErr, sysErr, status = ValidateServerCapabilities(tx, ds.ID, serverInfos)
@@ -564,7 +615,7 @@ func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.S
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, fmt.Errorf("validating server capabilities: %v", err), http.StatusInternalServerError
 	}
 
 	for _, name := range nonOriginServerNames {
@@ -857,6 +908,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 }
 
 type DSInfo struct {
+	Active               bool
 	ID                   int
 	Name                 string
 	Type                 tc.DSType
@@ -873,6 +925,7 @@ type DSInfo struct {
 // language=sql
 const getDSInfoBaseQuery = `
 SELECT
+  ds.active,
   ds.id,
   ds.xml_id,
   tp.name as type,
@@ -892,6 +945,7 @@ FROM
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
 	if err := row.Scan(
+		&di.Active,
 		&di.ID,
 		&di.Name,
 		&di.Type,

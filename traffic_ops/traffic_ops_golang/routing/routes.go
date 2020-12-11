@@ -264,7 +264,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 256142213, noPerlBypass},
 
 		//Ping
-		{api.Version{3, 0}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 25556615973, noPerlBypass},
+		{api.Version{3, 0}, http.MethodGet, `ping$`, ping.Handler, 0, NoAuth, nil, 25556615973, noPerlBypass},
 		{api.Version{3, 0}, http.MethodGet, `vault/ping/?$`, ping.Vault, auth.PrivLevelReadOnly, Authenticated, nil, 28840121143, noPerlBypass},
 
 		//Profile: CRUD
@@ -641,7 +641,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 25614221, noPerlBypass},
 
 		//Ping
-		{api.Version{2, 0}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 2555661597, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `ping$`, ping.Handler, 0, NoAuth, nil, 2555661597, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `vault/ping/?$`, ping.Vault, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
 
 		//Profile: CRUD
@@ -1027,7 +1027,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 15614221, noPerlBypass},
 
 		//Ping
-		{api.Version{1, 1}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 1555661597, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `ping$`, ping.Handler, 0, NoAuth, nil, 1555661597, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `riak/ping/?(\.json)?$`, ping.Riak, auth.PrivLevelReadOnly, Authenticated, nil, 1884012114, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `keys/ping/?(\.json)?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil, 318416022, noPerlBypass},
 

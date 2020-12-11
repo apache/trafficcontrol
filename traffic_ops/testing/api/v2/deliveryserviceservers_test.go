@@ -201,6 +201,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
+	setInactive(t, *ds.ID)
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(*ds.ID, server.ID); err != nil {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}

@@ -17,3 +17,8 @@
 #
 traffic_ops_golang
 *.log
+cdn.conf
+database.conf
+localhost.crt
+localhost.key
+riak.conf
