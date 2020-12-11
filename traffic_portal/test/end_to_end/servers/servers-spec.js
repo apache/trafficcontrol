@@ -25,7 +25,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
 	const mockVals = {
-		status: "OFFLINE",
+		status: "ONLINE",
 		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
