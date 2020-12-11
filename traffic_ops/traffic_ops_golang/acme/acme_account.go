@@ -21,45 +21,13 @@ package acme
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/go-ozzo/ozzo-validation"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
-
-type AcmeAccount struct {
-	Email      *string `json:"email" db:"email"`
-	PrivateKey *string `json:"private_key" db:"private_key"`
-	Uri        *string `json:"uri" db:"uri"`
-	Provider   *string `json:"provider" db:"provider"`
-}
-
-func (aa *AcmeAccount) Validate(tx *sql.Tx) error {
-
-	errs := validation.Errors{
-		"email":       validation.Validate(aa.Email, validation.Required),
-		"private_key": validation.Validate(aa.PrivateKey, validation.Required),
-		"uri":         validation.Validate(aa.Uri, validation.Required),
-		"provider":    validation.Validate(aa.Provider, validation.Required),
-	}
-
-	return util.JoinErrs(tovalidate.ToErrors(errs))
-}
-
-func (aa *AcmeAccount) ValidateUpdate(tx *sql.Tx) error {
-
-	errs := validation.Errors{
-		"email":    validation.Validate(aa.Email, validation.Required),
-		"provider": validation.Validate(aa.Provider, validation.Required),
-	}
-
-	return util.JoinErrs(tovalidate.ToErrors(errs))
-}
 
 const readQuery = `SELECT email, private_key, uri, provider FROM acme_account`
 const createQuery = `INSERT INTO acme_account (email, private_key, uri, provider) VALUES (:email, :private_key, :uri, :provider) RETURNING email, provider`
@@ -75,7 +43,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var acmeAccounts []AcmeAccount
+	acmeAccounts := []tc.AcmeAccount{}
 	rows, err := tx.Query(readQuery)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("querying acme accounts: "+err.Error()))
@@ -84,7 +52,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var acct AcmeAccount
+		var acct tc.AcmeAccount
 		if err = rows.Scan(&acct.Email, &acct.PrivateKey, &acct.Uri, &acct.Provider); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning acme accounts: "+err.Error()))
 			return
@@ -105,30 +73,23 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx.Tx
 
-	var acmeAccount AcmeAccount
-	if err := json.NewDecoder(r.Body).Decode(&acmeAccount); err != nil {
+	var acmeAccount tc.AcmeAccount
+	if err := api.Parse(r.Body, tx, &acmeAccount); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	if validErr := acmeAccount.Validate(tx); validErr != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, validErr, nil)
+	var prevEmail string
+	var prevProvider string
+	err := tx.QueryRow("SELECT email, provider from acme_account where email = $1 and provider = $2", acmeAccount.Email, acmeAccount.Provider).Scan(&prevEmail, &prevProvider)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err.Error())))
 		return
 	}
 
-	if acmeAccount.Email != nil && acmeAccount.Provider != nil {
-		var prevEmail string
-		var prevProvider string
-		err := tx.QueryRow("SELECT email, provider from acme_account where email = $1 and provider = $2", acmeAccount.Email, acmeAccount.Provider).Scan(&prevEmail, &prevProvider)
-		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err.Error())))
-			return
-		}
-
-		if prevEmail != "" && prevProvider != "" {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("acme account already exists"), nil)
-			return
-		}
+	if prevEmail != "" && prevProvider != "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("acme account already exists"), nil)
+		return
 	}
 
 	resultRows, err := inf.Tx.NamedQuery(createQuery, acmeAccount)
@@ -145,9 +106,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if rowsAffected == 0 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("acme account create: no account was inserted"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many rows returned from acme account insert"))
 		return
 	}
 
@@ -168,18 +126,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx.Tx
 
-	var acmeAccount AcmeAccount
-	if err := json.NewDecoder(r.Body).Decode(&acmeAccount); err != nil {
+	var acmeAccount tc.AcmeAccount
+	if err := api.Parse(r.Body, tx, &acmeAccount); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	if validErr := acmeAccount.ValidateUpdate(tx); validErr != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, validErr, nil)
-		return
-	}
-
-	var prevAccount AcmeAccount
+	var prevAccount tc.AcmeAccount
 	err := tx.QueryRow("SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2", acmeAccount.Email, acmeAccount.Provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
 	if err == sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("acme account not found")), nil)
@@ -188,14 +141,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err.Error())))
 		return
-	}
-
-	if acmeAccount.Uri == nil {
-		acmeAccount.Uri = prevAccount.Uri
-	}
-
-	if acmeAccount.PrivateKey == nil {
-		acmeAccount.PrivateKey = prevAccount.PrivateKey
 	}
 
 	resultRows, err := inf.Tx.NamedQuery(updateQuery, acmeAccount)
@@ -212,9 +157,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if rowsAffected == 0 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("acme account update: no account was updated"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many rows returned from acme account update"))
 		return
 	}
 
@@ -238,7 +180,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx.Tx
 
-	var prevAccount AcmeAccount
+	var prevAccount tc.AcmeAccount
 	err := tx.QueryRow("SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2", email, provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
 	if err == sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("acme account not found")), nil)

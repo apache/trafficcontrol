@@ -25,6 +25,9 @@ Glossary
 	302 content routing
 		:ref:`http-cr`.
 
+	Acme Account
+		An account previously created with an :abbr:`ACME (Automatic Certificate Management Environment)` provider.
+
 	astats (stats_over_http)
 		An :abbr:`ATS (Apache Traffic Server)` plugin that allows you to monitor vitals of the :abbr:`ATS (Apache Traffic Server)` server. See :ref:`astats`.
 

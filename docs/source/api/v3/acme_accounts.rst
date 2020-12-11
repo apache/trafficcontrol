@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets information for all ACME accounts.
+Gets information for all :term:`ACME account`s.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -35,9 +35,9 @@ No parameters available
 Response Structure
 ------------------
 :email:       The account information as defined in :ref:`cdn.conf`.
-:private_key: The private key connected to the ACME account
-:uri:         The URI for the ACME account. Differs per provider.
-:provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:privateKey: The private key connected to the :term:`ACME account`.
+:uri:         The URI for the :term:`ACME account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider. This needs to correspond to the setup in :ref:`cdn.conf`.
 
 .. code-block:: http
 	:caption: Response Example
@@ -48,7 +48,7 @@ Response Structure
 	{ "response": [
 		{
 			"email": "sample@example.com",
-			"private_key": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
+			"privateKey": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
 			"uri": "https://acme.example.com/acct/1",
 			"provider": "Lets Encrypt"
 		}
@@ -57,7 +57,7 @@ Response Structure
 
 ``POST``
 ========
-Creates one or more new :term:`Parameters`.
+Creates a new :term:`ACME account`s.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -65,11 +65,11 @@ Creates one or more new :term:`Parameters`.
 
 Request Structure
 -----------------
-The request body may be in one of two formats, a single :term:`Parameter` object or an array of :term:`Parameter` objects. Each :term:`Parameter` object shall have the following keys:
+The request body must be a single :term:`ACME account` object with the following keys:
 
 :email:       The account information as defined in :ref:`cdn.conf`.
-:private_key: The private key connected to the ACME account
-:uri:         The URI for the ACME account. Differs per provider.
+:privateKey: The private key connected to the :term:`ACME account`.
+:uri:         The URI for the :term:`ACME account`. Differs per provider.
 :provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
 
 .. code-block:: http
@@ -85,7 +85,7 @@ The request body may be in one of two formats, a single :term:`Parameter` object
 
 	{
 		"email": "sample@example.com",
-		"private_key": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
+		"privateKey": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
 		"uri": "https://acme.example.com/acct/1",
 		"provider": "Lets Encrypt"
 	}
@@ -93,8 +93,8 @@ The request body may be in one of two formats, a single :term:`Parameter` object
 Response Structure
 ------------------
 :email:       The account information as defined in :ref:`cdn.conf`.
-:private_key: The private key connected to the ACME account
-:uri:         The URI for the ACME account. Differs per provider.
+:privateKey: The private key connected to the :term:`ACME account`.
+:uri:         The URI for the :term:`ACME account`. Differs per provider.
 :provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
 
 .. code-block:: http
@@ -120,7 +120,7 @@ Response Structure
 	],
 	"response": {
 		"email": "sample@example.com",
-		"private_key": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
+		"privateKey": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
 		"uri": "https://acme.example.com/acct/1",
 		"provider": "Lets Encrypt"
 	}}
@@ -128,7 +128,7 @@ Response Structure
 
 ``PUT``
 =======
-Creates one or more new :term:`Parameters`.
+Creates a new :term:`ACME account`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -136,11 +136,11 @@ Creates one or more new :term:`Parameters`.
 
 Request Structure
 -----------------
-The request body may be in one of two formats, a single :term:`Parameter` object or an array of :term:`Parameter` objects. Each :term:`Parameter` object shall have the following keys:
+The request body must be a single :term:`ACME account` object with the following keys:
 
 :email:       The account information as defined in :ref:`cdn.conf`.
-:private_key: Optional. The private key connected to the ACME account
-:uri:         Optional. The URI for the ACME account. Differs per provider.
+:privateKey:  The private key connected to the :term:`ACME account`.
+:uri:         The URI for the :term:`ACME account`. Differs per provider.
 :provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
 
 .. code-block:: http
@@ -156,7 +156,7 @@ The request body may be in one of two formats, a single :term:`Parameter` object
 
 	{
 		"email": "sample@example.com",
-		"private_key": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
+		"privateKey": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
 		"uri": "https://acme.example.com/acct/1",
 		"provider": "Lets Encrypt"
 	}
@@ -164,8 +164,8 @@ The request body may be in one of two formats, a single :term:`Parameter` object
 Response Structure
 ------------------
 :email:       The account information as defined in :ref:`cdn.conf`.
-:private_key: The private key connected to the ACME account
-:uri:         The URI for the ACME account. Differs per provider.
+:privateKey: The private key connected to the :term:`ACME account`.
+:uri:         The URI for the :term:`ACME account`. Differs per provider.
 :provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
 
 .. code-block:: http
@@ -191,7 +191,7 @@ Response Structure
 	],
 	"response": {
 		"email": "sample@example.com",
-		"private_key": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
+		"privateKey": "-----BEGIN RSA PRIVATE KEY-----\nSampleKey\n-----END RSA PRIVATE KEY-----\n",
 		"uri": "https://acme.example.com/acct/1",
 		"provider": "Lets Encrypt"
 	}}

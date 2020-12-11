@@ -499,10 +499,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPost, `letsencrypt/autorenew/?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390563, noPerlBypass},
 
 		// Acme account information
-		{api.Version{3, 0}, http.MethodGet, `acme/accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 2034390561, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPost, `acme/accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 2034390562, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPut, `acme/accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563, noPerlBypass},
-		{api.Version{3, 0}, http.MethodDelete, `acme/accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564, noPerlBypass},
+		{api.Version{3, 1}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 2034390561, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 2034390562, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563, noPerlBypass},
+		{api.Version{3, 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564, noPerlBypass},
 
 		{api.Version{3, 0}, http.MethodGet, `deliveryservices/{id}/health/?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 22345901013, noPerlBypass},
 
