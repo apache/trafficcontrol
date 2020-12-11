@@ -146,21 +146,6 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 	return data.Response, reqInf, nil
 }
 
-// GetDeliveryServicesV31 returns all (tenant-visible) Delivery Services that
-// satisfy the passed query string parameters. See the API documentation for
-// information on the available parameters.
-func (to *Session) GetDeliveryServicesV31(header http.Header, params url.Values) ([]tc.DeliveryServiceV31, ReqInf, error) {
-	uri := API_DELIVERY_SERVICES
-	if params != nil {
-		uri += "?" + params.Encode()
-	}
-
-	var data tc.DeliveryServicesResponseV31
-
-	reqInf, err := get(to, uri, &data, header)
-	return data.Response, reqInf, err
-}
-
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
@@ -437,27 +422,6 @@ func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryService
 
 }
 
-// UpdateDeliveryServiceV31 replaces the Delivery Service identified by the
-// integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV31(id int, ds tc.DeliveryServiceV31, header http.Header) (tc.DeliveryServiceV31, ReqInf, error) {
-	var reqInf ReqInf
-	bts, err := json.Marshal(ds)
-	if err != nil {
-		return tc.DeliveryServiceV31{}, reqInf, err
-	}
-
-	var data tc.DeliveryServicesResponseV31
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data, header)
-	if err != nil {
-		return tc.DeliveryServiceV31{}, reqInf, err
-	}
-	if len(data.Response) != 1 {
-		return tc.DeliveryServiceV31{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
-	}
-	return data.Response[0], reqInf, nil
-
-}
-
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
 //
@@ -673,26 +637,6 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 		return []byte{}, reqInf, err
 	}
 	return []byte(data), reqInf, nil
-}
-
-// SafeDeliveryServiceUpdateV31 updates the "safe" fields of the Delivery
-// Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV31(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	var reqInf ReqInf
-	req, err := json.Marshal(r)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
-	}
-
-	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
-	}
-	if len(data.Response) != 1 {
-		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
-	}
-	return data.Response[0], reqInf, nil
 }
 
 // SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
