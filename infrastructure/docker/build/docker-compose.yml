@@ -18,6 +18,12 @@
 version: '2.1'
 
 services:
+  weasel:
+    image: licenseweasel/weasel:v0.4
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
   source:
     image: apache/traffic_source_tarballer:master
     build:
@@ -108,12 +114,6 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
-
-  weasel:
-    image: licenseweasel/weasel:v0.4
-    volumes:
-      - ../../..:/trafficcontrol:z
-    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
 
   docs:
     image: apache/traffic_docs_builder:master
