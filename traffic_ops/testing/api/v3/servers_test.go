@@ -742,6 +742,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	for _, s := range serversResp.Response {
 		if len(s.Interfaces) >= 1 && s.Interfaces[0].Monitor {
 			server = s
+			break
 		}
 	}
 	_, _, err = TOSession.CreateServerWithHdr(tc.ServerV30{
