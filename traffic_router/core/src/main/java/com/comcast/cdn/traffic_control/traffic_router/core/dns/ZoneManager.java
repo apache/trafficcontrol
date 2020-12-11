@@ -814,12 +814,7 @@ public class ZoneManager extends Resolver {
 				final String domain = parts[1];
 
 				dsMap.put(domain, ds);
-				List<Record> zholder = zoneMap.get(domain);
-
-				if (zholder == null) {
-					zholder = new ArrayList<Record>();
-					zoneMap.put(domain, zholder);
-				}
+				final List<Record> zholder = zoneMap.computeIfAbsent(domain, k -> new ArrayList<>());
 
 				final String superdomain = domain.split("\\.", 2)[1];
 
@@ -835,16 +830,23 @@ public class ZoneManager extends Resolver {
 					final Name name = newName(fqdn);
 					final JsonNode ttl = ds.getTtls();
 
-					try {
-						zholder.add(new ARecord(name, DClass.IN, ZoneUtils.getLong(ttl, "A", 60), c.getIp4()));
-					} catch (IllegalArgumentException e) {
-						LOGGER.warn(e + " : " + c.getIp4());
+					final InetAddress ip4 = c.getIp4();
+					if (ip4 != null) {
+						try {
+							zholder.add(new ARecord(name, DClass.IN, ZoneUtils.getLong(ttl, "A", 60), ip4));
+						} catch (IllegalArgumentException e) {
+							LOGGER.warn(e + " : " + ip4, e);
+						}
 					}
 
 					final InetAddress ip6 = c.getIp6();
 
-					if (ip6 != null && ds != null && ds.isIp6RoutingEnabled()) {
-						zholder.add(new AAAARecord(name, DClass.IN, ZoneUtils.getLong(ttl, AAAA, 60), ip6));
+					if (ip6 != null && ds.isIp6RoutingEnabled()) {
+					    try {
+							zholder.add(new AAAARecord(name, DClass.IN, ZoneUtils.getLong(ttl, AAAA, 60), ip6));
+						} catch (IllegalArgumentException e) {
+							LOGGER.warn(e + " : " + ip6, e);
+						}
 					}
 				} catch (org.xbill.DNS.TextParseException e) {
 					LOGGER.error("Caught fatal exception while generating zone data for " + fqdn  + "!", e);
