@@ -146,9 +146,9 @@ CHROME_VER=$(docker exec "$CONTAINER" google-chrome --version | sed -E 's/.* ([0
 sudo webdriver-manager update --gecko false --standalone false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
 
 GOROOT=/usr/local/go
-export GOPATH PATH="${PATH}:${GOROOT}/bin"
+export PATH="${PATH}:${GOROOT}/bin"
 download_go
-GOPATH="$(mktemp -d)"
+export GOPATH="$(mktemp -d)"
 SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
