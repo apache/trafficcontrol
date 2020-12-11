@@ -125,7 +125,4 @@ if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then
   to-auto-snapqueue $AUTO_SNAPQUEUE_SERVERS $CDN_NAME
 fi
 
-fg '"${traffic_ops_golang_command[@]}"'; # Bring traffic_ops_golang to foreground
-fg; # Bring to-enroll to foreground if it is still running
-
 tail -f /dev/null; # Keeps the container running indefinitely. The container health check (see dockerfile) will report whether Traffic Ops is running.
