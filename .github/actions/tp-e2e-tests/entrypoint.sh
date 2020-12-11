@@ -28,8 +28,13 @@ PHYS="aloc"
 COORD="acoord"
 CDN="zcdn"
 CG="acg"
+export PGUSER="traffic_ops"
+export PGPASSWORD="twelve"
+export PGHOST="localhost"
+export PGDATABASE="traffic_ops"
+export PGPORT="5432"
 
-<<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
+<<QUERY psql
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1);
 INSERT INTO division(name) VALUES('${DIVISION}');
 INSERT INTO region(name, division) VALUES('${REGION}', 1);
@@ -69,12 +74,7 @@ download_go() {
 	echo "Extracting Go ${go_version}..."
 	<<-'SUDO_COMMANDS' sudo sh
 		set -o errexit
-		go_dir="$(
-			dirname "$(
-				dirname "$(
-					realpath "$(
-						which go
-						)")")")"
+    go_dir="$(command -v go | xargs realpath | xargs dirname | xargs dirname)"
 		mv "$go_dir" "${go_dir}.unused"
 		tar -C /usr/local -xzf go.tar.gz
 	SUDO_COMMANDS
@@ -140,12 +140,15 @@ sudo apt-get install -y --no-install-recommends gettext \
 
 sudo gem update --system && sudo gem install sass compass
 sudo npm i -g protractor@^7.0.0 forever bower grunt selenium-webdriver
-sudo webdriver-manager update --gecko false
+
+CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
+CHROME_VER=$(docker exec "$CONTAINER" google-chrome --version | sed -E 's/.* ([0-9.]+).*/\1/')
+sudo webdriver-manager update --gecko false --standalone false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
 
 GOROOT=/usr/local/go
 export GOPATH PATH="${PATH}:${GOROOT}/bin"
 download_go
-export GOPATH="$(mktemp -d)"
+GOPATH="$(mktemp -d)"
 SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
