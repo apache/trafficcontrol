@@ -406,7 +406,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 
 func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
 	leInfo := LEInfo{}
-	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1 LIMIT 1`
+	selectQuery := `SELECT email, private_key, uri FROM acme_account WHERE email = $1 AND provider = 'Lets Encrypt' LIMIT 1`
 	if err := tx.QueryRow(selectQuery, email).Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -425,7 +425,7 @@ func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
 }
 
 func storeLEAccountInfo(tx *sql.Tx, email string, privateKey string, uri string) error {
-	q := `INSERT INTO lets_encrypt_account (email, private_key, uri) VALUES ($1, $2, $3)`
+	q := `INSERT INTO acme_account (email, private_key, uri, provider) VALUES ($1, $2, $3, 'Lets Encrypt')`
 	response, err := tx.Exec(q, email, privateKey, uri)
 	if err != nil {
 		return err

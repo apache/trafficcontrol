@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
@@ -496,6 +497,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390523, noPerlBypass},
 		{api.Version{3, 0}, http.MethodGet, `letsencrypt/dnsrecords/?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelOperations, Authenticated, nil, 2534390553, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPost, `letsencrypt/autorenew/?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390563, noPerlBypass},
+
+		// Acme account information
+		{api.Version{3, 0}, http.MethodGet, `acme/accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 2034390561, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `acme/accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 2034390562, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPut, `acme/accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563, noPerlBypass},
+		{api.Version{3, 0}, http.MethodDelete, `acme/accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564, noPerlBypass},
 
 		{api.Version{3, 0}, http.MethodGet, `deliveryservices/{id}/health/?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 22345901013, noPerlBypass},
 
