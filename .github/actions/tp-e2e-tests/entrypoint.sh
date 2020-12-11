@@ -22,26 +22,32 @@ if ! curl -Lvsk "${fqdn}" >/dev/null 2>&1; then
   exit 1
 fi
 
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1)"
-# Insert Traffic Vault into server table
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO division(name) VALUES('adivision')"
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO region(name, division) VALUES('aregion', 1)"
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('aloc', 'aloc', 1, 'some place idk', 'Denver', 'CO', '88888')"
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO coordinate(name) VALUES('acoord')"
-psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops -c "INSERT INTO cdn(name, domain_name) VALUES('zcdn', 'infra.ciab.test')"
+DIVISION="adivision"
+REGION="aregion"
+PHYS="aloc"
+COORD="acoord"
+CDN="zcdn"
+CG="acg"
+
 <<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
+INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1);
+INSERT INTO division(name) VALUES('${DIVISION}');
+INSERT INTO region(name, division) VALUES('${REGION}', 1);
+INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
+INSERT INTO coordinate(name) VALUES('${COORD}');
+INSERT INTO cdn(name, domain_name) VALUES('${CDN}', 'infra.ciab.test');
+
 WITH TYPE AS (SELECT id FROM type WHERE name = 'TC_LOC')
 INSERT INTO cachegroup(name, short_name, type, coordinate)
-SELECT 'acg', 'acg', TYPE.id, 1
-FROM TYPE
-QUERY
-<<QUERY psql -d postgresql://traffic_ops:twelve@localhost:5432/traffic_ops
+SELECT '${CG}', '${CG}', TYPE.id, 1
+FROM TYPE;
+
 WITH TYPE AS (SELECT id FROM type WHERE name = 'RIAK'),
 PROFILE AS (SELECT id FROM profile WHERE name = 'RIAK_ALL'),
 STATUS AS (SELECT id FROM status WHERE name = 'ONLINE'),
-PHYS AS (SELECT id FROM phys_location WHERE name = 'aloc'),
-CDN AS (SELECT id FROM cdn WHERE name = 'zcdn'),
-CG AS (SELECT id from cachegroup WHERE name = 'acg')
+PHYS AS (SELECT id FROM phys_location WHERE name = '${PHYS}'),
+CDN AS (SELECT id FROM cdn WHERE name = '${CDN}'),
+CG AS (SELECT id from cachegroup WHERE name = '${CG}')
 INSERT INTO server(host_name, domain_name, cachegroup, type, status, profile, phys_location, cdn_id)
 SELECT 'trafficvault', 'infra.ciab.test', CG.ID, TYPE.id, STATUS.id, PROFILE.id, PHYS.id, CDN.id
 FROM TYPE
@@ -49,7 +55,7 @@ JOIN STATUS ON 1=1
 JOIN PROFILE ON 1=1
 JOIN PHYS ON 1=1
 JOIN CDN ON 1=1
-JOIN CG ON 1=1
+JOIN CG ON 1=1;
 QUERY
 
 
@@ -59,7 +65,7 @@ download_go() {
 		return
 	fi
 	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
-	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
+	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz" --no-verbose
 	echo "Extracting Go ${go_version}..."
 	<<-'SUDO_COMMANDS' sudo sh
 		set -o errexit
@@ -124,8 +130,6 @@ start_traffic_vault() {
 		--rm \
 		"$trafficvault" \
 		/usr/lib/riak/riak-cluster.sh;
-	docker logs -f "$trafficvault" 2>&1 |
-		color_and_prefix "$gray_bg" 'Traffic Vault';
 }
 start_traffic_vault &
 
@@ -135,7 +139,7 @@ sudo apt-get install -y --no-install-recommends gettext \
 	gcc musl-dev
 
 sudo gem update --system && sudo gem install sass compass
-sudo npm i -g protractor@^7.0.0 forever bower grunt selenium-webdriver selenium-webdriver
+sudo npm i -g protractor@^7.0.0 forever bower grunt selenium-webdriver
 sudo webdriver-manager update --gecko false
 
 GOROOT=/usr/local/go
@@ -158,59 +162,7 @@ cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 	golang.org/x/text/secure/bidirule > /dev/null
 /usr/local/go/bin/go build . > /dev/null
 
-echo "
------BEGIN CERTIFICATE-----
-MIIDtTCCAp2gAwIBAgIJAJgQuE9T48+gMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
-BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
-aWRnaXRzIFB0eSBMdGQwHhcNMTcwNTA5MDIyNTI0WhcNMTgwNTA5MDIyNTI0WjBF
-MQswCQYDVQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50
-ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
-CgKCAQEA1OsuQ71qaSZ4ivGnh4YryeQEHMn5wZLX7kWYB637ssyOJnkU1ZGs93JM
-XJADzsjmssP6icSDhV2JPgDDYzx1eBJt6y3vHI7L3AdGfQJj+4FFABKR8moqpc1J
-WIMGnPzO6DeEc8irf0qxSh+yvuFX0j6oS8oCqiRxz5+HL2wEGWmrgr37JY4/bs7o
-4CMY19Ru1dP2Fr292HEIqCEnLTOuaHSWAEWx1Tm93kT9sXbw/SG2JTLQSX80biFL
-7foJeoGWLls2reTCYTprzWFaMu3x9I8HLtf4VIN44rtvo5N20KYgjGqvPjFGPljL
-yrgB8rXSCpH3M4AbazxD8fZKbdORawIDAQABo4GnMIGkMB0GA1UdDgQWBBT6zEpf
-DYbYCI3Bu82+Q5SmI+/7ojB1BgNVHSMEbjBsgBT6zEpfDYbYCI3Bu82+Q5SmI+/7
-oqFJpEcwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxITAfBgNV
-BAoTGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZIIJAJgQuE9T48+gMAwGA1UdEwQF
-MAMBAf8wDQYJKoZIhvcNAQEFBQADggEBAGLs1NcYNtUgN6FuMb6/UskEWLTKwfno
-NBtNdIbcZP3HmJHwruLWCeqj6HIWJC87EqmPTIYPdem3SAN1L20fWpzm7AB7av+2
-wTCAPVP0punF/IouSb6fyo8fdG1a104Mge4iy/Sf2uf09NEv08sfVdB4P0tKRRlg
-5KChhmspdPP7fmPXyghm4IC0Seknmh6IlVOnALXLU5OoCLHTie5Hjv4Tm8Xu0oBA
-dIH/cPu2/w5SAIVq9CtcsdglS0ZsCAv4W2YieuSLPf5xuI0q/5lFZGNoDpIWJldx
-Y2IpnoNCrHEAxijP5ctPawsxkSt2PmQ5uNNL7TbMudc3hZzOpTPkGoo=
------END CERTIFICATE-----
-" > localhost.crt
-
-echo "-----BEGIN RSA PRIVATE KEY-----
-MIIEpQIBAAKCAQEA1OsuQ71qaSZ4ivGnh4YryeQEHMn5wZLX7kWYB637ssyOJnkU
-1ZGs93JMXJADzsjmssP6icSDhV2JPgDDYzx1eBJt6y3vHI7L3AdGfQJj+4FFABKR
-8moqpc1JWIMGnPzO6DeEc8irf0qxSh+yvuFX0j6oS8oCqiRxz5+HL2wEGWmrgr37
-JY4/bs7o4CMY19Ru1dP2Fr292HEIqCEnLTOuaHSWAEWx1Tm93kT9sXbw/SG2JTLQ
-SX80biFL7foJeoGWLls2reTCYTprzWFaMu3x9I8HLtf4VIN44rtvo5N20KYgjGqv
-PjFGPljLyrgB8rXSCpH3M4AbazxD8fZKbdORawIDAQABAoIBAQCYOINc/qCDCHQJ
-sfa511ya/B9MjcG3eMpTmQG2C9b033WJX+tbPMjSJ68cRgHS5qK4j5AgypPU1yh1
-YYpO+jxpWZOoHbDjU9u/NJxaZ0kf2C2CfcRF8U0IOJoFY7doqP0r2/Uf6glh+f6C
-JeNewDBPKWictpHtHh0X+M9nQew0VZ7slXnV+IwUxiWYEtiIjwMyzSmfDEnN3ix5
-fuVQLvVaq+bbqXj2rMpJWFj7zMsG5HRePQl2kQGtMYLCIalnJIQs5jQn2YsliNyy
-fQiwWnU0wkrLlmkhlivlISRDtP35WQgF8ObsoQ3LZXRflB0C7U7zEl7Dj3Vi7WXr
-jsRZC4dxAoGBAPwuPdtc9gSNKjn8RnqfEJjdSo1qdLbGvRcSJNy4/kEEFECJXkeO
-mV/aklCi39cxAaIjVdTQ1XN67RMxgdekCI2Eg8h4RdvwgB/tAO+C3ExzMSOA1IcZ
-tWuwIA2YnaFF9Sla9iJqxgtoGlaqm4VTUM/IdZqlzsP08pfNq7bXPsr9AoGBANgk
-tkovf1Y0O4lBHX3eVLnHXForxEZh8bGHwuJJWWzb0ZFcXrrSd8FSycZrR28v4sdQ
-WSSVPz3Op95HoTVXVL9EJcZ+MTnHaoCHbYBkrGTlGviu5Fl2V5EbrN7R7CdxJeem
-HOU4shTy1acMPgf8sT17ykkXhVeUhSK2Jg6fZn6HAoGAI4/51SeE4htuKwMyhTRN
-SOFcFBlBIE1ieRBr9lx4Ln7+xCMbEog/hM7z9z8gxd35Vv4YqoxQrZpWOHCw2NIf
-CqX3V5vubhe6WcY4bY5MttM/yLvwPKUZeng57PDqucV9zzkuoKfiCdXCcRpaGDEp
-okOooghj4ip204WDg6NTDZkCgYEAwZTfzsGLgmF1kRBIoZqmt1zeUcQxHfhKx32Y
-BaM7/EtD/rSEAz7NEtBa9uLOL77rlSdZL3KcGXck0efFckitFkCqtIQBAoaf1E12
-vS9tV0/6QBAjZByhgM0Qnt/Uad7k2/vilUmZ9TkoMVy9kdm3xCFCowP14OKb+uK4
-YxBQc7ECgYEAm7eVtNlPHYmC54FU2bLucryNMLmu9I8O6zvbK5sxiMdtlh7OjaUB
-RQS5iVc0iTacDZTGh7eqNzgGplj76pWGHeZUy0xIj/ZIRu2qOy0v+ffqfX1wCz7p
-A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
------END RSA PRIVATE KEY-----
-" > localhost.key
+openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 
 resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
@@ -225,15 +177,13 @@ tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
 tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
 
 cd "../../traffic_portal"
-npm i --save-dev
+npm ci
 bower install
 grunt dist
 
 cp "${resources}/config.js" ./conf/
 touch tp.log access.log
 sudo forever --minUptime 5000 --spinSleepTime 2000 -l ./tp.log start server.js &
-tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever' &
-tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal' &
 
 fqdn="https://localhost:8443/"
 while ! curl -Lvsk "${fqdn}api/3.0/ping" >/dev/null 2>&1; do
@@ -248,10 +198,11 @@ cp "${resources}/conf.json" .
 sudo protractor ./conf.js
 CODE=$?
 
-echo "Stopping Traffic Vault..."
-docker kill "$trafficvault"
-echo 'Killing background jobs...';
-kill -9 $(jobs -p);
+if [ $CODE -ne 0 ]; then
+	docker logs -f "$trafficvault" 2>&1 |
+		color_and_prefix "$gray_bg" 'Traffic Vault';
+  tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever' &
+  tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal' &
+fi
 
 exit $CODE
-
