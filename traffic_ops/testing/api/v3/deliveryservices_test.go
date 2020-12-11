@@ -47,9 +47,7 @@ func TestDeliveryServices(t *testing.T) {
 		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
-		GetTestDeliveryServicesV31(t)
 		UpdateTestDeliveryServices(t)
-		UpdateTestDeliveryServicesV31(t)
 		UpdateValidateORGServerCacheGroup(t)
 		UpdateTestDeliveryServicesWithHeaders(t, header)
 		UpdateNullableTestDeliveryServices(t)
@@ -69,21 +67,6 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestDeliveryServicesWithHeaders(t, header)
 	})
-}
-
-func GetTestDeliveryServicesV31(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServicesV31(nil, nil)
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
-	}
-	for _, ds := range actualDSes {
-		if ds.MaxRequestHeaderSize == nil {
-			t.Errorf("max request header size is nil")
-		}
-		if *ds.MaxRequestHeaderSize != 131072 {
-			t.Errorf("expected max request header size to be %d, but got %d", 131072, *ds.MaxRequestHeaderSize)
-		}
-	}
 }
 
 func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
@@ -194,38 +177,42 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 
 	customDS := tc.DeliveryServiceNullableV30{
-		DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
-			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-							Active:               util.BoolPtr(true),
-							CDNID:                util.IntPtr(oldCdn.ID),
-							DSCP:                 util.IntPtr(0),
-							DisplayName:          util.StrPtr("displayName"),
-							RoutingName:          util.StrPtr("routingName"),
-							GeoLimit:             util.IntPtr(0),
-							GeoProvider:          util.IntPtr(0),
-							IPV6RoutingEnabled:   util.BoolPtr(false),
-							InitialDispersion:    util.IntPtr(1),
-							LogsEnabled:          util.BoolPtr(true),
-							MissLat:              util.FloatPtr(0),
-							MissLong:             util.FloatPtr(0),
-							MultiSiteOrigin:      util.BoolPtr(false),
-							OrgServerFQDN:        util.StrPtr("https://test.com"),
-							Protocol:             util.IntPtr(2),
-							QStringIgnore:        util.IntPtr(0),
-							RangeRequestHandling: util.IntPtr(0),
-							RegionalGeoBlocking:  util.BoolPtr(false),
-							TenantID:             util.IntPtr(1),
-							TypeID:               util.IntPtr(types[0].ID),
-							XMLID:                util.StrPtr("dsID"),
+		DeliveryServiceV30: tc.DeliveryServiceV30{
+			DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
+				DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
+					DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
+						DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
+							DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
+								Active:               util.BoolPtr(true),
+								CDNID:                util.IntPtr(oldCdn.ID),
+								DSCP:                 util.IntPtr(0),
+								DisplayName:          util.StrPtr("displayName"),
+								RoutingName:          util.StrPtr("routingName"),
+								GeoLimit:             util.IntPtr(0),
+								GeoProvider:          util.IntPtr(0),
+								IPV6RoutingEnabled:   util.BoolPtr(false),
+								InitialDispersion:    util.IntPtr(1),
+								LogsEnabled:          util.BoolPtr(true),
+								MissLat:              util.FloatPtr(0),
+								MissLong:             util.FloatPtr(0),
+								MultiSiteOrigin:      util.BoolPtr(false),
+								OrgServerFQDN:        util.StrPtr("https://test.com"),
+								Protocol:             util.IntPtr(2),
+								QStringIgnore:        util.IntPtr(0),
+								RangeRequestHandling: util.IntPtr(0),
+								RegionalGeoBlocking:  util.BoolPtr(false),
+								TenantID:             util.IntPtr(1),
+								TypeID:               util.IntPtr(types[0].ID),
+								XMLID:                util.StrPtr("dsID"),
+							},
 						},
 					},
 				},
 			},
 		},
+		MaxRequestHeaderSize: nil,
 	}
+
 	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
 	if err != nil {
 		t.Fatal(err)
@@ -476,6 +463,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
 	}
 
+	updatedMaxRequestHeaderSize := 131080
 	updatedLongDesc := "something different"
 	updatedMaxDNSAnswers := 164598
 	updatedMaxOriginConnections := 100
@@ -483,6 +471,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
+	remoteDS.MaxRequestHeaderSize = &updatedMaxRequestHeaderSize
 
 	if updateResp, _, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
@@ -500,65 +489,11 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	resp := apiResp[0]
 
-	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections {
-		t.Errorf("long description do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
-		t.Errorf("max DNS answers do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
-		t.Errorf("max origin connections do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
-	}
-}
-
-func UpdateTestDeliveryServicesV31(t *testing.T) {
-	firstDS := testData.DeliveryServices[0]
-
-	dses, _, err := TOSession.GetDeliveryServicesV31(nil, nil)
-	if err != nil {
-		t.Errorf("cannot GET Delivery Services: %v", err)
-	}
-
-	remoteDS := tc.DeliveryServiceV31{}
-	found := false
-	for _, ds := range dses {
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
-
-	updatedMaxRequestHeaderSize := 140000
-	updatedLongDesc := "something different"
-	updatedMaxDNSAnswers := 164598
-	updatedMaxOriginConnections := 100
-	remoteDS.LongDesc = &updatedLongDesc
-	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
-	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
-	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
-	remoteDS.MaxRequestHeaderSize = &updatedMaxRequestHeaderSize
-
-	if updateResp, _, err := TOSession.UpdateDeliveryServiceV31(*remoteDS.ID, remoteDS, nil); err != nil {
-		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
-	}
-
-	// Retrieve the server to check rack and interfaceName values were updated
-	params := url.Values{}
-	params.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServicesV31(nil, params)
-	if err != nil {
-		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
-	}
-	if len(apiResp) < 1 {
-		t.Fatalf("cannot GET Delivery Service by ID: %v - nil", remoteDS.XMLID)
-	}
-	resp := apiResp[0]
-
 	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections || *resp.MaxRequestHeaderSize != updatedMaxRequestHeaderSize {
 		t.Errorf("long description do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
 		t.Errorf("max DNS answers do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
 		t.Errorf("max origin connections do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
-		t.Errorf("max request header size do not match actual: %v, expected: %v", resp.MaxRequestHeaderSize, updatedMaxRequestHeaderSize)
+		t.Errorf("max request header sizes do not match actual: %v, expected: %v", resp.MaxRequestHeaderSize, updatedMaxRequestHeaderSize)
 	}
 }
 

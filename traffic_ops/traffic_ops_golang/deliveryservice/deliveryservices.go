@@ -50,11 +50,11 @@ type TODeliveryService struct {
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullableV30)
+	return json.Marshal(ds.DeliveryServiceV30)
 }
 
 func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullableV30)
+	return json.Unmarshal(data, ds.DeliveryServiceV30)
 }
 
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
@@ -88,7 +88,7 @@ func (ds *TODeliveryService) GetType() string {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullableV30)
+	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceV30)
 }
 
 func CreateV12(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +188,7 @@ func CreateV31(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds := tc.DeliveryServiceV31{}
+	ds := tc.DeliveryServiceNullableV30{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
@@ -199,7 +199,7 @@ func CreateV31(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceV31{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV30{*res})
 }
 
 func CreateV30(w http.ResponseWriter, r *http.Request) {
@@ -210,18 +210,21 @@ func CreateV30(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
 
-	res, status, userErr, sysErr := createV30(w, r, inf, ds)
+	dsV30Nullable := tc.DeliveryServiceNullableV30{
+		DeliveryServiceV30: ds,
+	}
+	res, status, userErr, sysErr := createV30(w, r, inf, dsV30Nullable)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV30{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceV30{*res})
 }
 
 func createV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
@@ -252,8 +255,11 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 }
 
 func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV30 := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: reqDS}
-	res, status, userErr, sysErr := createV30(w, r, inf, dsV30)
+	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: reqDS}
+	dsV30Nullable := tc.DeliveryServiceNullableV30{
+		DeliveryServiceV30: dsV30,
+	}
+	res, status, userErr, sysErr := createV30(w, r, inf, dsV30Nullable)
 	if res != nil {
 		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
 	}
@@ -261,7 +267,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
@@ -270,7 +276,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceNullableV30); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
@@ -282,7 +288,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	if errCode, userErr, sysErr := dbhelpers.CheckTopology(inf.Tx, ds.DeliveryServiceNullableV30); userErr != nil || sysErr != nil {
+	if errCode, userErr, sysErr := dbhelpers.CheckTopology(inf.Tx, ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 
@@ -421,7 +427,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		}
 	}
 
-	if err := createPrimaryOrigin(tx, user, ds.DeliveryServiceNullableV30); err != nil {
+	if err := createPrimaryOrigin(tx, user, ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
@@ -434,7 +440,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceV30, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
@@ -443,7 +449,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
@@ -593,7 +599,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		}
 	}
 
-	if err := createPrimaryOrigin(tx, user, ds); err != nil {
+	if err := createPrimaryOrigin(tx, user, ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
@@ -602,7 +608,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	return &ds, http.StatusOK, nil, nil
+	return &ds.DeliveryServiceV30, http.StatusOK, nil, nil
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -659,7 +665,7 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds)
 		case version.Major > 2:
-			returnable = append(returnable, ds.DeliveryServiceNullableV30)
+			returnable = append(returnable, ds.DeliveryServiceV30)
 		case version.Major > 1 || version.Minor >= 5:
 			returnable = append(returnable, ds.DeliveryServiceNullableV15)
 		case version.Minor >= 4:
@@ -785,19 +791,22 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds := tc.DeliveryServiceNullableV30{}
+	ds := tc.DeliveryServiceV30{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 	ds.ID = &id
 
-	res, status, userErr, sysErr := updateV30(w, r, inf, &ds)
+	dsV30Nullable := tc.DeliveryServiceNullableV30{
+		DeliveryServiceV30: ds,
+	}
+	res, status, userErr, sysErr := updateV30(w, r, inf, &dsV30Nullable)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV30{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceV30{*res})
 }
 
 func UpdateV31(w http.ResponseWriter, r *http.Request) {
@@ -810,7 +819,7 @@ func UpdateV31(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds := tc.DeliveryServiceV31{}
+	ds := tc.DeliveryServiceNullableV30{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
@@ -822,7 +831,7 @@ func UpdateV31(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceV31{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV30{*res})
 }
 
 func updateV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
@@ -921,8 +930,8 @@ WHERE
 }
 
 func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV31 := tc.DeliveryServiceV31{
-		DeliveryServiceNullableV30: tc.DeliveryServiceNullableV30{
+	dsV31 := tc.DeliveryServiceNullableV30{
+		DeliveryServiceV30: tc.DeliveryServiceV30{
 			DeliveryServiceNullableV15: *reqDS,
 		},
 	}
@@ -959,7 +968,7 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 
-func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
@@ -967,7 +976,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceNullableV30); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
@@ -1010,7 +1019,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, errCode, userErr, sysErr
 	}
 
-	if errCode, userErr, sysErr = dbhelpers.CheckTopology(inf.Tx, ds.DeliveryServiceNullableV30); userErr != nil || sysErr != nil {
+	if errCode, userErr, sysErr = dbhelpers.CheckTopology(inf.Tx, *ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 
@@ -1161,7 +1170,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, user, ds.DeliveryServiceNullableV30); err != nil {
+	if err := updatePrimaryOrigin(tx, user, ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 	}
 
@@ -1188,7 +1197,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	return ds, http.StatusOK, nil, nil
 }
 
-func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceV30, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
@@ -1196,7 +1205,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, ds); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
@@ -1394,7 +1403,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, user, *ds); err != nil {
+	if err := updatePrimaryOrigin(tx, user, ds.DeliveryServiceV30); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 	}
 
@@ -1418,7 +1427,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	return ds, http.StatusOK, nil, nil
+	return &ds.DeliveryServiceV30, http.StatusOK, nil, nil
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.
@@ -1595,7 +1604,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	return tc.DSTypeFromString(name), nil
 }
 
-func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
+func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceV30) error {
 	count := 0
 	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
 	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
@@ -1635,7 +1644,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
+func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceV30) error {
 	if ds.OrgServerFQDN == nil {
 		return nil
 	}
@@ -2111,7 +2120,7 @@ func GetDSSelectQuery() string {
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
-func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV30) (*int, error) {
+func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV30) (*int, error) {
 	if ds.ID == nil && ds.XMLID == nil {
 		return nil, errors.New("delivery service has no ID or XMLID")
 	}
@@ -2123,7 +2132,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV30) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullableV30) (bool, error) {
+func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceV30) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 

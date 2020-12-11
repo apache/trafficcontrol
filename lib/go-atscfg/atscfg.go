@@ -70,7 +70,11 @@ func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService 
 func OldToDeliveryServices(dses []tc.DeliveryServiceNullable) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
-		upgradedDS := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)}
+		upgradedDS := tc.DeliveryServiceNullableV30{
+			DeliveryServiceV30: tc.DeliveryServiceV30{
+				DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds),
+			},
+		}
 		ad = append(ad, DeliveryService(upgradedDS))
 	}
 	return ad

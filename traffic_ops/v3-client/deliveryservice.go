@@ -655,20 +655,20 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 
 // SafeDeliveryServiceUpdateV31 updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV31(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceV31, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV31(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	req, err := json.Marshal(r)
 	if err != nil {
-		return tc.DeliveryServiceV31{}, reqInf, err
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
 
-	var data tc.DeliveryServiceSafeUpdateResponseV31
+	var data tc.DeliveryServiceSafeUpdateResponseV30
 	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
 	if err != nil {
-		return tc.DeliveryServiceV31{}, reqInf, err
+		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
 	if len(data.Response) != 1 {
-		return tc.DeliveryServiceV31{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to safe update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
 	}
 	return data.Response[0], reqInf, nil
 }

@@ -29,5 +29,6 @@
         "xxx",
         "pdq",
         "abc"
-    ]
+    ],
+    "maxRequestHeaderSize": 131072
 }
