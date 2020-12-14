@@ -155,12 +155,11 @@ func (topology *TOTopology) Validate() error {
 		if err != nil {
 			return fmt.Errorf("failed to get a response from DB: %s", err)
 		}
-		for _, id := range dsId {
-			topoCachegroupNames := topology.getCachegroupNames()
-			userErr, sysErr, _ := dbhelpers.CheckOriginServerInCacheGroupTopology(topology.ReqInfo.Tx.Tx, id, topology.Name, topoCachegroupNames)
-			if userErr != nil || sysErr != nil {
-				return fmt.Errorf("%s", userErr.Error())
-			}
+		//Get current Topology-CG for the requested change.
+		topoCachegroupNames := topology.getCachegroupNames()
+		userErr, sysErr, _ := dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsId, topology.Name, topoCachegroupNames)
+		if userErr != nil || sysErr != nil {
+			return fmt.Errorf("%s", userErr.Error())
 		}
 	}
 
