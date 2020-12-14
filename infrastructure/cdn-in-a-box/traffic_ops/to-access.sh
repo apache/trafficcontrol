@@ -119,7 +119,7 @@ to-post() {
 }
 
 to-put() {
-	if [[ -z "$2" ]]; then
+	if [[ $# -lt 2 || -z "$2" ]]; then
 		data=""
 	elif [[ -f "$2" ]]; then
 		data="--data @$2"
@@ -171,26 +171,10 @@ to-enroll() {
 
 	local serverType="$1"
 
-	if [[ ! -z "$2" ]]; then
-		export MY_CDN="$2"
-	else
-		export MY_CDN="$CDN_NAME"
-	fi
-	if [[ ! -z "$3" ]]; then
-		export MY_CACHE_GROUP="$3"
-	else
-		export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-	fi
-	if [[ ! -z "$4" ]]; then
-		export MY_TCP_PORT="$4"
-	else
-		export MY_TCP_PORT="80"
-	fi
-	if [[ ! -z "$5" ]]; then
-		export MY_HTTPS_PORT="$5"
-	else
-		export MY_HTTPS_PORT="443"
-	fi
+	export MY_CDN="${2:-$CDN_NAME}"
+	export MY_CACHE_GROUP="${3:-CDN_in_a_Box_Edge}"
+	export MY_TCP_PORT="${4:-80}"
+	export MY_HTTPS_PORT="${5:-443}"
 
 	export MY_NET_INTERFACE='eth0'
 	export MY_DOMAINNAME="$(dnsdomainname)"

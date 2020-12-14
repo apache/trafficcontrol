@@ -18,3 +18,4 @@
 *.rpm
 traffic_ops/ca
 optional/vpn/vpnca
+traffic_vault/prestart.d/00-0-standalone-config.sh

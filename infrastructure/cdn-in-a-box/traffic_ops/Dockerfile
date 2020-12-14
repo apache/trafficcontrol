@@ -63,7 +63,8 @@ EXPOSE 443
 ENV MOJO_MODE production
 
 RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
-        enable_repo='--enablerepo=PowerTools' || exit 1; \
+        # If you get "Unknown repo: 'powertools'", pull a newer centos:8 image
+        enable_repo='--enablerepo=powertools' || exit 1; \
     fi && \
     dnf -y --allowerasing $enable_repo install \
         cpanminus           \
@@ -102,12 +103,12 @@ WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 
 # Start with the existing traffic_ops/app/local directory
-COPY infrastructure/cdn-in-a-box/traffic_ops/local local
+COPY infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-${RHEL_VERSION:-8}/local local
 RUN export POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 && \
     echo 'Running carton...' && \
     [[ -d "${PERL5LIB}/x86_64-linux-thread-multi" ]]; existing_install=$? && \
     if ! carton && [[ $existing_install -eq 0 ]]; then \
-        rm -rf "$PERL5LIB" && \
+        rm -rf local && \
         echo 'Removed modules, retrying carton...' && \
         carton || exit 1; \
     fi && \

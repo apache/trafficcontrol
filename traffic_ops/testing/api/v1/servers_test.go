@@ -131,6 +131,16 @@ func DeleteTestServers(t *testing.T) {
 		}
 		if len(resp) > 0 {
 			respServer := resp[0]
+			dses, _, err := TOSession.GetServerIDDeliveryServices(respServer.ID)
+			for _, ds := range dses {
+				if ds.ID == nil {
+					t.Logf("got DS assigned to server #%d that has no ID - deletion may fail!", respServer.ID)
+					continue
+				}
+				if ds.Active == nil || *ds.Active {
+					setInactive(t, *ds.ID)
+				}
+			}
 
 			delResp, _, err := TOSession.DeleteServerByID(respServer.ID)
 			if err != nil {

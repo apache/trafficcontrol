@@ -5,7 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
+- #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
+- [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
+
+### Fixed
+- [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
+- Fixed Traffic Router logging unnecessary warnings for IPv6-only caches
+- [#5294](https://github.com/apache/trafficcontrol/issues/5294) - TP ag grid tables now properly persist column filters
+    on page refresh.
+- [#5295](https://github.com/apache/trafficcontrol/issues/5295) - TP types/servers table now clears all filters instead
+    of just column filters
+- #2881 Some API endpoints have incorrect Content-Types
 
 ## [5.0.0] - 2020-10-20
 ### Added
@@ -140,6 +152,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed #5274 - CDN in a Box's Traffic Vault image failed to build due to Basho's repo responding with 402 Payment Required. The repo has been removed from the image.
 - #5069 - For LetsEncryptDnsChallengerWatcher in Traffic Router, the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 - #5191 - Error from IMS requests to /federations/all
+- Fixed Astats csv issue where it could crash if caches dont return proc data
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
