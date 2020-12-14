@@ -16,7 +16,7 @@
 .. _to-api-acme-accounts-provider-email:
 
 ****************************************
-``acme/accounts/{{provider}}/{{email}}``
+``acme_accounts/{{provider}}/{{email}}``
 ****************************************
 
 

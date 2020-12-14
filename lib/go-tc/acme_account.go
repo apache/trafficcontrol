@@ -28,7 +28,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation"
 )
 
-// AcmeAccount is the information needed to access an account with an ACME provider
+// AcmeAccount is the information needed to access an account with an ACME provider.
 type AcmeAccount struct {
 	Email      *string `json:"email" db:"email"`
 	PrivateKey *string `json:"privateKey" db:"private_key"`

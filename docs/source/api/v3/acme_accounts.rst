@@ -16,7 +16,7 @@
 .. _to-api-acme-accounts:
 
 *****************
-``acme/accounts``
+``acme_accounts``
 *****************
 
 ``GET``

@@ -25,7 +25,7 @@ Glossary
 	302 content routing
 		:ref:`http-cr`.
 
-	Acme Account
+	ACME Account
 		An account previously created with an :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 	astats (stats_over_http)
@@ -406,9 +406,9 @@ Glossary
 	Server Capabilities
 		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier cache servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier cache servers` assigned to the requiring :term:`Delivery Services`.
 
-    Service Category
-    Service Categories
-        A :dfn:`Service Category` defines the type of content being delivered by a :dfn:`Delivery Service`. For example, a :dfn:`Service Category` could be created named "linear" and assigned to a :dfn:`Delivery Service` that delivers linear content. 
+	Service Category
+	Service Categories
+		A :dfn:`Service Category` defines the type of content being delivered by a :dfn:`Delivery Service`. For example, a :dfn:`Service Category` could be created named "linear" and assigned to a :dfn:`Delivery Service` that delivers linear content.
 
 	Snapshot
 	Snapshots
