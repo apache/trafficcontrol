@@ -137,6 +137,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - #5069 - For LetsEncryptDnsChallengerWatcher in Traffic Router, the cr-config location is configurable instead of only looking at `/opt/traffic_router/db/cr-config.json`
 - #5191 - Error from IMS requests to /federations/all
 - Fixed Astats csv issue where it could crash if caches dont return proc data
+- Fixed parent.config generation for topology-based delivery services (inline comments not supported)
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
