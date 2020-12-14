@@ -761,7 +761,6 @@ func getTopologyParentConfigLine(
 	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, dsParams.QueryStringHandling)
 	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastCacheTier)
 	txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
-	txt += " # topology '" + *ds.Topology + "'"
 	txt += "\n"
 	return txt, warnings, nil
 }
