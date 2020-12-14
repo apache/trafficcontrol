@@ -175,42 +175,29 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := tc.DeliveryServiceNullableV30{
-		DeliveryServiceV30: tc.DeliveryServiceV30{
-			DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
-				DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-					DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-						DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-							DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-								Active:               util.BoolPtr(true),
-								CDNID:                util.IntPtr(oldCdn.ID),
-								DSCP:                 util.IntPtr(0),
-								DisplayName:          util.StrPtr("displayName"),
-								RoutingName:          util.StrPtr("routingName"),
-								GeoLimit:             util.IntPtr(0),
-								GeoProvider:          util.IntPtr(0),
-								IPV6RoutingEnabled:   util.BoolPtr(false),
-								InitialDispersion:    util.IntPtr(1),
-								LogsEnabled:          util.BoolPtr(true),
-								MissLat:              util.FloatPtr(0),
-								MissLong:             util.FloatPtr(0),
-								MultiSiteOrigin:      util.BoolPtr(false),
-								OrgServerFQDN:        util.StrPtr("https://test.com"),
-								Protocol:             util.IntPtr(2),
-								QStringIgnore:        util.IntPtr(0),
-								RangeRequestHandling: util.IntPtr(0),
-								RegionalGeoBlocking:  util.BoolPtr(false),
-								TenantID:             util.IntPtr(1),
-								TypeID:               util.IntPtr(types[0].ID),
-								XMLID:                util.StrPtr("dsID"),
-							},
-						},
-					},
-				},
-			},
-		},
-		MaxRequestHeaderBytes: nil,
-	}
+	customDS := tc.DeliveryServiceNullableV30{}
+	customDS.Active = util.BoolPtr(true)
+	customDS.CDNID = util.IntPtr(oldCdn.ID)
+	customDS.DSCP = util.IntPtr(0)
+	customDS.DisplayName = util.StrPtr("displayName")
+	customDS.RoutingName = util.StrPtr("routingName")
+	customDS.GeoLimit = util.IntPtr(0)
+	customDS.GeoProvider = util.IntPtr(0)
+	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
+	customDS.InitialDispersion = util.IntPtr(1)
+	customDS.LogsEnabled = util.BoolPtr(true)
+	customDS.MissLat = util.FloatPtr(0)
+	customDS.MissLong = util.FloatPtr(0)
+	customDS.MultiSiteOrigin = util.BoolPtr(false)
+	customDS.OrgServerFQDN = util.StrPtr("https://test.com")
+	customDS.Protocol = util.IntPtr(2)
+	customDS.QStringIgnore = util.IntPtr(0)
+	customDS.RangeRequestHandling = util.IntPtr(0)
+	customDS.RegionalGeoBlocking = util.BoolPtr(false)
+	customDS.TenantID = util.IntPtr(1)
+	customDS.TypeID = util.IntPtr(types[0].ID)
+	customDS.XMLID = util.StrPtr("dsID")
+	customDS.MaxRequestHeaderBytes = nil
 
 	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
 	if err != nil {

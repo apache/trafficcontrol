@@ -48,13 +48,6 @@ type DeliveryServicesResponse struct {
 	Alerts
 }
 
-// DeliveryServicesResponseV31 is the type of a response from the
-// /api/3.1/deliveryservices Traffic Ops endpoint.
-type DeliveryServicesResponseV31 struct {
-	Response []DeliveryServiceV31 `json:"response"`
-	Alerts
-}
-
 // DeliveryServicesResponseV30 is the type of a response from the
 // /api/3.0/deliveryservices Traffic Ops endpoint.
 // TODO: Move these into the respective clients?
@@ -194,6 +187,10 @@ type DeliveryServiceV31 struct {
 	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
 }
 
+// DeliveryServiceNullableV30 is the aliased structure that we should be using for all api 3.x delivery structure operations
+// This type should always alias the latest 3.x minor version struct. For ex, if you wanted to create a DeliveryServiceV32 struct, you would do the following:
+// type DeliveryServiceNullableV30 DeliveryServiceV32
+// DeliveryServiceV32 = DeliveryServiceV31 + the new fields
 type DeliveryServiceNullableV30 DeliveryServiceV31
 
 // Deprecated: Use versioned structures only from now on.
