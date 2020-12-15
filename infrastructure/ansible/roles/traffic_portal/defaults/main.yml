@@ -207,6 +207,9 @@ tp_default_properties_template:
           can the charts be found? xml id will be appended to the provided url.
         show: false
         baseUrl: "{{ tp_ts_base_url }}/dashboard/script/traffic_ops_server.js?which="
+    changeLogs:
+      _comment: Change log settings
+      days: 7
     customMenu:
       _comments: These are custom items you want to add to the menu. 'items' is an array
         of hashes where each hash has 'name' (the menu item name), 'embed' (true|false
