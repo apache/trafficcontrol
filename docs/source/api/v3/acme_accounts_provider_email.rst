@@ -22,7 +22,7 @@
 
 ``DELETE``
 ==========
-Delete :term:`ACME account` information.
+Delete :term:`ACME Account` information.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -32,13 +32,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+----------+----------------------------------------------------------+
-	| Name     |                       Description                        |
-	+==========+==========================================================+
-	| provider | The ACME provider for the account to be deleted          |
-	+----------+----------------------------------------------------------+
-	| email    | The email used in the :term:`ACME account` to be deleted |
-	+----------+----------------------------------------------------------+
+	+----------+-----------------------------------------------------------------------------------------------------------------+
+	| Name     |                       Description                                                                               |
+	+==========+=================================================================================================================+
+	| provider | The :abbr:`ACME (Automatic Certificate Management Environment)` provider for the account to be deleted          |
+	+----------+-----------------------------------------------------------------------------------------------------------------+
+	| email    | The email used in the :term:`ACME Account` to be deleted                                                        |
+	+----------+-----------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
