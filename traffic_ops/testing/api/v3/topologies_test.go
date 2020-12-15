@@ -260,10 +260,12 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Get Topology node to update and remove ORG server nodes
 	origTopo := *remoteDS[0].Topology
-	resp, _, err := TOSession.GetTopologyWithHdr(*remoteDS[0].Topology, nil)
+	resp, _, err := TOSession.GetTopologyWithHdr(origTopo, nil)
 	if err != nil {
 		t.Fatalf("couldn't find any topologies: %v", err)
 	}
+
+	// remove org server cachegroup
 	var p []int
 	newNodes := []tc.TopologyNode{{Id: 0, Cachegroup: "topology-edge-cg-01", Parents: p, LastUpdated: nil}}
 	if *remoteDS[0].Topology == resp.Name {
@@ -274,12 +276,12 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
 	}
 
-	//Set topology back to as it was for further testing
-	remoteDS[0].Topology = &origTopo
-	_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
-	if err != nil {
-		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
-	}
+	// Remove org server assignment
+	//serverResp, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
+	//_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].Server)
+	//if err != nil {
+	//	t.Errorf("cannot assign server to Delivery Services: %v", err)
+	//}
 }
 
 func DeleteTestTopologies(t *testing.T) {
