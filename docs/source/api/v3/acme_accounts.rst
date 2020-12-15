@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets information for all :term:`ACME account`s.
+Gets information for all :term:`ACME Account` s.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -34,10 +34,10 @@ No parameters available
 
 Response Structure
 ------------------
-:email:       The account information as defined in :ref:`cdn.conf`.
-:privateKey: The private key connected to the :term:`ACME account`.
-:uri:         The URI for the :term:`ACME account`. Differs per provider.
-:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:email:       The email connected to the :term:`ACME Account`.
+:privateKey:  The private key connected to the :term:`ACME Account`.
+:uri:         The URI for the :term:`ACME Account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 .. code-block:: http
 	:caption: Response Example
@@ -57,7 +57,7 @@ Response Structure
 
 ``POST``
 ========
-Creates a new :term:`ACME account`s.
+Creates a new :term:`ACME Account`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -65,12 +65,12 @@ Creates a new :term:`ACME account`s.
 
 Request Structure
 -----------------
-The request body must be a single :term:`ACME account` object with the following keys:
+The request body must be a single :term:`ACME Account` object with the following keys:
 
-:email:       The account information as defined in :ref:`cdn.conf`.
-:privateKey: The private key connected to the :term:`ACME account`.
-:uri:         The URI for the :term:`ACME account`. Differs per provider.
-:provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:email:       The email connected to the :term:`ACME Account`.
+:privateKey:  The private key connected to the :term:`ACME Account`.
+:uri:         The URI for the :term:`ACME Account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 .. code-block:: http
 	:caption: Request Example
@@ -92,10 +92,10 @@ The request body must be a single :term:`ACME account` object with the following
 
 Response Structure
 ------------------
-:email:       The account information as defined in :ref:`cdn.conf`.
-:privateKey: The private key connected to the :term:`ACME account`.
-:uri:         The URI for the :term:`ACME account`. Differs per provider.
-:provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:email:       The email connected to the :term:`ACME Account`.
+:privateKey:  The private key connected to the :term:`ACME Account`.
+:uri:         The URI for the :term:`ACME Account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 .. code-block:: http
 	:caption: Response Example
@@ -128,7 +128,7 @@ Response Structure
 
 ``PUT``
 =======
-Creates a new :term:`ACME account`.
+Updates an existing :term:`ACME Account`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -136,12 +136,12 @@ Creates a new :term:`ACME account`.
 
 Request Structure
 -----------------
-The request body must be a single :term:`ACME account` object with the following keys:
+The request body must be a single :term:`ACME Account` object with the following keys:
 
-:email:       The account information as defined in :ref:`cdn.conf`.
-:privateKey:  The private key connected to the :term:`ACME account`.
-:uri:         The URI for the :term:`ACME account`. Differs per provider.
-:provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:email:       The email connected to the :term:`ACME Account`.
+:privateKey:  The private key connected to the :term:`ACME Account`.
+:uri:         The URI for the :term:`ACME Account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 .. code-block:: http
 	:caption: Request Example
@@ -163,10 +163,10 @@ The request body must be a single :term:`ACME account` object with the following
 
 Response Structure
 ------------------
-:email:       The account information as defined in :ref:`cdn.conf`.
-:privateKey: The private key connected to the :term:`ACME account`.
-:uri:         The URI for the :term:`ACME account`. Differs per provider.
-:provider:    The ACME provider. This needs to correspond to the setup in :ref:`cdn.conf`.
+:email:       The email connected to the :term:`ACME Account`.
+:privateKey:  The private key connected to the :term:`ACME Account`.
+:uri:         The URI for the :term:`ACME Account`. Differs per provider.
+:provider:    The :abbr:`ACME (Automatic Certificate Management Environment)` provider.
 
 .. code-block:: http
 	:caption: Response Example
