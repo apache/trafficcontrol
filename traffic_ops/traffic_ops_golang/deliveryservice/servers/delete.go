@@ -47,9 +47,9 @@ func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 const lastServerQuery = `
 	SELECT COUNT(*)
 	FROM deliveryservice_server ds
-	inner join server s on ds.server = s.id 
-	inner join type t on t.id = s.type
-	WHERE ds.deliveryservice = $1 AND ds.server <> $2 and t.name!=$3
+	INNER JOIN server s ON ds.server = s.id 
+	INNER JOIN type t ON t.id = s.type
+	WHERE ds.deliveryservice = $1 AND ds.server <> $2 and t.name != $3
 `
 
 // checkLastServer checks if the given Server ID identifies the last server

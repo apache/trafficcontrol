@@ -111,17 +111,17 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, *server.ID)
 	if err == nil {
-		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
+		t.Logf("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
+		t.Errorf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
 	}
 
 	alerts, _, err := TOSession.DeleteServerByID(*server.ID)
 	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
-		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
+		t.Logf("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v", err)
+		t.Errorf("Got expected error trying to delete the only server assigned to a Delivery Service: %v", err)
 	}
 
 	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true)

@@ -276,7 +276,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
 	}
 
-	// Remove org server assignment
+	// Remove org server assignment and reset DS back to as it was for further testing
 	serverResp, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].Server)
 	if err != nil {
