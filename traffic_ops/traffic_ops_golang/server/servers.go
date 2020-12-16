@@ -73,12 +73,10 @@ JOIN deliveryservice td ON td.topology = tc.topology
 JOIN type t ON s.type = t.id
 LEFT JOIN deliveryservice_server dss
 	ON s.id = dss."server"
+	AND dss.deliveryservice IS NOT NULL
 	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
-AND (
-	t.name != '` + tc.OriginTypeName + `'
-	OR dss.deliveryservice IS NOT NULL
-)),
+),
 `
 
 /* language=SQL */
