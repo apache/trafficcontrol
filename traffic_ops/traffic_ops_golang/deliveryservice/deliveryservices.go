@@ -261,9 +261,9 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
-	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: ds}
-	res, status, userErr, sysErr := createV31(w, r, inf, dsV31)
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+	ds := tc.DeliveryServiceV31{DeliveryServiceV30: dsV30}
+	res, status, userErr, sysErr := createV31(w, r, inf, ds)
 	if res != nil {
 		return &res.DeliveryServiceV30, status, userErr, sysErr
 	}
@@ -271,16 +271,16 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
-	dsNullableV30 := tc.DeliveryServiceNullableV30(ds)
-	if err := dsNullableV30.Validate(tx); err != nil {
+	ds := tc.DeliveryServiceNullableV30(dsV31)
+	if err := ds.Validate(tx); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, &dsNullableV30); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
@@ -288,74 +288,74 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
 	deepCachingType := tc.DeepCachingType("").String()
-	if dsNullableV30.DeepCachingType != nil {
-		deepCachingType = dsNullableV30.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	if ds.DeepCachingType != nil {
+		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	if errCode, userErr, sysErr := dbhelpers.CheckTopology(inf.Tx, dsNullableV30); userErr != nil || sysErr != nil {
+	if errCode, userErr, sysErr := dbhelpers.CheckTopology(inf.Tx, ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 	resultRows, err := tx.Query(insertQuery(),
-		&dsNullableV30.Active,
-		&dsNullableV30.AnonymousBlockingEnabled,
-		&dsNullableV30.CacheURL,
-		&dsNullableV30.CCRDNSTTL,
-		&dsNullableV30.CDNID,
-		&dsNullableV30.CheckPath,
-		&dsNullableV30.ConsistentHashRegex,
+		&ds.Active,
+		&ds.AnonymousBlockingEnabled,
+		&ds.CacheURL,
+		&ds.CCRDNSTTL,
+		&ds.CDNID,
+		&ds.CheckPath,
+		&ds.ConsistentHashRegex,
 		&deepCachingType,
-		&dsNullableV30.DisplayName,
-		&dsNullableV30.DNSBypassCNAME,
-		&dsNullableV30.DNSBypassIP,
-		&dsNullableV30.DNSBypassIP6,
-		&dsNullableV30.DNSBypassTTL,
-		&dsNullableV30.DSCP,
-		&dsNullableV30.EdgeHeaderRewrite,
-		&dsNullableV30.GeoLimitRedirectURL,
-		&dsNullableV30.GeoLimit,
-		&dsNullableV30.GeoLimitCountries,
-		&dsNullableV30.GeoProvider,
-		&dsNullableV30.GlobalMaxMBPS,
-		&dsNullableV30.GlobalMaxTPS,
-		&dsNullableV30.FQPacingRate,
-		&dsNullableV30.HTTPBypassFQDN,
-		&dsNullableV30.InfoURL,
-		&dsNullableV30.InitialDispersion,
-		&dsNullableV30.IPV6RoutingEnabled,
-		&dsNullableV30.LogsEnabled,
-		&dsNullableV30.LongDesc,
-		&dsNullableV30.LongDesc1,
-		&dsNullableV30.LongDesc2,
-		&dsNullableV30.MaxDNSAnswers,
-		&dsNullableV30.MaxOriginConnections,
-		&dsNullableV30.MidHeaderRewrite,
-		&dsNullableV30.MissLat,
-		&dsNullableV30.MissLong,
-		&dsNullableV30.MultiSiteOrigin,
-		&dsNullableV30.OriginShield,
-		&dsNullableV30.ProfileID,
-		&dsNullableV30.Protocol,
-		&dsNullableV30.QStringIgnore,
-		&dsNullableV30.RangeRequestHandling,
-		&dsNullableV30.RegexRemap,
-		&dsNullableV30.RegionalGeoBlocking,
-		&dsNullableV30.RemapText,
-		&dsNullableV30.RoutingName,
-		&dsNullableV30.SigningAlgorithm,
-		&dsNullableV30.SSLKeyVersion,
-		&dsNullableV30.TenantID,
-		&dsNullableV30.Topology,
-		&dsNullableV30.TRRequestHeaders,
-		&dsNullableV30.TRResponseHeaders,
-		&dsNullableV30.TypeID,
-		&dsNullableV30.XMLID,
-		&dsNullableV30.EcsEnabled,
-		&dsNullableV30.RangeSliceBlockSize,
-		&dsNullableV30.FirstHeaderRewrite,
-		&dsNullableV30.InnerHeaderRewrite,
-		&dsNullableV30.LastHeaderRewrite,
-		&dsNullableV30.ServiceCategory,
-		&dsNullableV30.MaxRequestHeaderBytes,
+		&ds.DisplayName,
+		&ds.DNSBypassCNAME,
+		&ds.DNSBypassIP,
+		&ds.DNSBypassIP6,
+		&ds.DNSBypassTTL,
+		&ds.DSCP,
+		&ds.EdgeHeaderRewrite,
+		&ds.GeoLimitRedirectURL,
+		&ds.GeoLimit,
+		&ds.GeoLimitCountries,
+		&ds.GeoProvider,
+		&ds.GlobalMaxMBPS,
+		&ds.GlobalMaxTPS,
+		&ds.FQPacingRate,
+		&ds.HTTPBypassFQDN,
+		&ds.InfoURL,
+		&ds.InitialDispersion,
+		&ds.IPV6RoutingEnabled,
+		&ds.LogsEnabled,
+		&ds.LongDesc,
+		&ds.LongDesc1,
+		&ds.LongDesc2,
+		&ds.MaxDNSAnswers,
+		&ds.MaxOriginConnections,
+		&ds.MidHeaderRewrite,
+		&ds.MissLat,
+		&ds.MissLong,
+		&ds.MultiSiteOrigin,
+		&ds.OriginShield,
+		&ds.ProfileID,
+		&ds.Protocol,
+		&ds.QStringIgnore,
+		&ds.RangeRequestHandling,
+		&ds.RegexRemap,
+		&ds.RegionalGeoBlocking,
+		&ds.RemapText,
+		&ds.RoutingName,
+		&ds.SigningAlgorithm,
+		&ds.SSLKeyVersion,
+		&ds.TenantID,
+		&ds.Topology,
+		&ds.TRRequestHeaders,
+		&ds.TRResponseHeaders,
+		&ds.TypeID,
+		&ds.XMLID,
+		&ds.EcsEnabled,
+		&ds.RangeSliceBlockSize,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
+		&ds.ServiceCategory,
+		&ds.MaxRequestHeaderBytes,
 	)
 
 	if err != nil {
@@ -375,72 +375,72 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 	if resultRows.Next() {
 		return nil, http.StatusInternalServerError, nil, errors.New("too many ids returned from deliveryservice request insert")
 	}
-	dsNullableV30.ID = &id
+	ds.ID = &id
 
-	if dsNullableV30.ID == nil {
+	if ds.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing id after insert")
 	}
-	if dsNullableV30.XMLID == nil {
+	if ds.XMLID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing xml_id after insert")
 	}
-	if dsNullableV30.TypeID == nil {
+	if ds.TypeID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing type after insert")
 	}
-	dsType, err := getTypeFromID(*dsNullableV30.TypeID, tx)
+	dsType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
 	}
-	dsNullableV30.Type = &dsType
+	ds.Type = &dsType
 
-	if err := createDefaultRegex(tx, *dsNullableV30.ID, *dsNullableV30.XMLID); err != nil {
+	if err := createDefaultRegex(tx, *ds.ID, *ds.XMLID); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *dsNullableV30.ID, dsNullableV30.ConsistentHashQueryParams); err != nil {
+	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
 	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
-	matchlists, err := GetDeliveryServicesMatchLists([]string{*dsNullableV30.XMLID}, tx)
+	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: " + err.Error())
 	}
-	if matchlist, ok := matchlists[*dsNullableV30.XMLID]; !ok {
+	if matchlist, ok := matchlists[*ds.XMLID]; !ok {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: not found")
 	} else {
-		dsNullableV30.MatchList = &matchlist
+		ds.MatchList = &matchlist
 	}
 
-	cdnName, cdnDomain, dnssecEnabled, err := getCDNNameDomainDNSSecEnabled(*dsNullableV30.ID, tx)
+	cdnName, cdnDomain, dnssecEnabled, err := getCDNNameDomainDNSSecEnabled(*ds.ID, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
 	}
 
-	dsNullableV30.ExampleURLs = MakeExampleURLs(dsNullableV30.Protocol, *dsNullableV30.Type, *dsNullableV30.RoutingName, *dsNullableV30.MatchList, cdnDomain)
+	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
-	if err := EnsureParams(tx, *dsNullableV30.ID, *dsNullableV30.XMLID, dsNullableV30.EdgeHeaderRewrite, dsNullableV30.MidHeaderRewrite, dsNullableV30.RegexRemap, dsNullableV30.CacheURL, dsNullableV30.SigningAlgorithm, dsType, dsNullableV30.MaxOriginConnections); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("ensuring dsNullableV30 parameters:: " + err.Error())
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
+		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
 	if dnssecEnabled {
-		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *dsNullableV30.XMLID, cdnName, dsNullableV30.ExampleURLs); userErr != nil || sysErr != nil {
+		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); userErr != nil || sysErr != nil {
 			return nil, statusCode, userErr, sysErr
 		}
 	}
 
-	if err := createPrimaryOrigin(tx, user, dsNullableV30); err != nil {
+	if err := createPrimaryOrigin(tx, user, ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
-	dsNullableV30.LastUpdated = &lastUpdated
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Created delivery service", user, tx); err != nil {
+	ds.LastUpdated = &lastUpdated
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created delivery service", user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	ds = tc.DeliveryServiceV31(dsNullableV30)
-	return &ds, http.StatusOK, nil, nil
+	dsV31 = tc.DeliveryServiceV31(ds)
+	return &dsV31, http.StatusOK, nil, nil
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -654,7 +654,6 @@ func UpdateV31(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
-
 	res, status, userErr, sysErr := updateV31(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
@@ -759,11 +758,7 @@ WHERE
 }
 
 func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV31 := tc.DeliveryServiceV31{
-		DeliveryServiceV30: tc.DeliveryServiceV30{
-			DeliveryServiceNullableV15: *reqDS,
-		},
-	}
+	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: *reqDS}
 	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
 	query := `
 SELECT
@@ -771,18 +766,41 @@ SELECT
   ds.first_header_rewrite,
   ds.inner_header_rewrite,
   ds.last_header_rewrite,
-  ds.service_category,
-  ds.max_request_header_bytes
+  ds.service_category
 FROM
   deliveryservice ds
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
-		&dsV31.Topology,
-		&dsV31.FirstHeaderRewrite,
-		&dsV31.InnerHeaderRewrite,
-		&dsV31.LastHeaderRewrite,
-		&dsV31.ServiceCategory,
+		&dsV30.Topology,
+		&dsV30.FirstHeaderRewrite,
+		&dsV30.InnerHeaderRewrite,
+		&dsV30.LastHeaderRewrite,
+		&dsV30.ServiceCategory,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
+		}
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV30.ID, err.Error())
+	}
+	res, status, userErr, sysErr := updateV30(w, r, inf, &dsV30)
+	if res != nil {
+		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: *dsV30}
+	// query the DB for existing 3.1 fields in order to "upgrade" this 3.0 request into a 3.1 request
+	query := `
+SELECT
+  ds.max_request_header_bytes
+FROM
+  deliveryservice ds
+WHERE
+  ds.id = $1`
+	if err := inf.Tx.Tx.QueryRow(query, *dsV30.ID).Scan(
 		&dsV31.MaxRequestHeaderBytes,
 	); err != nil {
 		if err == sql.ErrNoRows {
@@ -792,35 +810,35 @@ WHERE
 	}
 	res, status, userErr, sysErr := updateV31(w, r, inf, &dsV31)
 	if res != nil {
-		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+		return &res.DeliveryServiceV30, status, userErr, sysErr
 	}
 	return nil, status, userErr, sysErr
 }
 
-func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	dsNullableV30 := tc.DeliveryServiceNullableV30(*ds)
-	if err := dsNullableV30.Validate(tx); err != nil {
+	ds := tc.DeliveryServiceNullableV30(*dsV31)
+	if err := ds.Validate(tx); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
 
-	if authorized, err := isTenantAuthorized(inf, &dsNullableV30); err != nil {
+	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
 	}
 
-	if dsNullableV30.XMLID == nil {
+	if ds.XMLID == nil {
 		return nil, http.StatusBadRequest, errors.New("missing xml_id"), nil
 	}
-	if dsNullableV30.ID == nil {
+	if ds.ID == nil {
 		return nil, http.StatusBadRequest, errors.New("missing id"), nil
 	}
 
-	dsType, ok, err := getDSType(tx, *dsNullableV30.XMLID)
+	dsType, ok, err := getDSType(tx, *ds.XMLID)
 	if !ok {
-		return nil, http.StatusNotFound, errors.New("delivery service '" + *dsNullableV30.XMLID + "' not found"), nil
+		return nil, http.StatusNotFound, errors.New("delivery service '" + *ds.XMLID + "' not found"), nil
 	}
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
@@ -831,7 +849,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	oldCDNName := ""
 	oldRoutingName := ""
 	if dsType.HasSSLKeys() {
-		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*dsNullableV30.ID, tx)
+		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*ds.ID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
 		}
@@ -839,93 +857,93 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
 	deepCachingType := tc.DeepCachingType("").String()
-	if dsNullableV30.DeepCachingType != nil {
-		deepCachingType = dsNullableV30.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	if ds.DeepCachingType != nil {
+		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, *dsNullableV30.ID, "deliveryservice")
+	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, *ds.ID, "deliveryservice")
 	if userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 
-	if errCode, userErr, sysErr = dbhelpers.CheckTopology(inf.Tx, dsNullableV30); userErr != nil || sysErr != nil {
+	if errCode, userErr, sysErr = dbhelpers.CheckTopology(inf.Tx, ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
 
-	if dsNullableV30.Topology != nil {
-		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*dsNullableV30.ID, tx)
+	if ds.Topology != nil {
+		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*ds.ID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting existing DS required capabilities: " + err.Error())
 		}
 		if len(requiredCapabilities) > 0 {
-			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *dsNullableV30.ID, *dsNullableV30.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
+			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
 				return nil, status, userErr, sysErr
 			}
 		}
 	}
 
 	resultRows, err := tx.Query(updateDSQuery(),
-		&dsNullableV30.Active,
-		&dsNullableV30.CacheURL,
-		&dsNullableV30.CCRDNSTTL,
-		&dsNullableV30.CDNID,
-		&dsNullableV30.CheckPath,
+		&ds.Active,
+		&ds.CacheURL,
+		&ds.CCRDNSTTL,
+		&ds.CDNID,
+		&ds.CheckPath,
 		&deepCachingType,
-		&dsNullableV30.DisplayName,
-		&dsNullableV30.DNSBypassCNAME,
-		&dsNullableV30.DNSBypassIP,
-		&dsNullableV30.DNSBypassIP6,
-		&dsNullableV30.DNSBypassTTL,
-		&dsNullableV30.DSCP,
-		&dsNullableV30.EdgeHeaderRewrite,
-		&dsNullableV30.GeoLimitRedirectURL,
-		&dsNullableV30.GeoLimit,
-		&dsNullableV30.GeoLimitCountries,
-		&dsNullableV30.GeoProvider,
-		&dsNullableV30.GlobalMaxMBPS,
-		&dsNullableV30.GlobalMaxTPS,
-		&dsNullableV30.FQPacingRate,
-		&dsNullableV30.HTTPBypassFQDN,
-		&dsNullableV30.InfoURL,
-		&dsNullableV30.InitialDispersion,
-		&dsNullableV30.IPV6RoutingEnabled,
-		&dsNullableV30.LogsEnabled,
-		&dsNullableV30.LongDesc,
-		&dsNullableV30.LongDesc1,
-		&dsNullableV30.LongDesc2,
-		&dsNullableV30.MaxDNSAnswers,
-		&dsNullableV30.MidHeaderRewrite,
-		&dsNullableV30.MissLat,
-		&dsNullableV30.MissLong,
-		&dsNullableV30.MultiSiteOrigin,
-		&dsNullableV30.OriginShield,
-		&dsNullableV30.ProfileID,
-		&dsNullableV30.Protocol,
-		&dsNullableV30.QStringIgnore,
-		&dsNullableV30.RangeRequestHandling,
-		&dsNullableV30.RegexRemap,
-		&dsNullableV30.RegionalGeoBlocking,
-		&dsNullableV30.RemapText,
-		&dsNullableV30.RoutingName,
-		&dsNullableV30.SigningAlgorithm,
-		&dsNullableV30.SSLKeyVersion,
-		&dsNullableV30.TenantID,
-		&dsNullableV30.TRRequestHeaders,
-		&dsNullableV30.TRResponseHeaders,
-		&dsNullableV30.TypeID,
-		&dsNullableV30.XMLID,
-		&dsNullableV30.AnonymousBlockingEnabled,
-		&dsNullableV30.ConsistentHashRegex,
-		&dsNullableV30.MaxOriginConnections,
-		&dsNullableV30.EcsEnabled,
-		&dsNullableV30.RangeSliceBlockSize,
-		&dsNullableV30.Topology,
-		&dsNullableV30.FirstHeaderRewrite,
-		&dsNullableV30.InnerHeaderRewrite,
-		&dsNullableV30.LastHeaderRewrite,
-		&dsNullableV30.ServiceCategory,
-		&dsNullableV30.MaxRequestHeaderBytes,
-		&dsNullableV30.ID)
+		&ds.DisplayName,
+		&ds.DNSBypassCNAME,
+		&ds.DNSBypassIP,
+		&ds.DNSBypassIP6,
+		&ds.DNSBypassTTL,
+		&ds.DSCP,
+		&ds.EdgeHeaderRewrite,
+		&ds.GeoLimitRedirectURL,
+		&ds.GeoLimit,
+		&ds.GeoLimitCountries,
+		&ds.GeoProvider,
+		&ds.GlobalMaxMBPS,
+		&ds.GlobalMaxTPS,
+		&ds.FQPacingRate,
+		&ds.HTTPBypassFQDN,
+		&ds.InfoURL,
+		&ds.InitialDispersion,
+		&ds.IPV6RoutingEnabled,
+		&ds.LogsEnabled,
+		&ds.LongDesc,
+		&ds.LongDesc1,
+		&ds.LongDesc2,
+		&ds.MaxDNSAnswers,
+		&ds.MidHeaderRewrite,
+		&ds.MissLat,
+		&ds.MissLong,
+		&ds.MultiSiteOrigin,
+		&ds.OriginShield,
+		&ds.ProfileID,
+		&ds.Protocol,
+		&ds.QStringIgnore,
+		&ds.RangeRequestHandling,
+		&ds.RegexRemap,
+		&ds.RegionalGeoBlocking,
+		&ds.RemapText,
+		&ds.RoutingName,
+		&ds.SigningAlgorithm,
+		&ds.SSLKeyVersion,
+		&ds.TenantID,
+		&ds.TRRequestHeaders,
+		&ds.TRResponseHeaders,
+		&ds.TypeID,
+		&ds.XMLID,
+		&ds.AnonymousBlockingEnabled,
+		&ds.ConsistentHashRegex,
+		&ds.MaxOriginConnections,
+		&ds.EcsEnabled,
+		&ds.RangeSliceBlockSize,
+		&ds.Topology,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
+		&ds.ServiceCategory,
+		&ds.MaxRequestHeaderBytes,
+		&ds.ID)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -941,327 +959,90 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	}
 	if resultRows.Next() {
 		xmlID := ""
-		if dsNullableV30.XMLID != nil {
-			xmlID = *dsNullableV30.XMLID
+		if ds.XMLID != nil {
+			xmlID = *ds.XMLID
 		}
 		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + xmlID + ": " + "this update affected too many rows: > 1")
 	}
 
-	if dsNullableV30.ID == nil {
+	if ds.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing id after update")
 	}
-	if dsNullableV30.XMLID == nil {
+	if ds.XMLID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing xml_id after update")
 	}
-	if dsNullableV30.TypeID == nil {
+	if ds.TypeID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing type after update")
 	}
-	if dsNullableV30.RoutingName == nil {
+	if ds.RoutingName == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
 	}
-	newDSType, err := getTypeFromID(*dsNullableV30.TypeID, tx)
+	newDSType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
 	}
-	dsNullableV30.Type = &newDSType
+	ds.Type = &newDSType
 
-	cdnDomain, err := getCDNDomain(*dsNullableV30.ID, tx) // need to get the domain again, in case it changed.
+	cdnDomain, err := getCDNDomain(*ds.ID, tx) // need to get the domain again, in case it changed.
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
 	}
 
-	matchLists, err := GetDeliveryServicesMatchLists([]string{*dsNullableV30.XMLID}, tx)
+	matchLists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting matchlists after update: " + err.Error())
 	}
-	if ml, ok := matchLists[*dsNullableV30.XMLID]; !ok {
+	if ml, ok := matchLists[*ds.XMLID]; !ok {
 		return nil, http.StatusInternalServerError, nil, errors.New("no matchlists after update")
 	} else {
-		dsNullableV30.MatchList = &ml
+		ds.MatchList = &ml
 	}
 
 	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
 	newHostName := ""
 	newCDNName := ""
 	if dsType.HasSSLKeys() {
-		newCDNName, err = getCDNName(*dsNullableV30.CDNID, tx)
-		newHostName, err = getHostName(dsNullableV30.Protocol, *dsNullableV30.Type, *dsNullableV30.RoutingName, *dsNullableV30.MatchList, cdnDomain)
+		newCDNName, err = getCDNName(*ds.CDNID, tx)
+		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
 		}
 	}
 
-	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *dsNullableV30.RoutingName) {
+	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
 		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
 	}
 
-	if err := EnsureParams(tx, *dsNullableV30.ID, *dsNullableV30.XMLID, dsNullableV30.EdgeHeaderRewrite, dsNullableV30.MidHeaderRewrite, dsNullableV30.RegexRemap, dsNullableV30.CacheURL, dsNullableV30.SigningAlgorithm, newDSType, dsNullableV30.MaxOriginConnections); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("ensuring dsNullableV30 parameters:: " + err.Error())
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
+		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, user, dsNullableV30); err != nil {
+	if err := updatePrimaryOrigin(tx, user, ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 	}
 
-	dsNullableV30.LastUpdated = &lastUpdated
+	ds.LastUpdated = &lastUpdated
 
 	// the update may change or delete the query params -- delete existing and re-add if any provided
 	q := `DELETE FROM deliveryservice_consistent_hash_query_param WHERE deliveryservice_id = $1`
-	if res, err := tx.Exec(q, *dsNullableV30.ID); err != nil {
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("deleting consistent hash query params for dsNullableV30 %s: %s", *dsNullableV30.XMLID, err.Error())
+	if res, err := tx.Exec(q, *ds.ID); err != nil {
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("deleting consistent hash query params for ds %s: %s", *ds.XMLID, err.Error())
 	} else if c, _ := res.RowsAffected(); c > 0 {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *dsNullableV30.ID, dsNullableV30.ConsistentHashQueryParams); err != nil {
+	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
 	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated dsNullableV30: "+*dsNullableV30.XMLID+" id: "+strconv.Itoa(*dsNullableV30.ID), user, tx); err != nil {
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	ds = (*tc.DeliveryServiceV31)(&dsNullableV30)
-	return ds, http.StatusOK, nil, nil
-}
-
-func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
-	tx := inf.Tx.Tx
-	user := inf.User
-	dsNullableV30 := tc.DeliveryServiceNullableV30{
-		DeliveryServiceV30: *ds,
-	}
-
-	if err := dsNullableV30.Validate(tx); err != nil {
-		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
-	}
-
-	if authorized, err := isTenantAuthorized(inf, &dsNullableV30); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
-	} else if !authorized {
-		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
-	}
-
-	if dsNullableV30.XMLID == nil {
-		return nil, http.StatusBadRequest, errors.New("missing xml_id"), nil
-	}
-	if dsNullableV30.ID == nil {
-		return nil, http.StatusBadRequest, errors.New("missing id"), nil
-	}
-
-	dsType, ok, err := getDSType(tx, *dsNullableV30.XMLID)
-	if !ok {
-		return nil, http.StatusNotFound, errors.New("delivery service '" + *dsNullableV30.XMLID + "' not found"), nil
-	}
-	if err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
-	}
-
-	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
-	oldHostName := ""
-	oldCDNName := ""
-	oldRoutingName := ""
-	if dsType.HasSSLKeys() {
-		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*dsNullableV30.ID, tx)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
-		}
-	}
-
-	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
-	deepCachingType := tc.DeepCachingType("").String()
-	if dsNullableV30.DeepCachingType != nil {
-		deepCachingType = dsNullableV30.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
-	}
-
-	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, *dsNullableV30.ID, "deliveryservice")
-	if userErr != nil || sysErr != nil {
-		return nil, errCode, userErr, sysErr
-	}
-
-	if errCode, userErr, sysErr = dbhelpers.CheckTopology(inf.Tx, dsNullableV30); userErr != nil || sysErr != nil {
-		return nil, errCode, userErr, sysErr
-	}
-
-	if dsNullableV30.Topology != nil {
-		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*dsNullableV30.ID, tx)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting existing DS required capabilities: " + err.Error())
-		}
-		if len(requiredCapabilities) > 0 {
-			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *dsNullableV30.ID, *dsNullableV30.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
-				return nil, status, userErr, sysErr
-			}
-		}
-
-		userErr, sysErr, status := dbhelpers.CheckOriginServerInCacheGroupTopology(tx, *dsNullableV30.ID, *dsNullableV30.Topology)
-		if userErr != nil || sysErr != nil {
-			return nil, status, userErr, sysErr
-		}
-	}
-
-	resultRows, err := tx.Query(updateDSQuery(),
-		&dsNullableV30.Active,
-		&dsNullableV30.CacheURL,
-		&dsNullableV30.CCRDNSTTL,
-		&dsNullableV30.CDNID,
-		&dsNullableV30.CheckPath,
-		&deepCachingType,
-		&dsNullableV30.DisplayName,
-		&dsNullableV30.DNSBypassCNAME,
-		&dsNullableV30.DNSBypassIP,
-		&dsNullableV30.DNSBypassIP6,
-		&dsNullableV30.DNSBypassTTL,
-		&dsNullableV30.DSCP,
-		&dsNullableV30.EdgeHeaderRewrite,
-		&dsNullableV30.GeoLimitRedirectURL,
-		&dsNullableV30.GeoLimit,
-		&dsNullableV30.GeoLimitCountries,
-		&dsNullableV30.GeoProvider,
-		&dsNullableV30.GlobalMaxMBPS,
-		&dsNullableV30.GlobalMaxTPS,
-		&dsNullableV30.FQPacingRate,
-		&dsNullableV30.HTTPBypassFQDN,
-		&dsNullableV30.InfoURL,
-		&dsNullableV30.InitialDispersion,
-		&dsNullableV30.IPV6RoutingEnabled,
-		&dsNullableV30.LogsEnabled,
-		&dsNullableV30.LongDesc,
-		&dsNullableV30.LongDesc1,
-		&dsNullableV30.LongDesc2,
-		&dsNullableV30.MaxDNSAnswers,
-		&dsNullableV30.MidHeaderRewrite,
-		&dsNullableV30.MissLat,
-		&dsNullableV30.MissLong,
-		&dsNullableV30.MultiSiteOrigin,
-		&dsNullableV30.OriginShield,
-		&dsNullableV30.ProfileID,
-		&dsNullableV30.Protocol,
-		&dsNullableV30.QStringIgnore,
-		&dsNullableV30.RangeRequestHandling,
-		&dsNullableV30.RegexRemap,
-		&dsNullableV30.RegionalGeoBlocking,
-		&dsNullableV30.RemapText,
-		&dsNullableV30.RoutingName,
-		&dsNullableV30.SigningAlgorithm,
-		&dsNullableV30.SSLKeyVersion,
-		&dsNullableV30.TenantID,
-		&dsNullableV30.TRRequestHeaders,
-		&dsNullableV30.TRResponseHeaders,
-		&dsNullableV30.TypeID,
-		&dsNullableV30.XMLID,
-		&dsNullableV30.AnonymousBlockingEnabled,
-		&dsNullableV30.ConsistentHashRegex,
-		&dsNullableV30.MaxOriginConnections,
-		&dsNullableV30.EcsEnabled,
-		&dsNullableV30.RangeSliceBlockSize,
-		&dsNullableV30.Topology,
-		&dsNullableV30.FirstHeaderRewrite,
-		&dsNullableV30.InnerHeaderRewrite,
-		&dsNullableV30.LastHeaderRewrite,
-		&dsNullableV30.ServiceCategory,
-		&dsNullableV30.MaxRequestHeaderBytes,
-		&dsNullableV30.ID)
-
-	if err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
-	}
-	defer resultRows.Close()
-	if !resultRows.Next() {
-		return nil, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
-	}
-	lastUpdated := tc.TimeNoMod{}
-	if err := resultRows.Scan(&lastUpdated); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("scan updating delivery service: " + err.Error())
-	}
-	if resultRows.Next() {
-		xmlID := ""
-		if dsNullableV30.XMLID != nil {
-			xmlID = *dsNullableV30.XMLID
-		}
-		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service " + xmlID + ": " + "this update affected too many rows: > 1")
-	}
-
-	if dsNullableV30.ID == nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("missing id after update")
-	}
-	if dsNullableV30.XMLID == nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("missing xml_id after update")
-	}
-	if dsNullableV30.TypeID == nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("missing type after update")
-	}
-	if dsNullableV30.RoutingName == nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
-	}
-	newDSType, err := getTypeFromID(*dsNullableV30.TypeID, tx)
-	if err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
-	}
-	dsNullableV30.Type = &newDSType
-
-	cdnDomain, err := getCDNDomain(*dsNullableV30.ID, tx) // need to get the domain again, in case it changed.
-	if err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
-	}
-
-	matchLists, err := GetDeliveryServicesMatchLists([]string{*dsNullableV30.XMLID}, tx)
-	if err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("getting matchlists after update: " + err.Error())
-	}
-	if ml, ok := matchLists[*dsNullableV30.XMLID]; !ok {
-		return nil, http.StatusInternalServerError, nil, errors.New("no matchlists after update")
-	} else {
-		dsNullableV30.MatchList = &ml
-	}
-
-	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
-	newHostName := ""
-	newCDNName := ""
-	if dsType.HasSSLKeys() {
-		newCDNName, err = getCDNName(*dsNullableV30.CDNID, tx)
-		newHostName, err = getHostName(dsNullableV30.Protocol, *dsNullableV30.Type, *dsNullableV30.RoutingName, *dsNullableV30.MatchList, cdnDomain)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
-		}
-	}
-
-	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *dsNullableV30.RoutingName) {
-		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
-	}
-
-	if err := EnsureParams(tx, *dsNullableV30.ID, *dsNullableV30.XMLID, dsNullableV30.EdgeHeaderRewrite, dsNullableV30.MidHeaderRewrite, dsNullableV30.RegexRemap, dsNullableV30.CacheURL, dsNullableV30.SigningAlgorithm, newDSType, dsNullableV30.MaxOriginConnections); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("ensuring dsNullableV30 parameters:: " + err.Error())
-	}
-
-	if err := updatePrimaryOrigin(tx, user, dsNullableV30); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
-	}
-
-	dsNullableV30.LastUpdated = &lastUpdated
-
-	// the update may change or delete the query params -- delete existing and re-add if any provided
-	q := `DELETE FROM deliveryservice_consistent_hash_query_param WHERE deliveryservice_id = $1`
-	if res, err := tx.Exec(q, *dsNullableV30.ID); err != nil {
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("deleting consistent hash query params for dsNullableV30 %s: %s", *dsNullableV30.XMLID, err.Error())
-	} else if c, _ := res.RowsAffected(); c > 0 {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
-	}
-
-	if c, err := createConsistentHashQueryParams(tx, *dsNullableV30.ID, dsNullableV30.ConsistentHashQueryParams); err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		return nil, code, usrErr, sysErr
-	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*dsNullableV30.XMLID+", ID: "+strconv.Itoa(*dsNullableV30.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
-	}
-
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated dsNullableV30: "+*dsNullableV30.XMLID+" id: "+strconv.Itoa(*dsNullableV30.ID), user, tx); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
-	}
-	return &dsNullableV30.DeliveryServiceV30, http.StatusOK, nil, nil
+	dsV31 = (*tc.DeliveryServiceV31)(&ds)
+	return dsV31, http.StatusOK, nil, nil
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.

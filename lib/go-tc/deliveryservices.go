@@ -32,7 +32,7 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
-const DefaultMaxHeaderSize = 131072
+const DefaultMaxRequestHeaderBytes = 131072
 const MinRangeSliceBlockSize = 262144   // 265Kib
 const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
@@ -385,7 +385,7 @@ func (ds *DeliveryServiceNullableV30) Sanitize() {
 	}
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
 	if ds.MaxRequestHeaderBytes == nil {
-		ds.MaxRequestHeaderBytes = util.IntPtr(DefaultMaxHeaderSize)
+		ds.MaxRequestHeaderBytes = util.IntPtr(DefaultMaxRequestHeaderBytes)
 	}
 }
 
@@ -538,6 +538,17 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 				ds := dsi.(*DeliveryServiceNullableV30)
 				if ds.Topology != nil && DSType(typeName).IsSteering() {
 					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
+				}
+				return nil
+			})),
+		"maxRequestHeaderBytes": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullableV30)
+				if ds.MaxRequestHeaderBytes == nil {
+					return fmt.Errorf("maxRequestHeaderBytes empty, must be a valid positive value")
+				}
+				if *ds.MaxRequestHeaderBytes <= 0 {
+					return fmt.Errorf("maxRequestHeaderBytes must be a valid positive value")
 				}
 				return nil
 			})),
