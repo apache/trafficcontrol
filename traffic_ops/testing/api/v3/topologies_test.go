@@ -277,11 +277,11 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	}
 
 	// Remove org server assignment
-	//serverResp, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
-	//_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].Server)
-	//if err != nil {
-	//	t.Errorf("cannot assign server to Delivery Services: %v", err)
-	//}
+	serverResp, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].Server)
+	if err != nil {
+		t.Errorf("cannot assign server to Delivery Services: %v", err)
+	}
 }
 
 func DeleteTestTopologies(t *testing.T) {

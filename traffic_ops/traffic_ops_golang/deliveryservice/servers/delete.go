@@ -45,10 +45,11 @@ func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 }
 
 const lastServerQuery = `
-SELECT COUNT(*) = 0
-FROM deliveryservice_server
-WHERE deliveryservice = $1
-	AND server <> $2
+	SELECT COUNT(*)
+	FROM deliveryservice_server ds
+	inner join server s on ds.server = s.id 
+	inner join type t on t.id = s.type
+	WHERE ds.deliveryservice = $1 AND ds.server <> $2 and t.name!=$3
 `
 
 // checkLastServer checks if the given Server ID identifies the last server
@@ -63,7 +64,7 @@ func checkLastServer(dsID, serverID int, tx *sql.Tx) (int, error, error) {
 	if tx == nil {
 		return http.StatusInternalServerError, nil, errors.New("nil transaction")
 	}
-	err := tx.QueryRow(lastServerQuery, dsID, serverID).Scan(&isLast)
+	err := tx.QueryRow(lastServerQuery, dsID, serverID, tc.OriginTypeName).Scan(&isLast)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}

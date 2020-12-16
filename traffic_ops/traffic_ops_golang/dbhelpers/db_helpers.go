@@ -1140,8 +1140,8 @@ func CheckOriginServerInDSCG(tx *sql.Tx, dsID int, dsTopology string) (error, er
 			topoCachegroups[cg] = ""
 		}
 		for cg, s := range servers {
-			_, DSCGOk := topoCachegroups[cg]
-			if !DSCGOk {
+			_, ok := topoCachegroups[cg]
+			if !ok {
 				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
 			}
 		}
