@@ -545,10 +545,10 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*DeliveryServiceNullableV30)
 				if ds.MaxRequestHeaderBytes == nil {
-					return fmt.Errorf("maxRequestHeaderBytes empty, must be a valid positive value")
+					return errors.New("maxRequestHeaderBytes empty, must be a valid non-negative value")
 				}
-				if *ds.MaxRequestHeaderBytes <= 0 {
-					return fmt.Errorf("maxRequestHeaderBytes must be a valid positive value")
+				if *ds.MaxRequestHeaderBytes < 0 {
+					return errors.New("maxRequestHeaderBytes must be a valid non-negative value")
 				}
 				return nil
 			})),
