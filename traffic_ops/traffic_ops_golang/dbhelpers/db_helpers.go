@@ -1162,14 +1162,14 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 			INNER JOIN deliveryservice d ON d.id = ds.deliveryservice
 			INNER JOIN type t ON t.id = s.type
 			INNER JOIN cachegroup c ON c.id = s.cachegroup
-		WHERE d.cdn_id =ANY($1) AND t.name=$2 AND topology=$3
+		WHERE d.cdn_id =ANY($1) AND t.name=$2 AND d.topology=$3
 		GROUP BY s.id, c.name
 	`
 	serverId := ""
 	cacheGroupName := ""
 	dsNames := []string{}
 	serversCG := make(map[string]string)
-	serversDS := make(map[string]interface{})
+	serversDS := make(map[string][]string)
 	rows, err := tx.Query(q, pq.Array(cdnIds), tc.OriginTypeName, dsTopology)
 	if err != nil {
 		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
@@ -1192,7 +1192,7 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 	for cg, s := range serversCG {
 		_, currentTopoCGOk := topoCacheGroupNames[cg]
 		if !currentTopoCGOk {
-			offendingDSSerCG = append(offendingDSSerCG, fmt.Sprintf("cachegroup=%s (serverID=%s, delivery_service=%s)", cg, s, serversDS[s]))
+			offendingDSSerCG = append(offendingDSSerCG, fmt.Sprintf("cachegroup=%s (serverID=%s, delivery_services=%s)", cg, s, serversDS[s]))
 		}
 	}
 	if len(offendingDSSerCG) > 0 {

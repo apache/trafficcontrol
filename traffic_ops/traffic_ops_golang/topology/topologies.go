@@ -154,11 +154,10 @@ func (topology *TOTopology) Validate() error {
 	topoCachegroupNames := topology.getCachegroupNames()
 	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, topology.Name, topoCachegroupNames)
 	if userErr != nil {
-		return fmt.Errorf("%s", userErr.Error())
+		return fmt.Errorf("%s", userErr)
 	}
 	if sysErr != nil {
-		fmt.Println("System Error", sysErr)
-		return errors.New("unable to validate topology")
+		log.Errorf("error while validate topology: %s", sysErr.Error())
 	}
 
 	/* Only perform further checks if everything so far is valid */

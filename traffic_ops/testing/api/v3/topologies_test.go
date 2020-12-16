@@ -277,10 +277,11 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	}
 
 	// Remove org server assignment and reset DS back to as it was for further testing
-	serverResp, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].Server)
+	params.Set("hostName", "denver-mso-org-01")
+	serverResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].ID)
 	if err != nil {
-		t.Errorf("cannot assign server to Delivery Services: %v", err)
+		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
 	}
 }
 
