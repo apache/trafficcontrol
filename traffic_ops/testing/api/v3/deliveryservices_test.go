@@ -904,10 +904,8 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 	ds, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err == nil {
 		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v, but update was successful", ds.XMLID)
-	} else {
-		if !strings.Contains(err.Error(), "the following ORG server cachegroups are not in the delivery service's topology") {
-			t.Errorf("expected: error containing \"the following ORG server cachegroups are not in the delivery service's topology\", actual: %s", err.Error())
-		}
+	} else if !strings.Contains(err.Error(), "the following ORG server cachegroups are not in the delivery service's topology") {
+		t.Errorf("expected: error containing \"the following ORG server cachegroups are not in the delivery service's topology\", actual: %s", err.Error())
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected to fail since ORG server's topology not part of DS. Expected:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
