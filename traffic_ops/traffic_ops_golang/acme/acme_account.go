@@ -33,6 +33,8 @@ const readQuery = `SELECT email, private_key, uri, provider FROM acme_account`
 const createQuery = `INSERT INTO acme_account (email, private_key, uri, provider) VALUES (:email, :private_key, :uri, :provider) RETURNING email, provider`
 const updateQuery = `UPDATE acme_account SET private_key=:private_key, uri=:uri WHERE email=:email and provider=:provider RETURNING email, provider`
 const deleteQuery = `DELETE FROM acme_account WHERE email=$1 and provider=$2`
+const selectByProviderAndEmailQuery = `SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2`
+const selectLimitedQuery = `SELECT email, provider from acme_account where email = $1 and provider = $2`
 
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -81,7 +83,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	var prevEmail string
 	var prevProvider string
-	err := tx.QueryRow("SELECT email, provider from acme_account where email = $1 and provider = $2", acmeAccount.Email, acmeAccount.Provider).Scan(&prevEmail, &prevProvider)
+	err := tx.QueryRow(selectLimitedQuery, acmeAccount.Email, acmeAccount.Provider).Scan(&prevEmail, &prevProvider)
 	if err != nil && err != sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err.Error())))
 		return
@@ -133,7 +135,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var prevAccount tc.AcmeAccount
-	err := tx.QueryRow("SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2", acmeAccount.Email, acmeAccount.Provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
+	err := tx.QueryRow(selectByProviderAndEmailQuery, acmeAccount.Email, acmeAccount.Provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
 	if err == sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("acme account not found")), nil)
 		return
@@ -181,7 +183,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var prevAccount tc.AcmeAccount
-	err := tx.QueryRow("SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2", email, provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
+	err := tx.QueryRow(selectByProviderAndEmailQuery, email, provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
 	if err == sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New(fmt.Sprintf("acme account not found")), nil)
 		return
