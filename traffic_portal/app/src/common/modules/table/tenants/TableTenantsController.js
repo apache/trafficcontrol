@@ -19,31 +19,23 @@
 
 var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, tenantUtils) {
 
-    $scope.isUserTenant = function(tenant) {
-        return tenant.id == currentUserTenant.id;
+    $scope.tenantTree = [];
+
+    $scope.hasChildren = function(node) {
+        return node.children.length > 0;
     };
 
-    $scope.editTenant = function(id) {
-        locationUtils.navigateToPath('/tenants/' + id);
+    $scope.toggle = function(scope) {
+        scope.toggle();
     };
 
     $scope.createTenant = function() {
         locationUtils.navigateToPath('/tenants/new');
     };
 
-    var init = function() {
-
+    let init = function() {
         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), currentUserTenant.parentId, []);
-        tenantUtils.addLevels($scope.tenants);
-
-        $timeout(function () {
-            $('#tenantsTable').dataTable({
-                "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-                "iDisplayLength": -1,
-                "bSort": false
-            });
-        }, 100);
-
+        $scope.tenantTree = tenantUtils.convertToHierarchy($scope.tenants);
     };
     init();
 

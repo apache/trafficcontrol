@@ -20,34 +20,51 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li class="active">Tenants</li>
+            <li class="active">Tenants <small>[{{tenants.length}}]</small></li>
         </ol>
         <div class="pull-right">
             <button class="btn btn-primary" title="Create New Tenant" ng-click="createTenant()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a name="createServerMenuItem" href="#!/servers/new">Export Tenants</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
         <br>
-        <table id="tenantsTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Name</th>
-                <th>Active</th>
-                <th>Parent</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-click="editTenant(t.id)" ng-repeat="t in ::tenants" ng-class="::{'active': isUserTenant(t)}">
-                <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
-                <td data-search="^{{::t.active}}$">{{::t.active}}</td>
-                <td data-search="^{{::t.parentName}}$">{{::t.parentName}}</td>
-            </tr>
-            </tbody>
-        </table>
+        <div id="tree-root" ui-tree data-drag-enabled="false">
+            <ol ui-tree-nodes ng-model="tenantTree">
+                <li ng-repeat="node in tenantTree" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+            </ol>
+        </div>
     </div>
 </div>
+
+<script type="text/ng-template" id="nodes_renderer.html">
+    <div ui-tree-handle class="tree-node tree-node-content">
+        <div class="tree-node-label pull-left">
+            <a class="tree-toggle btn btn-primary btn-xs" ng-if="hasChildren(node)" ng-click="toggle(this)">
+                <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+            </a> {{::node.name}}
+        </div>
+        <div class="pull-right">
+            <a title="Edit Tenant" ng-href="#!/tenants/{{node.id}}">Edit</a> |
+            <a title="View Tenant Users" ng-href="#!/tenants/{{node.id}}/users">Users</a> |
+            <a title="View Tenant Delivery Services" ng-href="#!/tenants/{{node.id}}/delivery-services">Delivery Services</a>
+        </div>
+    </div>
+    <ol ui-tree-nodes="" ng-model="node.children" ng-class="{ hidden: collapsed }">
+        <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+    </ol>
+</script>
+
+
 
 
 
