@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
 - #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
+- Added API endpoints for ACME accounts
 
 ### Fixed
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
