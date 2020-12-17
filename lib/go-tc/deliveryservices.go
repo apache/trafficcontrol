@@ -547,7 +547,7 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 				if ds.MaxRequestHeaderBytes == nil {
 					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
 				}
-				if *ds.MaxRequestHeaderBytes <= 0  || *ds.MaxRequestHeaderBytes > 2147483647 {
+				if *ds.MaxRequestHeaderBytes <= 0 || *ds.MaxRequestHeaderBytes > 2147483647 {
 					return errors.New("maxRequestHeaderBytes must be a valid positive value between 1 and 2147483647")
 				}
 				return nil
