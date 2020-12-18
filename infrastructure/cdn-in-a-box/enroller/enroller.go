@@ -678,6 +678,46 @@ func enrollServerCapability(toSession *session, r io.Reader) error {
 	return err
 }
 
+// enrollServerServerCapability takes a json file and creates a ServerServerCapability object using the TO API
+func enrollServerServerCapability(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var s tc.ServerServerCapability
+	err := dec.Decode(&s)
+	if err != nil {
+		log.Infof("error decoding Server: %s\n", err)
+		return err
+	}
+
+	resp, _, err := toSession.GetServersWithHdr(&url.Values{"hostName": []string{*s.Server}}, nil)
+	if err != nil {
+		log.Infof("getting server %s: %s\n", *s.Server, err.Error())
+		return err
+	}
+	if len(resp.Response) < 1 {
+		err = fmt.Errorf("could not find Server %s", *s.Server)
+		log.Infoln(err.Error())
+		return err
+	}
+	if len(resp.Response) > 1 {
+		err = fmt.Errorf("found more than 1 Server with hostname %s", *s.Server)
+		log.Infoln(err.Error())
+		return err
+	}
+	s.ServerID = resp.Response[0].ID
+
+	alerts, _, err := toSession.CreateServerServerCapability(s)
+	if err != nil {
+		log.Infof("error creating Server Server Capability: %s\n", err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 type dirWatcher struct {
 	*fsnotify.Watcher
 	TOSession *session
@@ -892,24 +932,25 @@ func main() {
 
 	// dispatcher maps an API endpoint name to a function to act on the JSON input Reader
 	dispatcher := map[string]func(*session, io.Reader) error{
-		"types":                   enrollType,
-		"cdns":                    enrollCDN,
-		"cachegroups":             enrollCachegroup,
-		"topologies":              enrollTopology,
-		"profiles":                enrollProfile,
-		"parameters":              enrollParameter,
-		"servers":                 enrollServer,
-		"server_capabilities":     enrollServerCapability,
-		"asns":                    enrollASN,
-		"deliveryservices":        enrollDeliveryService,
-		"deliveryservice_servers": enrollDeliveryServiceServer,
-		"divisions":               enrollDivision,
-		"origins":                 enrollOrigin,
-		"phys_locations":          enrollPhysLocation,
-		"regions":                 enrollRegion,
-		"statuses":                enrollStatus,
-		"tenants":                 enrollTenant,
-		"users":                   enrollUser,
+		"types":                                  enrollType,
+		"cdns":                                   enrollCDN,
+		"cachegroups":                            enrollCachegroup,
+		"topologies":                             enrollTopology,
+		"profiles":                               enrollProfile,
+		"parameters":                             enrollParameter,
+		"servers":                                enrollServer,
+		"server_capabilities":                    enrollServerCapability,
+		"server_server_capabilities":             enrollServerServerCapability,
+		"asns":                                   enrollASN,
+		"deliveryservices":                       enrollDeliveryService,
+		"deliveryservice_servers":                enrollDeliveryServiceServer,
+		"divisions":                              enrollDivision,
+		"origins":                                enrollOrigin,
+		"phys_locations":                         enrollPhysLocation,
+		"regions":                                enrollRegion,
+		"statuses":                               enrollStatus,
+		"tenants":                                enrollTenant,
+		"users":                                  enrollUser,
 	}
 
 	if len(httpPort) != 0 {
