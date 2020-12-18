@@ -4,7 +4,7 @@
     "tenant": "root",
     "protocol": 2,
     "topology": "demo1-top",
-    "orgServerFqdn": "http://origin.infra.ciab.test",
+    "orgServerFqdn": "http://origin-01.infra.ciab.test",
     "cdnName": "$CDN_NAME",
     "type": "HTTP",
     "active": true,

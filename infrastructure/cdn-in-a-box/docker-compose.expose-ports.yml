@@ -64,7 +64,7 @@ services:
   mid-02:
     ports:
       - "9200:80"
-  origin:
+  origin-01:
     ports:
       - "9300:80"
   dns:

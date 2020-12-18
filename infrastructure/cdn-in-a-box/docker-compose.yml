@@ -243,8 +243,8 @@ services:
     volumes:
       - shared:/shared
 
-  # origin provides the content to be distributed through the CDN caches
-  origin:
+  # origin-01 provides the content to be distributed through the CDN caches
+  origin-01:
     build:
       context: .
       dockerfile: origin/Dockerfile
@@ -253,7 +253,7 @@ services:
     domainname: infra.ciab.test
     env_file:
       - variables.env
-    hostname: origin
+    hostname: origin-01
     volumes:
       - shared:/shared
 
