@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
@@ -144,6 +145,16 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 3.x API
 		 */
+		////DeliveryServices
+		{api.Version{3, 1}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV31, auth.PrivLevelOperations, Authenticated, nil, 2064315323, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV31, auth.PrivLevelOperations, Authenticated, nil, 27665675673, noPerlBypass},
+
+		// Acme account information
+		{api.Version{3, 1}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 2034390561, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 2034390562, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563, noPerlBypass},
+		{api.Version{3, 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564, noPerlBypass},
+
 		// API Capability
 		{api.Version{3, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 28132065893, noPerlBypass},
 

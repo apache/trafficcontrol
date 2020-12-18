@@ -32,6 +32,9 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
+const DefaultMaxRequestHeaderBytes = 131072
+const MinRangeSliceBlockSize = 262144   // 265Kib
+const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
@@ -170,7 +173,7 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV30 struct {
+type DeliveryServiceV30 struct {
 	DeliveryServiceNullableV15
 	Topology           *string `json:"topology" db:"topology"`
 	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
@@ -178,6 +181,17 @@ type DeliveryServiceNullableV30 struct {
 	LastHeaderRewrite  *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
 	ServiceCategory    *string `json:"serviceCategory" db:"service_category"`
 }
+
+type DeliveryServiceV31 struct {
+	DeliveryServiceV30
+	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
+}
+
+// DeliveryServiceNullableV30 is the aliased structure that we should be using for all api 3.x delivery structure operations
+// This type should always alias the latest 3.x minor version struct. For ex, if you wanted to create a DeliveryServiceV32 struct, you would do the following:
+// type DeliveryServiceNullableV30 DeliveryServiceV32
+// DeliveryServiceV32 = DeliveryServiceV31 + the new fields
+type DeliveryServiceNullableV30 DeliveryServiceV31
 
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
@@ -370,6 +384,9 @@ func (ds *DeliveryServiceNullableV30) Sanitize() {
 		ds.DeepCachingType = &s
 	}
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
+	if ds.MaxRequestHeaderBytes == nil {
+		ds.MaxRequestHeaderBytes = util.IntPtr(DefaultMaxRequestHeaderBytes)
+	}
 }
 
 func setNilIfEmpty(ptrs ...**string) {
@@ -428,8 +445,8 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 					if *ds.RangeRequestHandling == 3 {
 						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
 							// Per Slice Plugin implementation
-							validation.Min(262144),   // 256KiB
-							validation.Max(33554432), // 32MiB
+							validation.Min(MinRangeSliceBlockSize), // 256KiB
+							validation.Max(MaxRangeSliceBlockSize), // 32MiB
 						)
 					}
 					if ds.RangeSliceBlockSize != nil {
@@ -500,8 +517,8 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 					if *ds.RangeRequestHandling == 3 {
 						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
 							// Per Slice Plugin implementation
-							validation.Min(262144),   // 256KiB
-							validation.Max(33554432), // 32MiB
+							validation.Min(MinRangeSliceBlockSize), // 256KiB
+							validation.Max(MaxRangeSliceBlockSize), // 32MiB
 						)
 					}
 					if ds.RangeSliceBlockSize != nil {
@@ -521,6 +538,17 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 				ds := dsi.(*DeliveryServiceNullableV30)
 				if ds.Topology != nil && DSType(typeName).IsSteering() {
 					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
+				}
+				return nil
+			})),
+		"maxRequestHeaderBytes": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullableV30)
+				if ds.MaxRequestHeaderBytes == nil {
+					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
+				}
+				if *ds.MaxRequestHeaderBytes <= 0 || *ds.MaxRequestHeaderBytes > 2147483647 {
+					return errors.New("maxRequestHeaderBytes must be a valid positive value between 1 and 2147483647")
 				}
 				return nil
 			})),
@@ -796,7 +824,6 @@ type DeliveryServiceSafeUpdateResponse struct {
 
 // DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
 // request to its /api/3.0/deliveryservices/{{ID}}/safe endpoint.
-// Deprecated: Please only use versioned structures.
 type DeliveryServiceSafeUpdateResponseV30 struct {
 	Alerts
 	// Response contains the representation of the Delivery Service after it has
