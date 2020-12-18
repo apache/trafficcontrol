@@ -50,7 +50,7 @@ done
 
 # these expected to be stored in $X509_CA_ENV_FILE, but a race condition could render the contents
 # blank until it gets sync'd.  Ensure vars defined before writing cdn.conf.
-until [[ -n "$X509_GENERATION_COMPLETE" ]]
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
 do
   echo "Waiting on X509 vars to be defined"
   sleep 1
