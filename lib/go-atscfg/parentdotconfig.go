@@ -236,7 +236,7 @@ func MakeParentDotConfig(
 		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
 	}
 
-	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities, dsRequiredCapabilities)
+	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "getting origin servers and profile caches: "+err.Error())
@@ -341,7 +341,7 @@ func MakeParentDotConfig(
 					warnings = append(warnings, "delivery service "+*ds.XMLID+" has no parent servers")
 				}
 
-				parents, secondaryParents, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsRequiredCapabilities, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
+				parents, secondaryParents, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
 				warnings = append(warnings, parentWarns...)
 				textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 				textLine += getParentRetryStr(true, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
@@ -1029,7 +1029,7 @@ func getTopologyParents(
 			continue
 		}
 
-		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
+		if sv.Type != tc.OriginTypeName && !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 		if *sv.Cachegroup == parentCG {
@@ -1136,7 +1136,6 @@ func getMSOParentStrs(
 	ds *DeliveryService,
 	parentInfos []parentInfo,
 	atsMajorVer int,
-	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	msoAlgorithm string,
 	tryAllPrimariesBeforeSecondary bool,
 ) (string, string, []string) {
@@ -1150,10 +1149,6 @@ func getMSOParentStrs(
 	secondaryParentInfo := []string{}
 	nullParentInfo := []string{}
 	for _, parent := range ([]parentInfo)(rankedParents) {
-		if !hasRequiredCapabilities(parent.Capabilities, dsRequiredCapabilities[*ds.ID]) {
-			continue
-		}
-
 		if parent.PrimaryParent {
 			parentInfoTxt = append(parentInfoTxt, parent.Format())
 		} else if parent.SecondaryParent {
@@ -1263,7 +1258,6 @@ func getOriginServersAndProfileCaches(
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []DeliveryService,
 	serverCapabilities map[int]map[ServerCapability]struct{},
-	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 ) (map[OriginHost][]cgServer, map[ProfileID]profileCache, []string, error) {
 	warnings := []string{}
 	originServers := map[OriginHost][]cgServer{}  // "deliveryServices" in Perl
@@ -1363,12 +1357,8 @@ func getOriginServersAndProfileCaches(
 					// warnings = append(warnings, fmt.Sprintf(("ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
 					continue
 				}
-				if hasRequiredCapabilities(serverCapabilities[*cgSv.ID], dsRequiredCapabilities[dsID]) {
-					orgHost := OriginHost(orgURI.Host)
-					originServers[orgHost] = append(originServers[orgHost], realCGServer)
-				} else {
-					warnings = append(warnings, fmt.Sprintf("ds %v server %v missing required caps, skipping!\n", dsID, orgURI.Host))
-				}
+				orgHost := OriginHost(orgURI.Host)
+				originServers[orgHost] = append(originServers[orgHost], realCGServer)
 			}
 		} else {
 			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], realCGServer)
