@@ -795,6 +795,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
 	var cdnID int
+	var serverCountOrigin uint64
+	rowsAffected := 0
+
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
@@ -834,6 +837,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
+		row := tx.QueryRow(serverCountQuery+` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=$1`, dsID)
+		if err := row.Scan(&serverCountOrigin); err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError, nil
+		}
 	}
 
 	if _, ok := params[`topology`]; ok {
@@ -858,7 +865,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
 	}
 	defer countRows.Close()
-	rowsAffected := 0
+	rowsAffected = 0
 	for countRows.Next() {
 		if err = countRows.Scan(&serverCount); err != nil {
 			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError, nil
@@ -869,6 +876,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, nil, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected), http.StatusInternalServerError, nil
 	}
 
+	serverCount += serverCountOrigin
 	serversList := []tc.ServerNullable{}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(queryAddition, where))
@@ -881,9 +889,16 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
+	if dsIDStr, ok := params[`dsId`]; ok {
+		_, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
+		}
+		where += `UNION `+selectQuery + ` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=:dsId`
+	}
 	query := selectQuery + queryAddition + where + orderBy + pagination
+	fmt.Println("Query is ", query)
 	log.Debugln("Query is ", query)
-
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, serverCount, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError, nil
