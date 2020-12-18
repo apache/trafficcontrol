@@ -228,7 +228,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx.Commit()
 
-	storedLEInfo, err := getStoredLetsEncryptInfo(userTx, cfg.ConfigLetsEncrypt.Email)
+	storedLEInfo, err := getStoredAcmeAccountInfo(userTx, cfg.ConfigLetsEncrypt.Email, tc.LetsEncryptAuthType)
 	if err != nil {
 		log.Errorf(deliveryService+": Error finding stored LE information: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
@@ -355,7 +355,10 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	keyPem := keyBuf.Bytes()
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
+	// remove extra line if LE returns it
+	trimmedCert := bytes.ReplaceAll(certificates.Certificate, []byte("\n\n"), []byte("\n"))
+
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(trimmedCert)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
@@ -392,7 +395,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		return errors.New("pem-encoding private key: " + err.Error())
 	}
 	userKeyPem := userKeyBuf.Bytes()
-	err = storeLEAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI)
+	err = storeAcmeAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI, tc.LetsEncryptAuthType)
 	if err != nil {
 		log.Errorf("storing user account info: " + err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
@@ -404,10 +407,10 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	return nil
 }
 
-func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
+func getStoredAcmeAccountInfo(tx *sql.Tx, email string, provider string) (*LEInfo, error) {
 	leInfo := LEInfo{}
-	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1 LIMIT 1`
-	if err := tx.QueryRow(selectQuery, email).Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
+	selectQuery := `SELECT email, private_key, uri FROM acme_account WHERE email = $1 AND provider = $2 LIMIT 1`
+	if err := tx.QueryRow(selectQuery, email, provider).Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -424,9 +427,9 @@ func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
 	return &leInfo, nil
 }
 
-func storeLEAccountInfo(tx *sql.Tx, email string, privateKey string, uri string) error {
-	q := `INSERT INTO lets_encrypt_account (email, private_key, uri) VALUES ($1, $2, $3)`
-	response, err := tx.Exec(q, email, privateKey, uri)
+func storeAcmeAccountInfo(tx *sql.Tx, email string, privateKey string, uri string, provider string) error {
+	q := `INSERT INTO acme_account (email, private_key, uri, provider) VALUES ($1, $2, $3, $4)`
+	response, err := tx.Exec(q, email, privateKey, uri, provider)
 	if err != nil {
 		return err
 	}

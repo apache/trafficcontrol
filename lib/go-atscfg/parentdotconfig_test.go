@@ -539,6 +539,10 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
 		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
 	}
+	if strings.Contains(txt, "# topology") {
+		// ATS doesn't support inline comments in parent.config
+		t.Errorf("expected: no inline '# topology' comment, actual: '%v'", txt)
+	}
 }
 
 // TestMakeParentDotConfigNotInTopologies tests when a given edge is NOT in a Topology, that it doesn't add a remap line.

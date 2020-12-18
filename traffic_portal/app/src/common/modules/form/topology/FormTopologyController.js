@@ -187,14 +187,6 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		scope.toggle();
 	};
 
-	$scope.nodeError = function(node) {
-		// only EDGE_LOCs can serve as a leaf node on the topology
-		if (node.type !== 'EDGE_LOC' && node.children.length === 0) {
-			return node.type + ' requires 1+ child cache group';
-		}
-		return '';
-	};
-
 	$scope.nodeWarning = function(node) {
 		// EDGE_LOCs with parent/secondary parent EDGE_LOCs require special configuration
 		let msg = 'Special Configuration Required';
