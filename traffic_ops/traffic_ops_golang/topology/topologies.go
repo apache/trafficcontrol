@@ -167,7 +167,7 @@ func (topology *TOTopology) Validate() error {
 	}
 
 	for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
-		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
+		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 primary or secondary child cache group)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
 	}
 	_, rules["topology cycles"] = checkForCycles(topology.Nodes)
 	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()

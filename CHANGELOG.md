@@ -5,19 +5,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
 - #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
+- Added API endpoints for ACME accounts
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 
 ### Fixed
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
 - Fixed Traffic Router logging unnecessary warnings for IPv6-only caches
+- Fixed parent.config generation for topology-based delivery services (inline comments not supported)
+- Fixed parent.config generation for MSO delivery services with required capabilities
 - [#5294](https://github.com/apache/trafficcontrol/issues/5294) - TP ag grid tables now properly persist column filters
     on page refresh.
 - [#5295](https://github.com/apache/trafficcontrol/issues/5295) - TP types/servers table now clears all filters instead
     of just column filters
 - #2881 Some API endpoints have incorrect Content-Types
+- [#5311](https://github.com/apache/trafficcontrol/issues/5311) - Better TO log messages when failures calling TM CacheStats
 
 ## [5.0.0] - 2020-10-20
 ### Added

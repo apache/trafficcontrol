@@ -114,9 +114,9 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 		return CapacityResp{}, errors.New("getting CRConfig for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
 	}
 	statsoFetch := []string{tc.StatNameMaxKBPS, tc.StatNameKBPS}
-	cacheStats, err := monitorhlp.GetCacheStats(monitorFQDN, client, statsoFetch)
+	cacheStats, _, err := monitorhlp.GetCacheStats(monitorFQDN, client, statsoFetch)
 	if err != nil {
-		legacyCacheStats, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsoFetch)
+		legacyCacheStats, _, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsoFetch)
 		if err != nil {
 			return CapacityResp{}, errors.New("getting CacheStats for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
 		}

@@ -427,7 +427,8 @@
             "tenantName": "tenant1",
             "type": "HTTP",
             "xmlId": "ds1",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -495,7 +496,8 @@
             "tenantName": "tenant2",
             "type": "HTTP_LIVE",
             "xmlId": "ds2",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -563,7 +565,8 @@
             "tenantName": "tenant3",
             "type": "HTTP_LIVE",
             "xmlId": "ds3",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -621,7 +624,8 @@
             "tenantName": "tenant3",
             "type": "ANY_MAP",
             "xmlId": "anymap-ds",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -680,7 +684,8 @@
             "trResponseHeaders": "Access-Control-Allow-Origin: *\nContent-Type: text/html; charset=utf-8",
             "type": "HTTP_LIVE",
             "xmlId": "ds-test-minor-versions",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -747,7 +752,8 @@
             "tenantName": "tenant1",
             "type": "HTTP_LIVE",
             "xmlId": "msods1",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -814,7 +820,8 @@
             "tenantName": "tenant1",
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds1nat",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -881,7 +888,8 @@
             "topology": "mso-topology",
             "firstHeaderRewrite": "first header rewrite",
             "innerHeaderRewrite": "inner header rewrite",
-            "lastHeaderRewrite": "last header rewrite"
+            "lastHeaderRewrite": "last header rewrite",
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -945,7 +953,8 @@
             "topology": "top-for-ds-req",
             "type": "HTTP",
             "xmlId": "ds-top-req-cap",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1009,7 +1018,8 @@
             "topology": "top-for-ds-req2",
             "type": "HTTP",
             "xmlId": "ds-top-req-cap2",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1072,7 +1082,8 @@
             "tenantName": "tenant1",
             "type": "CLIENT_STEERING",
             "xmlId": "ds-client-steering",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1136,7 +1147,8 @@
             "topology": "forked-topology",
             "type": "HTTP",
             "xmlId": "ds-forked-topology",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1200,7 +1212,8 @@
             "topology": "top-used-by-cdn1-and-cdn2",
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn1",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1264,7 +1277,8 @@
             "topology": "top-used-by-cdn1-and-cdn2",
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn2",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": false,
@@ -1331,7 +1345,8 @@
             "tenantName": "tenant1",
             "type": "HTTP",
             "xmlId": "inactiveds",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1354,7 +1369,8 @@
             "regionalGeoBlocking": false,
             "tenant": "tenant1",
             "type": "HTTP",
-            "xmlId": "test-ds-server-assignments"
+            "xmlId": "test-ds-server-assignments",
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [
