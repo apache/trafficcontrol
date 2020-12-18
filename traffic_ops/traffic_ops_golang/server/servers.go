@@ -73,10 +73,12 @@ JOIN deliveryservice td ON td.topology = tc.topology
 JOIN type t ON s.type = t.id
 LEFT JOIN deliveryservice_server dss
 	ON s.id = dss."server"
-	AND dss.deliveryservice IS NOT NULL
 	AND dss.deliveryservice = td.id
 WHERE td.id = :dsId
-),
+AND (
+	t.name != '` + tc.OriginTypeName + `'
+	OR dss.deliveryservice IS NOT NULL
+)),
 `
 
 /* language=SQL */
@@ -889,15 +891,11 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	if dsIDStr, ok := params[`dsId`]; ok {
-		_, err := strconv.Atoi(dsIDStr)
-		if err != nil {
-			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
-		}
-		where += `UNION `+selectQuery + ` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=:dsId`
-	}
 	query := selectQuery + queryAddition + where + orderBy + pagination
-	fmt.Println("Query is ", query)
+	if _, ok := params[`dsId`]; ok {
+		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + ` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=:dsId`
+	}
+
 	log.Debugln("Query is ", query)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
