@@ -778,7 +778,7 @@ func getServerCount(tx *sqlx.Tx, query string, queryValues map[string]interface{
 	var serverCount uint64
 	countOrigRows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get origin servers count: %v", err)
+		return 0, fmt.Errorf("failed to get servers count: %v", err)
 	}
 	defer countOrigRows.Close()
 	for countOrigRows.Next() {
