@@ -34,7 +34,7 @@
     mode: 0755
 
 - name: Initialize database
-  shell: "/usr/pgsql-9.6/bin/initdb -D '{{ postgresql_datadir }}'"
+  shell: "{{ pgdb_init_command }}"
   become: yes
   become_user: "{{ postgresql_user }}"
   args:
@@ -43,7 +43,7 @@
 - name: Update the systemd definition of PGDATA
   ini_file:
     create: no
-    path: /usr/lib/systemd/system/postgresql-9.6.service
+    path: "{{ pg_service_path }}"
     section: Service
     option: Environment
     value: "PGDATA={{ postgresql_datadir }}"
@@ -52,16 +52,16 @@
   systemd:
     daemon_reload: yes
 
-- name: Add Postgres96 bin dir to system-wide $PATH.
+- name: Add Postgres bin dir to system-wide $PATH.
   copy:
-    dest: /etc/profile.d/postgres96-bin.sh
-    content: PATH=$PATH:/usr/pgsql-9.6/bin
+    dest: "{{ pg_profile_path }}"
+    content: PATH=$PATH:{{ pg_bin_path }}
 
 - name: Install psycopg2 python module
   easy_install:
     name: psycopg2
   environment:
-    PATH: "/usr/pgsql-9.6/bin:{{ lookup('env', 'PATH') }}"
+    PATH: "{{ pg_bin_path }}:{{ lookup('env', 'PATH') }}"
 
 - name: Render pgpass file for TrafficOps
   template:
@@ -123,9 +123,10 @@
     enabled: yes
     state: started
   with_items:
-    - postgresql-9.6
+    - "{{ pg_service_name }}"
 
 - name: Wait for TODB to Init Postgres and become available
   wait_for:
     port: "{{ postgresql_port }}"
     delay: 3
+    

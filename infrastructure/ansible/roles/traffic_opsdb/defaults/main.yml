@@ -15,9 +15,9 @@
 install_traffic_opsdb: false
 initialize_traffic_opsdb: false
 
-postgresql_server_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-server-'+postgresql_version }}{% else %}postgresql96-server{% endif %}"
-postgresql_client_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-'+postgresql_version }}{% else %}postgresql96{% endif %}"
-postgresql_devel_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-devel-'+postgresql_version }}{% else %}postgresql96-devel{% endif %}"
+postgresql_server_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-server-{{postgresql_version}}{% else %}postgresql{{pg_major_version}}-server-{{postgresql_version}}{% endif %}"
+postgresql_client_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-{{postgresql_version}}{% else %}postgresql{{pg_major_version}}-{{postgresql_version}}{% endif %}"
+postgresql_devel_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-devel-{{postgresql_version}}{% else %}postgresql{{pg_major_version}}-devel-{{postgresql_version}}{% endif %}"
 
 # Local OS User to use for Postgres Processes
 postgresql_user: postgres
@@ -27,7 +27,7 @@ postgresql_group: postgres
 postgresql_port: 5432
 
 # Postgres PGDATA directory
-postgresql_datadir: /var/lib/pgsql/9.6/data
+postgresql_datadir: "{% if pg_major_version | int < 10 %}/var/lib/pgsql/{{pg_major_version}}.{{pg_minor_version}}/data{%else%}/var/lib/pgsql/{{pg_major_version}}/data{%endif%}"
 
 # SSL CA root cert to use with SSL Connections
 postgresql_certs_ca: "{{ postgresql_datadir }}/lab.rootca.crt"
