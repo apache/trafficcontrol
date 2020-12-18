@@ -399,6 +399,12 @@ RETURNING
 	upd_pending
 `
 
+const originServerQuery = `
+JOIN deliveryservice_server dsorg 
+ON dsorg.server = s.id 
+WHERE t.name='ORG' 
+AND dsorg.deliveryservice=:dsId
+`
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
@@ -767,6 +773,26 @@ JOIN type t ON s.type = t.id ` +
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
+func getServerCount(tx *sqlx.Tx, query string, queryValues map[string]interface{}) (uint64, error) {
+	rowsAffected := 0
+	var serverCount uint64
+	countOrigRows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get origin servers count: %v", err)
+	}
+	defer countOrigRows.Close()
+	for countOrigRows.Next() {
+		if err = countOrigRows.Scan(&serverCount); err != nil {
+			return 0, fmt.Errorf("failed to read servers count: %v", err)
+		}
+		rowsAffected++
+	}
+	if rowsAffected != 1 {
+		return 0, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected)
+	}
+	return serverCount, nil
+}
+
 func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
@@ -798,7 +824,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	dsHasRequiredCapabilities := false
 	var cdnID int
 	var serverCountOrigin uint64
-	rowsAffected := 0
+	var err error
 
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
@@ -839,10 +865,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
-		row := tx.QueryRow(serverCountQuery+` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=$1`, dsID)
-		if err := row.Scan(&serverCountOrigin); err != nil {
-			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError, nil
-		}
 	}
 
 	if _, ok := params[`topology`]; ok {
@@ -853,6 +875,15 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+
+	// get the origin server count
+	if _, ok := params["dsId"]; ok {
+		serverCountOrigin, err = getServerCount(tx, serverCountQuery+originServerQuery, queryValues)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to get origin servers count: %v", err), http.StatusInternalServerError, nil
+		}
+	}
+
 	if dsHasRequiredCapabilities {
 		where += requiredCapabilitiesCondition
 	}
@@ -862,20 +893,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
 	var serverCount uint64
-	countRows, err := tx.NamedQuery(serverCountQuery+queryAddition+where, queryValues)
+	serverCount, err = getServerCount(tx, serverCountQuery+queryAddition+where, queryValues)
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
-	}
-	defer countRows.Close()
-	rowsAffected = 0
-	for countRows.Next() {
-		if err = countRows.Scan(&serverCount); err != nil {
-			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError, nil
-		}
-		rowsAffected++
-	}
-	if rowsAffected != 1 {
-		return nil, 0, nil, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected), http.StatusInternalServerError, nil
 	}
 
 	serverCount += serverCountOrigin
@@ -892,8 +912,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	query := selectQuery + queryAddition + where + orderBy + pagination
+	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
-		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + ` JOIN deliveryservice_server dsorg ON dsorg.server = s.id WHERE t.name='ORG' AND dsorg.deliveryservice=:dsId`
+		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
 	}
 
 	log.Debugln("Query is ", query)
