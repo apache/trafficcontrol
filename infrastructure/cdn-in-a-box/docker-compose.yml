@@ -257,6 +257,20 @@ services:
     volumes:
       - shared:/shared
 
+  # origin-02 provides the content to be distributed through the CDN caches
+  origin-02:
+    build:
+      context: .
+      dockerfile: origin/Dockerfile
+    depends_on:
+      - enroller
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: origin-02
+    volumes:
+      - shared:/shared
+
 
   # enroller provides a way to register component instances with traffic_ops
   enroller:

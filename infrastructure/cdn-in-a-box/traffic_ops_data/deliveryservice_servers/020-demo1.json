@@ -1,6 +1,7 @@
 {
   "xmlId": "demo1",
   "serverNames": [
-    "origin-01"
+    "origin-01",
+    "origin-02"
   ]
 }

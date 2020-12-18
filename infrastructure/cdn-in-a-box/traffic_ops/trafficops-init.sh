@@ -55,7 +55,7 @@ waitfor() {
     fi
 
     while true; do
-        v="$(to-get "api/${TO_API_VERSION}/${endpoint}?${field}=${value}${additionalQueryString}" | jq -r --arg field "$responseField" '.response[][$field]')";
+        v="$(to-get "api/${TO_API_VERSION}/${endpoint}?${field}=${value}${additionalQueryString}" | jq -r --arg field "$responseField" '.response[0][$field]')";
         if [[ "$v" == "$value" ]]; then
           break
         fi

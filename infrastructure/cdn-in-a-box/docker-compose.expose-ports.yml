@@ -67,6 +67,9 @@ services:
   origin-01:
     ports:
       - "9300:80"
+  origin-02:
+    ports:
+      - "9301:80"
   dns:
     ports:
       - "9353:53/tcp"
