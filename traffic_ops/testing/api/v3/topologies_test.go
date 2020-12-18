@@ -274,6 +274,8 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
 	if err == nil {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
+	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
+		t.Errorf("ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed")
 	}
 
 	//TODO: Need to fix the query in deliveryservice/servers/delete.go for DeleteDeliveryServiceServer() to work correctly.

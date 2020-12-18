@@ -1196,7 +1196,7 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 		}
 	}
 	if len(offendingDSSerCG) > 0 {
-		return errors.New("ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:" + strings.Join(offendingDSSerCG, ", ")), nil, http.StatusBadRequest
+		return errors.New("ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed: " + strings.Join(offendingDSSerCG, ", ")), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }
