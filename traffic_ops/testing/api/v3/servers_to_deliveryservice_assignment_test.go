@@ -17,6 +17,7 @@ package v3
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -219,16 +220,38 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	}
 
 	var found bool
+	var dsID int
 	for _, ds := range response {
-
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
+			dsID = *ds.ID
 			break
 		}
 	}
 
 	if !found {
 		t.Errorf(`Valid Server/DS assignment was not created!`)
+	}
+
+	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top")
+	if err != nil {
+		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
+	}
+	params = url.Values{}
+	params.Add("dsId", strconv.Itoa(dsID))
+	params.Add("type", "ORG")
+	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("getting servers for ds-top delivery service: %v", err.Error())
+	}
+	if len(responseServers.Response) != 1 {
+		t.Fatalf("expected just one ORG server in the response, but got %d", len(responseServers.Response))
+	}
+	if responseServers.Response[0].HostName == nil {
+		t.Fatal("expected a valid host name for the resulting ORG server, but got nothing")
+	}
+	if *responseServers.Response[0].HostName != "denver-mso-org-01" {
+		t.Errorf("expected host name of the resulting ORG server to be %v, but got %v", "denver-mso-org-01", *responseServers.Response[0].HostName)
 	}
 }
 
