@@ -881,7 +881,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 			}
 		}
 
-		userErr, sysErr, status := dbhelpers.CheckOriginServerInCacheGroupTopology(tx, *ds.ID, *ds.Topology)
+		userErr, sysErr, status := dbhelpers.CheckOriginServerInDSCG(tx, *ds.ID, *ds.Topology)
 		if userErr != nil || sysErr != nil {
 			return nil, status, userErr, sysErr
 		}

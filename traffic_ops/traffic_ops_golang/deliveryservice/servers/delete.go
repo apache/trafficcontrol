@@ -44,6 +44,7 @@ func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 	delete(w, r, true)
 }
 
+//TODO: Check if the query works correctly when last assigned server is a ORG server
 const lastServerQuery = `
 SELECT COUNT(*) = 0
 FROM deliveryservice_server

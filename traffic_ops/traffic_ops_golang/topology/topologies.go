@@ -150,6 +150,17 @@ func (topology *TOTopology) Validate() error {
 	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
 	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
 
+	//Get current Topology-CG for the requested change.
+	topoCachegroupNames := topology.getCachegroupNames()
+	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, topology.Name, topoCachegroupNames)
+	if userErr != nil {
+		return userErr
+	}
+	if sysErr != nil {
+		log.Errorf("error while validate topology: %s", sysErr.Error())
+		return errors.New("unable to validate topology")
+	}
+
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
 		return err
