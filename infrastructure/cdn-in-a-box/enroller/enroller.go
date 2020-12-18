@@ -655,6 +655,29 @@ func enrollServer(toSession *session, r io.Reader) error {
 	return err
 }
 
+// enrollServerCapability takes a json file and creates a ServerCapability object using the TO API
+func enrollServerCapability(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var s tc.ServerCapability
+	err := dec.Decode(&s)
+	if err != nil {
+		log.Infof("error decoding Server Capability: %s\n", err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateServerCapability(s)
+	if err != nil {
+		log.Infof("error creating Server Capability: %s\n", err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 type dirWatcher struct {
 	*fsnotify.Watcher
 	TOSession *session
@@ -876,6 +899,7 @@ func main() {
 		"profiles":                enrollProfile,
 		"parameters":              enrollParameter,
 		"servers":                 enrollServer,
+		"server_capabilities":     enrollServerCapability,
 		"asns":                    enrollASN,
 		"deliveryservices":        enrollDeliveryService,
 		"deliveryservice_servers": enrollDeliveryServiceServer,
