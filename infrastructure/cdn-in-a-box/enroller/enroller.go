@@ -223,6 +223,41 @@ func enrollDeliveryService(toSession *session, r io.Reader) error {
 	return err
 }
 
+// enrollDeliveryServicesRequiredCapability takes a json file and creates a DeliveryServicesRequiredCapability object using the TO API
+func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var dsrc tc.DeliveryServicesRequiredCapability
+	err := dec.Decode(&dsrc)
+	if err != nil {
+		log.Infof("error decoding Delivery Services Required Capability: %s\n", err)
+		return err
+	}
+
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullableWithHdr(*dsrc.XMLID, nil)
+	if err != nil {
+		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
+		return  err
+	}
+	if len(dses) < 1 {
+		err = errors.New("could not find a Delivey Service with XMLID %s")
+		log.Infoln(err)
+		return err
+	}
+	dsrc.DeliveryServiceID = dses[0].ID
+
+	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc)
+	if err != nil {
+		log.Infof("error creating Delivery Services Required Capability: %s\n", err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
 
@@ -943,6 +978,7 @@ func main() {
 		"server_server_capabilities":             enrollServerServerCapability,
 		"asns":                                   enrollASN,
 		"deliveryservices":                       enrollDeliveryService,
+		"deliveryservices_required_capabilities": enrollDeliveryServicesRequiredCapability,
 		"deliveryservice_servers":                enrollDeliveryServiceServer,
 		"divisions":                              enrollDivision,
 		"origins":                                enrollOrigin,
