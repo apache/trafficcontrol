@@ -236,7 +236,7 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullableWithHdr(*dsrc.XMLID, nil)
 	if err != nil {
 		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
-		return  err
+		return err
 	}
 	if len(dses) < 1 {
 		err = errors.New("could not find a Delivey Service with XMLID %s")
