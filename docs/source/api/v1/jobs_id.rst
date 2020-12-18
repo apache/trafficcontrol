@@ -78,7 +78,7 @@ Response Structure
 	Content-Length: 192
 
 	{ "response": [{
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 3,

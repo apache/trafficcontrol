@@ -120,7 +120,7 @@ Response Structure
 			"coordinateId": null,
 			"deliveryService": "demo1",
 			"deliveryServiceId": 1,
-			"fqdn": "origin.infra.ciab.test",
+			"fqdn": "origin-01.infra.ciab.test",
 			"id": 1,
 			"ip6Address": null,
 			"ipAddress": null,

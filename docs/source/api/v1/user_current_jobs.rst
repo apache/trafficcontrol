@@ -105,7 +105,7 @@ Response Structure
 	"response": [{
 		"agent": 1,
 		"assetType": "file",
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"deliveryService": "demo1",
 		"enteredTime": "2019-06-19 13:19:51+00",
 		"id": 3,
@@ -202,7 +202,7 @@ Response Structure
 		}
 	],
 	"response": {
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 1,

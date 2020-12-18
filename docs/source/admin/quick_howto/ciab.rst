@@ -262,9 +262,9 @@ An automatic :term:`Snapshot` of the current Traffic Ops CDN configuration/topol
 
 Mock Origin Service
 -------------------
-The default "origin" service container provides a basic static file HTTP server as the central repository for content. Additional files can be added to the origin root content directory located at :file:`infrastructure/cdn-in-a-box/origin/content`. To request content directly from the origin directly and bypass the CDN:
+The default "origin-01" service container provides a basic static file HTTP server as the central repository for content. Additional files can be added to the origin root content directory located at :file:`infrastructure/cdn-in-a-box/origin/content`. To request content directly from the origin directly and bypass the CDN:
 
-* Origin Service URL: http://origin.infra.ciab.test/index.html
+* Origin Service URL: http://origin-01.infra.ciab.test/index.html
 * Docker Host: http://localhost:9200/index.html
 
 .. _ciab-optional-containers:

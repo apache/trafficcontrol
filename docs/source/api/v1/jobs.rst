@@ -92,7 +92,7 @@ Response Structure
 	Content-Length: 186
 
 	{ "response": [{
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 3,
@@ -189,7 +189,7 @@ Response Structure
 			}
 		],
 		"response": {
-			"assetUrl": "http://origin.infra.ciab.test/.*",
+			"assetUrl": "http://origin-01.infra.ciab.test/.*",
 			"createdBy": "admin",
 			"deliveryService": "demo1",
 			"id": 3,
@@ -251,7 +251,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 3,
@@ -295,7 +295,7 @@ Response Structure
 		"level": "success"
 	}],
 	"response": {
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 3,
@@ -378,7 +378,7 @@ Response Structure
 		}
 	],
 	"response": {
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"assetUrl": "http://origin-01.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
 		"id": 3,

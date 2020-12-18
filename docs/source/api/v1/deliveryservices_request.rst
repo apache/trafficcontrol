@@ -102,7 +102,7 @@ Request Structure
 		"maxLibrarySizeEstimate": "less-than-200-GB",
 		"originURL": "http://myorigin.com",
 		"hasOriginDynamicRemap": false,
-		"originTestFile": "http://origin.infra.ciab.test",
+		"originTestFile": "http://origin-01.infra.ciab.test",
 		"hasOriginACLWhitelist": false,
 		"originHeaders": "",
 		"otherOriginSecurity": "",

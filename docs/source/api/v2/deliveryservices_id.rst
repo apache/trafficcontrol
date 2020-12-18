@@ -124,7 +124,7 @@ Request Structure
 		"missLat": -1,
 		"missLong": -1,
 		"multiSiteOrigin": false,
-		"orgServerFqdn": "http://origin.infra.ciab.test",
+		"orgServerFqdn": "http://origin-01.infra.ciab.test",
 		"protocol": 0,
 		"qstringIgnore": 0,
 		"rangeRequestHandling": 0,
