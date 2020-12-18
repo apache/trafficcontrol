@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
 - #5344 - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal

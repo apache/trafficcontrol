@@ -145,6 +145,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 3.x API
 		 */
+		////DeliveryServices
+		{api.Version{3, 1}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV31, auth.PrivLevelOperations, Authenticated, nil, 2064315323, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV31, auth.PrivLevelOperations, Authenticated, nil, 27665675673, noPerlBypass},
 
 		// Acme account information
 		{api.Version{3, 1}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 2034390561, noPerlBypass},
