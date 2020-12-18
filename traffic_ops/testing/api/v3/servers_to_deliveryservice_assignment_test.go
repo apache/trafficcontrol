@@ -31,6 +31,7 @@ func TestAssignments(t *testing.T) {
 		AssignIncorrectTestDeliveryService(t)
 		AssignTopologyBasedDeliveryService(t)
 		OriginAssignTopologyBasedDeliveryService(t)
+		OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t)
 	})
 }
 
@@ -220,11 +221,10 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	}
 
 	var found bool
-	var dsID int
 	for _, ds := range response {
+
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
-			dsID = *ds.ID
 			break
 		}
 	}
@@ -232,17 +232,31 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	if !found {
 		t.Errorf(`Valid Server/DS assignment was not created!`)
 	}
+}
 
-	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top")
+func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
+	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds-top-req-cap2", nil)
+	if err != nil {
+		t.Errorf("getting delivery service by xml ID: %v", err.Error())
+	}
+	if len(resp) != 1 {
+		t.Fatalf("expected to get only one delivery service in the response, but got %d", len(resp))
+	}
+	if resp[0].ID == nil {
+		t.Fatalf("no ID in the resulting delivery service")
+	}
+	dsID := *resp[0].ID
+
+	params := url.Values{}
+	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2")
 	if err != nil {
 		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
 	}
-	params = url.Values{}
 	params.Add("dsId", strconv.Itoa(dsID))
 	params.Add("type", "ORG")
 	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("getting servers for ds-top delivery service: %v", err.Error())
+		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
 	}
 	if len(responseServers.Response) != 1 {
 		t.Fatalf("expected just one ORG server in the response, but got %d", len(responseServers.Response))
