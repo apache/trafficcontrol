@@ -774,21 +774,14 @@ JOIN type t ON s.type = t.id ` +
 }
 
 func getServerCount(tx *sqlx.Tx, query string, queryValues map[string]interface{}) (uint64, error) {
-	rowsAffected := 0
 	var serverCount uint64
-	countOrigRows, err := tx.NamedQuery(query, queryValues)
+	ns, err := tx.PrepareNamed(query)
+	if err != nil {
+		return 0, fmt.Errorf("couldn't prepare the query to get server count : %v", err)
+	}
+	err = tx.NamedStmt(ns).QueryRow(queryValues).Scan(&serverCount)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get servers count: %v", err)
-	}
-	defer countOrigRows.Close()
-	for countOrigRows.Next() {
-		if err = countOrigRows.Scan(&serverCount); err != nil {
-			return 0, fmt.Errorf("failed to read servers count: %v", err)
-		}
-		rowsAffected++
-	}
-	if rowsAffected != 1 {
-		return 0, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected)
 	}
 	return serverCount, nil
 }
@@ -823,7 +816,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
 	var cdnID int
-	var serverCountOrigin uint64
+	var serverCount uint64
 	var err error
 
 	if dsIDStr, ok := params[`dsId`]; ok {
@@ -875,15 +868,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
-
-	// get the origin server count
-	if _, ok := params["dsId"]; ok {
-		serverCountOrigin, err = getServerCount(tx, serverCountQuery+originServerQuery, queryValues)
-		if err != nil {
-			return nil, 0, nil, fmt.Errorf("failed to get origin servers count: %v", err), http.StatusInternalServerError, nil
-		}
-	}
-
 	if dsHasRequiredCapabilities {
 		where += requiredCapabilitiesCondition
 	}
@@ -891,14 +875,16 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
-	var serverCount uint64
-	serverCount, err = getServerCount(tx, serverCountQuery+queryAddition+where, queryValues)
+	countQuery := serverCountQuery + queryAddition + where
+	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
+	if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
+		countQuery = `SELECT (` + countQuery + `) + (` + serverCountQuery + originServerQuery + `) AS total`
+	}
+	serverCount, err = getServerCount(tx, countQuery, queryValues)
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
 	}
 
-	serverCount += serverCountOrigin
 	serversList := []tc.ServerNullable{}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(queryAddition, where))
