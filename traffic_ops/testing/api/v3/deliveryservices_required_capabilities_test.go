@@ -68,7 +68,7 @@ func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing
 		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
 	}
 	params.Add("dsId", strconv.Itoa(dsID))
-	params.Add("type", "ORG")
+	params.Add("type", tc.OriginTypeName)
 	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
 		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())

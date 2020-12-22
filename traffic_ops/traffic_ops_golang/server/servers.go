@@ -402,7 +402,7 @@ RETURNING
 const originServerQuery = `
 JOIN deliveryservice_server dsorg 
 ON dsorg.server = s.id 
-WHERE t.name='ORG' 
+WHERE t.name = '` + tc.OriginTypeName + `' 
 AND dsorg.deliveryservice=:dsId
 `
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
