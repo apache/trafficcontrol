@@ -399,6 +399,12 @@ RETURNING
 	upd_pending
 `
 
+const originServerQuery = `
+JOIN deliveryservice_server dsorg 
+ON dsorg.server = s.id 
+WHERE t.name = '` + tc.OriginTypeName + `' 
+AND dsorg.deliveryservice=:dsId
+`
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
@@ -765,6 +771,19 @@ JOIN type t ON s.type = t.id ` +
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
+func getServerCount(tx *sqlx.Tx, query string, queryValues map[string]interface{}) (uint64, error) {
+	var serverCount uint64
+	ns, err := tx.PrepareNamed(query)
+	if err != nil {
+		return 0, fmt.Errorf("couldn't prepare the query to get server count : %v", err)
+	}
+	err = tx.NamedStmt(ns).QueryRow(queryValues).Scan(&serverCount)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get servers count: %v", err)
+	}
+	return serverCount, nil
+}
+
 func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
@@ -792,6 +811,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
 	var cdnID int
+	var serverCount uint64
+	var err error
+
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
@@ -848,22 +870,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
-	var serverCount uint64
-	countRows, err := tx.NamedQuery(serverCountQuery+queryAddition+where, queryValues)
+	countQuery := serverCountQuery + queryAddition + where
+	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
+	if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
+		countQuery = `SELECT (` + countQuery + `) + (` + serverCountQuery + originServerQuery + `) AS total`
+	}
+	serverCount, err = getServerCount(tx, countQuery, queryValues)
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
-	}
-	defer countRows.Close()
-	rowsAffected := 0
-	for countRows.Next() {
-		if err = countRows.Scan(&serverCount); err != nil {
-			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError, nil
-		}
-		rowsAffected++
-	}
-	if rowsAffected != 1 {
-		return nil, 0, nil, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected), http.StatusInternalServerError, nil
 	}
 
 	serversList := []tc.ServerNullable{}
@@ -879,8 +893,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	query := selectQuery + queryAddition + where + orderBy + pagination
-	log.Debugln("Query is ", query)
+	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
+	if _, ok := params[`dsId`]; ok {
+		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
+	}
 
+	log.Debugln("Query is ", query)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, serverCount, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError, nil

@@ -139,6 +139,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Astats csv issue where it could crash if caches dont return proc data
 - Fixed parent.config generation for topology-based delivery services (inline comments not supported)
 - Fixed parent.config generation for MSO delivery services with required capabilities
+- [#5380](https://github.com/apache/trafficcontrol/issues/5380) - Show the correct servers (including ORGs) when a topology based DS with required capabilities + ORG servers is queried for the assigned servers
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
