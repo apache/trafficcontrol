@@ -20,6 +20,7 @@ package deliveryservice
  */
 
 import (
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -29,6 +30,32 @@ import (
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func TestGetOldDetails(t *testing.T) {
+	expected := `querying delivery service 1 host name: sql: no rows in result set`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{""})
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name").WillReturnRows(rows)
+	_, _, _, err, code := getOldDetails(1, db.MustBegin().Tx)
+	if err == nil {
+		t.Fatalf("expected error %v, but got none", expected)
+	}
+	if err.Error() != expected {
+		t.Errorf("expected error %v, but got %v", expected, err.Error())
+	}
+	if code != http.StatusNotFound {
+		t.Errorf("expected error code : %d, but got : %d", http.StatusNotFound, code)
+	}
+}
 
 func TestGetDeliveryServicesMatchLists(t *testing.T) {
 	// test to make sure that the DS matchlists query orders by set_number
