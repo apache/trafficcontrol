@@ -143,12 +143,12 @@ sudo npm i -g protractor@^7.0.0 forever bower grunt selenium-webdriver
 
 CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
 CHROME_VER=$(docker exec "$CONTAINER" google-chrome --version | sed -E 's/.* ([0-9.]+).*/\1/')
-sudo webdriver-manager update --gecko false --standalone false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
+sudo webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
 
 GOROOT=/usr/local/go
 export PATH="${PATH}:${GOROOT}/bin"
-download_go
 export GOPATH="$(mktemp -d)"
+download_go
 SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
