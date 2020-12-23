@@ -15,6 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+set -o errexit -o nounset -o pipefail
 
 fqdn="http://localhost:4444/wd/hub/status"
 if ! curl -Lvsk "${fqdn}" >/dev/null 2>&1; then
@@ -63,6 +64,7 @@ JOIN CDN ON 1=1
 JOIN CG ON 1=1;
 QUERY
 
+sudo useradd trafops
 
 download_go() {
 	. build/functions.sh
@@ -174,10 +176,11 @@ cp "${resources}/database.json" database.conf
 export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
 envsubst <"${resources}/riak.json" >riak.conf
 
-truncate --size=0 warning.log error.log # Removes output from previous API versions and makes sure files exist
+truncate --size=0 warning.log error.log event.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
 tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
 tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
+tail -f warning.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops' &
 
 cd "../../traffic_portal"
 npm ci
@@ -202,10 +205,10 @@ sudo protractor ./conf.js
 CODE=$?
 
 if [ $CODE -ne 0 ]; then
-	docker logs -f "$trafficvault" 2>&1 |
+	docker logs "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
-  tail -f tp.log 2>&1 | color_and_prefix "${gray_bg}" 'Forever' &
-  tail -f access.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Portal' &
+  tail -f tp.log | color_and_prefix "${gray_bg}" 'Forever'
+  tail -f access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
 fi
 
 exit $CODE
