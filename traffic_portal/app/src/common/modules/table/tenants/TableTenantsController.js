@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, tenantUtils) {
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, fileUtils, tenantUtils) {
 
     $scope.tenantTree = [];
 
@@ -33,6 +33,10 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
         locationUtils.navigateToPath('/tenants/new');
     };
 
+    $scope.exportCSV = function() {
+        fileUtils.convertToCSV(tenants, 'Tenants', ['id', 'lastUpdated', 'name', 'active', 'parentId', 'parentName']);
+    };
+
     let init = function() {
         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), currentUserTenant.parentId, []);
         $scope.tenantTree = tenantUtils.convertToHierarchy($scope.tenants);
@@ -41,5 +45,5 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
 
 };
 
-TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', 'locationUtils', 'tenantUtils'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', 'locationUtils', 'fileUtils', 'tenantUtils'];
 module.exports = TableTenantsController;
