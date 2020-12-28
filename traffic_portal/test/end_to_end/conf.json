@@ -27,7 +27,8 @@
       "servers/servers-spec.js",
       "topologies/topologies-spec.js",
       "deliveryServices/delivery-services-spec.js",
-      "jobs/jobs-spec.js"
+      "jobs/jobs-spec.js",
+      "tenants/tenants-spec.js"
     ]
   }
 }
