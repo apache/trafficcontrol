@@ -54,7 +54,7 @@ under the License.
             </a> <a ng-href="#!/tenants/{{node.id}}">{{::node.name}}</a>
         </div>
         <div class="pull-right">
-            <a title="Add child tenant" class="btn btn-primary btn-xs" data-nodrag ng-click="createTenant(node)" style="margin-right: 8px;">
+            <a title="Add child tenant" class="btn btn-primary btn-xs" data-nodrag ng-click="createTenant(node.id)" style="margin-right: 8px;">
                 <i class="fa fa-plus"></i>
             </a>
             <a title="Delete tenant" class="btn btn-danger btn-xs" data-nodrag ng-click="confirmDelete(node)" style="margin-right: 8px;">

@@ -29,8 +29,12 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
         scope.toggle();
     };
 
-    $scope.createTenant = function() {
-        locationUtils.navigateToPath('/tenants/new');
+    $scope.createTenant = function(parentId) {
+        if (parentId) {
+            locationUtils.navigateToPath('/tenants/new?parentId=' + parentId);
+        } else {
+            locationUtils.navigateToPath('/tenants/new');
+        }
     };
 
     $scope.exportCSV = function() {
