@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.tenants.deliveryServices'
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.tenants.deliveryServices', {
-				url: '/{tenantId}/delivery-services',
+				url: '/{tenantId}/delivery-services?all',
 				views: {
 					tenantsContent: {
 						templateUrl: 'common/modules/table/tenantDeliveryServices/table.tenantDeliveryServices.tpl.html',
@@ -30,8 +30,11 @@ module.exports = angular.module('trafficPortal.private.tenants.deliveryServices'
 							tenant: function($stateParams, tenantService) {
 								return tenantService.getTenant($stateParams.tenantId);
 							},
-							deliveryServices: function(tenant, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices({ accessibleTo: tenant.id });
+							deliveryServices: function($stateParams, tenant, deliveryServiceService) {
+								if ($stateParams.all) {
+									return deliveryServiceService.getDeliveryServices({ accessibleTo: tenant.id });
+								}
+								return deliveryServiceService.getDeliveryServices({ tenant: tenant.id });
 							}
 						}
 					}
