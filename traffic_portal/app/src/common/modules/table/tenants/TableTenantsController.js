@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService) {
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService, messageModel) {
 
     $scope.tenantTree = [];
 
@@ -58,7 +58,8 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
         });
         modalInstance.result.then(function() {
             tenantService.deleteTenant(tenant.id)
-                .then(function() {
+                .then(function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
                     $state.reload();
                 });
         }, function () {
@@ -74,5 +75,5 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
 
 };
 
-TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService', 'messageModel'];
 module.exports = TableTenantsController;
