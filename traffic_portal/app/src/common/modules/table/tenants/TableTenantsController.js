@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, fileUtils, tenantUtils) {
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService) {
 
     $scope.tenantTree = [];
 
@@ -37,6 +37,31 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
         fileUtils.convertToCSV(tenants, 'Tenants', ['id', 'lastUpdated', 'name', 'active', 'parentId', 'parentName']);
     };
 
+    $scope.confirmDelete = function(tenant) {
+        const params = {
+            title: 'Delete Tenant: ' + tenant.name,
+            key: tenant.name
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            tenantService.deleteTenant(tenant.id)
+                .then(function() {
+                    $state.reload();
+                });
+        }, function () {
+            // do nothing
+        });
+    };
+
     let init = function() {
         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), currentUserTenant.parentId, []);
         $scope.tenantTree = tenantUtils.convertToHierarchy($scope.tenants);
@@ -45,5 +70,5 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
 
 };
 
-TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', 'locationUtils', 'fileUtils', 'tenantUtils'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService'];
 module.exports = TableTenantsController;

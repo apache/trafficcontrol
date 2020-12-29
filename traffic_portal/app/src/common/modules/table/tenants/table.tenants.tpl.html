@@ -51,12 +51,18 @@ under the License.
         <div class="tree-node-label pull-left">
             <a class="tree-toggle btn btn-primary btn-xs" ng-if="hasChildren(node)" ng-click="toggle(this)">
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-            </a> {{::node.name}}
+            </a> <a ng-href="#!/tenants/{{node.id}}">{{::node.name}}</a>
         </div>
         <div class="pull-right">
-            <a title="Edit Tenant" ng-href="#!/tenants/{{node.id}}">Edit</a> |
-            <a title="View Tenant Users" ng-href="#!/tenants/{{node.id}}/users">Users</a> |
-            <a title="View Tenant Delivery Services" ng-href="#!/tenants/{{node.id}}/delivery-services">Delivery Services</a>
+            <a title="Add child tenant" class="btn btn-primary btn-xs" data-nodrag ng-click="createTenant(node)" style="margin-right: 8px;">
+                <i class="fa fa-plus"></i>
+            </a>
+            <a title="Delete tenant" class="btn btn-danger btn-xs" data-nodrag ng-click="confirmDelete(node)" style="margin-right: 8px;">
+                <i class="fa fa-times"></i>
+            </a>
+            <a title="Edit tenant" class="btn btn-default btn-xs" data-nodrag ng-href="#!/tenants/{{node.id}}">
+                <i class="fa fa-edit"></i>
+            </a>
         </div>
     </div>
     <ol ui-tree-nodes="" ng-model="node.children" ng-class="{ hidden: collapsed }">
