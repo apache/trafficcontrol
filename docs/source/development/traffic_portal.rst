@@ -103,14 +103,13 @@ Installing The Traffic Portal Developer Environment
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
 #. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed following the instructions under :ref:`dev-tp-compass`.
 
-#. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
 #. Modify ``traffic_portal/conf/configDev.js``:
-
 	#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and update ``ssl``.
 	#. Modify ``api.base_url`` to point to your Traffic Ops API endpoint.
 	#. Modify ``files.static`` to be ``./app/dist/public``.
 	#. Modify ``log.stream`` to be ``./server/log/access.log``. If you have created a ``traffic_portal/log`` directory with ``access.log`` file, use that location.
     #. Ensure ca_bundle.crt is present at ``/etc/pki/tls/certs``. If not present, use the cmd: ``sudo touch ca_bundle.crt``
+#. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/configDev.js``]
 
 .. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/configDev.js to specify the location of Traffic Ops.
