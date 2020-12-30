@@ -36,10 +36,14 @@ export PGDATABASE="traffic_ops"
 export PGPORT="5432"
 
 <<QUERY psql
-INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1);
+INSERT INTO tm_user (username, role, tenant_id, local_passwd)
+  VALUES ('admin', 1, 1,
+    'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q=='
+  );
 INSERT INTO division(name) VALUES('${DIVISION}');
 INSERT INTO region(name, division) VALUES('${REGION}', 1);
-INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
+INSERT INTO phys_location(name, short_name, region, address, city, state, zip)
+  VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
 INSERT INTO coordinate(name) VALUES('${COORD}');
 INSERT INTO cdn(name, domain_name) VALUES('${CDN}', 'infra.ciab.test');
 
