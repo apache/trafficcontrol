@@ -34,7 +34,7 @@ var FileUtils = function() {
 	this.convertToCSV = function(JSONData, reportTitle, includedKeys) {
 		var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
 		var CSV = '';
-		CSV += reportTitle + '\r\n\n';
+		CSV += reportTitle + '\r\n\r\n';
 
 		var keys = [];
 		for (var key in arrData[0]) {
