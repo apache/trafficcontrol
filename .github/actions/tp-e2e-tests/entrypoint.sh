@@ -207,8 +207,8 @@ CODE=$?
 if [ $CODE -ne 0 ]; then
 	docker logs "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
-  tail -f tp.log | color_and_prefix "${gray_bg}" 'Forever'
-  tail -f access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
+  cat tp.log | color_and_prefix "${gray_bg}" 'Forever'
+  cat access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
 fi
 
 exit $CODE
