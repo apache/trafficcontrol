@@ -256,3 +256,9 @@ input[type="checkbox"].dirty {
   }
 
 }
+
+#tenant-tree-root {
+  .angular-ui-tree-handle {
+    cursor: default !important;
+  }
+}

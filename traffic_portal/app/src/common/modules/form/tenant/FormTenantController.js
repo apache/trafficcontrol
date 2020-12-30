@@ -45,10 +45,6 @@ var FormTenantController = function(tenant, $scope, $location, formUtils, tenant
         $location.path($location.path() + '/users');
     };
 
-    $scope.viewDSs = function() {
-        $location.path($location.path() + '/delivery-services');
-    };
-
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
