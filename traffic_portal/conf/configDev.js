@@ -25,9 +25,9 @@ module.exports = {
     sslPort: 443, // set to https port
     // if useSSL is true, generate ssl certs and provide the proper locations.
     ssl: {
-        key:    '../localhost.key',
-        cert:   '../localhost.cert',
-        ca:     [ '../localhost.cert' ]
+        key:    './localhost.key',
+        cert:   './localhost.crt',
+        ca:     [ './localhost.crt' ]
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
     api: {
