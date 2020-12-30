@@ -174,7 +174,7 @@ func UpdateTestTenants(t *testing.T) {
 func UpdateTestRootTenant(t *testing.T) {
 	expected := "cannot update the root tenant"
 	// Retrieve the Tenant by name so we can get the id for the Update
-	name := rootName
+	name := "root"
 	modTenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
