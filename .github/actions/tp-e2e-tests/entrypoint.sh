@@ -203,7 +203,6 @@ done
 
 
 cd "test/end_to_end"
-#cp "${resources}/conf.json" .
 jq " .capabilities.chromeOptions.args = [
     \"--disable-extensions\",
     \"--disable-gpu\",
