@@ -211,14 +211,14 @@ jq " .capabilities.chromeOptions.args = [
 
 cat conf.json
 
-sudo protractor ./conf.js
-CODE=$?
-
-if [ $CODE -ne 0 ]; then
+onFail() {
 	docker logs "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
   cat tp.log | color_and_prefix "${gray_bg}" 'Forever'
   cat access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
-fi
+}
+
+CODE=0
+sudo protractor ./conf.js || CODE=$? && onFail
 
 exit $CODE
