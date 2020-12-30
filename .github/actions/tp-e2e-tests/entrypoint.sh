@@ -219,9 +219,7 @@ onFail() {
 		color_and_prefix "$gray_bg" 'Traffic Vault';
   cat tp.log | color_and_prefix "${gray_bg}" 'Forever'
   cat access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
+  exit 1
 }
 
-CODE=0
-sudo protractor ./conf.js || CODE=$? && onFail
-
-exit $CODE
+sudo protractor ./conf.js || onFail
