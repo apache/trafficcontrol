@@ -208,7 +208,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 }
 
 func (tn *TOTenant) Update(h http.Header) (error, error, int) {
-	if tn.Name != nil && *tn.Name == `root` {
+	if tn.Name != nil && *tn.Name == rootName {
 		return errors.New("cannot update the root tenant"), nil, http.StatusBadRequest
 	}
 	return api.GenericUpdate(h, tn)
