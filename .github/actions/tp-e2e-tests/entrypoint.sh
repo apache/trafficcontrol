@@ -199,7 +199,17 @@ done
 
 
 cd "test/end_to_end"
-cp "${resources}/conf.json" .
+#cp "${resources}/conf.json" .
+jq " .capabilities.chromeOptions.args = [
+    \"--disable-extensions\",
+    \"--disable-gpu\",
+    \"--headless\",
+    \"--no-sandbox\",
+    \"--ignore-certificate-errors\"
+  ] | .baseUrl = \"${fqdn}\" | del(.seleniumAddress)" \
+  conf.json > conf.json.tmp && mv conf.json.tmp conf.json
+
+cat conf.json
 
 sudo protractor ./conf.js
 CODE=$?
