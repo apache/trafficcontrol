@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 
 ### Fixed
+- [#5396](https://github.com/apache/trafficcontrol/issues/5396) - Return the correct error type if user tries to update the root tenant
 - [#5380](https://github.com/apache/trafficcontrol/issues/5380) - Show the correct servers (including ORGs) when a topology based DS with required capabilities + ORG servers is queried for the assigned servers
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
 - Fixed Traffic Router logging unnecessary warnings for IPv6-only caches

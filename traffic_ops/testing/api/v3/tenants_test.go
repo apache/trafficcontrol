@@ -33,6 +33,7 @@ func TestTenants(t *testing.T) {
 		SortTestTenants(t)
 		GetTestTenants(t)
 		UpdateTestTenants(t)
+		UpdateTestRootTenant(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -168,6 +169,26 @@ func UpdateTestTenants(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
 
+}
+
+func UpdateTestRootTenant(t *testing.T) {
+	expected := "cannot update the root tenant"
+	// Retrieve the Tenant by name so we can get the id for the Update
+	name := rootName
+	modTenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+	}
+
+	modTenant.Active = false
+	modTenant.ParentID = modTenant.ID
+	_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, nil)
+	if err == nil {
+		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
+	}
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("expected error detail to contain %s, but got %s", expected, err.Error())
+	}
 }
 
 func DeleteTestTenants(t *testing.T) {

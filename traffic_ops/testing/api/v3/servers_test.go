@@ -204,7 +204,7 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	respServer := resp.Response[0]
 
-	if *remoteServer.StatusLastUpdated != *respServer.StatusLastUpdated {
+	if !remoteServer.StatusLastUpdated.Equal(*respServer.StatusLastUpdated) {
 		t.Errorf("since status didnt change, no change in 'StatusLastUpdated' time was expected. Difference observer: old value: %v, new value: %v",
 			remoteServer.StatusLastUpdated.String(), respServer.StatusLastUpdated.String())
 	}
