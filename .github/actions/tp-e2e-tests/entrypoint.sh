@@ -184,7 +184,7 @@ truncate --size=0 warning.log error.log event.log # Removes output from previous
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
 tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
 tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
-tail -f warning.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops' &
+tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops' &
 
 cd "../../traffic_portal"
 npm ci
