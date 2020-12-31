@@ -212,8 +212,6 @@ jq " .capabilities.chromeOptions.args = [
   ] | .baseUrl = \"${fqdn}\" | del(.seleniumAddress)" \
   conf.json > conf.json.tmp && mv conf.json.tmp conf.json
 
-cat conf.json
-
 onFail() {
 	docker logs "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
