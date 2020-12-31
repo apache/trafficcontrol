@@ -33,7 +33,10 @@ try {
     config = require('/etc/traffic_portal/conf/config');
 }
 catch(e) {
-    config = require('./conf/config');
+    let file = "./conf/config";
+    if((process.env.NODE_ENV || "prod") === "dev")
+        file = './conf/configDev';
+    config = require(file);
 }
 
 var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
@@ -47,7 +50,7 @@ var app = express();
 app.use(function(req, res, next) {
     var err = null;
     try {
-        decodeURIComponent(req.path)
+        decodeURIComponent(req.path);
     }
     catch(e) {
         err = e;
