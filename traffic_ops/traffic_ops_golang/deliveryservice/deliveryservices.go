@@ -848,10 +848,13 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	oldHostName := ""
 	oldCDNName := ""
 	oldRoutingName := ""
+	errCode := http.StatusOK
+	var userErr error
+	var sysErr error
 	if dsType.HasSSLKeys() {
-		oldHostName, oldCDNName, oldRoutingName, err = getOldDetails(*ds.ID, tx)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
+		oldHostName, oldCDNName, oldRoutingName, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
+		if userErr != nil || sysErr != nil {
+			return nil, errCode, userErr, sysErr
 		}
 	}
 
@@ -861,7 +864,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	userErr, sysErr, errCode := api.CheckIfUnModified(r.Header, inf.Tx, *ds.ID, "deliveryservice")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, *ds.ID, "deliveryservice")
 	if userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
@@ -1179,7 +1182,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldDetails(id int, tx *sql.Tx) (string, string, string, error) {
+func getOldDetails(id int, tx *sql.Tx) (string, string, string, error, error, int) {
 	q := `
 SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name
 FROM  deliveryservice as ds
@@ -1194,25 +1197,28 @@ WHERE ds.id=$1
 	cdnDomain := ""
 	cdnName := ""
 	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain, &cdnName); err != nil {
-		return "", "", "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
+		if err == sql.ErrNoRows {
+			return "", "", "", fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
+		}
+		return "", "", "", nil, fmt.Errorf("querying delivery service %v host name: "+err.Error(), id), http.StatusInternalServerError
 	}
 	dsType := tc.DSTypeFromString(dsTypeStr)
 	if dsType == tc.DSTypeInvalid {
-		return "", "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
+		return "", "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'"), nil, http.StatusBadRequest
 	}
 	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
-		return "", "", "", errors.New("getting delivery services matchlist: " + err.Error())
+		return "", "", "", nil, errors.New("getting delivery services matchlist: " + err.Error()), http.StatusInternalServerError
 	}
 	matchList, ok := matchLists[xmlID]
 	if !ok {
-		return "", "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
+		return "", "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)"), nil, http.StatusBadRequest
 	}
 	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
 	if err != nil {
-		return "", "", "", errors.New("getting hostname: " + err.Error())
+		return "", "", "", nil, errors.New("getting hostname: " + err.Error()), http.StatusInternalServerError
 	}
-	return host, cdnName, routingName, nil
+	return host, cdnName, routingName, nil, nil, http.StatusOK
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
