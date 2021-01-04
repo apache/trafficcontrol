@@ -36,10 +36,14 @@ export PGDATABASE="traffic_ops"
 export PGPORT="5432"
 
 <<QUERY psql
-INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('admin', 'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q==', 1, 1);
+INSERT INTO tm_user (username, role, tenant_id, local_passwd)
+  VALUES ('admin', 1, 1,
+    'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q=='
+  );
 INSERT INTO division(name) VALUES('${DIVISION}');
 INSERT INTO region(name, division) VALUES('${REGION}', 1);
-INSERT INTO phys_location(name, short_name, region, address, city, state, zip) VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
+INSERT INTO phys_location(name, short_name, region, address, city, state, zip)
+  VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
 INSERT INTO coordinate(name) VALUES('${COORD}');
 INSERT INTO cdn(name, domain_name) VALUES('${CDN}', 'infra.ciab.test');
 
@@ -180,7 +184,7 @@ truncate --size=0 warning.log error.log event.log # Removes output from previous
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
 tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
 tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
-tail -f warning.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops' &
+tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops' &
 
 cd "../../traffic_portal"
 npm ci
@@ -191,24 +195,29 @@ cp "${resources}/config.js" ./conf/
 touch tp.log access.log
 sudo forever --minUptime 5000 --spinSleepTime 2000 -l ./tp.log start server.js &
 
-fqdn="https://localhost:8443/"
-while ! curl -Lvsk "${fqdn}api/3.0/ping" >/dev/null 2>&1; do
+fqdn="https://localhost:8443"
+while ! curl -Lvsk "${fqdn}/api/3.0/ping" >/dev/null 2>&1; do
   echo "waiting for TP/TO server to start on '${fqdn}'"
   sleep 10
 done
 
 
 cd "test/end_to_end"
-cp "${resources}/conf.json" .
+jq " .capabilities.chromeOptions.args = [
+    \"--disable-extensions\",
+    \"--disable-gpu\",
+    \"--headless\",
+    \"--no-sandbox\",
+    \"--ignore-certificate-errors\"
+  ] | .baseUrl = \"${fqdn}\" | del(.seleniumAddress)" \
+  conf.json > conf.json.tmp && mv conf.json.tmp conf.json
 
-sudo protractor ./conf.js
-CODE=$?
-
-if [ $CODE -ne 0 ]; then
+onFail() {
 	docker logs "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
-  tail -f tp.log | color_and_prefix "${gray_bg}" 'Forever'
-  tail -f access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
-fi
+  cat tp.log | color_and_prefix "${gray_bg}" 'Forever'
+  cat access.log | color_and_prefix "${gray_bg}" 'Traffic Portal'
+  exit 1
+}
 
-exit $CODE
+sudo protractor ./conf.js || onFail
