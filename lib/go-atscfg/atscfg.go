@@ -366,6 +366,36 @@ func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 	return topoNames
 }
 
+// getTopologyDirectChildren returns the cachegroups which are immediate children of the given cachegroup in any topology.
+func getTopologyDirectChildren(
+	cg tc.CacheGroupName,
+	topologies []tc.Topology,
+) map[tc.CacheGroupName]struct{} {
+	children := map[tc.CacheGroupName]struct{}{}
+
+	for _, topo := range topologies {
+		svNodeI := -1
+		for nodeI, node := range topo.Nodes {
+			if node.Cachegroup == string(cg) {
+				svNodeI = nodeI
+				break
+			}
+		}
+		if svNodeI < 0 {
+			continue // this cg wasn't in the topology
+		}
+		for _, node := range topo.Nodes {
+			for _, parent := range node.Parents {
+				if parent == svNodeI {
+					children[tc.CacheGroupName(node.Cachegroup)] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+	return children
+}
+
 type parameterWithProfiles struct {
 	tc.Parameter
 	ProfileNames []string
