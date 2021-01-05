@@ -32,6 +32,7 @@ import (
 var (
 	Config             config.Config
 	testData           TrafficControl
+	negativeTestData   NegativeFixtures
 	includeSystemTests bool
 )
 
@@ -40,6 +41,7 @@ const TestAPIBase = "/api/3.0"
 func TestMain(m *testing.M) {
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
+	tcNegativeFixturesFileName := flag.String("negativeFixtures", "tc-negative-fixtures.json", "The negative test fixtures for the API test tool")
 	cliIncludeSystemTests := *flag.Bool("includeSystemTests", false, "Whether to enable tests that have environment dependencies beyond a database")
 	flag.Parse()
 
@@ -71,16 +73,20 @@ func TestMain(m *testing.M) {
 	log.Infof(`Using Config values:
 			   TO Config File:       %s
 			   TO Fixtures:          %s
+			   TO Negative Fixtures: %s
 			   TO URL:               %s
 			   TO Session Timeout In Secs:  %d
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
 			   DB Ssl:               %t
-               UseIMS:               %v`, *configFileName, *tcFixturesFileName, Config.TrafficOps.URL, Config.Default.Session.TimeoutInSecs, Config.TrafficOpsDB.Hostname, Config.TrafficOpsDB.User, Config.TrafficOpsDB.Name, Config.TrafficOpsDB.SSL, Config.UseIMS)
+               UseIMS:               %v`, *configFileName, *tcFixturesFileName, *tcNegativeFixturesFileName, Config.TrafficOps.URL, Config.Default.Session.TimeoutInSecs, Config.TrafficOpsDB.Hostname, Config.TrafficOpsDB.User, Config.TrafficOpsDB.Name, Config.TrafficOpsDB.SSL, Config.UseIMS)
 
 	//Load the test data
 	LoadFixtures(*tcFixturesFileName)
+
+	//Load the negative test data
+	LoadNegativeFixtures(*tcNegativeFixturesFileName)
 
 	var db *sql.DB
 	db, err = OpenConnection()
