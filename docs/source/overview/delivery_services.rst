@@ -519,7 +519,7 @@ STEERING_REGEXP
 
 Max DNS Answers
 ---------------
-The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests for DNS-:ref:`Routed <ds-types>` Delivery Services. The :ref:`to-api` restricts this value to the range [1, 15], but no matching restraints are placed on the actual data as stored in the Traffic Ops Database. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
+The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
 
 .. _ds-max-origin-connections:
 
