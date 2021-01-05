@@ -17,37 +17,63 @@
  * under the License.
  */
 
-var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, tenantUtils) {
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService, messageModel) {
 
-    $scope.isUserTenant = function(tenant) {
-        return tenant.id == currentUserTenant.id;
+    $scope.tenantTree = [];
+
+    $scope.hasChildren = function(node) {
+        return node.children.length > 0;
     };
 
-    $scope.editTenant = function(id) {
-        locationUtils.navigateToPath('/tenants/' + id);
+    $scope.toggle = function(scope) {
+        scope.toggle();
     };
 
-    $scope.createTenant = function() {
-        locationUtils.navigateToPath('/tenants/new');
+    $scope.createTenant = function(parentId) {
+        if (parentId) {
+            locationUtils.navigateToPath('/tenants/new?parentId=' + parentId);
+        } else {
+            locationUtils.navigateToPath('/tenants/new');
+        }
     };
 
-    var init = function() {
+    $scope.exportCSV = function() {
+        fileUtils.convertToCSV(tenants, 'Tenants', ['id', 'lastUpdated', 'name', 'active', 'parentId', 'parentName']);
+    };
 
+    $scope.confirmDelete = function(tenant) {
+        const params = {
+            title: 'Delete Tenant: ' + tenant.name,
+            key: tenant.name
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            tenantService.deleteTenant(tenant.id)
+                .then(function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                    $state.reload();
+                });
+        }, function () {
+            // do nothing
+        });
+    };
+
+    let init = function() {
         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), currentUserTenant.parentId, []);
-        tenantUtils.addLevels($scope.tenants);
-
-        $timeout(function () {
-            $('#tenantsTable').dataTable({
-                "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-                "iDisplayLength": -1,
-                "bSort": false
-            });
-        }, 100);
-
+        $scope.tenantTree = tenantUtils.convertToHierarchy($scope.tenants);
     };
     init();
 
 };
 
-TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', 'locationUtils', 'tenantUtils'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService', 'messageModel'];
 module.exports = TableTenantsController;

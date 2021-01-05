@@ -21,7 +21,7 @@ module.exports = function() {
 	// selectDropdownbyNum - pass in the <SELECT> element and a option number, typically 1
 	this.selectDropdownbyNum = function ( element, optionNum ) {
 		if (optionNum){
-			var options = element.all(by.tagName('option'))
+			element.all(by.tagName('option'))
 				.then(function(options){
 					options[optionNum].click();
 				});

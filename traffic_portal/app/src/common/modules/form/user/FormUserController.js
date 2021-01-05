@@ -49,10 +49,6 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.viewDeliveryServices = function() {
-        $location.path('/tenants/' + user.tenantId + '/delivery-services');
-    };
-
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

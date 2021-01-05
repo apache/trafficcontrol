@@ -39,7 +39,7 @@ describe('Traffic Portal Types Test Suite', function() {
 			item.click();
 		});
 
-		let rowColumns = element.all(by.css('#typesTable tr:first-child td'));
+		let rowColumns = element.all(by.css('#typesTable tr:first-child th'));
 		expect(rowColumns.count()).toBe(1);
 	});
 

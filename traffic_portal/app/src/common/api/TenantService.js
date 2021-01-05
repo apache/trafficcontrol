@@ -72,7 +72,6 @@ var TenantService = function($http, ENV, messageModel) {
     this.deleteTenant = function(id) {
         return $http.delete(ENV.api['root'] + "tenants/" + id).then(
             function(result) {
-                messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
                 return result;
             },
             function(err) {

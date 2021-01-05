@@ -738,7 +738,13 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		t.Fatal("expected more than 0 servers")
 	}
 	xmppId := "unique"
-	server := serversResp.Response[0]
+	var server tc.ServerV30
+	for _, s := range serversResp.Response {
+		if len(s.Interfaces) >= 1 && s.Interfaces[0].Monitor {
+			server = s
+			break
+		}
+	}
 	_, _, err = TOSession.CreateServerWithHdr(tc.ServerV30{
 		CommonServerProperties: tc.CommonServerProperties{
 			Cachegroup: server.Cachegroup,
