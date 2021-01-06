@@ -21,13 +21,16 @@ module.exports = angular.module('trafficPortal.private.tenants.new', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.tenants.new', {
-                url: '/new',
+                url: '/new?parentId',
                 views: {
                     tenantsContent: {
                         templateUrl: 'common/modules/form/tenant/form.tenant.tpl.html',
                         controller: 'FormNewTenantController',
                         resolve: {
-                            tenant: function() {
+                            tenant: function($stateParams) {
+                                if ($stateParams.parentId) {
+                                    return { parentId: parseInt($stateParams.parentId, 10) };
+                                }
                                 return {};
                             }
                         }

@@ -17,14 +17,15 @@
  * under the License.
  */
 
-var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, $anchorScroll, locationUtils, tenantService) {
+var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, $anchorScroll, locationUtils, tenantService, messageModel) {
 
     // extends the FormTenantController to inherit common methods
     angular.extend(this, $controller('FormTenantController', { tenant: tenant, $scope: $scope }));
 
     var deleteTenant = function(tenant) {
         tenantService.deleteTenant(tenant.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/tenants');
             });
     };
@@ -68,5 +69,5 @@ var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, 
 
 };
 
-FormEditTenantController.$inject = ['tenant', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'tenantService'];
+FormEditTenantController.$inject = ['tenant', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'tenantService', 'messageModel'];
 module.exports = FormEditTenantController;

@@ -19,6 +19,8 @@
 ``acme_accounts``
 *****************
 
+.. versionadded:: 3.1
+
 ``GET``
 =======
 Gets information for all :term:`ACME Account` s.
@@ -75,7 +77,7 @@ The request body must be a single :term:`ACME Account` object with the following
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/3.0/acme/accounts HTTP/1.1
+	POST /api/3.1/acme_accounts HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -146,7 +148,7 @@ The request body must be a single :term:`ACME Account` object with the following
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/3.0/acme/accounts HTTP/1.1
+	PUT /api/3.1/acme_accounts HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

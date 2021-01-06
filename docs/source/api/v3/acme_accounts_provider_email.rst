@@ -19,6 +19,7 @@
 ``acme_accounts/{{provider}}/{{email}}``
 ****************************************
 
+.. versionadded:: 3.1
 
 ``DELETE``
 ==========

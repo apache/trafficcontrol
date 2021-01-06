@@ -103,6 +103,9 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
+
+		browser.wait(ec.presenceOf(element(by.className("alert"))), 5000);
+		browser.wait(ec.presenceOf(element(by.className("alert-success"))), 5000);
 	});
 
 	it('should back out to delivery services page and verify the new ANY_MAP delivery service and update it', function() {
@@ -112,13 +115,16 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should toggle the visibility of the first table column ', function() {
+		console.log("Toggle visibilty of first column");
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child td'));
-		expect(tableColumns.count()).toBe(11);
+		element.all(by.id("deliveryServicesTable")).then(function() {
+			let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child th'));
+			expect(tableColumns.count()).toBe(11);
+		});
 	});
 
 	it('should update the ANY_MAP delivery service', function() {

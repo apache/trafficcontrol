@@ -93,6 +93,7 @@ func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 		toData.Server,
 		toData.Servers,
 		toData.CacheGroups,
+		toData.Topologies,
 		hdrCommentTxt,
 	)
 }
