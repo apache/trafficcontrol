@@ -123,7 +123,7 @@ func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Head
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
-		return nil, ReqInf{StatusCode: http.StatusInternalServerError}, err
+		return nil, ReqInf{}, err
 	}
 	reqInf, err := put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data, header)
 	if err != nil {
