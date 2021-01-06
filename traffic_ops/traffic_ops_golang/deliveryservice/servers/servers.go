@@ -341,8 +341,34 @@ const verifyStatusesQuery = `
 SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
 FROM server
 INNER JOIN status ON server.status = status.id
+JOIN type t on server.type = t.id
 WHERE server.id = ANY($1::BIGINT[])
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
 `
+
+const checkPreExistingEdgeServersQuery = `
+SELECT t.name AS name
+FROM type t
+JOIN server s ON t.id = s.type
+JOIN status st ON s.status = st.id
+JOIN deliveryservice_server dss ON dss.server = s.id
+WHERE s.id = ANY(ARRAY(SELECT server FROM deliveryservice_server WHERE deliveryservice=$1))
+AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
+AND dss.deliveryservice=$1
+`
+
+func checkIfEdgesExistedBefore(tx *sql.Tx, dsID int) (error, bool) {
+	rows, err := tx.Query(checkPreExistingEdgeServersQuery, dsID)
+	if err != nil {
+		return fmt.Errorf("couldn't query for pre existing edge servers for this DS: %v", err.Error()), false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		return nil, true
+	}
+	return nil, false
+}
 
 func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
 	if len(ids) < 1 {
@@ -531,6 +557,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
 func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
+	valid := false
 	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, status
@@ -540,13 +567,27 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		ids := make([]int, 0, len(serverInfos))
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
+			if inf.Status == string(tc.CacheStatusOnline) || inf.Status == string(tc.CacheStatusReported) {
+				valid = true
+			}
 		}
-		ok, err := verifyAtLeastOneAvailableServer(ids, tx)
+
+		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
 		if err != nil {
-			return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
+			return nil, err, http.StatusInternalServerError
 		}
-		if !ok {
-			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		if preExistingEdges {
+			ok, err := verifyAtLeastOneAvailableServer(ids, tx)
+			if err != nil {
+				return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
+			}
+			if !ok {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
+		} else {
+			if !valid {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
 		}
 	}
 
