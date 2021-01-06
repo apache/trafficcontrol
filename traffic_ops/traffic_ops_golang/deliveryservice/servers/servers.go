@@ -585,7 +585,7 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
 		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
 		}
 		if preExistingEdges {
 			ok, err := verifyAtLeastOneAvailableServer(ids, tx)
