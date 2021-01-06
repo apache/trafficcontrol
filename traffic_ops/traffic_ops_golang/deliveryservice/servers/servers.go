@@ -567,11 +567,22 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		ids := make([]int, 0, len(serverInfos))
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
+			// We dont check for the cache type to be = EDGE here because if this is a new DS, and we want to assign an online/ reported ORG to it,
+			// we should be able to do that.
 			if inf.Status == string(tc.CacheStatusOnline) || inf.Status == string(tc.CacheStatusReported) {
 				valid = true
 			}
 		}
-
+		// Prevent the user from deleting all the servers in an active DS
+		if len(ids) == 0 {
+			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		}
+		// The following check is necessary because of the following:
+		// Consider a brand new active DS that has no server assignments.
+		// Now, you wish to assign an online/ reported ORG server to it.
+		// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
+		// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
+		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
 		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
