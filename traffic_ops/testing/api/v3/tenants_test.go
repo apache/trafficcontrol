@@ -63,12 +63,12 @@ func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
 	if newParent != nil {
 		modTenant.ParentID = newParent.ID
 
-		_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
+		_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
 		if err == nil {
 			t.Fatalf("expected a precondition failed error, got none")
 		}
-		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
-			t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("expected a status 412 Precondition Failed, but got %d", reqInf.StatusCode)
 		}
 	}
 }
@@ -172,7 +172,6 @@ func UpdateTestTenants(t *testing.T) {
 }
 
 func UpdateTestRootTenant(t *testing.T) {
-	expected := "cannot update the root tenant"
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "root"
 	modTenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
@@ -182,12 +181,12 @@ func UpdateTestRootTenant(t *testing.T) {
 
 	modTenant.Active = false
 	modTenant.ParentID = modTenant.ID
-	_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, nil)
+	_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, nil)
 	if err == nil {
 		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
 	}
-	if !strings.Contains(err.Error(), expected) {
-		t.Errorf("expected error detail to contain %s, but got %s", expected, err.Error())
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a status 400 Bad Request, but got %d", reqInf.StatusCode)
 	}
 }
 

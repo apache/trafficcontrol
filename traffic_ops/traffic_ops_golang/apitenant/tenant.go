@@ -186,7 +186,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 		// get current parentID to check if it's being changed
 		var parentID int
 		tx := ten.APIInfo().Tx.Tx
-		// If its the rot tenant, dont check for parent
+		// If it's the root tenant, don't check for parent
 		if ten.Name != nil && *ten.Name != rootName {
 			err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
 			if err != nil {
@@ -209,7 +209,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 func (tn *TOTenant) Update(h http.Header) (error, error, int) {
 	if tn.Name != nil && *tn.Name == rootName {
-		return errors.New("cannot update the root tenant"), nil, http.StatusBadRequest
+		return errors.New("trying to change the root tenant, which is immutable"), nil, http.StatusBadRequest
 	}
 	return api.GenericUpdate(h, tn)
 }
