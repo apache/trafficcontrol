@@ -39,6 +39,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 	});
 
 	it('should compare profiles', function() {
+		console.log("Comparing profiles");
 		pageData.moreBtn.click();
 		pageData.compareProfilesMenuItem.click();
 		expect(pageData.compareSubmit.isEnabled()).toBe(false);
@@ -82,7 +83,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#profilesTable tr:first-child td'));
+		let tableColumns = element.all(by.css('#profilesTable tr:first-child th'));
 		expect(tableColumns.count()).toBe(4);
 	});
 

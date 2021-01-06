@@ -17,31 +17,9 @@
  * under the License.
  */
 
-module.exports = function() {
-	// selectDropdownbyNum - pass in the <SELECT> element and a option number, typically 1
-	this.selectDropdownbyNum = function ( element, optionNum ) {
-		if (optionNum){
-			element.all(by.tagName('option'))
-				.then(function(options){
-					options[optionNum].click();
-				});
-		}
-	};
-
-	this.urlPath = function ( url ) {
-		return '/' + String(url).split('/').slice(3).join('/');
-	};
-
-	this.shuffle = (string) => {
-		return [...string].sort(
-			(a, b) => {
-				return Math.floor(Math.random() * 3) - 1;
-			}
-		).join("");
-	}
-
-	this.random = (max) => {
-		return Math.round(Math.random() * max);   
-	}
-
+module.exports = function(){
+	this.name=element(by.name('name'));
+	this.active=element(by.name('active'));
+	this.parent=element(by.name('parentId'));
+	this.createButton=element(by.buttonText('Create'));
 };

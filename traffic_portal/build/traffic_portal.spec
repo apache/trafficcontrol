@@ -47,12 +47,13 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %install
 		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
 		%__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
-		%__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
+		%__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal/conf
 		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
 		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
 		%__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
 
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+		%__rm -f ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf/configDev.js
 		%__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.

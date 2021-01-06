@@ -31,6 +31,56 @@ var FileUtils = function() {
 		a.remove();
 	};
 
+	this.convertToCSV = function(JSONData, reportTitle, includedKeys) {
+		var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
+		var CSV = '';
+		CSV += reportTitle + '\r\n\r\n';
+
+		var keys = [];
+		for (var key in arrData[0]) {
+			if (!includedKeys || _.contains(includedKeys, key)) {
+				keys.push(key);
+			}
+		}
+		keys.sort(); // alphabetically
+
+		var row = "";
+		for (var i = 0; i < keys.length; i++) {
+			row += keys[i] + ',';
+		}
+		row = row.slice(0, -1);
+
+		CSV += row + '\r\n';
+
+		for (var j = 0; j < arrData.length; j++) {
+			var row = "";
+			for (var k = 0; k < keys.length; k++) {
+				row += '"' + arrData[j][keys[k]] + '",';
+			}
+			row.slice(0, row.length - 1);
+			CSV += row + '\r\n';
+		}
+
+		if (CSV == '') {
+			alert("Invalid data");
+			return;
+		}
+
+		var fileName = "";
+		fileName += reportTitle.replace(/ /g,"_");
+
+		var uri = 'data:text/csv;charset=utf-8,' + escape(CSV);
+		var link = document.createElement("a");
+		link.href = uri;
+
+		link.style = "visibility:hidden";
+		link.download = fileName + ".csv";
+
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
 };
 
 FileUtils.$inject = [];
