@@ -21,6 +21,7 @@ package parameter
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
@@ -125,6 +126,9 @@ func (param TOParameter) Validate() error {
 	errs := validation.Errors{
 		NameQueryParam:       validation.Validate(param.Name, validation.Required),
 		ConfigFileQueryParam: validation.Validate(param.ConfigFile, validation.Required),
+	}
+	if *param.ConfigFile == atscfg.ParentConfigFileName && *param.Name == atscfg.ParentConfigCacheParamWeight {
+		errs[atscfg.ParentConfigFileName+" "+atscfg.ParentConfigCacheParamWeight] = validation.Validate(*param.Value, tovalidate.StringIsValidFloat())
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))

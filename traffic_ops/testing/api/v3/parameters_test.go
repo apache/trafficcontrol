@@ -109,6 +109,19 @@ func CreateTestParameters(t *testing.T) {
 
 }
 
+func CreateNegativeTestParameters(t *testing.T) {
+
+	for _, negativeTest := range negativeTestData.Parameters {
+		pl := negativeTest.Entity
+		resp, _, err := TOSession.CreateParameter(pl)
+		t.Log("Response: ", resp)
+		if err == nil {
+			t.Fatalf("Expected an error because %s but received no error, invalid parameter was created", negativeTest.Reason)
+		}
+	}
+
+}
+
 func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]

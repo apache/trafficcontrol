@@ -1611,6 +1611,24 @@
             "value": "STRING cache.config"
         },
         {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "5."
+        },
+        {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "0"
+        },
+        {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "-2.0e3"
+        },
+        {
             "configFile": "plugin.config",
             "lastUpdated": "2018-01-19T19:01:21.469075+00:00",
             "name": "regex_revalidate.so",

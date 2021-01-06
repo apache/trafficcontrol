@@ -15,9 +15,12 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"math"
 	"net"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -177,4 +180,11 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 	default:
 		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
 	}
+}
+
+func StringIsValidFloat() *validation.StringRule {
+	return validation.NewStringRule(func(value string) bool {
+		validated, err := strconv.ParseFloat(value, 64)
+		return err == nil && !math.IsNaN(validated)
+	}, "must be a valid float")
 }
