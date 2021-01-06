@@ -3,6 +3,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+<<<<<<< HEAD
+=======
+## [unreleased]
+### Added
+- Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
+- Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
+- Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
+- [#5344](https://github.com/apache/trafficcontrol/issues/5344) - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
+- [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
+- Added API endpoints for ACME accounts
+- Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
+
+### Fixed
+- [#5396](https://github.com/apache/trafficcontrol/issues/5396) - Return the correct error type if user tries to update the root tenant
+- [#5378](https://github.com/apache/trafficcontrol/issues/5378) - Updating a non existent DS should return a 404, instead of a 500
+- [#5380](https://github.com/apache/trafficcontrol/issues/5380) - Show the correct servers (including ORGs) when a topology based DS with required capabilities + ORG servers is queried for the assigned servers
+- [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
+- Fixed Traffic Router logging unnecessary warnings for IPv6-only caches
+- Fixed parent.config generation for topology-based delivery services (inline comments not supported)
+- Fixed parent.config generation for MSO delivery services with required capabilities
+- [#5294](https://github.com/apache/trafficcontrol/issues/5294) - TP ag grid tables now properly persist column filters
+    on page refresh.
+- [#5295](https://github.com/apache/trafficcontrol/issues/5295) - TP types/servers table now clears all filters instead
+    of just column filters
+- #2881 Some API endpoints have incorrect Content-Types
+- [#5311](https://github.com/apache/trafficcontrol/issues/5311) - Better TO log messages when failures calling TM CacheStats
+
+>>>>>>> 60e7f208d (TP: adds the ability to clone a topology (#5400))
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
@@ -74,6 +102,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal: change log days are now configurable in traffic_portal_properties.json (default is 7 days) and can be overridden by the user in TP
 - [#5319](https://github.com/apache/trafficcontrol/issues/5319) - Added support for building RPMs that target CentOS 8
 - Traffic Ops: Added validation to ensure assigned ORG server cachegroups are in the topology when updating a delivery service
+- Traffic Portal: [#5360](https://github.com/apache/trafficcontrol/issues/5360) - Adds the ability to clone a topology
 
 ### Fixed
 - Fixed #5188 - DSR (delivery service request) incorrectly marked as complete and error message not displaying when DSR fulfilled and DS update fails in Traffic Portal. [Related Github issue](https://github.com/apache/trafficcontrol/issues/5188)
