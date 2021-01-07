@@ -70,7 +70,7 @@ under the License.
 <menu id="context-menu" class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
     <ul>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}" target="_blank">Open {{ deliveryService.xmlId }} in New Tab</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}?type={{deliveryService.type}}" target="_blank">Open {{ deliveryService.xmlId }} in New Tab</a>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
