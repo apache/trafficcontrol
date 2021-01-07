@@ -484,7 +484,36 @@ func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	}
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
-
+	query := `
+SELECT s.ID, ip.address FROM server s
+JOIN profile p on p.Id = s.Profile
+JOIN interface i on i.server = s.ID
+JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
+WHERE p.id = $1
+`
+	var rows *sql.Rows
+	var err error
+	//ProfileID already validated
+	if s.ID != nil {
+		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
+	} else {
+		rows, err = tx.Query(query, *s.ProfileID)
+	}
+	if err != nil {
+		errs = append(errs, errors.New("unable to determine IP address uniqueness"))
+	} else if rows != nil {
+		defer rows.Close()
+		for rows.Next() {
+			var id int
+			var ipaddress string
+			err = rows.Scan(&id, &ipaddress)
+			if err != nil {
+				errs = append(errs, errors.New("unable to determine IP address uniqueness"))
+			} else if ((s.IPAddress != nil && ipaddress == *s.IPAddress) || (s.IP6Address != nil && ipaddress == *s.IP6Address)) && (s.ID == nil || *s.ID != id) {
+				errs = append(errs, fmt.Errorf("there exists a server with id %v on the same profile that has the same IP address %s", id, ipaddress))
+			}
+		}
+	}
 	return util.JoinErrs(errs)
 }
 

@@ -25,6 +25,7 @@ func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
 		UpdateTestServers(t)
 		GetTestServers(t)
+		CreateTestServerWithSameIPAddressAndProfile(t)
 	})
 }
 
@@ -120,6 +121,28 @@ func UpdateTestServers(t *testing.T) {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	}
 
+}
+
+func CreateTestServerWithSameIPAddressAndProfile(t *testing.T) {
+	if len(testData.Servers) == 0 {
+		t.Fatal("no test data servers, quitting")
+	}
+	firstServer := testData.Servers[0]
+	hostName := firstServer.HostName
+	resp, _, err := TOSession.GetServerByHostName(hostName)
+
+	if err != nil {
+		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("no response servers, quitting")
+	}
+	remoteServer := resp[0]
+	remoteServer.ID = 999 //change only the ID
+	_, _, err = TOSession.CreateServer(remoteServer)
+	if err == nil {
+		t.Fatalf("expected error about an existing server with the same profile and IP address, but got nothing")
+	}
 }
 
 func DeleteTestServers(t *testing.T) {
