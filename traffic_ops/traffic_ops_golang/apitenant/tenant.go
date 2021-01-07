@@ -39,6 +39,8 @@ import (
 	"time"
 )
 
+const rootName = `root`
+
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
 	api.APIInfoImpl `json:"-"`
@@ -184,13 +186,16 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 		// get current parentID to check if it's being changed
 		var parentID int
 		tx := ten.APIInfo().Tx.Tx
-		err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
-		if err != nil {
-			return false, err
-		}
-		if parentID == *ten.ParentID {
-			// parent not being changed
-			return ok, err
+		// If it's the root tenant, don't check for parent
+		if ten.Name != nil && *ten.Name != rootName {
+			err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
+			if err != nil {
+				return false, err
+			}
+			if parentID == *ten.ParentID {
+				// parent not being changed
+				return ok, err
+			}
 		}
 	}
 
@@ -202,7 +207,12 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx.Tx)
 }
 
-func (tn *TOTenant) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, tn) }
+func (tn *TOTenant) Update(h http.Header) (error, error, int) {
+	if tn.Name != nil && *tn.Name == rootName {
+		return errors.New("trying to change the root tenant, which is immutable"), nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(h, tn)
+}
 
 func (ten *TOTenant) Delete() (error, error, int) {
 	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)

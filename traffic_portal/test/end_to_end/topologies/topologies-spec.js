@@ -108,4 +108,16 @@ describe('Traffic Portal Topologies Test Suite', function() {
 		pageData.viewServersMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies/servers");
 	});
+
+	it('should navigate back to the topology and clone the topology', function() {
+		console.log('Cloning topology: ' + myNewTopology.name);
+		pageData.topLink.click();
+		pageData.moreBtn.click();
+		pageData.cloneToplogyMenuItem.click();
+		expect(pageData.cloneButton.isEnabled()).toBe(false);
+		pageData.name.sendKeys(myNewTopology.name + '-clone');
+		expect(pageData.cloneButton.isEnabled()).toBe(true);
+		pageData.cloneButton.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/topologies");
+	});
 });
