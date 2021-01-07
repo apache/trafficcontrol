@@ -82,11 +82,12 @@ SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status, t
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
+WHERE status.name = ANY($1::TEXT[])
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
-	WHERE pstatus.name != $1
+	WHERE pstatus.name = ANY($1::TEXT[])
 ), use_reval_pending AS (
 	SELECT value::BOOLEAN
 	FROM parameter
@@ -124,8 +125,9 @@ GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.v
 ORDER BY s.id
 `
 
+	cacheStatusesToCheck := []tc.CacheStatus{tc.CacheStatusOnline, tc.CacheStatusReported}
 	cacheGroupTypes := []string{tc.CacheGroupEdgeTypeName, tc.CacheGroupMidTypeName}
-	rows, err := tx.Query(selectQuery, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
+	rows, err := tx.Query(selectQuery, pq.Array(cacheStatusesToCheck), tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError

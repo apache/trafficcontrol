@@ -4182,11 +4182,11 @@
             "physLocation": "Denver",
             "profile": "CDN2_MID",
             "rack": "RR 119.02",
-            "revalPending": false,
-            "status": "REPORTED",
+            "revalPending": true,
+            "status": "OFFLINE",
             "tcpPort": 80,
             "type": "MID",
-            "updPending": false
+            "updPending": true
         },
         {
             "cachegroup": "topology-mid-cg-06",
