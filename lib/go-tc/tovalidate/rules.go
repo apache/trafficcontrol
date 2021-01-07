@@ -15,13 +15,14 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"math"
 	"net"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 var rxAlphanumericUnderscoreDash = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
