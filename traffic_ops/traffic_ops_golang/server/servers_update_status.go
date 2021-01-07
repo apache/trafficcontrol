@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/lib/pq"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -51,24 +53,27 @@ func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]t
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
- * the cachegroup containing server $4.
+ * the cachegroup containing server $5.
  */
 WITH RECURSIVE topology_ancestors AS (
 /* This is the base case of the recursive CTE, the topology node for the
- * cachegroup containing server $4.
+ * cachegroup containing server $5.
  */
 	SELECT tcp.child parent, NULL cachegroup, s.id base_server_id
 	FROM "server" s
 	JOIN cachegroup c ON s.cachegroup = c.id
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
 	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.child
-	WHERE s.host_name = $4
+	WHERE s.host_name = $5
 UNION ALL
 /* Find all direct topology parent nodes tc of a given topology ancestor ta. */
 	SELECT tcp.parent, tc.cachegroup, ta.base_server_id
 	FROM topology_ancestors ta, topology_cachegroup_parents tcp
 	JOIN topology_cachegroup tc ON tcp.parent = tc.id
+	JOIN cachegroup c ON tc.cachegroup = c."name"
+	JOIN "type" t ON c."type" = t.id
 	WHERE ta.parent = tcp.child
+	AND t."name" = ANY($4::TEXT[])
 /* server_topology_ancestors is the set of every server whose cachegroup is an
  * ancestor topology node found by topology_ancestors.
  */
@@ -114,12 +119,13 @@ LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
 LEFT JOIN type ON type.id = s.type
 LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
 	AND ps.cdn_id = s.cdn_id
-WHERE s.host_name = $4
+WHERE s.host_name = $5
 GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name
 ORDER BY s.id
 `
 
-	rows, err := tx.Query(selectQuery, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, hostName)
+	cacheGroupTypes := []string{tc.CacheGroupEdgeTypeName, tc.CacheGroupMidTypeName}
+	rows, err := tx.Query(selectQuery, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError

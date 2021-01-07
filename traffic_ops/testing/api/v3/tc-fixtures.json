@@ -3010,13 +3010,13 @@
             "physLocation": "Denver",
             "profile": "MSO",
             "rack": "RR 119.02",
-            "revalPending": false,
+            "revalPending": true,
             "routerHostName": "",
             "routerPortName": "",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "ORG",
-            "updPending": false,
+            "updPending": true,
             "xmppId": "denver-mso-org-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -4639,6 +4639,12 @@
                 },
                 {
                     "cachegroup": "topology-mid-cg-07",
+                    "parents": [
+                        9
+                    ]
+                },
+                {
+                    "cachegroup": "multiOriginCachegroup",
                     "parents": []
                 }
             ]
