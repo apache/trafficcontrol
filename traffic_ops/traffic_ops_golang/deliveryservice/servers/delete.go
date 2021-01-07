@@ -79,7 +79,7 @@ func checkLastServer(dsID, serverID int, tx *sql.Tx) (int, error, error) {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}
 	if isLast {
-		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ ONLINE assigned servers", serverID, dsID), nil
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE assigned servers", serverID, dsID), nil
 	}
 	return http.StatusOK, nil, nil
 }

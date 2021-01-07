@@ -282,6 +282,12 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	//Remove org server assignment and reset DS back to as it was for further testing
 	params.Set("hostName", "denver-mso-org-01")
 	serverResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if len(serverResp.Response) == 0 {
+		t.Fatal("no servers in response, quitting")
+	}
+	if serverResp.Response[0].ID == nil {
+		t.Fatal("ID of the response server is nil, quitting")
+	}
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].ID)
 	if err != nil {
 		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
