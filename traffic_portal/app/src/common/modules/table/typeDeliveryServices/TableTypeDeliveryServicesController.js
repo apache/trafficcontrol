@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableTypeDeliveryServicesController = function(type, deliveryServices, $controller, $scope) {
+var TableTypeDeliveryServicesController = function(type, deliveryServices, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
-
-	let typeDeliveryServicesTable;
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'typeDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.type = type;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = typeDeliveryServicesTable.column(colName + ':name');
-		col.visible(!col.visible());
-		typeDeliveryServicesTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		typeDeliveryServicesTable = $('#typeDeliveryServicesTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_typeDeliveryServicesTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_typeDeliveryServicesTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', '$controller', '$scope'];
+TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', 'filter', '$controller', '$scope'];
 module.exports = TableTypeDeliveryServicesController;
