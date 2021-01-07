@@ -215,7 +215,8 @@ func addMetaObjConfigDir(
 				return nil, warnings, errors.New("getting topology placement: " + err.Error())
 			}
 			if placement.IsFirstCacheTier {
-				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" ||
+					ds.MaxOriginConnections != nil || ds.MaxRequestHeaderBytes != nil {
 					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
@@ -223,7 +224,8 @@ func addMetaObjConfigDir(
 				}
 			}
 			if placement.IsInnerCacheTier {
-				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" ||
+					ds.MaxOriginConnections != nil || ds.MaxRequestHeaderBytes != nil {
 					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
@@ -231,7 +233,8 @@ func addMetaObjConfigDir(
 				}
 			}
 			if placement.IsLastCacheTier {
-				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" ||
+					ds.MaxOriginConnections != nil || ds.MaxRequestHeaderBytes != nil {
 					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
@@ -239,7 +242,7 @@ func addMetaObjConfigDir(
 				}
 			}
 		} else if strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
-			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil || ds.MaxRequestHeaderBytes != nil) &&
 				strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
 				fileName := "hdr_rw_" + *ds.XMLID + ".config"
 				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
@@ -247,7 +250,7 @@ func addMetaObjConfigDir(
 				}
 			}
 		} else if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil || ds.MaxRequestHeaderBytes != nil) &&
 				ds.Type != nil && ds.Type.UsesMidCache() &&
 				strings.HasPrefix(server.Type, tc.MidTypePrefix) {
 				fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"

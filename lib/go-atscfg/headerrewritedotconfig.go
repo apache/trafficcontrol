@@ -38,6 +38,7 @@ const LineCommentHeaderRewriteDotConfig = LineCommentHash
 const ServiceCategoryHeader = "CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
+const MaxRequestHeaderNoBytes = 0
 
 func MakeHeaderRewriteDotConfig(
 	fileName string,
@@ -120,6 +121,15 @@ func MakeHeaderRewriteDotConfig(
 
 	text := makeHdrComment(hdrComment)
 
+	if ds.MaxRequestHeaderBytes > 0 {
+		text += "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(ds.MaxRequestHeaderBytes) + "\nset-status 400"
+		if ds.EdgeHeaderRewrite == "" && ds.MaxOriginConnections == 0 {
+			text += " [L]"
+		} else {
+			text += "\n"
+		}
+	}
+
 	// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
 	if ds.MaxOriginConnections > 0 && !ds.Type.UsesMidCache() {
 		dsOnlineEdgeCount := 0
@@ -161,12 +171,13 @@ func MakeHeaderRewriteDotConfig(
 }
 
 type headerRewriteDS struct {
-	EdgeHeaderRewrite    string
-	ID                   int
-	MaxOriginConnections int
-	MidHeaderRewrite     string
-	Type                 tc.DSType
-	ServiceCategory      string
+	EdgeHeaderRewrite     string
+	ID                    int
+	MaxOriginConnections  int
+	MaxRequestHeaderBytes int
+	MidHeaderRewrite      string
+	Type                  tc.DSType
+	ServiceCategory       string
 }
 
 type headerRewriteServer struct {
@@ -240,6 +251,9 @@ func headerRewriteDSFromDS(ds *DeliveryService) (headerRewriteDS, error) {
 	if ds.MaxOriginConnections == nil {
 		ds.MaxOriginConnections = util.IntPtr(MaxOriginConnectionsNoMax)
 	}
+	if ds.MaxRequestHeaderBytes == nil {
+		ds.MaxRequestHeaderBytes = util.IntPtr(MaxRequestHeaderNoBytes)
+	}
 	if ds.EdgeHeaderRewrite == nil {
 		ds.EdgeHeaderRewrite = util.StrPtr("")
 	}
@@ -251,11 +265,12 @@ func headerRewriteDSFromDS(ds *DeliveryService) (headerRewriteDS, error) {
 	}
 
 	return headerRewriteDS{
-		EdgeHeaderRewrite:    *ds.EdgeHeaderRewrite,
-		ID:                   *ds.ID,
-		MaxOriginConnections: *ds.MaxOriginConnections,
-		MidHeaderRewrite:     *ds.MidHeaderRewrite,
-		Type:                 *ds.Type,
-		ServiceCategory:      *ds.ServiceCategory,
+		EdgeHeaderRewrite:     *ds.EdgeHeaderRewrite,
+		ID:                    *ds.ID,
+		MaxOriginConnections:  *ds.MaxOriginConnections,
+		MaxRequestHeaderBytes: *ds.MaxRequestHeaderBytes,
+		MidHeaderRewrite:      *ds.MidHeaderRewrite,
+		Type:                  *ds.Type,
+		ServiceCategory:       *ds.ServiceCategory,
 	}, nil
 }
