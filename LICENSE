@@ -625,6 +625,10 @@ For the kolo/xmlrpc component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/LICENSE
 
+For the kylelemons/godebug component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/kylelemons/godebug/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/kylelemons/godebug/LICENSE
+
 For the labbsr0x/bindman-dns-webhook component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/LICENSE
