@@ -24,8 +24,14 @@ import (
 )
 
 const (
-	API_PROFILES                 = apiBase + "/profiles"
+	// API_PROFILES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
+	API_PROFILES = apiBase + "/profiles"
+
+	// API_PROFILES_NAME_PARAMETERS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_PROFILES_NAME_PARAMETERS = API_PROFILES + "/name/%s/parameters"
+
+	APIProfiles               = "/profiles"
+	APIProfilesNameParameters = APIProfiles + "/name/%s/parameters"
 )
 
 // CreateProfile creates a Profile.
@@ -51,12 +57,12 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	}
 
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_PROFILES, pl, nil, &alerts)
+	reqInf, err := to.post(APIProfiles, pl, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateProfileByIDWithHdr(id int, pl tc.Profile, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
+	route := fmt.Sprintf("%s/%d", APIProfiles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, pl, header, &alerts)
 	return alerts, reqInf, err
@@ -69,7 +75,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 }
 
 func (to *Session) GetParametersByProfileNameWithHdr(profileName string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	route := fmt.Sprintf(API_PROFILES_NAME_PARAMETERS, profileName)
+	route := fmt.Sprintf(APIProfilesNameParameters, profileName)
 	var data tc.ParametersResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -83,7 +89,7 @@ func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Paramete
 
 func (to *Session) GetProfilesWithHdr(header http.Header) ([]tc.Profile, ReqInf, error) {
 	var data tc.ProfilesResponse
-	reqInf, err := to.get(API_PROFILES, header, &data)
+	reqInf, err := to.get(APIProfiles, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -94,7 +100,7 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 }
 
 func (to *Session) GetProfileByIDWithHdr(id int, header http.Header) ([]tc.Profile, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_PROFILES, id)
+	route := fmt.Sprintf("%s?id=%d", APIProfiles, id)
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -107,7 +113,7 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 }
 
 func (to *Session) GetProfileByNameWithHdr(name string, header http.Header) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?name=%s", API_PROFILES, url.QueryEscape(name))
+	URI := fmt.Sprintf("%s?name=%s", APIProfiles, url.QueryEscape(name))
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(URI, header, &data)
 	return data.Response, reqInf, err
@@ -120,7 +126,7 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 }
 
 func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
+	URI := fmt.Sprintf("%s?param=%s", APIProfiles, url.QueryEscape(param))
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(URI, header, &data)
 	return data.Response, reqInf, err
@@ -133,9 +139,9 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 }
 
 func (to *Session) GetProfileByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?cdn=%d", API_PROFILES, cdnID)
+	uri := fmt.Sprintf("%s?cdn=%d", APIProfiles, cdnID)
 	var data tc.ProfilesResponse
-	reqInf, err := to.get(URI, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -147,15 +153,15 @@ func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 
 // DeleteProfileByID DELETEs a Profile by ID.
 func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_PROFILES, id)
+	uri := fmt.Sprintf("%s/%d", APIProfiles, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(uri, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // ExportProfile Returns an exported Profile.
 func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/export", API_PROFILES, id)
+	route := fmt.Sprintf("%s/%d/export", APIProfiles, id)
 	var data tc.ProfileExportResponse
 	reqInf, err := to.get(route, nil, &data)
 	return &data, reqInf, err
@@ -163,7 +169,7 @@ func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, err
 
 // ImportProfile imports an exported Profile.
 func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.ProfileImportResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s/import", API_PROFILES)
+	route := fmt.Sprintf("%s/import", APIProfiles)
 	var data tc.ProfileImportResponse
 	reqInf, err := to.post(route, importRequest, nil, &data)
 	return &data, reqInf, err
@@ -171,7 +177,7 @@ func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.Pr
 
 // CopyProfile creates a new profile from an existing profile.
 func (to *Session) CopyProfile(p tc.ProfileCopy) (tc.ProfileCopyResponse, ReqInf, error) {
-	path := fmt.Sprintf("%s/name/%s/copy/%s", API_PROFILES, p.Name, p.ExistingName)
+	path := fmt.Sprintf("%s/name/%s/copy/%s", APIProfiles, p.Name, p.ExistingName)
 	resp := tc.ProfileCopyResponse{}
 	reqInf, err := to.post(path, p, nil, &resp)
 	return resp, reqInf, err

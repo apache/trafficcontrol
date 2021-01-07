@@ -20,7 +20,10 @@ import (
 )
 
 const (
+	// API_STATS_SUMMARY is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_STATS_SUMMARY = apiBase + "/stats_summary"
+
+	APIStatsSummary = "/stats_summary"
 )
 
 // GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
@@ -38,9 +41,9 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 		param.Add("statName", *statName)
 	}
 
-	route := API_STATS_SUMMARY
+	route := APIStatsSummary
 	if len(param) > 0 {
-		route = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
+		route = fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
 	}
 	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
@@ -55,8 +58,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	if statName != nil {
 		param.Add("statName", *statName)
 	}
-	route := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
-
+	route := fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
 	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
 }
@@ -64,6 +66,6 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 // CreateSummaryStats creates a stats summary
 func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_STATS_SUMMARY, statsSummary, nil, &alerts)
+	reqInf, err := to.post(APIStatsSummary, statsSummary, nil, &alerts)
 	return alerts, reqInf, err
 }

@@ -25,13 +25,16 @@ import (
 )
 
 const (
+	// API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES = apiBase + "/deliveryservices_required_capabilities"
+
+	APIDeliveryServicesRequiredCapabilities = "/deliveryservices_required_capabilities"
 )
 
 // CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
 func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, capability, nil, &alerts)
+	reqInf, err := to.post(APIDeliveryServicesRequiredCapabilities, capability, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -41,7 +44,7 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 	param := url.Values{}
 	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
 	param.Add("requiredCapability", capability)
-	route := fmt.Sprintf("%s?%s", API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, param.Encode())
+	route := fmt.Sprintf("%s?%s", APIDeliveryServicesRequiredCapabilities, param.Encode())
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }
@@ -58,7 +61,7 @@ func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServic
 		param.Add("requiredCapability", *capability)
 	}
 
-	route := API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES
+	route := APIDeliveryServicesRequiredCapabilities
 	if len(param) > 0 {
 		route = fmt.Sprintf("%s?%s", route, param.Encode())
 	}

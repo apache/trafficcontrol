@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added API endpoints for ACME accounts
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 - Traffic Ops: Added validation to ensure that the `weight` parameter of `parent.config` is a float
+- Traffic Ops Client: New Login function with more options, including falling back to previous minor versions. See traffic_ops/v3-client documentation for details.
 - Added license files to the RPMs
 - Added ACME certificate renewals and ACME account registration using external account binding
 
@@ -61,9 +62,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
-
-### Changed
-- Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
 
 ## [5.0.0] - 2020-10-20
 ### Added

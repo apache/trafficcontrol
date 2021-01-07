@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -32,11 +33,105 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/apache/trafficcontrol/lib/go-log"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"golang.org/x/net/publicsuffix"
 )
+
+// Login authenticates with Traffic Ops and returns the client object.
+//
+// Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
+//
+// See ClientOpts for details about options, which options are required, and how they behave.
+//
+func Login(url, user, pass string, opts ClientOpts) (*Session, ReqInf, error) {
+	if strings.TrimSpace(opts.UserAgent) == "" {
+		return nil, ReqInf{}, errors.New("opts.UserAgent is required")
+	}
+	if opts.RequestTimeout == 0 {
+		opts.RequestTimeout = DefaultTimeout
+	}
+	if opts.APIVersionCheckInterval == 0 {
+		opts.APIVersionCheckInterval = DefaultAPIVersionCheckInterval
+	}
+
+	jar, err := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+	if err != nil {
+		return nil, ReqInf{}, errors.New("creating cookie jar: " + err.Error())
+	}
+
+	to := NewSession(user, pass, url, opts.UserAgent, &http.Client{
+		Timeout: opts.RequestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: opts.Insecure},
+		},
+		Jar: jar,
+	}, opts.UseCache)
+
+	if !opts.ForceLatestAPI {
+		to.latestSupportedAPI = apiVersions()[0]
+	}
+
+	to.forceLatestAPI = opts.ForceLatestAPI
+	to.apiVerCheckInterval = opts.APIVersionCheckInterval
+
+	remoteAddr, err := to.login()
+	if err != nil {
+		return nil, ReqInf{RemoteAddr: remoteAddr}, errors.New("logging in: " + err.Error())
+	}
+	return to, ReqInf{RemoteAddr: remoteAddr}, nil
+}
+
+// ClientOpts is the options to configure the creation of the Client.
+//
+// This exists to allow adding new features without a breaking change to the Login function.
+// Users should understand this, and understand that upgrading their library may result in new options that their application doesn't know to use.
+// New fields should always behave as-before if their value is the default.
+type ClientOpts struct {
+	// ForceLatestAPI will cause Login to return an error if the latest minor API in the client
+	// is not supported by the Traffic Ops Server.
+	//
+	// Note this was the behavior of all Traffic Ops client functions prior to the Login function.
+	//
+	// If this is false or unset, login will determine the latest minor version supported, and use that for all requests.
+	//
+	// Be aware, this means client fields unknown to the server will always be default-initialized.
+	// For example, suppose the field Foo was added in API 3.1, the client code is 3.1, and the server is 3.0.
+	// Then, the field Foo will always be nil or the default value.
+	// Client applications must understand this, and code processing the new feature Foo must be able to
+	// process default or nil values, understanding they may indicate a server version before the feature was added.
+	//
+	ForceLatestAPI bool
+
+	// Insecure is whether to ignore HTTPS certificate errors with Traffic Ops.
+	// Setting this on production systems is strongly discouraged.
+	Insecure bool
+
+	// RequestTimeout is the HTTP timeout for Traffic Ops requests.
+	// If 0 or not explicitly set, DefaultTimeout will be used.
+	RequestTimeout time.Duration
+
+	// UseCache is whether to use an internal cache for requests.
+	// This should be considered experimental, and is currently discouraged for production systems.
+	UseCache bool
+
+	// UserAgent is the HTTP User Agent to use set when communicating with Traffic Ops.
+	// This field is required, and Login will fail if it is unset or the empty string.
+	UserAgent string
+
+	// APIVersionCheckInterval is how often to try a newer Traffic Ops API Version.
+	// This allows clients to get new Traffic Ops features after Traffic Ops is upgraded
+	// without requiring a restart or new client.
+	//
+	// If 0 or not explicitly set, DefaultAPIVersionCheckInterval will be used.
+	// To disable, set to a very high value (like 100 years).
+	//
+	// This has no effect if ForceLatestAPI is true.
+	APIVersionCheckInterval time.Duration
+}
 
 // Session ...
 type Session struct {
@@ -48,6 +143,17 @@ type Session struct {
 	cacheMutex   *sync.RWMutex
 	useCache     bool
 	UserAgentStr string
+
+	latestSupportedAPI string
+	// forceLatestAPI is whether to forcibly always use the latest API version known to this client.
+	// This should only ever be set by ClientOpts.ForceLatestAPI.
+	forceLatestAPI bool
+	// lastAPIVerCheck is the last time the Session tried to get a newer API version from TO.
+	// Used internally to decide whether to try again.
+	lastAPIVerCheck time.Time
+	// apiVerCheckInterval is how often to try a newer Traffic Ops API, in case Traffic Ops was upgraded.
+	// This should only ever be set by ClientOpts.APIVersionCheckInterval.
+	apiVerCheckInterval time.Duration
 }
 
 func NewSession(user, password, url, userAgent string, client *http.Client, useCache bool) *Session {
@@ -64,6 +170,7 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 }
 
 const DefaultTimeout = time.Second * time.Duration(30)
+const DefaultAPIVersionCheckInterval = time.Second * time.Duration(60)
 
 // HTTPError is returned on Update Session failure.
 type HTTPError struct {
@@ -119,22 +226,16 @@ func loginToken(token string) ([]byte, error) {
 
 // login tries to log in to Traffic Ops, and set the auth cookie in the Session. Returns the IP address of the remote Traffic Ops.
 func (to *Session) login() (net.Addr, error) {
-	credentials, err := loginCreds(to.UserName, to.Password)
-	if err != nil {
-		return nil, errors.New("creating login credentials: " + err.Error())
-	}
+	path := "/user/login"
+	body := tc.UserCredentials{Username: to.UserName, Password: to.Password}
+	alerts := tc.Alerts{}
 
-	path := apiBase + "/user/login"
-	resp, remoteAddr, err := to.RawRequestWithHdr("POST", path, credentials, nil)
-	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
-	if err != nil {
-		return remoteAddr, errors.New("requesting: " + err.Error())
-	}
-	defer resp.Body.Close()
+	// Can't use req() because it retries login failures, which would be an infinite loop.
+	reqF := composeReqFuncs(makeRequestWithHeader, []MidReqF{reqTryLatest, reqFallback, reqAPI})
 
-	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
+	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts)
+	if err != nil {
+		return reqInf.RemoteAddr, fmt.Errorf("Login error %v, alertss string: %+v", err, alerts)
 	}
 
 	success := false
@@ -146,14 +247,14 @@ func (to *Session) login() (net.Addr, error) {
 	}
 
 	if !success {
-		return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
+		return reqInf.RemoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
 	}
 
-	return remoteAddr, nil
+	return reqInf.RemoteAddr, nil
 }
 
 func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
-	path := apiBase + "/user/login/token"
+	path := to.APIBase() + "/user/login/token"
 	resp, remoteAddr, err := to.RawRequestWithHdr(http.MethodPost, path, token, nil)
 	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
 	if err != nil {
@@ -182,7 +283,7 @@ func (to *Session) logout() (net.Addr, error) {
 		return nil, errors.New("creating login credentials: " + err.Error())
 	}
 
-	path := apiBase + "/user/logout"
+	path := to.APIBase() + "/user/logout"
 	resp, remoteAddr, err := to.RawRequestWithHdr("POST", path, credentials, nil)
 	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
 	if err != nil {
@@ -308,6 +409,14 @@ func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bo
 	}, useCache)
 }
 
+func ErrIsNotImplemented(err error) bool {
+	return err != nil && strings.Contains(err.Error(), ErrNotImplemented.Error()) // use string.Contains in case context was added to the error
+}
+
+// ErrNotImplemented is returned when Traffic Ops returns a 501 Not Implemented
+// Users should check ErrIsNotImplemented rather than comparing directly, in case context was added.
+var ErrNotImplemented = errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+
 // errUnlessOKOrNotModified returns the response, the remote address, and an error if the given Response's status code is anything
 // but 200 OK/ 304 Not Modified. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
 // address, and a nil error are returned.
@@ -322,7 +431,7 @@ func (to *Session) errUnlessOKOrNotModified(resp *http.Response, remoteAddr net.
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotImplemented {
-		return resp, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+		return resp, remoteAddr, ErrNotImplemented
 	}
 
 	body, readErr := ioutil.ReadAll(resp.Body)
@@ -334,9 +443,123 @@ func (to *Session) errUnlessOKOrNotModified(resp *http.Response, remoteAddr net.
 
 func (to *Session) getURL(path string) string { return to.URL + path }
 
+type ReqF func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error)
+
+type MidReqF func(ReqF) ReqF
+
+// composeReqFuncs takes an initial request func and middleware, and
+// returns a single ReqFunc to be called,
+func composeReqFuncs(reqF ReqF, middleware []MidReqF) ReqF {
+	// compose in reverse-order, which causes them to be applied in forward-order.
+	for i := len(middleware) - 1; i >= 0; i-- {
+		reqF = middleware[i](reqF)
+	}
+	return reqF
+}
+
+// reqTryLatest will re-set to.latestSupportedAPI to the latest, if it's less than the latest and to.apiVerCheckInterval has passed.
+// This does not fallback, so it should generally be composed with reqFallback.
+func reqTryLatest(reqF ReqF) ReqF {
+	return func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+		if to.apiVerCheckInterval == 0 {
+			// Session could have been default-initialized rather than created with a func, so we need to check here, not just in login funcs.
+			to.apiVerCheckInterval = DefaultAPIVersionCheckInterval
+		}
+
+		if !to.forceLatestAPI && time.Since(to.lastAPIVerCheck) >= to.apiVerCheckInterval {
+			// if it's been apiVerCheckInterval since the last version check,
+			// set the version to the latest (and fall back again, if necessary)
+			to.latestSupportedAPI = apiVersions()[0]
+
+			// Set the last version check to far in the future, and then
+			// defer setting the last check until this function returns,
+			// so that if fallback takes longer than the interval,
+			// the recursive calls to this function don't end up forever retrying the latest.
+			to.lastAPIVerCheck = time.Now().Add(time.Hour * 24 * 365)
+			defer func() { to.lastAPIVerCheck = time.Now() }()
+		}
+		return reqF(to, method, path, body, header, response)
+	}
+}
+
+// reqLogin makes the request, and if it fails, tries to log in again then makes the request again.
+// If the login fails, the original response is returned.
+// If the second request fails, it's returned. Login is only tried once.
+// This is designed to handle expired sessions, when the time between requests is longer than the session expiration;
+// it does not do perpetual retry.
+func reqLogin(reqF ReqF) ReqF {
+	return func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+		inf, err := reqF(to, method, path, body, header, response)
+		if inf.StatusCode != http.StatusUnauthorized && inf.StatusCode != http.StatusForbidden {
+			return inf, err
+		}
+		if _, lerr := to.login(); lerr != nil {
+			return inf, err
+		}
+		return reqF(to, method, path, body, header, response)
+	}
+}
+
+// reqFallback calls reqF, and if Traffic Ops doesn't support the latest version,
+// falls back to the previous and retries, recursively.
+// If all supported versions fail, the last response error is returned.
+func reqFallback(reqF ReqF) ReqF {
+	var fallbackFunc func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error)
+	fallbackFunc = func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+		inf, err := reqF(to, method, path, body, header, response)
+		if err == nil {
+			return inf, err
+		}
+		if !ErrIsNotImplemented(err) ||
+			to.forceLatestAPI {
+			return inf, err
+		}
+
+		apiVersions := apiVersions()
+
+		nextAPIVerI := int(math.MaxInt32) - 1
+		for verI, ver := range apiVersions {
+			if to.latestSupportedAPI == ver {
+				nextAPIVerI = verI
+				break
+			}
+		}
+		nextAPIVerI = nextAPIVerI + 1
+		if nextAPIVerI >= len(apiVersions) {
+			return inf, err // we're already on the oldest minor supported, and the server doesn't support it.
+		}
+		to.latestSupportedAPI = apiVersions[nextAPIVerI]
+
+		return fallbackFunc(to, method, path, body, header, response)
+	}
+	return fallbackFunc
+}
+
+// reqAPI calls reqF with a path not including the /api/x prefix,
+// and adds the API version from the Session.
+//
+// For example, path should be like '/deliveryservices'
+// and this will request '/api/3.1/deliveryservices'.
+//
+func reqAPI(reqF ReqF) ReqF {
+	return func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+		path = to.APIBase() + path
+		return reqF(to, method, path, body, header, response)
+	}
+}
+
 // makeRequestWithHeader marshals the response body (if non-nil), performs the HTTP request,
 // and decodes the response into the given response pointer.
-func (to *Session) makeRequestWithHeader(method, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+//
+// Note processing on the following codes:
+// 304 http.StatusNotModified  - Will return the 304 in ReqInf, a nil error, and a nil response.
+//
+// 401 http.StatusUnauthorized - Via to.request(), Same as 403 Forbidden.
+// 403 http.StatusForbidden    - Via to.request()
+//                               Will try to log in again, and try the request again.
+//                               The second request is returned, even if it fails.
+//
+func makeRequestWithHeader(to *Session, method, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	var reqBody []byte
@@ -366,19 +589,24 @@ func (to *Session) makeRequestWithHeader(method, path string, body interface{}, 
 }
 
 func (to *Session) get(path string, header http.Header, response interface{}) (ReqInf, error) {
-	return to.makeRequestWithHeader(http.MethodGet, path, nil, header, response)
+	return to.req(http.MethodGet, path, nil, header, response)
 }
 
 func (to *Session) post(path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
-	return to.makeRequestWithHeader(http.MethodPost, path, body, header, response)
+	return to.req(http.MethodPost, path, body, header, response)
 }
 
 func (to *Session) put(path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
-	return to.makeRequestWithHeader(http.MethodPut, path, body, header, response)
+	return to.req(http.MethodPut, path, body, header, response)
 }
 
 func (to *Session) del(path string, header http.Header, response interface{}) (ReqInf, error) {
-	return to.makeRequestWithHeader(http.MethodDelete, path, nil, header, response)
+	return to.req(http.MethodDelete, path, nil, header, response)
+}
+
+func (to *Session) req(method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+	reqF := composeReqFuncs(makeRequestWithHeader, []MidReqF{reqTryLatest, reqFallback, reqAPI, reqLogin})
+	return reqF(to, method, path, body, header, response)
 }
 
 // request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.

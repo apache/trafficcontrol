@@ -24,18 +24,21 @@ import (
 )
 
 const (
+	// API_CDNS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_CDNS = apiBase + "/cdns"
+
+	APICDNs = "/cdns"
 )
 
 // CreateCDN creates a CDN.
 func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_CDNS, cdn, nil, &alerts)
+	reqInf, err := to.post(APICDNs, cdn, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateCDNByIDWithHdr(id int, cdn tc.CDN, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CDNS, id)
+	route := fmt.Sprintf("%s/%d", APICDNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, cdn, header, &alerts)
 	return alerts, reqInf, err
@@ -49,7 +52,7 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 
 func (to *Session) GetCDNsWithHdr(header http.Header) ([]tc.CDN, ReqInf, error) {
 	var data tc.CDNsResponse
-	reqInf, err := to.get(API_CDNS, header, &data)
+	reqInf, err := to.get(APICDNs, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -60,7 +63,7 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 }
 
 func (to *Session) GetCDNByIDWithHdr(id int, header http.Header) ([]tc.CDN, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%v", API_CDNS, id)
+	route := fmt.Sprintf("%s?id=%v", APICDNs, id)
 	var data tc.CDNsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -73,7 +76,7 @@ func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 }
 
 func (to *Session) GetCDNByNameWithHdr(name string, header http.Header) ([]tc.CDN, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_CDNS, url.QueryEscape(name))
+	route := fmt.Sprintf("%s?name=%s", APICDNs, url.QueryEscape(name))
 	var data tc.CDNsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -87,14 +90,14 @@ func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 
 // DeleteCDNByID deletes a CDN by ID.
 func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CDNS, id)
+	route := fmt.Sprintf("%s/%d", APICDNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) GetCDNSSLKeysWithHdr(name string, header http.Header) ([]tc.CDNSSLKeys, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s/sslkeys", API_CDNS, name)
+	route := fmt.Sprintf("%s/name/%s/sslkeys", APICDNs, name)
 	var data tc.CDNSSLKeysResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err

@@ -23,11 +23,14 @@ import (
 )
 
 const (
+	// API_CACHEGROUPPARAMETERS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_CACHEGROUPPARAMETERS = apiBase + "/cachegroupparameters"
+
+	APICachegroupParameters = "/cachegroupparameters"
 )
 
 func (to *Session) GetCacheGroupParametersWithHdr(cacheGroupID int, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/parameters", APICachegroups, cacheGroupID)
 	return to.getCacheGroupParameters(route, "", header)
 }
 
@@ -38,7 +41,7 @@ func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupPar
 }
 
 func (to *Session) GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID int, queryParams string, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/parameters", APICachegroups, cacheGroupID)
 	return to.getCacheGroupParameters(route, queryParams, header)
 }
 
@@ -56,7 +59,7 @@ func (to *Session) getCacheGroupParameters(route, queryParams string, header htt
 }
 
 func (to *Session) GetAllCacheGroupParametersWithHdr(header http.Header) ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/", API_CACHEGROUPPARAMETERS)
+	route := fmt.Sprintf("%s/", APICachegroupParameters)
 	var data tc.AllCacheGroupParametersResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response.CacheGroupParameters, reqInf, err
@@ -70,7 +73,7 @@ func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersRespon
 
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/%d", API_CACHEGROUPPARAMETERS, cacheGroupID, parameterID)
+	route := fmt.Sprintf("%s/%d/%d", APICachegroupParameters, cacheGroupID, parameterID)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -83,6 +86,6 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc
 		ParameterID:  parameterID,
 	}
 	var data tc.CacheGroupParametersPostResponse
-	reqInf, err := to.post(API_CACHEGROUPPARAMETERS, cacheGroupParameterReq, nil, &data)
+	reqInf, err := to.post(APICachegroupParameters, cacheGroupParameterReq, nil, &data)
 	return &data, reqInf, err
 }

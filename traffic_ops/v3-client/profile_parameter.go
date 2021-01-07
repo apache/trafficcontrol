@@ -23,22 +23,25 @@ import (
 )
 
 const (
+	// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_PROFILE_PARAMETERS = apiBase + "/profileparameters"
 	ProfileIdQueryParam    = "profileId"
 	ParameterIdQueryParam  = "parameterId"
+
+	APIProfileParameters = "/profileparameters"
 )
 
 // Create a ProfileParameter
 func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_PROFILE_PARAMETERS, pp, nil, &alerts)
+	reqInf, err := to.post(APIProfileParameters, pp, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // CreateMultipleProfileParameters creates multiple ProfileParameters at once.
 func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_PROFILE_PARAMETERS, pps, nil, &alerts)
+	reqInf, err := to.post(APIProfileParameters, pps, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -53,9 +56,9 @@ func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error)
 }
 
 func (to *Session) GetProfileParameterByQueryParamsWithHdr(queryParams string, header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
-	URI := API_PROFILE_PARAMETERS + queryParams
+	uri := APIProfileParameters + queryParams
 	var data tc.ProfileParametersNullableResponse
-	reqInf, err := to.get(URI, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -80,8 +83,8 @@ func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.Pr
 
 // DELETE a Parameter by Parameter
 func (to *Session) DeleteParameterByProfileParameter(profile int, parameter int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d/%d", API_PROFILE_PARAMETERS, profile, parameter)
+	uri := fmt.Sprintf("%s/%d/%d", APIProfileParameters, profile, parameter)
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(uri, nil, &alerts)
 	return alerts, reqInf, err
 }
