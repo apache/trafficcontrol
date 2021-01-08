@@ -1,22 +1,2 @@
 {
-	"parameters": [
-		{
-			"reason": "the weight value does not parse to a float",
-			"entity": {
-				"configFile": "parent.config",
-				"name": "weight",
-				"secure": false,
-				"value": "sample-text"
-			}
-		},
-		{
-			"reason": "NaN is not a valid float",
-			"entity": {
-				"configFile": "parent.config",
-				"name": "weight",
-				"secure": false,
-				"value": "NaN"
-			}
-		}
-	]
 }

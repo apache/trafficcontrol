@@ -136,5 +136,4 @@ type TCObjNegativeFunc struct {
 }
 
 var withNegativeFuncs = map[TCObj]TCObjNegativeFunc{
-	Parameters: {CreateNegativeTestParameters},
 }
