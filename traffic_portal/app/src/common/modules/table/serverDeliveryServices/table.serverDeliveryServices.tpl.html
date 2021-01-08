@@ -52,7 +52,7 @@ under the License.
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                        <li role="menuitem" ng-show="isEdge(server) || isOrigin(server)"><button class="menu-item-button clone-ds-assignments" type="button" ng-click="selectDeliveryServices()">Link Delivery Services to Server</button></li>
+                        <li role="menuitem" ng-show="isEdge(server) || isOrigin(server)"><button class="menu-item-button clone-ds-assignments" type="button" ng-click="selectDeliveryServices()">Assign Delivery Services</button></li>
                         <li role="menuitem"><button class="menu-item-button clone-ds-assignments" type="button" ng-click="cloneDsAssignments()">Clone Delivery Service Assignments</button></li>
                         <li class="divider"></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearTableFilters()">Clear Table Filters</button></li>
@@ -75,7 +75,7 @@ under the License.
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <button type="button" ng-click="confirmRemoveDS(deliveryService, $event)">Unlink Delivery Service from Server</button>
+            <button type="button" ng-click="confirmRemoveDS(deliveryService, $event)">Remove {{deliveryService.xmlId}}</button>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
