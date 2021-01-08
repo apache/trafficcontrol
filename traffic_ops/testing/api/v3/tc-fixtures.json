@@ -2186,6 +2186,13 @@
         },
         {
             "cdnName": "cdn2",
+            "description": "mso origin description",
+            "name": "MSO-CDN2",
+            "routing_disabled": false,
+            "type": "ORG_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
             "description": "cdn2 mid description",
             "name": "CDN2_MID",
             "routing_disabled": false,
@@ -3057,7 +3064,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MSO",
+            "profile": "MSO-CDN2",
             "rack": "RR 119.02",
             "revalPending": true,
             "routerHostName": "",
