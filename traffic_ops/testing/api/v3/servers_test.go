@@ -631,6 +631,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
 		originHostname:                   false,
+		"denver-mso-org-02":              false,
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
 		"atlanta-mid-16":                 false,
