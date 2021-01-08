@@ -111,6 +111,7 @@ jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\..*\.(css|js)$, MIT
 github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
+github\.com/kylelemons/godebug.*, Apache-2.0
 github\.com/pkg/errors\..*, BSD
 traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
 traffic_portal/app/src/assets/css/jsonformatter\..*, Apache-2.0
@@ -126,7 +127,6 @@ traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
 traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
 traffic_ops_ort/vendor/github\.com/gofrs/flock/.*, BSD
 traffic_ops_ort/vendor/github\.com/pborman/getopt/.*, BSD
-traffic_ops/traffic_ops_golang/vendor/github\.com/kylelemons/godebug.*, Apache-2.0
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
