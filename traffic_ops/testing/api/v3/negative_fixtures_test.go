@@ -27,7 +27,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-// LoadFixtures ...
+// LoadNegativeFixtures unmarshals the JSON file provided in the negativeFixtures
+// option (tc-negative-fixtures.js by default) into negativeTestData.
 func LoadNegativeFixtures(negativeFixturesPath string) {
 
 	f, err := ioutil.ReadFile(negativeFixturesPath)

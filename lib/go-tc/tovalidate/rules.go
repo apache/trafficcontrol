@@ -183,6 +183,8 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 	}
 }
 
+// StringIsValidFloat returns a reference to a validation.StringRule function that only returns true
+// if the string value given string argument can be parsed to a 64-bit float that is not NaN.
 func StringIsValidFloat() *validation.StringRule {
 	return validation.NewStringRule(func(value string) bool {
 		validated, err := strconv.ParseFloat(value, 64)

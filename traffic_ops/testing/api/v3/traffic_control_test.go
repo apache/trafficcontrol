@@ -60,7 +60,7 @@ type TrafficControl struct {
 	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 }
 
-// NegativeFixtures - maps to the tc-negative-fixtures.json file
+// NegativeFixtures maps to the tc-negative-fixtures.json file.
 type NegativeFixtures struct {
 	Parameters []struct {
 		Reason string       `json:"reason"`
