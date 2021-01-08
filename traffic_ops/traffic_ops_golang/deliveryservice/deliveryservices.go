@@ -1018,7 +1018,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	}
 
 	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
-		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
+		return nil, http.StatusBadRequest, errors.New("delivery service CDN is immutable"), errors.New("delivery service has ssl keys that cannot be automatically changed")
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
