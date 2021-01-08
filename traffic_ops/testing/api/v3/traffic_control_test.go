@@ -59,11 +59,3 @@ type TrafficControl struct {
 	Users                                             []tc.User                               `json:"users"`
 	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 }
-
-// NegativeFixtures maps to the tc-negative-fixtures.json file.
-type NegativeFixtures struct {
-	Parameters []struct {
-		Reason string       `json:"reason"`
-		Entity tc.Parameter `json:"entity"`
-	} `json:"parameters"`
-}

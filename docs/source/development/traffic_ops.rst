@@ -347,10 +347,6 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 	Specify whether to run tests that depend on additional components like an SMTP server or a Riak server. Default: ``no``
 
-.. option:: --negativeFixtures
-
-	Specify the path to a file containing static data for negative tests to use. The objects contained in this file should all fail to POST. Successfully POSTing an object from this file will be counted as a test failure.
-
 Configuring the Integration Tests
 """""""""""""""""""""""""""""""""
 Configuration is mainly done through the configuration file passed as :option:`--cfg`, but is also available through the following environment variables.

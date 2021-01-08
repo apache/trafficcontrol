@@ -32,15 +32,9 @@ func WithObjs(t *testing.T, objs []TCObj, f func()) {
 			withFuncs[obj].Delete(t)
 		}
 	}()
-	var obj TCObj
-	for _, obj = range objs {
+	for _, obj := range objs {
 		withFuncs[obj].Create(t)
 	}
-
-	if _, exists := withNegativeFuncs[obj]; exists {
-		withNegativeFuncs[obj].NegativeCreate(t)
-	}
-
 	f()
 }
 
@@ -129,11 +123,4 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	TopologyBasedDeliveryServiceRequiredCapabilities: {CreateTestTopologyBasedDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},
 	Types: {CreateTestTypes, DeleteTestTypes},
 	Users: {CreateTestUsers, ForceDeleteTestUsers},
-}
-
-type TCObjNegativeFunc struct {
-	NegativeCreate func(t *testing.T)
-}
-
-var withNegativeFuncs = map[TCObj]TCObjNegativeFunc{
 }
