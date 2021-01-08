@@ -73,7 +73,7 @@ UNION ALL
 	JOIN cachegroup c ON tc.cachegroup = c."name"
 	JOIN "type" t ON c."type" = t.id
 	WHERE ta.parent = tcp.child
-	AND t."name" = ANY($4::TEXT[])
+	AND t."name" LIKE ANY($4::TEXT[])
 /* server_topology_ancestors is the set of every server whose cachegroup is an
  * ancestor topology node found by topology_ancestors.
  */
@@ -127,7 +127,7 @@ ORDER BY s.id
 `
 
 	cacheStatusesToCheck := []tc.CacheStatus{tc.CacheStatusOnline, tc.CacheStatusReported}
-	cacheGroupTypes := []string{tc.CacheGroupEdgeTypeName, tc.CacheGroupMidTypeName}
+	cacheGroupTypes := []tc.CacheType{tc.CacheTypeEdge + "%", tc.CacheGroupMidTypeName + "%"}
 	rows, err := tx.Query(selectQuery, pq.Array(cacheStatusesToCheck), tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
