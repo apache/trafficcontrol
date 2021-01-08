@@ -79,17 +79,18 @@ UNION ALL
  */
 ), server_topology_ancestors AS (
 SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status, ta.base_server_id
-FROM server s
-JOIN cachegroup c ON s.cachegroup = c.id
-JOIN topology_ancestors ta ON c."name" = ta.cachegroup
-WHERE status.name = ANY($1::TEXT[])
+	FROM server s
+	JOIN cachegroup c ON s.cachegroup = c.id
+	JOIN topology_ancestors ta ON c."name" = ta.cachegroup
+	JOIN status ON status.id = s.status
+	WHERE status.name = ANY($1::TEXT[])
 ), parentservers AS (
-	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
+SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
 	WHERE pstatus.name = ANY($1::TEXT[])
 ), use_reval_pending AS (
-	SELECT value::BOOLEAN
+SELECT value::BOOLEAN
 	FROM parameter
 	WHERE name = $2
 	AND config_file = $3
@@ -103,16 +104,16 @@ SELECT
 	use_reval_pending.value,
 	s.upd_pending,
 	status.name AS status,
-		/* True if the cachegroup parent or any ancestor topology node has pending updates. */
-		TRUE IN (
-			SELECT sta.upd_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
-			UNION SELECT COALESCE(BOOL_OR(ps.upd_pending), FALSE)
-		) AS parent_upd_pending,
-		/* True if the cachegroup parent or any ancestor topology node has pending revalidation. */
-		TRUE IN (
-			SELECT sta.reval_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
-			UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
-		) AS parent_reval_pending
+	/* True if the cachegroup parent or any ancestor topology node has pending updates. */
+	TRUE IN (
+		SELECT sta.upd_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
+		UNION SELECT COALESCE(BOOL_OR(ps.upd_pending), FALSE)
+	) AS parent_upd_pending,
+	/* True if the cachegroup parent or any ancestor topology node has pending revalidation. */
+	TRUE IN (
+		SELECT sta.reval_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
+		UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
+	) AS parent_reval_pending
 	FROM use_reval_pending,
 		 server s
 LEFT JOIN status ON s.status = status.id
