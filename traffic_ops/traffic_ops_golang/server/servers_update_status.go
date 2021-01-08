@@ -126,7 +126,7 @@ GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.v
 ORDER BY s.id
 `
 
-	cacheStatusesToCheck := []tc.CacheStatus{tc.CacheStatusOnline, tc.CacheStatusReported}
+	cacheStatusesToCheck := []tc.CacheStatus{tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown}
 	cacheGroupTypes := []tc.CacheType{tc.CacheTypeEdge + "%", tc.CacheGroupMidTypeName + "%"}
 	rows, err := tx.Query(selectQuery, pq.Array(cacheStatusesToCheck), tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
