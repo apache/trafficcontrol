@@ -127,7 +127,7 @@ ORDER BY s.id
 `
 
 	cacheStatusesToCheck := []tc.CacheStatus{tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown}
-	cacheGroupTypes := []tc.CacheType{tc.CacheTypeEdge + "%", tc.CacheGroupMidTypeName + "%"}
+	cacheGroupTypes := []string{tc.EdgeTypePrefix + "%", tc.MidTypePrefix + "%"}
 	rows, err := tx.Query(selectQuery, pq.Array(cacheStatusesToCheck), tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
