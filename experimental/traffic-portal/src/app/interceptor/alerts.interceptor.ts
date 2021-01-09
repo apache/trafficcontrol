@@ -34,10 +34,10 @@ export class AlertInterceptor implements HttpInterceptor {
 	public intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(tap(
 			r => {
-				/* tslint:disable */
+				/* eslint-disable */
 				if (r.hasOwnProperty('body') && r['body'].hasOwnProperty('alerts')) {
 					for (const a of r['body']['alerts']) {
-						/* tslint:enable */
+						/* eslint-enable */
 						this.alertService.alertsSubject.next(a as Alert);
 					}
 				}

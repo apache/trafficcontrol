@@ -53,12 +53,12 @@ export class APIService {
 
 	protected do (method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
 
-		/* tslint:disable */
+		/* eslint-disable */
 		const options = {headers: new HttpHeaders({'Content-Type': 'application/json'}),
 		                 observe: 'response' as 'response',
 		                 responseType: 'json' as 'json',
 		                 body: data};
-		/* tslint:enable */
+		/* eslint-enable */
 		return this.http.request(method, path, options).pipe(map((response) => {
 			// TODO pass alerts to the alert service
 			// (TODO create the alert service)

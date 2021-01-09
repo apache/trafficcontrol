@@ -43,10 +43,10 @@ export class ErrorInterceptor implements HttpInterceptor {
 		return next.handle(request).pipe(catchError(err => {
 			console.error("HTTP Error: ", err);
 
-			/* tslint:disable */
+			/* eslint-disable */
 			if (err.hasOwnProperty('error') && err['error'].hasOwnProperty('alerts')) {
 				for (const a of err['error']['alerts']) {
-					/* tslint:enable */
+					/* eslint-enable */
 					this.alerts.alertsSubject.next(a as Alert);
 				}
 			}

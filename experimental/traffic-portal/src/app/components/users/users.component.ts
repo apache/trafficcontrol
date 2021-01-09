@@ -104,9 +104,9 @@ export class UsersComponent implements OnInit {
 		const testVal = u.username.toLocaleLowerCase();
 		let n = -1;
 		for (const l of this.fuzzControl.value.toLocaleLowerCase()) {
-			/* tslint:disable */
+			/* eslint-disable */
 			if (!~(n = testVal.indexOf(l, n + 1))) {
-			/* tslint:enable */
+			/* eslint-enable */
 				return false;
 			}
 		}

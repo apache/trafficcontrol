@@ -131,9 +131,9 @@ export namespace QStringHandling {
 			case QStringHandling.USE:
 				return "Use the query parameter string when deciding if a URL is cached, and pass it in upstream requests to the Mid-tier/origin";
 			case QStringHandling.IGNORE:
-				/* tslint:disable */
+				/* eslint-disable */
 				return 'Do not use the query parameter string when deciding if a URL is cached, but do pass it in upstream requests to the Mid-tier/origin';
-				/* tslint:enable */
+				/* eslint-enable */
 			case QStringHandling.DROP:
 				return "Immediately strip URLs of their query parameter strings before checking cached objects or making upstream requests";
 			default:

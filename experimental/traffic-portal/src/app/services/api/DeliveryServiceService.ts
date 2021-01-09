@@ -191,7 +191,7 @@ export class DeliveryServiceService extends APIService {
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
 	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
 	 * @returns An Observable that will emit an Array of datapoint Arrays (length 2 containing a date string and data value)
-	*//* tslint:disable */
+	*//* eslint-disable */
 	public getDSKBPS (
 		d: string,
 		start: Date,
@@ -200,7 +200,7 @@ export class DeliveryServiceService extends APIService {
 		useMids: boolean,
 		dataOnly?: boolean
 	): Observable<any | Array<DataPoint>> {
-		/* tslint:enable */
+		/* eslint-enable */
 		let path = `/api/${this.API_VERSION}/deliveryservice_stats?metricType=kbps`;
 		path += `&interval=${encodeURIComponent(interval)}`;
 		path += `&deliveryServiceName=${encodeURIComponent(d)}`;
