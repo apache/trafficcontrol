@@ -65,7 +65,7 @@ function cmpr (a: unknown, b: unknown): number {
  * @returns The sorted array
  */
 export function orderBy (value: Array<any>, property: string | Array<string>): Array<any> {
-	return value.sort((a: any, b: any) => {
+	return value.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
 
 		let props: Array<string>;
 		if (typeof(property) === "string") {
@@ -95,10 +95,8 @@ export function orderBy (value: Array<any>, property: string | Array<string>): A
 			}
 
 			try {
-				/* tslint:disable */
 				aProp = a[p];
 				bProp = b[p];
-				/* tslint:enable */
 			} catch (e) {
 				console.error(e);
 				return 0;
