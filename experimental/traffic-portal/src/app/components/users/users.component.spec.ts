@@ -17,13 +17,13 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 
 import { of } from "rxjs";
 
-import { UsersComponent } from "./users.component";
 
 import { User } from "../../models";
 import { APIService } from "../../services/api.service";
 import { LoadingComponent } from "../loading/loading.component";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { UserCardComponent } from "../user-card/user-card.component";
+import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
 	let component: UsersComponent;

@@ -36,7 +36,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * The set of all Delivery Services (visible to the Tenant).
 	 */
-	public deliveryServices: DeliveryService[];
+	public deliveryServices: DeliveryService[] = [];
 
 	/**
 	 * The set of Delivery Services filtered according to the search box text.
@@ -61,7 +61,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Whether or not the page is still loading. */
 	public loading = true;
 
-	private capabilitiesSubscription: Subscription;
+	private capabilitiesSubscription: Subscription | null = null;
 
 	/**
 	 * Whether or not the currently logged-in user has permission to create
@@ -80,7 +80,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Fuzzy search control */
 	public fuzzControl = new FormControl("", {updateOn: "change"});
 
-	constructor (
+	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
@@ -97,8 +97,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnInit(): void {
 		this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
-			(r: DeliveryService[]) => {
-				this.deliveryServices = orderBy(r, "displayName") as DeliveryService[];
+			r => {
+				// these annoying typecasts are necessary because of how object property indexing works.
+				// look at 'orderBy' to understand.
+				this.deliveryServices = (
+					orderBy((r as unknown[]) as Record<string, unknown>[], "displayName") as unknown[]
+				) as DeliveryService[];
 				this.loading = false;
 			}
 		);
@@ -126,9 +130,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	public updateURL(e: Event): void {
 		e.preventDefault();
 		if (this.fuzzControl.value === "") {
-			this.router.navigate([], {replaceUrl: true, queryParams: null});
+			this.router.navigate([], {queryParams: null, replaceUrl: true});
 		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
+			this.router.navigate([], {queryParams: {search: this.fuzzControl.value}, replaceUrl: true});
 		}
 	}
 
@@ -143,7 +147,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 * Cleans up subscriptions when the component is destroyed.
 	 */
 	public ngOnDestroy(): void {
-		this.capabilitiesSubscription.unsubscribe();
+		if (this.capabilitiesSubscription) {
+			this.capabilitiesSubscription.unsubscribe();
+		}
 	}
 
 }

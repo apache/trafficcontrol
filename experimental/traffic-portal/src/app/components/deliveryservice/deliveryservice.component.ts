@@ -47,36 +47,40 @@ export class DeliveryserviceComponent implements OnInit {
 	private readonly edgeBandwidth: DataSet;
 	private readonly midBandwidth: DataSet;
 
-	private to: Date;
-	private from: Date;
+	private to: Date = new Date();
+	private from: Date = new Date();
 
 	/**
 	 * Form controller for the user's date selector for the end of the time
 	 * range.
 	 */
-	public fromDate: FormControl;
+	public fromDate: FormControl = new FormControl();
 
 	/**
 	 * Form controller for the user's time selector for the end of the time
 	 * range.
 	 */
-	public fromTime: FormControl;
+	public fromTime: FormControl = new FormControl();
 
 	/**
 	 * Form controller for the user's date selector for the beginning of the
 	 * time range.
 	 */
-	public toDate: FormControl;
+	public toDate: FormControl = new FormControl();
 
 	/**
 	 * Form controller for the user's date selector for the beginning of the
 	 * time range.
 	 */
-	public toTime: FormControl;
+	public toTime: FormControl = new FormControl();
 
 	private bucketSize = 300; // seconds
 
-	constructor (private readonly route: ActivatedRoute, private readonly api: DeliveryServiceService, private readonly alerts: AlertService) {
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly api: DeliveryServiceService,
+		private readonly alerts: AlertService
+	) {
 		this.midBandwidth = {
 			backgroundColor: "#3CBA9F",
 			borderColor: "#3CBA9F",
@@ -108,7 +112,6 @@ export class DeliveryserviceComponent implements OnInit {
 			return;
 		}
 
-		this.to = new Date();
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
 
@@ -158,8 +161,10 @@ export class DeliveryserviceComponent implements OnInit {
 			interval = `${Math.round(this.bucketSize)}m`;
 		}
 
+		const xmlID = this.deliveryservice.xmlId;
+
 		// Edge-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(
+		this.api.getDSKBPS(xmlID, this.from, this.to, interval, false).subscribe(
 			data => {
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
@@ -173,7 +178,7 @@ export class DeliveryserviceComponent implements OnInit {
 			},
 			(e: Error) => {
 				this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
-				console.debug(e);
+				console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
 			}
 		);
 
@@ -192,7 +197,7 @@ export class DeliveryserviceComponent implements OnInit {
 			},
 			(e: Error) => {
 				this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
-				console.debug(e);
+				console.error(`Failed to get mid KBPS data for '${xmlID}':`, e);
 			}
 		);
 	}
@@ -227,7 +232,7 @@ export class DeliveryserviceComponent implements OnInit {
 				]);
 			},
 			(e: Error) => {
-				console.debug(e);
+				console.error(`Failed to get edge TPS data for '${this.deliveryservice.xmlId}':`, e);
 				this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
 			}
 		);

@@ -28,34 +28,37 @@ export class AlertService {
 	/** An Observable that emits Alerts. */
 	public alerts: Observable<Alert | null>;
 
-	constructor () {
+	constructor() {
 		this.alertsSubject = new BehaviorSubject<Alert | null>(null);
 		this.alerts = this.alertsSubject.asObservable();
 	}
 
 	/**
 	 * Directly constructs a new UI alert.
+	 *
 	 * @param level The level of the Alert.
 	 * @param text The message content of the Alert.
 	 */
 	public newAlert (level: string, text: string): void;
 	/**
 	 * Directly constructs a new UI alert.
+	 *
 	 * @param alert The Alert to be raised.
 	 */
 	public newAlert (alert: Alert): void;
 	/**
 	 * Directly constructs a new UI alert
+	 *
 	 * @param levelOrAlert Either an {@link Alert} or the level of alert
 	 * @param text Must be defined if `levelOrAlert` is a String - gives the text of the new alert.
 	 * @throws when `levelOrAlert` is a string, but `text` was not provided.
 	 */
-	public newAlert (levelOrAlert: string | Alert, text?: string): void {
+	public newAlert(levelOrAlert: string | Alert, text?: string): void {
 		if (typeof levelOrAlert === "string") {
 			if (text === null || text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");
 			}
-			this.alertsSubject.next({level: levelOrAlert, text: text} as Alert);
+			this.alertsSubject.next({level: levelOrAlert, text} as Alert);
 		} else {
 			this.alertsSubject.next(levelOrAlert);
 		}

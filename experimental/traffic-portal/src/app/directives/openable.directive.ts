@@ -28,7 +28,7 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 
 	private subscription: Subscription;
 
-	constructor (private readonly element: ElementRef) { }
+	constructor(private readonly element: ElementRef) { }
 
 	/** Initializes toggle listening. */
 	public ngAfterViewInit(): void {

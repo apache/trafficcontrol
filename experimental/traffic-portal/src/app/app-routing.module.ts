@@ -24,14 +24,14 @@ import { ServersTableComponent } from "./components/servers/servers-table/server
 import { UsersComponent } from "./components/users/users.component";
 
 const routes: Routes = [
-	{ path: "", component: DashboardComponent },
-	{ path: "login", component: LoginComponent },
-	{ path: "users", component: UsersComponent},
-	{ path: "me", component: CurrentuserComponent},
-	{ path: "new.Delivery.Service", component: NewDeliveryServiceComponent},
-	{ path: "deliveryservice/:id", component: DeliveryserviceComponent},
-	{ path: "deliveryservice/:id/invalidation-jobs", component: InvalidationJobsComponent},
-	{ path: "servers", component: ServersTableComponent},
+	{ component: DashboardComponent, path: "" },
+	{ component: LoginComponent, path: "login" },
+	{ component: UsersComponent, path: "users"},
+	{ component: CurrentuserComponent, path: "me"},
+	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service"},
+	{ component: DeliveryserviceComponent, path: "deliveryservice/:id"},
+	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs"},
+	{ component: ServersTableComponent, path: "servers"},
 ];
 
 /**
@@ -43,4 +43,6 @@ const routes: Routes = [
 		initialNavigation: "enabled"
 })],
 })
+// This is a necessary empty class. All of its data/logic come from the decorator.
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppRoutingModule { }

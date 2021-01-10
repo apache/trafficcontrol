@@ -24,16 +24,16 @@ export enum GeoLimit {
 	/**
 	 * No geographic limiting is to be done.
 	 */
-	None = 0,
+	NONE = 0,
 	/**
 	 * Only clients found in a Coverage Zone File may be permitted access.
 	 */
-	CZFOnly = 1,
+	CZF_ONLY = 1,
 	/**
 	 * Only clients found in a Coverage Zone File OR can be geo-located within a
 	 * set of country codes may be permitted access.
 	 */
-	CZFAndCountryCodes = 2
+	CZF_AND_COUNTRY_CODES = 2
 }
 
 /**
@@ -42,9 +42,9 @@ export enum GeoLimit {
  */
 export enum GeoProvider {
 	/** The standard database used for geo-location. */
-	MaxMind = 0,
+	MAX_MIND = 0,
 	/** An alternative database with dubious support. */
-	Neustar = 1
+	NEUSTAR = 1
 }
 
 /**
@@ -79,25 +79,19 @@ export enum Protocol {
 	HTTP_TO_HTTPS = 3
 }
 
-/**
- * This namespace merges with the `Protocol` enum to provide a seamless method
- * to convert those values to verbose explanations.
- */
-export namespace Protocol {
-	/** Converts protocols to a textual representation. */
-	export function toString (p: Protocol): string {
-		switch (p) {
-			case Protocol.HTTP:
-				return "Serve only unsecured HTTP requests";
-			case Protocol.HTTPS:
-				return "Serve only secured HTTPS requests";
-			case Protocol.HTTP_AND_HTTPS:
-				return "Serve both unsecured HTTP requests and secured HTTPS requests";
-			case Protocol.HTTP_TO_HTTPS:
-				return "Serve secured HTTPS requests normally, but redirect unsecured HTTP requests to use HTTPS";
-			default:
-				return "UNKNOWN";
-		}
+/** Converts protocols to a textual representation. */
+export function protocolToString(p: Protocol): string {
+	switch (p) {
+		case Protocol.HTTP:
+			return "Serve only unsecured HTTP requests";
+		case Protocol.HTTPS:
+			return "Serve only secured HTTPS requests";
+		case Protocol.HTTP_AND_HTTPS:
+			return "Serve both unsecured HTTP requests and secured HTTPS requests";
+		case Protocol.HTTP_TO_HTTPS:
+			return "Serve secured HTTPS requests normally, but redirect unsecured HTTP requests to use HTTPS";
+		default:
+			return "UNKNOWN";
 	}
 }
 
@@ -120,25 +114,19 @@ export enum QStringHandling {
 	DROP = 2
 }
 
-/**
- * This namespace merges with the `QStringHandling` enum to provide a seamless method to convert
- * those values to verbose explanations.
- */
-export namespace QStringHandling {
-	/** Converts a QStringHandling to a textual representation. */
-	export function toString (q: QStringHandling): string {
-		switch (q) {
-			case QStringHandling.USE:
-				return "Use the query parameter string when deciding if a URL is cached, and pass it in upstream requests to the Mid-tier/origin";
-			case QStringHandling.IGNORE:
-				/* eslint-disable */
-				return 'Do not use the query parameter string when deciding if a URL is cached, but do pass it in upstream requests to the Mid-tier/origin';
-				/* eslint-enable */
-			case QStringHandling.DROP:
-				return "Immediately strip URLs of their query parameter strings before checking cached objects or making upstream requests";
-			default:
-				return "UNKNOWN";
-		}
+/** Converts a QStringHandling to a textual representation. */
+export function qStringHandlingToString(q: QStringHandling): string {
+	switch (q) {
+		case QStringHandling.USE:
+			return "Use the query parameter string when deciding if a URL is cached, and pass it in upstream requests to the" +
+				" Mid-tier/origin";
+		case QStringHandling.IGNORE:
+			return "Do not use the query parameter string when deciding if a URL is cached, but do pass it in upstream requests to the" +
+				" Mid-tier/origin";
+		case QStringHandling.DROP:
+			return "Immediately strip URLs of their query parameter strings before checking cached objects or making upstream requests";
+		default:
+			return "UNKNOWN";
 	}
 }
 
@@ -159,24 +147,17 @@ export enum RangeRequestHandling {
 	 */
 	CACHE_RANGE_REQUESTS = 2
 }
-
-/**
- * This namespace merges with the `RangeRequestHandling` enum to provide a
- * seamless method to convert those values to verbose explanations.
- */
-export namespace RangeRequestHandling {
-	/** Converts a RangeRequestHandling to a textual representation. */
-	export function toString (r: RangeRequestHandling): string {
-		switch (r) {
-			case RangeRequestHandling.NONE:
-				return "Do not cache Range requests";
-			case RangeRequestHandling.BACKGROUND_FETCH:
-				return "Use the background_fetch plugin to serve Range requests while quietly caching the entire object";
-			case RangeRequestHandling.CACHE_RANGE_REQUESTS:
-				return "Use the cache_range_requests plugin to directly cache object ranges";
-		}
-		return "UNKNOWN";
+/** Converts a RangeRequestHandling to a textual representation. */
+export function rangeRequestHandlingToString(r: RangeRequestHandling): string {
+	switch (r) {
+		case RangeRequestHandling.NONE:
+			return "Do not cache Range requests";
+		case RangeRequestHandling.BACKGROUND_FETCH:
+			return "Use the background_fetch plugin to serve Range requests while quietly caching the entire object";
+		case RangeRequestHandling.CACHE_RANGE_REQUESTS:
+			return "Use the cache_range_requests plugin to directly cache object ranges";
 	}
+	return "UNKNOWN";
 }
 
 /**
@@ -385,10 +366,11 @@ export interface DeliveryService {
 }
 
 /**
- * Determines if the Delivery Service is a candidate for bypassing
+ * Determines if the Delivery Service is a candidate for bypassing.
+ *
  * @returns `true` if it can have bypass settings, `false` otherwise.
  */
-export function bypassable (ds: DeliveryService): boolean {
+export function bypassable(ds: DeliveryService): boolean {
 	if (!ds.type) {
 		return false;
 	}
@@ -404,4 +386,23 @@ export function bypassable (ds: DeliveryService): boolean {
 		default:
 			return false;
 	}
+}
+
+/**
+ * DSCapacity represents a response from the API to a request for the capacity
+ * of a Delivery Service.
+ */
+export interface DSCapacity {
+	availablePercent: number;
+	maintenancePercent: number;
+	utilizedPercent: number;
+}
+
+/**
+ * DSHealth represents a response from the API to a request for the health of a
+ * Delivery Service.
+ */
+export interface DSHealth {
+	totalOnline: number;
+	totalOffline: number;
 }

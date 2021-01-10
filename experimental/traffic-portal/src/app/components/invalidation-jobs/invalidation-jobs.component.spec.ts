@@ -18,13 +18,13 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
 
-import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 import { CustomvalidityDirective } from "../../directives/customvalidity.directive";
 import { OpenableDirective } from "../../directives/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
 import { APIService } from "../../services/api.service";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;

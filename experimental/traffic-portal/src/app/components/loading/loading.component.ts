@@ -19,6 +19,8 @@ import { Component } from "@angular/core";
 	styleUrls: ["./loading.component.scss"],
 	templateUrl: "./loading.component.html"
 })
+// need a class to bind to a template - even if there's no data or logic.
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class LoadingComponent {
 
 }

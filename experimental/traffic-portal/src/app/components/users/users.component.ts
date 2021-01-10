@@ -49,7 +49,7 @@ export class UsersComponent implements OnInit {
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
-	constructor (private readonly api: UserService, private readonly auth: AuthenticationService) {
+	constructor(private readonly api: UserService, private readonly auth: AuthenticationService) {
 		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();
@@ -94,10 +94,11 @@ export class UsersComponent implements OnInit {
 
 	/**
 	 * Implements a fuzzy search over usernames
+	 *
 	 * @param u The user being checked for a fuzzy match (currently uses the username)
 	 * @returns `true` if `u` is a fuzzy match for the `fuzzControl` value, `false` otherwise
 	 */
-	public fuzzy (u: User): boolean {
+	public fuzzy(u: User): boolean {
 		if (!this.fuzzControl.value) {
 			return true;
 		}

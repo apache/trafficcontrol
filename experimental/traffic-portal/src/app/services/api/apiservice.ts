@@ -15,7 +15,6 @@
 import { HttpClient, HttpResponse, HttpHeaders } from "@angular/common/http";
 
 import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
 
 import { environment } from "../../../environments/environment";
 
@@ -27,31 +26,31 @@ export class APIService {
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public API_VERSION = "2.0";
+	public apiVersion = "2.0";
 
-	protected delete (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected delete(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("delete", path, data);
 	}
-	protected get (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected get(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("get", path, data);
 	}
-	protected head (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected head(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("head", path, data);
 	}
-	protected options (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected options(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("options", path, data);
 	}
-	protected patch (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected patch(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("patch", path, data);
 	}
-	protected post (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected post(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("post", path, data);
 	}
-	protected push (path: string, data?: any): Observable<HttpResponse<any>> {
+	protected push(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("push", path, data);
 	}
 
-	protected do (method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
+	protected do(method: string, path: string, data?: object): Observable<HttpResponse<object>> {
 
 		/* eslint-disable */
 		const options = {headers: new HttpHeaders({'Content-Type': 'application/json'}),
@@ -59,16 +58,14 @@ export class APIService {
 		                 responseType: 'json' as 'json',
 		                 body: data};
 		/* eslint-enable */
-		return this.http.request(method, path, options).pipe(map((response) => {
-			// TODO pass alerts to the alert service
-			// (TODO create the alert service)
-			return response as HttpResponse<any>;
-		}));
+		// TODO pass alerts to the alert service
+		// (TODO create the alert service)
+		return this.http.request(method, path, options);
 	}
 
 	constructor(private readonly http: HttpClient) {
-		if (environment.APIVersion) {
-			this.API_VERSION = environment.APIVersion;
+		if (environment.apiVersion) {
+			this.apiVersion = environment.apiVersion;
 		}
 	}
 }

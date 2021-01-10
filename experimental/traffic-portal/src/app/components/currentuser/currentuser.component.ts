@@ -30,10 +30,10 @@ import { AuthenticationService } from "../../services";
 export class CurrentuserComponent implements OnInit, OnDestroy {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
-	public currentUser: User | null;
-	private subscription: Subscription;
+	public currentUser: User | null = null;
+	private subscription: Subscription | null = null;
 
-	constructor (private readonly auth: AuthenticationService) {
+	constructor(private readonly auth: AuthenticationService) {
 	}
 
 	/**
@@ -52,7 +52,7 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 			);
 		}
 		this.subscription = this.auth.currentUser.subscribe(
-			(u: User) => {
+			u => {
 				this.currentUser = u;
 			}
 		);
@@ -62,6 +62,8 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	 * Runs when the component is destroyed - cleans up active subscriptions.
 	 */
 	public ngOnDestroy(): void {
-		this.subscription.unsubscribe();
+		if (this.subscription) {
+			this.subscription.unsubscribe();
+		}
 	}
 }

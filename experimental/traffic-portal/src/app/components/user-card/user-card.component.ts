@@ -16,7 +16,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { Observable } from "rxjs";
 import { first } from "rxjs/operators";
 
-import { Role, User } from "../../models";
+import { User } from "../../models";
 import { UserService } from "../../services/api";
 
 /**
@@ -41,20 +41,28 @@ export class UserCardComponent implements OnInit {
 	 */
 	@Input() public roleMap?: Observable<Map<number, string>>;
 
-	constructor (private readonly api: UserService) { }
+	constructor(private readonly api: UserService) {
+		this.user = {
+			id: -1,
+			newUser: false,
+			username: ""
+		};
+	}
 
 	/** Initializes data like mapping role IDs to role names. */
 	public ngOnInit(): void {
-		this.user = this.user;
 		if (this.user.role === undefined) {
-			console.error("User appears to have no role");
-			console.debug(this.user);
+			console.error("User appears to have no role:", this.user);
 			return;
 		}
 		if (!this.user.roleName) {
 			if (!this.roleMap) {
 				this.api.getRoles(this.user.role).pipe(first()).subscribe(
-					(role: Role) => {
+					role => {
+						if (!role) {
+							console.error(`Failed to get user role '${this.user.role}' from the API`);
+							return;
+						}
 						this.user.roleName = role.name;
 					}
 				);

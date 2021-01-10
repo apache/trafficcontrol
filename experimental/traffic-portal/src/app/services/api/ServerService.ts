@@ -12,15 +12,14 @@
 * limitations under the License.
 */
 
-import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { APIService } from "./apiservice";
-
 import { Server, Servercheck, checkMap } from "../../models";
+
+import { APIService } from "./apiservice";
 
 /**
  * ServerService exposes API functionality related to Servers.
@@ -31,21 +30,19 @@ export class ServerService extends APIService {
 	 * Retrieves all servers.
 	 */
 	public getServers(): Observable<Array<Server>> {
-		const path = `/api/${this.API_VERSION}/servers`;
+		const path = `/api/${this.apiVersion}/servers`;
 		return this.get(path).pipe(map(
-			r => {
-				return (r.body.response as Array<Server>).map(
-					s => {
-						if (s.lastUpdated) {
-							// Our dates are actually strings since JSON doesn't provide a native date type.
-							// TODO: rework to use an interceptor
-							const dateStr = (s.lastUpdated as unknown) as string;
-							s.lastUpdated = new Date(dateStr.replace(" ", "T").replace(/\+00$/, "Z"));
-						}
-						return s;
+			r => (r.body as {response: Array<Server>}).response.map(
+				s => {
+					if (s.lastUpdated) {
+						// Our dates are actually strings since JSON doesn't provide a native date type.
+						// TODO: rework to use an interceptor
+						const dateStr = (s.lastUpdated as unknown) as string;
+						s.lastUpdated = new Date(dateStr.replace(" ", "T").replace(/\+00$/, "Z"));
 					}
-				);
-			}
+					return s;
+				}
+			)
 		));
 	}
 
@@ -57,14 +54,15 @@ export class ServerService extends APIService {
 	 * Fetches server "check" stats from Traffic Ops.
 	 * Because the filter is not implemented on the server-side, the returned
 	 * Observable<Servercheck> will throw an error if `id` does not exist.
+	 *
 	 * @param id If given, will return only the checks for the server with that ID.
 	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
 	 */
 	public getServerChecks(id?: number): Observable<Servercheck | Servercheck[]> {
-		const path = `/api/${this.API_VERSION}/servercheck`;
+		const path = `/api/${this.apiVersion}/servercheck`;
 		return this.get(path).pipe(map(
 			r => {
-				const response = r.body.response as Servercheck[];
+				const response = (r.body as {response: Array<Servercheck>}).response;
 				if (id) {
 					for (const sc of response) {
 						if (sc.id === id) {
@@ -78,9 +76,5 @@ export class ServerService extends APIService {
 				return response;
 			}
 		));
-	}
-
-	constructor(http: HttpClient) {
-		super(http);
 	}
 }

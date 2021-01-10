@@ -12,16 +12,18 @@
 * limitations under the License.
 */
 
-import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { APIService } from "./apiservice";
-
 import { DeliveryService, InvalidationJob, User } from "../../models";
 
+import { APIService } from "./apiservice";
+
+/**
+ * JobOpts defines the options that can be passed to getInvalidationJobs.
+ */
 interface JobOpts {
 	/** return only the Jobs that operate on this Delivery Service */
 	deliveryService?: DeliveryService;
@@ -44,8 +46,8 @@ export class InvalidationJobService extends APIService {
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.
 	 */
-	public getInvalidationJobs (opts?: JobOpts): Observable<Array<InvalidationJob>> {
-		let path = `/api/${this.API_VERSION}/jobs`;
+	public getInvalidationJobs(opts?: JobOpts): Observable<Array<InvalidationJob>> {
+		let path = `/api/${this.apiVersion}/jobs`;
 		if (opts) {
 			const args = new Array<string>();
 			if (opts.id) {
@@ -68,25 +70,17 @@ export class InvalidationJobService extends APIService {
 				path += `?${args.join("&")}`;
 			}
 		}
-		return this.get(path).pipe(map(
-			r => {
-				return r.body.response as Array<InvalidationJob>;
-			}
-		));
+		return this.get(path).pipe(map(r => (r.body as {response: Array<InvalidationJob>}).response));
 	}
 
 	/**
 	 * Creates the passed invalidation job, returning whether or not the creation was successful.
 	 */
 	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
-		const path = `/api/${this.API_VERSION}/user/current/jobs`;
+		const path = `/api/${this.apiVersion}/user/current/jobs`;
 		return this.post(path, job).pipe(map(
-			_ => true,
-			_ => false
+			() => true,
+			() => false
 		));
-	}
-
-	constructor(http: HttpClient) {
-		super(http);
 	}
 }

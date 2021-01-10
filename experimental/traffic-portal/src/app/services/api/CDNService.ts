@@ -17,43 +17,34 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
+import { CDN } from "../../models";
 import { APIService } from "./apiservice";
 
-import { CDN } from "../../models";
 
 /**
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable({providedIn: "root"})
 export class CDNService extends APIService {
+	public getCDNs(id: number): Observable<CDN>;
+	public getCDNs(): Observable<Map<string, CDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
+	 *
 	 * @param id The integral, unique identifier of a single CDN to be returned
 	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
-	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN | undefined> {
-		const path = `/api/${this.API_VERSION}/cdns`;
+	public getCDNs(id?: number): Observable<Map<string, CDN> | CDN> {
+		const path = `/api/${this.apiVersion}/cdns`;
 		if (id) {
 			return this.get(`${path}?id=${id}`).pipe(map(
-				r => {
-					for (const c of (r.body.response as Array<CDN>)) {
-						if (c.id === id) {
-							return c;
-						}
-					}
-				}
+				r => (r.body as {response: [CDN]}).response[0]
 			));
 		}
 		return this.get(path).pipe(map(
-			r => {
-				const ret = new Map<string, CDN>();
-				for (const c of (r.body.response as Array<CDN>)) {
-					ret.set(c.name, c);
-				}
-				return ret;
-			}
+			r => new Map<string, CDN>((r.body as {response: Array<CDN>}).response.map(c=>[c.name, c]))
 		));
 	}
 

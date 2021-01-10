@@ -18,12 +18,12 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
 
-import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 import { LinechartDirective } from "../../directives/linechart.directive";
 import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
 import { APIService } from "../../services/api.service";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 
 describe("DeliveryserviceComponent", () => {
@@ -139,7 +139,7 @@ describe("DeliveryserviceComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it('sets the "to" and "from" values to "so far today"', () => {
+	it("sets the \"to\" and \"from\" values to \"so far today\"", () => {
 		const now = new Date();
 		now.setUTCMilliseconds(0);
 		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

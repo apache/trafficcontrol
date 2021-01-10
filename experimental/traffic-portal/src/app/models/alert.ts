@@ -12,6 +12,9 @@
 * limitations under the License.
 */
 
+/**
+ *
+ */
 type AlertLevel = "info" | "success" | "error" | "warning";
 
 /**

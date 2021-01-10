@@ -14,9 +14,9 @@
 
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 
+import { TpHeaderComponent } from "../../tp-header/tp-header.component";
 import { ServersTableComponent } from "./servers-table.component";
 
-import { TpHeaderComponent } from "../../tp-header/tp-header.component";
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;

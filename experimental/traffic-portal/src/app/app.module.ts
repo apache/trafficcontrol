@@ -25,7 +25,7 @@ import { BrowserModule } from "@angular/platform-browser";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
-import { Chart } from "chart.js";
+import * as Chart from "chart.js";
 
 // Routing, Components, Directives and Interceptors
 import { AppRoutingModule } from "./app-routing.module";
@@ -50,9 +50,18 @@ import { OpenableDirective } from "./directives/openable.directive";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 
-
+// TODO: Figure out the actual typing here.
 Chart.plugins.register({
-	beforeDraw: (chartInstance: any) => {
+	beforeDraw: (chartInstance: Chart & {
+		chart: {
+			ctx: {
+				fillStyle: string;
+				fillRect: (a: number, b: number, c: number, d: number) => void;
+			};
+			width: number;
+			height: number;
+		};
+	}) => {
 		const ctx = chartInstance.chart.ctx;
 		ctx.fillStyle = "white";
 		ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
@@ -98,8 +107,10 @@ Chart.plugins.register({
 		AgGridModule.withComponents([])
 	],
 	providers: [
-		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-		{provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor, multi: true}
+		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
+		{multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor}
 	],
 })
+// This is a necessary empty class. All of its data/logic come from the decorator.
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppModule { }

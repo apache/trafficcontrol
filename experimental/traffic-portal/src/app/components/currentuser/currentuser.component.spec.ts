@@ -14,10 +14,10 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { CurrentuserComponent } from "./currentuser.component";
 
 import { User } from "../../models";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { CurrentuserComponent } from "./currentuser.component";
 
 describe("CurrentuserComponent", () => {
 	let component: CurrentuserComponent;

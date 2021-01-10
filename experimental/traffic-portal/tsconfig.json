@@ -10,7 +10,7 @@
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
 		"importHelpers": true,
-		"strictNullChecks": true,
+		"strict": true,
 		"target": "es2015",
 		"lib": [
 			"es2018",

@@ -156,20 +156,17 @@ export interface Servercheck {
 	type: string;
 	/** whether or not the server has updates pending */
 	updPending: boolean;
-
-	/** Builds a true Map from the Servercheck's "checks" property */
-	checkMap(): Map<string, number | boolean>;
 }
 
 /**
  * Builds a true Map from the Servercheck's "checks" property.
  */
-export function checkMap(this: Servercheck): Map<string, number | boolean> {
+export function checkMap(srv: Servercheck): Map<string, number | boolean> {
 	const ret = new Map();
-	if (!this.checks) {
+	if (!srv.checks) {
 		return ret;
 	}
-	for (const [key, value] of Object.entries(this.checks)) {
+	for (const [key, value] of Object.entries(srv.checks)) {
 		switch (key) {
 			case "ILO":
 			case "10G":

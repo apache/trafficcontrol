@@ -32,7 +32,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 
 	private subscription: Subscription;
 
-	constructor (private readonly element: ElementRef<HTMLInputElement>) { }
+	constructor(private readonly element: ElementRef<HTMLInputElement>) { }
 
 	/** Initializes the validity state of the element. */
 	public ngAfterViewInit(): void {

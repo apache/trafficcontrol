@@ -28,7 +28,7 @@ import { AlertService, AuthenticationService } from "../services";
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
-	constructor (
+	constructor(
 		private readonly authenticationService: AuthenticationService,
 		private readonly router: Router,
 		private readonly alerts: AlertService
@@ -39,7 +39,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 * appropriate error Alerts and redirecting unauthenticated users to the
 	 * login form.
 	 */
-	public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(catchError(err => {
 			console.error("HTTP Error: ", err);
 

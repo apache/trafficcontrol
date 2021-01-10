@@ -14,9 +14,9 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 
+import { User } from "../../models";
 import { UserCardComponent } from "./user-card.component";
 
-import { User } from "../../models";
 
 describe("UserCardComponent", () => {
 	let component: UserCardComponent;
@@ -35,7 +35,7 @@ describe("UserCardComponent", () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
-		component.user = {lastUpdated: new Date(), id: 1, name: "test", username: "test", newUser: false} as User;
+		component.user = { id: 1, lastUpdated: new Date(), name: "test", newUser: false, username: "test"} as User;
 		fixture.detectChanges();
 	});
 

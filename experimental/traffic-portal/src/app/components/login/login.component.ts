@@ -35,7 +35,7 @@ export class LoginComponent implements OnInit {
 	/** The user-entered password. */
 	public p = new FormControl("");
 
-	constructor (
+	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly auth: AuthenticationService) { }

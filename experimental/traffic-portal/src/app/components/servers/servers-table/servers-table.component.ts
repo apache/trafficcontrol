@@ -24,6 +24,9 @@ import { ServerService } from "../../../services/api";
 import { IPV4, serviceInterface } from "../../../utils";
 import { SSHCellRendererComponent } from "../../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 
+/**
+ *
+ */
 interface AugmentedServer extends Server {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
@@ -43,7 +46,7 @@ interface AugmentedServer extends Server {
 export class ServersTableComponent implements OnInit, OnDestroy {
 
 	/** All of the servers which should appear in the table. */
-	public servers: Observable<Array<AugmentedServer>>;
+	public servers: Observable<Array<AugmentedServer>> | null = null;
 	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -255,7 +258,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 
 	// private userSubscription: Subscription;
 
-	constructor (private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
+	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
 		// this.servers = [];
 		this.fuzzControl = new FormControl("");
 	}
@@ -263,8 +266,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
 		this.servers = this.api.getServers().pipe(map(
-			x => {
-				return x.map(
+			x => x.map(
 					s => {
 						const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
 						let inf: Interface;
@@ -292,8 +294,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 						}
 						return aug;
 					}
-				);
-			}
+				)
 		));
 
 		this.route.queryParamMap.subscribe(
@@ -315,9 +316,9 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
 		if (this.fuzzControl.value === "") {
-			this.router.navigate([], {replaceUrl: true, queryParams: null});
+			this.router.navigate([], {queryParams: null, replaceUrl: true});
 		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
+			this.router.navigate([], {queryParams: {search: this.fuzzControl.value}, replaceUrl: true});
 		}
 	}
 

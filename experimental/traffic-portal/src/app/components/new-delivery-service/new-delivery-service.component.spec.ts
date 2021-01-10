@@ -16,10 +16,10 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 import { Protocol } from "../../models";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;
@@ -56,7 +56,10 @@ describe("NewDeliveryServiceComponent", () => {
 		component.setOriginURL();
 		expect(component.deliveryService.orgServerFqdn).toEqual("http://some.domain.test:9001", "http://some.domain.test:9001");
 		expect(component.deliveryService.checkPath).toEqual("/a/check/path/here", "/a/check/path/here");
-		expect(component.deliveryService.displayName).toEqual("Delivery Service for some.domain.test", "Delivery Service for some.domain.test");
+		expect(component.deliveryService.displayName).toEqual(
+			"Delivery Service for some.domain.test",
+			"Delivery Service for some.domain.test"
+		);
 		expect(component.displayName.value).toEqual("Delivery Service for some.domain.test", "Delivery Service for some.domain.test");
 		expect(component.step).toEqual(1, "one");
 		expect(component.deliveryService.protocol).toEqual(Protocol.HTTP_AND_HTTPS, "HTTP_AND_HTTPS");

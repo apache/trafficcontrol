@@ -26,19 +26,19 @@ export enum LineChartType {
 	/**
 	 * Plots category proportions.
 	 */
-	Category = "category",
+	CATEGORY = "category",
 	/**
 	 * Scatter plots.
 	 */
-	Linear = "linear",
+	LINEAR = "linear",
 	/**
 	 * Logarithmic-scale scatter plots.
 	 */
-	Logarithmic = "logarithmic",
+	LOGARITHMIC = "logarithmic",
 	/**
 	 * Time-series data.
 	 */
-	Time = "time"
+	TIME = "time"
 }
 
 /**
@@ -56,7 +56,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** The title of the chart. */
 	@Input() public chartTitle?: string;
 	/** Labels for the datasets. */
-	@Input() public chartLabels?: any[];
+	@Input() public chartLabels?: unknown[];
 	/** Data to be plotted by the chart. */
 	@Input() public chartDataSets: Observable<DataSet[]> = from([]);
 	/** The type of the chart. */
@@ -66,19 +66,19 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** A label for the Y-axis of the chart. */
 	@Input() public chartYAxisLabel?: string;
 	/** A callback for the label of each data point, to be optionally provided. */
-	@Input() public chartLabelCallback?: (v: any, i: number, va: any[]) => any;
+	@Input() public chartLabelCallback?: (v: unknown, i: number, va: unknown[]) => unknown;
 	/** Whether or not to display the chart's legend. */
 	@Input() public chartDisplayLegend?: boolean;
 
 	private subscription: Subscription | null = null;
-	private opts: any;
+	private opts: Chart.ChartConfiguration = {};
 
-	constructor (private readonly element: ElementRef) { }
+	constructor(private readonly element: ElementRef) { }
 
 	/**
 	 * Initializes the chart using the input data.
 	 */
-	public ngAfterViewInit (): void {
+	public ngAfterViewInit(): void {
 		if (this.element.nativeElement === null) {
 			console.warn("Use of DOM directive in non-DOM context!");
 			return;
@@ -95,7 +95,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx = ctx;
 
 		if (!this.chartType) {
-			this.chartType = LineChartType.Linear;
+			this.chartType = LineChartType.LINEAR;
 		}
 
 		if (this.chartDisplayLegend === null || this.chartDisplayLegend === undefined) {
@@ -155,7 +155,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	private destroyChart(): void {
 		if (this.chart) {
 			this.chart.clear();
-			(this.chart.destroy as ()=>void)();
+			(this.chart.destroy as () => void)();
 			this.chart = null;
 			if (this.ctx) {
 				this.ctx.clearRect(0, 0, this.element.nativeElement.width, this.element.nativeElement.height);
@@ -173,7 +173,11 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			return;
 		}
 
-		this.opts.data.datasets = data;
+		if (this.opts.data) {
+			this.opts.data.datasets = data;
+		} else {
+			this.opts.data = {datasets: data};
+		}
 
 		if (!this.ctx) {
 			throw new Error("cannot load data with uninitialized context");
@@ -183,6 +187,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	}
 
 	private dataError(e: Error): void {
+		console.error("data error occurred:", e);
 		this.destroyChart();
 		if (this.ctx) {
 			this.ctx.font = "30px serif";

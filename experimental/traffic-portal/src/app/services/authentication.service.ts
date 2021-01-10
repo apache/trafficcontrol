@@ -16,9 +16,9 @@ import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable } from "rxjs";
 import { first, map } from "rxjs/operators";
 
-import { UserService } from "./api";
-
 import { Role, User } from "../models";
+
+import { UserService } from "./api";
 
 /**
  * AuthenticationService handles authentication with the Traffic Ops server and
@@ -39,7 +39,7 @@ export class AuthenticationService {
 	/** An Observable that emits the current user's capabilities. */
 	public currentUserCapabilities: Observable<Set<string>>;
 
-	constructor (private readonly api: UserService) {
+	constructor(private readonly api: UserService) {
 		this.currentUserSubject = new BehaviorSubject<User | null>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
 		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());
@@ -49,25 +49,26 @@ export class AuthenticationService {
 	}
 
 	/** The current user's User, or 'null' if they are not logged in. */
-	public get currentUserValue (): User | null {
+	public get currentUserValue(): User | null {
 		return this.currentUserSubject.value;
 	}
 
 	/** Whether or not the current user is logged in. */
-	public get loggedInValue (): boolean {
+	public get loggedInValue(): boolean {
 		return this.loggedInSubject.value;
 	}
 
 	/** The Capabilities of the current user. */
-	public get currentUserCapabilitiesValue (): Set<string> {
+	public get currentUserCapabilitiesValue(): Set<string> {
 		return this.currentUserCapabilitiesSubject.value;
 	}
 
 	/**
-	 * Updates the current user, and provides a way for callers to check if the update was succesful
+	 * Updates the current user, and provides a way for callers to check if the update was succesful.
+	 *
 	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
 	 */
-	public updateCurrentUser (): Observable<boolean> {
+	public updateCurrentUser(): Observable<boolean> {
 		return this.api.getCurrentUser().pipe(first()).pipe(map(
 			(u: User) => {
 				this.currentUserSubject.next(u);
@@ -81,8 +82,7 @@ export class AuthenticationService {
 				return true;
 			},
 			e => {
-				console.error("Failed to update current user");
-				console.debug("User update error: ", e);
+				console.error("Failed to update current user:", e);
 				return false;
 			}
 		));
@@ -94,7 +94,7 @@ export class AuthenticationService {
 	 * @param u The user's username.
 	 * @param p The user's password.
 	 */
-	public login (u: string, p: string): Observable<boolean> {
+	public login(u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(
 			(resp) => {
 				if (resp && resp.status === 200) {
