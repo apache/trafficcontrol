@@ -20,6 +20,7 @@ no if $] >= 5.018, warnings => qw( experimental::smartmatch );
 use JSON;
 use File::Basename;
 use File::Path;
+use File::Find;
 use Fcntl qw(:flock);
 use MIME::Base64;
 use Getopt::Long;
