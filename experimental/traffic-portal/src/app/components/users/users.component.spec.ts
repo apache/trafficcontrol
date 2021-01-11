@@ -19,7 +19,7 @@ import { of } from "rxjs";
 
 
 import { User } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { LoadingComponent } from "../loading/loading.component";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { UserCardComponent } from "../user-card/user-card.component";

@@ -65,19 +65,6 @@ describe("DashboardComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("should implement fuzzy search", () => {
-		// letter exclusion
-		component.fuzzControl.setValue("z");
-		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
-		expect(component.fuzzy(component.deliveryServices[1])).toBeFalsy();
-
-		// matches case-insensitively
-		component.fuzzControl.setValue("fb");
-		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
-		expect(component.fuzzy(component.deliveryServices[1])).toBeTruthy();
-
-	});
-
 	it("sets the \"search\" query parameter", () => {
 		expect(true).toBeTruthy();
 	});

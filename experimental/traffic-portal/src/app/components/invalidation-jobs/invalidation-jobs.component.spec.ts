@@ -22,7 +22,7 @@ import { of } from "rxjs";
 import { CustomvalidityDirective } from "../../directives/customvalidity.directive";
 import { OpenableDirective } from "../../directives/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
@@ -42,8 +42,8 @@ describe("InvalidationJobsComponent", () => {
 			cdnId: 0,
 			displayName: "test DS",
 			dscp: 0,
-			geoLimit: GeoLimit.None,
-			geoProvider: GeoProvider.MaxMind,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
 			ipv6RoutingEnabled: true,
 			lastUpdated: new Date(),
 			logsEnabled: true,

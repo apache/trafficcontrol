@@ -11,6 +11,7 @@
 		"experimentalDecorators": true,
 		"importHelpers": true,
 		"strict": true,
+		"emitDecoratorMetadata": true,
 		"target": "es2015",
 		"lib": [
 			"es2018",

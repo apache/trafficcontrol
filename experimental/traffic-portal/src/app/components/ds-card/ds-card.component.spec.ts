@@ -20,7 +20,7 @@ import { of } from "rxjs";
 
 import { LinechartDirective } from "../../directives/linechart.directive";
 import { DeliveryService } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { LoadingComponent } from "../loading/loading.component";
 import { DsCardComponent } from "./ds-card.component";
 
