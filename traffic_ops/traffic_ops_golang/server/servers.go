@@ -444,7 +444,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, errors.New("associated profile must have a cdn associated"))
+			errs = append(errs, fmt.Errorf("no such profileId: '%d'", *s.ProfileID))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
