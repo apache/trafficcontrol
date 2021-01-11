@@ -1,0 +1,73 @@
+import { browser } from 'protractor';
+import { LoginPage } from '../PageObjects/LoginPage.po';
+import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { API } from '../CommonUtils/API';
+import { ServiceCategoriesPage } from '../PageObjects/ServiceCategories.po';
+
+let fs = require('fs')
+let using = require('jasmine-data-provider');
+
+let setupFile = 'Data/ServiceCategories/Setup.json';
+let cleanupFile = 'Data/ServiceCategories/Cleanup.json';
+let filename = 'Data/ServiceCategories/TestCases.json';
+let testData = JSON.parse(fs.readFileSync(filename));
+
+let api = new API();
+let loginPage = new LoginPage();
+let topNavigation = new TopNavigationPage();
+let serviceCategoriesPage = new ServiceCategoriesPage();
+
+describe('Setup API for Service Categories Test', function(){
+    it('Setup', async function(){
+        let setupData = JSON.parse(fs.readFileSync(setupFile));
+        let output = await api.UseAPI(setupData);
+        expect(output).toBeNull();
+    })
+})
+using(testData.ServiceCategories, async function(serviceCategoriesData){
+    using(serviceCategoriesData.Login, function(login){
+        describe('Traffic Portal - ServiceCategories - ' + login.description, function(){
+            it('can login', async function(){
+                browser.get(browser.params.baseUrl);
+                await loginPage.Login(login.username, login.password);
+                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+            })
+            it('can open service categories page', async function(){
+                await serviceCategoriesPage.OpenServicesMenu();
+                await serviceCategoriesPage.OpenServiceCategoriesPage();
+            })
+
+            using(serviceCategoriesData.Add, function (add) {
+                it(add.description, async function () {
+                    expect(await serviceCategoriesPage.CreateServiceCategories(add)).toBeTruthy();
+                    await serviceCategoriesPage.OpenServiceCategoriesPage();
+                })
+            })
+            using(serviceCategoriesData.Update, function (update) {
+                it(update.description, async function () {
+                    await serviceCategoriesPage.SearchServiceCategories(update.Name);
+                    expect(await serviceCategoriesPage.UpdateServiceCategories(update)).toBeTruthy();
+                    await serviceCategoriesPage.OpenServiceCategoriesPage();
+                })
+            })
+            using(serviceCategoriesData.Remove, function (remove) {
+                it(remove.description, async function () {
+                    await serviceCategoriesPage.SearchServiceCategories(remove.Name);
+                    expect(await serviceCategoriesPage.DeleteServiceCategories(remove)).toBeTruthy();
+                    await serviceCategoriesPage.OpenServiceCategoriesPage();
+                })
+            })
+            it('can logout', async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
+        })
+    })
+})
+
+describe('Clean Up API for Service Categories Test', function () {
+    it('Cleanup', async function () {
+        let cleanupData = JSON.parse(fs.readFileSync(cleanupFile));
+        let output = await api.UseAPI(cleanupData);
+        expect(output).toBeNull();
+    })
+})

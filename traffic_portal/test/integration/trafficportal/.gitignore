@@ -1,0 +1,6 @@
+node_modules
+GeneratedCode
+.DS_Store
+ProtractorTestReport.html
+xmlresults.xml
+Reports

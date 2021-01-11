@@ -1,0 +1,306 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "CreateServers",
+            "Route": "/servers",
+            "Method": "post",
+            "Data": [
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver1",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver2",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver3",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 13,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver4",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver5",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 6,
+                    "cdnId": 2,
+                    "domainName": "test.net",
+                    "hostName": "testserver6",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 13,
+                    "updPending": false
+                }
+            ]
+        },
+        {
+            "Action": "CreateServerCapabilities",
+            "Route": "/server_capabilities",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "servercap1"
+                },
+                {
+                    "name": "servercap2"
+                },
+                {
+                    "name": "servercap3"
+                },
+                {
+                    "name": "servercap4"
+                }
+            ]
+        }
+    ]
+}
