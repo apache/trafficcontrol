@@ -150,6 +150,7 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 my $unixtime       = time();
+my %six_four_four = map { $_ => 1 } qw(records.config);
 my $hostname_short = `/bin/hostname -s`;
 if ($override_hostname_short ne '') {
 	$hostname_short = $override_hostname_short;
@@ -184,6 +185,7 @@ my $YUM_OPTS = "";
 
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_CTL = $TS_HOME . "/bin/traffic_ctl";
+my $TS_ETC 		= $TS_HOME . "/etc/trafficserver";
 
 my $out          = `/usr/bin/yum $YUM_OPTS clean expire-cache 2>&1`;
 my $return       = &check_output($out);
@@ -262,6 +264,8 @@ if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->
 		$traffic_ctl_needed++;
 	}
 }
+
+find(\&fix_file_perms, $TS_ETC);
 
 &start_restart_services();
 
@@ -2505,6 +2509,17 @@ sub backup_file {
 		close $fh;
 	}
 	return 0;
+}
+
+sub fix_file_perms {
+	my $file = $File::Find::name;
+	if (-f $file) {
+		if ( $six_four_four{$_}) {
+			chmod oct(644), $file
+		} else {
+			chmod oct(600), $file
+		}
+	}
 }
 
 sub adv_preprocessing_remap {
