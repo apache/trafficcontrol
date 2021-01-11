@@ -119,25 +119,26 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	return &data, nil
 }
 
-func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, error) {
+func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, ReqInf, error) {
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
-		return nil, err
+		return nil, ReqInf{}, err
 	}
-	_, err = put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data, header)
+	reqInf, err := put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data, header)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data, nil
+	return &data, reqInf, nil
 }
 
 // UpdateTenant updates the Tenant matching the ID it's passed with
 // the Tenant it is passed.
 // Deprecated: UpdateTenant will be removed in 6.0. Use UpdateTenantWithHdr.
 func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
-	return to.UpdateTenantWithHdr(id, t, nil)
+	data, _, err := to.UpdateTenantWithHdr(id, t, nil)
+	return data, err
 }
 
 // DeleteTenant deletes the Tenant matching the ID it's passed.

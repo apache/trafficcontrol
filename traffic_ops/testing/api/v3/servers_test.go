@@ -204,7 +204,7 @@ func UpdateTestServerStatus(t *testing.T) {
 
 	respServer := resp.Response[0]
 
-	if *remoteServer.StatusLastUpdated != *respServer.StatusLastUpdated {
+	if !remoteServer.StatusLastUpdated.Equal(*respServer.StatusLastUpdated) {
 		t.Errorf("since status didnt change, no change in 'StatusLastUpdated' time was expected. Difference observer: old value: %v, new value: %v",
 			remoteServer.StatusLastUpdated.String(), respServer.StatusLastUpdated.String())
 	}
@@ -631,6 +631,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
 		originHostname:                   false,
+		"denver-mso-org-02":              false,
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
 		"atlanta-mid-16":                 false,
