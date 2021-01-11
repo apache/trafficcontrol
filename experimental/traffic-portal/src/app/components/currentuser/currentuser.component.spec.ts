@@ -13,6 +13,8 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { of } from "rxjs";
+import { UserService } from "src/app/services/api";
 
 
 import { User } from "../../models";
@@ -24,6 +26,14 @@ describe("CurrentuserComponent", () => {
 	let fixture: ComponentFixture<CurrentuserComponent>;
 
 	beforeEach(waitForAsync(() => {
+		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
+		mockAPIService.getRoles.and.returnValue(of([]));
+		mockAPIService.getCurrentUser.and.returnValue(of({
+			id: 0,
+			newUser: false,
+			username: "test"
+		}));
+
 		TestBed.configureTestingModule({
 			declarations: [
 				CurrentuserComponent,
@@ -32,8 +42,9 @@ describe("CurrentuserComponent", () => {
 			imports: [
 				HttpClientModule
 			]
-		})
-		.compileComponents();
+		});
+		TestBed.overrideProvider(UserService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -17,12 +17,12 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
+import { InvalidationJobService } from "src/app/services/api";
 
 
 import { CustomvalidityDirective } from "../../directives/customvalidity.directive";
 import { OpenableDirective } from "../../directives/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
-import { APIService } from "../../services/api/apiservice";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
@@ -72,7 +72,7 @@ describe("InvalidationJobsComponent", () => {
 			]
 		});
 
-		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
+		TestBed.overrideProvider(InvalidationJobService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 

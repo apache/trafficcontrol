@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { SSHCellRendererComponent } from "./ssh-cell-renderer.component";
@@ -21,7 +22,8 @@ describe("SshCellRendererComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ SSHCellRendererComponent ]
+			declarations: [ SSHCellRendererComponent ],
+			imports: [HttpClientModule]
 		})
 		.compileComponents();
 	}));

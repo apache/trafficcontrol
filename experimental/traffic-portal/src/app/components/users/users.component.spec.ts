@@ -51,7 +51,7 @@ describe("UsersComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule
-			]
+			],
 		});
 		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
 		TestBed.compileComponents();

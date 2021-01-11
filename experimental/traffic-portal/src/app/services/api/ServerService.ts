@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import { Observable } from "rxjs";
@@ -26,6 +27,11 @@ import { APIService } from "./apiservice";
  */
 @Injectable({providedIn: "root"})
 export class ServerService extends APIService {
+
+	constructor(http: HttpClient) {
+		super(http);
+	}
+
 	/**
 	 * Retrieves all servers.
 	 */

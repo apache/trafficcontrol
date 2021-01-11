@@ -15,6 +15,8 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import { of } from "rxjs";
+import { UserService } from "src/app/services/api";
 
 
 import { Protocol } from "../../models";
@@ -26,6 +28,15 @@ describe("NewDeliveryServiceComponent", () => {
 	let fixture: ComponentFixture<NewDeliveryServiceComponent>;
 
 	beforeEach(waitForAsync(() => {
+		// mock the API
+		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
+		mockAPIService.getRoles.and.returnValue(of([]));
+		mockAPIService.getCurrentUser.and.returnValue(of({
+			id: 0,
+			newUser: false,
+			username: "test"
+		}));
+
 		TestBed.configureTestingModule({
 			declarations: [
 				NewDeliveryServiceComponent,
@@ -37,8 +48,9 @@ describe("NewDeliveryServiceComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule
 			]
-		})
-		.compileComponents();
+		});
+		TestBed.overrideProvider(UserService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {
@@ -71,17 +83,21 @@ describe("NewDeliveryServiceComponent", () => {
 	});
 
 	it("should set meta info properly", () => {
-		component.step = 1;
-		component.displayName.setValue("test._QUEST");
-		component.infoURL.setValue("ftp://this-is-a-weird.url/");
-		component.description.setValue("test description");
-		component.setMetaInformation();
+		try {
+			component.step = 1;
+			component.displayName.setValue("test._QUEST");
+			component.infoURL.setValue("ftp://this-is-a-weird.url/");
+			component.description.setValue("test description");
+			component.setMetaInformation();
 
-		expect(component.deliveryService.displayName).toEqual("test._QUEST", "test._QUEST");
-		expect(component.deliveryService.xmlId).toEqual("test-quest", "test-quest");
-		expect(component.deliveryService.longDesc).toEqual("test description", "test description");
-		expect(component.deliveryService.infoUrl).toEqual("ftp://this-is-a-weird.url/", "ftp://this-is-a-weird.url/");
-		expect(component.step).toEqual(2, "two");
+			expect(component.deliveryService.displayName).toEqual("test._QUEST", "test._QUEST");
+			expect(component.deliveryService.xmlId).toEqual("test-quest", "test-quest");
+			expect(component.deliveryService.longDesc).toEqual("test description", "test description");
+			expect(component.deliveryService.infoUrl).toEqual("ftp://this-is-a-weird.url/", "ftp://this-is-a-weird.url/");
+			expect(component.step).toEqual(2, "two");
+		} catch (e) {
+			console.error("Error occurred:", e);
+		}
 	});
 
 	// it('should set infrastructure info properly', () => {

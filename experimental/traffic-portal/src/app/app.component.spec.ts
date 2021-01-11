@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { HttpClientModule } from "@angular/common/http";
 import { TestBed, waitForAsync } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
@@ -26,6 +27,7 @@ describe("AppComponent", () => {
 				AppComponent
 			],
 			imports: [
+				HttpClientModule,
 				RouterTestingModule
 			],
 		}).compileComponents();

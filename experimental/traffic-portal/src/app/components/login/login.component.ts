@@ -59,6 +59,9 @@ export class LoginComponent implements OnInit {
 				if (response) {
 					this.router.navigate([this.returnURL]);
 				}
+			},
+			(err: Error) => {
+				console.error("login failed:", err);
 			}
 		);
 	}

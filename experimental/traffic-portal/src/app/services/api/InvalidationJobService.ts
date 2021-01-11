@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import { Observable } from "rxjs";
@@ -42,6 +43,10 @@ interface JobOpts {
  */
 @Injectable({providedIn: "root"})
 export class InvalidationJobService extends APIService {
+
+	constructor(http: HttpClient) {
+		super(http);
+	}
 
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.

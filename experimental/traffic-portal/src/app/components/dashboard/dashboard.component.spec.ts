@@ -15,6 +15,8 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import { of } from "rxjs";
+import { DeliveryServiceService } from "src/app/services/api";
 
 
 import { LinechartDirective } from "../../directives/linechart.directive";
@@ -29,6 +31,9 @@ describe("DashboardComponent", () => {
 	let fixture: ComponentFixture<DashboardComponent>;
 
 	beforeEach(waitForAsync(() => {
+		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
+		mockAPIService.getDeliveryServices.and.returnValue(of([]));
+
 		TestBed.configureTestingModule({
 		declarations: [
 			DashboardComponent,
@@ -43,8 +48,9 @@ describe("DashboardComponent", () => {
 			ReactiveFormsModule,
 			RouterTestingModule
 		]
-		})
-		.compileComponents();
+		});
+		TestBed.overrideProvider(DeliveryServiceService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {
