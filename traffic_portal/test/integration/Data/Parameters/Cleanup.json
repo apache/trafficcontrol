@@ -1,0 +1,22 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "DeleteParameters",
+            "Route" : "/parameters",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/parameters/",
+                    "getRequest": [
+                        {
+                            "route": "/parameters",
+                            "queryKey": "name",
+                            "queryValue": "TPParamtest2",
+                            "replace": "route"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1248 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "CreateCacheGroup",
+            "Route" : "/cachegroups",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "CacheGroupEdge",
+                    "shortName": "CGEdge",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdge2",
+                    "shortName": "CGEdge2",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                }, 
+                {
+                    "name": "CacheGroupEdge3",
+                    "shortName": "CGEdge3",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdge4",
+                    "shortName": "CGEdge4",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdge5",
+                    "shortName": "CGEdge5",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdge6",
+                    "shortName": "CGEdge6",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupMid",
+                    "shortName": "CGMid",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 24
+                },
+                {
+                    "name": "CacheGroupMid2",
+                    "shortName": "CGMid2",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 24
+                },
+                {
+                    "name": "CacheGroupOrg",
+                    "shortName": "CGOrg",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 25
+                },
+                {
+                    "name": "CacheGroupEdgeOp",
+                    "shortName": "CGEdgeOp",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdgeOp2",
+                    "shortName": "CGEdgeOp2",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                }, 
+                {
+                    "name": "CacheGroupEdgeOp3",
+                    "shortName": "CGEdgeOp3",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdgeOp4",
+                    "shortName": "CGEdgeOp4",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdgeOp5",
+                    "shortName": "CGEdgeOp5",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupEdgeOp6",
+                    "shortName": "CGEdgeOp6",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 23
+                },
+                {
+                    "name": "CacheGroupMidOp",
+                    "shortName": "CGMidOp",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 24
+                },
+                {
+                    "name": "CacheGroupMidOp2",
+                    "shortName": "CGMidOp2",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 24
+                },
+                {
+                    "name": "CacheGroupOrgOp",
+                    "shortName": "CGOrgOp",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                            "DEEP_CZ",
+                            "CZ",
+                            "GEO"
+                    ],
+                    "typeId": 25
+                }
+            ]
+        },
+        {
+            "Action": "CreateServers",
+            "Route": "/servers",
+            "Method": "post",
+            "Data": [
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver1",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge2",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver2",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge3",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver3",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge4",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver4",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge5",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver5",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdge6",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver6",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupMid",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver7",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupMid2",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver8",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupOrg",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver9",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver10",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp2",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver11",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp3",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver12",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp4",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver13",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp5",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver14",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupEdgeOp6",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver15",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupMidOp",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver16",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupMidOp2",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver17",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                },
+                {
+                    "cachegroupId": 0,
+                    "cdnId": 2,
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "CacheGroupOrgOp",
+                            "replace": "cachegroupId"
+                        }
+                    ],
+                    "domainName": "test.net",
+                    "hostName": "topologiesserver18",
+                    "httpsPort": 443,
+                    "iloIpAddress": "",
+                    "iloIpGateway": "",
+                    "iloIpNetmask": "",
+                    "iloPassword": "",
+                    "iloUsername": "",
+                    "interfaces": [
+                        {
+                            "ipAddresses": [
+                                {
+                                    "address": "::1",
+                                    "gateway": "::2",
+                                    "serviceAddress": true
+                                }
+                            ],
+                            "maxBandwidth": null,
+                            "monitor": true,
+                            "mtu": 1500,
+                            "name": "eth0"
+                        }
+                    ],
+                    "interfaceMtu": 1500,
+                    "interfaceName": "eth0",
+                    "ip6Address": "::1",
+                    "ip6Gateway": "::2",
+                    "ipAddress": "0.0.0.1",
+                    "ipGateway": "0.0.0.2",
+                    "ipNetmask": "255.255.255.0",
+                    "mgmtIpAddress": "",
+                    "mgmtIpGateway": "",
+                    "mgmtIpNetmask": "",
+                    "offlineReason": "",
+                    "physLocationId": 1,
+                    "profileId": 34,
+                    "routerHostName": "",
+                    "routerPortName": "",
+                    "statusId": 3,
+                    "tcpPort": 80,
+                    "typeId": 12,
+                    "updPending": false
+                }
+            ]
+        },
+        {
+            "Action": "CreateTopologies",
+            "Route" : "/topologies",
+            "Method": "post",
+            "Data": [
+                {
+                    "name":"TPTopologies5",
+                    "description":"TEST",
+                    "nodes":[
+                        {
+                            "cachegroup":"CacheGroupEdge",
+                            "parent":{
+                                "type":"ROOT"
+                            },
+                            "secParent":{
+                                "name":"",
+                                "type":""
+                            },
+                            "parents":[]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

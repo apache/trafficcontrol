@@ -1,0 +1,40 @@
+{
+    "TenancyAccess": [
+        {
+            "Login": [
+                {
+                    "description": "Admin Role with Child Tenancy",
+                    "username": "TPAdminChild",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Operator Role with Child Tenancy",
+                    "username": "TPOperatorChild",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Admin Role with Different Tenancy",
+                    "username": "TPAdminDiff",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Operator Role with Different Tenancy",
+                    "username": "TPOperatorDiff",
+                    "password": "pa$$word"
+                }
+            ],
+
+            "DeliveryService": [
+                {   
+                    "description": "Validate undefined output when searching for a Delivery Service this Tenant does not have access to",
+                    "DeliveryService": "dst1"
+                }
+            ]
+        }
+    ]
+}
+
+
+
+
+          

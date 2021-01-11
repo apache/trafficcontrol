@@ -1,0 +1,22 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "DeleteDeliveryServices",
+            "Route" : "/deliveryservices",
+            "Method" : "delete",
+            "Data" : [
+                {
+                    "route": "/deliveryservices/",
+                    "getRequest": [
+                        {
+                            "route": "/deliveryservices",
+                            "queryKey": "xmlId",
+                            "queryValue": "dst1",
+                            "replace": "route"                           
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

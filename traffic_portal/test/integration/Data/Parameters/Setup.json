@@ -1,0 +1,17 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "CreateParameters",
+            "Route": "/parameters",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "TPParamtest2",
+                    "value": "quest",
+                    "configFile": "records.config",
+                    "secure": true
+                }
+            ]
+        }
+    ]
+}
