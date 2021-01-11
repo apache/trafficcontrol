@@ -484,36 +484,7 @@ func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	}
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
-	query := `
-SELECT s.ID, ip.address FROM server s
-JOIN profile p on p.Id = s.Profile
-JOIN interface i on i.server = s.ID
-JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
-WHERE p.id = $1
-`
-	var rows *sql.Rows
-	var err error
-	//ProfileID already validated
-	if s.ID != nil {
-		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
-	} else {
-		rows, err = tx.Query(query, *s.ProfileID)
-	}
-	if err != nil {
-		errs = append(errs, errors.New("unable to determine IP address uniqueness"))
-	} else if rows != nil {
-		defer rows.Close()
-		for rows.Next() {
-			var id int
-			var ipaddress string
-			err = rows.Scan(&id, &ipaddress)
-			if err != nil {
-				errs = append(errs, errors.New("unable to determine IP address uniqueness"))
-			} else if ((s.IPAddress != nil && ipaddress == *s.IPAddress) || (s.IP6Address != nil && ipaddress == *s.IP6Address)) && (s.ID == nil || *s.ID != id) {
-				errs = append(errs, fmt.Errorf("there exists a server with id %v on the same profile that has the same IP address %s", id, ipaddress))
-			}
-		}
-	}
+
 	return util.JoinErrs(errs)
 }
 
@@ -1179,10 +1150,12 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 	ifaceArgs := make([]interface{}, 0, len(interfaces))
 	ipArgs := make([]interface{}, 0, len(interfaces))
 	for i, iface := range interfaces {
+		iface.Monitor = true
 		argStart := i * 5
 		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
 		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id)
 		for _, ip := range iface.IPAddresses {
+			ip.ServiceAddress = true
 			argStart = len(ipArgs)
 			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
 			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, id, ip.ServiceAddress)
@@ -1194,6 +1167,7 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 
 	_, err := tx.Exec(ifaceQry, ifaceArgs...)
 	if err != nil {
+		tx.Rollback()
 		return api.ParseDBError(err)
 	}
 
@@ -1202,6 +1176,7 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 
 	_, err = tx.Exec(ipQry, ipArgs...)
 	if err != nil {
+		tx.Rollback()
 		return api.ParseDBError(err)
 	}
 
@@ -1538,7 +1513,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}

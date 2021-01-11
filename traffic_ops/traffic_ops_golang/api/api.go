@@ -745,6 +745,16 @@ func toCamelCase(str string) string {
 	return strings.Replace(string(mutable[:]), "_", "", -1)
 }
 
+// parses pq errors for any trigger based conflicts
+func parseTriggerConflicts(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`^(.*?)conflicts`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s", toCamelCase(match[0])), nil, http.StatusBadRequest
+}
+
 // parses pq errors for not null constraint
 func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
@@ -858,6 +868,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseTriggerConflicts(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
