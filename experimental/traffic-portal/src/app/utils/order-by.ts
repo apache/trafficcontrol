@@ -47,6 +47,8 @@ function cmpr(a: unknown, b: unknown): number {
 	return 1;
 }
 
+// This can truly be anything, and there's no good way to type it to avoid 'any', so just this once I'm doing it.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Returns the passed array sorted by the properties of each element as given by
  * the caller.
@@ -67,8 +69,9 @@ function cmpr(a: unknown, b: unknown): number {
  * @param property Either a single property name or an array of property names to sort by - in descending order of importance.
  * @returns The sorted array
  */
-export function orderBy<T extends Record<string | number | symbol, unknown>>(value: Array<T>, property: string | Array<string>): Array<T> {
-	return value.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+export function orderBy<T extends any>(value: Array<T>, property: string | Array<string>): Array<T> {
+	return value.sort((a: any, b: any) => {
+		/* eslint-enable @typescript-eslint/no-explicit-any */
 
 		let props: Array<string>;
 		if (typeof(property) === "string") {

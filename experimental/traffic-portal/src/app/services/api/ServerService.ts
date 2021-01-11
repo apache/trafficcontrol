@@ -17,7 +17,7 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { Server, Servercheck, checkMap } from "../../models";
+import { Server, Servercheck } from "../../models";
 
 import { APIService } from "./apiservice";
 
@@ -66,13 +66,11 @@ export class ServerService extends APIService {
 				if (id) {
 					for (const sc of response) {
 						if (sc.id === id) {
-							sc.checkMap = checkMap;
 							return sc;
 						}
 					}
-					throw new ReferenceError(`No server #${id} found in checks response`);
+					throw new Error(`No server #${id} found in checks response`);
 				}
-				response.forEach(x=>x.checkMap = checkMap);
 				return response;
 			}
 		));

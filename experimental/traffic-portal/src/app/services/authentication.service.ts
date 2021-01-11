@@ -16,7 +16,7 @@ import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable } from "rxjs";
 import { first, map } from "rxjs/operators";
 
-import { Role, User } from "../models";
+import { User } from "../models";
 
 import { UserService } from "./api";
 
@@ -74,14 +74,14 @@ export class AuthenticationService {
 				this.currentUserSubject.next(u);
 				if (u.role) {
 					this.api.getRoles(u.role).pipe(first()).pipe(map(
-						(r: Role) => {
+						r => {
 							this.currentUserCapabilitiesSubject.next(new Set<string>(r.capabilities));
 						}
 					));
 				}
 				return true;
 			},
-			e => {
+			(e: Error) => {
 				console.error("Failed to update current user:", e);
 				return false;
 			}

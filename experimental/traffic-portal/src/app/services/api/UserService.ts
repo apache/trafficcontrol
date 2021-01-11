@@ -50,46 +50,34 @@ export class UserService extends APIService {
 		return this.get(path).pipe(map(r => (r.body as {response: User}).response));
 	}
 
+	public getUsers(nameOrID: string | number): Observable<User>;
+	public getUsers(): Observable<Array<User>>;
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
 	 * @returns An Observable that will emit an Array of User objects.
 	 */
-	public getUsers(nameOrID?: string | number): Observable<Array<User> | User | null> {
+	public getUsers(nameOrID?: string | number): Observable<Array<User> | User> {
 		const path = `/api/${this.apiVersion}/users`;
 		if (nameOrID) {
 			switch (typeof nameOrID) {
 				case "string":
 					return this.get(`${path}?username=${encodeURIComponent(nameOrID)}`).pipe(map(
-						r => {
-							for (const u of (r.body as {response: Array<User>}).response) {
-								if (u.username === nameOrID) {
-									return u;
-								}
-							}
-							return null;
-						}
+						r => (r.body as {response: [User]}).response
 					));
 				case "number":
 					return this.get(`${path}?id=${nameOrID}`).pipe(map(
-						r => {
-							for (const u of (r.body as {response: Array<User>}).response) {
-								if (u.id === nameOrID) {
-									return u;
-								}
-							}
-							return null;
-						}
+						r => (r.body as {response: [User]}).response
 					));
 				default:
-					throw new TypeError(`expected a username or ID, got '${typeof (nameOrID)}'`);
+					throw new Error(`expected a username or ID, got '${typeof (nameOrID)}'`);
 			}
 		}
 		return this.get(path).pipe(map(r => (r.body as {response: Array<User>}).response));
 	}
 
 	/** Fetches the Role with the given ID. */
-	public getRoles (nameOrID: number | string): Observable<Role | null>;
+	public getRoles (nameOrID: number | string): Observable<Role>;
 	/** Fetches all Roles. */
 	public getRoles (): Observable<Array<Role>>;
 	/**
@@ -101,7 +89,7 @@ export class UserService extends APIService {
 	 * `name`/`id` was passed
 	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
 	 */
-	public getRoles(nameOrID?: string | number): Observable<Array<Role> | Role | null> {
+	public getRoles(nameOrID?: string | number): Observable<Array<Role> | Role> {
 		const path = `/api/${this.apiVersion}/roles`;
 		if (nameOrID) {
 			switch (typeof nameOrID) {
@@ -113,7 +101,7 @@ export class UserService extends APIService {
 									return role;
 								}
 							}
-							return null;
+							throw new Error(`Traffic Ops had no Role with name '${nameOrID}'`);
 						}
 					));
 					break;
@@ -125,7 +113,7 @@ export class UserService extends APIService {
 									return role;
 								}
 							}
-							return null;
+							throw new Error(`Traffic Ops had no Role with ID '${nameOrID}'`);
 						}
 					));
 					break;

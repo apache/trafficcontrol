@@ -38,12 +38,12 @@ export class InvalidationJobsComponent implements OnInit {
 	public jobs: Array<InvalidationJob>;
 
 	/** The current date/time when the page loads */
-	public now: Date;
+	public now: Date = new Date();
 
 	/** Whether or not to show the dialog for creating a new job. */
 	public showDialog: Subject<boolean>;
 
-	private dsId: number;
+	private dsId = -1;
 
 
 	/** Control for users to enter new content invalidation jobs. */

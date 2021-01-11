@@ -28,7 +28,7 @@ import { AuthenticationService } from "../../services";
 	templateUrl: "./login.component.html"
 })
 export class LoginComponent implements OnInit {
-	private returnURL: string;
+	private returnURL = "";
 
 	/** The user-entered username. */
 	public u = new FormControl("");

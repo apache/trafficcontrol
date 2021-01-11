@@ -75,8 +75,8 @@ export class UsersComponent implements OnInit {
 		}
 
 		this.api.getUsers().pipe(first()).subscribe(
-			(r: Array<User>) => {
-				this.users = orderBy(r, "fullName") as Array<User>;
+			r => {
+				this.users = orderBy(r, "fullName");
 				this.loading = false;
 			}
 		);
