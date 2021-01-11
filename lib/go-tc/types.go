@@ -69,7 +69,7 @@ func GetTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
 // returns "" and an error if the typeID is invalid. If valid, the type's name is returned.
 func ValidateTypeID(tx *sql.Tx, typeID *int, expectedUseInTable string) (string, error) {
 	if typeID == nil {
-		return "", errors.New("missing type")
+		return "", errors.New("missing property: typeId")
 	}
 
 	typeName, useInTable, ok, err := GetTypeData(tx, *typeID)
