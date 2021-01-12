@@ -34,6 +34,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5364](https://github.com/apache/trafficcontrol/issues/5364) - Cascade server deletes to delete corresponding IP addresses and interfaces
 - [#5390](https://github.com/apache/trafficcontrol/issues/5390) - Improve the way TO deals with delivery service server assignments
 
+### Changed
+- Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
+
 ## [5.0.0] - 2020-10-20
 ### Added
 - Traffic Ops Ort: Disabled ntpd verification (ntpd is deprecated in CentOS)
