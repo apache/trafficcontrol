@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
 - Added API endpoints for ACME accounts
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
+- Traffic Ops: [#5339](https://github.com/apache/trafficcontrol/issues/5339) - Ensure Changelog entries for SSL key changes
 
 ### Fixed
 - [#5382](https://github.com/apache/trafficcontrol/issues/5382) - Fixed API documentation and TP helptext for "Max DNS Answers" field with respect to DNS, HTTP, Steering Delivery Service
