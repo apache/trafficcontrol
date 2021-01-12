@@ -444,7 +444,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, errors.New("associated profile must have a cdn associated"))
+			errs = append(errs, fmt.Errorf("no such profileId: '%d'", *s.ProfileID))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
@@ -1792,12 +1792,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := topology_validation.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("server is the last one in its cachegroup, which is used by a topology: "+err.Error()), nil)
-		return
-	}
-
-	userErr, sysErr, errCode = deleteInterfaces(id, tx)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 

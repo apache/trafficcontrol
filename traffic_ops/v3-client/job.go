@@ -16,11 +16,9 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
-	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -28,64 +26,23 @@ import (
 
 // Creates a new Content Invalidation Job
 func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, ReqInf, error) {
-	remoteAddr := (net.Addr)(nil)
-	reqBody, err := json.Marshal(job)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+`/jobs`, reqBody, nil)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(apiBase+`/jobs`, job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // Deletes a Content Invalidation Job
 func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, ReqInf, error) {
-	remoteAddr := (net.Addr)(nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	resp, remoteAddr, err := to.request(http.MethodDelete, fmt.Sprintf("%v/jobs?id=%v", apiBase, jobID), nil, nil)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.del(fmt.Sprintf("%s/jobs?id=%d", apiBase, jobID), nil, &alerts)
 	return alerts, reqInf, err
 
 }
 
 // Updates a Content Invalidation Job
 func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, ReqInf, error) {
-	remoteAddr := (net.Addr)(nil)
-	reqBody, err := json.Marshal(job)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	if job.ID == nil {
-		return tc.Alerts{}, reqInf, errors.New("job id cannot be nil")
-	}
-	resp, remoteAddr, err := to.request(http.MethodPut, fmt.Sprintf(`%v/jobs?id=%v`, apiBase, *job.ID), reqBody, nil)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.put(fmt.Sprintf(`%s/jobs?id=%d`, apiBase, *job.ID), job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -95,31 +52,18 @@ func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, Req
 //
 // Deprecated, use GetInvalidationJobs instead
 func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqInf, error) {
-	path := apiBase + "/jobs"
-	if deliveryServiceID != nil || userID != nil {
-		path += "?"
-		if deliveryServiceID != nil {
-			path += "dsId=" + strconv.Itoa(*deliveryServiceID)
-			if userID != nil {
-				path += "&"
-			}
-		}
-		if userID != nil {
-			path += "userId=" + strconv.Itoa(*userID)
-		}
+	params := url.Values{}
+	if deliveryServiceID != nil {
+		params.Add("dsId", strconv.Itoa(*deliveryServiceID))
 	}
-
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
+	if userID != nil {
+		params.Add("userId", strconv.Itoa(*userID))
 	}
-	defer resp.Body.Close()
-
+	path := apiBase + "/jobs?" + params.Encode()
 	data := struct {
 		Response []tc.Job `json:"response"`
 	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(path, nil, &data)
 	return data.Response, reqInf, err
 }
 
@@ -139,81 +83,74 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqIn
 // be a string, in which case it should be the username of the desired user, or it may be an actual
 // tc.User or tc.UserCurrent structure.
 func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc.InvalidationJob, ReqInf, error) {
+	const DSIDKey = "dsId"
+	const DSKey = "deliveryService"
+	const UserKey = "userId"
+	const CreatedKey = "createdBy"
+
+	params := url.Values{}
+	if ds != nil {
+		d := *ds
+		switch t := d.(type) {
+		case uint:
+			params.Add(DSIDKey, strconv.FormatUint(uint64(d.(uint)), 10))
+		case float64:
+			params.Add(DSIDKey, strconv.FormatInt(int64(d.(float64)), 10))
+		case int:
+			params.Add(DSIDKey, strconv.FormatInt(int64(d.(int)), 10))
+		case string:
+			params.Add(DSKey, d.(string))
+		case tc.DeliveryServiceNullable:
+			if d.(tc.DeliveryServiceNullable).XMLID != nil {
+				params.Add(DSKey, *d.(tc.DeliveryServiceNullable).XMLID)
+			} else if d.(tc.DeliveryServiceNullable).ID != nil {
+				params.Add(DSIDKey, strconv.FormatInt(int64(*d.(tc.DeliveryServiceNullable).ID), 10))
+			} else {
+				return nil, ReqInf{}, errors.New("no non-nil identifier on passed Delivery Service")
+			}
+		default:
+			return nil, ReqInf{}, fmt.Errorf("invalid type for argument 'ds': %T*", t)
+		}
+	}
+	if user != nil {
+		u := *user
+		switch t := u.(type) {
+		case uint:
+			params.Add(UserKey, strconv.FormatUint(uint64(u.(uint)), 10))
+		case float64:
+			params.Add(UserKey, strconv.FormatInt(int64(u.(float64)), 10))
+		case int:
+			params.Add(UserKey, strconv.FormatInt(u.(int64), 10))
+		case string:
+			params.Add(CreatedKey, u.(string))
+		case tc.User:
+			if u.(tc.User).Username != nil {
+				params.Add(CreatedKey, *u.(tc.User).Username)
+			} else if u.(tc.User).ID != nil {
+				params.Add(UserKey, strconv.FormatInt(int64(*u.(tc.User).ID), 10))
+			} else {
+				return nil, ReqInf{}, errors.New("no non-nil identifier on passed User")
+			}
+		case tc.UserCurrent:
+			if u.(tc.UserCurrent).UserName != nil {
+				params.Add(CreatedKey, *u.(tc.UserCurrent).UserName)
+			} else if u.(tc.UserCurrent).ID != nil {
+				params.Add(UserKey, strconv.FormatInt(int64(*u.(tc.UserCurrent).ID), 10))
+			} else {
+				return nil, ReqInf{}, errors.New("no non-nil identifier on passed UserCurrent")
+			}
+		default:
+			return nil, ReqInf{}, fmt.Errorf("invalid type for argument 'user': %T*", t)
+		}
+	}
 	path := apiBase + "/jobs"
-	if ds != nil || user != nil {
-		path += "?"
-
-		if ds != nil {
-			d := *ds
-			switch t := d.(type) {
-			case uint:
-				path += "dsId=" + strconv.FormatUint(uint64(d.(uint)), 10)
-			case float64:
-				path += "dsId=" + strconv.FormatInt(int64(d.(float64)), 10)
-			case int:
-				path += "dsId=" + strconv.FormatInt(int64(d.(int)), 10)
-			case string:
-				path += "deliveryService=" + d.(string)
-			case tc.DeliveryServiceNullable:
-				if d.(tc.DeliveryServiceNullable).XMLID != nil {
-					path += "deliveryService=" + *d.(tc.DeliveryServiceNullable).XMLID
-				} else if d.(tc.DeliveryServiceNullable).ID != nil {
-					path += "dsId=" + strconv.FormatInt(int64(*d.(tc.DeliveryServiceNullable).ID), 10)
-				} else {
-					return nil, ReqInf{}, errors.New("No non-nil identifier on passed Delivery Service!")
-				}
-			default:
-				return nil, ReqInf{}, fmt.Errorf("Invalid type for argument 'ds': %T*", t)
-			}
-
-			if user != nil {
-				path += "&"
-			}
-		}
-
-		if user != nil {
-			u := *user
-			switch t := u.(type) {
-			case uint:
-				path += "userId=" + strconv.FormatUint(uint64(u.(uint)), 10)
-			case float64:
-				path += "userId=" + strconv.FormatInt(int64(u.(float64)), 10)
-			case int:
-				path += "userId=" + strconv.FormatInt(int64(u.(int64)), 10)
-			case string:
-				path += "createdBy=" + u.(string)
-			case tc.User:
-				if u.(tc.User).Username != nil {
-					path += "createdBy=" + *u.(tc.User).Username
-				} else if u.(tc.User).ID != nil {
-					path += "userId=" + strconv.FormatInt(int64(*u.(tc.User).ID), 10)
-				} else {
-					return nil, ReqInf{}, errors.New("No non-nil identifier on passed User!")
-				}
-			case tc.UserCurrent:
-				if u.(tc.UserCurrent).UserName != nil {
-					path += "createdBy=" + *u.(tc.UserCurrent).UserName
-				} else if u.(tc.UserCurrent).ID != nil {
-					path += "userId=" + strconv.FormatInt(int64(*u.(tc.UserCurrent).ID), 10)
-				} else {
-					return nil, ReqInf{}, errors.New("No non-nil identifier on passed UserCurrent!")
-				}
-			default:
-				return nil, ReqInf{}, fmt.Errorf("Invalid type for argument 'user': %T*", t)
-			}
-		}
+	if len(params) > 0 {
+		path += "?" + params.Encode()
 	}
-
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
 
 	data := struct {
 		Response []tc.InvalidationJob `json:"response"`
 	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(path, nil, &data)
 	return data.Response, reqInf, err
 }

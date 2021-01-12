@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 /*
@@ -22,11 +23,8 @@ import (
 
 func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, ReqInf, error) {
 	var data tc.DomainsResponse
-	inf, err := get(to, apiBase+"/cdns/domains", &data, header)
-	if err != nil {
-		return nil, inf, err
-	}
-	return data.Response, inf, nil
+	inf, err := to.get(apiBase+"/cdns/domains", header, &data)
+	return data.Response, inf, err
 }
 
 // Deprecated: GetDomains will be removed in 6.0. Use GetDomainsWithHdr.

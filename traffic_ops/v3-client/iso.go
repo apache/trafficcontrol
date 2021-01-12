@@ -20,9 +20,6 @@ package client
  */
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -36,19 +33,9 @@ const (
 //  key:   Name of OS
 //  value: Directory where the ISO source can be found
 func (to *Session) GetOSVersions() (map[string]string, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_OSVERSIONS, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data struct {
 		Versions tc.OSVersionsResponse `json:"response"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Versions, reqInf, nil
+	reqInf, err := to.get(API_OSVERSIONS, nil, &data)
+	return data.Versions, reqInf, err
 }

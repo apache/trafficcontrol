@@ -14,57 +14,27 @@ package client
    limitations under the License.
 */
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // GetFederationFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
 func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
-	var (
-		path   = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
-		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
-		resp   tc.FederationFederationResolversResponse
-	)
-	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
-	reqInf.RemoteAddr = remoteAddr
-	if err != nil {
-		return resp, reqInf, err
-	}
-	defer httpResp.Body.Close()
-
-	err = json.NewDecoder(httpResp.Body).Decode(&resp)
-
+	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
+	resp := tc.FederationFederationResolversResponse{}
+	reqInf, err := to.get(path, nil, &resp)
 	return resp, reqInf, err
 }
 
 // AssignFederationFederationResolver creates the Federation Resolver 'fr'.
 func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
-	var (
-		path = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID)
-		req  = tc.AssignFederationResolversRequest{
-			Replace:        replace,
-			FedResolverIDs: resolverIDs,
-		}
-		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
-		resp   tc.AssignFederationFederationResolversResponse
-	)
-
-	reqBody, err := json.Marshal(req)
-	if err != nil {
-		return resp, reqInf, err
+	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID)
+	req := tc.AssignFederationResolversRequest{
+		Replace:        replace,
+		FedResolverIDs: resolverIDs,
 	}
-
-	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody, nil)
-	reqInf.RemoteAddr = remoteAddr
-	if err != nil {
-		return resp, reqInf, err
-	}
-	defer httpResp.Body.Close()
-
-	err = json.NewDecoder(httpResp.Body).Decode(&resp)
-
+	resp := tc.AssignFederationFederationResolversResponse{}
+	reqInf, err := to.post(path, req, nil, &resp)
 	return resp, reqInf, err
 }
