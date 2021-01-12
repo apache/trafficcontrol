@@ -267,6 +267,7 @@ if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->
 	}
 }
 
+( $log_level >> $ERROR ) && print "ERROR ensure proper file permissions in $TS_ETC\n";
 find(\&fix_file_perms, $TS_ETC);
 
 &start_restart_services();
@@ -2516,15 +2517,14 @@ sub backup_file {
 # Will maintain file permissions in /opt/trafficserver/etc/trafficserver to 600
 # unless they're added to %perm_exceptions("filename" => octal)
 sub fix_file_perms {
-	( $log_level >> $ERROR ) && print "ERROR ensure proper file permissions in $TS_ETC\n";
 	my $file = $File::Find::name;
 	if (-f $file) {
 		my $mode = sprintf("%03o", (stat($file))[2] & 07777);
 		if ($mode != $default_mode && !$perm_exceptions{$_}) {
-			( $log_level >> $ERROR ) && print "ERROR Permissions for $file not $default_mode Updating.";
+			( $log_level >> $ERROR ) && print "ERROR Permissions for $file not $default_mode Updating.\n";
 			chmod oct($default_mode), $file;
 		} elsif ( $perm_exceptions{$_} && $mode != $perm_exceptions{$_}) {
-			( $log_level >> ERROR ) && print "ERROR Permission exception added for $file setting mode $perm_exceptions{$_}"
+			( $log_level >> $ERROR ) && print "ERROR Permission exception added for $file setting mode $perm_exceptions{$_}\n";
 			chmod oct($perm_exceptions{$_}), $file;
 		}
 	}
