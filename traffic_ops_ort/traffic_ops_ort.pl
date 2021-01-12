@@ -151,7 +151,8 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 my $unixtime       = time();
-my %six_four_four = map { $_ => 1 } qw(records.config);
+my %perm_exceptions = ('records.config' => 644);
+my $default_mode = 600;
 my $hostname_short = `/bin/hostname -s`;
 if ($override_hostname_short ne '') {
 	$hostname_short = $override_hostname_short;
@@ -2512,13 +2513,19 @@ sub backup_file {
 	return 0;
 }
 
+# Will maintain file permissions in /opt/trafficserver/etc/trafficserver to 600
+# unless they're added to %perm_exceptions("filename" => octal)
 sub fix_file_perms {
+	( $log_level >> $ERROR ) && print "ERROR ensure proper file permissions in $TS_ETC\n";
 	my $file = $File::Find::name;
 	if (-f $file) {
-		if ( $six_four_four{$_}) {
-			chmod oct(644), $file
-		} else {
-			chmod oct(600), $file
+		my $mode = sprintf("%03o", (stat($file))[2] & 07777);
+		if ($mode != $default_mode && !$perm_exceptions{$_}) {
+			( $log_level >> $ERROR ) && print "ERROR Permissions for $file not $default_mode Updating.";
+			chmod oct($default_mode), $file;
+		} elsif ( $perm_exceptions{$_} && $mode != $perm_exceptions{$_}) {
+			( $log_level >> ERROR ) && print "ERROR Permission exception added for $file setting mode $perm_exceptions{$_}"
+			chmod oct($perm_exceptions{$_}), $file;
 		}
 	}
 }
