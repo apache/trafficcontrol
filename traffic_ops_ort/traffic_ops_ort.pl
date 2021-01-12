@@ -2524,7 +2524,7 @@ sub fix_file_perms {
 			( $log_level >> $ERROR ) && print "ERROR Permissions for $file not $default_mode Updating.\n";
 			chmod oct($default_mode), $file;
 		} elsif ( $perm_exceptions{$_} && $mode != $perm_exceptions{$_}) {
-			( $log_level >> $ERROR ) && print "ERROR Permission exception added for $file setting mode $perm_exceptions{$_}\n";
+			( $log_level >> $ERROR ) && print "ERROR Permission exception exists for $file setting mode $perm_exceptions{$_}\n";
 			chmod oct($perm_exceptions{$_}), $file;
 		}
 	}
