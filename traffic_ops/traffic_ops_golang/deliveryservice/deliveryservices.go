@@ -49,7 +49,7 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullableV30
 }
 
-// TODeliveryServiceOldDetails is the struct to store the old details while updating a DS
+// TODeliveryServiceOldDetails is the struct to store the old details while updating a DS.
 type TODeliveryServiceOldDetails struct {
 	OldOrgServerFqdn *string
 	OldHostName      string
