@@ -23,7 +23,7 @@ Apache-TrafficControl Package
 
 Contributing
 ============
-When contributing Python code to Apache Traffic Control, please ensure that it passes the provided Pylint configuration file (:atc-file:`traffic_control/clients/python/pylint.rc`).
+When contributing Python code to Apache Traffic Control, please ensure that it passes the provided Pylint configuration file (:atc-file:`clients/python/pylint.rc`).
 
 Package Contents
 ================

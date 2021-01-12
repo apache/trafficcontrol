@@ -10,10 +10,10 @@ The official installation method is to use ``pip`` to install directly from from
 .. code-block:: shell
 	:caption: Install Using 'pip' From GitHub
 
-	pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
+	pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=clients/python"
 
 	# or
-	# pip install git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
+	# pip install git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=clients/python"
 
 Local Installation
 ------------------
@@ -23,7 +23,7 @@ The preferred method is to use ``pip`` to install locally. Starting from the rep
 	:linenos:
 	:caption: Local Installation of Python Client
 
-	cd traffic_control/clients/python
+	cd clients/python
 	pip install .
 
 	# The above will install using the system's default Python interpreter - to use a specific
@@ -59,7 +59,7 @@ Development Dependencies
 ------------------------
 To install the development dependencies, first ensure that your system has ``pip`` and ``setuptools`` then use ``pip`` to install the development environment.
 
-.. note:: Currently, the development environment only requires `Pylint <https://www.pylint.org/>`_, which is a simple linter for which a configuration file is provided at :file:`traffic_control/clients/python/pylint.rc`.
+.. note:: Currently, the development environment only requires `Pylint <https://www.pylint.org/>`_, which is a simple linter for which a configuration file is provided at :atc-file:`clients/python/pylint.rc`.
 
 .. code-block:: shell
 	:caption: Development Dependencies Installation
