@@ -327,12 +327,12 @@ order by dsr.set_number asc
 	hostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``)
 
 	dsInfs := map[string][]DSRouteInfo{}
+	var hasTopology bool
 	for rows.Next() {
 		ds := ""
 		dsType := ""
 		dsPattern := ""
 		dsRoutingName := ""
-		var hasTopology bool
 		inf := DSRouteInfo{}
 		if err := rows.Scan(&ds, &dsType, &dsRoutingName, &dsPattern, &hasTopology); err != nil {
 			return nil, errors.New("Error scanning server deliveryservices: " + err.Error())
@@ -361,6 +361,9 @@ order by dsr.set_number asc
 		for _, dsName := range dses {
 			dsInfList, ok := dsInfs[string(dsName)]
 			if !ok {
+				if !hasTopology {
+					log.Warnln("Creating CRConfig: deliveryservice " + string(dsName) + " has no regexes, skipping")
+				}
 				continue
 			}
 			for _, dsInf := range dsInfList {
