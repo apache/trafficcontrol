@@ -88,7 +88,9 @@ SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status, t
 SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
+	LEFT JOIN type t ON ps."type" = t.id
 	WHERE pstatus.name = ANY($1::TEXT[])
+	AND t."name" LIKE ANY($4::TEXT[])
 ), use_reval_pending AS (
 SELECT value::BOOLEAN
 	FROM parameter
