@@ -1150,12 +1150,10 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 	ifaceArgs := make([]interface{}, 0, len(interfaces))
 	ipArgs := make([]interface{}, 0, len(interfaces))
 	for i, iface := range interfaces {
-		iface.Monitor = true
 		argStart := i * 5
 		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
 		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id)
 		for _, ip := range iface.IPAddresses {
-			ip.ServiceAddress = true
 			argStart = len(ipArgs)
 			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
 			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, id, ip.ServiceAddress)
@@ -1167,7 +1165,6 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 
 	_, err := tx.Exec(ifaceQry, ifaceArgs...)
 	if err != nil {
-		tx.Rollback()
 		return api.ParseDBError(err)
 	}
 
@@ -1176,10 +1173,8 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 
 	_, err = tx.Exec(ipQry, ipArgs...)
 	if err != nil {
-		tx.Rollback()
 		return api.ParseDBError(err)
 	}
-
 	return nil, nil, http.StatusOK
 }
 
@@ -1513,6 +1508,10 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// There should only be one interface in v1.x
+	if len(ifaces) > 0 {
+		ifaces[0].Monitor = true
+	}
 	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

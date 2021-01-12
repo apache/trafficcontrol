@@ -23,9 +23,9 @@ import (
 
 func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
+		CreateTestServerWithSameServiceIPAddressAndProfile(t)
 		UpdateTestServers(t)
 		GetTestServers(t)
-		CreateTestServerWithSameIPAddressAndProfile(t)
 	})
 }
 
@@ -123,25 +123,52 @@ func UpdateTestServers(t *testing.T) {
 
 }
 
-func CreateTestServerWithSameIPAddressAndProfile(t *testing.T) {
+func CreateTestServerWithSameServiceIPAddressAndProfile(t *testing.T) {
 	if len(testData.Servers) == 0 {
 		t.Fatal("no test data servers, quitting")
 	}
 	firstServer := testData.Servers[0]
 	hostName := firstServer.HostName
 	resp, _, err := TOSession.GetServerByHostName(hostName)
-
 	if err != nil {
 		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("no response servers, quitting")
 	}
-	remoteServer := resp[0]
-	remoteServer.ID = 999 //change only the ID
-	_, _, err = TOSession.CreateServer(remoteServer)
+	newServer := tc.ServerV1{
+		TCPPort:        resp[0].TCPPort,
+		HostName:       "testServerCreate",
+		DomainName:     resp[0].DomainName,
+		HTTPSPort:      resp[0].HTTPSPort,
+		InterfaceName:  "test-interface",
+		IPAddress:      "100.100.100.100",
+		ProfileID:      resp[0].ProfileID,
+		CDNID:          resp[0].CDNID,
+		TypeID:         resp[0].TypeID,
+		StatusID:       resp[0].StatusID,
+		PhysLocationID: resp[0].PhysLocationID,
+		CachegroupID:   resp[0].CachegroupID,
+		InterfaceMtu:   resp[0].InterfaceMtu,
+	}
+	_, _, err = TOSession.CreateServer(newServer)
+	if err != nil {
+		t.Fatalf("error while CREATEing a new server: %v", err.Error())
+	}
+	s, _, err := TOSession.GetServerByHostName("testServerCreate")
+	if err != nil {
+		t.Fatalf("error GETting the server with hostname %s, that was just created: %v", newServer.HostName, err.Error())
+	}
+	if len(s) == 0 {
+		t.Fatalf("no servers returned")
+	}
+	_, _, err = TOSession.CreateServer(newServer)
 	if err == nil {
-		t.Fatalf("expected error about an existing server with the same profile and IP address, but got nothing")
+		t.Error("expected error about an existing server with the same profile and IP address, but got nothing")
+	}
+	_, _, err = TOSession.DeleteServerByID(s[0].ID)
+	if err != nil {
+		t.Errorf("error DELETEing the server just created: %v", err.Error())
 	}
 }
 

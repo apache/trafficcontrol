@@ -13,41 +13,8 @@
 */
 
 -- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION before_server_table()
-    RETURNS TRIGGER AS
-$$
-DECLARE
-    server_count BIGINT;
-BEGIN
-    WITH server_ips AS (
-        SELECT s.id, i.name, ip.address, s.profile
-        FROM server s
-                 JOIN interface i on i.server = s.ID
-                 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
-        WHERE i.monitor = true
-    )
-    SELECT count(*)
-    INTO server_count
-    FROM server_ips sip
-             JOIN server_ips sip2 on sip.id <> sip2.id
-    WHERE sip2.address = sip.address
-      AND sip2.profile = sip.profile;
-
-    IF server_count > 0 THEN
-        RAISE EXCEPTION 'Server [id:%] does not have a unique ip_address over the profile [id:%], [%] conflicts',
-            NEW.id,
-            NEW.profile,
-            server_count;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
--- +goose StatementEnd
-
--- +goose StatementBegin
-CREATE OR REPLACE FUNCTION before_ip_address_table()
+CREATE OR REPLACE FUNCTION after_ip_address_table()
     RETURNS TRIGGER
 AS
 $$
@@ -55,24 +22,26 @@ DECLARE
     server_count   BIGINT;
     server_id      BIGINT;
     server_profile BIGINT;
+    new_profile    BIGINT;
 BEGIN
+    SELECT profile INTO new_profile from server s WHERE s.id = NEW.server;
     WITH server_ips AS (
-        SELECT s.id as sid, i.name, ip.address, s.profile
+        SELECT s.id as sid, ip.interface, i.name, ip.address, s.profile, ip.server
         FROM server s
                  JOIN interface i
-                     on i.server = s.ID
+                      on i.server = s.ID
                  JOIN ip_address ip
-                     on ip.Server = s.ID and ip.interface = i.name
-        WHERE i.monitor = true
+                      on ip.Server = s.ID and ip.interface = i.name
+        WHERE i.monitor = true AND ip.service_address = true
     )
     SELECT count(distinct(sip.sid)), sip.sid, sip.profile
     INTO server_count, server_id, server_profile
     FROM server_ips sip
-             JOIN server_ips sip2 on sip.sid <> sip2.sid
-    WHERE (sip.sid <> NEW.server AND sip.address = NEW.address AND sip.name = NEW.interface)
+    WHERE (sip.server <> NEW.server AND sip.address = NEW.address AND sip.profile = new_profile)
     GROUP BY sip.sid, sip.profile;
+
     IF server_count > 0 THEN
-        RAISE EXCEPTION 'ip_address is not unique accross the server [id:%] profile [id:%], [%] conflicts',
+        RAISE EXCEPTION 'ip_address is not unique across the server [id:%] profile [id:%], [%] conflicts',
             server_id,
             server_profile,
             server_count;
@@ -81,3 +50,24 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 -- +goose StatementEnd
+
+CREATE TRIGGER after_create_ip_address_trigger
+    AFTER INSERT
+    ON ip_address
+    FOR EACH ROW
+EXECUTE PROCEDURE after_ip_address_table();
+
+CREATE TRIGGER after_update_ip_address_trigger
+    BEFORE UPDATE
+    ON ip_address
+    FOR EACH ROW
+    WHEN (NEW.address <> OLD.address)
+EXECUTE PROCEDURE after_ip_address_table();
+
+-- +goose Down
+-- SQL section 'Down' is executed when this migration is rolled back
+DROP TRIGGER IF EXISTS after_update_ip_address_trigger ON ip_address;
+DROP TRIGGER IF EXISTS after_create_ip_address_trigger ON ip_address;
+
+DROP FUNCTION IF EXISTS after_ip_address_table();
+
