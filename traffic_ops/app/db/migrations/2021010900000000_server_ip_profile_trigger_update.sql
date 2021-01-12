@@ -13,8 +13,10 @@
 */
 
 -- +goose Up
+DROP TRIGGER IF EXISTS before_update_ip_address_trigger ON ip_address;
+DROP TRIGGER IF EXISTS before_create_ip_address_trigger ON ip_address;
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION after_ip_address_table()
+CREATE OR REPLACE FUNCTION before_ip_address_table()
     RETURNS TRIGGER
 AS
 $$
@@ -22,9 +24,7 @@ DECLARE
     server_count   BIGINT;
     server_id      BIGINT;
     server_profile BIGINT;
-    new_profile    BIGINT;
 BEGIN
-    SELECT profile INTO new_profile from server s WHERE s.id = NEW.server;
     WITH server_ips AS (
         SELECT s.id as sid, ip.interface, i.name, ip.address, s.profile, ip.server
         FROM server s
@@ -32,12 +32,12 @@ BEGIN
                       on i.server = s.ID
                  JOIN ip_address ip
                       on ip.Server = s.ID and ip.interface = i.name
-        WHERE i.monitor = true AND ip.service_address = true
+        WHERE ip.service_address = true
     )
     SELECT count(distinct(sip.sid)), sip.sid, sip.profile
     INTO server_count, server_id, server_profile
     FROM server_ips sip
-    WHERE (sip.server <> NEW.server AND sip.address = NEW.address AND sip.profile = new_profile)
+    WHERE (sip.server <> NEW.server AND (SELECT SPLIT_PART(sip.address::varchar,'/',1)) = (SELECT SPLIT_PART(NEW.address::varchar,'/',1)) AND sip.profile = (SELECT profile from server s WHERE s.id = NEW.server))
     GROUP BY sip.sid, sip.profile;
 
     IF server_count > 0 THEN
@@ -51,23 +51,23 @@ END;
 $$ LANGUAGE PLPGSQL;
 -- +goose StatementEnd
 
-CREATE TRIGGER after_create_ip_address_trigger
-    AFTER INSERT
+CREATE TRIGGER before_create_ip_address_trigger
+    BEFORE INSERT
     ON ip_address
     FOR EACH ROW
-EXECUTE PROCEDURE after_ip_address_table();
+EXECUTE PROCEDURE before_ip_address_table();
 
-CREATE TRIGGER after_update_ip_address_trigger
+CREATE TRIGGER before_update_ip_address_trigger
     BEFORE UPDATE
     ON ip_address
     FOR EACH ROW
     WHEN (NEW.address <> OLD.address)
-EXECUTE PROCEDURE after_ip_address_table();
+EXECUTE PROCEDURE before_ip_address_table();
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TRIGGER IF EXISTS after_update_ip_address_trigger ON ip_address;
-DROP TRIGGER IF EXISTS after_create_ip_address_trigger ON ip_address;
+DROP TRIGGER IF EXISTS before_update_ip_address_trigger ON ip_address;
+DROP TRIGGER IF EXISTS before_create_ip_address_trigger ON ip_address;
 
-DROP FUNCTION IF EXISTS after_ip_address_table();
+DROP FUNCTION IF EXISTS before_ip_address_table();
 

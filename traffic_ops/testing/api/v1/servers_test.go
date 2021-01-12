@@ -162,6 +162,13 @@ func CreateTestServerWithSameServiceIPAddressAndProfile(t *testing.T) {
 	if len(s) == 0 {
 		t.Fatalf("no servers returned")
 	}
+	// Try creating a server with the same service IP address
+	_, _, err = TOSession.CreateServer(newServer)
+	if err == nil {
+		t.Error("expected error about an existing server with the same profile and IP address, but got nothing")
+	}
+	// Now try creating a server with the same service IP address but different netmask
+	newServer.IPNetmask = "255.255.100.100"
 	_, _, err = TOSession.CreateServer(newServer)
 	if err == nil {
 		t.Error("expected error about an existing server with the same profile and IP address, but got nothing")

@@ -157,6 +157,25 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
 	server.ID = nil
+	if len(server.Interfaces) == 0 {
+		t.Fatal("no interfaces in this server, quitting")
+	}
+	interfaces := make([]tc.ServerInterfaceInfo, 0)
+	ipAddresses := make([]tc.ServerIPAddress, 0)
+	gateway := "255.255.255.255"
+	ipAddresses = append(ipAddresses, tc.ServerIPAddress{
+		Address:        "1.1.1.1",
+		Gateway:        &gateway,
+		ServiceAddress: true,
+	})
+	interfaces = append(interfaces, tc.ServerInterfaceInfo{
+		IPAddresses:  ipAddresses,
+		MaxBandwidth: server.Interfaces[0].MaxBandwidth,
+		Monitor:      false,
+		MTU:          server.Interfaces[0].MTU,
+		Name:         server.Interfaces[0].Name,
+	})
+	server.Interfaces = interfaces
 	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
