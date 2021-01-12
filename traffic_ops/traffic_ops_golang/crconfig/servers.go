@@ -361,7 +361,6 @@ order by dsr.set_number asc
 		for _, dsName := range dses {
 			dsInfList, ok := dsInfs[string(dsName)]
 			if !ok {
-				log.Warnln("Creating CRConfig: deliveryservice " + string(dsName) + " has no regexes, skipping")
 				continue
 			}
 			for _, dsInf := range dsInfList {
