@@ -22,11 +22,13 @@ on:
   push:
     paths:
       - docs/source/**
+      - .github/workflows/docs.yml
       - traffic_control/clients/python/**
   pull_request:
     types: [opened, reopened, read_for_review, synchronize]
     paths:
       - docs/source/**
+      - .github/workflows/docs.yml
       - traffic_control/clients/python/**
 
 jobs:
@@ -35,9 +37,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
+      - name: Checkout sphinx-action
+        uses: actions/checkout@v2
+        with:
+          repository: ammaraskar/sphinx-action
+          ref: 35082eb35b69713fe335801c4d5846a4cc3c91ff # Mon Apr 20 15:25:33 2020 -0700 Fix travis for docker image change
+          path: .github/actions/sphinx-action
       - name: Build Documentation
-        uses: ammaraskar/sphinx-action@master
+        uses: ./.github/actions/sphinx-action
         with:
           docs-folder: "docs/"
           pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
