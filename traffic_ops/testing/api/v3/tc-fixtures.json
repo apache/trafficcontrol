@@ -179,7 +179,8 @@
             "longitude": 0,
             "name": "topology-mid-cg-04",
             "shortName": "tm4",
-            "typeName": "MID_LOC"
+            "typeName": "MID_LOC",
+            "parentCachegroupName": "multiOriginCachegroup"
         },
         {
             "latitude": 0,
