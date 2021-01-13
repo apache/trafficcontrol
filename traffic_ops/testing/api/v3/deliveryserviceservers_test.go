@@ -162,7 +162,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	}
 	interfaces := make([]tc.ServerInterfaceInfo, 0)
 	ipAddresses := make([]tc.ServerIPAddress, 0)
-	gateway := "255.255.255.255"
+	gateway := "1.2.3.4"
 	ipAddresses = append(ipAddresses, tc.ServerIPAddress{
 		Address:        "1.1.1.1",
 		Gateway:        &gateway,
