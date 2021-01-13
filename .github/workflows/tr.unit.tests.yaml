@@ -20,10 +20,14 @@ name: Traffic Router Unit Tests
 on:
   push:
     paths:
+      - .github/actions/tr-tests/**
+      - .github/workflows/tr.unit.tests.yaml
       - traffic_router/**
   create:
   pull_request:
     paths:
+      - .github/actions/tr-tests/**
+      - .github/workflows/tr.unit.tests.yaml
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
