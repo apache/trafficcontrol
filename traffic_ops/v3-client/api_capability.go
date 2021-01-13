@@ -1,9 +1,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -46,15 +44,7 @@ func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICa
 		path = fmt.Sprintf("%s?%s", path, vals.Encode())
 	}
 
-	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
-	reqInf.RemoteAddr = remoteAddr
-
-	if err != nil {
-		return tc.APICapabilityResponse{}, reqInf, err
-	}
-	defer httpResp.Body.Close()
-
-	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+	reqInf, err := to.get(path, nil, &resp)
 
 	return resp, reqInf, err
 }

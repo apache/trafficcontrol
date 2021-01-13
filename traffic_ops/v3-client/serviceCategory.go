@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 
@@ -31,71 +29,25 @@ const (
 
 // CreateServiceCategory performs a post to create a service category.
 func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(serviceCategory)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVICE_CATEGORIES, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_SERVICE_CATEGORIES, serviceCategory, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 // UpdateServiceCategoryByName updates a service category by its unique name.
 func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.ServiceCategory, header http.Header) (tc.Alerts, ReqInf, error) {
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(serviceCategory)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s/%s", API_SERVICE_CATEGORIES, name)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		defer resp.Body.Close()
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, serviceCategory, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // GetServiceCategoriesWithHdr gets a list of service categories by the passed in url values and http headers.
 func (to *Session) GetServiceCategoriesWithHdr(values *url.Values, header http.Header) ([]tc.ServiceCategory, ReqInf, error) {
 	path := fmt.Sprintf("%s?%s", API_SERVICE_CATEGORIES, values.Encode())
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.ServiceCategory{}, reqInf, nil
-		}
-	}
-	defer resp.Body.Close()
-
 	var data tc.ServiceCategoriesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(path, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetServiceCategories gets a list of service categories by the passed in url values.
@@ -107,15 +59,7 @@ func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategor
 // category's unique name.
 func (to *Session) DeleteServiceCategoryByName(name string) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%s", API_SERVICE_CATEGORIES, name)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }

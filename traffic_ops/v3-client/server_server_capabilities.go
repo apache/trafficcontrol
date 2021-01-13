@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,13 +31,7 @@ const (
 // CreateServerServerCapability assigns a Server Capability to a Server
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqBody, err := json.Marshal(ssc)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	reqInf, err = post(to, API_SERVER_SERVER_CAPABILITIES, reqBody, &alerts)
+	reqInf, err := to.post(API_SERVER_SERVER_CAPABILITIES, ssc, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -51,7 +43,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	v.Add("serverCapability", serverCapability)
 	qStr := v.Encode()
 	queryURL := fmt.Sprintf("%s?%s", API_SERVER_SERVER_CAPABILITIES, qStr)
-	reqInf, err := del(to, queryURL, &alerts)
+	reqInf, err := to.del(queryURL, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -74,11 +66,8 @@ func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostN
 	resp := struct {
 		Response []tc.ServerServerCapability `json:"response"`
 	}{}
-	reqInf, err := get(to, queryURL, &resp, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
+	reqInf, err := to.get(queryURL, header, &resp)
+	return resp.Response, reqInf, err
 }
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server

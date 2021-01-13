@@ -474,6 +474,10 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			}
 		}
 
+		// midCacheGroup has an ORG_LOC non-topology parent cachegroup
+		if updateStatusByCacheGroup[midCacheGroup].ParentPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[midCacheGroup].ParentPending)
+		}
 		// edgeCacheGroup is a descendant of midCacheGroup
 		if !updateStatusByCacheGroup[edgeCacheGroup].ParentPending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", true, updateStatusByCacheGroup[edgeCacheGroup].ParentPending)

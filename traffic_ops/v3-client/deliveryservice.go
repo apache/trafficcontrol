@@ -119,7 +119,7 @@ const (
 
 func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, header)
+	reqInf, err := to.get(fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -138,12 +138,8 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNull
 func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 
-	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
@@ -154,10 +150,8 @@ func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.
 	if params != nil {
 		uri += "?" + params.Encode()
 	}
-
 	var data tc.DeliveryServicesResponseV30
-
-	reqInf, err := get(to, uri, &data, header)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -165,11 +159,8 @@ func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := get(to, API_DELIVERY_SERVICES, &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_DELIVERY_SERVICES, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetDeliveryServicesNullable returns a slice of Delivery Services.
@@ -187,11 +178,8 @@ func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Head
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?cdn="+strconv.Itoa(cdnID), &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_DELIVERY_SERVICES+"?cdn="+strconv.Itoa(cdnID), header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetDeliveryServicesByCDNID returns the (tenant-visible) Delivery Services within the CDN identified
@@ -212,7 +200,7 @@ func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Head
 		Response []tc.DeliveryServiceNullableV30 `json:"response"`
 	}{}
 	route := fmt.Sprintf("%s?id=%s", API_DELIVERY_SERVICES, id)
-	reqInf, err := get(to, route, &data, header)
+	reqInf, err := to.get(route, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -234,7 +222,7 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data, nil)
+	reqInf, err := to.get(API_DELIVERY_SERVICES+"?id="+url.QueryEscape(id), nil, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -248,12 +236,8 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 // the given XMLID.
 func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlId="+XMLID, &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_DELIVERY_SERVICES+"?xmlId="+url.QueryEscape(XMLID), header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetDeliveryServiceByXMLIDNullable returns the Delivery Service identified by the passed XMLID.
@@ -281,7 +265,7 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.Deliver
 func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
 	var reqInf ReqInf
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByName(ds.Type.String())
+		ty, _, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
 		if err != nil {
 			return tc.DeliveryServiceNullableV30{}, reqInf, err
 		}
@@ -292,7 +276,7 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, _, err := to.GetCDNByName(*ds.CDNName)
+		cdns, _, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
 		if err != nil {
 			return tc.DeliveryServiceNullableV30{}, reqInf, err
 		}
@@ -303,7 +287,7 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
+		profiles, _, err := to.GetProfileByNameWithHdr(*ds.ProfileName, nil)
 		if err != nil {
 			return tc.DeliveryServiceNullableV30{}, reqInf, err
 		}
@@ -314,20 +298,15 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.TenantByName(*ds.Tenant)
+		ten, _, err := to.TenantByNameWithHdr(*ds.Tenant, nil)
 		if err != nil {
 			return tc.DeliveryServiceNullableV30{}, reqInf, err
 		}
 		ds.TenantID = &ten.ID
 	}
 
-	bts, err := json.Marshal(ds)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, nil
-	}
-
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err = post(to, API_DELIVERY_SERVICES, bts, &data)
+	reqInf, err := to.post(API_DELIVERY_SERVICES, ds, nil, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -348,7 +327,7 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 // CreateDeliveryServiceV30.
 func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByName(ds.Type.String())
+		ty, _, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -359,7 +338,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, _, err := to.GetCDNByName(*ds.CDNName)
+		cdns, _, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -370,7 +349,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
+		profiles, _, err := to.GetProfileByNameWithHdr(*ds.ProfileName, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -381,7 +360,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.TenantByName(*ds.Tenant)
+		ten, _, err := to.TenantByNameWithHdr(*ds.Tenant, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -389,11 +368,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	var data tc.CreateDeliveryServiceNullableResponse
-	jsonReq, err := json.Marshal(ds)
-	if err != nil {
-		return nil, err
-	}
-	_, err = post(to, API_DELIVERY_SERVICES, jsonReq, &data)
+	_, err := to.post(API_DELIVERY_SERVICES, ds, nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -404,14 +379,8 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 // UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
 func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	var reqInf ReqInf
-	bts, err := json.Marshal(ds)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
-	}
-
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), bts, &data, header)
+	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -437,32 +406,26 @@ func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServi
 
 func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
-	jsonReq, err := json.Marshal(ds)
+	_, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data, header)
-	if err != nil {
-		return nil, err
-	}
-
 	return &data, nil
 }
 
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed.
 func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceResponse, error) {
 	var data tc.DeleteDeliveryServiceResponse
-	_, err := del(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), &data)
+	_, err := to.del(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
-
 	return &data, nil
 }
 
 func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header) (*tc.DeliveryServiceHealth, ReqInf, error) {
 	var data tc.DeliveryServiceHealthResponse
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_HEALTH, id), &data, nil)
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_HEALTH, id), nil, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -479,11 +442,10 @@ func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealt
 
 func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Header) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	var data tc.DeliveryServiceCapacityResponse
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_CAPACITY, id), &data, header)
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_CAPACITY, id), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
-
 	return &data.Response, reqInf, nil
 }
 
@@ -492,40 +454,6 @@ func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Head
 // Deprecated: GetDeliveryServiceCapacity will be removed in 6.0. Use GetDeliveryServiceCapacityWithHdr.
 func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	return to.GetDeliveryServiceCapacityWithHdr(id, nil)
-}
-
-// GetDeliveryServiceServer returns associations between Delivery Services and servers using the
-// provided pagination controls.
-// Deprecated: GetDeliveryServiceServer will be removed in 6.0. Use GetDeliveryServiceServerWithHdr.
-func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
-	return to.GetDeliveryServiceServerWithHdr(page, limit, nil)
-}
-
-func (to *Session) GetDeliveryServiceServerWithHdr(page, limit string, header http.Header) ([]tc.DeliveryServiceServer, ReqInf, error) {
-	var data tc.DeliveryServiceServerResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICE_SERVER+"?page="+page+"&limit="+limit, &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
-// Delivery Services.
-// Deprecated: GetDeliveryServiceRegexes will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
-func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
-	return to.GetDeliveryServiceRegexesWithHdr(nil)
-}
-
-func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
-	var data tc.DeliveryServiceRegexResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES_REGEXES, &data, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
 }
 
 // GenerateSSLKeysForDS generates ssl keys for a given cdn
@@ -543,14 +471,10 @@ func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields 
 		State:           sslFields.State,
 		Version:         &version,
 	}
-	jsonReq, err := json.Marshal(request)
-	if err != nil {
-		return "", ReqInf{}, err
-	}
 	response := struct {
 		Response string `json:"response"`
 	}{}
-	reqInf, err := post(to, API_DELIVERY_SERVICE_GENERATE_SSL_KEYS, jsonReq, &response)
+	reqInf, err := to.post(API_DELIVERY_SERVICE_GENERATE_SSL_KEYS, request, nil, &response)
 	if err != nil {
 		return "", reqInf, err
 	}
@@ -559,13 +483,10 @@ func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields 
 
 func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, ReqInf, error) {
 	resp := struct {
-		Response string `json:"resposne"`
+		Response string `json:"response"`
 	}{}
-	reqInf, err := del(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &resp)
-	if err != nil {
-		return "", reqInf, err
-	}
-	return resp.Response, reqInf, nil
+	reqInf, err := to.del(fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, url.QueryEscape(XMLID)), nil, &resp)
+	return resp.Response, reqInf, err
 }
 
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
@@ -577,11 +498,10 @@ func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServ
 
 func (to *Session) GetDeliveryServiceSSLKeysByIDWithHdr(XMLID string, header http.Header) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &data, header)
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, url.QueryEscape(XMLID)), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
-
 	return &data.Response, reqInf, nil
 }
 
@@ -590,11 +510,8 @@ func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Head
 		Response []tc.DSServer `json:"response"`
 	}{Response: []tc.DSServer{}}
 
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_ELIGIBLE_SERVERS, dsID), &resp, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_ELIGIBLE_SERVERS, dsID), header, &resp)
+	return resp.Response, reqInf, err
 }
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
@@ -616,7 +533,7 @@ func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header htt
 		Response tc.URLSigKeys `json:"response"`
 	}{}
 
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICES_URL_SIGNING_KEYS, dsName), &data, header)
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICES_URL_SIGNING_KEYS, dsName), header, &data)
 	if err != nil {
 		return tc.URLSigKeys{}, reqInf, err
 	}
@@ -632,7 +549,7 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqI
 // identified by the XMLID 'dsName'. The result is not parsed.
 func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header http.Header) ([]byte, ReqInf, error) {
 	data := json.RawMessage{}
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICES_URI_SIGNING_KEYS, dsName), &data, header)
+	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICES_URI_SIGNING_KEYS, url.QueryEscape(dsName)), header, &data)
 	if err != nil {
 		return []byte{}, reqInf, err
 	}
@@ -642,14 +559,8 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 // SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
 func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	var reqInf ReqInf
-	req, err := json.Marshal(r)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
-	}
-
 	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &data, header)
+	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), r, header, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -667,15 +578,9 @@ func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServ
 // versioned methods, specifically, for API v3.0 - in this case,
 // SafeDeliveryServiceUpdateV30WithHdr.
 func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
-	var reqInf ReqInf
 	var resp tc.DeliveryServiceSafeUpdateResponse
-
-	req, err := json.Marshal(ds)
+	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), ds, nil, &resp)
 	if err != nil {
-		return resp.Response, reqInf, err
-	}
-
-	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp, nil); err != nil {
 		return resp.Response, reqInf, err
 	}
 
@@ -695,6 +600,6 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 // GetDeliveryServicesV30WithHdr.
 func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := tc.DeliveryServicesNullableResponse{}
-	reqInf, err := get(to, fmt.Sprintf("%v?accessibleTo=%v", API_DELIVERY_SERVICES, tenantId), &data, nil)
+	reqInf, err := to.get(fmt.Sprintf("%s?accessibleTo=%d", API_DELIVERY_SERVICES, tenantId), nil, &data)
 	return data.Response, reqInf, err
 }
