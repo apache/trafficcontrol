@@ -143,6 +143,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// it's unique.
 
 		/**
+		 * 4.x API
+		 */
+		// Servers
+		{api.Version{4, 0}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 3586341033, noPerlBypass},
+		{api.Version{4, 0}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 32255580613, noPerlBypass},
+
+		/**
 		 * 3.x API
 		 */
 		////DeliveryServices

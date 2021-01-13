@@ -153,6 +153,92 @@ SELECT
 	s.status_last_updated
 ` + serversFromAndJoin
 
+const insertQueryV4 = `
+INSERT INTO server (
+	cachegroup,
+	cdn_id,
+	domain_name,
+	host_name,
+	https_port,
+	ilo_ip_address,
+	ilo_ip_netmask,
+	ilo_ip_gateway,
+	ilo_username,
+	ilo_password,
+	mgmt_ip_address,
+	mgmt_ip_netmask,
+	mgmt_ip_gateway,
+	offline_reason,
+	phys_location,
+	profile,
+	rack,
+	status,
+	tcp_port,
+	type,
+	upd_pending,
+	xmpp_id,
+	xmpp_passwd,
+	status_last_updated
+) VALUES (
+	:cachegroup_id,
+	:cdn_id,
+	:domain_name,
+	:host_name,
+	:https_port,
+	:ilo_ip_address,
+	:ilo_ip_netmask,
+	:ilo_ip_gateway,
+	:ilo_username,
+	:ilo_password,
+	:mgmt_ip_address,
+	:mgmt_ip_netmask,
+	:mgmt_ip_gateway,
+	:offline_reason,
+	:phys_location_id,
+	:profile_id,
+	:rack,
+	:status_id,
+	:tcp_port,
+	:server_type_id,
+	:upd_pending,
+	:xmpp_id,
+	:xmpp_passwd,
+	:status_last_updated
+) RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
+`
+
 const insertQueryV3 = `
 INSERT INTO server (
 	cachegroup,
@@ -530,6 +616,10 @@ func validateMTU(mtu interface{}) error {
 		return errors.New("must be at least 1280")
 	}
 	return nil
+}
+
+func validateV4(t *tc.ServerV40, tx *sql.Tx) (string, error) {
+	return "", nil
 }
 
 func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error) {
@@ -1125,6 +1215,62 @@ WHERE id=$2 `
 	return nil, nil, http.StatusOK
 }
 
+func createInterfacesV40(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx) (error, error, int) {
+	ifaceQry := `
+	INSERT INTO interface (
+		max_bandwidth,
+		monitor,
+		mtu,
+		name,
+		server,
+		router_host_name,
+		router_port
+	) VALUES
+	`
+	ipQry := `
+	INSERT INTO ip_address (
+		address,
+		gateway,
+		interface,
+		server,
+		service_address
+	) VALUES
+	`
+
+	ifaceQueryParts := make([]string, 0, len(interfaces))
+	ipQueryParts := make([]string, 0, len(interfaces))
+	ifaceArgs := make([]interface{}, 0, len(interfaces))
+	ipArgs := make([]interface{}, 0, len(interfaces))
+	for i, iface := range interfaces {
+		argStart := i * 5
+		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5, argStart+6, argStart+7))
+		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id, iface.RouterHostName, iface.RouterPort)
+		for _, ip := range iface.IPAddresses {
+			argStart = len(ipArgs)
+			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, id, ip.ServiceAddress)
+		}
+	}
+
+	ifaceQry += strings.Join(ifaceQueryParts, ",")
+	log.Debugf("Inserting interfaces for new server, query is: %s", ifaceQry)
+
+	_, err := tx.Exec(ifaceQry, ifaceArgs...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+
+	ipQry += strings.Join(ipQueryParts, ",")
+	log.Debugf("Inserting IP addresses for new server, query is: %s", ipQry)
+
+	_, err = tx.Exec(ipQry, ipArgs...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (error, error, int) {
 	ifaceQry := `
 	INSERT INTO interface (
@@ -1663,6 +1809,77 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	var server tc.ServerV40
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if server.ID != nil {
+		var prevID int
+		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		if err != nil && err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
+			return
+		}
+		if prevID != 0 {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
+			return
+		}
+	}
+
+	str := uuid.New().String()
+	server.XMPPID = &str
+	_, err := validateV4(&server, tx)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	currentTime := time.Now()
+	server.StatusLastUpdated = &currentTime
+
+	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.StructScan(&server.CommonServerPropertiesV40); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+		return
+	}
+
+	userErr, sysErr, errCode := createInterfacesV40(*server.ID, server.Interfaces, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
 // Create is the handler for POST requests to /servers.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -1677,8 +1894,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		createV1(inf, w, r)
 	case inf.Version.Major == 2:
 		createV2(inf, w, r)
-	default:
+	case inf.Version.Major == 3:
 		createV3(inf, w, r)
+	default:
+		createV4(inf, w, r)
 	}
 }
 
