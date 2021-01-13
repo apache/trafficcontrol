@@ -32,19 +32,19 @@ set -e
 set -x
 set -m
 
-envvars=( TO_URL TO_HOST TO_PORT INFLUXDB_HOST )
+envvars=( TO_HOST TO_PORT INFLUXDB_HOST )
 for v in $envvars
 do
-  if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+  if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 # Enroll with traffic ops
 TSCONF=/opt/traffic_stats/conf/traffic_stats.cfg
 
-while ! to-ping 2>/dev/null; do
-  echo "waiting for trafficops ($TO_URL)..."
-  sleep 3
-done
+#while ! to-ping 2>/dev/null; do
+#  echo "waiting for trafficops ($TO_URL)..."
+#  sleep 3
+#done
 
 cat <<-EOF >$TSCONF
 {
@@ -70,33 +70,19 @@ cat <<-EOF >/opt/traffic_stats/conf/traffic_stats_seelog.xml
 <?xml version='1.0'?>
 <seelog minlevel="debug">
     <outputs formatid="std:debug-short">
-        <file path="/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log" />
+        <console/>
     </outputs>
 </seelog>
 EOF
 
-touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
-
-# Wait for influxdb
-until nc $INFLUXDB_HOST $INFLUXDB_PORT </dev/null >/dev/null 2>&1; do
-  echo "Waiting for influxdb to start..."
-  sleep 3
-done
-
-#/opt/traffic_stats/influxdb_tools/create_ts_databases -user $INFLUXDB_ADMIN_USER -password $INFLUXDB_ADMIN_PASSWORD -url http://$INFLUXDB_HOST:$INFLUXDB_PORT -replication 1
-
-# Wait for traffic monitor
-#until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
-#  echo "Waiting for Traffic Monitor to start..."
-#  sleep 3
-#done
+touch /opt/traffic_stats/var/log/traffic_stats.log
 
 traffic_stats_command=(/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF);
 if [[ "$TS_DEBUG_ENABLE" == true ]]; then
   dlv '--continue' '--listen=:2346' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
     "${traffic_stats_command[0]}" -- "${traffic_stats_command[@]:1}" &
 else
-  "${traffic_stats_command[@]}" &
+  "${traffic_stats_command[@]}"
 fi;
 
-exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
+#exec tail -f /opt/traffic_stats/var/log/traffic_stats.log

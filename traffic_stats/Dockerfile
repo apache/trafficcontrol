@@ -37,7 +37,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 #WORKDIR /root/
 COPY --from=builder /go/bin/traffic_stats /opt/traffic_stats/bin/
 
-RUN mkdir -p /opt/traffic_stats/var/run && mkdir -p /opt/traffic_stats/var/log
+RUN mkdir -p /opt/traffic_stats/var/run && mkdir -p /opt/traffic_stats/var/log && mkdir -p /opt/traffic_stats/conf
 
 ADD run.sh /
 ENTRYPOINT /run.sh
