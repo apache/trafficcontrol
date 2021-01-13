@@ -605,7 +605,7 @@ SELECT s.ID, ip.address FROM server s
 JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
-WHERE i.monitor = true
+WHERE ip.service_address = true
 and p.id = $1
 `
 	var rows *sql.Rows
@@ -1175,7 +1175,6 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-
 	return nil, nil, http.StatusOK
 }
 
@@ -1509,7 +1508,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
