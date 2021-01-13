@@ -28,7 +28,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     on page refresh.
 - [#5295](https://github.com/apache/trafficcontrol/issues/5295) - TP types/servers table now clears all filters instead
     of just column filters
-- #2881 Some API endpoints have incorrect Content-Types
+- [#5407](https://github.com/apache/trafficcontrol/issues/5407) - Make sure that you cannot add two servers with identical content
+- [#2881](https://github.com/apache/trafficcontrol/issues/2881) - Some API endpoints have incorrect Content-Types
 - [#5311](https://github.com/apache/trafficcontrol/issues/5311) - Better TO log messages when failures calling TM CacheStats
 
 >>>>>>> 60e7f208d (TP: adds the ability to clone a topology (#5400))
