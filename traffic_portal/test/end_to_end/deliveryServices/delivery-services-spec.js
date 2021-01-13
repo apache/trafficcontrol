@@ -63,11 +63,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
-	it('should verify CSV link exists ', function() {
-		console.log("Verify CSV button exists");
-		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
-	});
-
 	// ANY_MAP delivery service
 
 	it('should click new delivery service and select ANY_MAP category from the dropdown', function() {
@@ -104,13 +99,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 
-		browser.wait(ec.presenceOf(element(by.className("alert"))), 5000);
 		browser.wait(ec.presenceOf(element(by.className("alert-success"))), 5000);
-	});
-
-	it('should back out to delivery services page and verify the new ANY_MAP delivery service and update it', function() {
-		console.log('Verifying that ' + mockVals.anyMapXmlId + ' exists');
-		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
@@ -127,16 +116,12 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		});
 	});
 
-	it('should update the ANY_MAP delivery service', function() {
+	it('should verify the new ANY_MAP delivery service and update it', function() {
 		console.log('Updating the ANY_MAP delivery service for ' + mockVals.anyMapXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.anyMapXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-			return row.element(by.name('xmlId')).getText().then(function(val){
-				return val.toString() === mockVals.anyMapXmlId.toString();
-			});
-		}).get(0).click();
+		browser.sleep(1000);
+		let row = element(by.cssContainingText('.ag-cell', mockVals.anyMapXmlId));
+		browser.actions().click(row).perform();
+		browser.sleep(1000);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
 		pageData.displayName.clear().then(function() {
@@ -147,7 +132,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should navigate back to the ANY_MAP delivery service and delete it', function() {
+	it('should delete the ANY_MAP delivery service', function() {
 		console.log('Deleting ' + mockVals.anyMapXmlId);
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.anyMapXmlId);
@@ -192,24 +177,17 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
-	});
 
-	it('should back out to delivery services page and verify the new DNS delivery service and update it', function() {
-		console.log('Verifying that ' + mockVals.dnsXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		browser.wait(ec.presenceOf(element(by.className("alert-success"))), 5000);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	it('should update the DNS delivery service', function() {
 		console.log('Updating the DNS delivery service for ' + mockVals.dnsXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.dnsXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-			return row.element(by.name('xmlId')).getText().then(function(val){
-				return val.toString() === mockVals.dnsXmlId.toString();
-			});
-		}).get(0).click();
+		browser.sleep(1000);
+		let row = element(by.cssContainingText('.ag-cell', mockVals.dnsXmlId));
+		browser.actions().click(row).perform();
+		browser.sleep(1000);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
 		pageData.displayName.clear().then(function() {
@@ -227,7 +205,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
 		pageData.moreBtn.click();
 		expect(pageData.selectServersMenuItem.isEnabled()).toBe(true);
-		expect(pageData.selectServersMenuItem.getText() === 'Assign Servers');
 		pageData.selectServersMenuItem.click();
 		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
 		pageData.selectAllCB.click();
@@ -299,24 +276,18 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		// set topology
 		commonFunctions.selectDropdownbyNum(pageData.topology, 1);
 		pageData.createButton.click();
-	});
 
-	it('should back out to delivery services page and verify the new HTTP delivery service and update it', function() {
-		console.log('Verifying that ' + mockVals.httpXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		browser.wait(ec.presenceOf(element(by.className("alert-success"))), 5000);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
+
 	});
 
 	it('should update the HTTP delivery service', function() {
 		console.log('Updating the HTTP delivery service for ' + mockVals.httpXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.httpXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-			return row.element(by.name('xmlId')).getText().then(function(val){
-				return val.toString() === mockVals.httpXmlId.toString();
-			});
-		}).get(0).click();
+		browser.sleep(1000);
+		let row = element(by.cssContainingText('.ag-cell', mockVals.httpXmlId));
+		browser.actions().click(row).perform();
+		browser.sleep(1000);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
 		pageData.displayName.clear().then(function() {
@@ -413,24 +384,17 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
-	});
 
-	it('should back out to delivery services page and verify the new Steering delivery service and update it', function() {
-		console.log('Verifying that ' + mockVals.steeringXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		browser.wait(ec.presenceOf(element(by.className("alert-success"))), 5000);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	it('should update the Steering delivery service', function() {
 		console.log('Updating the Steering delivery service for ' + mockVals.steeringXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.steeringXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-			return row.element(by.name('xmlId')).getText().then(function(val){
-				return val.toString() === mockVals.steeringXmlId.toString();
-			});
-		}).get(0).click();
+		browser.sleep(1000);
+		let row = element(by.cssContainingText('.ag-cell', mockVals.steeringXmlId));
+		browser.actions().click(row).perform();
+		browser.sleep(1000);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
 		pageData.displayName.clear().then(function() {
