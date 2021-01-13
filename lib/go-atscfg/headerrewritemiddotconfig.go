@@ -20,7 +20,6 @@ package atscfg
  */
 
 import (
-	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -148,7 +147,6 @@ func MakeHeaderRewriteMidDotConfig(
 
 	text := makeHdrComment(hdrComment)
 
-	fmt.Printf("DEBUG moc %v usesmid %v assignedmids %v\n", ds.MaxOriginConnections, ds.Type.UsesMidCache(), len(assignedMids))
 	// write a header rewrite rule if maxOriginConnections > 0 and the ds DOES use mids
 	if ds.MaxOriginConnections > 0 && ds.Type.UsesMidCache() {
 		dsOnlineMidCount := 0
