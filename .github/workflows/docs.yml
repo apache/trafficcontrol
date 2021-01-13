@@ -22,11 +22,13 @@ on:
   push:
     paths:
       - docs/source/**
+      - .github/workflows/docs.yml
       - traffic_control/clients/python/**
   pull_request:
     types: [opened, reopened, read_for_review, synchronize]
     paths:
       - docs/source/**
+      - .github/workflows/docs.yml
       - traffic_control/clients/python/**
 
 jobs:
