@@ -851,10 +851,18 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	errCode := http.StatusOK
 	var userErr error
 	var sysErr error
+	var exists bool
 	if dsType.HasSSLKeys() {
 		oldHostName, oldCDNName, oldRoutingName, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
+		}
+		exists, err = GetSSLVersion(*ds.XMLID, tx)
+		if err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service failed: %s", err)
+		}
+		if exists {
+			return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 		}
 	}
 
@@ -1017,8 +1025,8 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		}
 	}
 
-	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
-		return nil, http.StatusBadRequest, errors.New("delivery service CDN is immutable"), errors.New("delivery service has ssl keys that cannot be automatically changed")
+	if newDSType.HasSSLKeys() && exists && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
+		return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -1824,6 +1832,14 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return xmlID, true, nil
+}
+
+// GetSSLVersion reports a boolean value, confirming whether DS has a SSL version or not
+func GetSSLVersion(xmlId string, tx *sql.Tx) (bool, error) {
+	var exists bool
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id = $1 AND ssl_key_version IS NOT NULL)`, xmlId)
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 func selectQuery() string {
