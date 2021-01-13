@@ -32,4 +32,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Run weasel
-      uses: docker://licenseweasel/weasel:v0.4
+      run: |
+        # Image is licenseweasel/weasel:v0.4
+        docker run --rm --workdir=/github/workspace --volume="${GITHUB_WORKSPACE}:/github/workspace" licenseweasel/weasel@sha256:85196092a84315d2ebb9db32f3f6113d288256dba7f7855ca0d3483ef787cb4e
