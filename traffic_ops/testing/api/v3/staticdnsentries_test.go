@@ -17,8 +17,8 @@ package v3
 
 import (
 	"net/http"
-	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,11 +175,12 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 
-	expectedAlerts := []tc.Alerts{
-		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}},
-		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}},
-		tc.Alerts{[]tc.Alert{tc.Alert{"'address' for type: CNAME_RECORD must have a trailing period", "error"}}},
-		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
+	expectedAlerts := []string{
+		"'address' must be a valid IPv4 address",
+		"'address' must be a valid DNS name",
+		"'address' for type: CNAME_RECORD must have a trailing period",
+		"'address' must be a valid IPv6 address",
+	}
 
 	// A_RECORD
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]
@@ -191,15 +192,15 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry := resp[0]
 	expectedAddress := "test.testdomain.net."
 	remoteStaticDNSEntry.Address = expectedAddress
-	var alert tc.Alerts
 	var status int
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
-	if err != nil {
-		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
-	}
-	if !reflect.DeepEqual(alert, expectedAlerts[0]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[0])
+	if err == nil {
+		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
+	} else {
+		if !strings.Contains(err.Error(), expectedAlerts[0]) {
+			t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[0])
+		}
 	}
 
 	// CNAME_RECORD
@@ -212,25 +213,23 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry = resp[0]
 	expectedAddress = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 	remoteStaticDNSEntry.Address = expectedAddress
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
-	if err != nil {
-		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
-	}
-	if !reflect.DeepEqual(alert, expectedAlerts[1]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[1])
+	if err == nil {
+		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
+	} else if !strings.Contains(err.Error(), expectedAlerts[1]) {
+		t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[1])
 	}
 
 	//CNAME_RECORD: missing a trailing period
 	expectedAddressMissingPeriod := "cdn.test.com"
 	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
-	if err != nil {
-		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
-	}
-	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	if err == nil {
+		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
+	} else if !strings.Contains(err.Error(), expectedAlerts[2]) {
+		t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[2])
 	}
 
 	// AAAA_RECORD
@@ -243,13 +242,12 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry = resp[0]
 	expectedAddress = "192.168.0.1"
 	remoteStaticDNSEntry.Address = expectedAddress
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
-	if err != nil {
-		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
-	}
-	if !reflect.DeepEqual(alert, expectedAlerts[3]) {
-		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[3])
+	if err == nil {
+		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
+	} else if !strings.Contains(err.Error(), expectedAlerts[3]) {
+		t.Errorf("got err: %v, but expected err containging: %v", err, expectedAlerts[3])
 	}
 }
 

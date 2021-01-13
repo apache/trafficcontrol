@@ -16,7 +16,6 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,19 +25,12 @@ import (
 )
 
 const API_TENANTS = apiBase + "/tenants"
-const API_TENANT_ID = API_TENANTS + "/%v"
+const API_TENANT_ID = API_TENANTS + "/%s"
 
 func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, API_TENANTS, &data, header)
-	if reqInf.StatusCode == http.StatusNotModified {
-		return []tc.Tenant{}, reqInf, nil
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_TENANTS, header, &data)
+	return data.Response, reqInf, err
 }
 
 // Tenants gets an array of Tenants.
@@ -49,14 +41,13 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 
 func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data, header)
-	if reqInf.StatusCode == http.StatusNotModified {
-		return nil, reqInf, nil
-	}
+	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", API_TENANTS, id), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
-
+	if reqInf.StatusCode == http.StatusNotModified {
+		return nil, reqInf, nil
+	}
 	return &data.Response[0], reqInf, nil
 }
 
@@ -70,21 +61,18 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := API_TENANTS + "?name=" + url.QueryEscape(name)
-	reqInf, err := get(to, query, &data, header)
-	if reqInf.StatusCode == http.StatusNotModified {
-		return nil, reqInf, nil
-	}
+	reqInf, err := to.get(query, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
-
-	var ten *tc.Tenant
-	if len(data.Response) > 0 {
-		ten = &data.Response[0]
-	} else {
-		err = errors.New("no tenant found with name " + name)
+	if reqInf.StatusCode == http.StatusNotModified {
+		return nil, reqInf, nil
 	}
-	return ten, reqInf, err
+	if len(data.Response) > 0 {
+		return &data.Response[0], reqInf, nil
+	} else {
+		return nil, reqInf, errors.New("no tenant found with name " + name)
+	}
 }
 
 // TenantByName gets the Tenant with the name it's passed.
@@ -96,7 +84,7 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 // CreateTenant creates the Tenant it's passed.
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.TenantByName(t.ParentName)
+		tenant, _, err := to.TenantByNameWithHdr(t.ParentName, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -107,46 +95,36 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	}
 
 	var data tc.TenantResponse
-	jsonReq, err := json.Marshal(t)
+	_, err := to.post(API_TENANTS, t, nil, &data)
 	if err != nil {
 		return nil, err
 	}
-	_, err = post(to, API_TENANTS, jsonReq, &data)
-	if err != nil {
-		return nil, err
-	}
-
 	return &data, nil
 }
 
-func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, error) {
+func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, ReqInf, error) {
 	var data tc.TenantResponse
-	jsonReq, err := json.Marshal(t)
+	reqInf, err := to.put(fmt.Sprintf(API_TENANT_ID, id), t, header, &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
-	_, err = put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data, header)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data, nil
+	return &data, reqInf, nil
 }
 
 // UpdateTenant updates the Tenant matching the ID it's passed with
 // the Tenant it is passed.
 // Deprecated: UpdateTenant will be removed in 6.0. Use UpdateTenantWithHdr.
 func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
-	return to.UpdateTenantWithHdr(id, t, nil)
+	data, _, err := to.UpdateTenantWithHdr(id, t, nil)
+	return data, err
 }
 
 // DeleteTenant deletes the Tenant matching the ID it's passed.
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	_, err := del(to, fmt.Sprintf(API_TENANT_ID, id), &data)
+	_, err := to.del(fmt.Sprintf(API_TENANT_ID, id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
-
 	return &data, nil
 }

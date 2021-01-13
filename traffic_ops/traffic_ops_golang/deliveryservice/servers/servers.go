@@ -341,8 +341,34 @@ const verifyStatusesQuery = `
 SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
 FROM server
 INNER JOIN status ON server.status = status.id
+JOIN type t on server.type = t.id
 WHERE server.id = ANY($1::BIGINT[])
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
 `
+
+const checkPreExistingEdgeServersQuery = `
+SELECT t.name AS name
+FROM type t
+JOIN server s ON t.id = s.type
+JOIN status st ON s.status = st.id
+JOIN deliveryservice_server dss ON dss.server = s.id
+WHERE s.id = ANY(ARRAY(SELECT server FROM deliveryservice_server WHERE deliveryservice=$1))
+AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
+AND dss.deliveryservice=$1
+`
+
+func checkIfEdgesExistedBefore(tx *sql.Tx, dsID int) (error, bool) {
+	rows, err := tx.Query(checkPreExistingEdgeServersQuery, dsID)
+	if err != nil {
+		return fmt.Errorf("couldn't query for pre existing edge servers for this DS: %v", err.Error()), false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		return nil, true
+	}
+	return nil, false
+}
 
 func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
 	if len(ids) < 1 {
@@ -531,6 +557,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
 func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
+	valid := false
 	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, status
@@ -540,13 +567,38 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		ids := make([]int, 0, len(serverInfos))
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
+			// We dont check for the cache type to be = EDGE here because if this is a new DS, and we want to assign an online/ reported ORG to it,
+			// we should be able to do that.
+			if inf.Status == string(tc.CacheStatusOnline) || inf.Status == string(tc.CacheStatusReported) {
+				valid = true
+			}
 		}
-		ok, err := verifyAtLeastOneAvailableServer(ids, tx)
-		if err != nil {
-			return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
-		}
-		if !ok {
+		// Prevent the user from deleting all the servers in an active DS
+		if len(ids) == 0 {
 			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		}
+		// The following check is necessary because of the following:
+		// Consider a brand new active DS that has no server assignments.
+		// Now, you wish to assign an online/ reported ORG server to it.
+		// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
+		// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
+		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
+		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
+		if err != nil {
+			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
+		}
+		if preExistingEdges {
+			ok, err := verifyAtLeastOneAvailableServer(ids, tx)
+			if err != nil {
+				return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
+			}
+			if !ok {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
+		} else {
+			if !valid {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
 		}
 	}
 

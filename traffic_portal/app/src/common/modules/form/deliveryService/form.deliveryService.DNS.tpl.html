@@ -965,7 +965,7 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.maxDnsAnswers), 'has-feedback': hasError(routingConfig.maxDnsAnswers)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxDnsAnswers">Max DNS Answers<div class="helptooltip">
                             <div class="helptext">
-                                This is used to restrict the number of cache IP addresses that the Traffic Router will hand back to clients. A numeric value from 1 to 15 which determines how many caches your content will be spread across in a particular site. When a customer requests your content they will get 1 to 15 IP addresses back they can use. These are rotated in each response. Ideally the number will reflect the amount of traffic. 1 = trial account with very little traffic, 2 = small production service. Add 1 more server for every 20 Gbps of traffic you expect at peak. So 20 Gbps = 3, 40 Gbps = 4, 60 Gbps = 5
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#max-dns-answers"> ATS documentation on Max DNS Answers: DNS-routed Delivery Service</a>
                             </div>
                         </div>
                         </label>

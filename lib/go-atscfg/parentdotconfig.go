@@ -66,6 +66,19 @@ const ParentConfigCacheParamNotAParent = "not_a_parent"
 type OriginHost string
 type OriginFQDN string
 
+// ParentConfigOpts contains settings to configure parent.config generation options.
+type ParentConfigOpts struct {
+	// AddComments is whether to add informative comments to the generated file, about what was generated and why.
+	// Note this does not include the header comment, which is configured separately with HdrComment.
+	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
+	AddComments bool
+
+	// HdrComment is the header comment to include at the beginning of the file.
+	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
+	// To omit the header comment, pass the empty string.
+	HdrComment string
+}
+
 func MakeParentDotConfig(
 	dses []DeliveryService,
 	server *Server,
@@ -78,7 +91,7 @@ func MakeParentDotConfig(
 	cacheGroupArr []tc.CacheGroupNullable,
 	dss []tc.DeliveryServiceServer,
 	cdn *tc.CDN,
-	hdrComment string,
+	opt ParentConfigOpts,
 ) (Cfg, error) {
 	warnings := []string{}
 
@@ -110,7 +123,10 @@ func MakeParentDotConfig(
 
 	sort.Sort(dsesSortByName(dses))
 
-	hdr := makeHdrComment(hdrComment)
+	hdr := ""
+	if opt.HdrComment != "" {
+		hdr = makeHdrComment(opt.HdrComment)
+	}
 
 	textArr := []string{}
 	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
@@ -299,11 +315,12 @@ func MakeParentDotConfig(
 				dsParams,
 				atsMajorVer,
 				dsOrigins[DeliveryServiceID(*ds.ID)],
+				opt.AddComments,
 			)
 			warnings = append(warnings, topoWarnings...)
 			if err != nil {
 				// we don't want to fail generation with an error if one ds is malformed
-				warnings = append(warnings, err.Error()) // GetTopologyParentConfigLine includes error context
+				warnings = append(warnings, err.Error()) // getTopologyParentConfigLine includes error context
 				continue
 			}
 
@@ -330,8 +347,10 @@ func MakeParentDotConfig(
 				if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
 					algorithm = "round_robin=" + parentSelectAlg
 				}
+				textLine += makeParentComment(opt.AddComments, *ds.XMLID, "")
 				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + *ds.OriginShield + " " + algorithm + " go_direct=true\n"
 			} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
+				textLine += makeParentComment(opt.AddComments, *ds.XMLID, "")
 				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
 				if len(parentInfos) == 0 {
 				}
@@ -343,9 +362,11 @@ func MakeParentDotConfig(
 
 				parents, secondaryParents, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
 				warnings = append(warnings, parentWarns...)
+
 				textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 				textLine += getParentRetryStr(true, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
+
 				textArr = append(textArr, textLine)
 			}
 		} else {
@@ -365,6 +386,7 @@ func MakeParentDotConfig(
 				continue
 			}
 
+			text += makeParentComment(opt.AddComments, *ds.XMLID, "")
 			// TODO encode this in a DSType func, IsGoDirect() ?
 			if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
@@ -392,6 +414,7 @@ func MakeParentDotConfig(
 
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
+
 			textArr = append(textArr, text)
 		}
 		processedOriginsToDSNames[*ds.OrgServerFQDN] = tc.DeliveryServiceName(*ds.XMLID)
@@ -418,13 +441,27 @@ func MakeParentDotConfig(
 	}
 
 	sort.Sort(sort.StringSlice(textArr))
-	text := hdr + strings.Join(textArr, "") + defaultDestText
+	text := hdr + strings.Join(textArr, "")
+
+	text += makeParentComment(opt.AddComments, "", "") + defaultDestText
+
 	return Cfg{
 		Text:        text,
 		ContentType: ContentTypeParentDotConfig,
 		LineComment: LineCommentParentDotConfig,
 		Warnings:    warnings,
 	}, nil
+}
+
+// makeParentComment creates the parent line comment and returns it.
+// If addComments is false, returns the empty string. This exists for composability.
+// Either dsName or topology may be the empty string.
+// The returned comment includes a trailing newline.
+func makeParentComment(addComments bool, dsName string, topology string) string {
+	if !addComments {
+		return ""
+	}
+	return "# ds '" + dsName + "' topology '" + topology + "'" + "\n"
 }
 
 type parentConfigDS struct {
@@ -695,7 +732,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	return params, warnings
 }
 
-// GetTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error
+// getTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error
 func getTopologyParentConfigLine(
 	server *Server,
 	servers []Server,
@@ -709,6 +746,7 @@ func getTopologyParentConfigLine(
 	dsParams parentDSParams,
 	atsMajorVer int,
 	dsOrigins map[ServerID]struct{},
+	addComments bool,
 ) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
@@ -728,6 +766,7 @@ func getTopologyParentConfigLine(
 		return "", warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' not found in Topologies!")
 	}
 
+	txt += makeParentComment(addComments, *ds.XMLID, *ds.Topology)
 	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
@@ -762,6 +801,7 @@ func getTopologyParentConfigLine(
 	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastCacheTier)
 	txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 	txt += "\n"
+
 	return txt, warnings, nil
 }
 

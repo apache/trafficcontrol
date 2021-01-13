@@ -106,6 +106,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
+	$scope.clone = function(topology) {
+		locationUtils.navigateToPath('/topologies/clone?name=' + topology.name);
+	};
+
 	$scope.viewCacheGroups = function() {
 		$location.path('/topologies/cache-groups');
 	};

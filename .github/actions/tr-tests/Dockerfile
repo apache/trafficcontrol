@@ -16,7 +16,7 @@ FROM alpine:3.12.0
 RUN apk add --no-cache \
 		openjdk8=8.252.09-r0 \
 		maven=3.6.3-r0 \
-		tomcat-native=1.2.24-r0
+		tomcat-native
 
 ENTRYPOINT	cd traffic_router && \
 			mvn "-Dmaven.repo.local=${GITHUB_WORKSPACE}/.m2/repository" \
