@@ -16,10 +16,8 @@ package client
 */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -31,7 +29,7 @@ import (
 func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users", apiBase)
-	inf, err := get(to, route, &data, header)
+	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
@@ -44,7 +42,7 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
-	inf, err := get(to, route, &data, header)
+	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
@@ -57,7 +55,7 @@ func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
 func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users/%d", apiBase, id)
-	inf, err := get(to, route, &data, header)
+	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
@@ -68,8 +66,8 @@ func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
 
 func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users?username=%s", apiBase, username)
-	inf, err := get(to, route, &data, header)
+	route := fmt.Sprintf("%s/users?username=%s", apiBase, url.QueryEscape(username))
+	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
@@ -81,7 +79,7 @@ func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error)
 func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, ReqInf, error) {
 	route := apiBase + `/user/current`
 	resp := tc.UserCurrentResponse{}
-	reqInf, err := get(to, route, &resp, header)
+	reqInf, err := to.get(route, header, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -96,132 +94,69 @@ func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 
 // UpdateCurrentUser replaces the current user data with the provided tc.User structure.
 func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
-	var a net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: a}
-
 	user := struct {
 		User tc.User `json:"user"`
 	}{u}
-	reqBody, err := json.Marshal(user)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody, nil)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var clientResp tc.UpdateUserResponse
-	err = json.NewDecoder(resp.Body).Decode(&clientResp)
+	reqInf, err := to.put(apiBase+"/user/current", user, nil, &clientResp)
 	return &clientResp, reqInf, err
 }
 
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByName(*user.Tenant)
+		tenant, _, err := to.TenantByNameWithHdr(*user.Tenant, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
 		if tenant == nil {
 			return nil, ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
 		}
-		if err != nil {
-			return nil, ReqInf{}, err
-		}
 		user.TenantID = &tenant.ID
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByName(*user.RoleName)
+		roles, _, _, err := to.GetRoleByNameWithHdr(*user.RoleName, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
 		if len(roles) == 0 || roles[0].ID == nil {
 			return nil, ReqInf{}, errors.New("no role with name " + *user.RoleName)
 		}
-		if err != nil {
-			return nil, ReqInf{}, err
-		}
 		user.Role = roles[0].ID
 	}
 
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(user)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
 	route := apiBase + "/users"
-	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody, nil)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
 	var clientResp tc.CreateUserResponse
-	err = json.NewDecoder(resp.Body).Decode(&clientResp)
-	return &clientResp, reqInf, nil
+	reqInf, err := to.post(route, user, nil, &clientResp)
+	return &clientResp, reqInf, err
 }
 
 // UpdateUserByID updates user with the given id
 func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(u)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
 	var clientResp tc.UpdateUserResponse
-	err = json.NewDecoder(resp.Body).Decode(&clientResp)
-	return &clientResp, reqInf, nil
+	reqInf, err := to.put(route, u, nil, &clientResp)
+	return &clientResp, reqInf, err
 }
 
 // DeleteUserByID updates user with the given id
 func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 // RegisterNewUser requests the registration of a new user with the given tenant ID and role ID,
 // through their email.
 func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAddress) (tc.Alerts, ReqInf, error) {
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
-
-	reqBody, err := json.Marshal(tc.UserRegistrationRequest{
+	reqBody := tc.UserRegistrationRequest{
 		Email:    email,
 		TenantID: tenantID,
 		Role:     roleID,
-	})
-	if err != nil {
-		return alerts, reqInf, err
 	}
-
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody, nil)
-	reqInf.RemoteAddr = remoteAddr
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(apiBase+"/users/register", reqBody, nil, &alerts)
 	return alerts, reqInf, err
 }

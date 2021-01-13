@@ -13,10 +13,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
-	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -25,45 +22,22 @@ const API_TO_EXTENSION = apiBase + "/servercheck/extensions"
 
 // CreateServerCheckExtension creates a servercheck extension.
 func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, ReqInf, error) {
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(ServerCheckExtension)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_TO_EXTENSION, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(API_TO_EXTENSION, ServerCheckExtension, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteServerCheckExtension deletes a servercheck extension.
 func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.del(URI, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetServerCheckExtensions gets all servercheck extensions.
 func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.ServerCheckExtensionResponse{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var toExtResp tc.ServerCheckExtensionResponse
-	err = json.NewDecoder(resp.Body).Decode(&toExtResp)
+	reqInf, err := to.get(API_TO_EXTENSION, nil, &toExtResp)
 	return toExtResp, reqInf, err
 }
