@@ -105,6 +105,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	it('should toggle the visibility of the first table column ', function() {
 		console.log("Toggling visiblity of column");
 		browser.setLocation("delivery-services");
+		browser.sleep(1000);
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
