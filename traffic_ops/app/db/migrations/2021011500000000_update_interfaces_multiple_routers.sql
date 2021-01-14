@@ -15,14 +15,32 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE server DROP COLUMN router_host_name;
-ALTER TABLE server DROP COLUMN router_port_name;
 ALTER TABLE interface ADD COLUMN router_host_name text DEFAULT '';
 ALTER TABLE interface ADD COLUMN router_port text DEFAULT '';
 
+UPDATE interface
+SET router_host_name = CASE
+WHEN server.router_host_name IS NULL THEN ''
+ELSE interface.router_host_name || server.router_host_name
+END
+FROM server
+WHERE server = server.id;
+
+UPDATE interface
+SET router_port = CASE
+WHEN server.router_port_name IS NULL THEN ''
+ELSE interface.router_port || server.router_port_name
+END
+FROM server
+WHERE server = server.id;
+
+ALTER TABLE server DROP COLUMN router_host_name;
+ALTER TABLE server DROP COLUMN router_port_name;
+
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
-ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';
 ALTER TABLE interface DROP COLUMN router_host_name;
 ALTER TABLE interface DROP COLUMN router_port;
+
+ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
+ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';

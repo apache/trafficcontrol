@@ -103,7 +103,7 @@ type ServerInterfaceInfo struct {
 type ServerInterfaceInfoV40 struct {
 	ServerInterfaceInfo
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
-	RouterPort string `json:"routerPort" db:"router_port"`
+	RouterPort     string `json:"routerPort" db:"router_port"`
 }
 
 // GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
@@ -212,6 +212,79 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 
 	iface.IPAddresses = ips
 	return []ServerInterfaceInfo{iface}, nil
+}
+
+func ToInterfacesV4(oldInterfaces []ServerInterfaceInfo, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
+	v4Interfaces := make([]ServerInterfaceInfoV40, 0)
+	var v4Int ServerInterfaceInfoV40
+	for _, i := range oldInterfaces {
+		v4Int.ServerInterfaceInfo = i
+		if routerName != nil {
+			v4Int.RouterHostName = *routerName
+		}
+		if routerPort != nil {
+			v4Int.RouterPort = *routerPort
+		}
+		v4Interfaces = append(v4Interfaces, v4Int)
+	}
+	return v4Interfaces, nil
+}
+
+func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService bool, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
+	var iface ServerInterfaceInfoV40
+	if lid.InterfaceMtu == nil {
+		return nil, errors.New("interfaceMtu is null")
+	}
+	mtu := uint64(*lid.InterfaceMtu)
+	iface.MTU = &mtu
+
+	if lid.InterfaceName == nil {
+		return nil, errors.New("interfaceName is null")
+	}
+	iface.Name = *lid.InterfaceName
+
+	var ips []ServerIPAddress
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
+		if lid.IPGateway != nil && *lid.IPGateway == "" {
+			lid.IPGateway = nil
+		}
+
+		ipStr := *lid.IPAddress
+		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
+			mask := net.ParseIP(*lid.IPNetmask).To4()
+			if mask == nil {
+				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+			}
+			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
+			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
+		}
+
+		ips = append(ips, ServerIPAddress{
+			Address:        ipStr,
+			Gateway:        lid.IPGateway,
+			ServiceAddress: ipv4IsService,
+		})
+	}
+
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
+		if lid.IP6Gateway != nil && *lid.IP6Gateway == "" {
+			lid.IP6Gateway = nil
+		}
+		ips = append(ips, ServerIPAddress{
+			Address:        *lid.IP6Address,
+			Gateway:        lid.IP6Gateway,
+			ServiceAddress: ipv6IsService,
+		})
+	}
+
+	iface.IPAddresses = ips
+	if routerName != nil {
+		iface.RouterHostName = *routerName
+	}
+	if routerPort != nil {
+		iface.RouterPort = *routerPort
+	}
+	return []ServerInterfaceInfoV40{iface}, nil
 }
 
 // String implements the fmt.Stringer interface.
@@ -793,11 +866,71 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	return upgraded, nil
 }
 
+func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
+	ipv4IsService := false
+	if s.IPIsService != nil {
+		ipv4IsService = *s.IPIsService
+	}
+	ipv6IsService := false
+	if s.IP6IsService != nil {
+		ipv6IsService = *s.IP6IsService
+	}
+	common := CommonServerPropertiesV40{
+		Cachegroup:       s.CommonServerProperties.Cachegroup,
+		CachegroupID:     s.CommonServerProperties.CachegroupID,
+		CDNID:            s.CommonServerProperties.CDNID,
+		CDNName:          s.CommonServerProperties.CDNName,
+		DeliveryServices: s.CommonServerProperties.DeliveryServices,
+		DomainName:       s.CommonServerProperties.DomainName,
+		FQDN:             s.CommonServerProperties.FQDN,
+		FqdnTime:         s.CommonServerProperties.FqdnTime,
+		GUID:             s.CommonServerProperties.GUID,
+		HostName:         s.CommonServerProperties.HostName,
+		HTTPSPort:        s.CommonServerProperties.HTTPSPort,
+		ID:               s.CommonServerProperties.ID,
+		ILOIPAddress:     s.CommonServerProperties.ILOIPAddress,
+		ILOIPGateway:     s.CommonServerProperties.ILOIPGateway,
+		ILOIPNetmask:     s.CommonServerProperties.ILOIPNetmask,
+		ILOPassword:      s.CommonServerProperties.ILOPassword,
+		ILOUsername:      s.CommonServerProperties.ILOUsername,
+		LastUpdated:      s.CommonServerProperties.LastUpdated,
+		MgmtIPAddress:    s.CommonServerProperties.MgmtIPAddress,
+		MgmtIPGateway:    s.CommonServerProperties.MgmtIPGateway,
+		MgmtIPNetmask:    s.CommonServerProperties.MgmtIPNetmask,
+		OfflineReason:    s.CommonServerProperties.OfflineReason,
+		PhysLocation:     s.CommonServerProperties.PhysLocation,
+		PhysLocationID:   s.CommonServerProperties.PhysLocationID,
+		Profile:          s.CommonServerProperties.Profile,
+		ProfileDesc:      s.CommonServerProperties.ProfileDesc,
+		ProfileID:        s.CommonServerProperties.ProfileID,
+		Rack:             s.CommonServerProperties.Rack,
+		RevalPending:     s.CommonServerProperties.RevalPending,
+		Status:           s.CommonServerProperties.Status,
+		StatusID:         s.CommonServerProperties.StatusID,
+		TCPPort:          s.CommonServerProperties.TCPPort,
+		Type:             s.CommonServerProperties.Type,
+		TypeID:           s.CommonServerProperties.TypeID,
+		UpdPending:       s.CommonServerProperties.UpdPending,
+		XMPPID:           s.CommonServerProperties.XMPPID,
+		XMPPPasswd:       s.CommonServerProperties.XMPPPasswd,
+	}
+	upgraded := ServerV40{
+		CommonServerPropertiesV40: common,
+	}
+
+	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
+}
+
 // ServerV40 is the representation of a Server in version 3.1 of the Traffic Ops API
 type ServerV40 struct {
 	CommonServerPropertiesV40
-	Interfaces []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
-	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`
+	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
+	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
@@ -831,6 +964,144 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 
 	var err error
 	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(s.Interfaces)
+	if err != nil {
+		return legacyServer, err
+	}
+
+	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
+	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
+
+	return legacyServer, nil
+}
+
+func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+	common := CommonServerProperties{
+		Cachegroup:       s.CommonServerPropertiesV40.Cachegroup,
+		CachegroupID:     s.CommonServerPropertiesV40.CachegroupID,
+		CDNID:            s.CommonServerPropertiesV40.CDNID,
+		CDNName:          s.CommonServerPropertiesV40.CDNName,
+		DeliveryServices: s.CommonServerPropertiesV40.DeliveryServices,
+		DomainName:       s.CommonServerPropertiesV40.DomainName,
+		FQDN:             s.CommonServerPropertiesV40.FQDN,
+		FqdnTime:         s.CommonServerPropertiesV40.FqdnTime,
+		GUID:             s.CommonServerPropertiesV40.GUID,
+		HostName:         s.CommonServerPropertiesV40.HostName,
+		HTTPSPort:        s.CommonServerPropertiesV40.HTTPSPort,
+		ID:               s.CommonServerPropertiesV40.ID,
+		ILOIPAddress:     s.CommonServerPropertiesV40.ILOIPAddress,
+		ILOIPGateway:     s.CommonServerPropertiesV40.ILOIPGateway,
+		ILOIPNetmask:     s.CommonServerPropertiesV40.ILOIPNetmask,
+		ILOPassword:      s.CommonServerPropertiesV40.ILOPassword,
+		ILOUsername:      s.CommonServerPropertiesV40.ILOUsername,
+		LastUpdated:      s.CommonServerPropertiesV40.LastUpdated,
+		MgmtIPAddress:    s.CommonServerPropertiesV40.MgmtIPAddress,
+		MgmtIPGateway:    s.CommonServerPropertiesV40.MgmtIPGateway,
+		MgmtIPNetmask:    s.CommonServerPropertiesV40.MgmtIPNetmask,
+		OfflineReason:    s.CommonServerPropertiesV40.OfflineReason,
+		PhysLocation:     s.CommonServerPropertiesV40.PhysLocation,
+		PhysLocationID:   s.CommonServerPropertiesV40.PhysLocationID,
+		Profile:          s.CommonServerPropertiesV40.Profile,
+		ProfileDesc:      s.CommonServerPropertiesV40.ProfileDesc,
+		ProfileID:        s.CommonServerPropertiesV40.ProfileID,
+		Rack:             s.CommonServerPropertiesV40.Rack,
+		RevalPending:     s.CommonServerPropertiesV40.RevalPending,
+		Status:           s.CommonServerPropertiesV40.Status,
+		StatusID:         s.CommonServerPropertiesV40.StatusID,
+		TCPPort:          s.CommonServerPropertiesV40.TCPPort,
+		Type:             s.CommonServerPropertiesV40.Type,
+		TypeID:           s.CommonServerPropertiesV40.TypeID,
+		UpdPending:       s.CommonServerPropertiesV40.UpdPending,
+		XMPPID:           s.CommonServerPropertiesV40.XMPPID,
+		XMPPPasswd:       s.CommonServerPropertiesV40.XMPPPasswd,
+	}
+	if len(s.Interfaces) != 0 {
+		common.RouterHostName = &s.Interfaces[0].RouterHostName
+		common.RouterPortName = &s.Interfaces[0].RouterPort
+	}
+
+	interfaces := make([]ServerInterfaceInfo, 0)
+	i := ServerInterfaceInfo{}
+	for _, in := range s.Interfaces {
+		i.Name = in.Name
+		i.MTU = in.MTU
+		i.MaxBandwidth = in.MaxBandwidth
+		i.Monitor = in.Monitor
+		i.IPAddresses = in.IPAddresses
+		interfaces = append(interfaces, i)
+	}
+	serverV30 := ServerV30{
+		CommonServerProperties: common,
+		Interfaces:             interfaces,
+		StatusLastUpdated:      s.StatusLastUpdated,
+	}
+
+	return serverV30, nil
+}
+
+func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+	common := CommonServerProperties{
+		Cachegroup:       s.CommonServerPropertiesV40.Cachegroup,
+		CachegroupID:     s.CommonServerPropertiesV40.CachegroupID,
+		CDNID:            s.CommonServerPropertiesV40.CDNID,
+		CDNName:          s.CommonServerPropertiesV40.CDNName,
+		DeliveryServices: s.CommonServerPropertiesV40.DeliveryServices,
+		DomainName:       s.CommonServerPropertiesV40.DomainName,
+		FQDN:             s.CommonServerPropertiesV40.FQDN,
+		FqdnTime:         s.CommonServerPropertiesV40.FqdnTime,
+		GUID:             s.CommonServerPropertiesV40.GUID,
+		HostName:         s.CommonServerPropertiesV40.HostName,
+		HTTPSPort:        s.CommonServerPropertiesV40.HTTPSPort,
+		ID:               s.CommonServerPropertiesV40.ID,
+		ILOIPAddress:     s.CommonServerPropertiesV40.ILOIPAddress,
+		ILOIPGateway:     s.CommonServerPropertiesV40.ILOIPGateway,
+		ILOIPNetmask:     s.CommonServerPropertiesV40.ILOIPNetmask,
+		ILOPassword:      s.CommonServerPropertiesV40.ILOPassword,
+		ILOUsername:      s.CommonServerPropertiesV40.ILOUsername,
+		LastUpdated:      s.CommonServerPropertiesV40.LastUpdated,
+		MgmtIPAddress:    s.CommonServerPropertiesV40.MgmtIPAddress,
+		MgmtIPGateway:    s.CommonServerPropertiesV40.MgmtIPGateway,
+		MgmtIPNetmask:    s.CommonServerPropertiesV40.MgmtIPNetmask,
+		OfflineReason:    s.CommonServerPropertiesV40.OfflineReason,
+		PhysLocation:     s.CommonServerPropertiesV40.PhysLocation,
+		PhysLocationID:   s.CommonServerPropertiesV40.PhysLocationID,
+		Profile:          s.CommonServerPropertiesV40.Profile,
+		ProfileDesc:      s.CommonServerPropertiesV40.ProfileDesc,
+		ProfileID:        s.CommonServerPropertiesV40.ProfileID,
+		Rack:             s.CommonServerPropertiesV40.Rack,
+		RevalPending:     s.CommonServerPropertiesV40.RevalPending,
+		Status:           s.CommonServerPropertiesV40.Status,
+		StatusID:         s.CommonServerPropertiesV40.StatusID,
+		TCPPort:          s.CommonServerPropertiesV40.TCPPort,
+		Type:             s.CommonServerPropertiesV40.Type,
+		TypeID:           s.CommonServerPropertiesV40.TypeID,
+		UpdPending:       s.CommonServerPropertiesV40.UpdPending,
+		XMPPID:           s.CommonServerPropertiesV40.XMPPID,
+		XMPPPasswd:       s.CommonServerPropertiesV40.XMPPPasswd,
+	}
+	if len(s.Interfaces) != 0 {
+		common.RouterHostName = &s.Interfaces[0].RouterHostName
+		common.RouterPortName = &s.Interfaces[0].RouterPort
+	}
+	legacyServer := ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: common,
+		},
+		IPIsService:  new(bool),
+		IP6IsService: new(bool),
+	}
+
+	interfaces := make([]ServerInterfaceInfo, 0)
+	i := ServerInterfaceInfo{}
+	for _, in := range s.Interfaces {
+		i.Name = in.Name
+		i.MTU = in.MTU
+		i.MaxBandwidth = in.MaxBandwidth
+		i.Monitor = in.Monitor
+		i.IPAddresses = in.IPAddresses
+		interfaces = append(interfaces, i)
+	}
+	var err error
+	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(interfaces)
 	if err != nil {
 		return legacyServer, err
 	}
