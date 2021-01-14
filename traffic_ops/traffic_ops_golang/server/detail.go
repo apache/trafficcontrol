@@ -157,36 +157,35 @@ func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationI
 	}
 }
 
+//ToDo: Srijeet change here
 func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
 	allowedOrderByCols := map[string]string{
-		"":                 "",
-		"cachegroup":       "server.cachegroup",
-		"cdn_name":         "cdn.name",
-		"domain_name":      "server.domain_name",
-		"guid":             "server.guid",
-		"host_name":        "server.host_name",
-		"https_port":       "server.https_port",
-		"id":               "server.id",
-		"ilo_ip_address":   "server.ilo_ip_address",
-		"ilo_ip_gateway":   "server.ilo_ip_gateway",
-		"ilo_ip_netmask":   "server.ilo_ip_netmask",
-		"ilo_password":     "server.ilo_password",
-		"ilo_username":     "server.ilo_username",
-		"mgmt_ip_address":  "server.mgmt_ip_address",
-		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
-		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
-		"offline_reason":   "server.offline_reason",
-		"phys_location":    "pl.name",
-		"profile":          "p.name",
-		"profile_desc":     "p.description",
-		"rack":             "server.rack",
-		"router_host_name": "server.router_host_name",
-		"router_port_name": "server.router_port_name",
-		"status":           "st.name",
-		"tcp_port":         "server.tcp_port",
-		"server_type":      "t.name",
-		"xmpp_id":          "server.xmpp_id",
-		"xmpp_passwd":      "server.xmpp_passwd",
+		"":                "",
+		"cachegroup":      "server.cachegroup",
+		"cdn_name":        "cdn.name",
+		"domain_name":     "server.domain_name",
+		"guid":            "server.guid",
+		"host_name":       "server.host_name",
+		"https_port":      "server.https_port",
+		"id":              "server.id",
+		"ilo_ip_address":  "server.ilo_ip_address",
+		"ilo_ip_gateway":  "server.ilo_ip_gateway",
+		"ilo_ip_netmask":  "server.ilo_ip_netmask",
+		"ilo_password":    "server.ilo_password",
+		"ilo_username":    "server.ilo_username",
+		"mgmt_ip_address": "server.mgmt_ip_address",
+		"mgmt_ip_gateway": "server.mgmt_ip_gateway",
+		"mgmt_ip_netmask": "server.mgmt_ip_netmask",
+		"offline_reason":  "server.offline_reason",
+		"phys_location":   "pl.name",
+		"profile":         "p.name",
+		"profile_desc":    "p.description",
+		"rack":            "server.rack",
+		"status":          "st.name",
+		"tcp_port":        "server.tcp_port",
+		"server_type":     "t.name",
+		"xmpp_id":         "server.xmpp_id",
+		"xmpp_passwd":     "server.xmpp_passwd",
 	}
 	orderBy, ok := allowedOrderByCols[orderBy]
 	if !ok {
@@ -221,8 +220,6 @@ pl.name as phys_location,
 p.name as profile,
 p.description as profile_desc,
 server.rack,
-server.router_host_name,
-server.router_port_name,
 st.name as status,
 server.tcp_port,
 t.name as server_type,
@@ -287,7 +284,7 @@ JOIN type t ON server.type = t.id
 
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}

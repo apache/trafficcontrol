@@ -179,8 +179,6 @@ SELECT
 	s.profile AS profile_id,
 	s.rack,
 	s.reval_pending,
-	s.router_host_name,
-	s.router_port_name,
 	st.name AS status,
 	s.status AS status_id,
 	s.tcp_port,
@@ -468,7 +466,8 @@ UPDATE server SET
 	tcp_port=:tcp_port,
 	type=:server_type_id,
 	upd_pending=:upd_pending,
-	xmpp_passwd=:xmpp_passwd
+	xmpp_passwd=:xmpp_passwd,
+	status_last_updated=:status_last_updated
 WHERE id=:id
 RETURNING
 	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
@@ -502,7 +501,8 @@ RETURNING
 	tcp_port,
 	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
 	type AS server_type_id,
-	upd_pending
+	upd_pending,
+	status_last_updated
 `
 
 const originServerQuery = `
@@ -1910,6 +1910,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	originalStatusID := *original.StatusID
 
 	var server tc.ServerV40
+	var serverV3 tc.ServerV30
 	var statusLastUpdatedTime time.Time
 	if inf.Version.Major >= 4 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
@@ -1924,10 +1925,33 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			server.StatusLastUpdated = original.StatusLastUpdated
 			statusLastUpdatedTime = *original.StatusLastUpdated
 		}
-
 		_, err := validateV4(&server, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	} else if inf.Version.Major >= 3 {
+		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if serverV3.StatusID != nil && *serverV3.StatusID != originalStatusID {
+			currentTime := time.Now()
+			serverV3.StatusLastUpdated = &currentTime
+			statusLastUpdatedTime = currentTime
+		} else {
+			serverV3.StatusLastUpdated = original.StatusLastUpdated
+			statusLastUpdatedTime = *original.StatusLastUpdated
+		}
+		_, err := validateV3(&serverV3, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		server, err = serverV3.UpgradeToV40()
+		if err != nil {
+			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 	} else if inf.Version.Major == 2 {

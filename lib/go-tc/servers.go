@@ -866,6 +866,58 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	return upgraded, nil
 }
 
+func (s ServerV30) UpgradeToV40() (ServerV40, error) {
+	common := CommonServerPropertiesV40{
+		Cachegroup:       s.CommonServerProperties.Cachegroup,
+		CachegroupID:     s.CommonServerProperties.CachegroupID,
+		CDNID:            s.CommonServerProperties.CDNID,
+		CDNName:          s.CommonServerProperties.CDNName,
+		DeliveryServices: s.CommonServerProperties.DeliveryServices,
+		DomainName:       s.CommonServerProperties.DomainName,
+		FQDN:             s.CommonServerProperties.FQDN,
+		FqdnTime:         s.CommonServerProperties.FqdnTime,
+		GUID:             s.CommonServerProperties.GUID,
+		HostName:         s.CommonServerProperties.HostName,
+		HTTPSPort:        s.CommonServerProperties.HTTPSPort,
+		ID:               s.CommonServerProperties.ID,
+		ILOIPAddress:     s.CommonServerProperties.ILOIPAddress,
+		ILOIPGateway:     s.CommonServerProperties.ILOIPGateway,
+		ILOIPNetmask:     s.CommonServerProperties.ILOIPNetmask,
+		ILOPassword:      s.CommonServerProperties.ILOPassword,
+		ILOUsername:      s.CommonServerProperties.ILOUsername,
+		LastUpdated:      s.CommonServerProperties.LastUpdated,
+		MgmtIPAddress:    s.CommonServerProperties.MgmtIPAddress,
+		MgmtIPGateway:    s.CommonServerProperties.MgmtIPGateway,
+		MgmtIPNetmask:    s.CommonServerProperties.MgmtIPNetmask,
+		OfflineReason:    s.CommonServerProperties.OfflineReason,
+		PhysLocation:     s.CommonServerProperties.PhysLocation,
+		PhysLocationID:   s.CommonServerProperties.PhysLocationID,
+		Profile:          s.CommonServerProperties.Profile,
+		ProfileDesc:      s.CommonServerProperties.ProfileDesc,
+		ProfileID:        s.CommonServerProperties.ProfileID,
+		Rack:             s.CommonServerProperties.Rack,
+		RevalPending:     s.CommonServerProperties.RevalPending,
+		Status:           s.CommonServerProperties.Status,
+		StatusID:         s.CommonServerProperties.StatusID,
+		TCPPort:          s.CommonServerProperties.TCPPort,
+		Type:             s.CommonServerProperties.Type,
+		TypeID:           s.CommonServerProperties.TypeID,
+		UpdPending:       s.CommonServerProperties.UpdPending,
+		XMPPID:           s.CommonServerProperties.XMPPID,
+		XMPPPasswd:       s.CommonServerProperties.XMPPPasswd,
+	}
+	upgraded := ServerV40{
+		CommonServerPropertiesV40: common,
+		StatusLastUpdated:         s.StatusLastUpdated,
+	}
+	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
+}
+
 func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
