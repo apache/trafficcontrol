@@ -65,29 +65,61 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major < 3 {
+	if inf.Version.Major <= 2 {
 		v11ServerList := []tc.DSServerV11{}
 		for _, srv := range servers {
-			v11server := tc.DSServerV11{}
-			v11server.DSServerBase = srv.DSServerBase
-
+			routerHostName := ""
+			routerPort := ""
 			interfaces := *srv.ServerInterfaces
-			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPort
+			}
+			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
 			}
+			v11server := tc.DSServerV11{}
+			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+
 			v11server.LegacyInterfaceDetails = legacyInterface
 
 			v11ServerList = append(v11ServerList, v11server)
 		}
 		api.WriteResp(w, r, v11ServerList)
 		return
+	} else if inf.Version.Major <= 3 {
+		v3ServerList := []tc.DSServerV3{}
+		for _, srv := range servers {
+			routerHostName := ""
+			routerPort := ""
+			interfaces := *srv.ServerInterfaces
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPort
+			}
+			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v3server := tc.DSServerV3{}
+			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+
+			v3server.ServerInterfaces = &v3Interfaces
+
+			v3ServerList = append(v3ServerList, v3server)
+		}
+		api.WriteResp(w, r, v3ServerList)
+		return
 	}
 	api.WriteResp(w, r, servers)
 }
 
-func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
+func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServerV4, error) {
 	queryFormatString := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
@@ -153,7 +185,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 		}
 		serverIDs = append(serverIDs, *serverID)
 	}
-	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
+	serversMap, err := dbhelpers.GetServersInterfacesV40(serverIDs, tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}
@@ -164,9 +196,9 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 	}
 	defer rows.Close()
 
-	servers := []tc.DSServer{}
+	servers := []tc.DSServerV4{}
 	for rows.Next() {
-		s := tc.DSServer{}
+		s := tc.DSServerV4{}
 		err := rows.Scan(
 			&s.ID,
 			&s.Cachegroup,
@@ -205,7 +237,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
-		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
 			for _, interfaceInfo := range interfacesMap {
 				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)

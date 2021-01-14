@@ -154,7 +154,7 @@ func TestGetEligibleServers(t *testing.T) {
 
 }
 
-func getMockDSServers() []tc.DSServer {
+func getMockDSServers() []tc.DSServerV3 {
 	base := tc.DSServerBase{
 		ID:           util.IntPtr(1),
 		Cachegroup:   util.StrPtr("cgTest"),
@@ -163,11 +163,11 @@ func getMockDSServers() []tc.DSServer {
 		CDNName:      util.StrPtr("cdnTest"),
 		DomainName:   util.StrPtr("domain"),
 	}
-	srv := tc.DSServer{
+	srv := tc.DSServerV3{
 		base,
 		&[]tc.ServerInterfaceInfo{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
-	srvsExpected := []tc.DSServer{srv}
+	srvsExpected := []tc.DSServerV3{srv}
 	return srvsExpected
 }
 

@@ -357,6 +357,89 @@ func (lid LegacyInterfaceDetails) String() string {
 	return b.String()
 }
 
+func V4InterfaceInfoToV3Interfaces(serverInterfaces []ServerInterfaceInfoV40) ([]ServerInterfaceInfo, error) {
+	var interfaces []ServerInterfaceInfo
+
+	for _, intFace := range serverInterfaces {
+		var interfaceV3 ServerInterfaceInfo
+		interfaceV3.IPAddresses = intFace.IPAddresses
+		interfaceV3.Monitor = intFace.Monitor
+		interfaceV3.MaxBandwidth = intFace.MaxBandwidth
+		interfaceV3.MTU = intFace.MTU
+		interfaceV3.Name = intFace.Name
+		interfaces = append(interfaces, interfaceV3)
+	}
+
+	return interfaces, nil
+}
+
+func V4InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfoV40) (LegacyInterfaceDetails, error) {
+	var legacyDetails LegacyInterfaceDetails
+
+	for _, intFace := range serverInterfaces {
+
+		foundServiceInterface := false
+
+		for _, addr := range intFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+
+			foundServiceInterface = true
+
+			address := addr.Address
+			gateway := addr.Gateway
+
+			var parsedIp net.IP
+			var mask *net.IPNet
+			var err error
+			parsedIp, mask, err = net.ParseCIDR(address)
+			if err != nil {
+				parsedIp = net.ParseIP(address)
+				if parsedIp == nil {
+					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				}
+			}
+
+			if parsedIp.To4() == nil {
+				legacyDetails.IP6Address = &address
+				legacyDetails.IP6Gateway = gateway
+			} else if mask != nil {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = util.StrPtr(fmt.Sprintf("%d.%d.%d.%d", mask.Mask[0], mask.Mask[1], mask.Mask[2], mask.Mask[3]))
+			} else {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = new(string)
+			}
+
+			if intFace.MTU != nil {
+				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
+			}
+
+			// This should no longer matter now that short-circuiting is better,
+			// but this temporary variable is necessary because the 'intFace'
+			// variable is referential, so taking '&intFace.Name' would cause
+			// problems when intFace is reassigned.
+			name := intFace.Name
+			legacyDetails.InterfaceName = &name
+
+			// we can jump out here since servers can only legally have one
+			// IPv4 and one IPv6 service address
+			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
+				break
+			}
+		}
+
+		if foundServiceInterface {
+			return legacyDetails, nil
+		}
+	}
+
+	return legacyDetails, errors.New("no service addresses found")
+}
+
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
 // equivalent LegacyInterfaceDetails structure. It does this by creating the
 // IP address fields using the "service" interface's IP addresses. All others
