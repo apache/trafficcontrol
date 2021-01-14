@@ -112,7 +112,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		first.click();
 		expect(first.isSelected()).toBe(false);
 		let tableColumns = element.all(by.css('.ag-header-cell'));
-		expect(tableColumns.count()).toBe(11);
+		expect(tableColumns.count()).toBe(9);
 	});
 
 	it('should verify the new ANY_MAP delivery service and update it', function() {
