@@ -19,6 +19,7 @@
 
 module.exports = function(){
 	this.moreBtn=element(by.name('moreBtn'));
+	this.createDSMenuItem=element(by.name('createDSMenuItem'));
 	this.viewStaticCapabilitiesMenuItem=element(by.css('a[ng-click*=viewStaticDnsEntries]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.manageServersMenuItem=element(by.css('a[ng-click*=viewServers]'));
