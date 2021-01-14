@@ -319,7 +319,6 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <small class="input-warning" ng-show="!settings.isNew && routingConfig.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
                             <input id="routingName" name="routingName" type="text" class="form-control" placeholder="Routing name used for the delivery service resulting in FQDN = <routing name>.<key>.<CDN domain>" ng-model="deliveryService.routingName" maxlength="48" pattern="[a-z0-9]([a-z\-0-9]*[a-z0-9])?" required ng-disabled="(!settings.isNew && deliveryService.sslKeyVersion)">
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'required')">Required</small>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'maxlength')">Too Long</small>

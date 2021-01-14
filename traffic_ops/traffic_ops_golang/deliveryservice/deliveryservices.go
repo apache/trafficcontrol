@@ -1837,7 +1837,7 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 // GetSSLVersion reports a boolean value, confirming whether DS has a SSL version or not
 func GetSSLVersion(xmlId string, tx *sql.Tx) (bool, error) {
 	var exists bool
-	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id = $1 AND ssl_key_version IS NOT NULL)`, xmlId)
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id = $1 AND ssl_key_version>=1)`, xmlId)
 	err := row.Scan(&exists)
 	return exists, err
 }
