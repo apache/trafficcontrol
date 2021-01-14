@@ -30,6 +30,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 */
 	@Input() public validity: Observable<string> = of("");
 
+	/** A subscription for the 'validity' input. */
 	private subscription: Subscription | null = null;
 
 	constructor(private readonly element: ElementRef<HTMLInputElement>) { }

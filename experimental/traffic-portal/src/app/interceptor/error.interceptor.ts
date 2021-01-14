@@ -38,6 +38,10 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 * Intercepts HTTP responses and checks for erroneous responses, displaying
 	 * appropriate error Alerts and redirecting unauthenticated users to the
 	 * login form.
+	 *
+	 * @param request The client request.
+	 * @param next The next handler for HTTP requests in the pipeline.
+	 * @returns An Observable that will emit an event if the request fails.
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(catchError(err => {

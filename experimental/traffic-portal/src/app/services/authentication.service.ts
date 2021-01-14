@@ -26,18 +26,20 @@ import { UserService } from "./api";
  */
 @Injectable({ providedIn: "root" })
 export class AuthenticationService {
-	private readonly currentUserSubject: BehaviorSubject<User | null>;
-
 	/** An observable that emits the current user, or 'null' if they are not logged in. */
 	public currentUser: Observable<User | null>;
-	private readonly loggedInSubject: BehaviorSubject<boolean>;
+	/** Observation subject for the current user. */
+	private readonly currentUserSubject: BehaviorSubject<User | null>;
 
 	/** An Observable that emits whether or not the current user is logged in. */
 	public loggedIn: Observable<boolean>;
-	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
+	/** Observation subject for whether or not the user is logged in. */
+	private readonly loggedInSubject: BehaviorSubject<boolean>;
 
 	/** An Observable that emits the current user's capabilities. */
 	public currentUserCapabilities: Observable<Set<string>>;
+	/** Behavior subject for the current user's capabilities. */
+	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
 
 	constructor(private readonly api: UserService) {
 		this.currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -93,6 +95,7 @@ export class AuthenticationService {
 	 *
 	 * @param u The user's username.
 	 * @param p The user's password.
+	 * @returns An observable that emits whether or not login succeeded.
 	 */
 	public login(u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(

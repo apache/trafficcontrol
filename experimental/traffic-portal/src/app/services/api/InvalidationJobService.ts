@@ -50,6 +50,9 @@ export class InvalidationJobService extends APIService {
 
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.
+	 *
+	 * @param opts Optional identifiers for the requested Jobs.
+	 * @returns An Observable that will emit the request Jobs.
 	 */
 	public getInvalidationJobs(opts?: JobOpts): Observable<Array<InvalidationJob>> {
 		let path = `/api/${this.apiVersion}/jobs`;
@@ -79,7 +82,10 @@ export class InvalidationJobService extends APIService {
 	}
 
 	/**
-	 * Creates the passed invalidation job, returning whether or not the creation was successful.
+	 * Creates an Invalidation Job.
+	 *
+	 * @param job The Job to create.
+	 * @returns An Observable that emits whether or not creation succeeded.
 	 */
 	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
 		const path = `/api/${this.apiVersion}/user/current/jobs`;

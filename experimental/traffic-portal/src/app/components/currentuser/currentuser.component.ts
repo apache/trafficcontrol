@@ -31,6 +31,7 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
 	public currentUser: User | null = null;
+	/** A subscription for the authentication service's currentUser value. */
 	private subscription: Subscription | null = null;
 
 	constructor(private readonly auth: AuthenticationService) {

@@ -28,6 +28,7 @@ import { AuthenticationService } from "../../services";
 	templateUrl: "./login.component.html"
 })
 export class LoginComponent implements OnInit {
+	/** The URL to which to redirect users after successful login. */
 	private returnURL = "";
 
 	/** The user-entered username. */

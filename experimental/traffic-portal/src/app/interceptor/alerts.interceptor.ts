@@ -30,6 +30,10 @@ export class AlertInterceptor implements HttpInterceptor {
 
 	/**
 	 * Intercepts HTTP responses and checks for any alerts.
+	 *
+	 * @param request The client request.
+	 * @param next The next handler for HTTP requests in the pipeline.
+	 * @returns An Observable that will not emit anything.
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(tap(

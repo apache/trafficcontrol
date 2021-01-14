@@ -34,8 +34,11 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 	public get value(): string {
 		return this.val;
 	}
+
+	/** The raw value for the SSH server network location. */
 	private val = "";
 
+	/** The SSH connection username. */
 	private username = "";
 
 	/** The SSH URL to use. */
@@ -61,14 +64,23 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 		}
 	}
 
-	/** Called when the value changes - I don't think this will ever happen. */
-	public refresh(params: ICellRendererParams): boolean {
+	/**
+	 * Called when the value changes - I don't think this will ever happen.
+	 *
+	 * @param params The AG-Grid cell-rendering parameters (refer to AG-Grid docs).
+	 * @returns 'true' if the component could be refreshed (always for this simple component) or 'false' if the component must be recreated.
+	 */
+	public refresh(params: ICellRendererParams): true {
 		this.val = params.value;
 		console.log("refreshed:", params);
 		return true;
 	}
 
-	/** called after ag-grid is initalized */
+	/**
+	 * Called after ag-grid is initalized.
+	 *
+	 * @param params The AG-Grid cell-rendering parameters (refer to AG-Grid docs).
+	 */
 	public agInit(params: ICellRendererParams): void {
 		console.log("has value?:", Object.prototype.hasOwnProperty.call(params, "value"));
 		console.log("getval:", params.getValue());

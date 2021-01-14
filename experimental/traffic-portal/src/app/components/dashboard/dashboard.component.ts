@@ -61,6 +61,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Whether or not the page is still loading. */
 	public loading = true;
 
+	/** A subscription for the Capabilities of the user. */
 	private capabilitiesSubscription: Subscription | null = null;
 
 	/**
@@ -126,6 +127,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * Updates the page's URL to show the current search term in its 'search'
 	 * query parameter.
+	 *
+	 * @param e The Event that triggered updating the URL.
 	 */
 	public updateURL(e: Event): void {
 		e.preventDefault();
@@ -138,6 +141,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Provides a tracking identifier for each Delivery Service.
+	 *
+	 * @param _ unused, but specified by the Angular API.
+	 * @param d The Delivery Service to identify.
+	 * @returns A unique identifier for 'd' to facilitate tracking.
 	 */
 	public tracker(_: number, d: DeliveryService): number {
 		return d.id || 0;

@@ -89,15 +89,19 @@ export class UserCardComponent implements OnInit {
 	}
 
 	/**
-	 * Checks if the user has at least on populated "location" field (city,
-	 * stateOrProvince etc.).
+	 * Checks if the user has any render-able address piece(s).
+	 *
+	 * @returns 'true' if the user has at least one populated "location" field (city,
+	 * stateOrProvince etc.), 'false' otherwise.
 	 */
 	public userHasLocation(): boolean {
 		return this.user.city !== null || this.user.stateOrProvince !== null || this.user.country !== null || this.user.postalCode !== null;
 	}
 
 	/**
-	 * Gets a string representing a user's address, or 'null' if one cannot be
+	 * Gets a string representing a user's address.
+	 *
+	 * @returns The user's address, or 'null' if one cannot be
 	 * constructed because no relevant information exists.
 	 */
 	public userLocationString(): string | null {

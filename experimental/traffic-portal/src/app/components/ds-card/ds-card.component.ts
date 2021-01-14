@@ -72,7 +72,10 @@ export class DsCardComponent implements OnInit {
 
 	/** Bandwidth chart data. */
 	public chartData: Subject<Array<DataSet | null>>;
+
+	/** Bandwidth data at the Mid-tier level. */
 	private readonly midBandwidthData: DataSet;
+	/** Bandwidth data at the Edge-tier level. */
 	private readonly edgeBandwidthData: DataSet;
 
 	/** This must be a member to have access in the template. */

@@ -20,7 +20,7 @@
 /**
  * Represents the `geoLimit` field of a Delivery Service
  */
-export enum GeoLimit {
+export const enum GeoLimit {
 	/**
 	 * No geographic limiting is to be done.
 	 */
@@ -40,7 +40,7 @@ export enum GeoLimit {
  * Defines the supported Geograhic IP mapping database providers and their
  * respective magic number identifiers.
  */
-export enum GeoProvider {
+export const enum GeoProvider {
 	/** The standard database used for geo-location. */
 	MAX_MIND = 0,
 	/** An alternative database with dubious support. */
@@ -68,7 +68,7 @@ export interface DeliveryServiceMatch {
  * Represents the allowed routing protocols and their respective magic number
  * identifiers.
  */
-export enum Protocol {
+export const enum Protocol {
 	/** Serve HTTP traffic only. */
 	HTTP = 0,
 	/** Serve HTTPS traffic only. */
@@ -79,7 +79,12 @@ export enum Protocol {
 	HTTP_TO_HTTPS = 3
 }
 
-/** Converts protocols to a textual representation. */
+/**
+ * Converts Protocols to a textual representation.
+ *
+ * @param p The Protocol to convert.
+ * @returns A string representation of 'p', or 'UNKNOWN' if 'p' was unrecognized.
+ */
 export function protocolToString(p: Protocol): string {
 	switch (p) {
 		case Protocol.HTTP:
@@ -99,7 +104,7 @@ export function protocolToString(p: Protocol): string {
  * Represents the allowed values of the `qstringIgnore` field of a
  * `DeliveryService`.
  */
-export enum QStringHandling {
+export const enum QStringHandling {
 	/** Use the query string in the cache key and pass in upstream requests. */
 	USE = 0,
 	/**
@@ -114,7 +119,12 @@ export enum QStringHandling {
 	DROP = 2
 }
 
-/** Converts a QStringHandling to a textual representation. */
+/**
+ * Converts a QStringHandling to a textual representation.
+ *
+ * @param q The QStringHandling to convert.
+ * @returns A string representation of 'q'.
+ */
 export function qStringHandlingToString(q: QStringHandling): string {
 	switch (q) {
 		case QStringHandling.USE:
@@ -125,8 +135,6 @@ export function qStringHandlingToString(q: QStringHandling): string {
 				" Mid-tier/origin";
 		case QStringHandling.DROP:
 			return "Immediately strip URLs of their query parameter strings before checking cached objects or making upstream requests";
-		default:
-			return "UNKNOWN";
 	}
 }
 
@@ -134,7 +142,7 @@ export function qStringHandlingToString(q: QStringHandling): string {
  * Represents the allowed values of the `rangeRequestHandling` field of a
  * `Delivery Service`.
  */
-export enum RangeRequestHandling {
+export const enum RangeRequestHandling {
 	/** Range requests will not be cached. */
 	NONE = 0,
 	/**
@@ -147,7 +155,12 @@ export enum RangeRequestHandling {
 	 */
 	CACHE_RANGE_REQUESTS = 2
 }
-/** Converts a RangeRequestHandling to a textual representation. */
+/**
+ * Converts a RangeRequestHandling to a textual representation.
+ *
+ * @param r The RangeRequestHandling to convert.
+ * @returns A string representation of 'r'.
+ */
 export function rangeRequestHandlingToString(r: RangeRequestHandling): string {
 	switch (r) {
 		case RangeRequestHandling.NONE:
@@ -157,7 +170,6 @@ export function rangeRequestHandlingToString(r: RangeRequestHandling): string {
 		case RangeRequestHandling.CACHE_RANGE_REQUESTS:
 			return "Use the cache_range_requests plugin to directly cache object ranges";
 	}
-	return "UNKNOWN";
 }
 
 /**
@@ -368,6 +380,7 @@ export interface DeliveryService {
 /**
  * Determines if the Delivery Service is a candidate for bypassing.
  *
+ * @param ds The Delivery Service to check.
  * @returns `true` if it can have bypass settings, `false` otherwise.
  */
 export function bypassable(ds: DeliveryService): boolean {

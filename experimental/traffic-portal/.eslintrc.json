@@ -161,6 +161,7 @@
 				"@typescript-eslint/no-misused-new": "error",
 				"@typescript-eslint/no-misused-promises": "error",
 				"@typescript-eslint/no-non-null-assertion": "error",
+				"@typescript-eslint/no-redeclare": "error",
 				"@typescript-eslint/no-require-imports": "error",
 				"@typescript-eslint/no-shadow": "error",
 				"@typescript-eslint/no-this-alias": "error",
@@ -187,23 +188,16 @@
 					"error"
 				],
 				"@typescript-eslint/typedef": "off",
-				// "@typescript-eslint/typedef": [
-				// 	"error",
-				// 	{
-				// 		"arrayDestructuring": true,
-				// 		"memberVariableDeclaration": true,
-				// 		"objectDestructuring": true,
-				// 		"parameter": true,
-				// 		"propertyDeclaration": true
-				// 	}
-				// ],
 				"jsdoc/require-jsdoc": [
 					"error",
 					{
 						"contexts": [
+							"ClassProperty",
 							"TSInterfaceDeclaration",
 							"TSTypeAliasDeclaration",
-							"TSEnumDeclaration"
+							"TSEnumDeclaration",
+							"TSEnumMember",
+							"TSAbstractClassProperty"
 						]
 					}
 				],
@@ -224,6 +218,7 @@
 					"error",
 					"unix"
 				],
+				"no-bitwise": "off",
 				"no-duplicate-case": "error",
 				"no-duplicate-imports": "error",
 				"no-else-return": "error",
@@ -236,7 +231,7 @@
 					}
 				],
 				"no-new-func": "error",
-				"no-redeclare": "error",
+				"no-redeclare": "off",
 				"no-return-await": "error",
 				"no-sparse-arrays": "error",
 				"no-template-curly-in-string": "error",
@@ -249,6 +244,18 @@
 					"asc",
 					{
 						"natural": true
+					}
+				],
+				"valid-jsdoc": [
+					"error",
+					{
+						"matchDescription": ".+",
+						"requireReturn": false,
+						"requireReturnType": false,
+						"requireParamType": false,
+						"prefer": {
+							"return": "returns"
+						}
 					}
 				]
 			}

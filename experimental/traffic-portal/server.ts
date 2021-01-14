@@ -32,6 +32,8 @@ let config: ServerConfig;
 
 /**
  * The Express app is exported so that it can be used by serverless Functions.
+ *
+ * @returns The Express.js application.
  */
 export function app(): express.Express {
 	const server = express();
@@ -98,6 +100,8 @@ export function app(): express.Express {
 
 /**
  * Runs the server.
+ *
+ * @returns An exit code for the process.
  */
 function run(): number {
 	const version = getVersion();

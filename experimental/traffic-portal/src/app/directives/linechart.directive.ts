@@ -50,7 +50,9 @@ export enum LineChartType {
 })
 export class LinechartDirective implements AfterViewInit, OnDestroy {
 
+	/** The chart context. */
 	private ctx: CanvasRenderingContext2D | null = null; // | WebGLRenderingContext;
+	/** The Chart.js API object. */
 	private chart: Chart | null = null;
 
 	/** The title of the chart. */
@@ -70,7 +72,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Whether or not to display the chart's legend. */
 	@Input() public chartDisplayLegend?: boolean;
 
+	/** A subscription for the chartDataSets input. */
 	private subscription: Subscription | null = null;
+	/** Chart.js configuration options. */
 	private opts: Chart.ChartConfiguration = {};
 
 	constructor(private readonly element: ElementRef) { }

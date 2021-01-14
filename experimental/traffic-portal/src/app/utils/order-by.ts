@@ -15,6 +15,8 @@
 /**
  * Implements a single comparison between two values
  *
+ * @param a A value to compare.
+ * @param b A value to compare.
  * @returns 0 if ``a===b`` or if both a and b are ``null``, -1 if ``a<b`` or b is ``null`` and a is not, otherwise `1`
  * @throws whenever an attempt is made to compare values of different types.
  * This is calculated using ``typeof``, and so only primitive type is considered

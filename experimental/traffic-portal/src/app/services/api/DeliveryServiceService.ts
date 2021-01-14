@@ -56,6 +56,8 @@ interface DataResponse {
  * Checks that a given object represents a proper data set.
  *
  * @param r The 'response' object from the API response.
+ * @returns Always 'true' - if the assertion fails, an error is thrown rather than returning 'false'.
+ * @throws When 'r' is not a 'DataResponse'.
  */
 function isDataResponse(r: object): r is DataResponse {
 	if (!Object.prototype.hasOwnProperty.call(r, "series")) {
@@ -86,6 +88,9 @@ function isDataResponse(r: object): r is DataResponse {
 
 /**
  * Constructs a data set from the API response.
+ *
+ * @param r The parsed response body.
+ * @returns A DataSetWithSummary that was massaged out of the raw response.
  */
 function constructDataSetFromResponse(r: object): DataSetWithSummary {
 	try {
@@ -144,6 +149,7 @@ function constructDataSetFromResponse(r: object): DataSetWithSummary {
 @Injectable({providedIn: "root"})
 export class DeliveryServiceService extends APIService {
 
+	/** This is where DS Types are cached, as they are presumed to not change (often). */
 	private deliveryServiceTypes: Array<Type>;
 
 	constructor(http: HttpClient) {
@@ -156,7 +162,7 @@ export class DeliveryServiceService extends APIService {
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
-	 * @param A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
+	 * @param id A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
 	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An observable that will emit an array of `DeliveryService` objects.
 	 */
@@ -198,7 +204,7 @@ export class DeliveryServiceService extends APIService {
 	 * integral value.
 	 *
 	 * @param d Either a {@link DeliveryService} or an integral, unique identifier of a Delivery Service
-	 * @returrns An Observable that emits an object that hopefully has the right keys to represent capacity.
+	 * @returns An Observable that emits an object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
 	public getDSCapacity(d: number | DeliveryService): Observable<DSCapacity> {
@@ -298,7 +304,8 @@ export class DeliveryServiceService extends APIService {
 	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
 	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
 	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
-	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior).
+	 * @returns An Observable that will emit the requested DataResponse.
 	 */
 	public getDSTPS(
 		d: string,
@@ -306,7 +313,7 @@ export class DeliveryServiceService extends APIService {
 		end: Date,
 		interval: string,
 		useMids?: boolean
-	): Observable<null | DataResponse> {
+	): Observable<DataResponse> {
 		let path = `/api/${this.apiVersion}/deliveryservice_stats?metricType=tps_total`;
 		path += `&interval=${interval}`;
 		path += `&deliveryServiceName=${d}`;
@@ -318,7 +325,7 @@ export class DeliveryServiceService extends APIService {
 				if (r && r.body && Object.prototype.hasOwnProperty.call(r.body, "response")) {
 					return (r.body as {response: DataResponse}).response;
 				}
-				return null;
+				throw new Error(`invalid response body: '${r.body}'`);
 			}
 		));
 	}
@@ -331,6 +338,7 @@ export class DeliveryServiceService extends APIService {
 	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
 	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
 	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 * @returns An Observable that will emit the requested TPSData.
 	 */
 	public getAllDSTPSData(
 		d: string,
@@ -454,7 +462,7 @@ export class DeliveryServiceService extends APIService {
 	 * Creates a new content invalidation job.
 	 *
 	 * @param job The content invalidation job to be created.
-	 * @return An Observable that emits once: whether or not creation succeeded.
+	 * @returns An Observable that emits once: whether or not creation succeeded.
 	 */
 	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
 		const path = `/api/${this.apiVersion}/user/current/jobs`;
@@ -464,18 +472,13 @@ export class DeliveryServiceService extends APIService {
 		));
 	}
 
-	/**
-	 * Get a single server by ID.
-	 *
-	 * @param id The ID of the requested Server.
-	 */
 	public getServers (id: number): Observable<Server>;
-	/** Get all servers. */
 	public getServers (): Observable<Array<Server>>;
 	/**
 	 * Get one or all Servers.
 	 *
 	 * @param id If provided, the returned Observable will emit only the identified server.
+	 * @returns An Observable that will emit the requested Servers (or Server, if 'id' was passed).
 	 */
 	public getServers(id?: number): Observable<Array<Server> | Server> {
 		const path = `/api/${this.apiVersion}/servers`;

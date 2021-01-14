@@ -33,6 +33,8 @@ export const IPV4 = /^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0
 /**
  * Gets the service interface from the given set of interfaces.
  *
+ * @param infs The interfaces to search.
+ * @returns The interface containing service addresses.
  * @throws When no service interface cannot be found - it is illegal for a server to not have exactly one service interface.
  */
 export function serviceInterface(infs: Array<Interface>): Interface {

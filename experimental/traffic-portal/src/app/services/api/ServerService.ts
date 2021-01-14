@@ -34,6 +34,8 @@ export class ServerService extends APIService {
 
 	/**
 	 * Retrieves all servers.
+	 *
+	 * @returns An Observable that will emit the servers.
 	 */
 	public getServers(): Observable<Array<Server>> {
 		const path = `/api/${this.apiVersion}/servers`;
@@ -52,9 +54,7 @@ export class ServerService extends APIService {
 		));
 	}
 
-	/** Fetches all server checks */
 	public getServerChecks(): Observable<Servercheck[]>;
-	/** Fetches only the server checks for the Server with the given ID */
 	public getServerChecks(id: number): Observable<Servercheck>;
 	/**
 	 * Fetches server "check" stats from Traffic Ops.
@@ -63,6 +63,7 @@ export class ServerService extends APIService {
 	 *
 	 * @param id If given, will return only the checks for the server with that ID.
 	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
+	 * @returns An observable that emits Serverchecks - or a single Servercheck if ID was given.
 	 */
 	public getServerChecks(id?: number): Observable<Servercheck | Servercheck[]> {
 		const path = `/api/${this.apiVersion}/servercheck`;

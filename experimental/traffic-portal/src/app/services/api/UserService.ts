@@ -59,7 +59,8 @@ export class UserService extends APIService {
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
-	 * @returns An Observable that will emit an Array of User objects.
+	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
+	 * @returns An Observable that will emit an Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
 	public getUsers(nameOrID?: string | number): Observable<Array<User> | User> {
 		const path = `/api/${this.apiVersion}/users`;

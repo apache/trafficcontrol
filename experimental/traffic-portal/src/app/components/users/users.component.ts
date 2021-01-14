@@ -44,6 +44,7 @@ export class UsersComponent implements OnInit {
 	/** The ID of the currently logged-in user. */
 	public myId: number;
 
+	/** An observation subject for the map of a user's Roles. */
 	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
 
 	/** Maps role IDs to role Names. */

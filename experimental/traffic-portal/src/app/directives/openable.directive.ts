@@ -26,6 +26,7 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 	/** An Observable that emits toggle states for the dialog. */
 	@Input() public toggle: Observable<boolean> = of(true);
 
+	/** A subscription for the toggle input. */
 	private subscription: Subscription | null = null;
 
 	constructor(private readonly element: ElementRef) { }

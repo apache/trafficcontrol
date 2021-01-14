@@ -44,10 +44,14 @@ export class DeliveryserviceComponent implements OnInit {
 	/** Data for the transactions per second chart. */
 	public tpsChartData: Subject<Array<DataSet>>;
 
+	/** Bandwidth data at the Edge-tier level. */
 	private readonly edgeBandwidth: DataSet;
+	/** Bandwidth data at the Mid-tier level. */
 	private readonly midBandwidth: DataSet;
 
+	/** End date for charts. */
 	private to: Date = new Date();
+	/** Start date for charts. */
 	private from: Date = new Date();
 
 	/**
@@ -74,7 +78,8 @@ export class DeliveryserviceComponent implements OnInit {
 	 */
 	public toTime: FormControl = new FormControl();
 
-	private bucketSize = 300; // seconds
+	/** The size of each single interval for data grouping, in seconds. */
+	private bucketSize = 300;
 
 	constructor(
 		private readonly route: ActivatedRoute,
