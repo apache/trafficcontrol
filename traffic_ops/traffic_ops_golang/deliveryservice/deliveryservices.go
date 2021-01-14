@@ -849,13 +849,12 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	errCode := http.StatusOK
 	var userErr error
 	var sysErr error
-	var exists bool
 	if dsType.HasSSLKeys() {
 		oldCDNName, oldRoutingName, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
 		}
-		exists, err = GetSSLVersion(*ds.XMLID, tx)
+		exists, err := getSSLVersion(*ds.XMLID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
 		}
@@ -1797,8 +1796,8 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 	return xmlID, true, nil
 }
 
-// GetSSLVersion reports a boolean value, confirming whether DS has a SSL version or not
-func GetSSLVersion(xmlId string, tx *sql.Tx) (bool, error) {
+// getSSLVersion reports a boolean value, confirming whether DS has a SSL version or not
+func getSSLVersion(xmlId string, tx *sql.Tx) (bool, error) {
 	var exists bool
 	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id = $1 AND ssl_key_version>=1)`, xmlId)
 	err := row.Scan(&exists)
