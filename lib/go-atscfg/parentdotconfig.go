@@ -36,6 +36,8 @@ import (
 const ContentTypeParentDotConfig = ContentTypeTextASCII
 const LineCommentParentDotConfig = LineCommentHash
 
+const ParentConfigFileName = "parent.config"
+
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"
 const ParentConfigParamMSOParentRetry = "mso.parent_retry"
