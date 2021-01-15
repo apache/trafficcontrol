@@ -30,7 +30,7 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
             });
     };
 
-    var sentRegistration = function(user) {
+    var sendRegistration = function(user) {
         userService.registerUser(user).
             then(function() {
                 $scope.userEmail = angular.copy(user.email);
@@ -50,7 +50,7 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
     };
 
     $scope.resendRegistration = function(user, emailField) {
-        sentRegistration(user);
+        sendRegistration(user);
     };
 
 };

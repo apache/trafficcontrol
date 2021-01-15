@@ -108,7 +108,7 @@ under the License.
             <div class="form-group" ng-if="user.newUser" ng-class="{'has-error': hasError(userForm.registrationSent), 'has-feedback': hasError(userForm.registrationSent)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Registration Sent</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="registrationSent" type="text" class="form-control" ng-model="user.registrationSent" ng-maxlength="128"required>
+                    <input name="registrationSent" type="text" class="form-control" ng-model="user.registrationSent" ng-maxlength="128" required ng-disabled="!settings.isNew">
                     <small class="input-error" ng-show="hasPropertyError(userForm.registrationSent, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(userForm.registrationSent, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(userForm.registrationSent)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -116,8 +116,8 @@ under the License.
             </div>
 
             <div class="modal-footer">
+                <button ng-if="user.newUser" type="button" class="btn btn-default" ng-click="resendRegistration(user, userForm.email)">Resend Registration</button>
                 <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.uName)">{{settings.saveLabel}}</button>
-                <button ng-if="user.newUser" type="button" class="btn btn-primary" ng-click="resendRegistration(user, userForm.email)">Resend Registration</button>
             </div>
         </form>
     </div>
