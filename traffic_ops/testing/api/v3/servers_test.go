@@ -740,12 +740,11 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	}
 	xmppId := "unique"
 	var server tc.ServerV30
-	for _, s := range serversResp.Response {
-		if len(s.Interfaces) >= 1 && s.Interfaces[0].Monitor {
-			server = s
-			break
-		}
+	if len(serversResp.Response) == 0 {
+		t.Fatalf("no servers in response, quitting")
 	}
+	server = serversResp.Response[0]
+
 	_, _, err = TOSession.CreateServerWithHdr(tc.ServerV30{
 		CommonServerProperties: tc.CommonServerProperties{
 			Cachegroup: server.Cachegroup,
@@ -789,7 +788,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		if interf.Monitor {
 			for j, ip := range interf.IPAddresses {
 				if ip.ServiceAddress {
-					server.Interfaces[i].IPAddresses[j].Address = "127.0.0.1/24"
+					server.Interfaces[i].IPAddresses[j].Address = "127.0.0.5/24"
 					changed = true
 				}
 			}
