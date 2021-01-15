@@ -46,12 +46,16 @@ func MakeHeaderRewriteDotConfig(
 	deliveryServiceServers []tc.DeliveryServiceServer,
 	server *Server,
 	servers []Server,
+	serverParams []tc.Parameter,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
 
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewritePrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
+	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+	fmt.Println(params)
 	tcDS := DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.XMLID == nil {
