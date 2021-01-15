@@ -13,8 +13,8 @@ limitations under the License.
 -->
 <tp-header [title]="'Servers'"></tp-header>
 <main>
-	<!-- <div>
+	<div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-	</div> -->
-	<ag-grid-angular [rowData]="servers | async" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components"></ag-grid-angular>
+	</div>
+	<ag-grid-angular [rowData]="servers | async" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components" [gridOptions]="gridOptions" (gridReady)="setAPI($event)"></ag-grid-angular>
 </main>

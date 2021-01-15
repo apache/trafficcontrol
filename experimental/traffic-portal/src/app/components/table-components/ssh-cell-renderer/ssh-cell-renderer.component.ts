@@ -72,7 +72,6 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 	 */
 	public refresh(params: ICellRendererParams): true {
 		this.val = params.value;
-		console.log("refreshed:", params);
 		return true;
 	}
 
@@ -82,8 +81,6 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 	 * @param params The AG-Grid cell-rendering parameters (refer to AG-Grid docs).
 	 */
 	public agInit(params: ICellRendererParams): void {
-		console.log("has value?:", Object.prototype.hasOwnProperty.call(params, "value"));
-		console.log("getval:", params.getValue());
 		this.val = params.value;
 	}
 }

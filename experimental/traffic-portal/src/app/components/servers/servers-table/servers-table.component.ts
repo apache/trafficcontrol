@@ -15,13 +15,15 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+// import { ColumnApi, GridApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
+import { ColumnApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
 
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
-import { IPV4, serviceInterface } from "../../../utils";
+import { fuzzyScore, IPV4, serviceInterface } from "../../../utils";
 import { SSHCellRendererComponent } from "../../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 
 /**
@@ -44,6 +46,13 @@ interface AugmentedServer extends Server {
 	templateUrl: "./servers-table.component.html"
 })
 export class ServersTableComponent implements OnInit, OnDestroy {
+
+	/** Holds a reference to the GridOptions for the nested AG-Grid instance. */
+	public gridOptions: GridOptions;
+	/** Holds a reference to the nested grid's API. */
+	// private gridAPI: GridApi | null = null;
+	/** Holds a reference to the nested grid's column API. */
+	private columnAPI: ColumnApi | null = null;
 
 	/** All of the servers which should appear in the table. */
 	public servers: Observable<Array<AugmentedServer>> | null = null;
@@ -254,13 +263,16 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 	// }
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl;
+	public fuzzControl: FormControl = new FormControl("");
 
 	// private userSubscription: Subscription;
 
 	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
-		// this.servers = [];
-		this.fuzzControl = new FormControl("");
+		this.gridOptions = {
+			doesExternalFilterPass: this.filter.bind(this),
+			isExternalFilterPresent: this.shouldFilter.bind(this),
+		};
+		console.log("this.fuzzControl in constructor:", this.fuzzControl);
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -306,6 +318,8 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 			}
 		);
 
+		console.log("this.fuzzControl in ngOnInit:", this.fuzzControl);
+
 	}
 
 	/** Cleans up resources on destruction. */
@@ -313,8 +327,75 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		// this.userSubscription.unsubscribe();
 	}
 
+	public setAPI(e: GridReadyEvent): void {
+		this.columnAPI = e.columnApi;
+		// this.gridAPI = e.api;
+	}
+
+	/**
+	 * Lets AG-Grid know if it should be calling the external filter.
+	 *
+	 * @returns whether or not the external filter is to be used.
+	 */
+	public shouldFilter(): boolean {
+		const should = true; //this.fuzzControl && this.fuzzControl.value !== "";
+		console.log("should filter:", should);
+		return should;
+		// return this.fuzzControl && this.fuzzControl.value !== "";
+	}
+
+	/**
+	 * Checks if a node passes the user's fuzzy search filter.
+	 *
+	 * @param node The row to check.
+	 * @returns whether or not the row passes filtering
+	 */
+	public filter(node: RowNode): boolean {
+		console.log("checking", node, "with", this.fuzzControl);
+		console.log("this:", this);
+		if (!this.columnAPI) {
+			return true;
+		}
+		const visibleCols = new Set(this.columnAPI.getAllDisplayedColumns().map(x=>x.getColId()));
+		for (const k in node.data) {
+			if (!Object.prototype.hasOwnProperty.call(node.data, k) || !visibleCols.has(k)) {
+				continue;
+			}
+			const value = node.data[k];
+			let stringVal: string;
+			switch (typeof value) {
+				case "string":
+					stringVal = value;
+					break;
+				case "number":
+					stringVal = String(value);
+					break;
+				case "object":
+					if (value instanceof Date) {
+						stringVal = value.toLocaleString();
+					} else {
+						continue;
+					}
+					break;
+				default:
+					continue;
+			}
+			const score = fuzzyScore(stringVal.toLocaleLowerCase(), this.fuzzControl.value.toLocaleLowerCase());
+			if ( score < Infinity) {
+				console.log("server", node.data, "passed filter:", this.fuzzControl.value, "with score:", score, "on field:", k);
+				return true;
+			}
+		}
+		console.log("server", node.data, "failed filter:", this.fuzzControl.value);
+
+		return false;
+	}
+
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
+		if (this.gridOptions.api) {
+			this.gridOptions.api.onFilterChanged();
+		}
 		if (this.fuzzControl.value === "") {
 			this.router.navigate([], {queryParams: null, replaceUrl: true});
 		} else if (this.fuzzControl.value) {
