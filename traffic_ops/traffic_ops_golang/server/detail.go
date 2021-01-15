@@ -119,7 +119,51 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		"size":    len(servers),
 	}
 
-	if inf.Version.Major < 3 {
+	if inf.Version.Major <= 2 {
+		v11ServerList := []tc.ServerDetailV11{}
+		for _, server := range servers {
+			v11server := tc.ServerDetailV11{}
+			v11server.ServerDetail = server.ServerDetail
+
+			interfaces := *server.ServerInterfaces
+			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
+		return
+	} else if inf.Version.Major <= 3 {
+		/*
+			v3ServerList := []tc.DSServerV3{}
+				for _, srv := range servers {
+					routerHostName := ""
+					routerPort := ""
+					interfaces := *srv.ServerInterfaces
+					// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+					if len(interfaces) != 0 {
+						routerHostName = interfaces[0].RouterHostName
+						routerPort = interfaces[0].RouterPort
+					}
+					v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+					if err != nil {
+						api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+						return
+					}
+					v3server := tc.DSServerV3{}
+					v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+
+					v3server.ServerInterfaces = &v3Interfaces
+
+					v3ServerList = append(v3ServerList, v3server)
+				}
+				api.WriteResp(w, r, v3ServerList)
+				return
+		*/
 		v11ServerList := []tc.ServerDetailV11{}
 		for _, server := range servers {
 			v11server := tc.ServerDetailV11{}
@@ -158,7 +202,7 @@ func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationI
 }
 
 //ToDo: Srijeet change here
-func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV40, error) {
 	allowedOrderByCols := map[string]string{
 		"":                "",
 		"cachegroup":      "server.cachegroup",
@@ -226,7 +270,10 @@ t.name as server_type,
 server.xmpp_id,
 server.xmpp_passwd
 `
-
+	/*
+	   (SELECT router_host_name FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND server = server.id)) AS router_host_name,
+	   (SELECT router_port FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND server = server.id)) AS router_port,
+	*/
 	queryFormatString := `
 SELECT
 	server.id
@@ -261,7 +308,7 @@ JOIN type t ON server.type = t.id
 		}
 		serverIDs = append(serverIDs, *serverID)
 	}
-	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
+	serversMap, err := dbhelpers.GetServersInterfacesV40(serverIDs, tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}
@@ -272,7 +319,7 @@ JOIN type t ON server.type = t.id
 
 	defer rows.Close()
 	sIDs := []int{}
-	servers := []tc.ServerDetailV30{}
+	servers := []tc.ServerDetailV40{}
 
 	serviceAddress := util.StrPtr("")
 	service6Address := util.StrPtr("")
@@ -281,13 +328,16 @@ JOIN type t ON server.type = t.id
 	serviceNetmask := util.StrPtr("")
 	serviceInterface := util.StrPtr("")
 	serviceMtu := util.StrPtr("")
+	//routerHostName := util.StrPtr("")
+	//routerPort := util.StrPtr("")
 
 	for rows.Next() {
-		s := tc.ServerDetailV30{}
+		s := tc.ServerDetailV40{}
+		// &routerHostName, &routerPort,
 		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
-		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
 			for _, interfaceInfo := range interfacesMap {
 				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
