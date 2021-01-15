@@ -390,7 +390,7 @@ func (user *TOUser) UpdateQuery() string {
 	company=:company,
 	email=:email,
 	full_name=:full_name,
-	new_user=COALESCE(:new_user, FALSE),
+	new_user=FALSE,
 	address_line1=:address_line1,
 	address_line2=:address_line2,
 	city=:city,
