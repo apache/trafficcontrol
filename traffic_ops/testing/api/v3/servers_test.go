@@ -511,7 +511,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
-	if len(servers.Response) != 2 {
+	if len(servers.Response) != 3 {
 		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
@@ -579,6 +579,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-01":                 false,
 		"atlanta-mid-16":                 false,
 		"edgeInCachegroup3":              false,
 		"midInSecondaryCachegroupInCDN1": false,
@@ -663,6 +664,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"denver-mso-org-02":              false,
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-01":                 false,
 		"atlanta-mid-16":                 false,
 		"atlanta-mid-17":                 false,
 		"edgeInCachegroup3":              false,
