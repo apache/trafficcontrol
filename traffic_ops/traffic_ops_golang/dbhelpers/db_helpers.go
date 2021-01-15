@@ -560,9 +560,7 @@ func GetServersInterfacesV40(ids []int, tx *sql.Tx) (map[int]map[string]tc.Serve
 	for ifaceRows.Next() {
 		var inf tc.ServerInterfaceInfoV40
 		var server int
-		var routerHostName string
-		var routerPort string
-		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &routerHostName, &routerPort); err != nil {
+		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPort); err != nil {
 			return nil, err
 		}
 

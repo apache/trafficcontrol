@@ -55,19 +55,45 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := servers[0]
-	if inf.Version.Major < 3 {
-		v11server := tc.ServerDetailV11{}
-		v11server.ServerDetail = server.ServerDetail
-
+	if inf.Version.Major <= 2 {
 		interfaces := *server.ServerInterfaces
-		legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+		routerHostName := ""
+		routerPort := ""
+		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+		if len(interfaces) != 0 {
+			routerHostName = interfaces[0].RouterHostName
+			routerPort = interfaces[0].RouterPort
+		}
+		legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 			return
 		}
+		v11server := tc.ServerDetailV11{}
+		v11server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
 		v11server.LegacyInterfaceDetails = legacyInterface
-
 		server := v11server
+		alerts := api.CreateDeprecationAlerts(&alt)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
+		return
+	} else if inf.Version.Major <= 3 {
+		interfaces := *server.ServerInterfaces
+		routerHostName := ""
+		routerPort := ""
+		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+		if len(interfaces) != 0 {
+			routerHostName = interfaces[0].RouterHostName
+			routerPort = interfaces[0].RouterPort
+		}
+		v3server := tc.ServerDetailV30{}
+		v3server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+		v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
+			return
+		}
+		v3server.ServerInterfaces = &v3Interfaces
+		server := v3server
 		alerts := api.CreateDeprecationAlerts(&alt)
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 		return
@@ -122,10 +148,17 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major <= 2 {
 		v11ServerList := []tc.ServerDetailV11{}
 		for _, server := range servers {
-			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
-
 			interfaces := *server.ServerInterfaces
+			routerHostName := ""
+			routerPort := ""
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPort
+			}
+			v11server := tc.ServerDetailV11{}
+			v11server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
@@ -138,48 +171,27 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
 		return
 	} else if inf.Version.Major <= 3 {
-		/*
-			v3ServerList := []tc.DSServerV3{}
-				for _, srv := range servers {
-					routerHostName := ""
-					routerPort := ""
-					interfaces := *srv.ServerInterfaces
-					// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
-					if len(interfaces) != 0 {
-						routerHostName = interfaces[0].RouterHostName
-						routerPort = interfaces[0].RouterPort
-					}
-					v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
-					if err != nil {
-						api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
-						return
-					}
-					v3server := tc.DSServerV3{}
-					v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
-
-					v3server.ServerInterfaces = &v3Interfaces
-
-					v3ServerList = append(v3ServerList, v3server)
-				}
-				api.WriteResp(w, r, v3ServerList)
-				return
-		*/
-		v11ServerList := []tc.ServerDetailV11{}
+		v3ServerList := []tc.ServerDetailV30{}
 		for _, server := range servers {
-			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
-
+			v3Server := tc.ServerDetailV30{}
 			interfaces := *server.ServerInterfaces
-			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			routerHostName := ""
+			routerPort := ""
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPort
+			}
+			v3Server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
 				return
 			}
-			v11server.LegacyInterfaceDetails = legacyInterface
-
-			v11ServerList = append(v11ServerList, v11server)
+			v3Server.ServerInterfaces = &v3Interfaces
+			v3ServerList = append(v3ServerList, v3Server)
 		}
-		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
+		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v3ServerList, err)
 		return
 	}
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
@@ -270,10 +282,6 @@ t.name as server_type,
 server.xmpp_id,
 server.xmpp_passwd
 `
-	/*
-	   (SELECT router_host_name FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND server = server.id)) AS router_host_name,
-	   (SELECT router_port FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND server = server.id)) AS router_port,
-	*/
 	queryFormatString := `
 SELECT
 	server.id
@@ -328,12 +336,9 @@ JOIN type t ON server.type = t.id
 	serviceNetmask := util.StrPtr("")
 	serviceInterface := util.StrPtr("")
 	serviceMtu := util.StrPtr("")
-	//routerHostName := util.StrPtr("")
-	//routerPort := util.StrPtr("")
 
 	for rows.Next() {
 		s := tc.ServerDetailV40{}
-		// &routerHostName, &routerPort,
 		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
