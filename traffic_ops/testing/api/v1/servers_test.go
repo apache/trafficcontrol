@@ -23,6 +23,7 @@ import (
 
 func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
+		CreateTestServerWithSameServiceIPAddressAndProfile(t)
 		UpdateTestServers(t)
 		GetTestServers(t)
 	})
@@ -120,6 +121,62 @@ func UpdateTestServers(t *testing.T) {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	}
 
+}
+
+func CreateTestServerWithSameServiceIPAddressAndProfile(t *testing.T) {
+	if len(testData.Servers) == 0 {
+		t.Fatal("no test data servers, quitting")
+	}
+	firstServer := testData.Servers[0]
+	hostName := firstServer.HostName
+	resp, _, err := TOSession.GetServerByHostName(hostName)
+	if err != nil {
+		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("no response servers, quitting")
+	}
+	newServer := tc.ServerV1{
+		TCPPort:        resp[0].TCPPort,
+		HostName:       "testServerCreate",
+		DomainName:     resp[0].DomainName,
+		HTTPSPort:      resp[0].HTTPSPort,
+		InterfaceName:  "test-interface",
+		IPAddress:      "100.100.100.100",
+		ProfileID:      resp[0].ProfileID,
+		CDNID:          resp[0].CDNID,
+		TypeID:         resp[0].TypeID,
+		StatusID:       resp[0].StatusID,
+		PhysLocationID: resp[0].PhysLocationID,
+		CachegroupID:   resp[0].CachegroupID,
+		InterfaceMtu:   resp[0].InterfaceMtu,
+	}
+	_, _, err = TOSession.CreateServer(newServer)
+	if err != nil {
+		t.Fatalf("error while CREATEing a new server: %v", err.Error())
+	}
+	s, _, err := TOSession.GetServerByHostName("testServerCreate")
+	if err != nil {
+		t.Fatalf("error GETting the server with hostname %s, that was just created: %v", newServer.HostName, err.Error())
+	}
+	if len(s) == 0 {
+		t.Fatalf("no servers returned")
+	}
+	// Try creating a server with the same service IP address
+	_, _, err = TOSession.CreateServer(newServer)
+	if err == nil {
+		t.Error("expected error about an existing server with the same profile and IP address, but got nothing")
+	}
+	// Now try creating a server with the same service IP address but different netmask
+	newServer.IPNetmask = "255.255.100.100"
+	_, _, err = TOSession.CreateServer(newServer)
+	if err == nil {
+		t.Error("expected error about an existing server with the same profile and IP address, but got nothing")
+	}
+	_, _, err = TOSession.DeleteServerByID(s[0].ID)
+	if err != nil {
+		t.Errorf("error DELETEing the server just created: %v", err.Error())
+	}
 }
 
 func DeleteTestServers(t *testing.T) {
