@@ -479,7 +479,7 @@ func TestGetMidServers(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
-	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, 0, db.MustBegin())
+	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, 0, 0, db.MustBegin())
 
 	if userErr != nil || sysErr != nil {
 		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
