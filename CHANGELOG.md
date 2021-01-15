@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
 
 ### Fixed
+- [#5341](https://github.com/apache/trafficcontrol/issues/5341) - For a DS with existing SSLKeys, fixed HTTP status code from 403 to 400 when updating CDN and Routing Name (in TO) and made CDN and Routing Name fields immutable (in TP).
 - [#5192](https://github.com/apache/trafficcontrol/issues/5192) - Fixed TO log warnings when generating snapshots for topology-based delivery services.
 - [#5284](https://github.com/apache/trafficcontrol/issues/5284) - Fixed error message when creating a server with non-existent profile
 - [#5287](https://github.com/apache/trafficcontrol/issues/5287) - Fixed error message when creating a Cache Group with no typeId
