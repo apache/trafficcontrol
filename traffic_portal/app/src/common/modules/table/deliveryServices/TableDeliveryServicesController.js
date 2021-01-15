@@ -99,17 +99,20 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "DNS Bypass TTL",
             field: "dnsBypassTtl",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "DNS TTL",
             field: "ccrDnsTtl",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "DSCP",
             field: "dscp",
-            hide: false
+            hide: false,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "ECS Enabled",
@@ -129,7 +132,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "FQ Pacing Rate",
             field: "fqPacingRate",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Geo Limit",
@@ -166,22 +170,26 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "Geo Miss Latitude",
             field: "missLat",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Geo Miss Longitude",
             field: "missLong",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Global Max Mbps",
             field: "globalMaxMbps",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Global Max TPS",
             field: "globalMaxTps",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "HTTP Bypass FQDN",
@@ -191,7 +199,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "ID",
             field: "id",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Info URL",
@@ -201,7 +210,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "Initial Dispersion",
             field: "initialDispersion",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Inner Header Rewrite Rules",
@@ -243,17 +253,20 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "Max DNS Answers",
             field: "maxDnsAnswers",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Max Origin Connections",
             field: "maxOriginConnections",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Max Request Header Bytes",
             field: "maxRequestHeaderBytes",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Mid Header Rewrite Rules",
@@ -351,7 +364,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         {
             headerName: "Range Slice Block Size",
             field: "rangeSliceBlockSize",
-            hide: true
+            hide: true,
+            filter: "agNumberColumnFilter"
         },
         {
             headerName: "Tenant",
