@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5311](https://github.com/apache/trafficcontrol/issues/5311) - Better TO log messages when failures calling TM CacheStats
 - [#5364](https://github.com/apache/trafficcontrol/issues/5364) - Cascade server deletes to delete corresponding IP addresses and interfaces
 - [#5390](https://github.com/apache/trafficcontrol/issues/5390) - Improve the way TO deals with delivery service server assignments
+- [#5339](https://github.com/apache/trafficcontrol/issues/5339) - Ensure Changelog entries for SSL key changes
 
 ### Changed
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
