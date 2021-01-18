@@ -160,6 +160,9 @@ export interface Servercheck {
 
 /**
  * Builds a true Map from the Servercheck's "checks" property.
+ *
+ * @param srv The Servercheck to convert.
+ * @returns A map of servercheck check names to their values.
  */
 export function checkMap(srv: Servercheck): Map<string, number | boolean> {
 	const ret = new Map();

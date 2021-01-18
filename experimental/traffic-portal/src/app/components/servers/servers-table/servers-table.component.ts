@@ -12,22 +12,20 @@
 * limitations under the License.
 */
 
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 // import { ColumnApi, GridApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
-import { ColumnApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
 
-import { Observable } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
-import { fuzzyScore, IPV4, serviceInterface } from "../../../utils";
-import { SSHCellRendererComponent } from "../../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
+import { IPV4, serviceInterface } from "../../../utils";
 
 /**
- *
+ * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
  */
 interface AugmentedServer extends Server {
 	/** The server's IPv4 service address */
@@ -45,14 +43,7 @@ interface AugmentedServer extends Server {
 	styleUrls: ["./servers-table.component.scss"],
 	templateUrl: "./servers-table.component.html"
 })
-export class ServersTableComponent implements OnInit, OnDestroy {
-
-	/** Holds a reference to the GridOptions for the nested AG-Grid instance. */
-	public gridOptions: GridOptions;
-	/** Holds a reference to the nested grid's API. */
-	// private gridAPI: GridApi | null = null;
-	/** Holds a reference to the nested grid's column API. */
-	private columnAPI: ColumnApi | null = null;
+export class ServersTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
 	public servers: Observable<Array<AugmentedServer>> | null = null;
@@ -251,11 +242,8 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		}
 	];
 
-	/** Passed as components to the ag-grid API */
-	public components = {
-		sshCellRenderer: SSHCellRendererComponent,
-		// updateCellRenderer: new UpdateCellRenderer()
-	};
+	/** A subject that child components can subscribe to for access to the fuzzy search query text */
+	public fuzzySubject: BehaviorSubject<string>;
 
 	/** a list of all servers that match the current filter */
 	// public get filteredServers(): Array<Server> {
@@ -268,45 +256,41 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 	// private userSubscription: Subscription;
 
 	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
-		this.gridOptions = {
-			doesExternalFilterPass: this.filter.bind(this),
-			isExternalFilterPresent: this.shouldFilter.bind(this),
-		};
-		console.log("this.fuzzControl in constructor:", this.fuzzControl);
+		this.fuzzySubject = new BehaviorSubject<string>("");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
 		this.servers = this.api.getServers().pipe(map(
 			x => x.map(
-					s => {
-						const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
-						let inf: Interface;
-						try {
-							inf = serviceInterface(aug.interfaces);
-						} catch (e) {
-							console.error(`server #${s.id}:`, e);
-							return aug;
-						}
-						for (const ip of inf.ipAddresses) {
-							if (!ip.serviceAddress) {
-								continue;
-							}
-							if (IPV4.test(ip.address)) {
-								if (aug.ipv4Address !== "") {
-									console.warn("found more than one IPv4 service address for server:", s.id);
-								}
-								aug.ipv4Address = ip.address;
-							} else {
-								if (aug.ipv6Address !== "") {
-									console.warn("found more than one IPv6 service address for server:", s.id);
-								}
-								aug.ipv6Address = ip.address;
-							}
-						}
+				s => {
+					const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
+					let inf: Interface;
+					try {
+						inf = serviceInterface(aug.interfaces);
+					} catch (e) {
+						console.error(`server #${s.id}:`, e);
 						return aug;
 					}
-				)
+					for (const ip of inf.ipAddresses) {
+						if (!ip.serviceAddress) {
+							continue;
+						}
+						if (IPV4.test(ip.address)) {
+							if (aug.ipv4Address !== "") {
+								console.warn("found more than one IPv4 service address for server:", s.id);
+							}
+							aug.ipv4Address = ip.address;
+						} else {
+							if (aug.ipv6Address !== "") {
+								console.warn("found more than one IPv6 service address for server:", s.id);
+							}
+							aug.ipv6Address = ip.address;
+						}
+					}
+					return aug;
+				}
+			)
 		));
 
 		this.route.queryParamMap.subscribe(
@@ -314,93 +298,16 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 				const search = m.get("search");
 				if (search) {
 					this.fuzzControl.setValue(decodeURIComponent(search));
+					this.fuzzySubject.next(search);
+					this.fuzzySubject.next(this.fuzzControl.value);
 				}
 			}
 		);
-
-		console.log("this.fuzzControl in ngOnInit:", this.fuzzControl);
-
-	}
-
-	/** Cleans up resources on destruction. */
-	public ngOnDestroy(): void {
-		// this.userSubscription.unsubscribe();
-	}
-
-	public setAPI(e: GridReadyEvent): void {
-		this.columnAPI = e.columnApi;
-		// this.gridAPI = e.api;
-	}
-
-	/**
-	 * Lets AG-Grid know if it should be calling the external filter.
-	 *
-	 * @returns whether or not the external filter is to be used.
-	 */
-	public shouldFilter(): boolean {
-		const should = true; //this.fuzzControl && this.fuzzControl.value !== "";
-		console.log("should filter:", should);
-		return should;
-		// return this.fuzzControl && this.fuzzControl.value !== "";
-	}
-
-	/**
-	 * Checks if a node passes the user's fuzzy search filter.
-	 *
-	 * @param node The row to check.
-	 * @returns whether or not the row passes filtering
-	 */
-	public filter(node: RowNode): boolean {
-		console.log("checking", node, "with", this.fuzzControl);
-		console.log("this:", this);
-		if (!this.columnAPI) {
-			return true;
-		}
-		const visibleCols = new Set(this.columnAPI.getAllDisplayedColumns().map(x=>x.getColId()));
-		for (const k in node.data) {
-			if (!Object.prototype.hasOwnProperty.call(node.data, k) || !visibleCols.has(k)) {
-				continue;
-			}
-			const value = node.data[k];
-			let stringVal: string;
-			switch (typeof value) {
-				case "string":
-					stringVal = value;
-					break;
-				case "number":
-					stringVal = String(value);
-					break;
-				case "object":
-					if (value instanceof Date) {
-						stringVal = value.toLocaleString();
-					} else {
-						continue;
-					}
-					break;
-				default:
-					continue;
-			}
-			const score = fuzzyScore(stringVal.toLocaleLowerCase(), this.fuzzControl.value.toLocaleLowerCase());
-			if ( score < Infinity) {
-				console.log("server", node.data, "passed filter:", this.fuzzControl.value, "with score:", score, "on field:", k);
-				return true;
-			}
-		}
-		console.log("server", node.data, "failed filter:", this.fuzzControl.value);
-
-		return false;
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		if (this.gridOptions.api) {
-			this.gridOptions.api.onFilterChanged();
-		}
-		if (this.fuzzControl.value === "") {
-			this.router.navigate([], {queryParams: null, replaceUrl: true});
-		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {queryParams: {search: this.fuzzControl.value}, replaceUrl: true});
-		}
+		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
 }
