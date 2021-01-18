@@ -13,6 +13,7 @@
 */
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
+import { CacheGroupTableComponent } from "./components/cache-groups/cache-group-table/cache-group-table.component";
 
 import { CurrentuserComponent } from "./components/currentuser/currentuser.component";
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
@@ -32,6 +33,7 @@ const routes: Routes = [
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id"},
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs"},
 	{ component: ServersTableComponent, path: "servers"},
+	{ component: CacheGroupTableComponent, path: "cache-groups"}
 ];
 
 /**

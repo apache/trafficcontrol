@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 export * from "./alert";
+export * from "./cache-groups";
 export * from "./cdn";
 export * from "./data";
 export * from "./deliveryservice";

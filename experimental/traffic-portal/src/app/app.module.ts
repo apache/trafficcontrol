@@ -50,6 +50,7 @@ import { OpenableDirective } from "./directives/openable.directive";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { GenericTableComponent } from "./components/generic-table/generic-table.component";
+import { CacheGroupTableComponent } from './components/cache-groups/cache-group-table/cache-group-table.component';
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -94,7 +95,8 @@ Chart.plugins.register({
 		CustomvalidityDirective,
 		CurrentuserComponent,
 		ServersTableComponent,
-		GenericTableComponent
+		GenericTableComponent,
+		CacheGroupTableComponent
 	],
 	entryComponents: [
 		SSHCellRendererComponent

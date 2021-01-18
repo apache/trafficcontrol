@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+export * from "./CacheGroupService";
 export * from "./CDNService";
 export * from "./DeliveryServiceService";
 export * from "./InvalidationJobService";

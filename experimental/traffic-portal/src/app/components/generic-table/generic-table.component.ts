@@ -56,6 +56,9 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 
 	constructor(private readonly router: Router) {
 		this.gridOptions = {
+			defaultColDef: {
+				filter: true
+			},
 			doesExternalFilterPass: this.filter.bind(this),
 			isExternalFilterPresent: this.shouldFilter.bind(this),
 		};
@@ -87,6 +90,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 			this.initialize = false;
 			this.gridAPI.onFilterChanged();
 		}
+		this.gridAPI.sizeColumnsToFit();
 	}
 
 	public shouldFilter(): boolean {
