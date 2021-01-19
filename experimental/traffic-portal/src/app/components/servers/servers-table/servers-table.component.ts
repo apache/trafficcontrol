@@ -218,7 +218,7 @@ export class ServersTableComponent implements OnInit {
 		{
 			cellRenderer: "updateCellRenderer",
 			field: "revalPending",
-			filter: true,
+			filter: "tpBooleanFilter",
 			headerName: "Reval Pending",
 			hide: true,
 		},
@@ -256,7 +256,7 @@ export class ServersTableComponent implements OnInit {
 		{
 			cellRenderer: "updateCellRenderer",
 			field: "updPending",
-			filter: true,
+			filter: "tpBooleanFilter",
 			headerName: "Update Pending",
 			hide: false,
 		}
