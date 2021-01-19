@@ -15,6 +15,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+import { ITooltipParams } from "ag-grid-community";
 // import { ColumnApi, GridApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
 
 import { BehaviorSubject, Observable } from "rxjs";
@@ -221,7 +222,13 @@ export class ServersTableComponent implements OnInit {
 		{
 			field: "status",
 			headerName: "Status",
-			hide: false
+			hide: false,
+			tooltipValueGetter(params: ITooltipParams): string | undefined {
+				if (!params.value || params.value === "ONLINE" || params.value === "REPORTED") {
+					return;
+				}
+				return `${params.value}: ${params.data.offlineReason}`;
+			}
 		},
 		{
 			field: "tcpPort",

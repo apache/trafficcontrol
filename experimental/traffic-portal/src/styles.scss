@@ -47,3 +47,7 @@ button {
 .ag-theme-alpine {
 	@include ag-theme-alpine();
 }
+
+.ag-header-cell-menu-button {
+	cursor: pointer;
+}

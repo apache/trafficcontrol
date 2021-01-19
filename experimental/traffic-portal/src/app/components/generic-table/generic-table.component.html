@@ -11,7 +11,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<!-- <div>
-	<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-</div> -->
-<ag-grid-angular [rowData]="data" [columnDefs]="cols" class="ag-theme-alpine" [frameworkComponents]="components" [gridOptions]="gridOptions" (gridReady)="setAPI($event)"></ag-grid-angular>
+<div class="extra-actions">
+	<div class="toggle-columns" role="group" title="Select Table Columns">
+		<button type="button" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" (click)="toggleMenu($event)">
+			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
+			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
+		</button>
+		<menu class="column-settings" *ngIf="showMenu">
+			<li role="menuitem" *ngFor="let c of columnAPI.getAllColumns(); orderBy:'colDef.headerName'">
+				<div class="checkbox">
+					<label><input type="checkbox" [checked]="c.isVisible()" (click)="toggleVisibility(c.colId)">{{c.colDef.headerName}}</label>
+				</div>
+			</li>
+		</menu>
+	</div>
+</div>
+<ag-grid-angular
+	[rowData]="data"
+	[columnDefs]="cols"
+	class="ag-theme-alpine"
+	[frameworkComponents]="components"
+	[gridOptions]="gridOptions"
+	(gridReady)="setAPI($event)"
+	(sortChanged)="storeSort()"
+	(columnMoved)="storeColumns()"
+	(columnVisible)="storeColumns(true)">
+</ag-grid-angular>

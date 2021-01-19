@@ -34,6 +34,7 @@ export class CacheGroupTableComponent implements OnInit {
 	public columnDefs = [
 		{
 			field: "fallbackToClosest",
+			filter: "tpBooleanFilter",
 			headerName: "Fall-back To Closest",
 			hide: false
 		},

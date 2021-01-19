@@ -16,6 +16,5 @@ limitations under the License.
 	<div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
-	<!-- <ag-grid-angular [rowData]="servers | async" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components" [gridOptions]="gridOptions" (gridReady)="setAPI($event)"></ag-grid-angular> -->
-	<tp-generic-table [data]="servers | async" [cols]="columnDefs" [fuzzySearch]="fuzzySubject"></tp-generic-table>
+	<tp-generic-table [data]="servers | async" [cols]="columnDefs" [fuzzySearch]="fuzzySubject" context="servers"></tp-generic-table>
 </main>
