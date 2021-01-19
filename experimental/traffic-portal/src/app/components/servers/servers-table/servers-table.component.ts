@@ -14,9 +14,8 @@
 
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import { ITooltipParams } from "ag-grid-community";
-// import { ColumnApi, GridApi, GridOptions, GridReadyEvent, RowNode } from "ag-grid-community";
 
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
@@ -24,6 +23,7 @@ import { map } from "rxjs/operators";
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
 import { IPV4, serviceInterface } from "../../../utils";
+import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/generic-table.component";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
@@ -33,6 +33,19 @@ interface AugmentedServer extends Server {
 	ipv4Address: string;
 	/** The server's IPv6 service address */
 	ipv6Address: string;
+}
+
+/**
+ * Checks if a server is a Cache Server.
+ *
+ * @param data The server to check.
+ * @returns Whether or not 'data' is a Cache Server.
+ */
+function serverIsCache(data: AugmentedServer): boolean {
+	if (!data || !data.type) {
+		return false;
+	}
+	return data.type.startsWith("EDGE") || data.type.startsWith("MID");
 }
 
 /**
@@ -249,20 +262,41 @@ export class ServersTableComponent implements OnInit {
 		}
 	];
 
+	/** Definitions for the context menu items (which act on augmented server data). */
+	public contextMenuItems: Array<ContextMenuItem<AugmentedServer>> = [
+		{
+			action: "viewDetails",
+			name: "View Server Details"
+		},
+		{
+			action: "updateStatus",
+			name: "Update Status"
+		},
+		{
+			action: "queue",
+			disabled: (data: AugmentedServer): boolean =>!serverIsCache(data),
+			name: "Queue Server Updates"
+		},
+		{
+			action: "dequeue",
+			disabled: (data: AugmentedServer): boolean =>!serverIsCache(data),
+			name: "Clear Queued Updates"
+		}
+	];
+
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
 	public fuzzySubject: BehaviorSubject<string>;
-
-	/** a list of all servers that match the current filter */
-	// public get filteredServers(): Array<Server> {
-	// 	return this.servers.filter(x=>this.fuzzControl.value === "" || x.hostName.includes(this.fuzzControl.value));
-	// }
 
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
-	// private userSubscription: Subscription;
-
-	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
+	/**
+	 * Constructs the component with its required injections.
+	 *
+	 * @param api The Servers API which is used to provide row data.
+	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
+	 */
+	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 	}
 
@@ -317,4 +351,28 @@ export class ServersTableComponent implements OnInit {
 		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
+	/**
+	 * Handles user selection of a context menu action item.
+	 *
+	 * @param action The emitted context menu action event.
+	 */
+	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
+		switch (action.action) {
+			case "viewDetails":
+				console.log("'View Details' clicked - not yet implemented");
+				break;
+			case "updateStatus":
+				console.log("'Update Status' clicked - not yet implemented");
+				break;
+			case "queue":
+				console.log("'Queue Server Updates' clicked - not yet implemented");
+				break;
+			case "dequeue":
+				console.log("'Clear Server Updates' clicked - not yet implemented");
+				break;
+			default:
+				console.error("unknown context menu item clicked:", action.action);
+		}
+		console.log(action.action, "triggered with data:", action.data);
+	}
 }

@@ -12,9 +12,18 @@
 * limitations under the License.
 */
 
-import { Component, Input, OnDestroy, OnInit } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
-import { ColDef, ColGroupDef, ColumnApi, GridApi, GridOptions, GridReadyEvent, ITooltipParams, RowNode } from "ag-grid-community";
+import {
+	CellContextMenuEvent,
+	ColDef,
+	ColGroupDef,
+	ColumnApi,
+	GridApi,
+	GridOptions,
+	GridReadyEvent,
+	ITooltipParams,
+	RowNode } from "ag-grid-community";
 import { BehaviorSubject, Subscription } from "rxjs";
 
 import {faCaretDown, faColumns} from "@fortawesome/free-solid-svg-icons";
@@ -25,6 +34,46 @@ import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/
 
 /** Tables can display any of this kind of data. */
 type TableData = Record<string, string | number | bigint | Date | boolean | RegExp | null>;
+
+/** ContextMenuActions represent an action that can be taken in a context menu. */
+interface ContextMenuAction<T> {
+	/**
+	 * The name of the action; this will be emitted along with the selected data back to the host so that it knows which option was clicked.
+	 */
+	action: string;
+	/**
+	 * If present, this method will be called to determine if the action should be disabled.
+	 *
+	 * @param data The selected data which can be used to make the determination.
+	 */
+	disabled?: (data: T) => boolean;
+	/** A human-readable name for the action which is displayed to the user. */
+	name: string;
+}
+
+/** ContextMenuLinks represent a link within a context menu. They aren't templated, so currently have limited uses. */
+interface ContextMenuLink {
+	/**
+	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
+	 * reasons.
+	 */
+	href: string;
+	/** A human-readable name for the link which is displayed to the user. */
+	name: string;
+	/** If given and true, sets the link to open in a new browsing context (or "tab"). */
+	newTab?: boolean;
+}
+
+/** ContextMenuItems represent items in a context menu. They can be links or arbitrary actions. */
+export type ContextMenuItem<T> = ContextMenuAction<T> | ContextMenuLink;
+
+/** ContextMenuActionEvent is emitted by the GenericTableComponent when an action in its context menu was clicked. */
+export interface ContextMenuActionEvent<T> {
+	/** action is the 'action' property of the clicked action. */
+	action: string;
+	/** data is the selected data on which the action will act. */
+	data: T;
+}
 
 @Component({
 	selector: "tp-generic-table[data][cols]",
@@ -41,6 +90,37 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	@Input() public fuzzySearch: BehaviorSubject<string> | undefined;
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
+	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
+	@Input() public contextMenuItems: Array<ContextMenuItem<unknown>> = [];
+	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
+	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<unknown>>();
+	/**
+	 * Checks if a context menu item is an action.
+	 *
+	 * @param i The menu item to check.
+	 * @returns 'true' if 'i' is an action, 'false' if it's a link.
+	 */
+	public isAction<T>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
+		return Object.prototype.hasOwnProperty.call(i, "action");
+	}
+
+	/** Holds a reference to the context menu which is used to calculate its size. */
+	@ViewChild("contextmenu") public contextmenu: ElementRef | null = null;
+
+	/**
+	 * This event handler listens to click events anywhere, since if you're clicking outside
+	 * the context menu it should close (and it should also close when an action is taken).
+	 *
+	 * @param e The click event.
+	 */
+	@HostListener("document:click", ["$event"])
+	public clickOutside(e: MouseEvent): void {
+		e.stopPropagation();
+		this.showContextMenu = false;
+	}
+
+	/** This holds a reference to the table's selected data, which is emitted on context menu action clicks. */
+	public selected: unknown;
 
 	/** Holds a subscription for the fuzzySearch input if one was provided (otherwise 'null') */
 	private fuzzySubscription: Subscription|null = null;
@@ -63,12 +143,20 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	/** Tracks whether the menu button has been clicked. */
 	private menuClicked = false;
 
+	/** Tells whether or not to show the cell context menu. */
+	public showContextMenu = false;
+
 	/** Passed as components to the ag-grid API */
 	public components = {
 		sshCellRenderer: SSHCellRendererComponent,
 		tpBooleanFilter: BooleanFilterComponent,
 	};
 
+	/**
+	 * Contructs the component with its required injections.
+	 *
+	 * @param router Used to update the 'search' query parameter on fuzzy filter changes.
+	 */
 	constructor(private readonly router: Router) {
 		this.gridOptions = {
 			defaultColDef: {
@@ -79,16 +167,24 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 			},
 			doesExternalFilterPass: this.filter.bind(this),
 			isExternalFilterPresent: this.shouldFilter.bind(this),
+			preventDefaultOnContextMenu: true,
+			rowSelection: "multiple",
 			tooltipShowDelay: 500
 		};
 	}
 
+	/**
+	 * Cleans up async resources on component destruction.
+	 */
 	public ngOnDestroy(): void {
 		if (this.fuzzySubscription) {
 			this.fuzzySubscription.unsubscribe();
 		}
 	}
 
+	/**
+	 * Sets up async resources after component initialization is complete.
+	 */
 	public ngOnInit(): void {
 		if (this.fuzzySearch) {
 			this.fuzzySubscription = this.fuzzySearch.subscribe(
@@ -102,6 +198,11 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * Sets up the API once the Grid is ready, and loads the table context if one was provided.
+	 *
+	 * @param params The GridReadyEvent.
+	 */
 	public setAPI(params: GridReadyEvent): void {
 		this.gridAPI = params.api;
 		this.columnAPI = params.columnApi;
@@ -156,12 +257,18 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		// }
 	}
 
+	/** When sorting changes, stores the sorting state if a context was provided. */
 	public storeSort(): void {
 		if (this.context && this.gridAPI) {
 			localStorage.setItem(`${this.context}_table_sort`, JSON.stringify(this.gridAPI.getSortModel()));
 		}
 	}
 
+	/**
+	 * When column order/visibility change, stores the column state if a context was provided.
+	 *
+	 * @param fit If given and true, sizes columns to fit the view area. This is typically done when a column's visibility is toggled.
+	 */
 	public storeColumns(fit?: boolean): void {
 		if (fit && this.gridAPI) {
 			this.gridAPI.sizeColumnsToFit();
@@ -171,6 +278,11 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * Checks if external filtering should be performed.
+	 *
+	 * @returns whether or not a fuzzy search filter was provided.
+	 */
 	public shouldFilter(): boolean {
 		return this.fuzzySearch !== undefined;
 	}
@@ -231,20 +343,88 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		return false;
 	}
 
+	/**
+	 * Toggles the visibility of a column.
+	 *
+	 * @param col The ID of a column to toggle.
+	 */
 	public toggleVisibility(col: string): void {
 		if (this.columnAPI) {
 			const visible = this.columnAPI.getColumn(col).isVisible();
-			console.log(`setting column '${col}' to visible:`, !visible);
 			this.columnAPI.setColumnVisible(col, !visible);
 		}
 	}
 
+	/**
+	 * Toggles the column visibility menu open state.
+	 *
+	 * @param e The mouse event which has its propagation stopped so it doesn't interfere with the context menu.
+	 */
 	public toggleMenu(e: Event): void {
 		e.stopPropagation();
 		this.menuClicked = !this.menuClicked;
 	}
 
+	/** This tracks whether the column visibility menu is/should be open. */
 	public get showMenu(): boolean {
 		return this.menuClicked && (this.columnAPI ? true : false);
+	}
+
+	/** This is the styling of the table's context menu. */
+	public menuStyle = {
+		bottom: "unset",
+		left: "0",
+		right: "unset",
+		top: "0",
+	};
+
+	/**
+	 * Handles opening the context menu when a table cell is right-clicked.
+	 *
+	 * @param params The AG-Grid-emitted event.
+	 */
+	public onCellContextMenu(params: CellContextMenuEvent): void {
+		if (!params.event || !(params.event instanceof MouseEvent)) {
+			console.warn("cellContextMenu fired with no underlying event");
+			return;
+		}
+
+		if (!this.contextmenu) {
+			console.warn("element reference to 'contextmenu' still null after view init");
+			return;
+		}
+
+		this.showContextMenu = true;
+		this.menuStyle.left = `${params.event.clientX}px`;
+		this.menuStyle.top = `${params.event.clientY}px`;
+		this.menuStyle.bottom = "unset";
+		this.menuStyle.right = "unset";
+		const boundingRect = this.contextmenu.nativeElement.getBoundingClientRect();
+		// const boundingRect = (document.getElementById("context-menu") as HTMLMenuElement).getBoundingClientRect();
+
+		if (boundingRect.bottom > window.innerHeight){
+			this.menuStyle.bottom = `${window.innerHeight - params.event.clientY}px`;
+			this.menuStyle.top = "unset";
+		}
+		if (boundingRect.right > window.innerWidth) {
+			this.menuStyle.right = `${window.innerWidth - params.event.clientX}px`;
+			this.menuStyle.left = "unset";
+		}
+		this.selected = params.data;
+	}
+
+	/**
+	 * Handles when the user clicks on a context menu action item by emitting the proper data.
+	 *
+	 * @param action The action that was clicked.
+	 * @param e The mouse event that triggered this handler.
+	 */
+	public emitContextMenuAction(action: string, e: MouseEvent): void {
+		e.stopPropagation();
+		this.contextMenuAction.emit({
+			action,
+			data: this.selected
+		});
+		this.showContextMenu = false;
 	}
 }

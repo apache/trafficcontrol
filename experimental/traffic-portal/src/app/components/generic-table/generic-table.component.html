@@ -35,5 +35,15 @@ limitations under the License.
 	(gridReady)="setAPI($event)"
 	(sortChanged)="storeSort()"
 	(columnMoved)="storeColumns()"
-	(columnVisible)="storeColumns(true)">
+	(columnVisible)="storeColumns(true)"
+	(cellContextMenu)="onCellContextMenu($event)">
 </ag-grid-angular>
+
+<menu #contextmenu type="contextmenu" [hidden]="!showContextMenu" [ngStyle]="menuStyle" *ngIf="contextMenuItems && contextMenuItems.length > 0">
+	<ul>
+		<li *ngFor="let item of contextMenuItems" role="menuitem">
+			<a *ngIf="!isAction(item)" [href]="item.href" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
+			<button *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, $event)" [disabled]="item.disabled ? item.disabled(selected) : false">{{item.name}}</button>
+		</li>
+	</ul>
+</menu>

@@ -28,7 +28,6 @@ export class CacheGroupTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
 	public cacheGroups: Observable<Array<CacheGroup>> | null = null;
-	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [

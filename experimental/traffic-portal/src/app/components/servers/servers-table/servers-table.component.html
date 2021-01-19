@@ -16,5 +16,12 @@ limitations under the License.
 	<div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
-	<tp-generic-table [data]="servers | async" [cols]="columnDefs" [fuzzySearch]="fuzzySubject" context="servers"></tp-generic-table>
+	<tp-generic-table
+		[data]="servers | async"
+		[cols]="columnDefs"
+		[fuzzySearch]="fuzzySubject"
+		context="servers"
+		[contextMenuItems]="contextMenuItems"
+		(contextMenuAction)="handleContextMenu($event)">
+	</tp-generic-table>
 </main>

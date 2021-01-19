@@ -198,7 +198,10 @@
 							"TSEnumDeclaration",
 							"TSEnumMember",
 							"TSAbstractClassProperty"
-						]
+						],
+						"require": {
+							"MethodDefinition": true
+						}
 					}
 				],
 				"@typescript-eslint/unbound-method": "error",
