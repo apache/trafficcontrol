@@ -1,0 +1,11 @@
+---
+
+platform: linux
+inputs: 
+- name: tests-source
+  path: cdn-tests
+params: 
+  ENVIRONMENT: 
+  API_VERSION: 
+run: 
+  path: cdn-tests/pipeline/scripts/run-to-test.sh

@@ -1,0 +1,135 @@
+---
+resource_types:
+  - name: meta
+    type: docker-image
+    source:
+      repository: hub.comcast.net/ipcdn/cdn-tests/swce/metadata-resource
+      tag: "1.0.0"
+      version: {digest: "sha256:798ebd8068f83935ec27b670022d03021d44ad6ee9167aeb929a6415695d801f"}
+  - name: slack-notification
+    type: docker-image
+    source:
+      repository: hub.comcast.net/ipcdn/cdn-tests/cfcommunity/slack-notification-resource
+      tag: "v1.5.0"
+      version: {digest: "sha256:85ff8d3a1f29d6806e4d31beddd9db334e47edcfcbf9d543f29f77886f58d3ab"}
+resources:
+  - name: dailyTO
+    type: time
+    check_every: 1m
+    source:
+      start: 8:00 AM
+      stop: 8:30 AM
+      location: America/Denver
+
+  - name: dailyTP
+    type: time
+    check_every: 1m
+    source:
+      start: 8:30 AM
+      stop: 9:00 AM
+      location: America/Denver
+
+  - name: meta
+    type: meta
+
+  - name: alert
+    type: slack-notification
+    source:
+      url: https://hooks.slack.com/services/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
+
+ 
+
+  - name: tests-source
+    type: git
+    check_every: 24h
+    webhook_token: 98c92664-e7ef-43b1-a45a-8063e141587f
+    source:
+      uri: git@github.comcast.com:cdn/cdn-tests.git
+      branch: master
+      username: ((ghe.username))
+      private_key: ((ghe.key))
+
+  - name: to-tests-image
+    type: docker-image
+    source:
+      username: ((ghe.username))
+      password: ((ghe.password))
+      repository: hub.comcast.net/ipcdn/cdn-tests/totests
+
+  - name: tp-tests-image
+    type: docker-image
+    source:
+      username: ((ghe.username))
+      password: ((ghe.password))
+      repository: hub.comcast.net/ipcdn/cdn-tests/tptests
+
+jobs:
+  - name: build-to-test-image
+    serial: true
+    plan:
+      - get: tests-source
+        trigger: true
+      - put: to-tests-image
+        params:
+          build: tests-source
+          dockerfile: tests-source/trafficops/Dockerfile
+          tag_as_latest: true
+
+  - name: run-to-tests
+    plan: 
+      - in_parallel:
+        - get: meta
+        - get: tests-source
+          passed: [build-to-test-image]
+        - get: to-tests-image
+          passed: [build-to-test-image]
+        - get: dailyTO
+          trigger: true
+      - task: run test
+        image: to-tests-image
+        params: 
+          ENVIRONMENT: nightly
+          API_VERSION: "3.0"
+        file: tests-source/pipeline/tasks/validate-to.yaml
+        on_failure:
+          put: alert
+          params:
+            text: ":fire: <https://ci.comcast.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME> TO Tests Failed :fire:"
+        on_success:
+          put: alert
+          params:
+            text: ":bananadance: <https://ci.comcast.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME> TO Tests Passed :bananadance:"
+  - name: build-tp-test-image
+    serial: true
+    plan:
+      - get: tests-source
+        trigger: true
+      - put: tp-tests-image
+        params:
+          build: tests-source
+          dockerfile: tests-source/trafficportal/Dockerfile
+          tag_as_latest: true
+
+  - name: run-tp-tests
+    plan: 
+      - in_parallel:
+        - get: meta
+        - get: tests-source
+          passed: [build-tp-test-image]
+        - get: tp-tests-image
+          passed: [build-tp-test-image]
+        - get: dailyTP
+          trigger: true
+      - task: run test
+        image: tp-tests-image
+        params: 
+          URL: 'https://tp.nightly.cdnlab.comcast.net/#!/login'
+        file: tests-source/pipeline/tasks/validate-tp.yaml
+        on_failure:
+          put: alert
+          params:
+            text: ":fire: <https://ci.comcast.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME> TP Tests Failed :fire:"
+        on_success: 
+          put: alert
+          params:
+            text: ":bananadance: <https://ci.comcast.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME> TP Tests Passed :bananadance:"

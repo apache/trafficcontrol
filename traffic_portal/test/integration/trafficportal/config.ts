@@ -32,7 +32,7 @@ export let config: Config = {
     }
   },
   specs: [
-    "specs/ASNs.spec.js",
+    "specs/*.spec.js",
   ],
   // Options to be passed to Jasmine-node.
   jasmineNodeOpts: {
@@ -43,11 +43,11 @@ export let config: Config = {
   },
 
   params: {
-    apiUrl: 'https://trafficops.infra.ciab.test/api/3.0',
-    baseUrl: 'https://127.0.0.1/',
+    apiUrl: 'https://to.nightly.cdnlab.comcast.net/api/3.0',
+    baseUrl: 'https://localhost:443/',
     login: {
       username: 'admin',
-      password: 'twelve12'
+      password: 'twelve'
     }
   },
 
