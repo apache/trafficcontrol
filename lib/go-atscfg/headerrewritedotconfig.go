@@ -39,6 +39,7 @@ const ServiceCategoryHeader = "CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 const MaxRequestHeaderNoBytes = 0
+const TsDefaultRequestHeaderMaxSize = 131072
 
 func MakeHeaderRewriteDotConfig(
 	fileName string,
@@ -54,8 +55,8 @@ func MakeHeaderRewriteDotConfig(
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewritePrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
 	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
+
 	warnings = append(warnings, paramWarns...)
-	fmt.Println(params)
 	tcDS := DeliveryService{}
 	for _, ds := range deliveryServices {
 		if ds.XMLID == nil {
@@ -125,7 +126,21 @@ func MakeHeaderRewriteDotConfig(
 
 	text := makeHdrComment(hdrComment)
 
+	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
+	if val, ok := params["CONFIG proxy.config.http.request_header_max_size"]; ok {
+		size := strings.Fields(val)
+		globalRequestHeaderMaxSize, err = strconv.Atoi(size[1])
+		if err != nil {
+			warnings = append(warnings, "Couldn't convert string to int for max_req_header_size")
+		}
+	}
 	if ds.MaxRequestHeaderBytes > 0 {
+		if ds.MaxRequestHeaderBytes >= globalRequestHeaderMaxSize {
+			warnTxt := "TO Max Request Header Size: " + strconv.Itoa(ds.MaxRequestHeaderBytes) +
+				" ,is larger than global setting of " + strconv.Itoa(globalRequestHeaderMaxSize) +
+				", only global setting will be used."
+			warnings = append(warnings, warnTxt)
+		}
 		text += "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(ds.MaxRequestHeaderBytes) + "\nset-status 400"
 		if ds.EdgeHeaderRewrite == "" && ds.MaxOriginConnections == 0 {
 			text += " [L]"
