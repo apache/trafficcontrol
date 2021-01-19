@@ -129,9 +129,11 @@ func MakeHeaderRewriteDotConfig(
 	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
 	if val, ok := params["CONFIG proxy.config.http.request_header_max_size"]; ok {
 		size := strings.Fields(val)
-		globalRequestHeaderMaxSize, err = strconv.Atoi(size[1])
+		sizeI, err := strconv.Atoi(size[1])
 		if err != nil {
 			warnings = append(warnings, "Couldn't convert string to int for max_req_header_size")
+		} else {
+			globalRequestHeaderMaxSize = sizeI
 		}
 	}
 	if ds.MaxRequestHeaderBytes > 0 {
