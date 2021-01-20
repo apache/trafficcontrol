@@ -858,12 +858,12 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
 		}
-		exists, err := getSSLVersion(*ds.XMLID, tx)
+		sslKeysExist, err := getSSLVersion(*ds.XMLID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
 		}
 		if ds.CDNName != nil && ds.RoutingName != nil {
-			if exists && (oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
+			if sslKeysExist && (oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
 				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 			}
 		}
