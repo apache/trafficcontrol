@@ -230,21 +230,6 @@ under the License.
                 <span ng-show="hasError(serverForm.iloPassword)" class="form-control-feedback"><i class="fa fa-times"></i></span>
             </div>
 
-            <label ng-class="{'has-error': hasError(serverForm.routerHostName)}">Router Hostname</label>
-            <div ng-class="{'has-error': hasError(serverForm.routerHostName), 'has-feedback': hasError(serverForm.routerHostName)}">
-                <input name="routerHostName" type="text" class="form-control" ng-model="server.routerHostName" maxlength="256" pattern="\S*"/>
-                <small class="input-error" ng-show="hasPropertyError(serverForm.routerHostName, 'maxlength')">Too Long</small>
-                <small class="input-error" ng-show="hasPropertyError(serverForm.routerHostName, 'pattern')">No Spaces</small>
-                <span ng-show="hasError(serverForm.routerHostName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-            </div>
-
-            <label ng-class="{'has-error': hasError(serverForm.routerPortName)}">Router Port Name</label>
-            <div ng-class="{'has-error': hasError(serverForm.routerPortName), 'has-feedback': hasError(serverForm.routerPortName)}">
-                <input name="routerPortName" type="text" class="form-control" ng-model="server.routerPortName" maxlength="256"/>
-                <small class="input-error" ng-show="hasPropertyError(serverForm.routerPortName, 'maxlength')">Too Long</small>
-                <span ng-show="hasError(serverForm.routerPortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-            </div>
-
             <label ng-if="!settings.isNew">Hash ID</label>
             <div ng-if="!settings.isNew">
                 <input name="xmppId" type="text" class="form-control" ng-model="server.xmppId" readonly/>
@@ -268,6 +253,15 @@ under the License.
                         <label for="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}">Maximum Bandwidth</label>
                         <input id="{{inf.name}}-max-bandwidth" ng-model="inf.maxBandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small>
+                        <label for="{{inf.name}}-router-hostname" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-hostname'])}">Router Hostname</label>
+                        <input id="{{inf.name}}-router-hostname" ng-model="inf.routerHostName" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-hostname'])}" type="text" name="{{inf.name}}-router-hostname" maxlength="256" pattern="\S*"/>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'maxlength')">Too long</small>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'pattern')">No Spaces</small>
+                        <label for="{{inf.name}}-router-port" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-port'])}">Router Port Name</label>
+                        <input id="{{inf.name}}-router-port" ng-model="inf.routerPort" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-port'])}" type="text" name="{{inf.name}}-router-port" maxlength="256" pattern="\S*"/>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-port'], 'maxlength')">Too long</small>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-port'], 'pattern')">No Spaces</small>
+
                     </div>
 
                     <fieldset>
