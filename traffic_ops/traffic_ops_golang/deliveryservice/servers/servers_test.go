@@ -173,6 +173,12 @@ func TestReadServers(t *testing.T) {
 	}
 
 	for _, interf := range srvInts {
+		if interf.RouterHostName != "router1" && interf.RouterHostName != "router2" {
+			t.Errorf("RouterHostName %s does't match router1 or router2", interf.RouterHostName)
+		}
+		if interf.RouterPort != "9090" && interf.RouterPort != "9091" {
+			t.Errorf("RouterPort %s does't match 9090 or 9091", interf.RouterPort)
+		}
 		if len(interf.IPAddresses) != 4 {
 			t.Fatalf("servers.read expected len(interf.IPAddresses) == 4, actual = %v", len(interf.IPAddresses))
 		}
@@ -227,8 +233,8 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				MTU:          util.Uint64Ptr(1500),
 				Name:         "interfaceName" + strconv.Itoa(cacheID),
 			},
-			RouterHostName: "",
-			RouterPort:     "",
+			RouterHostName: "router1",
+			RouterPort:     "9090",
 		},
 		{
 			ServerInterfaceInfo: tc.ServerInterfaceInfo{
@@ -259,8 +265,8 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				MTU:          util.Uint64Ptr(1500),
 				Name:         "interfaceName2" + strconv.Itoa(cacheID),
 			},
-			RouterHostName: "",
-			RouterPort:     "",
+			RouterHostName: "router2",
+			RouterPort:     "9091",
 		},
 	}
 }

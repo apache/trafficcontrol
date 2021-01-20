@@ -213,7 +213,6 @@ func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationI
 	}
 }
 
-//ToDo: Srijeet change here
 func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV40, error) {
 	allowedOrderByCols := map[string]string{
 		"":                "",

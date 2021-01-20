@@ -1542,7 +1542,7 @@ func getMidServersV40(edgeIDs []int, servers map[int]tc.ServerV40, cdnID int, tx
 	}
 
 	// TODO: include secondary parent?
-	q := selectQuery + `
+	q := selectQueryV40 + `
 	WHERE t.name = 'MID' AND s.cachegroup IN (
 	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 	WHERE cg.id IN (
@@ -2350,7 +2350,6 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-
 	if server.ID != nil {
 		var prevID int
 		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)

@@ -17,12 +17,27 @@
  * under the License.
  */
 
-// this is the config the TO UI uses
+package v4
 
-"use strict";
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 
-angular.module('config', [])
+	"github.com/apache/trafficcontrol/lib/go-log"
+)
 
-.constant('ENV', { api: { root:'/api/4.0/', legacy: '/api/1.5/' } })
+// LoadFixtures ...
+func LoadFixtures(fixturesPath string) {
 
-;
+	f, err := ioutil.ReadFile(fixturesPath)
+	if err != nil {
+		log.Errorf("Cannot unmarshal fixtures json %s", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal(f, &testData)
+	if err != nil {
+		log.Errorf("Cannot unmarshal fixtures json %v", err)
+		os.Exit(1)
+	}
+}

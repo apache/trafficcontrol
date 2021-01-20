@@ -32,6 +32,15 @@ import (
  * under the License.
  */
 
+// ServersV4Response is the format of a response to a GET request for API v4.x /servers.
+type ServersV4Response struct {
+	Response []ServerV40 `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+	Alerts
+}
+
 // ServersV3Response is the format of a response to a GET request for /servers.
 type ServersV3Response struct {
 	Response []ServerV30 `json:"response"`
@@ -86,6 +95,12 @@ type ServersV1DetailResponse struct {
 // ServersV3DetailResponse is the JSON object returned for a single server for v3.
 type ServersV3DetailResponse struct {
 	Response []ServerDetailV30 `json:"response"`
+	Alerts
+}
+
+// ServersV4DetailResponse is the JSON object returned for a single server for v4.
+type ServersV4DetailResponse struct {
+	Response []ServerDetailV40 `json:"response"`
 	Alerts
 }
 

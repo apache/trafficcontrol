@@ -1,4 +1,4 @@
-package v3
+package v4
 
 /*
 
@@ -116,7 +116,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err := TOSession.DeleteServerByID(*server.ID)
+	alerts, _, err := TOSession.DeleteServerByID(*server.ID, nil)
 	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
@@ -124,7 +124,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true)
+	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true, nil)
 	t.Logf("Alerts from removing Delivery Service from server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
@@ -147,7 +147,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err = TOSession.UpdateServerByIDWithHdr(*server.ID, server, nil)
+	alerts, _, err = TOSession.UpdateServerByID(*server.ID, server, nil)
 	t.Logf("Alerts from updating server status: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
@@ -170,7 +170,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		interfaces[interfaceIndex].IPAddresses = ipAddresses
 	}
 	server.Interfaces = interfaces
-	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
+	alerts, _, err = TOSession.CreateServer(server, nil)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
 	}
@@ -196,7 +196,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	// Cleanup
 	setInactive(t, *ds.ID)
-	alerts, _, err = TOSession.DeleteServerByID(*server.ID)
+	alerts, _, err = TOSession.DeleteServerByID(*server.ID, nil)
 	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err != nil {
 		t.Errorf("Failed to delete server: %v", err)
@@ -217,7 +217,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
 	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
-	servers := []tc.ServerV30{}
+	servers := []tc.ServerV40{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
 			servers = append(servers, s)
@@ -585,7 +585,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.ServerV30) {
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.ServerV40) {
 	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
@@ -612,5 +612,5 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.Se
 	}
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
-	return tc.DeliveryServiceNullableV30{}, tc.ServerV30{}
+	return tc.DeliveryServiceNullableV30{}, tc.ServerV40{}
 }
