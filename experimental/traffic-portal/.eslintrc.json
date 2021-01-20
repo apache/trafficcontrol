@@ -96,7 +96,7 @@
 				],
 				"@typescript-eslint/explicit-module-boundary-types": "error",
 				"@typescript-eslint/indent": [
-					"off",
+					"error",
 					"tab"
 				],
 				"@typescript-eslint/member-delimiter-style": [
