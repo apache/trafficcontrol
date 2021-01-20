@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: Added validation to ensure that the `weight` parameter of `parent.config` is a float
 
 ### Fixed
+- [#5335](https://github.com/apache/trafficcontrol/issues/5335) - Don't create a change log entry if the delivery service primary origin hasn't changed
+- [#5333](https://github.com/apache/trafficcontrol/issues/5333) - Don't create a change log entry for any delivery service consistent hash query params updates
 - [#5341](https://github.com/apache/trafficcontrol/issues/5341) - For a DS with existing SSLKeys, fixed HTTP status code from 403 to 400 when updating CDN and Routing Name (in TO) and made CDN and Routing Name fields immutable (in TP).
 - [#5192](https://github.com/apache/trafficcontrol/issues/5192) - Fixed TO log warnings when generating snapshots for topology-based delivery services.
 - [#5284](https://github.com/apache/trafficcontrol/issues/5284) - Fixed error message when creating a server with non-existent profile
