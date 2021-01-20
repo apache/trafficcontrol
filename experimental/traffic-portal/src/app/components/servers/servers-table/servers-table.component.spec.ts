@@ -29,7 +29,7 @@ describe("ServersTableComponent", () => {
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [HttpClientModule, RouterTestingModule]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

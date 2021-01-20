@@ -32,7 +32,7 @@ describe("LoginComponent", () => {
 				RouterTestingModule
 			]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

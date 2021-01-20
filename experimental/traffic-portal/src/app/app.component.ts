@@ -33,6 +33,9 @@ export class AppComponent {
 	/** The currently logged-in user */
 	public currentUser: User | null = null;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly router: Router, private readonly auth: AuthenticationService) {
 		this.auth.currentUser.subscribe(x => this.currentUser = x);
 	}

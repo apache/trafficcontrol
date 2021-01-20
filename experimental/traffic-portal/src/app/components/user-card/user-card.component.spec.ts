@@ -29,7 +29,7 @@ describe("UserCardComponent", () => {
 				HttpClientModule
 			]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

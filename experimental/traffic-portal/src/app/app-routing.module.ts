@@ -43,7 +43,7 @@ const routes: Routes = [
 	exports: [RouterModule],
 	imports: [RouterModule.forRoot(routes, {
 		initialNavigation: "enabled"
-})],
+	})],
 })
 // This is a necessary empty class. All of its data/logic come from the decorator.
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

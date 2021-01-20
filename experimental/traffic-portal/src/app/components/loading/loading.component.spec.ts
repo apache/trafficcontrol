@@ -23,7 +23,7 @@ describe("LoadingComponent", () => {
 		TestBed.configureTestingModule({
 			declarations: [ LoadingComponent ]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -28,6 +28,11 @@ import { APIService } from "./apiservice";
 @Injectable({providedIn: "root"})
 export class UserService extends APIService {
 
+	/**
+	 * Injects the Angular HTTP client service into the parent constructor.
+	 *
+	 * @param http The Angular HTTP client service.
+	 */
 	constructor(http: HttpClient) {
 		super(http);
 	}

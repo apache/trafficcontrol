@@ -28,6 +28,9 @@ export class AlertService {
 	/** An Observable that emits Alerts. */
 	public alerts: Observable<Alert | null>;
 
+	/**
+	 * Constructor.
+	 */
 	constructor() {
 		this.alertsSubject = new BehaviorSubject<Alert | null>(null);
 		this.alerts = this.alertsSubject.asObservable();

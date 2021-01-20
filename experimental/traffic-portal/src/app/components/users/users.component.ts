@@ -50,6 +50,9 @@ export class UsersComponent implements OnInit {
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly api: UserService, private readonly auth: AuthenticationService) {
 		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();

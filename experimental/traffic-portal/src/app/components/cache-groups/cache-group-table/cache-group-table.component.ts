@@ -94,6 +94,9 @@ export class CacheGroupTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 	}

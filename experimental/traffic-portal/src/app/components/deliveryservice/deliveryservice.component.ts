@@ -81,6 +81,9 @@ export class DeliveryserviceComponent implements OnInit {
 	/** The size of each single interval for data grouping, in seconds. */
 	private bucketSize = 300;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly api: DeliveryServiceService,
@@ -158,6 +161,9 @@ export class DeliveryserviceComponent implements OnInit {
 		this.loadTPS();
 	}
 
+	/**
+	 * Loads new data for the bandwidth chart.
+	 */
 	private loadBandwidth(): void {
 		let interval: string;
 		if (this.bucketSize < 1) {
@@ -207,6 +213,9 @@ export class DeliveryserviceComponent implements OnInit {
 		);
 	}
 
+	/**
+	 * Loads new data for the TPS chart.
+	 */
 	private loadTPS(): void {
 		let interval: string;
 		if (this.bucketSize < 1) {

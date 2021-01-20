@@ -29,6 +29,9 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 	/** A subscription for the toggle input. */
 	private subscription: Subscription | null = null;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly element: ElementRef) { }
 
 	/** Initializes toggle listening. */

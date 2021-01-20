@@ -152,6 +152,11 @@ export class DeliveryServiceService extends APIService {
 	/** This is where DS Types are cached, as they are presumed to not change (often). */
 	private deliveryServiceTypes: Array<Type>;
 
+	/**
+	 * Injects the Angular HTTP client service into the parent constructor.
+	 *
+	 * @param http The Angular HTTP client service.
+	 */
 	constructor(http: HttpClient) {
 		super(http);
 		this.deliveryServiceTypes = new Array<Type>();

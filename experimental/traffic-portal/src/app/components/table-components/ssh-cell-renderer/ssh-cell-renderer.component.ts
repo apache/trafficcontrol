@@ -47,6 +47,9 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 		return this.sanitizer.bypassSecurityTrustUrl(url);
 	}
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) {
 		this.auth.updateCurrentUser().subscribe(
 			success => {

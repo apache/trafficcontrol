@@ -77,6 +77,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Chart.js configuration options. */
 	private opts: Chart.ChartConfiguration = {};
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly element: ElementRef) { }
 
 	/**
@@ -156,6 +159,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		);
 	}
 
+	/**
+	 * Destroys the ChartJS instance and clears the underlying drawing context.
+	 */
 	private destroyChart(): void {
 		if (this.chart) {
 			this.chart.clear();
@@ -169,6 +175,11 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	}
 
 
+	/**
+	 * Loads a new Chart.
+	 *
+	 * @param data The new data sets for the new chart.
+	 */
 	private dataLoad(data: DataSet[]): void {
 		this.destroyChart();
 
@@ -190,6 +201,11 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.chart = new Chart(this.ctx, this.opts);
 	}
 
+	/**
+	 * Handles an error when loading data.
+	 *
+	 * @param e The error that occurred.
+	 */
 	private dataError(e: Error): void {
 		console.error("data error occurred:", e);
 		this.destroyChart();
@@ -201,6 +217,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * Handles when there is no data for the chart.
+	 */
 	private noData(): void {
 		this.destroyChart();
 		if (this.ctx) {

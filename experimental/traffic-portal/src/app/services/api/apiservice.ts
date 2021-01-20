@@ -28,28 +28,91 @@ export class APIService {
 	 */
 	public apiVersion = "2.0";
 
+	/**
+	 * Sends an HTTP DELETE request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected delete(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("delete", path, data);
 	}
+
+	/**
+	 * Sends an HTTP GET request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected get(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("get", path, data);
 	}
+
+	/**
+	 * Sends an HTTP HEAD request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected head(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("head", path, data);
 	}
+
+	/**
+	 * Sends an HTTP OPTIONS request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected options(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("options", path, data);
 	}
+
+	/**
+	 * Sends an HTTP PATCH request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected patch(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("patch", path, data);
 	}
+
+	/**
+	 * Sends an HTTP POST request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected post(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("post", path, data);
 	}
+
+	/**
+	 * Sends an HTTP PUSH request to the API.
+	 *
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected push(path: string, data?: object): Observable<HttpResponse<object>> {
 		return this.do("push", path, data);
 	}
 
+	/**
+	 * Sends an HTTP request to the API.
+	 *
+	 * @param method The HTTP request method to use, e.g. "GET".
+	 * @param path The request path.
+	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @returns An Observable that emits the server response.
+	 */
 	protected do(method: string, path: string, data?: object): Observable<HttpResponse<object>> {
 
 		/* eslint-disable */
@@ -63,6 +126,11 @@ export class APIService {
 		return this.http.request(method, path, options);
 	}
 
+	/**
+	 * Constructs the service and sets the API version based on the execution environment.
+	 *
+	 * @param http The Angular HTTP client service.
+	 */
 	constructor(private readonly http: HttpClient) {
 		if (environment.apiVersion) {
 			this.apiVersion = environment.apiVersion;

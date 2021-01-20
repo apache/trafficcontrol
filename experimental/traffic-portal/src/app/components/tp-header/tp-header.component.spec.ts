@@ -23,7 +23,7 @@ describe("TpHeaderComponent", () => {
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -26,6 +26,9 @@ import { AlertService } from "../services";
  */
 @Injectable()
 export class AlertInterceptor implements HttpInterceptor {
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly alertService: AlertService) {}
 
 	/**

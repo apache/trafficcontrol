@@ -93,6 +93,9 @@ export class DsCardComponent implements OnInit {
 	 */
 	public graphDataLoaded: boolean;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly dsAPI: DeliveryServiceService) {
 		this.deliveryService = {
 			active: true,
@@ -201,6 +204,9 @@ export class DsCardComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Requests new data for the charts from the API and loads it.
+	 */
 	private loadChart(): void {
 		const xmlID = this.deliveryService.xmlId;
 		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true).pipe(first()).subscribe(

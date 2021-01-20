@@ -19,24 +19,24 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { CacheGroupTableComponent } from "./cache-group-table.component";
 
 describe("CacheGroupTableComponent", () => {
-  let component: CacheGroupTableComponent;
-  let fixture: ComponentFixture<CacheGroupTableComponent>;
+	let component: CacheGroupTableComponent;
+	let fixture: ComponentFixture<CacheGroupTableComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ CacheGroupTableComponent ],
-      imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule]
-    })
-    .compileComponents();
-  });
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			declarations: [ CacheGroupTableComponent ],
+			imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule]
+		})
+			.compileComponents();
+	});
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(CacheGroupTableComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(CacheGroupTableComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it("should create", () => {
-    expect(component).toBeTruthy();
-  });
+	it("should create", () => {
+		expect(component).toBeTruthy();
+	});
 });

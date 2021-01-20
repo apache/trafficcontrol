@@ -28,6 +28,9 @@ import { AlertService, AuthenticationService } from "../services";
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
+	/**
+	 * Constructor.
+	 */
 	constructor(
 		private readonly authenticationService: AuthenticationService,
 		private readonly router: Router,

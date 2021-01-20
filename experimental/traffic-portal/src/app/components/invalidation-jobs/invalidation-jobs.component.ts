@@ -61,6 +61,9 @@ export class InvalidationJobsComponent implements OnInit {
 	public regexpIsValid: Subject<string>;
 
 
+	/**
+	 * Constructor.
+	 */
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly jobAPI: InvalidationJobService,

@@ -39,14 +39,31 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	/** Initialization parameters. */
 	private params: IFilterParams = null as unknown as IFilterParams;
 
+	/**
+	 * Called by AG-Grid to check if the filter is in effect.
+	 *
+	 * @returns Whether or not the filter is active.
+	 */
 	public isFilterActive(): boolean {
 		return this.shouldFilter;
 	}
 
+	/**
+	 * Called by AG-Grid to filter a row.
+	 *
+	 * @param params Parameters given by AG-Grid which contain (among other things) the table row being filtered.
+	 * @returns 'true' if the row matches the filter state, 'false' if it should be filtered out.
+	 */
 	public doesFilterPass(params: IDoesFilterPassParams): boolean {
 		return this.params.valueGetter(params.node) === this.value;
 	}
 
+	/**
+	 * Handles when a control for the filter is changed.
+	 *
+	 * @param event The new value of the control.
+	 * @param input A string that describes which input has changed.
+	 */
 	public onChange(event: boolean, input: "should" | "value"): void {
 		switch (input) {
 			case "should":
@@ -65,6 +82,11 @@ export class BooleanFilterComponent implements AgFilterComponent {
 		}
 	}
 
+	/**
+	 * Gets the filter state.
+	 *
+	 * @returns the full representation of the filter state.
+	 */
 	public getModel(): BooleanFilterModel {
 		return {
 			should: this.shouldFilter,
@@ -72,11 +94,21 @@ export class BooleanFilterComponent implements AgFilterComponent {
 		};
 	}
 
+	/**
+	 * Sets the filter state.
+	 *
+	 * @param model A full representation of a filter state.
+	 */
 	public setModel(model: BooleanFilterModel): void {
 		this.shouldFilter = model.should;
 		this.value = model.value;
 	}
 
+	/**
+	 * Called by AG-Grid after the grid is ready.
+	 *
+	 * @param params All of the information required to set up a filter.
+	 */
 	public agInit(params: IFilterParams): void {
 		this.params = params;
 	}

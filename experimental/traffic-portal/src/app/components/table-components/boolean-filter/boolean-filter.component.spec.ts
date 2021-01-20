@@ -10,7 +10,7 @@ describe("BooleanFilterComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [ BooleanFilterComponent ]
 		})
-		.compileComponents();
+			.compileComponents();
 	});
 
 	beforeEach(() => {

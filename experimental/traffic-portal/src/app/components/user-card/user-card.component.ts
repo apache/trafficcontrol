@@ -41,6 +41,9 @@ export class UserCardComponent implements OnInit {
 	 */
 	@Input() public roleMap?: Observable<Map<number, string>>;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly api: UserService) {
 		this.user = {
 			id: -1,

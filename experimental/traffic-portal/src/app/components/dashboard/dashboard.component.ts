@@ -81,6 +81,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Fuzzy search control */
 	public fuzzControl = new FormControl("", {updateOn: "change"});
 
+	/**
+	 * Constructor.
+	 */
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,

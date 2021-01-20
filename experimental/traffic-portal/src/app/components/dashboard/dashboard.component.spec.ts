@@ -35,19 +35,19 @@ describe("DashboardComponent", () => {
 		mockAPIService.getDeliveryServices.and.returnValue(of([]));
 
 		TestBed.configureTestingModule({
-		declarations: [
-			DashboardComponent,
-			DsCardComponent,
-			LoadingComponent,
-			TpHeaderComponent,
-			LinechartDirective
-		],
-		imports: [
-			FormsModule,
-			HttpClientModule,
-			ReactiveFormsModule,
-			RouterTestingModule
-		]
+			declarations: [
+				DashboardComponent,
+				DsCardComponent,
+				LoadingComponent,
+				TpHeaderComponent,
+				LinechartDirective
+			],
+			imports: [
+				FormsModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			]
 		});
 		TestBed.overrideProvider(DeliveryServiceService, { useValue: mockAPIService });
 		TestBed.compileComponents();

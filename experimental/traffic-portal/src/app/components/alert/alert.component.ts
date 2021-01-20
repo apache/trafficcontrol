@@ -33,6 +33,9 @@ export class AlertComponent implements OnInit {
 	/** The Alert being displayed. */
 	public alert: Alert | null = null;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly platform: object) { }
 
 	/**

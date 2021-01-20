@@ -25,7 +25,7 @@ describe("SshCellRendererComponent", () => {
 			declarations: [ SSHCellRendererComponent ],
 			imports: [HttpClientModule]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -33,6 +33,9 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	/** A subscription for the 'validity' input. */
 	private subscription: Subscription | null = null;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(private readonly element: ElementRef<HTMLInputElement>) { }
 
 	/** Initializes the validity state of the element. */

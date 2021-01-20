@@ -133,6 +133,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
 
+	/**
+	 * Constructor.
+	 */
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly cdnAPI: CDNService,

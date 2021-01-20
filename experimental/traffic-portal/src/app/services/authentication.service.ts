@@ -41,6 +41,11 @@ export class AuthenticationService {
 	/** Behavior subject for the current user's capabilities. */
 	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
 
+	/**
+	 * Constructs the service with its required dependencies injected.
+	 *
+	 * @param api A reference to the UserService.
+	 */
 	constructor(private readonly api: UserService) {
 		this.currentUserSubject = new BehaviorSubject<User | null>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
