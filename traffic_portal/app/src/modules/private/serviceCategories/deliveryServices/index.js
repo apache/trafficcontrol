@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.serviceCategories.deliver
 							},
 							deliveryServices: function(serviceCategory, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ serviceCategory: serviceCategory.name });
+							},
+							filter: function(serviceCategory) {
+								return {
+									serviceCategory: {
+										filterType: "text",
+										type: "equals",
+										filter: serviceCategory.name
+									}
+								}
 							}
 						}
 					}
