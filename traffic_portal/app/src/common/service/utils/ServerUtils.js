@@ -86,7 +86,9 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 			ip6Address: null,
 			ip6Gateway: null,
 			interfaceName: null,
-			interfaceMtu: null
+			interfaceMtu: null,
+			routerHostName: null,
+			routerPort: null
 		};
 		if (!interfaces) {
 			return legacyInfo;
@@ -102,7 +104,8 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 				}
 				legacyInfo.interfaceName = inf.name;
 				legacyInfo.interfaceMtu = inf.mtu;
-
+				legacyInfo.routerHostName = inf.routerHostName;
+				legacyInfo.routerPort = inf.routerPort;
 				let address = ip.address;
 
 				// we don't validate ips here; if it has a '.' it's ipv4,

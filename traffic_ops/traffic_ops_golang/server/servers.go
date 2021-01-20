@@ -1746,7 +1746,7 @@ func createInterfacesV40(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql
 	ifaceArgs := make([]interface{}, 0, len(interfaces))
 	ipArgs := make([]interface{}, 0, len(interfaces))
 	for i, iface := range interfaces {
-		argStart := i * 5
+		argStart := i * 7
 		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5, argStart+6, argStart+7))
 		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id, iface.RouterHostName, iface.RouterPort)
 		for _, ip := range iface.IPAddresses {
