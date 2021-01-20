@@ -839,7 +839,7 @@ JOIN type t ON s.type = t.id `
 		serverIDs = append(serverIDs, serverID)
 	}
 
-	serversMap, err := dbhelpers.GetServersInterfacesV40(serverIDs, tx.Tx)
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx.Tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}

@@ -185,7 +185,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 		}
 		serverIDs = append(serverIDs, *serverID)
 	}
-	serversMap, err := dbhelpers.GetServersInterfacesV40(serverIDs, tx)
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}

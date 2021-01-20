@@ -227,12 +227,12 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 			continue
 		}
 
-		infs := make([]tc.ServerInterfaceInfo, 0, len(ifaces))
+		infs := make([]tc.ServerInterfaceInfoV40, 0, len(ifaces))
 		for _, inf := range ifaces {
 			infs = append(infs, inf)
 		}
 
-		legacyNet, err := tc.InterfaceInfoToLegacyInterfaces(infs)
+		legacyNet, err := tc.V4InterfaceInfoToLegacyInterfaces(infs)
 		if err != nil {
 			return nil, fmt.Errorf("Error converting interfaces to legacy data for server '%s' (#%d): %v", server.Host, id, err)
 		}

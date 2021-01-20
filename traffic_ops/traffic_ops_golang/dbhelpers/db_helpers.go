@@ -538,7 +538,7 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 
 // GetServerInterfaces, given the IDs of one or more servers, returns all of their network
 // interfaces mapped by their ids, or an error if one occurs during retrieval.
-func GetServersInterfacesV40(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfoV40, error) {
+func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfoV40, error) {
 	q := `
 	SELECT max_bandwidth,
 	       monitor,
@@ -565,78 +565,6 @@ func GetServersInterfacesV40(ids []int, tx *sql.Tx) (map[int]map[string]tc.Serve
 		}
 		if _, ok := infs[server]; !ok {
 			infs[server] = make(map[string]tc.ServerInterfaceInfoV40)
-		}
-
-		infs[server][inf.Name] = inf
-	}
-
-	q = `
-	SELECT address,
-	       gateway,
-	       service_address,
-	       interface,
-	       server
-	FROM ip_address
-	WHERE ip_address.server = ANY ($1)
-	`
-	ipRows, err := tx.Query(q, pq.Array(ids))
-	if err != nil {
-		return nil, err
-	}
-	defer ipRows.Close()
-
-	for ipRows.Next() {
-		var ip tc.ServerIPAddress
-		var inf string
-		var server int
-		if err = ipRows.Scan(&ip.Address, &ip.Gateway, &ip.ServiceAddress, &inf, &server); err != nil {
-			return nil, err
-		}
-
-		ifaces, ok := infs[server]
-		if !ok {
-			return nil, fmt.Errorf("retrieved ip_address with server not previously found: %d", server)
-		}
-
-		iface, ok := ifaces[inf]
-		if !ok {
-			return nil, fmt.Errorf("retrieved ip_address with interface not previously found: %s", inf)
-		}
-		iface.IPAddresses = append(iface.IPAddresses, ip)
-		infs[server][inf] = iface
-	}
-
-	return infs, nil
-}
-
-// GetServerInterfaces, given the IDs of one or more servers, returns all of their network
-// interfaces mapped by their ids, or an error if one occurs during retrieval.
-func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfo, error) {
-	q := `
-	SELECT max_bandwidth,
-	       monitor,
-	       mtu,
-	       name,
-	       server
-	FROM interface
-	WHERE interface.server = ANY ($1)
-	`
-	ifaceRows, err := tx.Query(q, pq.Array(ids))
-	if err != nil {
-		return nil, err
-	}
-	defer ifaceRows.Close()
-
-	infs := map[int]map[string]tc.ServerInterfaceInfo{}
-	for ifaceRows.Next() {
-		var inf tc.ServerInterfaceInfo
-		var server int
-		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server); err != nil {
-			return nil, err
-		}
-
-		if _, ok := infs[server]; !ok {
-			infs[server] = make(map[string]tc.ServerInterfaceInfo)
 		}
 
 		infs[server][inf.Name] = inf
