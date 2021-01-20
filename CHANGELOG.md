@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5378](https://github.com/apache/trafficcontrol/issues/5378) - Updating a non existent DS should return a 404, instead of a 500
 - [#5380](https://github.com/apache/trafficcontrol/issues/5380) - Show the correct servers (including ORGs) when a topology based DS with required capabilities + ORG servers is queried for the assigned servers
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
+- [#5438](https://github.com/apache/trafficcontrol/issues/5438) - Correctly specify nodejs version requirements in traffic_portal.spec
 - Fixed Traffic Router logging unnecessary warnings for IPv6-only caches
 - Fixed parent.config generation for topology-based delivery services (inline comments not supported)
 - Fixed parent.config generation for MSO delivery services with required capabilities
