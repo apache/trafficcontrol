@@ -20,11 +20,6 @@ package client
    limitations under the License.
 */
 
-import (
-	"encoding/json"
-	"net/http"
-)
-
 const (
 	API_ABOUT = apiBase + "/about"
 )
@@ -32,17 +27,7 @@ const (
 // GetAbout gets data about the TO instance.
 func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
 	route := API_ABOUT
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data map[string]string
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data, reqInf, nil
+	reqInf, err := to.get(route, nil, &data)
+	return data, reqInf, err
 }

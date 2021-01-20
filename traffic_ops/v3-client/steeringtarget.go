@@ -16,31 +16,20 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	if st.DeliveryServiceID == nil {
-		return tc.Alerts{}, reqInf, errors.New("missing delivery service id")
+		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, errors.New("missing delivery service id")
 	}
-	reqBody, err := json.Marshal(st)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-
-	resp := (*http.Response)(nil)
-	if resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets`, reqBody, nil); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	alerts := tc.Alerts{}
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, *st.DeliveryServiceID)
+	reqInf, err := to.post(route, st, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -52,22 +41,9 @@ func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, hea
 	if st.TargetID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing target id")
 	}
-
-	reqBody, err := json.Marshal(st)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp := (*http.Response)(nil)
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets/`+strconv.Itoa(int(*st.TargetID)), reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
+	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, *st.DeliveryServiceID, *st.TargetID)
 	alerts := tc.Alerts{}
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.put(route, st, header, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -77,28 +53,17 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 }
 
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets`, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, dsID)
 	data := struct {
 		Response []tc.SteeringTargetNullable `json:"response"`
 	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(route, nil, &data)
 	return data.Response, reqInf, err
 }
 
 func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets/`+strconv.Itoa(targetID), nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
+	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, dsID, targetID)
 	alerts := tc.Alerts{}
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }
