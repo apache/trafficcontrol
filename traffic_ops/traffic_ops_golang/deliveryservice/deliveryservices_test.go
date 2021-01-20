@@ -41,14 +41,14 @@ func TestGetDetails(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"xml_id", "protocol", "name", "routing_name", "domain_name", "name", "origin_server_fqdn"})
-	rows.AddRow("testDS", 0, "HTTP", "cdn", "test.foo.bar", "foo", "http://123.34.32.21:9090")
+	rows := sqlmock.NewRows([]string{"routing_name", "name", "origin_server_fqdn"})
+	rows.AddRow("cdn", "foo", "http://123.34.32.21:9090")
 
 	rows2 := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "coalesce"})
 	rows2.AddRow("testDS", "HOST_REGEXP", ".*\\.testDS\\..*", 0)
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ds.xml_id as ds_name, t.name as type, r.pattern").WillReturnRows(rows2)
 
 	oldDetails, userErr, sysErr, code := getOldDetails(1, db.MustBegin().Tx)
@@ -85,7 +85,7 @@ func TestGetOldDetailsError(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{""})
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
 	_, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
 	if userErr == nil {
 		t.Fatalf("expected error %v, but got none", expected)
