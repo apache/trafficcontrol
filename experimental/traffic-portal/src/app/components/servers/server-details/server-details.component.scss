@@ -21,6 +21,21 @@ form {
 	width: 85vw;
 	margin: 1em auto 0;
 
+	small {
+		grid-column: 2;
+		justify-self: start;
+
+		&.input-warning {
+			color: black;
+			background-color: $warning;
+			border-radius: 4px;
+
+			&::before {
+				content: "⚠";
+			}
+		}
+	}
+
 	output {
 		border: 1px solid darkgray;
 		padding: 2px 3px;

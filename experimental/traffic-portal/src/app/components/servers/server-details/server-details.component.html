@@ -39,8 +39,8 @@ limitations under the License.
 	<fieldset>
 		<legend (click)="hideInterfaces=!hideInterfaces">Interfaces<button name="addInterfaceBtn" class="add-button" type="button" title="add a new interface" (click)="addInterface($event)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
 		<fieldset [hidden]="hideInterfaces" *ngFor="let inf of server.interfaces; index as infInd">
-			<legend ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}">
-				<label for="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}">Name</label>
+			<legend>
+				<label for="{{inf.name}}-name">Name</label>
 				<input type="text" [(ngModel)]="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input"/>
 				<button class="remove-button" type="button" title="delete this interface" (click)="deleteInterface(infInd)"><fa-icon [icon]="removeIcon"></fa-icon></button>
 			</legend>
@@ -48,11 +48,12 @@ limitations under the License.
 			<div>
 				<label for="{{inf.name}}-monitor">Monitor this interface</label>
 				<input id="{{inf.name}}-monitor" name="{{inf.name}}-monitor" type="checkbox" [(ngModel)]="inf.monitor"/>
-				<label for="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}"><abbr title="Maximum Transmission Unit">MTU</abbr></label>
-				<input id="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" [(ngModel)]="inf.mtu"/>
+				<label for="{{inf.name}}-mtu"><abbr title="Maximum Transmission Unit">MTU</abbr></label>
+				<input id="{{inf.name}}-mtu" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" [(ngModel)]="inf.mtu"/>
 				<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small> -->
-				<label for="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}">Maximum Bandwidth</label>
-				<input id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
+				<label for="{{inf.name}}-max-bandwidth">Maximum Bandwidth</label>
+				<input id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
+				<small class="input-warning" [hidden]="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</small>
 				<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small> -->
 			</div>
 
@@ -60,13 +61,13 @@ limitations under the License.
 				<legend>IP Addresses<button name="addIPBtn" type="button" title="add new IP Address" class="add-button" (click)="addIP(inf)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
 				<ul>
 					<li *ngFor="let ip of inf.ipAddresses; index as ipInd" [ngClass]="{'bordered-item': ipInd !== 0}">
-						<label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
-						<input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" [(ngModel)]="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/27" />
+						<label for="{{inf.name}}-{{ip.address}}">Address</label>
+						<input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" [(ngModel)]="ip.address" [pattern]="validIPPattern" required placeholder="192.0.2.0/27" />
 						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
 						<small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
 						<small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR &lt; 27 or IPv6 with CIDR &lt; 64 can be problematic.</small> -->
 						<label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
-						<input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" [(ngModel)]="ip.gateway" ng-pattern="IPPattern"/>
+						<input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" [(ngModel)]="ip.gateway" [pattern]="validGatewayPattern"/>
 						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small> -->
 						<label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
 						<input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" [(ngModel)]="ip.serviceAddress"/>

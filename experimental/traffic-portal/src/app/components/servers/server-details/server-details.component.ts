@@ -17,6 +17,7 @@ import { ActivatedRoute } from "@angular/router";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, Server, Status } from "src/app/models";
 import { CacheGroupService, CDNService, ServerService } from "src/app/services/api";
+import { IP, IP_WITH_CIDR } from "src/app/utils";
 
 @Component({
 	selector: "tp-server-details",
@@ -27,6 +28,8 @@ export class ServerDetailsComponent implements OnInit {
 
 	public isNew = false;
 	public server: Server;
+	public validIPPattern = IP_WITH_CIDR;
+	public validGatewayPattern = IP;
 
 	public get title(): string {
 		if (this.isNew) {
