@@ -14,7 +14,7 @@
 
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ITooltipParams } from "ag-grid-community";
 
 import { BehaviorSubject, Observable } from "rxjs";
@@ -296,7 +296,7 @@ export class ServersTableComponent implements OnInit {
 	 * @param api The Servers API which is used to provide row data.
 	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
 	 */
-	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute) {
+	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 	}
 
@@ -359,7 +359,7 @@ export class ServersTableComponent implements OnInit {
 	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
 		switch (action.action) {
 			case "viewDetails":
-				console.log("'View Details' clicked - not yet implemented");
+				this.router.navigate(["/server", action.data.id]);
 				break;
 			case "updateStatus":
 				console.log("'Update Status' clicked - not yet implemented");
