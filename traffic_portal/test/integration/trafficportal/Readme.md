@@ -13,7 +13,7 @@
 ### Run Tests
 ---
 run `tsc` from trafficportal directory. This command will compile and convert the typescript files into javascript files. The generated js files are available in trafficPortal/GeneratedCode directory
-run `protractor ./GeneratedCode/config.js --params.baseUrl='https://tp.nightly.cdnlab.comcast.net/#!/login'` from trafficportal directory. This command will run the protractor test from the environment user input.
+run `protractor ./GeneratedCode/config.js --params.baseUrl='https://localhost:443'` from trafficportal directory. This command will run the protractor test from the environment user input.
 
 
 ### Test Automation Framework

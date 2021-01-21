@@ -43,11 +43,11 @@ export let config: Config = {
   },
 
   params: {
-    apiUrl: 'https://to.nightly.cdnlab.comcast.net/api/3.0',
+    apiUrl: ' https://localhost:443/api/3.0',
     baseUrl: 'https://localhost:443/',
     login: {
       username: 'admin',
-      password: 'twelve'
+      password: 'twelve12'
     }
   },
 
@@ -84,4 +84,5 @@ export let config: Config = {
       throw error
     }
   },
+  
 };
