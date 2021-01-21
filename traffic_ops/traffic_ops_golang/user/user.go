@@ -271,8 +271,6 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	user.RegistrationSent = &tc.TimeNoMod{Time: time.Now()}
-	fmt.Println("1", user.RegistrationSent)
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -400,7 +398,6 @@ func (user *TOUser) UpdateQuery() string {
 	phone_number=:phone_number,
 	postal_code=:postal_code,
 	country=:country,
-	registration_sent=:registration_sent,
 	tenant_id=:tenant_id,
 	local_passwd=COALESCE(:local_passwd, local_passwd)
 	WHERE id=:id
