@@ -271,6 +271,8 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
+	user.RegistrationSent = &tc.TimeNoMod{Time: time.Now()}
+	fmt.Println("1", user.RegistrationSent)
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
 	if err != nil {
 		return api.ParseDBError(err)
