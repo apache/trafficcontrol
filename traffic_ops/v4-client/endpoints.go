@@ -15,5 +15,4 @@
 
 package client
 
-const apiBase = "/api/3.1"
-const apiBaseServer = "/api/4.0"
+const apiBase = "/api/4.0"
