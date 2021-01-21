@@ -49,6 +49,13 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullableV30
 }
 
+// TODeliveryServiceOldDetails is the struct to store the old details while updating a DS.
+type TODeliveryServiceOldDetails struct {
+	OldOrgServerFqdn *string
+	OldCdnName       string
+	OldRoutingName   string
+}
+
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ds.DeliveryServiceNullableV30)
 }
@@ -396,11 +403,9 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 		return nil, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+	if _, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
-	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -844,22 +849,23 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
 	}
 
-	oldCDNName := ""
-	oldRoutingName := ""
 	errCode := http.StatusOK
 	var userErr error
 	var sysErr error
+	var oldDetails TODeliveryServiceOldDetails
 	if dsType.HasSSLKeys() {
-		oldCDNName, oldRoutingName, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
+		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
 		}
-		exists, err := getSSLVersion(*ds.XMLID, tx)
+		sslKeysExist, err := getSSLVersion(*ds.XMLID, tx)
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
 		}
-		if exists && (oldCDNName != *ds.CDNName || oldRoutingName != *ds.RoutingName) {
-			return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
+		if ds.CDNName != nil && ds.RoutingName != nil {
+			if sslKeysExist && (oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
+				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
+			}
 		}
 	}
 
@@ -1015,8 +1021,10 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, user, ds); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+	if oldDetails.OldOrgServerFqdn != nil && ds.OrgServerFQDN != nil && *oldDetails.OldOrgServerFqdn != *ds.OrgServerFQDN {
+		if err := updatePrimaryOrigin(tx, user, ds); err != nil {
+			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+		}
 	}
 
 	ds.LastUpdated = &lastUpdated
@@ -1029,11 +1037,9 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+	if _, err = createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
-	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
@@ -1172,23 +1178,25 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldDetails(id int, tx *sql.Tx) (string, string, error, error, int) {
+func getOldDetails(id int, tx *sql.Tx) (TODeliveryServiceOldDetails, error, error, int) {
 	q := `
-SELECT ds.routing_name, cdn.name
+SELECT ds.routing_name, cdn.name,
+(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+FROM origin o
+WHERE o.deliveryservice = ds.id
+AND o.is_primary) as org_server_fqdn
 FROM  deliveryservice as ds
 JOIN cdn ON ds.cdn_id = cdn.id
 WHERE ds.id=$1
 `
-	routingName := ""
-	cdnName := ""
-	if err := tx.QueryRow(q, id).Scan(&routingName, &cdnName); err != nil {
+	var oldDetails TODeliveryServiceOldDetails
+	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldCdnName, &oldDetails.OldOrgServerFqdn); err != nil {
 		if err == sql.ErrNoRows {
-			return "", "", fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
+			return oldDetails, fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
 		}
-		return "", "", nil, fmt.Errorf("querying delivery service %v host name: "+err.Error(), id), http.StatusInternalServerError
+		return oldDetails, nil, fmt.Errorf("querying delivery service %v host name: "+err.Error(), id), http.StatusInternalServerError
 	}
-
-	return cdnName, routingName, nil, nil, http.StatusOK
+	return oldDetails, nil, nil, http.StatusOK
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {

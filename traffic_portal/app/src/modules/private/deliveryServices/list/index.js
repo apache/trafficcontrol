@@ -27,8 +27,14 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.list', [
                         templateUrl: 'common/modules/table/deliveryServices/table.deliveryServices.tpl.html',
                         controller: 'TableDeliveryServicesController',
                         resolve: {
+                            tableName: function() {
+                                return 'ds';
+                            },
                             deliveryServices: function(deliveryServiceService) {
                                 return deliveryServiceService.getDeliveryServices();
+                            },
+                            filter: function() {
+                                return null;
                             }
                         }
                     }

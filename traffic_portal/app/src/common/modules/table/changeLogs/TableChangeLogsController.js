@@ -43,7 +43,7 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 			field: "lastUpdated",
 			hide: false,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatterRelative,
+			tooltipValueGetter: dateCellFormatterRelative,
 			valueFormatter: dateCellFormatterRelative
 		},
 		{
@@ -51,7 +51,7 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 			field: "lastUpdated",
 			hide: false,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatter,
+			tooltipValueGetter: dateCellFormatter,
 			valueFormatter: dateCellFormatter
 		},
 		{

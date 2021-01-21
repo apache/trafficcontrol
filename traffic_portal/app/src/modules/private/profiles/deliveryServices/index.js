@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.profiles.deliveryServices
 							},
 							deliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ profile: $stateParams.profileId });
+							},
+							filter: function(profile) {
+								return {
+									profileName: {
+										filterType: "text",
+										type: "equals",
+										filter: profile.name
+									}
+								}
 							}
 						}
 					}
