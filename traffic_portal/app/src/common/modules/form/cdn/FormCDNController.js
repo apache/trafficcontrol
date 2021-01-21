@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, stringUtils, locationUtils, cdnService) {
+var FormCDNController = function(cdn, $scope, $location, $state, $uibModal, formUtils, stringUtils, locationUtils, cdnService, messageModel) {
 
     var queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
@@ -102,6 +102,67 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
         });
     };
 
+    $scope.toggleCDNLock = function(cdn) {
+        if (cdn.lockedBy) {
+            confirmUnlockCDN(cdn);
+        } else {
+            confirmLockCDN(cdn);
+        }
+    };
+
+    let confirmLockCDN = function(cdn) {
+        const params = {
+            title: 'Lock ' + cdn.name,
+            message: 'What is your reason for locking the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(reason) {
+            cdnService.lockCDN(cdn, reason).
+            then(
+                function() {
+                    $state.reload();
+                }
+            );
+        }, function () {
+            // do nothing
+        });
+    };
+
+    let confirmUnlockCDN = function(cdn) {
+        const params = {
+            title: 'Unlock ' + cdn.name,
+            message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            cdnService.unlockCDN(cdn).
+            then(
+                function() {
+                    $state.reload();
+                }
+            );
+        }, function () {
+            // do nothing
+        });
+    };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -111,5 +172,5 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = FormCDNController;

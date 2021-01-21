@@ -41,6 +41,9 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li ng-if="!cdn.lockedBy" role="menuitem"><a ng-click="toggleCDNLock(cdn)">Lock CDN</a></li>
+                    <li ng-if="cdn.lockedBy" role="menuitem"><a ng-click="toggleCDNLock(cdn)">Unlock CDN</a></li>
+                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
                     <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
                     <li class="divider"></li>
