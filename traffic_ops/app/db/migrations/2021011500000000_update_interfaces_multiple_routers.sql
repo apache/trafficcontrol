@@ -49,6 +49,5 @@ JOIN server on ip.server = server.id
 WHERE ip.service_address = true
 AND s.id = ip.server);
 
-
 ALTER TABLE interface DROP COLUMN router_host_name;
 ALTER TABLE interface DROP COLUMN router_port;
