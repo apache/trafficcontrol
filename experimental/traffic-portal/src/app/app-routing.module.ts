@@ -21,6 +21,7 @@ import { DeliveryserviceComponent } from "./components/deliveryservice/deliverys
 import { InvalidationJobsComponent } from "./components/invalidation-jobs/invalidation-jobs.component";
 import { LoginComponent } from "./components/login/login.component";
 import { NewDeliveryServiceComponent } from "./components/new-delivery-service/new-delivery-service.component";
+import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
 import { UsersComponent } from "./components/users/users.component";
 
@@ -33,7 +34,8 @@ const routes: Routes = [
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id"},
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs"},
 	{ component: ServersTableComponent, path: "servers"},
-	{ component: CacheGroupTableComponent, path: "cache-groups"}
+	{ component: CacheGroupTableComponent, path: "cache-groups"},
+	{ component: ServerDetailsComponent, path: "server/:id"}
 ];
 
 /**

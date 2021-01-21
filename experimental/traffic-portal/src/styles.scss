@@ -41,6 +41,11 @@ button {
 	}
 }
 
+/* read-only pseudo-class always applies to checkbox inputs, because read-write never applies. Go figure. */
+input:read-only:not([type="checkbox"]), select:disabled, textarea:read-only, input[type="checkbox"][readonly] {
+	cursor: not-allowed;
+}
+
 @import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
 @import "../node_modules/ag-grid-community/src/styles/ag-theme-alpine/sass/ag-theme-alpine-mixin.scss";
 
