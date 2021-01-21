@@ -39,8 +39,16 @@ ALTER TABLE server DROP COLUMN router_port_name;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE interface DROP COLUMN router_host_name;
-ALTER TABLE interface DROP COLUMN router_port;
-
 ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
 ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';
+
+UPDATE server s SET (router_host_name, router_port_name) =
+(SELECT interface.router_host_name, interface.router_port FROM interface
+JOIN ip_address ip ON ip.interface = name
+JOIN server on ip.server = server.id
+WHERE ip.service_address = true
+AND s.id = ip.server);
+
+
+ALTER TABLE interface DROP COLUMN router_host_name;
+ALTER TABLE interface DROP COLUMN router_port;
