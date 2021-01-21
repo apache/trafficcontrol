@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableTopologyDeliveryServicesController = function(topologies, deliveryServices, $controller, $scope) {
+var TableTopologyDeliveryServicesController = function(topologies, deliveryServices, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
-
-	let topologyDSsTable;
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'topDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.topology = topologies[0];
-
-	$scope.toggleVisibility = function(colName) {
-		const col = topologyDSsTable.column(colName + ':name');
-		col.visible(!col.visible());
-		topologyDSsTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		topologyDSsTable = $('#topologyDSsTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_topologyDSsTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_topologyDSsTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableTopologyDeliveryServicesController.$inject = ['topologies', 'deliveryServices', '$controller', '$scope'];
+TableTopologyDeliveryServicesController.$inject = ['topologies', 'deliveryServices', 'filter', '$controller', '$scope'];
 module.exports = TableTopologyDeliveryServicesController;

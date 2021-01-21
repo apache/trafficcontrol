@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableProfileDeliveryServicesController = function(profile, deliveryServices, $controller, $scope) {
+var TableProfileDeliveryServicesController = function(profile, deliveryServices, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
-
-	let profileDeliveryServicesTable;
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'profileDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.profile = profile;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = profileDeliveryServicesTable.column(colName + ':name');
-		col.visible(!col.visible());
-		profileDeliveryServicesTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		profileDeliveryServicesTable = $('#profileDeliveryServicesTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_profileDeliveryServicesTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_profileDeliveryServicesTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', '$controller', '$scope'];
+TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', 'filter', '$controller', '$scope'];
 module.exports = TableProfileDeliveryServicesController;
