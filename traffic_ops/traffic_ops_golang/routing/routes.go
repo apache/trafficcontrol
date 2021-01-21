@@ -528,6 +528,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563},
 		{api.Version{3, 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564},
 
+		// cdn locking
+		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/lock$`, cdn.Lock, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
+		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/unlock$`, cdn.Unlock, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
+
 		// API Capability
 		{api.Version{3, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 28132065893},
 
@@ -747,10 +751,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 23111789343},
 		{api.Version{3, 0}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 21605052893},
 		{api.Version{3, 0}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 2276946573},
-
-		// cdn locking
-		{api.Version{3, 0}, http.MethodPost, `cdns/{id}/lock$`, cdn.Lock, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPost, `cdns/{id}/unlock$`, cdn.Unlock, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
 
 		//Delivery service requests
 		{api.Version{3, 0}, http.MethodGet, `deliveryservice_requests/?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 26811639353},
