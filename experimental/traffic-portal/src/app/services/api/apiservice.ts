@@ -115,12 +115,14 @@ export class APIService {
 	 */
 	protected do(method: string, path: string, data?: object): Observable<HttpResponse<object>> {
 
-		/* eslint-disable */
-		const options = {headers: new HttpHeaders({'Content-Type': 'application/json'}),
-		                 observe: 'response' as 'response',
-		                 responseType: 'json' as 'json',
-		                 body: data};
-		/* eslint-enable */
+		const options = {
+			body: data,
+			// This is part of the HTTP spec. I can't - and shouldn't - change it.
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			headers: new HttpHeaders({"Content-Type": "application/json"}),
+			observe: "response" as "response",
+			responseType: "json" as "json",
+		};
 		// TODO pass alerts to the alert service
 		// (TODO create the alert service)
 		return this.http.request(method, path, options);
@@ -131,7 +133,7 @@ export class APIService {
 	 *
 	 * @param http The Angular HTTP client service.
 	 */
-	constructor(private readonly http: HttpClient) {
+	constructor(protected readonly http: HttpClient) {
 		if (environment.apiVersion) {
 			this.apiVersion = environment.apiVersion;
 		}
