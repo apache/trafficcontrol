@@ -403,13 +403,13 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.maxRequestHeaderBytes), 'has-feedback': hasError(cacheConfig.maxRequestHeaderBytes)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxRequestHeaderBytes">Max Request Header Bytes<div class="helptooltip">
                                 <div class="helptext">
-                                    The maximum size (in bytes) of the request headers for this particular delivery service. Clearing this will result in the default (131072) being set for this DS.
+                                    The maximum size (in bytes) of the request headers for this particular delivery service. Clearing this will result in the default (0) being set for this DS.
                                 </div>
                             </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="maxRequestHeaderBytes" name="maxRequestHeaderBytes" type="number" class="form-control" ng-model="deliveryService.maxRequestHeaderBytes" step="1" min="1" max="2147483647">
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.maxRequestHeaderBytes, 'min')">Too Small (must be greater than or equal to 1)</small>
+                            <input id="maxRequestHeaderBytes" name="maxRequestHeaderBytes" type="number" class="form-control" ng-model="deliveryService.maxRequestHeaderBytes" step="1" min="0" max="2147483647">
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.maxRequestHeaderBytes, 'min')">Too Small (must be greater than or equal to 0)</small>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.maxRequestHeaderBytes, 'max')">Too Big (must be lesser than or equal to 2147483647)</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.maxRequestHeaderBytes != dsCurrent.maxRequestHeaderBytes">
                                 <h3>Current Value</h3>

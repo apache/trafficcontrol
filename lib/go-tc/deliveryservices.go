@@ -32,7 +32,7 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
-const DefaultMaxRequestHeaderBytes = 131072
+const DefaultMaxRequestHeaderBytes = 0
 const MinRangeSliceBlockSize = 262144   // 265Kib
 const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
@@ -547,8 +547,8 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 				if ds.MaxRequestHeaderBytes == nil {
 					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
 				}
-				if *ds.MaxRequestHeaderBytes <= 0 || *ds.MaxRequestHeaderBytes > 2147483647 {
-					return errors.New("maxRequestHeaderBytes must be a valid positive value between 1 and 2147483647")
+				if *ds.MaxRequestHeaderBytes < 0 || *ds.MaxRequestHeaderBytes > 2147483647 {
+					return errors.New("maxRequestHeaderBytes must be a valid non negative value between 0 and 2147483647")
 				}
 				return nil
 			})),
