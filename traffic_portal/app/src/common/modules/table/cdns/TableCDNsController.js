@@ -19,15 +19,15 @@
 
 var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $window, locationUtils, cdnService, messageModel) {
 
-    var queueServerUpdates = function(cdn) {
+    let queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
     };
 
-    var clearServerUpdates = function(cdn) {
+    let clearServerUpdates = function(cdn) {
         cdnService.clearServerUpdates(cdn.id);
     };
 
-    var deleteCDN = function(cdn) {
+    let deleteCDN = function(cdn) {
         cdnService.deleteCDN(cdn.id)
             .then(function(result) {
                 messageModel.setMessages(result.alerts, false);
@@ -35,7 +35,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             });
     };
 
-    var confirmQueueServerUpdates = function(cdn) {
+    let confirmQueueServerUpdates = function(cdn) {
         var params = {
             title: 'Queue Server Updates: ' + cdn.name,
             message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
@@ -57,7 +57,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    var confirmClearServerUpdates = function(cdn) {
+    let confirmClearServerUpdates = function(cdn) {
         var params = {
             title: 'Clear Server Updates: ' + cdn.name,
             message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
@@ -79,7 +79,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    var confirmDelete = function(cdn) {
+    let confirmDelete = function(cdn) {
         var params = {
             title: 'Delete CDN: ' + cdn.name,
             key: cdn.name
@@ -101,6 +101,68 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
+    let toggleCDNLock = function(cdn) {
+        if (cdn.lockedBy) {
+            confirmUnlockCDN(cdn);
+        } else {
+            confirmLockCDN(cdn);
+        }
+    };
+
+    let confirmLockCDN = function(cdn) {
+        const params = {
+            title: 'Lock ' + cdn.name,
+            message: 'What is your reason for locking the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(reason) {
+            cdnService.lockCDN(cdn, reason).
+            then(
+                function() {
+                    $state.reload();
+                }
+            );
+        }, function () {
+            // do nothing
+        });
+    };
+
+    let confirmUnlockCDN = function(cdn) {
+        const params = {
+            title: 'Unlock ' + cdn.name,
+            message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            cdnService.unlockCDN(cdn).
+            then(
+                function() {
+                    $state.reload();
+                }
+            );
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.cdns = cdns;
 
     $scope.contextMenuItems = [
@@ -108,6 +170,25 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             text: 'Open in New Tab',
             click: function ($itemScope) {
                 $window.open('/#!/cdns/' + $itemScope.cdn.id, '_blank');
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Lock CDN',
+            click: function ($itemScope) {
+                toggleCDNLock($itemScope.cdn);
+            },
+            displayed: function ($itemScope) {
+                return !$itemScope.cdn.lockedBy;
+            }
+        },
+        {
+            text: 'Unlock CDN',
+            click: function ($itemScope) {
+                toggleCDNLock($itemScope.cdn);
+            },
+            displayed: function ($itemScope) {
+                return $itemScope.cdn.lockedBy;
             }
         },
         null, // Dividier
