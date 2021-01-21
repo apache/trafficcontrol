@@ -191,7 +191,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions. Delivery Services can also be grouped by :term:`Service Category`.
 
 
 .. figure:: ./images/tp_menu_services.png

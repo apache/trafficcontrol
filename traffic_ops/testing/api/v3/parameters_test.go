@@ -109,6 +109,35 @@ func CreateTestParameters(t *testing.T) {
 
 }
 
+func CreateNegativeTestParameters(t *testing.T) {
+	invalidParameters := []struct {
+		Reason string       `json:"reason"`
+		Entity tc.Parameter `json:"entity"`
+	}{{
+		Reason: "the weight value does not parse to a float",
+		Entity: tc.Parameter{
+			ConfigFile: "parent.config",
+			Name:       "weight",
+			Secure:     false,
+		}}, {
+		Reason: "NaN is not a valid float",
+		Entity: tc.Parameter{
+			ConfigFile: "parent.config",
+			Name:       "weight",
+			Secure:     false,
+		}}}
+
+	for _, negativeTest := range invalidParameters {
+		pl := negativeTest.Entity
+		resp, _, err := TOSession.CreateParameter(pl)
+		t.Log("Response: ", resp)
+		if err == nil {
+			t.Fatalf("Expected an error because %s but received no error, invalid parameter was created", negativeTest.Reason)
+		}
+	}
+
+}
+
 func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]

@@ -49,6 +49,13 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullableV30
 }
 
+// TODeliveryServiceOldDetails is the struct to store the old details while updating a DS.
+type TODeliveryServiceOldDetails struct {
+	OldOrgServerFqdn *string
+	OldCdnName       string
+	OldRoutingName   string
+}
+
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ds.DeliveryServiceNullableV30)
 }
@@ -396,11 +403,9 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 		return nil, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+	if _, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
-	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -844,17 +849,23 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
 	}
 
-	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
-	oldHostName := ""
-	oldCDNName := ""
-	oldRoutingName := ""
 	errCode := http.StatusOK
 	var userErr error
 	var sysErr error
+	var oldDetails TODeliveryServiceOldDetails
 	if dsType.HasSSLKeys() {
-		oldHostName, oldCDNName, oldRoutingName, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
+		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
+		}
+		sslKeysExist, err := getSSLVersion(*ds.XMLID, tx)
+		if err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
+		}
+		if ds.CDNName != nil && ds.RoutingName != nil {
+			if sslKeysExist && (oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
+				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
+			}
 		}
 	}
 
@@ -993,7 +1004,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 
 	cdnDomain, err := getCDNDomain(*ds.ID, tx) // need to get the domain again, in case it changed.
 	if err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
+		return nil, http.StatusInternalServerError, nil, errors.New("getting CDN domain: (" + cdnDomain + ") after update: " + err.Error())
 	}
 
 	matchLists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -1006,27 +1017,14 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		ds.MatchList = &ml
 	}
 
-	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
-	newHostName := ""
-	newCDNName := ""
-	if dsType.HasSSLKeys() {
-		newCDNName, err = getCDNName(*ds.CDNID, tx)
-		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("getting cdnname/hostname after update: " + err.Error())
-		}
-	}
-
-	if newDSType.HasSSLKeys() && (oldHostName != newHostName || oldCDNName != newCDNName || oldRoutingName != *ds.RoutingName) {
-		return nil, http.StatusForbidden, nil, errors.New("delivery service has ssl keys that cannot be automatically changed")
-	}
-
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, user, ds); err != nil {
-		return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+	if oldDetails.OldOrgServerFqdn != nil && ds.OrgServerFQDN != nil && *oldDetails.OldOrgServerFqdn != *ds.OrgServerFQDN {
+		if err := updatePrimaryOrigin(tx, user, ds); err != nil {
+			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+		}
 	}
 
 	ds.LastUpdated = &lastUpdated
@@ -1039,11 +1037,9 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
 	}
 
-	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+	if _, err = createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
-	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
@@ -1182,43 +1178,25 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
-func getOldDetails(id int, tx *sql.Tx) (string, string, string, error, error, int) {
+func getOldDetails(id int, tx *sql.Tx) (TODeliveryServiceOldDetails, error, error, int) {
 	q := `
-SELECT ds.xml_id, ds.protocol, type.name, ds.routing_name, cdn.domain_name, cdn.name
+SELECT ds.routing_name, cdn.name,
+(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+FROM origin o
+WHERE o.deliveryservice = ds.id
+AND o.is_primary) as org_server_fqdn
 FROM  deliveryservice as ds
-JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
 WHERE ds.id=$1
 `
-	xmlID := ""
-	protocol := (*int)(nil)
-	dsTypeStr := ""
-	routingName := ""
-	cdnDomain := ""
-	cdnName := ""
-	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain, &cdnName); err != nil {
+	var oldDetails TODeliveryServiceOldDetails
+	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldCdnName, &oldDetails.OldOrgServerFqdn); err != nil {
 		if err == sql.ErrNoRows {
-			return "", "", "", fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
+			return oldDetails, fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
 		}
-		return "", "", "", nil, fmt.Errorf("querying delivery service %v host name: "+err.Error(), id), http.StatusInternalServerError
+		return oldDetails, nil, fmt.Errorf("querying delivery service %v host name: "+err.Error(), id), http.StatusInternalServerError
 	}
-	dsType := tc.DSTypeFromString(dsTypeStr)
-	if dsType == tc.DSTypeInvalid {
-		return "", "", "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'"), nil, http.StatusBadRequest
-	}
-	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
-	if err != nil {
-		return "", "", "", nil, errors.New("getting delivery services matchlist: " + err.Error()), http.StatusInternalServerError
-	}
-	matchList, ok := matchLists[xmlID]
-	if !ok {
-		return "", "", "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)"), nil, http.StatusBadRequest
-	}
-	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
-	if err != nil {
-		return "", "", "", nil, errors.New("getting hostname: " + err.Error()), http.StatusInternalServerError
-	}
-	return host, cdnName, routingName, nil, nil, http.StatusOK
+	return oldDetails, nil, nil, http.StatusOK
 }
 
 func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
@@ -1824,6 +1802,14 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return xmlID, true, nil
+}
+
+// getSSLVersion reports a boolean value, confirming whether DS has a SSL version or not
+func getSSLVersion(xmlId string, tx *sql.Tx) (bool, error) {
+	var exists bool
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id = $1 AND ssl_key_version>=1)`, xmlId)
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 func selectQuery() string {

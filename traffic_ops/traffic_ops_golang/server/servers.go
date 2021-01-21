@@ -511,7 +511,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, errors.New("associated profile must have a cdn associated"))
+			errs = append(errs, fmt.Errorf("no such profileId: '%d'", *s.ProfileID))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
@@ -813,7 +813,7 @@ SELECT s.ID, ip.address FROM server s
 JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
-WHERE i.monitor = true
+WHERE ip.service_address = true
 and p.id = $1
 `
 	var rows *sql.Rows
@@ -1036,13 +1036,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
+	var dsID int
 	var cdnID int
 	var serverCount uint64
 	var err error
 
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
-		dsID, err := strconv.Atoi(dsIDStr)
+		dsID, err = strconv.Atoi(dsIDStr)
 		if err != nil {
 			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
 		}
@@ -1157,7 +1158,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, cdnID, tx)
+		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, dsID, cdnID, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
@@ -1253,36 +1254,35 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 }
 
 // getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
 	}
 
-	filters := []interface{}{
-		edgeIDs,
+	filters := map[string]interface{}{
+		"cache_type_mid": tc.CacheTypeMid,
+		"edge_ids":       pq.Array(edgeIDs),
+		"ds_id":          dsID,
 	}
 
 	// TODO: include secondary parent?
-	q := selectQuery + `
-	WHERE t.name = 'MID' AND s.cachegroup IN (
+	query := selectQuery + `
+	WHERE t.name = :cache_type_mid AND s.cachegroup IN (
 	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 	WHERE cg.id IN (
 	SELECT s.cachegroup FROM server AS s
-	WHERE s.id IN (?)))
+	WHERE s.id = ANY(:edge_ids)))
+	AND (SELECT d.topology
+		FROM deliveryservice d
+		WHERE d.id = :ds_id) IS NULL
 	`
 
 	if cdnID > 0 {
-		q += ` AND s.cdn_id = ?`
-		filters = append(filters, cdnID)
+		query += ` AND s.cdn_id = :cdn_id`
+		filters["cdn_id"] = cdnID
 	}
 
-	query, args, err := sqlx.In(q, filters...)
-	if err != nil {
-		return nil, nil, fmt.Errorf("constructing mid servers query: %v", err), http.StatusInternalServerError
-	}
-	query = tx.Rebind(query)
-
-	rows, err := tx.Queryx(query, args...)
+	rows, err := tx.NamedQuery(query, filters)
 	if err != nil {
 		return nil, err, nil, http.StatusBadRequest
 	}
@@ -1403,7 +1403,6 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-
 	return nil, nil, http.StatusOK
 }
 
@@ -1761,7 +1760,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}

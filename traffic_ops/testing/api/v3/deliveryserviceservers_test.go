@@ -157,18 +157,24 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
 	server.ID = nil
-	interfaces := server.Interfaces
-	for interfaceIndex, i := range interfaces {
-		ipAddresses := i.IPAddresses
-		for index, ip := range ipAddresses {
-			if ip.ServiceAddress {
-				str := "100.100.100."
-				ip.Address = str + strconv.Itoa(index)
-			}
-			ipAddresses[index] = ip
-		}
-		interfaces[interfaceIndex].IPAddresses = ipAddresses
+	if len(server.Interfaces) == 0 {
+		t.Fatal("no interfaces in this server, quitting")
 	}
+	interfaces := make([]tc.ServerInterfaceInfo, 0)
+	ipAddresses := make([]tc.ServerIPAddress, 0)
+	gateway := "1.2.3.4"
+	ipAddresses = append(ipAddresses, tc.ServerIPAddress{
+		Address:        "1.1.1.1",
+		Gateway:        &gateway,
+		ServiceAddress: true,
+	})
+	interfaces = append(interfaces, tc.ServerInterfaceInfo{
+		IPAddresses:  ipAddresses,
+		MaxBandwidth: server.Interfaces[0].MaxBandwidth,
+		Monitor:      false,
+		MTU:          server.Interfaces[0].MTU,
+		Name:         server.Interfaces[0].Name,
+	})
 	server.Interfaces = interfaces
 	alerts, _, err = TOSession.CreateServerWithHdr(server, nil)
 	if err != nil {

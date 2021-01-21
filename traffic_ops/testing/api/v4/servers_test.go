@@ -805,7 +805,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		if interf.Monitor {
 			for j, ip := range interf.IPAddresses {
 				if ip.ServiceAddress {
-					server.Interfaces[i].IPAddresses[j].Address = "127.0.0.1/24"
+					server.Interfaces[i].IPAddresses[j].Address = "127.0.0.5/24"
 					changed = true
 				}
 			}

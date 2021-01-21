@@ -14,7 +14,6 @@ package client
  * limitations under the License.
  */
 
-import "encoding/json"
 import "errors"
 import "net/http"
 import "net/url"
@@ -24,21 +23,8 @@ import "github.com/apache/trafficcontrol/lib/go-tc"
 const API_CAPABILITIES = apiBase + "/capabilities"
 
 func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Capability{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CapabilitiesResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(API_CAPABILITIES, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -52,25 +38,12 @@ func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capabi
 	v := url.Values{}
 	v.Add("name", c)
 	endpoint := API_CAPABILITIES + "?" + v.Encode()
-	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return tc.Capability{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return tc.Capability{}, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CapabilitiesResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(endpoint, header, &data)
 	if err != nil {
 		return tc.Capability{}, reqInf, err
 	} else if data.Response == nil || len(data.Response) < 1 {
-		return tc.Capability{}, reqInf, errors.New("Invalid response - no capability returned!")
+		return tc.Capability{}, reqInf, errors.New("invalid response - no capability returned")
 	}
 
 	return data.Response[0], reqInf, nil

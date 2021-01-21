@@ -16,8 +16,6 @@
 package client
 
 import (
-	"encoding/json"
-	"net"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -31,43 +29,16 @@ const (
 
 // Create a delivery service request comment
 func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(comment)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_DELIVERY_SERVICE_REQUEST_COMMENTS, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_DELIVERY_SERVICE_REQUEST_COMMENTS, comment, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateDeliveryServiceRequestCommentByIDWithHdr(id int, comment tc.DeliveryServiceRequestComment, header http.Header) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(comment)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, comment, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // Update a delivery service request by ID
@@ -77,22 +48,9 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.De
 }
 
 func (to *Session) GetDeliveryServiceRequestCommentsWithHdr(header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DELIVERY_SERVICE_REQUEST_COMMENTS, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.DeliveryServiceRequestComment{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.DeliveryServiceRequestCommentsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_DELIVERY_SERVICE_REQUEST_COMMENTS, header, &data)
+	return data.Response, reqInf, err
 }
 
 // Returns a list of delivery service request comments
@@ -103,25 +61,9 @@ func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequ
 
 func (to *Session) GetDeliveryServiceRequestCommentByIDWithHdr(id int, header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.DeliveryServiceRequestComment{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.DeliveryServiceRequestCommentsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GET a delivery service request comment by ID
@@ -133,13 +75,7 @@ func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliverySe
 // DELETE a delivery service request comment by ID
 func (to *Session) DeleteDeliveryServiceRequestCommentByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }

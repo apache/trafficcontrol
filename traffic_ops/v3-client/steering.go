@@ -16,30 +16,16 @@
 package client
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Steering{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	data := struct {
 		Response []tc.Steering `json:"response"`
 	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(apiBase+`/steering`, header, &data)
 	return data.Response, reqInf, err
 }
 

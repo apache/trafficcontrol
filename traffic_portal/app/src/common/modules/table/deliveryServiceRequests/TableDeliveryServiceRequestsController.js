@@ -69,7 +69,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			field: "lastUpdated",
 			hide: true,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatter,
+			tooltipValueGetter: dateCellFormatter,
 			valueFormatter: dateCellFormatter
 		},
 		{
@@ -77,7 +77,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			field: "createdAt",
 			hide: false,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatter,
+			tooltipValueGetter: dateCellFormatter,
 			valueFormatter: dateCellFormatter
 		}
 	];
@@ -155,7 +155,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			filter: true,
 			sortable: true,
 			resizable: true,
-			tooltipValueGetter: () => defaultTooltip
+			tooltipValueGetter: defaultTooltip
 		},
 		rowClassRules: {
 			'draft-request': function(params) {

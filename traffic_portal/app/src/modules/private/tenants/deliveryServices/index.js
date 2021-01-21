@@ -35,6 +35,18 @@ module.exports = angular.module('trafficPortal.private.tenants.deliveryServices'
 									return deliveryServiceService.getDeliveryServices({ accessibleTo: tenant.id });
 								}
 								return deliveryServiceService.getDeliveryServices({ tenant: tenant.id });
+							},
+							filter: function($stateParams, tenant) {
+								if ($stateParams.all && $stateParams.all === 'true') {
+									return null;
+								}
+								return {
+									tenant: {
+										filterType: "text",
+										type: "equals",
+										filter: tenant.name
+									}
+								}
 							}
 						}
 					}
