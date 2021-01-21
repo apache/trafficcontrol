@@ -525,18 +525,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// Plugins
 		{api.Version{4, 0}, http.MethodGet, `plugins/?$`, plugins.Get(d.Plugins), auth.PrivLevelReadOnly, Authenticated, nil, 4834985393, noPerlBypass},
 
-		///**
-		// * 4.x API
-		// */
-		//// Servers
-		//{api.Version{4, 0}, http.MethodGet, `servers/?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 37209592853, noPerlBypass},
-		//{api.Version{4, 0}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 3586341033, noPerlBypass},
-		//{api.Version{4, 0}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 32255580613, noPerlBypass},
-		//{api.Version{4, 0}, http.MethodDelete, `servers/{id}$`, server.Delete, auth.PrivLevelOperations, Authenticated, nil, 3923222333, noPerlBypass},
-		//
-		////Server Details
-		//{api.Version{4, 0}, http.MethodGet, `servers/details/?$`, server.GetDetailParamHandler, auth.PrivLevelReadOnly, Authenticated, nil, 32612647143, noPerlBypass},
-
 		/**
 		 * 3.x API
 		 */
