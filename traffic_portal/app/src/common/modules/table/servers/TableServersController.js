@@ -216,14 +216,12 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "Router Hostname",
 			field: "routerHostName",
-			hide: false,
-			filter: true
+			hide: true
 		},
 		{
 			headerName: "Router Port Name",
 			field: "routerPort",
-			hide: false,
-			filter: true
+			hide: true
 		},
 		{
 			headerName: "Status",
