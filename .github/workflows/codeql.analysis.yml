@@ -33,7 +33,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'go', 'java', 'javascript', 'python' ]
+        # CodeQL also supports Java, but our build system is too esoteric for them.
+        language: [ 'go', 'javascript', 'python' ]
 
     steps:
     - name: Checkout repository
