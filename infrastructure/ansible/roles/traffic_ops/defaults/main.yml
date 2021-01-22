@@ -18,7 +18,7 @@ to_pkg_name: "{% if to_version is defined and to_version != omit %}{{ 'traffic_o
 # Postgres Superuser account to use with TO database and user creation
 postgresql_admin_user:
 postgresql_admin_user_password:
-postgresql_client_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-{{postgresql_version}}{% else %}postgresql{{pg_major_version}}-{{postgresql_version}}{% endif %}"
+postgresql_client_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}{% else %}postgresql{{pg_major_version}}-{{pg_major_version}}.{{pg_minor_version}}{% endif %}"
 
 # Local OS Account to use with TrafficOps processes
 to_user: trafops # currently hardcoded into TO
