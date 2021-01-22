@@ -78,6 +78,10 @@ initBuildArea() {
 	cp -p build/atstccfg.logrotate "$dest"/build;
 	mkdir -p "${dest}/atstccfg";
 	cp -a atstccfg/* "${dest}/atstccfg";
+
+	# include LICENSE in the tarball
+	cp "${TC_DIR}/LICENSE" "$dest"
+
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")";
 	cp build/traffic_ops_ort.spec "$RPMBUILD"/SPECS/.;
 	cp build/atstccfg.logrotate "$RPMBUILD"/.;
