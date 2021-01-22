@@ -17,6 +17,7 @@
   "suites": {
     "allTests": [
       "login/login-spec.js",
+      "users/users-spec.js",
       "CDNs/cdns-spec.js",
       "cacheGroups/cache-groups-spec.js",
       "profiles/profiles-spec.js",
