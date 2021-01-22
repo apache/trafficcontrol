@@ -25,7 +25,7 @@ describe('Traffic Portal Users Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewUser = {
 		username: 'user-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
-		fullName: 'test',
+		fullName: 'test-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		email: 'test@viper.com',
 		roleName: 'admin',
 		tenantId: ' - root',
@@ -82,16 +82,19 @@ describe('Traffic Portal Users Test Suite', function() {
 
 	it('should update a user', function() {
 		console.log('Updating the new user: ' + myNewUser.username);
-		pageData.searchFilter.sendKeys(myNewUser.fullName);
+		browser.sleep(250);
+		pageData.searchFilter.sendKeys(myNewUser.username);
+		browser.sleep(250);
 		element.all(by.repeater('u in ::users')).filter(function(row){
-			return row.element(by.name('fullName')).getText().then(function(val){
-				return val === myNewUser.fullName;
+			return row.element(by.name('username')).getText().then(function(val){
+				return val === myNewUser.username;
 			});
 		}).get(0).click();
+		browser.sleep(1000);
 		pageData.fullName.clear();
-		pageData.username.sendKeys(myNewUser.username + ' updated');
+		pageData.fullName.sendKeys(myNewUser.fullName + ' updated');
 		pageData.updateButton.click();
-		expect(pageData.username.getText() === myNewUser.username + ' updated');
+		expect(pageData.fullName.getText() === myNewUser.fullName + ' updated');
 	});
 
 	it('should open new register users form page', function() {
@@ -111,19 +114,24 @@ describe('Traffic Portal Users Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users/register");
 	});
 
-	// it('should update a new registered user', function() {
-	// 	expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users");
-	// 	console.log('Updating the new registered user: ' + myNewRegisteredUser.username);
-	// 	pageData.searchFilter.sendKeys(myNewRegisteredUser.fullName);
-	// 	element.all(by.repeater('u in ::users')).filter(function(row){
-	// 		return row.element(by.name('fullName')).getText().then(function(val){
-	// 			return val === myNewRegisteredUser.fullName;
-	// 		});
-	// 	}).get(0).click();
-	// 	pageData.fullName.clear();
-	// 	pageData.username.sendKeys(myNewRegisteredUser.username + ' updated');
-	// 	pageData.updateButton.click();
-	// 	expect(pageData.username.getText() === myNewRegisteredUser.username + ' updated');
-	// });
+	it('should update a new registered user', function() {
+		console.log('Updating the new registered user: ' + myNewRegisteredUser.email);
+		browser.sleep(250);
+		browser.setLocation("users");
+		pageData.searchFilter.sendKeys(myNewRegisteredUser.email);
+		browser.sleep(1000);
+		element.all(by.repeater('u in ::users')).filter(function(row){
+			return row.element(by.css('email')).getText().then(function(val){
+				return val === myNewRegisteredUser.email;
+			});
+		}).get(0).click();
+		browser.sleep(1000);
+		expect(pageData.registerSent.isEnabled()).toBe(false);
+		expect(pageData.registerSent.getAttribute('disabled')).toBe('true');
+		pageData.fullName.clear();
+		pageData.fullName.sendKeys('test1 updated');
+		pageData.updateButton.click();
+		expect(pageData.fullName.getText() === 'test1 updated');
+	});
 
 });
