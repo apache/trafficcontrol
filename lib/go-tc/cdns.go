@@ -66,13 +66,13 @@ type CDN struct {
 	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	// Username that has locked the CDN
+	// Username that created the CDN message
 	//
-	LockedBy string `json:"lockedBy" db:"locked_by"`
+	Messenger string `json:"messenger" db:"messenger"`
 
-	// Reason why the CDN was locked
+	// CDN message
 	//
-	LockedReason string `json:"lockedReason" db:"locked_reason"`
+	Message string `json:"message" db:"message"`
 
 	// Name of the CDN
 	//
@@ -104,13 +104,13 @@ type CDNNullable struct {
 	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	// Username that has locked the CDN
+	// Username that created the CDN message
 	//
-	LockedBy *string `json:"lockedBy" db:"locked_by"`
+	Messenger *string `json:"messenger" db:"messenger"`
 
-	// Reason why the CDN was locked
+	// CDN message
 	//
-	LockedReason *string `json:"lockedReason" db:"locked_reason"`
+	Message *string `json:"message" db:"message"`
 
 	// Name of the CDN
 	//
@@ -161,22 +161,16 @@ type CDNQueueUpdateResponse struct {
 	CDNID  int64  `json:"cdnId"`
 }
 
-// CDNLockRequest encodes the request data for the POST
-// cdns/{{ID}}/lock endpoint.
-type CDNLockRequest struct {
-	Reason string `json:"reason"`
+// CDNMessageRequest encodes the request data for the POST
+// cdns/{{ID}}/message endpoint.
+type CDNMessageRequest struct {
+	Message string `json:"message"`
 }
 
-// CDNLockResponse encodes the response data for the POST
-// cdns/{{ID}}/lock endpoint.
-type CDNLockResponse struct {
+// CDNMessageResponse encodes the response data for the POST
+// cdns/{{ID}}/message endpoint.
+type CDNMessageResponse struct {
 	CDNID  int64  `json:"cdnId"`
 	Username string `json:"username"`
-	Reason string `json:"reason"`
-}
-
-// CDNUnlockResponse encodes the response data for the POST
-// cdns/{{ID}}/unlock endpoint.
-type CDNUnlockResponse struct {
-	CDNID  int64  `json:"cdnId"`
+	Message string `json:"message"`
 }

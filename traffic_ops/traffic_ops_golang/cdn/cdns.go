@@ -154,8 +154,8 @@ dnssec_enabled,
 domain_name,
 id,
 last_updated,
-locked_by,
-locked_reason,
+messenger,
+message,
 name
 
 FROM cdn c`

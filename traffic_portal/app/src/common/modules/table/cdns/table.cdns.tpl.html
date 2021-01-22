@@ -36,8 +36,8 @@ under the License.
                     <th>Name</th>
                     <th>Domain</th>
                     <th>DNSSEC Enabled</th>
-                    <th>Locked By</th>
-                    <th>Locked Reason</th>
+                    <th>Messenger</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,8 +45,8 @@ under the License.
                     <td name="name" data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
                     <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
                     <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
-                    <td data-search="^{{::cdn.lockedBy}}$">{{::cdn.lockedBy}}</td>
-                    <td data-search="^{{::cdn.lockedReason}}$">{{::cdn.lockedReason}}</td>
+                    <td data-search="^{{::cdn.messenger}}$">{{::cdn.messenger}}</td>
+                    <td data-search="^{{::cdn.message}}$">{{::cdn.message}}</td>
                 </tr>
             </tbody>
         </table>

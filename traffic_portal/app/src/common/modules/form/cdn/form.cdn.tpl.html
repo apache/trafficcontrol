@@ -41,8 +41,8 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li ng-if="!cdn.lockedBy" role="menuitem"><a ng-click="toggleCDNLock(cdn)">Lock CDN</a></li>
-                    <li ng-if="cdn.lockedBy" role="menuitem"><a ng-click="toggleCDNLock(cdn)">Unlock CDN</a></li>
+                    <li ng-if="!cdn.messenger" role="menuitem"><a ng-click="toggleCDNMessage(cdn)">Create CDN Message</a></li>
+                    <li ng-if="cdn.messenger" role="menuitem"><a ng-click="toggleCDNMessage(cdn)">Delete CDN Message</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
                     <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
@@ -84,15 +84,15 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-if="!settings.isNew">
-                <label for="lockedBy" class="control-label col-md-2 col-sm-2 col-xs-12">Locked By</label>
+                <label for="messenger" class="control-label col-md-2 col-sm-2 col-xs-12">Messenger</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="lockedBy" name="lockedBy" type="text" class="form-control" ng-model="cdn.lockedBy" disabled>
+                    <input id="messenger" name="messenger" type="text" class="form-control" ng-model="cdn.messenger" disabled>
                 </div>
             </div>
             <div class="form-group" ng-if="!settings.isNew">
-                <label for="lockedReason" class="control-label col-md-2 col-sm-2 col-xs-12">Locked Reason</label>
+                <label for="message" class="control-label col-md-2 col-sm-2 col-xs-12">Message</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="lockedReason" name="lockedReason" type="text" class="form-control" ng-model="cdn.lockedReason" disabled>
+                    <input id="message" name="message" type="text" class="form-control" ng-model="cdn.message" disabled>
                 </div>
             </div>
             <div class="modal-footer">

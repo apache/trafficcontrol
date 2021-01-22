@@ -101,18 +101,18 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    let toggleCDNLock = function(cdn) {
-        if (cdn.lockedBy) {
-            confirmUnlockCDN(cdn);
+    let toggleCDNMessage = function(cdn) {
+        if (cdn.messenger) {
+            confirmDeleteMsg(cdn);
         } else {
-            confirmLockCDN(cdn);
+            confirmCreateMsg(cdn);
         }
     };
 
-    let confirmLockCDN = function(cdn) {
+    let confirmCreateMsg = function(cdn) {
         const params = {
-            title: 'Lock ' + cdn.name,
-            message: 'What is your reason for locking the ' + cdn.name + ' CDN?'
+            title: 'Create Global ' + cdn.name + ' Message',
+            message: 'What is the content of your message for the ' + cdn.name + ' CDN?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
@@ -125,7 +125,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             }
         });
         modalInstance.result.then(function(reason) {
-            cdnService.lockCDN(cdn, reason).
+            cdnService.createCDNMessage(cdn, reason).
             then(
                 function() {
                     $state.reload();
@@ -136,10 +136,10 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    let confirmUnlockCDN = function(cdn) {
+    let confirmDeleteMsg = function(cdn) {
         const params = {
-            title: 'Unlock ' + cdn.name,
-            message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+            title: 'Delete Global ' + cdn.name + ' Message',
+            message: 'Are you sure you want to delete the global ' + cdn.name + ' message?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -152,7 +152,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             }
         });
         modalInstance.result.then(function() {
-            cdnService.unlockCDN(cdn).
+            cdnService.deleteCDNMessage(cdn).
             then(
                 function() {
                     $state.reload();
@@ -174,21 +174,21 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         },
         null, // Dividier
         {
-            text: 'Lock CDN',
+            text: 'Create CDN Message',
             click: function ($itemScope) {
-                toggleCDNLock($itemScope.cdn);
+                toggleCDNMessage($itemScope.cdn);
             },
             displayed: function ($itemScope) {
-                return !$itemScope.cdn.lockedBy;
+                return !$itemScope.cdn.messenger;
             }
         },
         {
-            text: 'Unlock CDN',
+            text: 'Delete CDN Message',
             click: function ($itemScope) {
-                toggleCDNLock($itemScope.cdn);
+                toggleCDNMessage($itemScope.cdn);
             },
             displayed: function ($itemScope) {
-                return $itemScope.cdn.lockedBy;
+                return $itemScope.cdn.messenger;
             }
         },
         null, // Dividier

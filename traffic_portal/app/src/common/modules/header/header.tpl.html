@@ -81,8 +81,8 @@ under the License.
                 </div>
             </li>
             <li ng-repeat="cdn in cdns">
-                <div class="btn-group" title="{{(cdn.lockedBy) ? 'Unlock' : 'Lock'}}">
-                    <button type="button" class="btn btn-link" ng-click="toggleCDNLock(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-lock': cdn.lockedBy, 'fa-unlock': !cdn.lockedBy }"></i></button>
+                <div class="btn-group" title="{{(cdn.messenger) ? 'Delete Global ' + cdn.name + ' Message' : 'Create Global ' + cdn.name + ' Message'}}">
+                    <button type="button" class="btn btn-link" ng-click="toggleCDNMessage(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-sticky-note': cdn.messenger, 'fa-sticky-note-o': !cdn.messenger }"></i></button>
                 </div>
             </li>
         </ul>

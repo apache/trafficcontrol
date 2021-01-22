@@ -19,14 +19,14 @@
 -- SQL in section 'Up' is executed when this migration is applied
 
 ALTER TABLE cdn
-    ADD COLUMN locked_by text,
-    ADD COLUMN locked_reason text,
-    ADD CONSTRAINT cdn_locked_by_fkey FOREIGN KEY (locked_by) REFERENCES tm_user (username) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD COLUMN messenger text,
+    ADD COLUMN message text,
+    ADD CONSTRAINT cdn_messenger_fkey FOREIGN KEY (messenger) REFERENCES tm_user (username) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 
 ALTER TABLE cdn
-    DROP COLUMN locked_by,
-    DROP COLUMN locked_reason;
+    DROP COLUMN messenger,
+    DROP COLUMN message;

@@ -71,18 +71,18 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
-    $scope.toggleCDNLock = function(cdn) {
-        if (cdn.lockedBy) {
-            confirmUnlockCDN(cdn);
+    $scope.toggleCDNMessage = function(cdn) {
+        if (cdn.messenger) {
+            confirmDeleteMsg(cdn);
         } else {
-            confirmLockCDN(cdn);
+            confirmCreateMsg(cdn);
         }
     };
 
-    let confirmLockCDN = function(cdn) {
+    let confirmCreateMsg = function(cdn) {
         const params = {
-            title: 'Lock ' + cdn.name,
-            message: 'What is your reason for locking the ' + cdn.name + ' CDN?'
+            title: 'Create Global ' + cdn.name + ' Message',
+            message: 'What is the content of your message for the ' + cdn.name + ' CDN?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
@@ -95,7 +95,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function(reason) {
-            cdnService.lockCDN(cdn, reason).
+            cdnService.createCDNMessage(cdn, reason).
                 then(
                     function() {
                         $state.reload(); // reloads all the resolves for the view
@@ -106,10 +106,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         });
     };
 
-    let confirmUnlockCDN = function(cdn) {
+    let confirmDeleteMsg = function(cdn) {
         const params = {
-            title: 'Unlock ' + cdn.name,
-            message: 'Are you sure you want to unlock the ' + cdn.name + ' CDN?'
+            title: 'Delete Global ' + cdn.name + ' Message',
+            message: 'Are you sure you want to delete the global ' + cdn.name + ' message?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -122,7 +122,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function() {
-            cdnService.unlockCDN(cdn).
+            cdnService.deleteCDNMessage(cdn).
                 then(
                     function() {
                         $state.reload(); // reloads all the resolves for the view

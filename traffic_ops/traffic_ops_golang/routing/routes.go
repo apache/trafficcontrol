@@ -528,9 +528,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563},
 		{api.Version{3, 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564},
 
-		// cdn locking
-		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/lock$`, cdn.Lock, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
-		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/unlock$`, cdn.Unlock, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
+		// cdn message
+		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/message`, cdn.CreateMsg, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
+		{api.Version{3, 1}, http.MethodDelete, `cdns/{id}/message`, cdn.DeleteMsg, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
 
 		// API Capability
 		{api.Version{3, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 28132065893},

@@ -91,8 +91,8 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.lockCDN = function(cdn, reason) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/lock', { reason: reason}).then(
+    this.createCDNMessage = function(cdn, message) {
+        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/message', { message: message}).then(
             function(result) {
                 return result;
             },
@@ -103,8 +103,8 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.unlockCDN = function(cdn) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/unlock').then(
+    this.deleteCDNMessage = function(cdn) {
+        return $http.delete(ENV.api['root'] + 'cdns/' + cdn.id + '/message').then(
             function(result) {
                 return result;
             },
