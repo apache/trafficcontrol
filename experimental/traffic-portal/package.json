@@ -26,6 +26,7 @@
     "@angular/router": "~10.2.4",
     "@fortawesome/angular-fontawesome": "^0.7.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
+    "@fortawesome/free-regular-svg-icons": "^5.15.2",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@nguniversal/express-engine": "^10.1.0",
     "ag-grid-angular": "^24.1.0",
