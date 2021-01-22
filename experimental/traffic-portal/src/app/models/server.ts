@@ -189,6 +189,9 @@ export function checkMap(srv: Servercheck): Map<string, number | boolean> {
 	return ret;
 }
 
+/**
+ *
+ */
 export interface Status {
 	description: string;
 	id?: number;

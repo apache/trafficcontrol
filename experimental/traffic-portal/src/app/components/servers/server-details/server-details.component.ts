@@ -27,11 +27,26 @@ import { IP, IP_WITH_CIDR } from "src/app/utils";
 })
 export class ServerDetailsComponent implements OnInit {
 
+	/**
+	 *
+	 */
 	public isNew = false;
+	/**
+	 *
+	 */
 	public server: Server;
+	/**
+	 *
+	 */
 	public validIPPattern = IP_WITH_CIDR;
+	/**
+	 *
+	 */
 	public validGatewayPattern = IP;
 
+	/**
+	 *
+	 */
 	public get title(): string {
 		if (this.isNew) {
 			return "New Server";
@@ -39,14 +54,38 @@ export class ServerDetailsComponent implements OnInit {
 		return `Server #${this.server.id}`;
 	}
 
+	/**
+	 *
+	 */
 	public hideILO = false;
+	/**
+	 *
+	 */
 	public hideManagement = false;
+	/**
+	 *
+	 */
 	public hideInterfaces = false;
 
+	/**
+	 *
+	 */
 	public addIcon = faPlus;
+	/**
+	 *
+	 */
 	public removeIcon = faMinus;
+	/**
+	 *
+	 */
 	public clearUpdatesIcon = faClock;
+	/**
+	 *
+	 */
 	public updateIcon = hollowClock;
+	/**
+	 *
+	 */
 	public get statusChangeIcon(): IconDefinition {
 		if (this.isNew || !this.server.status) {
 			return faToggleOn;
@@ -57,10 +96,22 @@ export class ServerDetailsComponent implements OnInit {
 		return faToggleOff;
 	}
 
+	/**
+	 *
+	 */
 	public cacheGroups = new Array<CacheGroup>();
+	/**
+	 *
+	 */
 	public cdns = new Array<CDN>();
 	// public physicalLocations = new Array<PhysicalLocation>();
+	/**
+	 *
+	 */
 	public profiles = new Array<Profile>();
+	/**
+	 *
+	 */
 	public statuses = new Array<Status>();
 
 	/**
@@ -76,6 +127,9 @@ export class ServerDetailsComponent implements OnInit {
 		this.server = DUMMY_SERVER;
 	}
 
+	/**
+	 *
+	 */
 	public serverJSON(): string {
 		return JSON.stringify(this.server, null, "\t");
 	}
@@ -122,6 +176,9 @@ export class ServerDetailsComponent implements OnInit {
 		}
 	}
 
+	/**
+	 *
+	 */
 	public submit(e: Event): void {
 		e.preventDefault();
 		e.stopPropagation();
@@ -138,10 +195,16 @@ export class ServerDetailsComponent implements OnInit {
 		}
 	}
 
+	/**
+	 *
+	 */
 	public log(): void {
 		console.log(this);
 	}
 
+	/**
+	 *
+	 */
 	public addInterface(e: MouseEvent): void {
 		e.stopPropagation();
 		const newInf = {
@@ -155,6 +218,9 @@ export class ServerDetailsComponent implements OnInit {
 		this.server.interfaces.push(newInf);
 	}
 
+	/**
+	 *
+	 */
 	public addIP(inf: Interface): void {
 		inf.ipAddresses.push({
 			address: "",
@@ -163,14 +229,23 @@ export class ServerDetailsComponent implements OnInit {
 		});
 	}
 
+	/**
+	 *
+	 */
 	public deleteIP(inf: Interface, ip: number): void {
 		inf.ipAddresses.splice(ip, 1);
 	}
 
+	/**
+	 *
+	 */
 	public deleteInterface(inf: number): void {
 		this.server.interfaces.splice(inf, 1);
 	}
 
+	/**
+	 *
+	 */
 	public isCache(): boolean {
 		if (!this.server.type) {
 			return false;

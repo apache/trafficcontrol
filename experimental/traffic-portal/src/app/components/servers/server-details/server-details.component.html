@@ -119,7 +119,7 @@ limitations under the License.
 	<label *ngIf="!isNew" for="offlineReason">Offline Reason</label>
 	<input *ngIf="!isNew" id="offlineReason" name="offlineReason" type="text" readonly [value]="server.offlineReason"/>
 	<label for="rack">Rack</label>
-	<input type="text" id="rack" name="rack" ([ngModel])="server.rack"/>
+	<input type="text" id="rack" name="rack" [(ngModel)]="server.rack"/>
 	<label *ngIf="!isNew && server.statusLastUpdated" for="statusLastUpdated">Status Last Updated</label>
 	<input *ngIf="!isNew && server.statusLastUpdated" type="text" id="statusLastUpdated" name="statusLastUpdated" readonly [value]="server.statusLastUpdated.toLocaleString()"/>
 	<label *ngIf="!isNew" for="xmppId">Hash ID</label>
