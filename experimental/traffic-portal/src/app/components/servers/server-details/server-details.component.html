@@ -41,6 +41,10 @@ limitations under the License.
 	<select id="status" name="status" *ngIf="isNew" [(ngModel)]="server.statusId" required>
 		<option *ngFor="let status of statuses" [ngValue]="status.id">{{status.name}}</option>
 	</select>
+	<label for="profile">Profile</label>
+	<select id="profile" name="profile" [(ngModel)]="server.profileId" required>
+		<option *ngFor="let profile of profiles" [ngValue]="profile.id">{{profile.name}}</option>
+	</select>
 	<label for="httpport">HTTP Port</label>
 	<input id="httpport" name="httpport" type="number" [(ngModel)]="server.tcpPort" min="1" max="65535"/>
 	<label for="httpsport">HTTPS Port</label>

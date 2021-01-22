@@ -16,8 +16,8 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
-import { CacheGroup, CDN, DUMMY_SERVER, Interface, Server, Status } from "src/app/models";
-import { CacheGroupService, CDNService, ServerService } from "src/app/services/api";
+import { CacheGroup, CDN, DUMMY_SERVER, Interface, Profile, Server, Status } from "src/app/models";
+import { CacheGroupService, CDNService, ProfileService, ServerService } from "src/app/services/api";
 import { IP, IP_WITH_CIDR } from "src/app/utils";
 
 @Component({
@@ -60,7 +60,7 @@ export class ServerDetailsComponent implements OnInit {
 	public cacheGroups = new Array<CacheGroup>();
 	public cdns = new Array<CDN>();
 	// public physicalLocations = new Array<PhysicalLocation>();
-	// public profiles = new Array<Profile>();
+	public profiles = new Array<Profile>();
 	public statuses = new Array<Status>();
 
 	/**
@@ -70,7 +70,8 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly serverService: ServerService,
 		private readonly cacheGroupService: CacheGroupService,
-		private readonly cdnService: CDNService
+		private readonly cdnService: CDNService,
+		private readonly profileService: ProfileService
 	) {
 		this.server = DUMMY_SERVER;
 	}
@@ -96,6 +97,11 @@ export class ServerDetailsComponent implements OnInit {
 		this.serverService.getStatuses().subscribe(
 			statuses => {
 				this.statuses = statuses;
+			}
+		);
+		this.profileService.getProfiles().subscribe(
+			profiles => {
+				this.profiles = profiles;
 			}
 		);
 
