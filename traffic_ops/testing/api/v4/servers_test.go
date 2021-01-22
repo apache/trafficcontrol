@@ -763,7 +763,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		}
 	}
 	_, _, err = TOSession.CreateServer(tc.ServerV40{
-		CommonServerPropertiesV40: tc.CommonServerPropertiesV40{
+		CommonServerProperties: tc.CommonServerProperties{
 			Cachegroup: server.Cachegroup,
 			CDNName:    server.CDNName,
 			DomainName: util.StrPtr("mydomain"),

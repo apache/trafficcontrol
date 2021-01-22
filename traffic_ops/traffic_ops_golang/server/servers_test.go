@@ -150,7 +150,7 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
-	s := tc.CommonServerPropertiesV40{
+	s := tc.CommonServerProperties{
 		CDNID:    &testServers[0].Server.CDNID,
 		FqdnTime: time.Time{},
 		TypeID:   &testServers[0].Server.TypeID,
@@ -182,7 +182,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredCols := []string{"count"}
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
-	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -295,7 +295,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredCols := []string{"count"}
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
-	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -378,7 +378,7 @@ func TestGetMidServers(t *testing.T) {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
-	cols2 := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols2 := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}

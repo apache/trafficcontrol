@@ -91,7 +91,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.WriteResp(w, r, v11ServerList)
 		return
 	} else if inf.Version.Major <= 3 {
-		v3ServerList := []tc.DSServerV3{}
+		v3ServerList := []tc.DSServer{}
 		for _, srv := range servers {
 			routerHostName := ""
 			routerPort := ""
@@ -106,7 +106,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
 			}
-			v3server := tc.DSServerV3{}
+			v3server := tc.DSServer{}
 			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
 
 			v3server.ServerInterfaces = &v3Interfaces

@@ -663,46 +663,7 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-	common := tc.CommonServerProperties{
-		Cachegroup:       s.CommonServerPropertiesV40.Cachegroup,
-		CachegroupID:     s.CommonServerPropertiesV40.CachegroupID,
-		CDNID:            s.CommonServerPropertiesV40.CDNID,
-		CDNName:          s.CommonServerPropertiesV40.CDNName,
-		DeliveryServices: s.CommonServerPropertiesV40.DeliveryServices,
-		DomainName:       s.CommonServerPropertiesV40.DomainName,
-		FQDN:             s.CommonServerPropertiesV40.FQDN,
-		FqdnTime:         s.CommonServerPropertiesV40.FqdnTime,
-		GUID:             s.CommonServerPropertiesV40.GUID,
-		HostName:         s.CommonServerPropertiesV40.HostName,
-		HTTPSPort:        s.CommonServerPropertiesV40.HTTPSPort,
-		ID:               s.CommonServerPropertiesV40.ID,
-		ILOIPAddress:     s.CommonServerPropertiesV40.ILOIPAddress,
-		ILOIPGateway:     s.CommonServerPropertiesV40.ILOIPGateway,
-		ILOIPNetmask:     s.CommonServerPropertiesV40.ILOIPNetmask,
-		ILOPassword:      s.CommonServerPropertiesV40.ILOPassword,
-		ILOUsername:      s.CommonServerPropertiesV40.ILOUsername,
-		LastUpdated:      s.CommonServerPropertiesV40.LastUpdated,
-		MgmtIPAddress:    s.CommonServerPropertiesV40.MgmtIPAddress,
-		MgmtIPGateway:    s.CommonServerPropertiesV40.MgmtIPGateway,
-		MgmtIPNetmask:    s.CommonServerPropertiesV40.MgmtIPNetmask,
-		OfflineReason:    s.CommonServerPropertiesV40.OfflineReason,
-		PhysLocation:     s.CommonServerPropertiesV40.PhysLocation,
-		PhysLocationID:   s.CommonServerPropertiesV40.PhysLocationID,
-		Profile:          s.CommonServerPropertiesV40.Profile,
-		ProfileDesc:      s.CommonServerPropertiesV40.ProfileDesc,
-		ProfileID:        s.CommonServerPropertiesV40.ProfileID,
-		Rack:             s.CommonServerPropertiesV40.Rack,
-		RevalPending:     s.CommonServerPropertiesV40.RevalPending,
-		Status:           s.CommonServerPropertiesV40.Status,
-		StatusID:         s.CommonServerPropertiesV40.StatusID,
-		TCPPort:          s.CommonServerPropertiesV40.TCPPort,
-		Type:             s.CommonServerPropertiesV40.Type,
-		TypeID:           s.CommonServerPropertiesV40.TypeID,
-		UpdPending:       s.CommonServerPropertiesV40.UpdPending,
-		XMPPID:           s.CommonServerPropertiesV40.XMPPID,
-		XMPPPasswd:       s.CommonServerPropertiesV40.XMPPPasswd,
-	}
-	if errs = append(errs, validateCommon(&common, tx)...); errs != nil {
+	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
@@ -1312,7 +1273,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 	return ids, nil, nil, http.StatusOK
 }
 
-func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (error, error, int) {
+func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
 	// see if cdn or type changed
 	var cdnID int
 	var typeID int
@@ -1627,7 +1588,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerPropertiesV40, inf.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1962,7 +1923,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerPropertiesV40); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}

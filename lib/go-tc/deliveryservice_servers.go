@@ -151,8 +151,8 @@ type DSServerV11 struct {
 	LegacyInterfaceDetails
 }
 
-// DSServerV3 contains information for a Delivery Service Server.
-type DSServerV3 struct {
+// DSServer contains information for a Delivery Service Server.
+type DSServer struct {
 	DSServerBase
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }

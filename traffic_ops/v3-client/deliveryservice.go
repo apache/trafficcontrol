@@ -505,10 +505,10 @@ func (to *Session) GetDeliveryServiceSSLKeysByIDWithHdr(XMLID string, header htt
 	return &data.Response, reqInf, nil
 }
 
-func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Header) ([]tc.DSServerV3, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Header) ([]tc.DSServer, ReqInf, error) {
 	resp := struct {
-		Response []tc.DSServerV3 `json:"response"`
-	}{Response: []tc.DSServerV3{}}
+		Response []tc.DSServer `json:"response"`
+	}{Response: []tc.DSServer{}}
 
 	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_ELIGIBLE_SERVERS, dsID), header, &resp)
 	return resp.Response, reqInf, err
@@ -517,7 +517,7 @@ func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Head
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
 // Service identified by the integral, unique identifier 'dsID'.
 // Deprecated: GetDeliveryServicesEligible will be removed in 6.0. Use GetDeliveryServicesEligibleWithHdr.
-func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServerV3, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
 	return to.GetDeliveryServicesEligibleWithHdr(dsID, nil)
 }
 
