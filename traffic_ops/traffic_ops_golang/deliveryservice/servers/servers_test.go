@@ -176,8 +176,8 @@ func TestReadServers(t *testing.T) {
 		if interf.RouterHostName != "router1" && interf.RouterHostName != "router2" {
 			t.Errorf("RouterHostName %s does't match router1 or router2", interf.RouterHostName)
 		}
-		if interf.RouterPort != "9090" && interf.RouterPort != "9091" {
-			t.Errorf("RouterPort %s does't match 9090 or 9091", interf.RouterPort)
+		if interf.RouterPortName != "9090" && interf.RouterPortName != "9091" {
+			t.Errorf("RouterPortName %s does't match 9090 or 9091", interf.RouterPortName)
 		}
 		if len(interf.IPAddresses) != 4 {
 			t.Fatalf("servers.read expected len(interf.IPAddresses) == 4, actual = %v", len(interf.IPAddresses))
@@ -234,7 +234,7 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				Name:         "interfaceName" + strconv.Itoa(cacheID),
 			},
 			RouterHostName: "router1",
-			RouterPort:     "9090",
+			RouterPortName: "9090",
 		},
 		{
 			ServerInterfaceInfo: tc.ServerInterfaceInfo{
@@ -266,16 +266,16 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				Name:         "interfaceName2" + strconv.Itoa(cacheID),
 			},
 			RouterHostName: "router2",
-			RouterPort:     "9091",
+			RouterPortName: "9091",
 		},
 	}
 }
 
 func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfoV40) {
-	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"})
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	for _, interf := range serverInterfaces {
-		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPort)
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPortName)
 		for _, ip := range interf.IPAddresses {
 			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
 		}

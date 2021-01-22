@@ -199,7 +199,7 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				Name:         "interfaceName" + strconv.Itoa(cacheID),
 			},
 			RouterHostName: "",
-			RouterPort:     "",
+			RouterPortName: "",
 		},
 		{
 			ServerInterfaceInfo: tc.ServerInterfaceInfo{
@@ -231,16 +231,16 @@ func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
 				Name:         "interfaceName2" + strconv.Itoa(cacheID),
 			},
 			RouterHostName: "",
-			RouterPort:     "",
+			RouterPortName: "",
 		},
 	}
 }
 
 func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfoV40) {
-	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"})
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	for _, interf := range serverInterfaces {
-		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPort)
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPortName)
 		for _, ip := range interf.IPAddresses {
 			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
 		}

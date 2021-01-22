@@ -16,21 +16,11 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 ALTER TABLE interface ADD COLUMN router_host_name text DEFAULT '';
-ALTER TABLE interface ADD COLUMN router_port text DEFAULT '';
+ALTER TABLE interface ADD COLUMN router_port_name text DEFAULT '';
 
 UPDATE interface
-SET router_host_name = CASE
-WHEN server.router_host_name IS NULL THEN ''
-ELSE interface.router_host_name || server.router_host_name
-END
-FROM server
-WHERE server = server.id;
-
-UPDATE interface
-SET router_port = CASE
-WHEN server.router_port_name IS NULL THEN ''
-ELSE interface.router_port || server.router_port_name
-END
+SET router_host_name = server.router_host_name,
+router_port_name = server.router_port_name
 FROM server
 WHERE server = server.id;
 
@@ -43,11 +33,11 @@ ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
 ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';
 
 UPDATE server s SET (router_host_name, router_port_name) =
-(SELECT interface.router_host_name, interface.router_port FROM interface
+(SELECT interface.router_host_name, interface.router_port_name FROM interface
 JOIN ip_address ip ON ip.interface = name
 JOIN server on ip.server = server.id
 WHERE ip.service_address = true
 AND s.id = ip.server);
 
 ALTER TABLE interface DROP COLUMN router_host_name;
-ALTER TABLE interface DROP COLUMN router_port;
+ALTER TABLE interface DROP COLUMN router_port_name;

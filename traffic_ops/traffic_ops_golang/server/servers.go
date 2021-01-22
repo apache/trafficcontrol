@@ -1133,7 +1133,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return []tc.ServerV40{}, serverCount, nil, nil, http.StatusOK, nil
 	}
 
-	query, args, err := sqlx.In(`SELECT max_bandwidth, monitor, mtu, name, server, router_host_name, router_port FROM interface WHERE server IN (?)`, ids)
+	query, args, err := sqlx.In(`SELECT max_bandwidth, monitor, mtu, name, server, router_host_name, router_port_name FROM interface WHERE server IN (?)`, ids)
 	if err != nil {
 		return nil, serverCount, nil, fmt.Errorf("building interfaces query: %v", err), http.StatusInternalServerError, nil
 	}
@@ -1166,7 +1166,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 			interfaces[server] = map[string]tc.ServerInterfaceInfoV40{}
 		}
 		iface.RouterHostName = routerHostName
-		iface.RouterPort = routerPort
+		iface.RouterPortName = routerPort
 		interfaces[server][iface.Name] = iface
 	}
 
@@ -1321,7 +1321,7 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx
 		name,
 		server,
 		router_host_name,
-		router_port
+		router_port_name
 	) VALUES
 	`
 	ipQry := `
@@ -1341,7 +1341,7 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfoV40, tx *sql.Tx
 	for i, iface := range interfaces {
 		argStart := i * 7
 		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5, argStart+6, argStart+7))
-		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id, iface.RouterHostName, iface.RouterPort)
+		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id, iface.RouterHostName, iface.RouterPortName)
 		for _, ip := range iface.IPAddresses {
 			argStart = len(ipArgs)
 			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))

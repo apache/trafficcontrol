@@ -546,7 +546,7 @@ func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerIn
 	       name,
 	       server,
 	       router_host_name,
-	       router_port
+	       router_port_name
 	FROM interface
 	WHERE interface.server = ANY ($1)
 	`
@@ -560,7 +560,7 @@ func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerIn
 	for ifaceRows.Next() {
 		var inf tc.ServerInterfaceInfoV40
 		var server int
-		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPort); err != nil {
+		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPortName); err != nil {
 			return nil, err
 		}
 		if _, ok := infs[server]; !ok {

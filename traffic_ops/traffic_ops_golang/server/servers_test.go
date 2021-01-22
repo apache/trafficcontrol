@@ -107,7 +107,7 @@ func getTestServers() []ServerAndInterfaces {
 			Name:         testServer.InterfaceName,
 		},
 		RouterHostName: testServer.RouterHostName,
-		RouterPort:     testServer.RouterPortName,
+		RouterPortName: testServer.RouterPortName,
 	}
 
 	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
@@ -183,7 +183,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
 
@@ -296,7 +296,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
 

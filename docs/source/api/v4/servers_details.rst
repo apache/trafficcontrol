@@ -90,7 +90,7 @@ Response Structure
 			:service_address:  A boolean determining if content will be routed to the IP address
 
 		:routerHostName:       The human-readable name of the router responsible for reaching this server's interface.
-		:routerPort:           The human-readable name of the port used by the router responsible for reaching this server's interface
+		:routerPort:           The human-readable name of the port used by the router responsible for reaching this server's interface.
 
 	:mgmtIpAddress:  The IPv4 address of the server's management port
 	:mgmtIpGateway:  The IPv4 gateway of the server's management port

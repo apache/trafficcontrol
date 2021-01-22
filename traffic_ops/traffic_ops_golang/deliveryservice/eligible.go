@@ -74,7 +74,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 			if len(interfaces) != 0 {
 				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPort
+				routerPort = interfaces[0].RouterPortName
 			}
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
@@ -99,7 +99,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 			if len(interfaces) != 0 {
 				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPort
+				routerPort = interfaces[0].RouterPortName
 			}
 			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
 			if err != nil {

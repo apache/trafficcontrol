@@ -72,17 +72,21 @@ type ServersV1Response struct {
 type ServerDetailV11 struct {
 	ServerDetail
 	LegacyInterfaceDetails
+	RouterHostName *string `json:"routerHostName" db:"router_host_name"`
+	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
 }
 
 // ServerDetailV30 is the details for a server for API v3
 type ServerDetailV30 struct {
 	ServerDetail
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces"`
+	RouterHostName   *string                `json:"routerHostName" db:"router_host_name"`
+	RouterPortName   *string                `json:"routerPortName" db:"router_port_name"`
 }
 
 // ServerDetailV40 is the details for a server for API v4
 type ServerDetailV40 struct {
-	ServerDetailBaseV40
+	ServerDetail
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces"`
 }
 
@@ -124,73 +128,7 @@ type ServerInterfaceInfo struct {
 type ServerInterfaceInfoV40 struct {
 	ServerInterfaceInfo
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
-	RouterPort     string `json:"routerPort" db:"router_port"`
-}
-
-func (detailV40 ServerDetailBaseV40) ToServerDetailFromV4(routerHostName, routerPort *string) ServerDetail {
-	var detail ServerDetail
-	detail.CacheGroup = detailV40.CacheGroup
-	detail.CDNName = detailV40.CDNName
-	detail.DeliveryServiceIDs = detailV40.DeliveryServiceIDs
-	detail.DomainName = detailV40.DomainName
-	detail.GUID = detailV40.GUID
-	detail.HardwareInfo = detailV40.HardwareInfo
-	detail.HostName = detailV40.HostName
-	detail.HTTPSPort = detailV40.HTTPSPort
-	detail.ID = detailV40.ID
-	detail.ILOIPAddress = detailV40.ILOIPAddress
-	detail.ILOIPGateway = detailV40.ILOIPGateway
-	detail.ILOIPNetmask = detailV40.ILOIPNetmask
-	detail.ILOPassword = detailV40.ILOPassword
-	detail.ILOUsername = detailV40.ILOUsername
-	detail.MgmtIPAddress = detailV40.MgmtIPAddress
-	detail.MgmtIPGateway = detailV40.MgmtIPGateway
-	detail.MgmtIPNetmask = detailV40.MgmtIPNetmask
-	detail.OfflineReason = detailV40.OfflineReason
-	detail.PhysLocation = detailV40.PhysLocation
-	detail.Profile = detailV40.Profile
-	detail.ProfileDesc = detailV40.ProfileDesc
-	detail.Rack = detailV40.Rack
-	detail.Status = detailV40.Status
-	detail.TCPPort = detailV40.TCPPort
-	detail.Type = detailV40.Type
-	detail.XMPPID = detailV40.XMPPID
-	detail.XMPPPasswd = detailV40.XMPPPasswd
-	detail.RouterHostName = routerHostName
-	detail.RouterPortName = routerPort
-	return detail
-}
-
-func (detail ServerDetail) ToV4ServerDetail() ServerDetailBaseV40 {
-	var detailV40 ServerDetailBaseV40
-	detailV40.CacheGroup = detail.CacheGroup
-	detailV40.CDNName = detail.CDNName
-	detailV40.DeliveryServiceIDs = detail.DeliveryServiceIDs
-	detailV40.DomainName = detail.DomainName
-	detailV40.GUID = detail.GUID
-	detailV40.HardwareInfo = detail.HardwareInfo
-	detailV40.HostName = detail.HostName
-	detailV40.HTTPSPort = detail.HTTPSPort
-	detailV40.ID = detail.ID
-	detailV40.ILOIPAddress = detail.ILOIPAddress
-	detailV40.ILOIPGateway = detail.ILOIPGateway
-	detailV40.ILOIPNetmask = detail.ILOIPNetmask
-	detailV40.ILOPassword = detail.ILOPassword
-	detailV40.ILOUsername = detail.ILOUsername
-	detailV40.MgmtIPAddress = detail.MgmtIPAddress
-	detailV40.MgmtIPGateway = detail.MgmtIPGateway
-	detailV40.MgmtIPNetmask = detail.MgmtIPNetmask
-	detailV40.OfflineReason = detail.OfflineReason
-	detailV40.PhysLocation = detail.PhysLocation
-	detailV40.Profile = detail.Profile
-	detailV40.ProfileDesc = detail.ProfileDesc
-	detailV40.Rack = detail.Rack
-	detailV40.Status = detail.Status
-	detailV40.TCPPort = detail.TCPPort
-	detailV40.Type = detail.Type
-	detailV40.XMPPID = detail.XMPPID
-	detailV40.XMPPPasswd = detail.XMPPPasswd
-	return detailV40
+	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 }
 
 // GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
@@ -310,7 +248,7 @@ func ToInterfacesV4(oldInterfaces []ServerInterfaceInfo, routerName, routerPort 
 			v4Int.RouterHostName = *routerName
 		}
 		if routerPort != nil {
-			v4Int.RouterPort = *routerPort
+			v4Int.RouterPortName = *routerPort
 		}
 		v4Interfaces = append(v4Interfaces, v4Int)
 	}
@@ -369,7 +307,7 @@ func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService b
 		iface.RouterHostName = *routerName
 	}
 	if routerPort != nil {
-		iface.RouterPort = *routerPort
+		iface.RouterPortName = *routerPort
 	}
 	return []ServerInterfaceInfoV40{iface}, nil
 }
@@ -1096,7 +1034,7 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 	}
 	if len(s.Interfaces) != 0 {
 		serverV30.RouterHostName = &s.Interfaces[0].RouterHostName
-		serverV30.RouterPortName = &s.Interfaces[0].RouterPort
+		serverV30.RouterPortName = &s.Interfaces[0].RouterPortName
 	}
 	return serverV30, nil
 }
@@ -1130,7 +1068,7 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
 	if len(s.Interfaces) != 0 {
 		legacyServer.RouterHostName = &s.Interfaces[0].RouterHostName
-		legacyServer.RouterPortName = &s.Interfaces[0].RouterPort
+		legacyServer.RouterPortName = &s.Interfaces[0].RouterPortName
 	}
 	return legacyServer, nil
 }
@@ -1163,38 +1101,6 @@ type ServerInfo struct {
 }
 
 type ServerDetail struct {
-	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
-	CDNName            *string           `json:"cdnName" db:"cdn_name"`
-	DeliveryServiceIDs []int64           `json:"deliveryservices,omitempty"`
-	DomainName         *string           `json:"domainName" db:"domain_name"`
-	GUID               *string           `json:"guid" db:"guid"`
-	HardwareInfo       map[string]string `json:"hardwareInfo"`
-	HostName           *string           `json:"hostName" db:"host_name"`
-	HTTPSPort          *int              `json:"httpsPort" db:"https_port"`
-	ID                 *int              `json:"id" db:"id"`
-	ILOIPAddress       *string           `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway       *string           `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask       *string           `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword        *string           `json:"iloPassword" db:"ilo_password"`
-	ILOUsername        *string           `json:"iloUsername" db:"ilo_username"`
-	MgmtIPAddress      *string           `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway      *string           `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
-	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
-	Profile            *string           `json:"profile" db:"profile"`
-	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
-	Rack               *string           `json:"rack" db:"rack"`
-	RouterHostName     *string           `json:"routerHostName" db:"router_host_name"`
-	RouterPortName     *string           `json:"routerPortName" db:"router_port_name"`
-	Status             *string           `json:"status" db:"status"`
-	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
-	Type               string            `json:"type" db:"server_type"`
-	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
-}
-
-type ServerDetailBaseV40 struct {
 	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
 	CDNName            *string           `json:"cdnName" db:"cdn_name"`
 	DeliveryServiceIDs []int64           `json:"deliveryservices,omitempty"`

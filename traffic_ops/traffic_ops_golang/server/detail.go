@@ -58,11 +58,11 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major <= 2 {
 		interfaces := *server.ServerInterfaces
 		routerHostName := ""
-		routerPort := ""
+		routerPortName := ""
 		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 		if len(interfaces) != 0 {
 			routerHostName = interfaces[0].RouterHostName
-			routerPort = interfaces[0].RouterPort
+			routerPortName = interfaces[0].RouterPortName
 		}
 		legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 		if err != nil {
@@ -70,7 +70,9 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		v11server := tc.ServerDetailV11{}
-		v11server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+		v11server.ServerDetail = server.ServerDetail
+		v11server.RouterHostName = &routerHostName
+		v11server.RouterPortName = &routerPortName
 		v11server.LegacyInterfaceDetails = legacyInterface
 		server := v11server
 		alerts := api.CreateDeprecationAlerts(&alt)
@@ -79,14 +81,16 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	} else if inf.Version.Major <= 3 {
 		interfaces := *server.ServerInterfaces
 		routerHostName := ""
-		routerPort := ""
+		routerPortName := ""
 		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 		if len(interfaces) != 0 {
 			routerHostName = interfaces[0].RouterHostName
-			routerPort = interfaces[0].RouterPort
+			routerPortName = interfaces[0].RouterPortName
 		}
 		v3server := tc.ServerDetailV30{}
-		v3server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+		v3server.ServerDetail = server.ServerDetail
+		v3server.RouterHostName = &routerHostName
+		v3server.RouterPortName = &routerPortName
 		v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
@@ -150,15 +154,16 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		for _, server := range servers {
 			interfaces := *server.ServerInterfaces
 			routerHostName := ""
-			routerPort := ""
+			routerPortName := ""
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 			if len(interfaces) != 0 {
 				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPort
+				routerPortName = interfaces[0].RouterPortName
 			}
 			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
-
+			v11server.ServerDetail = server.ServerDetail
+			v11server.RouterHostName = &routerHostName
+			v11server.RouterPortName = &routerPortName
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
@@ -176,13 +181,15 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			v3Server := tc.ServerDetailV30{}
 			interfaces := *server.ServerInterfaces
 			routerHostName := ""
-			routerPort := ""
+			routerPortName := ""
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
 			if len(interfaces) != 0 {
 				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPort
+				routerPortName = interfaces[0].RouterPortName
 			}
-			v3Server.ServerDetail = server.ServerDetailBaseV40.ToServerDetailFromV4(&routerHostName, &routerPort)
+			v3Server.ServerDetail = server.ServerDetail
+			v3Server.RouterHostName = &routerHostName
+			v3Server.RouterPortName = &routerPortName
 			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
