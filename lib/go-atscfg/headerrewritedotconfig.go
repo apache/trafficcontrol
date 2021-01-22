@@ -48,7 +48,7 @@ func MakeHeaderRewriteDotConfig(
 	server *Server,
 	servers []Server,
 	serverParams []tc.Parameter,
-	hdrComment string,
+	opt ParentConfigOpts,
 ) (Cfg, error) {
 	warnings := []string{}
 
@@ -124,7 +124,7 @@ func MakeHeaderRewriteDotConfig(
 		return Cfg{}, makeErr(warnings, "this server missing CDNName")
 	}
 
-	text := makeHdrComment(hdrComment)
+	text := makeHdrComment(opt.HdrComment)
 
 	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
 	if val, ok := params["CONFIG proxy.config.http.request_header_max_size"]; ok {
@@ -136,13 +136,17 @@ func MakeHeaderRewriteDotConfig(
 			globalRequestHeaderMaxSize = sizeI
 		}
 	}
-	if ds.MaxRequestHeaderBytes > 0 {
-		if ds.MaxRequestHeaderBytes >= globalRequestHeaderMaxSize {
-			warnTxt := "TO Max Request Header Size: " + strconv.Itoa(ds.MaxRequestHeaderBytes) +
-				" ,is larger than global setting of " + strconv.Itoa(globalRequestHeaderMaxSize) +
-				", only global setting will be used."
+	if ds.MaxRequestHeaderBytes >= globalRequestHeaderMaxSize {
+		warnTxt := "TO Max Request Header Size: " + strconv.Itoa(ds.MaxRequestHeaderBytes) +
+			" ,is larger than global setting of " + strconv.Itoa(globalRequestHeaderMaxSize) +
+			", header rw will be ignored."
+		if opt.AddComments {
 			warnings = append(warnings, warnTxt)
+			text += makeHeaderRewriteComment(opt.AddComments, warnTxt)
 		}
+	}
+	if ds.MaxRequestHeaderBytes > 0 {
+
 		text += "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(ds.MaxRequestHeaderBytes) + "\nset-status 400"
 		if ds.EdgeHeaderRewrite == "" && ds.MaxOriginConnections == 0 {
 			text += " [L]"
@@ -206,6 +210,13 @@ type headerRewriteServer struct {
 	DomainName string
 	Port       int
 	Status     tc.CacheStatus
+}
+
+func makeHeaderRewriteComment(addComments bool, comment string) string {
+	if !addComments {
+		return ""
+	}
+	return "# " + comment
 }
 
 func headerRewriteServersFromServers(servers []Server) ([]headerRewriteServer, error) {

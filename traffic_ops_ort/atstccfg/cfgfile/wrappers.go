@@ -197,7 +197,18 @@ func MakeTopologyHeaderRewrite(toData *config.TOData, fileName string, hdrCommen
 }
 
 func MakeHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt string) (atscfg.Cfg, error) {
-	return atscfg.MakeHeaderRewriteDotConfig(fileName, toData.DeliveryServices, toData.DeliveryServiceServers, toData.Server, toData.Servers, toData.ServerParams, hdrCommentTxt)
+	return atscfg.MakeHeaderRewriteDotConfig(
+		fileName,
+		toData.DeliveryServices,
+		toData.DeliveryServiceServers,
+		toData.Server,
+		toData.Servers,
+		toData.ServerParams,
+		atscfg.ParentConfigOpts{
+			HdrComment:  hdrCommentTxt,
+			AddComments: true, // TODO add a CLI flag?
+		},
+	)
 }
 
 func MakeRegexRemap(toData *config.TOData, fileName string, hdrCommentTxt string) (atscfg.Cfg, error) {
