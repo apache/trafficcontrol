@@ -60,30 +60,26 @@ export class InvalidationJobService extends APIService {
 	 * @returns An Observable that will emit the request Jobs.
 	 */
 	public getInvalidationJobs(opts?: JobOpts): Observable<Array<InvalidationJob>> {
-		let path = `/api/${this.apiVersion}/jobs`;
+		const path = "jobs";
+		const params: Record<string, string> = {};
 		if (opts) {
-			const args = new Array<string>();
 			if (opts.id) {
-				args.push(`id=${opts.id}`);
+				params.id = String(opts.id);
 			}
 			if (opts.dsID) {
-				args.push(`dsId=${opts.dsID}`);
+				params.dsId = String(opts.dsID);
 			}
 			if (opts.userId) {
-				args.push(`userId=${opts.userId}`);
+				params.userId = String(opts.userId);
 			}
 			if (opts.deliveryService && opts.deliveryService.id) {
-				args.push(`dsId=${opts.deliveryService.id}`);
+				params.dsId = String(opts.deliveryService.id);
 			}
 			if (opts.user && opts.user.id) {
-				args.push(`userId=${opts.user.id}`);
-			}
-
-			if (args.length > 0) {
-				path += `?${args.join("&")}`;
+				params.userId = String(opts.user.id);
 			}
 		}
-		return this.get(path).pipe(map(r => (r.body as {response: Array<InvalidationJob>}).response));
+		return this.get<Array<InvalidationJob>>(path, undefined, params).pipe();
 	}
 
 	/**
@@ -93,7 +89,7 @@ export class InvalidationJobService extends APIService {
 	 * @returns An Observable that emits whether or not creation succeeded.
 	 */
 	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
-		const path = `/api/${this.apiVersion}/user/current/jobs`;
+		const path = "user/current/jobs";
 		return this.post(path, job).pipe(map(
 			() => true,
 			() => false

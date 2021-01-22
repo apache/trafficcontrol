@@ -37,14 +37,14 @@ export class CDNService extends APIService {
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
 	public getCDNs(id?: number): Observable<Map<string, CDN> | CDN> {
-		const path = `/api/${this.apiVersion}/cdns`;
+		const path = "cdns";
 		if (id) {
-			return this.get(`${path}?id=${id}`).pipe(map(
-				r => (r.body as {response: [CDN]}).response[0]
+			return this.get<[CDN]>(path, undefined, {id: String(id)}).pipe(map(
+				r => r[0]
 			));
 		}
-		return this.get(path).pipe(map(
-			r => new Map<string, CDN>((r.body as {response: Array<CDN>}).response.map(c=>[c.name, c]))
+		return this.get<Array<CDN>>(path).pipe(map(
+			r => new Map<string, CDN>(r.map(c=>[c.name, c]))
 		));
 	}
 

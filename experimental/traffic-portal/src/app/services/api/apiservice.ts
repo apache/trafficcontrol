@@ -12,9 +12,10 @@
 * limitations under the License.
 */
 
-import { HttpClient, HttpResponse, HttpHeaders } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 import { environment } from "../../../environments/environment";
 
@@ -33,10 +34,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected delete(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("delete", path, data);
+	protected delete<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("delete", path, data, params);
 	}
 
 	/**
@@ -44,10 +46,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected get(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("get", path, data);
+	protected get<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("get", path, data, params);
 	}
 
 	/**
@@ -55,10 +58,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected head(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("head", path, data);
+	protected head<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("head", path, data, params);
 	}
 
 	/**
@@ -66,10 +70,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected options(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("options", path, data);
+	protected options<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("options", path, data, params);
 	}
 
 	/**
@@ -77,10 +82,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected patch(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("patch", path, data);
+	protected patch<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("patch", path, data, params);
 	}
 
 	/**
@@ -88,10 +94,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected post(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("post", path, data);
+	protected post<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("post", path, data, params);
 	}
 
 	/**
@@ -99,10 +106,11 @@ export class APIService {
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected push(path: string, data?: object): Observable<HttpResponse<object>> {
-		return this.do("push", path, data);
+	protected push<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("push", path, data, params);
 	}
 
 	/**
@@ -110,20 +118,34 @@ export class APIService {
 	 *
 	 * @param method The HTTP request method to use, e.g. "GET".
 	 * @param path The request path.
-	 * @param data Optional request body (will be JSON.stringify'd).
+	 * @param body Optional request body (will be JSON.stringify'd).
+	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected do(method: string, path: string, data?: object): Observable<HttpResponse<object>> {
+	protected do<T>(method: string, path: string, body?: object, params?: Record<string, string>): Observable<T> {
 
 		const options = {
-			body: data,
+			body,
+			params,
 			...this.defaultOptions
 		};
 		// TODO pass alerts to the alert service
 		// (TODO create the alert service)
-		return this.http.request(method, path, options);
+		return this.http.request<{response: T}>(method, `/api/${this.apiVersion}/${path.replace(/^\/+/, "")}`, options).pipe(map(
+			r => {
+				if (!r.body) {
+					throw new Error(`${method} ${path} returned no response body - ${r.status} ${r.statusText}`);
+				}
+				return r.body.response;
+			}
+		));
 	}
 
+	/**
+	 * These are the default options sent in HttpClient methods - if subclasses
+	 * make raw requests, they are encouraged to extend this rather than duplicate
+	 * it.
+	 */
 	protected readonly defaultOptions = {
 		// This is part of the HTTP spec. I can't - and shouldn't - change it.
 		// eslint-disable-next-line @typescript-eslint/naming-convention

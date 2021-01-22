@@ -37,36 +37,36 @@ export class CacheGroupService extends APIService {
 	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
 	 */
 	public getCacheGroups(idOrName?: number | string): Observable<Array<CacheGroup> | CacheGroup> {
-		const path = `/api/${this.apiVersion}/cachegroups`;
-		switch (typeof(idOrName)) {
-			case "string":
-				return this.get(`${path}?name=${encodeURIComponent(idOrName)}`).pipe(map(
-					r => {
-						const cg = (r.body as {response: [CacheGroup]}).response[0];
-						if (cg.name !== idOrName) {
-							throw new Error(`Traffic Ops returned no match for name '${idOrName}'`);
-						}
-						//  lastUpdated comes in as a string
-						cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
-						return cg;
+		const path = "cachegroups";
+		if (idOrName !== undefined) {
+			let params;
+			switch (typeof(idOrName)) {
+				case "string":
+					params = {name: idOrName};
+					break;
+				case "number":
+					params = {id: String(idOrName)};
+			}
+			return this.get<[CacheGroup]>(path, undefined, params).pipe(map(
+				r => {
+					const cg = r[0];
+					if (cg.id !== idOrName) {
+						throw new Error(`Traffic Ops returned no match for ID ${idOrName}`);
 					}
-				));
-			case "number":
-				return this.get(`${path}?id=${idOrName}`).pipe(map(
-					r => {
-						const cg = (r.body as {response: [CacheGroup]}).response[0];
-						if (cg.id !== idOrName) {
-							throw new Error(`Traffic Ops returned no match for ID ${idOrName}`);
-						}
-						//  lastUpdated comes in as a string
-						cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
-						return cg;
-					}
-				));
+					//  lastUpdated comes in as a string
+					cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
+					return cg;
+				}
+			));
 		}
-		return this.get(`${path}`).pipe(map(
-			r => (r.body as {response: Array<CacheGroup>}).response
-		));
+		return this.get<Array<CacheGroup>>(path).pipe(map(r => r.map(
+			cg => {
+				if (cg.lastUpdated) {
+					cg.lastUpdated = new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"));
+				}
+				return cg;
+			}
+		)));
 	}
 
 	/**
