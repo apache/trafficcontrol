@@ -22,6 +22,7 @@ env
 
 BUILDDIR="$HOME/rpmbuild"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export DIR
 pwd
 cd $DIR/..
 pwd
