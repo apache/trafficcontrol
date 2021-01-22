@@ -75,22 +75,22 @@ Response Structure
 	:iloUsername:           The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
 	:interfaces:     An array of interface and IP address information
 
-		:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `0` means "no limit".
-		:monitor:        A boolean indicating if Traffic Monitor should monitor this interface
-		:mtu:            The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
+		:max_bandwidth:        The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `0` means "no limit".
+		:monitor:              A boolean indicating if Traffic Monitor should monitor this interface
+		:mtu:                  The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 
 			.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
-		:name:           The network interface name used by the server.
+		:name:                      The network interface name used by the server.
 
-		:ipAddresses:    An array of the IP address information for the interface
+		:ipAddresses:          An array of the IP address information for the interface
 
 			:address:          The IPv4 or IPv6 address and subnet mask of the server - applicable for the interface ``name``
 			:gateway:          The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 			:service_address:  A boolean determining if content will be routed to the IP address
 
-        :routerHostName:        The human-readable name of the router responsible for reaching this server's interface.
-	    :routerPort:        The human-readable name of the port used by the router responsible for reaching this server's interface
+		:routerHostName:       The human-readable name of the router responsible for reaching this server's interface.
+		:routerPort:           The human-readable name of the port used by the router responsible for reaching this server's interface
 
 	:mgmtIpAddress:  The IPv4 address of the server's management port
 	:mgmtIpGateway:  The IPv4 gateway of the server's management port
@@ -181,8 +181,8 @@ Response Structure
 						"monitor": true,
 						"mtu": 1500,
 						"name": "eth0",
-                        "routerHostName": "",
-				        "routerPort": ""
+						"routerHostName": "",
+						"routerPort": ""
 					}
 				]
 			}
