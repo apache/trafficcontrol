@@ -70,7 +70,7 @@ cp $BUILDDIR/RPMS/x86_64/*.rpm ./dist/
 # Cross compile because we can
 GOBINEXT=""
 for GOOS in darwin linux windows; do
-  for GOARCH in 386 amd64; do
+  for GOARCH in amd64; do
     if [[ "$GOOS" == "windows" ]]
     then
       GOBINEXT=".exe"
