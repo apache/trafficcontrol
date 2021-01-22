@@ -30,11 +30,16 @@ limitations under the License.
 	<input type="text" [(ngModel)]="server.domainName" id="domainname" name="domainname" required maxlength="50"/>
 	<label for="cachegroup">Cache Group</label>
 	<select name="cachegroup" id="cachegroup" [(ngModel)]="server.cachegroupId" required>
-		<option *ngFor="let cg of cacheGroups" [value]="cg.id">{{cg.name}}</option>
+		<option *ngFor="let cg of cacheGroups" [ngValue]="cg.id">{{cg.name}}</option>
 	</select>
 	<label for="cdn">CDN</label>
 	<select name="cdn" id="cdn" [(ngModel)]="server.cdnId" required>
-		<option *ngFor="let cdn of cdns" [value]="cdn.id">{{cdn.name}}</option>
+		<option *ngFor="let cdn of cdns" [ngValue]="cdn.id">{{cdn.name}}</option>
+	</select>
+	<label for="status">Status</label>
+	<input type="text" id="status" name="status" readonly [value]="server.status" *ngIf="!isNew"/>
+	<select id="status" name="status" *ngIf="isNew" [(ngModel)]="server.statusId" required>
+		<option *ngFor="let status of statuses" [ngValue]="status.id">{{status.name}}</option>
 	</select>
 	<label for="httpport">HTTP Port</label>
 	<input id="httpport" name="httpport" type="number" [(ngModel)]="server.tcpPort" min="1" max="65535"/>
@@ -111,11 +116,6 @@ limitations under the License.
 	<input *ngIf="!isNew" id="offlineReason" name="offlineReason" type="text" readonly [value]="server.offlineReason"/>
 	<label for="rack">Rack</label>
 	<input type="text" id="rack" name="rack" ([ngModel])="server.rack"/>
-	<label for="status">Status</label>
-	<input type="text" id="status" name="status" readonly [value]="server.status" *ngIf="!isNew"/>
-	<select id="status" name="status" *ngIf="isNew" [(ngModel)]="server.statusId" required>
-		<option *ngFor="let status of statuses" [value]="status.id">{{status.name}}</option>
-	</select>
 	<label *ngIf="!isNew && server.statusLastUpdated" for="statusLastUpdated">Status Last Updated</label>
 	<input *ngIf="!isNew && server.statusLastUpdated" type="text" id="statusLastUpdated" name="statusLastUpdated" readonly [value]="server.statusLastUpdated.toLocaleString()"/>
 	<label *ngIf="!isNew" for="xmppId">Hash ID</label>

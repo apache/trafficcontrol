@@ -116,8 +116,20 @@ export class ServerDetailsComponent implements OnInit {
 		}
 	}
 
-	public submit(e: unknown): void {
-		console.log("submit event:", e);
+	public submit(e: Event): void {
+		e.preventDefault();
+		e.stopPropagation();
+		if (this.isNew) {
+			this.serverService.createServer(this.server).subscribe(
+				s => {
+					this.server = s;
+					this.isNew = false;
+				},
+				err => {
+					console.error("failed to create server:", err);
+				}
+			);
+		}
 	}
 
 	public log(): void {

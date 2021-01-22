@@ -117,16 +117,20 @@ export class APIService {
 
 		const options = {
 			body: data,
-			// This is part of the HTTP spec. I can't - and shouldn't - change it.
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			headers: new HttpHeaders({"Content-Type": "application/json"}),
-			observe: "response" as "response",
-			responseType: "json" as "json",
+			...this.defaultOptions
 		};
 		// TODO pass alerts to the alert service
 		// (TODO create the alert service)
 		return this.http.request(method, path, options);
 	}
+
+	protected readonly defaultOptions = {
+		// This is part of the HTTP spec. I can't - and shouldn't - change it.
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		headers: new HttpHeaders({"Content-Type": "application/json"}),
+		observe: "response" as "response",
+		responseType: "json" as "json",
+	};
 
 	/**
 	 * Constructs the service and sets the API version based on the execution environment.

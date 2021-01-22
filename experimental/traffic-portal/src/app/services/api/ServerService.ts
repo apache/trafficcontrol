@@ -121,6 +121,22 @@ export class ServerService extends APIService {
 		));
 	}
 
+	public createServer(s: Server): Observable<Server> {
+		return this.http.post<{response: Server}>(`/api/${this.apiVersion}/servers`, s, this.defaultOptions).pipe(map(
+			r => {
+				if (!r.body) {
+					throw new Error("no response body for POST /servers");
+				}
+				const srv = r.body.response;
+				srv.lastUpdated = new Date((srv.lastUpdated as unknown as string).replace("+00", "Z"));
+				if (srv.statusLastUpdated) {
+					srv.statusLastUpdated = new Date(srv.statusLastUpdated as unknown as string);
+				}
+				return srv;
+			}
+		));
+	}
+
 	public getServerChecks(): Observable<Servercheck[]>;
 	public getServerChecks(id: number): Observable<Servercheck>;
 	/**
