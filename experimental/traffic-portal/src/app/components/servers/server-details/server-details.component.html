@@ -12,8 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <tp-header [title]="title"></tp-header>
-<div class="actions-container">
-	<button type="button"></button>
+<div class="actions-container" *ngIf="!isNew">
+	<button [disabled]="!isCache()" type="button">Manage Capabilities</button>
+	<button [disabled]="!isCache()" type="button">Manage Delivery Services</button>
+	<button [disabled]="!isCache()" type="button" title="queue server updates" *ngIf="!server.updPending"><fa-icon [icon]="updateIcon"></fa-icon></button>
+	<button [disabled]="!isCache()" type="button" title="clear server updates" *ngIf="server.updPending"><fa-icon [icon]="clearUpdatesIcon"></fa-icon></button>
+	<button type="button" title="change server status"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
 </div>
 <form ngNativeValidate #serverForm="ngForm" (ngSubmit)="submit($event)">
 	<label for="id" *ngIf="!isNew">ID</label>
@@ -116,5 +120,8 @@ limitations under the License.
 	<input *ngIf="!isNew && server.statusLastUpdated" type="text" id="statusLastUpdated" name="statusLastUpdated" readonly [value]="server.statusLastUpdated.toLocaleString()"/>
 	<label *ngIf="!isNew" for="xmppId">Hash ID</label>
 	<input readonly *ngIf="!isNew" id="xmppId" name="xmppId" [value]="server.xmppId"/>
-	<div class="buttons"><button type="button" (click)="log()">Debug</button><button>Submit</button></div>
+	<div class="buttons">
+		<button type="button" (click)="log()">Debug</button>
+		<button>Submit</button>
+	</div>
 </form>

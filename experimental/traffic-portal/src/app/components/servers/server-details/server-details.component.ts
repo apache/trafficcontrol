@@ -14,7 +14,8 @@
 
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, Server, Status } from "src/app/models";
 import { CacheGroupService, CDNService, ServerService } from "src/app/services/api";
 import { IP, IP_WITH_CIDR } from "src/app/utils";
@@ -44,6 +45,17 @@ export class ServerDetailsComponent implements OnInit {
 
 	public addIcon = faPlus;
 	public removeIcon = faMinus;
+	public clearUpdatesIcon = faClock;
+	public updateIcon = hollowClock;
+	public get statusChangeIcon(): IconDefinition {
+		if (this.isNew || !this.server.status) {
+			return faToggleOn;
+		}
+		if (this.server.status === "ONLINE" || this.server.status === "REPORTED") {
+			return faToggleOn;
+		}
+		return faToggleOff;
+	}
 
 	public cacheGroups = new Array<CacheGroup>();
 	public cdns = new Array<CDN>();
@@ -139,6 +151,13 @@ export class ServerDetailsComponent implements OnInit {
 
 	public deleteInterface(inf: number): void {
 		this.server.interfaces.splice(inf, 1);
+	}
+
+	public isCache(): boolean {
+		if (!this.server.type) {
+			return false;
+		}
+		return this.server.type.startsWith("EDGE") || this.server.type.startsWith("MID");
 	}
 
 }

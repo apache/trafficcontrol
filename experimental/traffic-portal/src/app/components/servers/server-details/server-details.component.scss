@@ -13,6 +13,20 @@
 */
 @import '../../../../theme.scss';
 
+.actions-container {
+	width: 85vw;
+	margin: 25px auto 0;
+	display: flex;
+	justify-content: end;
+	padding-right: 1em;
+
+	button {
+		border: none;
+		background: none;
+		font-size: large;
+	}
+}
+
 form {
 	display: grid;
 	grid-template-columns: auto 1fr;
