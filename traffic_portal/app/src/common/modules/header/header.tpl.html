@@ -40,7 +40,7 @@ under the License.
             <li role="presentation" class="dropdown" ng-if="hasCapability('change-logs-read')">
                 <div class="btn-group" title="Change Logs" uib-dropdown is-open="alerts.isopen">
                     <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
-                        <i class="fa fa-comment-o"></i>
+                        <i class="fa" ng-class="{ 'fa-comment': newLogCount() > 0, 'fa-comment-o': newLogCount() == 0 }"></i>
                         <span class="badge bg-blue">{{newLogCount()}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
