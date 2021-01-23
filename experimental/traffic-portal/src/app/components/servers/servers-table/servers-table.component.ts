@@ -18,7 +18,8 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { ITooltipParams } from "ag-grid-community";
 
 import { BehaviorSubject, Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { merge } from "rxjs/index";
+import { map, mergeAll } from "rxjs/operators";
 
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
@@ -33,6 +34,34 @@ interface AugmentedServer extends Server {
 	ipv4Address: string;
 	/** The server's IPv6 service address */
 	ipv6Address: string;
+}
+
+function augment(s: Server): AugmentedServer {
+	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
+	let inf: Interface;
+	try {
+		inf = serviceInterface(aug.interfaces);
+	} catch (e) {
+		console.error(`server #${s.id}:`, e);
+		return aug;
+	}
+	for (const ip of inf.ipAddresses) {
+		if (!ip.serviceAddress) {
+			continue;
+		}
+		if (IPV4.test(ip.address)) {
+			if (aug.ipv4Address !== "") {
+				console.warn("found more than one IPv4 service address for server:", s.id);
+			}
+			aug.ipv4Address = ip.address;
+		} else {
+			if (aug.ipv6Address !== "") {
+				console.warn("found more than one IPv6 service address for server:", s.id);
+			}
+			aug.ipv6Address = ip.address;
+		}
+	}
+	return aug;
 }
 
 /**
@@ -274,12 +303,14 @@ export class ServersTableComponent implements OnInit {
 		},
 		{
 			action: "queue",
-			disabled: (data: AugmentedServer): boolean =>!serverIsCache(data),
+			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
+			multiRow: true,
 			name: "Queue Server Updates"
 		},
 		{
 			action: "dequeue",
-			disabled: (data: AugmentedServer): boolean =>!serverIsCache(data),
+			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
+			multiRow:true,
 			name: "Clear Queued Updates"
 		}
 	];
@@ -303,35 +334,7 @@ export class ServersTableComponent implements OnInit {
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
 		this.servers = this.api.getServers().pipe(map(
-			x => x.map(
-				s => {
-					const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
-					let inf: Interface;
-					try {
-						inf = serviceInterface(aug.interfaces);
-					} catch (e) {
-						console.error(`server #${s.id}:`, e);
-						return aug;
-					}
-					for (const ip of inf.ipAddresses) {
-						if (!ip.serviceAddress) {
-							continue;
-						}
-						if (IPV4.test(ip.address)) {
-							if (aug.ipv4Address !== "") {
-								console.warn("found more than one IPv4 service address for server:", s.id);
-							}
-							aug.ipv4Address = ip.address;
-						} else {
-							if (aug.ipv6Address !== "") {
-								console.warn("found more than one IPv6 service address for server:", s.id);
-							}
-							aug.ipv6Address = ip.address;
-						}
-					}
-					return aug;
-				}
-			)
+			x => x.map(augment)
 		));
 
 		this.route.queryParamMap.subscribe(
@@ -357,18 +360,29 @@ export class ServersTableComponent implements OnInit {
 	 * @param action The emitted context menu action event.
 	 */
 	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
+		let observables;
 		switch (action.action) {
 			case "viewDetails":
-				this.router.navigate(["/server", action.data.id]);
+				this.router.navigate(["/server", (action.data as AugmentedServer).id]);
 				break;
 			case "updateStatus":
 				console.log("'Update Status' clicked - not yet implemented");
 				break;
 			case "queue":
-				console.log("'Queue Server Updates' clicked - not yet implemented");
+				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.queueUpdates(s));
+				merge(observables).pipe(mergeAll()).subscribe(
+					() => {
+						this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
+					}
+				);
 				break;
 			case "dequeue":
-				console.log("'Clear Server Updates' clicked - not yet implemented");
+				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.clearUpdates(s));
+				merge(observables).pipe(mergeAll()).subscribe(
+					() => {
+						this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
+					}
+				);
 				break;
 			default:
 				console.error("unknown context menu item clicked:", action.action);

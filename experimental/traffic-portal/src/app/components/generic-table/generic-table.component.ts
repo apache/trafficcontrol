@@ -491,7 +491,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		if (multi) {
 			this.contextMenuAction.emit({
 				action,
-				data: this.fullSelection
+				data: this.selectionCount > 0 ? this.fullSelection : [this.selected]
 			});
 		} else {
 			this.contextMenuAction.emit({
@@ -520,7 +520,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	}
 
 
-	public selectAll(de: boolean): void {
+	public selectAll(de?: boolean): void {
 		if (!this.gridAPI) {
 			console.error("Cannot de-select: no grid API handle");
 			return;

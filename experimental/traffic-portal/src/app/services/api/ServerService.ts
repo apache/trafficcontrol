@@ -191,4 +191,31 @@ export class ServerService extends APIService {
 			)
 		));
 	}
+
+	public queueUpdates(server: number | Server): Observable<{serverId: number; action: "queue"}> {
+		let id: number;
+		if (typeof server === "number") {
+			id = server;
+		} else if (!server.id) {
+			throw new Error("server has no id");
+		} else {
+			id = server.id;
+		}
+
+		return this.post<{serverId: number; action: "queue"}>(`servers/${id}/queue_update`, {action: "queue"});
+	}
+
+
+	public clearUpdates(server: number | Server): Observable<{serverId: number; action: "dequeue"}> {
+		let id: number;
+		if (typeof server === "number") {
+			id = server;
+		} else if (!server.id) {
+			throw new Error("server has no id");
+		} else {
+			id = server.id;
+		}
+
+		return this.post<{serverId: number; action: "dequeue"}>(`servers/${id}/queue_update`, {action: "dequeue"});
+	}
 }
