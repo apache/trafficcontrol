@@ -16,9 +16,10 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
-import { CacheGroup, CDN, DUMMY_SERVER, Interface, Profile, Server, Status } from "src/app/models";
-import { CacheGroupService, CDNService, ProfileService, ServerService } from "src/app/services/api";
+import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
+import { CacheGroupService, CDNService, ProfileService, ServerService, TypeService } from "src/app/services/api";
 import { IP, IP_WITH_CIDR } from "src/app/utils";
+import { PhysicalLocationService } from "src/app/services/api/PhysicalLocationService";
 
 @Component({
 	selector: "tp-server-details",
@@ -104,7 +105,7 @@ export class ServerDetailsComponent implements OnInit {
 	 *
 	 */
 	public cdns = new Array<CDN>();
-	// public physicalLocations = new Array<PhysicalLocation>();
+	public physicalLocations = new Array<PhysicalLocation>();
 	/**
 	 *
 	 */
@@ -113,6 +114,7 @@ export class ServerDetailsComponent implements OnInit {
 	 *
 	 */
 	public statuses = new Array<Status>();
+	public types = new Array<Type>();
 
 	/**
 	 *
@@ -122,7 +124,9 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly serverService: ServerService,
 		private readonly cacheGroupService: CacheGroupService,
 		private readonly cdnService: CDNService,
-		private readonly profileService: ProfileService
+		private readonly profileService: ProfileService,
+		private readonly typeService: TypeService,
+		private readonly physlocService: PhysicalLocationService
 	) {
 		this.server = DUMMY_SERVER;
 	}
@@ -158,6 +162,16 @@ export class ServerDetailsComponent implements OnInit {
 				this.profiles = profiles;
 			}
 		);
+		this.typeService.getServerTypes().subscribe(
+			types => {
+				this.types = types;
+			}
+		);
+		this.physlocService.getPhysicalLocations().subscribe(
+			physlocs => {
+				this.physicalLocations = physlocs;
+			}
+		);
 
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
@@ -173,6 +187,18 @@ export class ServerDetailsComponent implements OnInit {
 					this.server = s;
 				}
 			);
+		} else {
+			this.server.interfaces = [{
+				ipAddresses: [{
+					address: "",
+					gateway: null,
+					serviceAddress: true
+				}],
+				maxBandwidth: null,
+				monitor: false,
+				mtu: null,
+				name: "",
+			}];
 		}
 	}
 
