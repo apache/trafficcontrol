@@ -71,10 +71,13 @@ cp $BUILDDIR/RPMS/x86_64/*.rpm ./dist/
 # Cross compile because we can
 GOBINEXT=""
 for GOOS in darwin linux windows; do
-  for GOARCH in amd64; do
+  for GOARCH in 386 amd64; do
     if [[ "$GOOS" == "windows" ]]
     then
       GOBINEXT=".exe"
+    elif [[ "$GOOS" == darwin && "$GOARCH" == 386 ]] ; then
+      # Go 1.15 and up does not support the darwin/386 GOOS/GOARCH pair (golang/go@65a4dc9c18)
+      continue;
     else
       GOBINEXT=""
     fi
