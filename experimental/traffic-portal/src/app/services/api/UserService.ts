@@ -45,7 +45,7 @@ export class UserService extends APIService {
 	 * @returns An observable that will emit the entire HTTP response
 	 */
 	public login(u: string, p: string): Observable<HttpResponse<object>> {
-		const path = "user/login";
+		const path = `/api/${this.apiVersion}/user/login`;
 		return this.http.post(path, {p, u}, this.defaultOptions);
 	}
 
