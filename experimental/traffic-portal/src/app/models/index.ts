@@ -17,6 +17,7 @@ export * from "./cdn";
 export * from "./data";
 export * from "./deliveryservice";
 export * from "./invalidation";
+export * from "./physical.location";
 export * from "./profile";
 export * from "./server";
 export * from "./type";
