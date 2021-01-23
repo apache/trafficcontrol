@@ -18,6 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject, Observable } from "rxjs";
 import { CacheGroup } from "src/app/models/cache-groups";
 import { CacheGroupService } from "src/app/services/api";
+import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/generic-table.component";
 
 @Component({
 	selector: "tp-cache-group-table",
@@ -88,6 +89,40 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	];
 
+	/** Definitions for the context menu items (which act on augmented server data). */
+	public contextMenuItems: Array<ContextMenuItem<CacheGroup>> = [
+		{
+			action: "edit",
+			name: "Edit"
+		},
+		{
+			action: "delete",
+			name: "Delete"
+		},
+		{
+			action: "queue",
+			multiRow: true,
+			name: "Queue Server Updates"
+		},
+		{
+			action: "dequeue",
+			multiRow: true,
+			name: "Clear Queued Updates"
+		},
+		{
+			action: "asns",
+			name: "Manage ASNs"
+		},
+		{
+			action: "parameters",
+			name: "Manage Parameters"
+		},
+		{
+			action: "servers",
+			name: "Manage Servers"
+		}
+	];
+
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
 	public fuzzySubject: BehaviorSubject<string>;
 
@@ -120,6 +155,10 @@ export class CacheGroupTableComponent implements OnInit {
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
 		this.fuzzySubject.next(this.fuzzControl.value);
+	}
+
+	public handleContextMenu(a: ContextMenuActionEvent<CacheGroup>): void {
+		console.log("action:", a);
 	}
 
 }
