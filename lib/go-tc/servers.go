@@ -922,6 +922,8 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 
 	upgraded := ServerV30{
 		CommonServerProperties: s.CommonServerProperties,
+		RouterHostName:         s.RouterHostName,
+		RouterPortName:         s.RouterPortName,
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfaces(ipv4IsService, ipv6IsService)
