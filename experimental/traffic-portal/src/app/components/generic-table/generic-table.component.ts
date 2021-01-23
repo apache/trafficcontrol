@@ -19,6 +19,7 @@ import {
 	ColDef,
 	ColGroupDef,
 	ColumnApi,
+	CsvExportParams,
 	GridApi,
 	GridOptions,
 	GridReadyEvent,
@@ -26,7 +27,7 @@ import {
 	RowNode } from "ag-grid-community";
 import { BehaviorSubject, Subscription } from "rxjs";
 
-import {faCaretDown, faColumns} from "@fortawesome/free-solid-svg-icons";
+import {faCaretDown, faColumns, faDownload} from "@fortawesome/free-solid-svg-icons";
 
 import { fuzzyScore } from "src/app/utils";
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
@@ -35,8 +36,8 @@ import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/
 /** Tables can display any of this kind of data. */
 type TableData = Record<string, string | number | bigint | Date | boolean | RegExp | null>;
 
-/** ContextMenuActions represent an action that can be taken in a context menu. */
-interface ContextMenuAction<T> {
+/** A context menu action that acts on a single row only. */
+interface ContextMenuSingleAction<T> {
 	/**
 	 * The name of the action; this will be emitted along with the selected data back to the host so that it knows which option was clicked.
 	 */
@@ -45,11 +46,44 @@ interface ContextMenuAction<T> {
 	 * If present, this method will be called to determine if the action should be disabled.
 	 *
 	 * @param data The selected data which can be used to make the determination.
+	 * @param api A reference to the Grid's API - which must be checked for initialization, unfortunately.
 	 */
-	disabled?: (data: T) => boolean;
+	disabled?: (data: T, api?: GridApi) => boolean;
+	/**
+	 * If given and true, causes the action to act on all selected data instead of a single row.
+	 *
+	 * Actions that do not act on a single row are disabled when multiple rows are selected.
+	 */
+	multiRow?: false;
 	/** A human-readable name for the action which is displayed to the user. */
 	name: string;
 }
+
+/** A context menu action that acts on any number of selected rows. */
+interface ContextMenuMultiAction<T> {
+	/**
+	 * The name of the action; this will be emitted along with the selected data back to the host so that it knows which option was clicked.
+	 */
+	action: string;
+	/**
+	 * If present, this method will be called to determine if the action should be disabled.
+	 *
+	 * @param data The selected data which can be used to make the determination.
+	 * @param api A reference to the Grid's API - which must be checked for initialization, unfortunately.
+	 */
+	disabled?: (data: Array<T>, api?: GridApi) => boolean;
+	/**
+	 * If given and true, causes the action to act on all selected data instead of a single row.
+	 *
+	 * Actions that do not act on a single row are disabled when multiple rows are selected.
+	 */
+	multiRow: true;
+	/** A human-readable name for the action which is displayed to the user. */
+	name: string;
+}
+
+/** ContextMenuActions represent an action that can be taken in a context menu. */
+type ContextMenuAction<T> = ContextMenuSingleAction<T> | ContextMenuMultiAction<T>;
 
 /** ContextMenuLinks represent a link within a context menu. They aren't templated, so currently have limited uses. */
 interface ContextMenuLink {
@@ -72,7 +106,7 @@ export interface ContextMenuActionEvent<T> {
 	/** action is the 'action' property of the clicked action. */
 	action: string;
 	/** data is the selected data on which the action will act. */
-	data: T;
+	data: T | Array<T>;
 }
 
 @Component({
@@ -117,6 +151,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	public clickOutside(e: MouseEvent): void {
 		e.stopPropagation();
 		this.showContextMenu = false;
+		this.menuClicked = false;
 	}
 
 	/** This holds a reference to the table's selected data, which is emitted on context menu action clicks. */
@@ -133,9 +168,10 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	public columnAPI: ColumnApi | undefined;
 
 	/** Icon used for the 'columns' dropdown item. */
-	public columnsIcon = faColumns;
+	public readonly columnsIcon = faColumns;
 	/** Icon used for the caret/chevron indicating menu direction on button press. */
-	public caretIcon = faCaretDown;
+	public readonly caretIcon = faCaretDown;
+	public readonly downloadIcon = faDownload;
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
 	private initialize = false;
@@ -151,6 +187,20 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		sshCellRenderer: SSHCellRendererComponent,
 		tpBooleanFilter: BooleanFilterComponent,
 	};
+
+	public get selectionCount(): number {
+		if (!this.gridAPI) {
+			return -1;
+		}
+		return this.gridAPI.getSelectedRows().length;
+	}
+
+	public get fullSelection(): Array<unknown> {
+		if (!this.gridAPI) {
+			return [];
+		}
+		return this.gridAPI.getSelectedRows();
+	}
 
 	/**
 	 * Contructs the component with its required injections.
@@ -362,6 +412,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 */
 	public toggleMenu(e: Event): void {
 		e.stopPropagation();
+		this.showContextMenu = false;
 		this.menuClicked = !this.menuClicked;
 	}
 
@@ -389,6 +440,8 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 			return;
 		}
 
+		this.menuClicked = false;
+
 		if (!this.contextmenu) {
 			console.warn("element reference to 'contextmenu' still null after view init");
 			return;
@@ -413,18 +466,70 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		this.selected = params.data;
 	}
 
+	public isDisabled(a: ContextMenuAction<unknown>): boolean {
+		if (!a.multiRow && this.selectionCount > 1) {
+			return true;
+		}
+		if (a.disabled) {
+			if (a.multiRow) {
+				return a.disabled(this.fullSelection, this.gridAPI);
+			}
+			return a.disabled(this.selected, this.gridAPI);
+		}
+		return false;
+	}
+
 	/**
 	 * Handles when the user clicks on a context menu action item by emitting the proper data.
 	 *
 	 * @param action The action that was clicked.
+	 * @param multi If 'true' the emitted data will be all rows currently selected, otherwise only the item on which the user right-clicked.
 	 * @param e The mouse event that triggered this handler.
 	 */
-	public emitContextMenuAction(action: string, e: MouseEvent): void {
+	public emitContextMenuAction(action: string, multi: boolean, e: MouseEvent): void {
 		e.stopPropagation();
-		this.contextMenuAction.emit({
-			action,
-			data: this.selected
-		});
+		if (multi) {
+			this.contextMenuAction.emit({
+				action,
+				data: this.fullSelection
+			});
+		} else {
+			this.contextMenuAction.emit({
+				action,
+				data: this.selected
+			});
+		}
 		this.showContextMenu = false;
+	}
+
+	public download(): void {
+		if (!this.gridAPI) {
+			console.error("Cannot download: no grid API handle");
+			return;
+		}
+
+		const params: CsvExportParams = {
+			onlySelected: this.gridAPI.getSelectedNodes().length > 0,
+		};
+
+		if (this.context) {
+			params.fileName = `${this.context}.csv`;
+		}
+
+		this.gridAPI.exportDataAsCsv(params);
+	}
+
+
+	public selectAll(de: boolean): void {
+		if (!this.gridAPI) {
+			console.error("Cannot de-select: no grid API handle");
+			return;
+		}
+
+		if (de) {
+			this.gridAPI.deselectAll();
+		} else {
+			this.gridAPI.selectAllFiltered();
+		}
 	}
 }

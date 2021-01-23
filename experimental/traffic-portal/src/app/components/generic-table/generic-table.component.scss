@@ -22,10 +22,36 @@ ag-grid-angular {
 	width: 80vw;
 	display: flex;
 	margin: auto;
+
+	& > :first-child {
+		margin-left: auto;
+		border-radius: 5px 0 0 0;
+	}
+
+	& > :last-child {
+		border-radius: 0 5px 0 0;
+	}
+
+	& > button, & > div {
+
+		&:not(:first-child) {
+			border-left-width: 1px;
+		}
+
+		&:not(:last-child) {
+			border-right-width: 0;
+		}
+	}
+
+	button {
+		border-style: solid solid none solid;
+		border-radius: 0;
+		padding: 0 1em;
+	}
 }
 
 .toggle-columns {
-	margin-left: auto;
+	// margin-left: auto;
 	position: relative;
 
 	menu {
@@ -68,6 +94,7 @@ ag-grid-angular {
 
 	button {
 		border-style: solid solid none solid;
+		border-radius: inherit;
 		fa-icon.caret {
 			line-height: 30px;
 			transition: 0.5s;
