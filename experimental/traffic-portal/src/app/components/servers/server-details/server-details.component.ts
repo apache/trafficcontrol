@@ -216,9 +216,9 @@ export class ServerDetailsComponent implements OnInit {
 					if (!s.id) {
 						throw new Error("Traffic Ops returned server with no ID");
 					}
-					this.router.navigate(["server", s.id]);
-					this.server = s;
 					this.isNew = false;
+					this.server = s;
+					this.router.navigate(["server", s.id]);
 				},
 				err => {
 					console.error("failed to create server:", err);
@@ -287,6 +287,20 @@ export class ServerDetailsComponent implements OnInit {
 			return false;
 		}
 		return this.server.type.startsWith("EDGE") || this.server.type.startsWith("MID");
+	}
+
+	/**
+	 * Changes the server's status.
+	 *
+	 * @param status The name of the status to set on the server.
+	 * @param offlineReason Optionally a reason the server has been taken "offline".
+	 * @throws {Error} when trying to update server status if the server doesn't exist yet (`this.isNew === true`).
+	 */
+	public changeStatus(status: string, offlineReason?: string): void {
+		if (this.isNew) {
+			throw new Error("cannot update the status of a server that doesn't exist yet");
+		}
+		this.serverService.updateStatus(this.server, status, offlineReason);
 	}
 
 }

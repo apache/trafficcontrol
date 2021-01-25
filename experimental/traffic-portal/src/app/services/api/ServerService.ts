@@ -229,4 +229,25 @@ export class ServerService extends APIService {
 
 		return this.post<{serverId: number; action: "dequeue"}>(`servers/${id}/queue_update`, {action: "dequeue"});
 	}
+
+	/**
+	 * Updates a server's status.
+	 *
+	 * @param server Either the server that will have its status changed, or the integral, unique identifier thereof.
+	 * @param status The name of the status to which to set the server.
+	 * @param offlineReason The reason why the server was placed into a non-ONLINE or REPORTED status.
+	 * @returns Nothing.
+	 */
+	public updateStatus(server: number | Server, status: string, offlineReason?: string): Observable<undefined> {
+		let id: number;
+		if (typeof server === "number") {
+			id = server;
+		} else if (!server.id) {
+			throw new Error("server has no id");
+		} else {
+			id = server.id;
+		}
+
+		return this.post<undefined>(`servers/${id}/status`, {offlineReason, status});
+	}
 }
