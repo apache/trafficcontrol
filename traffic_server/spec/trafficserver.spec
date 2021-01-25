@@ -77,6 +77,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
+%license LICENSE
 %defattr(-,root,root)
 %attr(755,-,-) /etc/init.d/trafficserver
 %dir /opt/trafficserver
