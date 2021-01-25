@@ -32,7 +32,7 @@ export let config: Config = {
     }
   },
   specs: [
-    "specs/*.spec.js",
+    "specs/Servers.spec.js",
   ],
   // Options to be passed to Jasmine-node.
   jasmineNodeOpts: {

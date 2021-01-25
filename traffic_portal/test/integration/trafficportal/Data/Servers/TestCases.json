@@ -14,11 +14,11 @@
                     "Status": "ONLINE",
                     "Hostname": "servertestcreate1",
                     "Domainname": "test.com",
-                    "CDN": "Kabletown2.0",
-                    "CacheGroup": "infrastructure",
+                    "CDN": "CDN-in-a-Box",
+                    "CacheGroup": "CDN_in_a_Box_Edge",
                     "Type": "EDGE",
-                    "Profile": "ATS_Edge_MKGA",
-                    "PhysLocation": "NY-Albany",
+                    "Profile": "ATS_EDGE_TIER_CACHE",
+                    "PhysLocation": "CDN_in_a_Box",
                     "InterfaceName": "test",
                     "validationMessage": "Server created"
                 },
@@ -27,11 +27,11 @@
                     "Status": "ONLINE",
                     "Hostname": "servertestcreate2",
                     "Domainname": "test.com",
-                    "CDN": "Kabletown2.0",
-                    "CacheGroup": "infrastructure",
+                    "CDN": "CDN-in-a-Box",
+                    "CacheGroup": "CDN_in_a_Box_Edge",
                     "Type": "EDGE",
-                    "Profile": "ATS_Edge_MKGA",
-                    "PhysLocation": "NY-Albany",
+                    "Profile": "ATS_EDGE_TIER_CACHE",
+                    "PhysLocation": "CDN_in_a_Box",
                     "InterfaceName": "test",
                     "validationMessage": "Server created"
                 }
@@ -63,11 +63,6 @@
                     "description": "delete a Server with Server Capabilities assigned",
                     "Name": "servertestremove2",
                     "validationMessage": "Server deleted"
-                },
-                {
-                    "description": "delete a Server with Delivery Service assigned",
-                    "Name": "servertestremove3",
-                    "validationMessage": "Server deleted"
                 }
             ]
         },
@@ -85,11 +80,11 @@
                     "Status": "ONLINE",
                     "Hostname": "servertcreatero",
                     "Domainname": "test.com",
-                    "CDN": "Kabletown2.0",
-                    "CacheGroup": "infrastructure",
+                    "CDN": "CDN-in-a-Box",
+                    "CacheGroup": "CDN_in_a_Box_Edge",
                     "Type": "EDGE",
-                    "Profile": "ATS_Edge_MKGA",
-                    "PhysLocation": "NY-Albany",
+                    "Profile": "ATS_EDGE_TIER_CACHE",
+                    "PhysLocation": "CDN_in_a_Box",
                     "InterfaceName": "test",
                     "validationMessage": "Forbidden."
                 }
@@ -125,11 +120,11 @@
                     "Status": "ONLINE",
                     "Hostname": "servertestcreateop1",
                     "Domainname": "test.com",
-                    "CDN": "Kabletown2.0",
-                    "CacheGroup": "infrastructure",
+                    "CDN": "CDN-in-a-Box",
+                    "CacheGroup": "CDN_in_a_Box_Edge",
                     "Type": "EDGE",
-                    "Profile": "ATS_Edge_MKGA",
-                    "PhysLocation": "NY-Albany",
+                    "Profile": "ATS_EDGE_TIER_CACHE",
+                    "PhysLocation": "CDN_in_a_Box",
                     "InterfaceName": "test",
                     "validationMessage": "Server created"
                 },
@@ -138,11 +133,11 @@
                     "Status": "ONLINE",
                     "Hostname": "servertestcreateop2",
                     "Domainname": "test.com",
-                    "CDN": "Kabletown2.0",
-                    "CacheGroup": "infrastructure",
+                    "CDN": "CDN-in-a-Box",
+                    "CacheGroup": "CDN_in_a_Box_Edge",
                     "Type": "EDGE",
-                    "Profile": "ATS_Edge_MKGA",
-                    "PhysLocation": "NY-Albany",
+                    "Profile": "ATS_EDGE_TIER_CACHE",
+                    "PhysLocation": "CDN_in_a_Box",
                     "InterfaceName": "test",
                     "validationMessage": "Server created"
                 }
@@ -173,11 +168,6 @@
                 {
                     "description": "delete a Server with Server Capabilities assigned",
                     "Name": "servertestremoveop2",
-                    "validationMessage": "Server deleted"
-                },
-                {
-                    "description": "delete a Server with Delivery Service assigned",
-                    "Name": "servertestremoveop3",
                     "validationMessage": "Server deleted"
                 }
             ]

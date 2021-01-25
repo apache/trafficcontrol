@@ -68,6 +68,28 @@
                             "replace": "route"                           
                         }
                     ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestremove3",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestremoveop3",
+                            "replace": "route"                           
+                        }
+                    ]
                 }
             ]
         },
