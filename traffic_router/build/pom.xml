@@ -133,6 +133,7 @@
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
+							<license>Apache License, Version 2.0</license>
 							<needarch>x86_64</needarch>
 							<targetOS>${env.RPM_TARGET_OS}</targetOS>
 							<defineStatements>
@@ -221,6 +222,18 @@
 											<include>com.comcast.cdn.traffic_control.traffic_router:ROOT</include>
 										</includes>
 									</dependency>
+								</mapping>
+								<mapping>
+									<directory>/usr/share/licenses/traffic_router-${project.parent.version}</directory>
+									<documentation>true</documentation>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<source>
+											<location>../../LICENSE</location>
+										</source>
+									</sources>
 								</mapping>
 							</mappings>
 							<requires>

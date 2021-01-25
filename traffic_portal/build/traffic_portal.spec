@@ -79,6 +79,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 		echo "Start with 'service traffic_portal start'"
 
 %files
+%license LICENSE
 %defattr(644,root,root,755)
 %attr(755,root,root) /etc/init.d/traffic_portal
 %attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/forever

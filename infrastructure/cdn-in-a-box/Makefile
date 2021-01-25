@@ -143,5 +143,5 @@ clean:
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)
-	sleep 2 # Give users a sceond to cancel
-	$(RM) ../../dist/*
+	sleep 2 # Give users a second to cancel
+	$(RM) -r ../../dist/*

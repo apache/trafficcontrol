@@ -45,6 +45,8 @@ git checkout master
 git checkout %{commit} .
 cd ..
 mv trafficcontrol/traffic_server/plugins/astats_over_http %{name}
+# copy license
+cp trafficcontrol/LICENSE %{_builddir}
 rm -rf trafficcontrol
 %setup -D -n %{name} -T
 
@@ -64,4 +66,5 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+%license LICENSE
 /opt/trafficserver/libexec/trafficserver/%{name}.so
