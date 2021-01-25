@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"os/exec"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,10 +31,19 @@ const RecordsFileName = "records.config"
 const ContentTypeRecordsDotConfig = ContentTypeTextASCII
 const LineCommentRecordsDotConfig = LineCommentHash
 
+type RecordsConfigOpts struct {
+	// ReleaseViaStr is whether or not we replace the via and server strings in ATS
+	// responses to be the Release value from the rpm package. This can be a user
+	// defined build hash (or whatever the user wants) type value to give more
+	// specific info as well as obfuscating the real ATS version from prying eyes
+	ReleaseViaStr bool
+}
+
 func MakeRecordsDotConfig(
 	server *Server,
 	serverParams []tc.Parameter,
 	hdrComment string,
+	opt RecordsConfigOpts,
 ) (Cfg, error) {
 	warnings := []string{}
 	if server.Profile == nil {
@@ -51,7 +61,7 @@ func MakeRecordsDotConfig(
 	txt = replaceLineSuffixes(txt, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
 	txt = hdr + txt
 
-	txt, overrideWarns := addRecordsDotConfigOverrides(txt, server)
+	txt, overrideWarns := addRecordsDotConfigOverrides(txt, server, opt)
 	warnings = append(warnings, overrideWarns...)
 
 	return Cfg{
@@ -64,10 +74,17 @@ func MakeRecordsDotConfig(
 
 // addRecordsDotConfigOverrides modifies the records.config text and adds any overrides.
 // Returns the modified text and any warnings.
-func addRecordsDotConfigOverrides(txt string, server *Server) (string, []string) {
+func addRecordsDotConfigOverrides(txt string, server *Server, opt RecordsConfigOpts) (string, []string) {
 	warnings := []string{}
 	txt, ipWarns := addRecordsDotConfigOutgoingIP(txt, server)
 	warnings = append(warnings, ipWarns...)
+
+	if opt.ReleaseViaStr {
+		viaWarns := []string{}
+		txt, viaWarns = addRecordsDotConfigViaStr(txt)
+		warnings = append(warnings, viaWarns...)
+	}
+
 	return txt, warnings
 }
 
@@ -92,6 +109,49 @@ func addRecordsDotConfigOutgoingIP(txt string, server *Server) (string, []string
 		txt += ` [` + v6.String() + `]`
 	}
 	txt += "\n"
+	return txt, warnings
+}
+
+// addRecordsDotConfigViaStr returns the request, response, and response server via strings with the current Release (a.k.a. build version and not ATS version), and any warnings.
+func addRecordsDotConfigViaStr(txt string) (string, []string) {
+	warnings := []string{}
+
+	requestViaStr := `proxy.config.http.request_via_str`
+	responseViaStr := `proxy.config.http.response_via_str`
+	responseServerStr := `proxy.config.http.response_server_str`
+
+	cmd := "yum info installed trafficserver | grep Release"
+	yumOutput, err := exec.Command("sh", "-c", cmd).Output()
+
+	if err != nil {
+		warnings = append(warnings, "could not read trafficserver release information from yum! Not setting via strings")
+		return txt, warnings
+	}
+
+	releaseVerSlice := strings.Split(string(yumOutput), " ")
+	releaseVer := releaseVerSlice[len(releaseVerSlice)-1]
+
+	if strings.Contains(txt, requestViaStr) {
+		warnings = append(warnings, "records.config had a proxy.config.http.request_via_str Parameter! Using Parameter, not setting request via string")
+	} else {
+		txt = txt + `CONFIG ` + requestViaStr + ` STRING ` + releaseVer
+		txt += "\n"
+	}
+
+	if strings.Contains(txt, responseViaStr) {
+		warnings = append(warnings, "records.config had a proxy.config.http.response_via_str Parameter! Using Parameter, not setting response via string")
+	} else {
+		txt = txt + `CONFIG ` + responseViaStr + ` STRING ` + releaseVer
+		txt += "\n"
+	}
+
+	if strings.Contains(txt, responseServerStr) {
+		warnings = append(warnings, "records.config had a proxy.config.http.response_server_str Parameter! Using Parameter, not setting response server string")
+	} else {
+		txt = txt + `CONFIG ` + responseServerStr + ` STRING ` + releaseVer
+		txt += "\n"
+	}
+
 	return txt, warnings
 }
 

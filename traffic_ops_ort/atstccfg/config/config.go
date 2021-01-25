@@ -66,6 +66,8 @@ type Cfg struct {
 	TOURL           *url.URL
 	TOUser          string
 	Dir             string
+	ViaRelease      bool
+	ParentComments  bool
 }
 
 type TCCfg struct {
@@ -101,6 +103,8 @@ func GetCfg() (Cfg, error) {
 	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
 	dirPtr := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
+	viaReleasePtr := flag.BoolP("via-string-release", "", false, "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
+	disableParentConfigComments := flag.BoolP("disable-parent-config-comments", "", false, "Disable adding a comments to parent.config individual lines")
 
 	flag.Parse()
 
@@ -131,6 +135,8 @@ func GetCfg() (Cfg, error) {
 	revalOnly := *revalOnlyPtr
 	disableProxy := *disableProxyPtr
 	dir := *dirPtr
+	viaRelease := *viaReleasePtr
+	parentComments := !(*disableParentConfigComments) //we use this as a boolean value so reverse it here to not have negative logic
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -190,6 +196,8 @@ func GetCfg() (Cfg, error) {
 		RevalOnly:       revalOnly,
 		DisableProxy:    disableProxy,
 		Dir:             dir,
+		ViaRelease:      viaRelease,
+		ParentComments:  parentComments,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
