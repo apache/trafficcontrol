@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added license files to the RPMs
 
 ### Fixed
+- [#5445](https://github.com/apache/trafficcontrol/issues/5445) - When updating a registered user, ignore updates on registration_sent field.
 - [#5335](https://github.com/apache/trafficcontrol/issues/5335) - Don't create a change log entry if the delivery service primary origin hasn't changed
 - [#5333](https://github.com/apache/trafficcontrol/issues/5333) - Don't create a change log entry for any delivery service consistent hash query params updates
 - [#5341](https://github.com/apache/trafficcontrol/issues/5341) - For a DS with existing SSLKeys, fixed HTTP status code from 403 to 400 when updating CDN and Routing Name (in TO) and made CDN and Routing Name fields immutable (in TP).
