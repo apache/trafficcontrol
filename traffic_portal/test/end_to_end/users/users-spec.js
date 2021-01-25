@@ -57,6 +57,7 @@ describe('Traffic Portal Users Test Suite', function() {
 		expect(first.isSelected()).toBe(false);
 		let tableColumns = element.all(by.css('#usersTable tr:first-child td'));
 		expect(tableColumns.count()).toBe(4);
+		first.click();
 	});
 
 	it('should open new users form page', function() {
@@ -97,31 +98,33 @@ describe('Traffic Portal Users Test Suite', function() {
 		expect(pageData.fullName.getText() === myNewUser.fullName + ' updated');
 	});
 
-	it('should open new register users form page', function() {
+	it('should open new registered users form page', function() {
 		console.log("Open new register users form page");
-		browser.driver.findElement(by.name('createRegisterUserButton')).click();
+		browser.setLocation("users");
+		pageData.registerNewUserButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users/register");
 	});
 
 	it('should create a new registered user', function () {
 		console.log("Creating a new registered user");
-		expect(pageData.registerButton.isEnabled()).toBe(false);
+		expect(pageData.registerEmailButton.isEnabled()).toBe(false);
 		pageData.email.sendKeys(myNewRegisteredUser.email);
 		pageData.roleName.sendKeys(myNewRegisteredUser.roleName);
 		pageData.tenantId.sendKeys(myNewRegisteredUser.tenantId);
-		expect(pageData.registerButton.isEnabled()).toBe(true);
-		pageData.registerButton.click();
+		expect(pageData.registerEmailButton.isEnabled()).toBe(true);
+		pageData.registerEmailButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users/register");
 	});
 
 	it('should update a new registered user', function() {
 		console.log('Updating the new registered user: ' + myNewRegisteredUser.email);
-		browser.sleep(250);
 		browser.setLocation("users");
+		pageData.searchFilter.clear();
+		browser.sleep(250);
 		pageData.searchFilter.sendKeys(myNewRegisteredUser.email);
-		browser.sleep(1000);
+		browser.sleep(250);
 		element.all(by.repeater('u in ::users')).filter(function(row){
-			return row.element(by.css('email')).getText().then(function(val){
+			return row.element(by.name('email')).getText().then(function(val){
 				return val === myNewRegisteredUser.email;
 			});
 		}).get(0).click();

@@ -17,7 +17,6 @@
   "suites": {
     "allTests": [
       "login/login-spec.js",
-      "users/users-spec.js",
       "CDNs/cdns-spec.js",
       "cacheGroups/cache-groups-spec.js",
       "profiles/profiles-spec.js",
@@ -29,7 +28,8 @@
       "topologies/topologies-spec.js",
       "deliveryServices/delivery-services-spec.js",
       "jobs/jobs-spec.js",
-      "tenants/tenants-spec.js"
+      "tenants/tenants-spec.js",
+      "users/users-spec.js"
     ]
   }
 }

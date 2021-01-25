@@ -27,7 +27,8 @@ module.exports = function(){
     this.confirmLocalPasswd=element(by.name('confirmPassword'));
     this.registerSent=element(by.name('registrationSent'));
     this.createButton=element(by.buttonText('Create'));
-    this.registerButton=element(by.buttonText('Send Registration'));
+    this.registerNewUserButton=element(by.buttonText('Register User'));
+    this.registerEmailButton=element(by.buttonText('Send Registration'));
     this.updateButton=element(by.buttonText('Update'));
     this.searchFilter=element(by.id('usersTable_filter')).element(by.css('label input'));
 };
