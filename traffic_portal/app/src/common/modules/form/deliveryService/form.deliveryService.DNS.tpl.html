@@ -404,10 +404,8 @@ under the License.
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxRequestHeaderBytes">Max Request Header Bytes<div class="helptooltip">
                                 <div class="helptext">
                                     The maximum size (in bytes) of the request headers for this particular delivery service. Clearing this will result in the default <code>(0)</code> being set for this DS.
-                                    Having <code>0</code> in this field will not apply any limit on the request headers.
-                                    <br>
-                                    <br>
-                                    <a href="https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/records.config.en.html#proxy-config-http-request-header-max-size" target="_blank">See proxy.config.http.request_header_max_size</a>
+                                    Having <code>0</code> in this field will not apply any limit on the request headers, and will use the value configured in
+                                    <a href="https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/records.config.en.html#proxy-config-http-request-header-max-size" target="_blank">proxy.config.http.request_header_max_size</a>
                                 </div>
                             </div>
                         </label>
