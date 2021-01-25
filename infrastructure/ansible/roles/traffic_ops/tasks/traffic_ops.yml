@@ -31,8 +31,8 @@
 
 - name: Add Postgres96 bin dir to system-wide $PATH.
   copy:
-    dest: /etc/profile.d/postgres96-bin.sh
-    content: PATH=$PATH:/usr/pgsql-9.6/bin
+    dest: "{{ pg_profile_path }}"
+    content: PATH=$PATH:{{ pg_bin_path }}
 
 - name: Install Traffic Ops
   yum:
