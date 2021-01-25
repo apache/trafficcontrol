@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-v3-deliveryservice-requests:
+.. _to-api-v3-deliveryservice-requests:
 
 ****************************
 ``deliveryservice_requests``
@@ -283,7 +283,7 @@ Response Structure
 		]
 	}
 
-.. _to-api-v3-v3-deliveryservice-requests-post:
+.. _to-api-v3-deliveryservice-requests-post:
 
 ``POST``
 ========
