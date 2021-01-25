@@ -62,8 +62,8 @@ Request Structure
 	:monitor:           A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
 	:mtu:               The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface. This unsigned integer must not be less than 1280.
 	:name:              The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
-    :routerHostName:    An optional string containing The human-readable name of the router responsible for reaching this server's interface.
-    :routerPort:        An optional string containing The human-readable name of the port used by the router responsible for reaching this server's interface.
+    :routerHostName:    The human-readable name of the router responsible for reaching this server's interface.
+    :routerPort:        The human-readable name of the port used by the router responsible for reaching this server's interface.
 
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
 
