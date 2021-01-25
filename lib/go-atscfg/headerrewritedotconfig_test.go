@@ -31,7 +31,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	xmlID := "xml-id"
 	fileName := "hdr_rw_" + xmlID + ".config"
 	cdnName := "mycdn"
-	hdr := "myHeaderComment"
+	hdr := ParentConfigOpts{}
 
 	server := makeGenericServer()
 	server.CDNName = &cdnName
@@ -68,11 +68,12 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	sv2.Status = &sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
+	var serverParams []tc.Parameter
 	dses := []DeliveryService{*ds}
 
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, hdr)
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, serverParams, hdr)
 
 	if err != nil {
 		t.Errorf("error expected nil, actual '%v'\n", err)
@@ -105,7 +106,7 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	xmlID := "xml-id"
 	fileName := "hdr_rw_" + xmlID + ".config"
 	cdnName := "mycdn"
-	hdr := "myHeaderComment"
+	hdr := ParentConfigOpts{}
 
 	server := makeGenericServer()
 	server.CDNName = &cdnName
@@ -142,11 +143,12 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	sv2.Status = &sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
+	var serverParams []tc.Parameter
 	dses := []DeliveryService{*ds}
 
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, hdr)
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, serverParams, hdr)
 
 	if err != nil {
 		t.Errorf("error expected nil, actual '%v'\n", err)
