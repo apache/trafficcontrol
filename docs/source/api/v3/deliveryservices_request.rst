@@ -13,13 +13,13 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-request:
+.. _to-api-v3-deliveryservices-request:
 
 ****************************
 ``deliveryservices/request``
 ****************************
 
-.. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-v3-deliveryservice-requests-post>`.
+.. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-v3-v3-deliveryservice-requests-post>`.
 
 ``POST``
 ========

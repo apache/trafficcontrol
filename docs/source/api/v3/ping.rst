@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-ping:
+.. _to-api-v3-v3-ping:
 
 ********
 ``ping``

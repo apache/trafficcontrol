@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_stats:
+.. _to-api-v3-deliveryservice_stats:
 
 *************************
 ``deliveryservice_stats``

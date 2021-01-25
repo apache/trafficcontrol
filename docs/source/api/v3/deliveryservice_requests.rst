@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-deliveryservice-requests:
+.. _to-api-v3-v3-deliveryservice-requests:
 
 ****************************
 ``deliveryservice_requests``
@@ -283,12 +283,12 @@ Response Structure
 		]
 	}
 
-.. _to-api-v3-deliveryservice-requests-post:
+.. _to-api-v3-v3-deliveryservice-requests-post:
 
 ``POST``
 ========
 
-.. note:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-deliveryservices-request>`.
+.. note:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-v3-deliveryservices-request>`.
 
 Creates a new :term:`Delivery Service Request`.
 

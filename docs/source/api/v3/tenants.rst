@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-tenants:
+.. _to-api-v3-tenants:
 
 ***********
 ``tenants``
