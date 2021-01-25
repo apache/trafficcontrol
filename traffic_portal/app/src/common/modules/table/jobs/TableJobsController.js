@@ -51,7 +51,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			field: "startTime",
 			hide: false,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatter,
+			tooltipValueGetter: dateCellFormatter,
 			valueFormatter: dateCellFormatter
 		},
 		{
@@ -59,7 +59,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			field: "expires",
 			hide: false,
 			filter: "agDateColumnFilter",
-			tooltipValueGetter: () => dateCellFormatter,
+			tooltipValueGetter: dateCellFormatter,
 			valueFormatter: dateCellFormatter
 		},
 		{
@@ -95,7 +95,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			filter: true,
 			sortable: true,
 			resizable: true,
-			tooltipValueGetter: () => defaultTooltip
+			tooltipValueGetter: defaultTooltip
 		},
 		rowClassRules: {
 			'active-job': function(params) {

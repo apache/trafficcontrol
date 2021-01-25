@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.types.deliveryServices', 
 							},
 							deliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ type: $stateParams.typeId });
+							},
+							filter: function(type) {
+								return {
+									type: {
+										filterType: "text",
+										type: "equals",
+										filter: type.name
+									}
+								}
 							}
 						}
 					}
