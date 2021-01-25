@@ -13,7 +13,7 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
@@ -29,24 +29,24 @@ import { PhysicalLocationService } from "src/app/services/api/PhysicalLocationSe
 export class ServerDetailsComponent implements OnInit {
 
 	/**
-	 *
+	 * Tracks whether the form is for creating a new server ('true') or editing an existing one ('false').
 	 */
 	public isNew = false;
 	/**
-	 *
+	 * The server being edited/created.
 	 */
 	public server: Server;
 	/**
-	 *
+	 * A Regular Expression that matches valid IP addresses - and allows IPv4 addresses to have CIDR-notation network prefixes.
 	 */
 	public validIPPattern = IP_WITH_CIDR;
 	/**
-	 *
+	 * A Regular Expression that matches valid IP addresses.
 	 */
 	public validGatewayPattern = IP;
 
 	/**
-	 *
+	 * The page title.
 	 */
 	public get title(): string {
 		if (this.isNew) {
@@ -56,36 +56,36 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
-	 *
+	 * Tracks whether ILO details should be hidden.
 	 */
 	public hideILO = false;
 	/**
-	 *
+	 * Tracks whether management interface details should be hidden.
 	 */
 	public hideManagement = false;
 	/**
-	 *
+	 * Tracks whether network interface details should be hidden.
 	 */
 	public hideInterfaces = false;
 
 	/**
-	 *
+	 * Icon for adding to a collection.
 	 */
 	public addIcon = faPlus;
 	/**
-	 *
+	 * Icon for removing from a collection.
 	 */
 	public removeIcon = faMinus;
 	/**
-	 *
+	 * Icon for the "clear updates" button.
 	 */
 	public clearUpdatesIcon = faClock;
 	/**
-	 *
+	 * Icon for the "queue updates" button.
 	 */
 	public updateIcon = hollowClock;
 	/**
-	 *
+	 * Icon for the "change status" button.
 	 */
 	public get statusChangeIcon(): IconDefinition {
 		if (this.isNew || !this.server.status) {
@@ -98,29 +98,36 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
-	 *
+	 * The set of all Cache Groups.
 	 */
 	public cacheGroups = new Array<CacheGroup>();
 	/**
-	 *
+	 * The set of all CDNs.
 	 */
 	public cdns = new Array<CDN>();
+	/**
+	 * The set of all Physical Locations.
+	 */
 	public physicalLocations = new Array<PhysicalLocation>();
 	/**
-	 *
+	 * The set of all Profiles.
 	 */
 	public profiles = new Array<Profile>();
 	/**
-	 *
+	 * The set of all Statuses.
 	 */
 	public statuses = new Array<Status>();
+	/**
+	 * The set of all Types that can be applied to a server.
+	 */
 	public types = new Array<Type>();
 
 	/**
-	 *
+	 * Constructor.
 	 */
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly serverService: ServerService,
 		private readonly cacheGroupService: CacheGroupService,
 		private readonly cdnService: CDNService,
@@ -129,13 +136,6 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly physlocService: PhysicalLocationService
 	) {
 		this.server = DUMMY_SERVER;
-	}
-
-	/**
-	 *
-	 */
-	public serverJSON(): string {
-		return JSON.stringify(this.server, null, "\t");
 	}
 
 	/**
@@ -203,7 +203,9 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Handles form submittal, either creating or updating the server as appropriate.
 	 *
+	 * @param e The raw submittal event; its default is prevented and its propagation is halted.
 	 */
 	public submit(e: Event): void {
 		e.preventDefault();
@@ -211,6 +213,10 @@ export class ServerDetailsComponent implements OnInit {
 		if (this.isNew) {
 			this.serverService.createServer(this.server).subscribe(
 				s => {
+					if (!s.id) {
+						throw new Error("Traffic Ops returned server with no ID");
+					}
+					this.router.navigate(["server", s.id]);
 					this.server = s;
 					this.isNew = false;
 				},
@@ -222,14 +228,9 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Adds a new network interface to the server.
 	 *
-	 */
-	public log(): void {
-		console.log(this);
-	}
-
-	/**
-	 *
+	 * @param e The triggering DOM event; its propagation is stopped.
 	 */
 	public addInterface(e: MouseEvent): void {
 		e.stopPropagation();
@@ -245,7 +246,9 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Adds a new IP address to the server.
 	 *
+	 * @param inf The specific network interface to which to add the new IP address.
 	 */
 	public addIP(inf: Interface): void {
 		inf.ipAddresses.push({
@@ -256,21 +259,28 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Removes an IP address from the server.
 	 *
+	 * @param inf The specific network interface from which to remove an IP address.
+	 * @param ip The index in the `ipAddresses` of `inf` to delete.
 	 */
 	public deleteIP(inf: Interface, ip: number): void {
 		inf.ipAddresses.splice(ip, 1);
 	}
 
 	/**
+	 * Removes a network interface from the server.
 	 *
+	 * @param inf The index of the interface to remove.
 	 */
 	public deleteInterface(inf: number): void {
 		this.server.interfaces.splice(inf, 1);
 	}
 
 	/**
+	 * Tells whether the edited server is a cache server.
 	 *
+	 * @returns 'true' if the edited/new server is a cache server, false otherwise.
 	 */
 	public isCache(): boolean {
 		if (!this.server.type) {

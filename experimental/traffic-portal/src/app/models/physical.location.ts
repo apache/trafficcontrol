@@ -12,6 +12,9 @@
 * limitations under the License.
 */
 
+/**
+ * Represents a Physical Location. Refer to ATC docs for details.
+ */
 export interface PhysicalLocation {
 	address: string;
 	city: string;

@@ -157,6 +157,11 @@ export class CacheGroupTableComponent implements OnInit {
 		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
+	/**
+	 * Handles a context menu event.
+	 *
+	 * @param a The action selected from the context menu.
+	 */
 	public handleContextMenu(a: ContextMenuActionEvent<CacheGroup>): void {
 		console.log("action:", a);
 	}

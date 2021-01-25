@@ -32,6 +32,7 @@ import {faCaretDown, faColumns, faDownload} from "@fortawesome/free-solid-svg-ic
 import { fuzzyScore } from "src/app/utils";
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
+import { UpdateCellRendererComponent } from "../table-components/update-cell-renderer/update-cell-renderer.component";
 
 /** Tables can display any of this kind of data. */
 type TableData = Record<string, string | number | bigint | Date | boolean | RegExp | null>;
@@ -171,6 +172,9 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	public readonly columnsIcon = faColumns;
 	/** Icon used for the caret/chevron indicating menu direction on button press. */
 	public readonly caretIcon = faCaretDown;
+	/**
+	 * Icon for the "export to CSZ" button.
+	 */
 	public readonly downloadIcon = faDownload;
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
@@ -186,8 +190,12 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	public components = {
 		sshCellRenderer: SSHCellRendererComponent,
 		tpBooleanFilter: BooleanFilterComponent,
+		updateCellRenderer: UpdateCellRendererComponent,
 	};
 
+	/**
+	 * The number of currently selected rows (-1 if the grid is not initialized).
+	 */
 	public get selectionCount(): number {
 		if (!this.gridAPI) {
 			return -1;
@@ -195,6 +203,9 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		return this.gridAPI.getSelectedRows().length;
 	}
 
+	/**
+	 * All currently selected rows.
+	 */
 	public get fullSelection(): Array<unknown> {
 		if (!this.gridAPI) {
 			return [];
@@ -466,6 +477,12 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		this.selected = params.data;
 	}
 
+	/**
+	 * Checks if a context menu action is disabled.
+	 *
+	 * @param a The action to check.
+	 * @returns Whether or not `a` should be disabled.
+	 */
 	public isDisabled(a: ContextMenuAction<unknown>): boolean {
 		if (!a.multiRow && this.selectionCount > 1) {
 			return true;
@@ -502,6 +519,9 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		this.showContextMenu = false;
 	}
 
+	/**
+	 * Downloads the table data as a CSV file.
+	 */
 	public download(): void {
 		if (!this.gridAPI) {
 			console.error("Cannot download: no grid API handle");
@@ -520,6 +540,11 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	}
 
 
+	/**
+	 * Select or de-select all rows.
+	 *
+	 * @param de If given and true, de-selects all rows. Otherwise all rows will be selected.
+	 */
 	public selectAll(de?: boolean): void {
 		if (!this.gridAPI) {
 			console.error("Cannot de-select: no grid API handle");

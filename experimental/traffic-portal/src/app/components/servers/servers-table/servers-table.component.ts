@@ -36,6 +36,12 @@ interface AugmentedServer extends Server {
 	ipv6Address: string;
 }
 
+/**
+ * Converts a server to an "augmented" server.
+ *
+ * @param s The server to convert.
+ * @returns The converted server.
+ */
 function augment(s: Server): AugmentedServer {
 	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
 	let inf: Interface;

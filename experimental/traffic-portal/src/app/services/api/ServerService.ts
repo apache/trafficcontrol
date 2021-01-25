@@ -192,6 +192,12 @@ export class ServerService extends APIService {
 		));
 	}
 
+	/**
+	 * Queues updates on a single server.
+	 *
+	 * @param server Either the server on which updates will be queued, or its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API docs.
+	 */
 	public queueUpdates(server: number | Server): Observable<{serverId: number; action: "queue"}> {
 		let id: number;
 		if (typeof server === "number") {
@@ -205,7 +211,12 @@ export class ServerService extends APIService {
 		return this.post<{serverId: number; action: "queue"}>(`servers/${id}/queue_update`, {action: "queue"});
 	}
 
-
+	/**
+	 * Clears updates on a single server.
+	 *
+	 * @param server Either the server for which updates will be cleared, or its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API docs.
+	 */
 	public clearUpdates(server: number | Server): Observable<{serverId: number; action: "dequeue"}> {
 		let id: number;
 		if (typeof server === "number") {

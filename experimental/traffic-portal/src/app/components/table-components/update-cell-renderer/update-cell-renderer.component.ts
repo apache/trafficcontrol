@@ -24,17 +24,30 @@ import { ICellRendererParams } from "ag-grid-community";
 })
 export class UpdateCellRendererComponent implements ICellRendererAngularComp {
 
+	/** The value of the column of the rendered row. */
 	public value = false;
 
+	/** The icon to be displayed - dependent on value. */
 	public get icon(): IconDefinition {
 		return this.value ? faClock : faCheck;
 	}
 
+	/**
+	 * Called when the value changes - I don't think this will ever happen.
+	 *
+	 * @param params The AG-Grid cell-rendering parameters (refer to AG-Grid docs).
+	 * @returns 'true' if the component could be refreshed (always for this simple component) or 'false' if the component must be recreated.
+	 */
 	public refresh(params: ICellRendererParams): true {
 		this.value = params.value;
 		return true;
 	}
 
+	/**
+	 * Called after ag-grid is initalized.
+	 *
+	 * @param params The AG-Grid cell-rendering parameters (refer to AG-Grid docs).
+	 */
 	public agInit(params: ICellRendererParams): void {
 		this.value = params.value;
 	}
