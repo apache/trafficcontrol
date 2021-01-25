@@ -13,10 +13,10 @@
 #
 - name: Check that valid postgresql version was passed
   assert:
-  that:  
-    - " valid_major_version == 'true' "
-    - " valid_minor_version == 'true' "
-    - " valid_build_version == 'true' "
+    that:  
+      - " valid_major_version == 'true' "
+      - " valid_minor_version == 'true' "
+      - " valid_build_version == 'true' "
 
 - name: Install Postgres
   yum:
