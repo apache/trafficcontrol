@@ -6,13 +6,18 @@
                     "description": "Admin Role",
                     "username": "TPAdmin",
                     "password": "pa$$word"
+                },
+                {
+                    "description": "Operation Role",
+                    "username": "TPOperator",
+                    "password": "pa$$word"
                 }
             ],
             "Add": [
                 {
                     "description": "create a Profiles",
                     "Name": "TPProfiles1",
-                    "CDN": "cdnprofile1",
+                    "CDN": "CDN-in-a-Box",
                     "Type": "ATS_PROFILE",
                     "RoutingDisable": "true",
                     "Description": "testing",
@@ -47,7 +52,7 @@
                 {
                     "description": "create a Profiles",
                     "Name": "TPProfiles1",
-                    "CDN": "cdnprofile1",
+                    "CDN": "CDN-in-a-Box",
                     "Type": "ATS_PROFILE",
                     "RoutingDisable": "true",
                     "Description": "testing",
@@ -67,41 +72,6 @@
                     "description": "delete a Profile",
                     "Name": "TPProfiles2",
                     "validationMessage": "Forbidden."
-                }
-            ]
-        },
-        {
-            "Login": [
-                {
-                    "description": "Operation Role",
-                    "username": "TPOperator",
-                    "password": "pa$$word"
-                }
-            ],
-            "Add": [
-                {
-                    "description": "create a Profiles",
-                    "Name": "TPProfiles1",
-                    "CDN": "cdnprofile1",
-                    "Type": "ATS_PROFILE",
-                    "RoutingDisable": "true",
-                    "Description": "testing",
-                    "validationMessage": "Profile created"
-                }
-            ],
-            "Update": [
-                {
-                    "description": "update profile type",
-                    "Name": "TPProfiles1",
-                    "Type": "RIAK_PROFILE",
-                    "validationMessage": "Profile updated"
-                }
-            ],
-            "Remove": [
-                {
-                    "description": "delete a Profile",
-                    "Name": "TPProfiles1",
-                    "validationMessage": "profile was deleted."
                 }
             ]
         }

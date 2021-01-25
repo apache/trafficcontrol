@@ -57,7 +57,9 @@ using(testData.Profiles, async function(profilesData){
                     await profilesPage.OpenProfilesPage();
                 })
             })
-
+            it('can logout', async function(){
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
         })
     })
 })
