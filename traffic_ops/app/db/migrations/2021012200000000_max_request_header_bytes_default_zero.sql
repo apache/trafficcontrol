@@ -15,6 +15,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
+UPDATE deliveryservice SET max_request_header_bytes = 0;
 ALTER TABLE deliveryservice ALTER COLUMN max_request_header_bytes SET DEFAULT 0;
 
 -- +goose Down
