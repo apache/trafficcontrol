@@ -6,7 +6,7 @@
             "Method": "post",
             "Data": [
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver1",
@@ -42,8 +42,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -52,7 +52,7 @@
                     "updPending": false
                 },
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver2",
@@ -88,8 +88,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -98,7 +98,7 @@
                     "updPending": false
                 },
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver3",
@@ -134,8 +134,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -144,7 +144,7 @@
                     "updPending": false
                 },
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver4",
@@ -180,8 +180,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -190,7 +190,7 @@
                     "updPending": false
                 },
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver5",
@@ -226,8 +226,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -236,7 +236,7 @@
                     "updPending": false
                 },
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "testserver6",
@@ -272,8 +272,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
