@@ -76,14 +76,14 @@ func logf(logger *log.Logger, format string, v ...interface{}) {
 	if logger == nil {
 		return
 	}
-	logger.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
+	logger.Output(stackFrame, time.Now().UTC().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 
 func logln(logger *log.Logger, v ...interface{}) {
 	if logger == nil {
 		return
 	}
-	logger.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
+	logger.Output(stackFrame, time.Now().UTC().Format(timeFormat)+": "+fmt.Sprintln(v...))
 }
 
 const timeFormat = time.RFC3339Nano
