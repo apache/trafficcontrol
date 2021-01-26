@@ -25,3 +25,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </main>
+
+<tp-update-status *ngIf="changeStatusOpen" [servers]="changeStatusServers" (done)="statusUpdated($event)"></tp-update-status>

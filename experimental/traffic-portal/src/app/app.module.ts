@@ -54,6 +54,7 @@ import { CacheGroupTableComponent } from "./components/cache-groups/cache-group-
 import { BooleanFilterComponent } from "./components/table-components/boolean-filter/boolean-filter.component";
 import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { UpdateCellRendererComponent } from "./components/table-components/update-cell-renderer/update-cell-renderer.component";
+import { UpdateStatusComponent } from "./components/servers/update-status/update-status.component";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -102,7 +103,8 @@ Chart.plugins.register({
 		CacheGroupTableComponent,
 		BooleanFilterComponent,
 		ServerDetailsComponent,
-		UpdateCellRendererComponent
+		UpdateCellRendererComponent,
+		UpdateStatusComponent
 	],
 	entryComponents: [
 		SSHCellRendererComponent

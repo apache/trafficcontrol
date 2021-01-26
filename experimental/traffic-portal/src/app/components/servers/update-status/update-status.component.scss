@@ -1,0 +1,34 @@
+@import "../../../../theme.scss";
+
+dialog {
+	top: 40vh;
+	margin: 0 auto;
+}
+
+form {
+	display: grid;
+	grid-row-gap: 10px;
+	margin-top: 40px;
+
+	label:after {
+		content: ":";
+	}
+
+	div {
+		display: flex;
+		justify-content: space-between;
+		gap: 20%;
+	}
+
+	button {
+		background-color: $success;
+		color: white;
+		border-radius: 5px;
+		padding: 0.5em 0;
+		flex: 1;
+
+		&[type="reset"] {
+			background-color: $error;
+		}
+	}
+}

@@ -305,6 +305,7 @@ export class ServersTableComponent implements OnInit {
 		},
 		{
 			action: "updateStatus",
+			multiRow: true,
 			name: "Update Status"
 		},
 		{
@@ -327,6 +328,9 @@ export class ServersTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
+	public changeStatusServers = new Array<Server>();
+	public changeStatusOpen = false;
+
 	/**
 	 * Constructs the component with its required injections.
 	 *
@@ -339,9 +343,7 @@ export class ServersTableComponent implements OnInit {
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.servers = this.api.getServers().pipe(map(
-			x => x.map(augment)
-		));
+		this.reloadServers();
 
 		this.route.queryParamMap.subscribe(
 			m => {
@@ -353,6 +355,10 @@ export class ServersTableComponent implements OnInit {
 				}
 			}
 		);
+	}
+
+	private reloadServers(): void {
+		this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
@@ -373,12 +379,14 @@ export class ServersTableComponent implements OnInit {
 				break;
 			case "updateStatus":
 				console.log("'Update Status' clicked - not yet implemented");
+				this.changeStatusServers = action.data instanceof Array ? action.data : [action.data];
+				this.changeStatusOpen = true;
 				break;
 			case "queue":
 				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.queueUpdates(s));
 				merge(observables).pipe(mergeAll()).subscribe(
 					() => {
-						this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
+						this.reloadServers();
 					}
 				);
 				break;
@@ -386,7 +394,7 @@ export class ServersTableComponent implements OnInit {
 				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.clearUpdates(s));
 				merge(observables).pipe(mergeAll()).subscribe(
 					() => {
-						this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
+						this.reloadServers();
 					}
 				);
 				break;
@@ -394,5 +402,13 @@ export class ServersTableComponent implements OnInit {
 				console.error("unknown context menu item clicked:", action.action);
 		}
 		console.log(action.action, "triggered with data:", action.data);
+	}
+
+	public statusUpdated(reload: boolean): void {
+		this.changeStatusOpen = false;
+		this.changeStatusServers = [];
+		if (reload) {
+			this.reloadServers();
+		}
 	}
 }
