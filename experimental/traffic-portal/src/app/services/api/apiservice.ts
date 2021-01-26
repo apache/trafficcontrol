@@ -102,15 +102,15 @@ export class APIService {
 	}
 
 	/**
-	 * Sends an HTTP PUSH request to the API.
+	 * Sends an HTTP PUT request to the API.
 	 *
 	 * @param path The request path.
 	 * @param data Optional request body (will be JSON.stringify'd).
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected push<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
-		return this.do<T>("push", path, data, params);
+	protected put<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+		return this.do<T>("put", path, data, params);
 	}
 
 	/**
