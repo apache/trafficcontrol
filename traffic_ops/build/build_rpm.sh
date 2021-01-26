@@ -93,8 +93,13 @@ initBuildArea() {
 		echo "Could not copy to $dest/app"
 		return 1
 	fi
+
+	# include LICENSE in the tarball
+	cp "${TC_DIR}/LICENSE" "$dest"
+
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")" || \
 		 { echo "Could not create tar archive $dest.tgz: $?"; return 1; }
+
 	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 

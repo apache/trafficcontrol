@@ -22,6 +22,7 @@ env
 
 BUILDDIR="$HOME/rpmbuild"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export DIR
 pwd
 cd $DIR/..
 pwd
@@ -74,6 +75,9 @@ for GOOS in darwin linux windows; do
     if [[ "$GOOS" == "windows" ]]
     then
       GOBINEXT=".exe"
+    elif [[ "$GOOS" == darwin && "$GOARCH" == 386 ]] ; then
+      # Go 1.15 and up does not support the darwin/386 GOOS/GOARCH pair (golang/go@65a4dc9c18)
+      continue;
     else
       GOBINEXT=""
     fi

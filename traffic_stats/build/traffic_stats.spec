@@ -111,6 +111,7 @@ fi
 /sbin/chkconfig traffic_stats on
 
 %files
+%license LICENSE
 %defattr(644, traffic_stats, traffic_stats, 755)
 
 %config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats.cfg
