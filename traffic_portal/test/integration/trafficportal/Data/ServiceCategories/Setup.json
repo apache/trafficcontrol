@@ -6,16 +6,7 @@
             "Method": "post",
             "Data": [
                 {
-                    "name": "TPTest2",
-                    "tenantId": 1,
-                    "getRequest": [
-                        {
-                            "route": "/tenants",
-                            "queryKey": "name",
-                            "queryValue": "tenantSame",
-                            "replace": "tenantId"                           
-                        }
-                    ]
+                    "name": "TPTest2"
                 }
             ]
         }
