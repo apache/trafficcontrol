@@ -26,14 +26,14 @@ describe('Traffic Portal Users Test Suite', function() {
 	const myNewUser = {
 		username: 'user-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		fullName: 'test-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
-		email: 'test@viper.com',
+		email: 'test@cdn.viper.com',
 		roleName: 'admin',
 		tenantId: ' - root',
 		localPasswd: 'test@123',
 		confirmLocalPasswd: 'test@123'
 	};
 	const myNewRegisteredUser = {
-		email: 'test1@viper.com',
+		email: 'test1@cdn.viper.com',
 		roleName: 'operations',
 		tenantId: ' -- tenant01'
 	};

@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- Traffic Portal: [#5340](https://github.com/apache/trafficcontrol/issues/5340) - Added the ability to resend a user registration from the user screen
+- Traffic Portal: [#5340](https://github.com/apache/trafficcontrol/issues/5340) - Added the ability to resend a user registration from user screen.
 - Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
 - Traffic Portal: upgraded delivery service UI tables to use more powerful/performant ag-grid component
 - Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
