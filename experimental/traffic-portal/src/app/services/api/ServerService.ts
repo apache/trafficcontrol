@@ -248,6 +248,6 @@ export class ServerService extends APIService {
 			id = server.id;
 		}
 
-		return this.post<undefined>(`servers/${id}/status`, {offlineReason, status});
+		return this.put<undefined>(`servers/${id}/status`, {offlineReason, status});
 	}
 }
