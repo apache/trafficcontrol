@@ -257,8 +257,8 @@ under the License.
                         <input id="{{inf.name}}-router-hostname" ng-model="inf.routerHostName" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-hostname'])}" type="text" name="{{inf.name}}-router-hostname" maxlength="256" pattern="\S*"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'maxlength')">Too long</small>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'pattern')">No Spaces</small>
-                        <label for="{{inf.name}}-router-port" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-port'])}">Router Port Name</label>
-                        <input id="{{inf.name}}-router-port" ng-model="inf.routerPort" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-port'])}" type="text" name="{{inf.name}}-router-port" maxlength="256" pattern="\S*"/>
+                        <label for="{{inf.name}}-router-portname" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-portname'])}">Router Port Name</label>
+                        <input id="{{inf.name}}-router-portname" ng-model="inf.routerPortName" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-portname'])}" type="text" name="{{inf.name}}-router-portname" maxlength="256" pattern="\S*"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-port'], 'maxlength')">Too long</small>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-port'], 'pattern')">No Spaces</small>
 

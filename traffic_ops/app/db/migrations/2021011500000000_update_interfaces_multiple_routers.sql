@@ -15,12 +15,12 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE interface ADD COLUMN router_host_name text DEFAULT '';
-ALTER TABLE interface ADD COLUMN router_port_name text DEFAULT '';
+ALTER TABLE interface ADD COLUMN router_host_name text NOT NULL DEFAULT '';
+ALTER TABLE interface ADD COLUMN router_port_name text NOT NULL DEFAULT '';
 
 UPDATE interface
-SET router_host_name = server.router_host_name,
-router_port_name = server.router_port_name
+SET router_host_name = COALESCE(server.router_host_name, ''),
+router_port_name = COALESCE(server.router_port_name, '')
 FROM server
 WHERE server = server.id;
 

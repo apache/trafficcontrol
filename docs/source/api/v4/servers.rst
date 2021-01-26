@@ -112,8 +112,8 @@ Response Structure
 	:monitor:           A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
 	:mtu:               The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
 	:name:              The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
-    :routerHostName:    The human-readable name of the router responsible for reaching this server's interface.
-    :routerPort:        The human-readable name of the port used by the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
 :lastUpdated:   The date and time at which this server description was last modified
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
@@ -218,7 +218,7 @@ Response Structure
 				"mtu": 1500,
 				"name": "eth0",
 				"routerHostName": "",
-				"routerPort": ""
+				"routerPortName": ""
 			}
 		]
 	}],
@@ -265,8 +265,8 @@ Request Structure
 	:monitor:           A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
 	:mtu:               The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
 	:name:              The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
-    :routerHostName:    The human-readable name of the router responsible for reaching this server's interface.
-    :routerPort:        The human-readable name of the port used by the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
 
@@ -341,7 +341,7 @@ Request Structure
 				"mtu": 1500,
 				"name": "eth0",
 				"routerHostName": "",
-				"routerPort": ""
+				"routerPortName": ""
 			}
 		],
 		"interfaceMtu": 1500,
@@ -397,8 +397,8 @@ Response Structure
 	:monitor:           A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
 	:mtu:               The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
 	:name:              The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
-    :routerHostName:    The human-readable name of the router responsible for reaching this server's interface.
-    :routerPort:        The human-readable name of the port used by the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
+	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
 :lastUpdated:   The date and time at which this server description was last modified
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
@@ -514,7 +514,7 @@ Response Structure
 				"mtu": 1500,
 				"name": "eth0",
 				"routerHostName": "",
-				"routerPort": ""
+				"routerPortName": ""
 			}
 		]
 	}}

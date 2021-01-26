@@ -32,7 +32,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		ipAddress: "10.42.80.118",
 		interfaceMtu: "9000",
 		routerHostName: "testInterfaceRouterHostName",
-		routerPort: "testInterfaceRouterPort",
+		routerPortName: "testInterfaceRouterPort",
 	};
 
 	it('should go to the Servers page', function() {

@@ -156,7 +156,7 @@ func TestGetDetailServers(t *testing.T) {
 		t.Fatalf("servers.read expected len(actualSrvs[0].HardwareInfo) == 3, actual = %v", len(actualSrvs[0].HardwareInfo))
 	}
 
-	srvInts := *(actualSrvs[0]).ServerInterfaces
+	srvInts := actualSrvs[0].ServerInterfaces
 	if len(srvInts) != 2 {
 		t.Fatalf("servers.read expected len(srvInts) == 2, actual = %v", len(srvInts))
 	}
@@ -173,7 +173,7 @@ func getMockServerDetails() []tc.ServerDetailV40 {
 		tc.ServerDetail{
 			ID: util.IntPtr(1),
 		},
-		&[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+		[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
 	return []tc.ServerDetailV40{srvData}
 }

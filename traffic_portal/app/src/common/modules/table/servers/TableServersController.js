@@ -220,7 +220,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		},
 		{
 			headerName: "Router Port Name",
-			field: "routerPort",
+			field: "routerPortName",
 			hide: true
 		},
 		{

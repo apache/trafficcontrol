@@ -56,7 +56,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	server := servers[0]
 	if inf.Version.Major <= 2 {
-		interfaces := *server.ServerInterfaces
+		interfaces := server.ServerInterfaces
 		routerHostName := ""
 		routerPortName := ""
 		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
@@ -79,7 +79,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 		return
 	} else if inf.Version.Major <= 3 {
-		interfaces := *server.ServerInterfaces
+		interfaces := server.ServerInterfaces
 		routerHostName := ""
 		routerPortName := ""
 		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
@@ -152,7 +152,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major <= 2 {
 		v11ServerList := []tc.ServerDetailV11{}
 		for _, server := range servers {
-			interfaces := *server.ServerInterfaces
+			interfaces := server.ServerInterfaces
 			routerHostName := ""
 			routerPortName := ""
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
@@ -179,7 +179,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		v3ServerList := []tc.ServerDetailV30{}
 		for _, server := range servers {
 			v3Server := tc.ServerDetailV30{}
-			interfaces := *server.ServerInterfaces
+			interfaces := server.ServerInterfaces
 			routerHostName := ""
 			routerPortName := ""
 			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
@@ -348,10 +348,10 @@ JOIN type t ON server.type = t.id
 		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
-		s.ServerInterfaces = &[]tc.ServerInterfaceInfoV40{}
+		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
 			for _, interfaceInfo := range interfacesMap {
-				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+				s.ServerInterfaces = append(s.ServerInterfaces, interfaceInfo)
 			}
 		}
 

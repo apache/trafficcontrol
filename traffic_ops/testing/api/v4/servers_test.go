@@ -489,7 +489,7 @@ func GetTestServersDetails(t *testing.T) {
 		if len(resp) == 0 {
 			t.Fatal("no servers in response, quitting")
 		}
-		if resp[0].ServerInterfaces == nil || len((*resp[0].ServerInterfaces)) == 0 {
+		if len(resp[0].ServerInterfaces) == 0 {
 			t.Fatalf("no interfaces to check, quitting")
 		}
 		if len(server.Interfaces) == 0 {
@@ -497,11 +497,11 @@ func GetTestServersDetails(t *testing.T) {
 		}
 
 		// just check the first interface for noe
-		if (*resp[0].ServerInterfaces)[0].RouterHostName != server.Interfaces[0].RouterHostName {
-			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, (*resp[0].ServerInterfaces)[0].RouterHostName)
+		if resp[0].ServerInterfaces[0].RouterHostName != server.Interfaces[0].RouterHostName {
+			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, resp[0].ServerInterfaces[0].RouterHostName)
 		}
-		if (*resp[0].ServerInterfaces)[0].RouterPortName != server.Interfaces[0].RouterPortName {
-			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, (*resp[0].ServerInterfaces)[0].RouterPortName)
+		if resp[0].ServerInterfaces[0].RouterPortName != server.Interfaces[0].RouterPortName {
+			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, resp[0].ServerInterfaces[0].RouterPortName)
 		}
 	}
 }

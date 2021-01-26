@@ -87,7 +87,7 @@ type ServerDetailV30 struct {
 // ServerDetailV40 is the details for a server for API v4
 type ServerDetailV40 struct {
 	ServerDetail
-	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces"`
+	ServerInterfaces []ServerInterfaceInfoV40 `json:"interfaces"`
 }
 
 // ServersV1DetailResponse is the JSON object returned for a single server for v1.
