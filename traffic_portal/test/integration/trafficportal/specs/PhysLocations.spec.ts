@@ -61,6 +61,9 @@ using(testData.PhysLocations, async function(physlocationsData){
                     await physlocationsPage.OpenPhysLocationPage();
                 })
             })
+            it('can logout', async function(){
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
         })
     })
 })
