@@ -303,4 +303,14 @@ export class ServerDetailsComponent implements OnInit {
 		this.serverService.updateStatus(this.server, status, offlineReason);
 	}
 
+	public done(reload: boolean): void {
+		if (this.isNew || !this.server.id) {
+			console.error("done fired on server with no ID");
+			return;
+		}
+		if (reload) {
+			this.router.navigate(["servers", this.server.id], {replaceUrl: true});
+		}
+	}
+
 }
