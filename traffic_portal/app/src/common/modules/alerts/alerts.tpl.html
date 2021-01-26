@@ -17,8 +17,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="lockContainer">
-    <div ng-show="cdn.messenger" class="alert alert-info" ng-repeat="cdn in cdns">
-        <div ng-bind-html="cdn.message + ' [ CDN: ' + cdn.name + '; Created By: ' + cdn.messenger + ' ]' | linky:'_blank'"></div>
+<div id="alertsContainer">
+    <div ng-show="cdn.alertCreatedBy" class="alert alert-danger" ng-repeat="cdn in cdns">
+        <div ng-bind-html="cdn.alert + ' [ CDN: ' + cdn.name + '; Created By: ' + cdn.alertCreatedBy + ' ]' | linky:'_blank'"></div>
     </div>
 </div>

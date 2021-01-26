@@ -32,9 +32,9 @@ module.exports = angular.module('trafficPortal.public', [])
                         templateUrl: 'common/modules/header/header.tpl.html',
                         controller: 'HeaderController'
                     },
-                    locks: {
-                        templateUrl: 'common/modules/locks/lock.tpl.html',
-                        controller: 'LockController'
+                    alerts: {
+                        templateUrl: 'common/modules/alerts/alerts.tpl.html',
+                        controller: 'AlertsController'
                     },
                     message: {
                         templateUrl: 'common/modules/message/message.tpl.html',

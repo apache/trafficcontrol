@@ -36,8 +36,8 @@ under the License.
                     <th>Name</th>
                     <th>Domain</th>
                     <th>DNSSEC Enabled</th>
-                    <th>Messenger</th>
-                    <th>Message</th>
+                    <th>Alert Created By</th>
+                    <th>Alert</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,8 +45,8 @@ under the License.
                     <td name="name" data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
                     <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
                     <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
-                    <td data-search="^{{::cdn.messenger}}$">{{::cdn.messenger}}</td>
-                    <td data-search="^{{::cdn.message}}$">{{::cdn.message}}</td>
+                    <td data-search="^{{::cdn.alertCreatedBy}}$">{{::cdn.alertCreatedBy}}</td>
+                    <td data-search="^{{::cdn.alert}}$">{{::cdn.alert}}</td>
                 </tr>
             </tbody>
         </table>

@@ -17,5 +17,21 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.lock', [])
-	.controller('LockController', require('./LockController'));
+var AlertsController = function($scope, cdnService) {
+
+	let getCDNs = function() {
+		cdnService.getCDNs()
+			.then(function(result) {
+				$scope.cdns = result;
+			});
+	};
+
+	let init = function () {
+		getCDNs();
+	};
+	init();
+
+};
+
+AlertsController.$inject = ['$scope', 'cdnService'];
+module.exports = AlertsController;

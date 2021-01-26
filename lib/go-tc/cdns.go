@@ -66,13 +66,13 @@ type CDN struct {
 	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	// Username that created the CDN message
+	// Username that created the CDN alert
 	//
-	Messenger string `json:"messenger" db:"messenger"`
+	AlertCreatedBy string `json:"alertCreatedBy" db:"alert_created_by"`
 
-	// CDN message
+	// CDN alert
 	//
-	Message string `json:"message" db:"message"`
+	Alert string `json:"alert" db:"alert"`
 
 	// Name of the CDN
 	//
@@ -104,13 +104,13 @@ type CDNNullable struct {
 	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	// Username that created the CDN message
+	// Username that created the CDN alert
 	//
-	Messenger *string `json:"messenger" db:"messenger"`
+	AlertCreatedBy *string `json:"alertCreatedBy" db:"alert_created_by"`
 
-	// CDN message
+	// CDN alert
 	//
-	Message *string `json:"message" db:"message"`
+	Alert *string `json:"alert" db:"alert"`
 
 	// Name of the CDN
 	//
@@ -161,16 +161,16 @@ type CDNQueueUpdateResponse struct {
 	CDNID  int64  `json:"cdnId"`
 }
 
-// CDNMessageRequest encodes the request data for the POST
-// cdns/{{ID}}/message endpoint.
-type CDNMessageRequest struct {
-	Message string `json:"message"`
+// CDNAlertRequest encodes the request data for the POST
+// cdns/{{ID}}/alert endpoint.
+type CDNAlertRequest struct {
+	Alert string `json:"alert"`
 }
 
-// CDNMessageResponse encodes the response data for the POST
-// cdns/{{ID}}/message endpoint.
-type CDNMessageResponse struct {
+// CDNAlertResponse encodes the response data for the POST
+// cdns/{{ID}}/alert endpoint.
+type CDNAlertResponse struct {
 	CDNID  int64  `json:"cdnId"`
 	Username string `json:"username"`
-	Message string `json:"message"`
+	Alert string `json:"alert"`
 }

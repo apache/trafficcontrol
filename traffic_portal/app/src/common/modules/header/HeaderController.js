@@ -71,18 +71,18 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
-    $scope.toggleCDNMessage = function(cdn) {
-        if (cdn.messenger) {
-            confirmDeleteMsg(cdn);
+    $scope.toggleCDNAlert = function(cdn) {
+        if (cdn.alertCreatedBy) {
+            confirmDeleteAlert(cdn);
         } else {
-            confirmCreateMsg(cdn);
+            confirmCreateAlert(cdn);
         }
     };
 
-    let confirmCreateMsg = function(cdn) {
+    let confirmCreateAlert = function(cdn) {
         const params = {
-            title: 'Create Global ' + cdn.name + ' Message',
-            message: 'What is the content of your message for the ' + cdn.name + ' CDN?'
+            title: 'Create Global ' + cdn.name + ' Alert',
+            message: 'What is the content of your global alert for the ' + cdn.name + ' CDN?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
@@ -94,8 +94,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 }
             }
         });
-        modalInstance.result.then(function(reason) {
-            cdnService.createCDNMessage(cdn, reason).
+        modalInstance.result.then(function(alert) {
+            cdnService.createCDNAlert(cdn, alert).
                 then(
                     function() {
                         $state.reload(); // reloads all the resolves for the view
@@ -106,10 +106,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         });
     };
 
-    let confirmDeleteMsg = function(cdn) {
+    let confirmDeleteAlert = function(cdn) {
         const params = {
-            title: 'Delete Global ' + cdn.name + ' Message',
-            message: 'Are you sure you want to delete the global ' + cdn.name + ' message?'
+            title: 'Delete Global ' + cdn.name + ' Alert',
+            message: 'Are you sure you want to delete the global alert for the ' + cdn.name + ' CDN? This will remove the alert from the view of all users.'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -122,7 +122,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function() {
-            cdnService.deleteCDNMessage(cdn).
+            cdnService.deleteCDNAlert(cdn).
                 then(
                     function() {
                         $state.reload(); // reloads all the resolves for the view

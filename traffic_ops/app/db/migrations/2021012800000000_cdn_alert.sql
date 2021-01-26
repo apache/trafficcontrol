@@ -19,14 +19,14 @@
 -- SQL in section 'Up' is executed when this migration is applied
 
 ALTER TABLE cdn
-    ADD COLUMN messenger text,
-    ADD COLUMN message text,
-    ADD CONSTRAINT cdn_messenger_fkey FOREIGN KEY (messenger) REFERENCES tm_user (username) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD COLUMN alert_created_by text,
+    ADD COLUMN alert text,
+    ADD CONSTRAINT cdn_alert_created_by_fkey FOREIGN KEY (alert_created_by) REFERENCES tm_user (username) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 
 ALTER TABLE cdn
-    DROP COLUMN messenger,
-    DROP COLUMN message;
+    DROP COLUMN alert_created_by,
+    DROP COLUMN alert;

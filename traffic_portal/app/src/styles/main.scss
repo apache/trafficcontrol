@@ -24,6 +24,7 @@ $fa-font-path: "../assets/fonts";
 @import "font-awesome/scss/font-awesome";
 
 // common
+@import "../common/modules/alerts/alerts ";
 @import "../common/modules/chart/chart ";
 @import "../common/modules/compare/compare ";
 @import "../common/modules/dialog/dialog";
@@ -32,7 +33,6 @@ $fa-font-path: "../assets/fonts";
 @import "../common/modules/header/header";
 @import "../common/modules/form/cacheGroup/form.cacheGroup";
 @import "../common/modules/form/form";
-@import "../common/modules/locks/lock";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/table/table";
 @import "../common/modules/table/parameters/table.parameters";
