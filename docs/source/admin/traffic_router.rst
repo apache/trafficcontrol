@@ -762,6 +762,45 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use :manpage:`openssl(1ssl)` on each individual certificate
 
+Automatic Certificate Management Environment
+--------------------------------------------
+Automatic Certificate Management Environment (ACME) is a protocol for automatically generating, renewing, and revoking SSL certificates.  Currently, :abbr:`ACME (Automatic Certificate Management Environment)` can be used through :ref:`lets_encrypt` or through :ref:`external_account_binding`.
+
+.. _external_account_binding:
+
+External Account Binding
+------------------------
+External Account Binding allows the user to use an existing account with an :abbr:`ACME (Automatic Certificate Management Environment)` provider to obtain, renew, and revoke SSL certificates.
+To use this functionality, fill in the fields in :ref:`cdn.conf` for the :abbr:`ACME (Automatic Certificate Management Environment)` provider with which the account is set up.
+The first time this is used for a specific :abbr:`ACME (Automatic Certificate Management Environment)` provider (defined by the `acme_provider` and `user_email` fields) the information will be used to get a private key and account URL from the :abbr:`ACME (Automatic Certificate Management Environment)` provider and register the account. These will be stored for later use.
+External Account Binding information can only be used once, so after the first time, the private key and URL will be used.
+
+.. Important:: The `acme_provider` and `user_email` combination must be unique.  The `acme_provider` field must correlate to the `AuthType` field for each certificate to be renewed using that provider.
+
+.. Note:: As of writing, External Account Binding can only be used for certificate renewals.
+
+External Account Binding can be set up through :ref:`cdn.conf` by updating the following fields:
+
+.. table:: Fields to update for External Account Binding using :abbr:`ACME (Automatic Certificate Management Environment)` protocol under `acme_accounts`
+
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                                                                                                        |
+	+==============================+=========+==========+====================================================================================================================================================================================================================+
+	| acme_provider                | string  | Yes      | The certificate provider. This field needs to correlate to the AuthType field for each certificate so the renewal functionality knows which provider to use.                                                       |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| user_email                   | string  | Yes      | The email used to set up the account with the provider.                                                                                                                                                            |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| acme_url                     | string  | Yes      | The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.                                                                                                                                       |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| kid                          | string  | No       | The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding.                                                                                      |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| hmac_encoded                 | string  | No       | The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding. This should be in Base64 URL encoded. |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. Note:: The `kid` and `hmac_encoded` fields are required unless the account has already been registered and the information has been stored in the Traffic Ops Database.
+
+.. _lets_encrypt:
+
 Let's Encrypt
 -------------
 Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:

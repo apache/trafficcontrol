@@ -48,8 +48,9 @@ type Config struct {
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
-	DB                     ConfigDatabase `json:"db"`
-	Secrets                []string       `json:"secrets"`
+	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
+	DB                     ConfigDatabase      `json:"db"`
+	Secrets                []string            `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions  *riak.AuthOptions
 	RiakEnabled      bool
@@ -156,6 +157,15 @@ type ConfigLetsEncrypt struct {
 	ConvertSelfSigned         bool   `json:"convert_self_signed"`
 	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
 	Environment               string `json:"environment"`
+}
+
+// ConfigAcmeAccount contains all account information for a single ACME provider to be registered with External Account Binding
+type ConfigAcmeAccount struct {
+	AcmeProvider string `json:"acme_provider"`
+	UserEmail    string `json:"user_email"`
+	AcmeUrl      string `json:"acme_url"`
+	Kid          string `json:"kid"`
+	HmacEncoded  string `json:"hmac_encoded"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file

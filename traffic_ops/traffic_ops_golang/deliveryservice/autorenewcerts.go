@@ -91,7 +91,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User)
 
-	api.WriteRespAlert(w, r, tc.InfoLevel, "Beginning async call to renew Let's Encrypt certificates.  This may take a few minutes.")
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async call to renew Let's Encrypt certificates.  This may take a few minutes.")
 
 }
 func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser) {

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 - Traffic Ops: Added validation to ensure that the `weight` parameter of `parent.config` is a float
 - Added license files to the RPMs
+- Added ACME certificate renewals and ACME account registration using external account binding
 
 ### Fixed
 - [#5445](https://github.com/apache/trafficcontrol/issues/5445) - When updating a registered user, ignore updates on registration_sent field.

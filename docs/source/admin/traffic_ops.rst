@@ -306,6 +306,16 @@ cdn.conf
 """"""""
 This file deals with the configuration parameters of running Traffic Ops itself. It is a JSON-format set of options and their respective values. For the `Legacy Perl Script`_ to work with this file, it must be in its default location at :file:`/opt/traffic_ops/app/conf/cdn.conf`, but `traffic_ops_golang`_ will use whatever file is specified by its :option:`--cfg` option. The keys of the file are described below.
 
+:acme_accounts: This is an optional array of objects to define External Account Binding information to an existing :abbr:`ACME (Automatic Certificate Management Environment)` account.  The `acme_provider` and `user_email` combination must be unique.
+
+    .. versionadded:: 5.1
+
+	:acme_provider: The certificate provider. This field needs to correlate to the AuthType field for each certificate so the renewal functionality knows which provider to use.
+	:user_email: The email used to set up the account with the provider.
+	:acme_url: The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.
+	:kid: The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding.
+	:hmac_encoded: The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding. This should be in Base64 URL encoded.
+
 :geniso: This object contains configuration options for system ISO generation.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.
