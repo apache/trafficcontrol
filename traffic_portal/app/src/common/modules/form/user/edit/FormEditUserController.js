@@ -45,11 +45,11 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
         saveLabel: 'Update'
     };
 
-    $scope.confirmSave = function(user, usernameField) {
+    $scope.confirmSave = function(user) {
         saveUser(user);
     };
 
-    $scope.resendRegistration = function(user, emailField) {
+    $scope.resendRegistration = function(user) {
         sendRegistration(user);
     };
 

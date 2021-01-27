@@ -116,8 +116,8 @@ under the License.
             </div>
 
             <div class="modal-footer">
-                <button ng-if="user.newUser" type="button" class="btn btn-default" ng-click="resendRegistration(user, userForm.email)">Resend Registration</button>
-                <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.uName)">{{settings.saveLabel}}</button>
+                <button ng-if="user.newUser" type="button" class="btn btn-default" ng-click="resendRegistration(user)">Resend Registration</button>
+                <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>
