@@ -29,7 +29,7 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
         { "name": "Email", "visible": true, "searchable": true },
         { "name": "Tenant", "visible": true, "searchable": true },
         { "name": "Role", "visible": true, "searchable": true },
-        { "name": "Registration Sent", field: "registrationSent", "visible": false }
+        { "name": "Registration Sent", "visible": false, "searchable": true }
     ];
 
     $scope.editUser = function(id) {
