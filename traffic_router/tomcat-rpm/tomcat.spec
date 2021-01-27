@@ -68,6 +68,7 @@ fi
 %pre
 
 %files
+%license LICENSE
 %defattr(-,root,root)
 %{tomcat_home}
 

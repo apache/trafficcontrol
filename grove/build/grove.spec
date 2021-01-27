@@ -31,6 +31,10 @@ An HTTP Caching Proxy
 %prep
 
 %build
+set -o nounset
+# copy license
+cp "${TC_DIR}/LICENSE" %{_builddir}
+
 tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
@@ -56,6 +60,7 @@ echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
+%license LICENSE
 /usr/sbin/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}

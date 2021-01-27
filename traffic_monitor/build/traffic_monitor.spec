@@ -98,6 +98,7 @@ fi
 /sbin/chkconfig traffic_monitor on
 
 %files
+%license LICENSE
 %defattr(644, traffic_monitor, traffic_monitor, 755)
 %config(noreplace) %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/conf/traffic_monitor.cfg
 %config(noreplace) %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/conf/traffic_ops.cfg

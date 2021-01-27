@@ -31,7 +31,48 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func TestGetOldDetails(t *testing.T) {
+func TestGetDetails(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"routing_name", "name", "origin_server_fqdn"})
+	rows.AddRow("cdn", "foo", "http://123.34.32.21:9090")
+
+	rows2 := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "coalesce"})
+	rows2.AddRow("testDS", "HOST_REGEXP", ".*\\.testDS\\..*", 0)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.xml_id as ds_name, t.name as type, r.pattern").WillReturnRows(rows2)
+
+	oldDetails, userErr, sysErr, code := getOldDetails(1, db.MustBegin().Tx)
+	if userErr != nil || sysErr != nil {
+		t.Fatalf("didn't expect an error but got user err %v, sys err %v", userErr, sysErr)
+	}
+	if code != http.StatusOK {
+		t.Fatalf("expected status OK 200, but got %d", code)
+	}
+	if oldDetails.OldOrgServerFqdn == nil {
+		t.Fatalf("old org server fqdn is nil")
+	}
+	if *oldDetails.OldOrgServerFqdn != "http://123.34.32.21:9090" {
+		t.Errorf("expected old org server fqdn to be http://123.34.32.21:9090, but got %v", *oldDetails.OldOrgServerFqdn)
+	}
+	if oldDetails.OldRoutingName != "cdn" {
+		t.Errorf("expected old routing name to be cdn, but got %v", oldDetails.OldRoutingName)
+	}
+	if oldDetails.OldCdnName != "foo" {
+		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCdnName)
+	}
+}
+
+func TestGetOldDetailsError(t *testing.T) {
 	expected := `querying delivery service 1 host name: no such delivery service exists`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
@@ -45,7 +86,7 @@ func TestGetOldDetails(t *testing.T) {
 	rows := sqlmock.NewRows([]string{""})
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
-	_, _, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
+	_, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
 	if userErr == nil {
 		t.Fatalf("expected error %v, but got none", expected)
 	}

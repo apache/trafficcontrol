@@ -30,5 +30,5 @@
         "pdq",
         "abc"
     ],
-    "maxRequestHeaderBytes": 131072
+    "maxRequestHeaderBytes": 0
 }
