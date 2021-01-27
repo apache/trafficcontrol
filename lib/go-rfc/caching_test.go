@@ -19,12 +19,14 @@ package rfc
  * under the License.
  */
 
-import "fmt"
-import "net/http"
-import "testing"
-import "time"
+import (
+	"fmt"
+	"net/http"
+	"testing"
+	"time"
+)
 
-func ExampleParseCacheControl(t *testing.T) {
+func ExampleParseCacheControl() {
 	hdrs := http.Header{}
 
 	hdrs.Set(CacheControl, "no-store, no-cache, must-revalidate, post-check=0, pre-check=0")
