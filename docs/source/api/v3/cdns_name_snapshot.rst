@@ -317,6 +317,11 @@ Response Structure
 	:CDN_name:   The name of this CDN
 	:date:       The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:    The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
+
+		.. deprecated:: ATCv5.1
+
+			This information should never be used; instead all tools and (especially) components **must** use the documented API. This field was removed in APIv4
+
 	:tm_path:    A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
