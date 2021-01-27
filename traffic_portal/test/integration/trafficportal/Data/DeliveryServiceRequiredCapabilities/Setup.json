@@ -164,7 +164,7 @@
             "Method": "post",
             "Data": [
                 {
-                    "cachegroupId": 6,
+                    "cachegroupId": 8,
                     "cdnId": 2,
                     "domainName": "test.net",
                     "hostName": "server1",
@@ -200,8 +200,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,

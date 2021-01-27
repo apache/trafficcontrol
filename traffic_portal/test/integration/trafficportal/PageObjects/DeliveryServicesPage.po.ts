@@ -1,4 +1,4 @@
-import { ElementFinder, browser, by, element, ExpectedConditions, protractor} from 'protractor'
+import { ElementFinder, browser, by, element, ExpectedConditions, protractor } from 'protractor'
 import { async, delay } from 'q';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
@@ -9,7 +9,7 @@ export class DeliveryServicesPage extends BasePage {
   private btnCreateNewDeliveryServices = element(by.name('createDeliveryServiceButton'));
   private mnuFormDropDown = element(by.name('selectFormDropdown'));
   private btnSubmitFormDropDown = element(by.buttonText('Submit'));
-  private txtSearch = element(by.id('deliveryServicesTable_filter')).element(by.css('label input'));
+  private txtSearch = element(by.id("quickSearch"));
   private txtSearchRC = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
   private mnuDeliveryServicesTable = element(by.id('deliveryServicesTable'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
@@ -94,239 +94,238 @@ export class DeliveryServicesPage extends BasePage {
   private txtNoMatchingError = element(by.xpath("//td[text()='No data available in table']"));
   private config = require('../config');
   private randomize = this.config.randomize;
-  async OpenDeliveryServicePage(){
+  async OpenDeliveryServicePage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToDeliveryServicesPage();
   }
-  async OpenServicesMenu(){
+  async OpenServicesMenu() {
     let snp = new SideNavigationPage();
     await snp.ClickServicesMenu();
   }
 
-  async CreateDeliveryService(deliveryservice,outputMessage:string){
+  async CreateDeliveryService(deliveryservice, outputMessage: string) {
     let result = false;
-    let type : string = deliveryservice.Type;
+    let type: string = deliveryservice.Type;
     let basePage = new BasePage();
-    let snp= new SideNavigationPage();
-    if(outputMessage.includes("created")){
-      outputMessage = outputMessage.replace(deliveryservice.XmlId,deliveryservice.XmlId+this.randomize)
+    let snp = new SideNavigationPage();
+    if (outputMessage.includes("created")) {
+      outputMessage = outputMessage.replace(deliveryservice.XmlId, deliveryservice.XmlId + this.randomize)
     }
     await snp.NavigateToDeliveryServicesPage();
     await this.btnCreateNewDeliveryServices.click();
     await this.mnuFormDropDown.sendKeys(type);
     await this.btnSubmitFormDropDown.click();
-   
+
     switch (type) {
-          case "ANY_MAP": {
-            await this.txtXmlId.sendKeys(deliveryservice.XmlId+this.randomize);
-            await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
-            await this.selectActive.sendKeys(deliveryservice.Active)
-            await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
-            await this.selectTenant.sendKeys(deliveryservice.Tenant+this.randomize)
-            await this.selectCDN.sendKeys(deliveryservice.CDN)
-            await this.txtRemapText.sendKeys(deliveryservice.RawRemapText)
-            break;
-          }
-          case "DNS": { 
-            await this.txtXmlId.sendKeys(deliveryservice.XmlId+this.randomize);
-            await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
-            await this.selectActive.sendKeys(deliveryservice.Active)
-            await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
-            await this.selectTenant.sendKeys(deliveryservice.Tenant+this.randomize)
-            await this.selectCDN.sendKeys(deliveryservice.CDN)
-            await this.txtOrgServerURL.sendKeys(deliveryservice.OriginURL);
-            await this.txtProtocol.sendKeys(deliveryservice.Protocol)
-            await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
-            break;
-          }
-          case "HTTP": {
-            await this.txtXmlId.sendKeys(deliveryservice.XmlId+this.randomize);
-            await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
-            await this.selectActive.sendKeys(deliveryservice.Active)
-            await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
-            await this.selectTenant.sendKeys(deliveryservice.Tenant+this.randomize)
-            await this.selectCDN.sendKeys(deliveryservice.CDN)
-            await this.txtOrgServerURL.sendKeys(deliveryservice.OriginURL);
-            await this.txtProtocol.sendKeys(deliveryservice.Protocol)
-            await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
-            break;
-          }
-          case "STEERING": {
-            await this.txtXmlId.sendKeys(deliveryservice.XmlId+this.randomize);
-            await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
-            await this.selectActive.sendKeys(deliveryservice.Active)
-            await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
-            await this.selectTenant.sendKeys(deliveryservice.Tenant+this.randomize)
-            await this.selectCDN.sendKeys(deliveryservice.CDN)
-            await this.txtProtocol.sendKeys(deliveryservice.Protocol)
-            await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
-            break;
-          }
-          default:
-            {
-              console.log('Wrong Type name');
-              break;
-            }
-      }   
+      case "ANY_MAP": {
+        await this.txtXmlId.sendKeys(deliveryservice.XmlId + this.randomize);
+        await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
+        await this.selectActive.sendKeys(deliveryservice.Active)
+        await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
+        await this.selectTenant.sendKeys(deliveryservice.Tenant + this.randomize)
+        await this.selectCDN.sendKeys(deliveryservice.CDN)
+        await this.txtRemapText.sendKeys(deliveryservice.RawRemapText)
+        break;
+      }
+      case "DNS": {
+        await this.txtXmlId.sendKeys(deliveryservice.XmlId + this.randomize);
+        await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
+        await this.selectActive.sendKeys(deliveryservice.Active)
+        await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
+        await this.selectTenant.sendKeys(deliveryservice.Tenant + this.randomize)
+        await this.selectCDN.sendKeys(deliveryservice.CDN)
+        await this.txtOrgServerURL.sendKeys(deliveryservice.OriginURL);
+        await this.txtProtocol.sendKeys(deliveryservice.Protocol)
+        await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
+        break;
+      }
+      case "HTTP": {
+        await this.txtXmlId.sendKeys(deliveryservice.XmlId + this.randomize);
+        await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
+        await this.selectActive.sendKeys(deliveryservice.Active)
+        await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
+        await this.selectTenant.sendKeys(deliveryservice.Tenant + this.randomize)
+        await this.selectCDN.sendKeys(deliveryservice.CDN)
+        await this.txtOrgServerURL.sendKeys(deliveryservice.OriginURL);
+        await this.txtProtocol.sendKeys(deliveryservice.Protocol)
+        await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
+        break;
+      }
+      case "STEERING": {
+        await this.txtXmlId.sendKeys(deliveryservice.XmlId + this.randomize);
+        await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
+        await this.selectActive.sendKeys(deliveryservice.Active)
+        await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
+        await this.selectTenant.sendKeys(deliveryservice.Tenant + this.randomize)
+        await this.selectCDN.sendKeys(deliveryservice.CDN)
+        await this.txtProtocol.sendKeys(deliveryservice.Protocol)
+        await this.txtSubnetEnabled.sendKeys(deliveryservice.SubnetEnabled)
+        break;
+      }
+      default:
+        {
+          console.log('Wrong Type name');
+          break;
+        }
+    }
     await this.btnCreateDeliveryServices.click();
     await this.txtRequestStatus.sendKeys(deliveryservice.RequestStatus);
     await this.txtComment.sendKeys('test');
     await basePage.ClickSubmit();
-    if(deliveryservice.RequestStatus.includes('Review and Deployment')){
-      if(await this.SearchDeliveryServiceRequest(deliveryservice.XmlId+this.randomize) == true){
+    if (deliveryservice.RequestStatus.includes('Review and Deployment')) {
+      if (await this.SearchDeliveryServiceRequest(deliveryservice.XmlId + this.randomize) == true) {
         await browser.actions().mouseMove(this.btnFullfillRequest).perform();
         await this.btnFullfillRequest.click();
         await this.btnYesRemoveRC.click();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(outputMessage == value){
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (outputMessage == value) {
             return true;
-          }else{
+          } else {
             return false;
           }
         })
-      await snp.NavigateToDeliveryServicesRequestsPage();
-      await this.txtSearchDSRequest.clear();
-      await this.txtSearchDSRequest.sendKeys(deliveryservice.XmlId+this.randomize);
-      await this.lnkCompleteRequest.click();
-      await this.btnYesRemoveRC.click();
-      await this.txtCommentCompleteDS.sendKeys('test');
-      await basePage.ClickSubmit();
+        await snp.NavigateToDeliveryServicesRequestsPage();
+        await this.txtSearchDSRequest.clear();
+        await this.txtSearchDSRequest.sendKeys(deliveryservice.XmlId + this.randomize);
+        await this.lnkCompleteRequest.click();
+        await this.btnYesRemoveRC.click();
+        await this.txtCommentCompleteDS.sendKeys('test');
+        await basePage.ClickSubmit();
       }
-    }else{
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(outputMessage == value){
+    } else {
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (outputMessage == value) {
           return true;
-        }else{
+        } else {
           return false;
         }
       })
     }
     return result;
   }
-  async SearchDeliveryServiceRequest(name:string){
+  async SearchDeliveryServiceRequest(name: string) {
     let result = false;
     await browser.wait(ExpectedConditions.visibilityOf(this.txtSearchDSRequest), 2000);
     await this.txtSearchDSRequest.clear();
     await this.txtSearchDSRequest.sendKeys(name);
-    if(await browser.isElementPresent(element(by.xpath("//td[@data-search='^"+name+"$']"))) == true){
-      await element(by.xpath("//td[@data-search='^"+name+"$']")).click();
+    if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
+      await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
       result = true;
-    }else{
+    } else {
       result = undefined;
     }
     return result;
   }
 
-  async SearchDeliveryService(nameDS:string){
-    let name = nameDS+this.randomize;
+  async SearchDeliveryService(nameDS: string) {
+    let name = nameDS + this.randomize;
     await this.txtSearch.clear();
     await this.txtSearch.sendKeys(name);
-    if(await this.txtNoMatchingError.isPresent() == true){
-      return undefined;
+    if (await browser.isElementPresent(element(by.xpath("//span[text()='" + name + "']"))) == true) {
+      await element(by.xpath("//span[text()='" + name + "']")).click();
     }else{
-      await element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-        return row.element(by.name('xmlId')).getText().then(function(val){
-          return val === name;
-        });
-      }).first().click();
-    }  
+      throw new Error('Search Delivery Service Error: No Delivery Service Found');
+    }
   }
-  async SearchServerToAddDeliveryService(name:string){
+
+     
+  
+  async SearchServerToAddDeliveryService(name: string) {
     let result = false;
     await this.txtSearchServersForDS.clear();
     await this.txtSearchServersForDS.sendKeys(name);
-    if(await browser.isElementPresent(element(by.xpath("//td[@data-search='^"+name+"$']"))) == true){
-      await element(by.xpath("//td[@data-search='^"+name+"$']")).click();
+    if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
+      await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
       result = true;
-    }else{
+    } else {
       result = undefined;
     }
     return result;
   }
 
-  async AddServerToDeliveryService(serverName:string, outputMessage:string){
+  async AddServerToDeliveryService(serverName: string, outputMessage: string) {
     let result = false;
     let basePage = new BasePage();
     await this.btnMore.click();
-    if((await this.mnuManageServers.isPresent()) == true){
+    if ((await this.mnuManageServers.isPresent()) == true) {
       await this.mnuManageServers.click();
       await this.btnLinkServersToDS.click();
-      if(await this.SearchServerToAddDeliveryService(serverName) == true){
+      if (await this.SearchServerToAddDeliveryService(serverName) == true) {
         await basePage.ClickSubmit();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(outputMessage == value){
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (outputMessage == value) {
             return true;
-          }else{
+          } else {
             return false;
           }
         })
         result = true;
-      }else{
+      } else {
         await basePage.ClickSubmit();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(outputMessage == value){
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (outputMessage == value) {
             return true;
-          }else{
+          } else {
             return undefined;
           }
         })
       }
-    }else{
+    } else {
       result = undefined;
     }
-    
+
     return result;
   }
 
-  async SearchServerToRemoveFromDS(name:string){
+  async SearchServerToRemoveFromDS(name: string) {
     let result = true;
-    const ele = element(by.xpath("//td[@data-search='^"+name+"$']"));
+    const ele = element(by.xpath("//td[@data-search='^" + name + "$']"));
     await this.txtSearchServersForDS.clear();
     await this.txtSearchServersForDS.sendKeys(name);
-    if(await browser.isElementPresent(ele) == true){
+    if (await browser.isElementPresent(ele) == true) {
       await this.txtServerAssign.click();
       result = true;
-    }else{
+    } else {
       result = undefined;
     }
     return result;
   }
 
-  async RemoveServerFromDeliveryService(server:string, outputMessage:string){
+  async RemoveServerFromDeliveryService(server: string, outputMessage: string) {
     let result = false;
     let basePage = new BasePage();
-    let serverName = server+this.randomize;
+    let serverName = server + this.randomize;
     await this.btnMore.click();
-    if((await this.mnuManageServers.isPresent()) == true){
+    if ((await this.mnuManageServers.isPresent()) == true) {
       await this.mnuManageServers.click();
       await this.btnLinkServersToDS.click();
-      if(await this.SearchServerToRemoveFromDS(serverName) == true){
+      if (await this.SearchServerToRemoveFromDS(serverName) == true) {
         await basePage.ClickSubmit();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(value.includes(outputMessage)){
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (value.includes(outputMessage)) {
             result = true;
-          }else{
+          } else {
             result = false;
           }
           return result;
         })
-      }else{
+      } else {
         await basePage.ClickSubmit();
         result = undefined;
-      } 
-    }else{
+      }
+    } else {
       result = undefined;
     }
     return result;
   }
- 
-  async DeleteDeliveryService(nameDS:string,requestStatus:string,outputMessage:string){
+
+  async DeleteDeliveryService(nameDS: string, requestStatus: string, outputMessage: string) {
     let result = false;
     let basePage = new BasePage();
     let snp = new SideNavigationPage();
-    let name = nameDS+this.randomize;
-    if(outputMessage.includes("deleted")){
-      outputMessage = outputMessage.replace(nameDS,name);
+    let name = nameDS + this.randomize;
+    if (outputMessage.includes("deleted")) {
+      outputMessage = outputMessage.replace(nameDS, name);
     }
     await this.btnDelete.click();
     await this.txtConfirmName.sendKeys(name);
@@ -334,92 +333,92 @@ export class DeliveryServicesPage extends BasePage {
     await this.txtRequestStatus.sendKeys(requestStatus);
     await this.txtComment.sendKeys('test');
     await basePage.ClickSubmit();
-    if(requestStatus.includes('Review and Deployment')){
-      if(await this.SearchDeliveryServiceRequest(name) == true){
+    if (requestStatus.includes('Review and Deployment')) {
+      if (await this.SearchDeliveryServiceRequest(name) == true) {
         await browser.actions().mouseMove(this.btnFullfillRequest).perform();
         await this.btnFullfillRequest.click();
         await this.btnYesRemoveRC.click();
         await this.txtConfirmName.sendKeys(name);
         await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(outputMessage == value){
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (outputMessage == value) {
             return true;
-          }else{
+          } else {
             return false;
           }
         })
-      await snp.NavigateToDeliveryServicesRequestsPage();
-      await this.txtSearchDSRequest.clear();
-      await this.txtSearchDSRequest.sendKeys(name);
-      await this.lnkCompleteRequest.click();
-      await this.btnYesRemoveRC.click();
-      await this.txtCommentCompleteDS.sendKeys('test');
-      await basePage.ClickSubmit();
+        await snp.NavigateToDeliveryServicesRequestsPage();
+        await this.txtSearchDSRequest.clear();
+        await this.txtSearchDSRequest.sendKeys(name);
+        await this.lnkCompleteRequest.click();
+        await this.btnYesRemoveRC.click();
+        await this.txtCommentCompleteDS.sendKeys('test');
+        await basePage.ClickSubmit();
       }
-    }else{
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(outputMessage == value){
+    } else {
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (outputMessage == value) {
           return true;
-        }else{
+        } else {
           return false;
         }
       })
-      
+
     }
     return result;
-    }
+  }
 
-    async AddRequiredServerCapabilities(servercapabilities:string,outputMessage:string){
-      let result = false;
-      let basePage = new BasePage();
-      let servercapabilitiesName = servercapabilities+this.randomize;
-      await this.btnMore.click();
-      await this.btnManageRequiredServerCapabilities.click();
-      await this.btnAddRequiredServerCapabilities.click();
-      await this.mnuFormDropDown.sendKeys(servercapabilitiesName);
-      await this.btnSubmitFormDropDown.click();
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(outputMessage == value){
+  async AddRequiredServerCapabilities(servercapabilities: string, outputMessage: string) {
+    let result = false;
+    let basePage = new BasePage();
+    let servercapabilitiesName = servercapabilities + this.randomize;
+    await this.btnMore.click();
+    await this.btnManageRequiredServerCapabilities.click();
+    await this.btnAddRequiredServerCapabilities.click();
+    await this.mnuFormDropDown.sendKeys(servercapabilitiesName);
+    await this.btnSubmitFormDropDown.click();
+    result = await basePage.GetOutputMessage().then(function (value) {
+      if (outputMessage == value) {
+        return true;
+      } else if (value.includes(outputMessage)) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    })
+    return result;
+  }
+
+  async RemoveRequiredServerCapabilities(servercapabilities: string, outputMessage: string) {
+    let result = false;
+    let basePage = new BasePage();
+    let servercapabilitiesName = servercapabilities + this.randomize;
+    await this.btnMore.click();
+    await this.btnManageRequiredServerCapabilities.click();
+    await this.txtSearchRequiredServerCapabilities.clear();
+    await this.txtSearchRequiredServerCapabilities.sendKeys(servercapabilitiesName);
+    if (await this.btnRemoveRequiredServerCapabilities.isPresent() == false) {
+      let value = "Forbidden."
+      if (outputMessage == value) {
+        result = true;
+      } else {
+        result = undefined;
+      }
+    } else {
+      await this.btnRemoveRequiredServerCapabilities.click();
+      await this.btnYesRemoveRC.click();
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (outputMessage == value) {
           return true;
-        }else if(value.includes(outputMessage)){
+        } else if (value.includes(outputMessage)) {
           return true;
         }
-        else{
+        else {
           return false;
         }
       })
-      return result;
     }
-  
-    async RemoveRequiredServerCapabilities(servercapabilities:string,outputMessage:string){
-      let result = false;
-      let basePage = new BasePage();
-      let servercapabilitiesName = servercapabilities+this.randomize;
-      await this.btnMore.click();
-      await this.btnManageRequiredServerCapabilities.click();
-      await this.txtSearchRequiredServerCapabilities.clear();
-      await this.txtSearchRequiredServerCapabilities.sendKeys(servercapabilitiesName);
-      if(await this. btnRemoveRequiredServerCapabilities.isPresent() == false){
-        let value = "Forbidden."
-        if(outputMessage == value){
-          result = true;
-        }else{
-          result = undefined;
-        }
-      }else{
-        await this.btnRemoveRequiredServerCapabilities.click();
-        await this.btnYesRemoveRC.click();
-        result = await basePage.GetOutputMessage().then(function(value){
-          if(outputMessage == value){
-            return true;
-          }else if(value.includes(outputMessage)){
-            return true;
-          }
-          else{
-            return false;
-          }
-        })
-      }
-      return result;
-    }
+    return result;
+  }
 }
