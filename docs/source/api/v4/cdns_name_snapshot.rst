@@ -317,7 +317,6 @@ Response Structure
 	:CDN_name:   The name of this CDN
 	:date:       The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:    The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
-	:tm_path:    A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
 
@@ -541,7 +540,6 @@ Response Structure
 			"CDN_name": "CDN-in-a-Box",
 			"date": 1590600715,
 			"tm_host": "trafficops.infra.ciab.test:443",
-			"tm_path": "/api/4.0/snapshot",
 			"tm_user": "admin",
 			"tm_version": "development"
 		    },
