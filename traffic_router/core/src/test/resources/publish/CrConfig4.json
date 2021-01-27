@@ -1207,7 +1207,6 @@
     "tm_version": "1.5.0-3027.8d600a8e",
     "CDN_name": "thecdn",
     "tm_user": "admin4",
-    "tm_path": "/tools/write_crconfig/thecdn",
     "date": 1465344000,
     "tm_host": "localhost:8889"
   },
@@ -1296,4 +1295,3 @@
     "dnssec.enabled": "false"
   }
 }
-
