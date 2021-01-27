@@ -42,6 +42,10 @@ from pygments.token import *
 from sphinx.highlighting import lexers
 
 class DNSLexer(RegexLexer):
+    """
+    DNSLexer is a lexer for the pygments code highlighter that highlights DNS messages
+    as printed out by the 'dig' command.
+    """
     name = 'DNS'
     aliases = ['dns', 'dig']
 
