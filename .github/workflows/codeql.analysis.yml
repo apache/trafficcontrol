@@ -23,6 +23,7 @@ on:
   pull_request:
     branches: [ master ]
   schedule:
+    # Runs at 11:32AM every Sunday
     - cron: '32 11 * * 0'
 
 jobs:
