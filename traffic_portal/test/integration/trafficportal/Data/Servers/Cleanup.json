@@ -1,0 +1,134 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "DeleteDeliveryServices",
+            "Route" : "/deliveryservices",
+            "Method" : "delete",
+            "Data" : [
+                {
+                    "route": "/deliveryservices/",
+                    "getRequest": [
+                        {
+                            "route": "/deliveryservices",
+                            "queryKey": "xmlId",
+                            "queryValue": "servertds1",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/deliveryservices/",
+                    "getRequest": [
+                        {
+                            "route": "/deliveryservices",
+                            "queryKey": "xmlId",
+                            "queryValue": "servertdsop1",
+                            "replace": "route"                           
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Action": "DeleteServerCapabilities",
+            "Route" : "/server_capabilities",
+            "Method" : "delete",
+            "Data" : [
+                {
+                    "route": "/server_capabilities?name=servertestcap1"
+                },
+                {
+                    "route": "/server_capabilities?name=servertestcapop1"
+                }
+            ]
+        },
+        {
+            "Action": "DeleteServers",
+            "Route" : "/servers",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestcreate2",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestcreateop2",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestremove3",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "servertestremoveop3",
+                            "replace": "route"                           
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Action": "DeleteProfile",
+            "Route" : "/profiles",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/profiles/",
+                    "getRequest": [
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "servertestprofiles1",
+                            "replace": "route"
+                        }
+                    ]   
+                }
+            ]
+        },
+        {
+            "Action": "DeleteCDN",
+            "Route" : "/cdns",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/cdns/",
+                    "getRequest": [
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "servertestcdn1",
+                            "replace": "route"
+                        }
+                    ]
+                    
+                }
+            ]
+        }
+    ]
+}

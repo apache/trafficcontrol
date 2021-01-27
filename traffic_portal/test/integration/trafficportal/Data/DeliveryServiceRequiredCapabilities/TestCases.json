@@ -1,0 +1,125 @@
+{
+    "DeliveryServiceRequiredCapabilities": [
+        {
+            "Login": [
+                {
+                    "description": "Admin Role with Equal Tenancy",
+                    "username": "TPAdmin",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Operator Role with Equal Tenancy",
+                    "username": "TPOperator",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Admin Role with Parent Tenancy",
+                    "username": "TPAdminParent",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Operator Role with Parent Tenancy",
+                    "username": "TPOperatorParent",
+                    "password": "pa$$word"
+                }
+            ],
+
+            "Add": [
+                {   
+                    "description": "Add a Required Server Capability, that no server uses, to a Delivery Service, that has no servers assigned",
+                    "DeliveryService": "ds1",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "deliveryservice.RequiredCapability was created."
+                },
+                {
+                    "description": "Add a Required Server Capability, used by a server, to a Delivery Service, that has no servers assigned",
+                    "DeliveryService": "ds2",
+                    "ServerCapability": "DISK",
+                    "validationMessage": "deliveryservice.RequiredCapability was created."
+                },
+                {
+                    "description": "Add a Required Server Capability, used by the server that is assigned to this Delivery Service",
+                    "DeliveryService": "ds3",
+                    "ServerCapability": "DISK",
+                    "validationMessage": "deliveryservice.RequiredCapability was created."
+                },
+                {
+                    "description": "Add additional Required Server Capabilities to a Delivery Service, that has no servers assigned",
+                    "DeliveryService": "ds4",
+                    "ServerCapability": "DISK",
+                    "validationMessage": "deliveryservice.RequiredCapability was created."
+                },
+                {
+                    "description": "Add additional Required Capabilities to Delivery Service, when there are servers assigned that use this server capability",
+                    "DeliveryService": "ds3",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "deliveryservice.RequiredCapability was created."
+                },
+                {
+                    "description": "Validate Error when adding a Required Server Capability, not used by any server assigned to this Delivery Service",
+                    "DeliveryService": "ds3",
+                    "ServerCapability": "SSD",
+                    "validationMessage": "do not have the capability assigned"
+                },
+                {
+                    "description": "Validate Error when adding a Required Server Capability, not used by any server assigned to this Delivery Service, with existing required server capabilities",
+                    "DeliveryService": "ds5",
+                    "ServerCapability": "SSD",
+                    "validationMessage": "do not have the capability assigned"
+                },
+                {
+                    "description": "Validate Error when adding a Required Server Capability that is already used by that Delivery Service",
+                    "DeliveryService": "ds5",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "already exists."
+                }
+            ],
+
+            "Remove": [
+                {
+                    "description": "Remove a Required Capability",
+                    "DeliveryService": "ds5",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "deliveryservice.RequiredCapability was deleted."
+                }
+            ]
+        },
+        {
+            "Login": [
+                {
+                    "description": "Read Only Role with Equal Tenancy",
+                    "username": "TPReadOnly",
+                    "password": "pa$$word"
+                },
+                {
+                    "description": "Read Only Role with Parent Tenancy",
+                    "username": "TPReadOnlyParent",
+                    "password": "pa$$word"
+                }
+            ],
+
+            "Add": [
+                {   
+                    "description": "Validate a Read Only User cannot add required server capabilities",
+                    "DeliveryService": "ds1",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "Forbidden."
+                }
+            ],
+
+            "Remove": [
+                {
+                    "description": "Validate a Read Only User cannot remove required server capabilities",
+                    "DeliveryService": "ds5",
+                    "ServerCapability": "RAM",
+                    "validationMessage": "Forbidden."
+                }
+            ]
+        }
+    ]
+}
+
+
+
+
+          
