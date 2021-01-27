@@ -17,7 +17,7 @@ limitations under the License.
 	<button [disabled]="!isCache()" type="button">Manage Delivery Services</button>
 	<button [disabled]="!isCache()" type="button" title="queue server updates" *ngIf="!server.updPending"><fa-icon [icon]="updateIcon"></fa-icon></button>
 	<button [disabled]="!isCache()" type="button" title="clear server updates" *ngIf="server.updPending"><fa-icon [icon]="clearUpdatesIcon"></fa-icon></button>
-	<button type="button" title="change server status"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
+	<button type="button" title="change server status" (click)="changeStatus($event)"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
 </div>
 <form ngNativeValidate #serverForm="ngForm" (ngSubmit)="submit($event)">
 	<label for="id" *ngIf="!isNew">ID</label>
@@ -136,3 +136,5 @@ limitations under the License.
 		<button>Submit</button>
 	</div>
 </form>
+
+<tp-update-status [servers]="[server]" (done)="done($event)" [open]="changeStatusDialogOpen"></tp-update-status>

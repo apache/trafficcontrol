@@ -44,6 +44,10 @@ export class ServerDetailsComponent implements OnInit {
 	 * A Regular Expression that matches valid IP addresses.
 	 */
 	public validGatewayPattern = IP;
+	/**
+	 * Controls whether or not the "change status" dialog is open
+	 */
+	public changeStatusDialogOpen = false;
 
 	/**
 	 * The page title.
@@ -292,18 +296,20 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * Changes the server's status.
 	 *
-	 * @param status The name of the status to set on the server.
-	 * @param offlineReason Optionally a reason the server has been taken "offline".
+	 * @param e The click event that triggered this handler.
 	 * @throws {Error} when trying to update server status if the server doesn't exist yet (`this.isNew === true`).
 	 */
-	public changeStatus(status: string, offlineReason?: string): void {
+	public changeStatus(e: MouseEvent): void {
+		e.stopPropagation();
 		if (this.isNew) {
 			throw new Error("cannot update the status of a server that doesn't exist yet");
 		}
-		this.serverService.updateStatus(this.server, status, offlineReason);
+		this.changeStatusDialogOpen = false;
 	}
 
 	public done(reload: boolean): void {
+		this.changeStatusDialogOpen = false;
+		console.log("done emitted:", reload);
 		if (this.isNew || !this.server.id) {
 			console.error("done fired on server with no ID");
 			return;

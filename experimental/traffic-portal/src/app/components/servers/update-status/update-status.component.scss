@@ -27,7 +27,7 @@ form {
 		padding: 0.5em 0;
 		flex: 1;
 
-		&[type="reset"] {
+		&[type="button"] {
 			background-color: $error;
 		}
 	}
