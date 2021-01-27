@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"sort"
 	"strconv"
 	"strings"
@@ -172,12 +173,6 @@ func getServerConfigRemapDotConfigForMid(
 				hasCacheKey = true
 			}
 			midRemap += qstr
-		}
-		if ds.CacheURL != nil && *ds.CacheURL != "" {
-			if hasCacheURL {
-				warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
-			}
-			midRemap += ` @plugin=cacheurl.so @pparam=` + cacheURLConfigFileName(*ds.XMLID)
 		}
 
 		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
@@ -361,13 +356,6 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	if ds.CacheURL != nil && *ds.CacheURL != "" {
-		if hasCacheURL {
-			warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
-		}
-		text += ` @plugin=cacheurl.so @pparam=` + cacheURLConfigFileName(*ds.XMLID)
-	}
-
 	if len(cacheKeyConfigParams) > 0 {
 		if hasCacheKey {
 			warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
@@ -518,10 +506,6 @@ func edgeHeaderRewriteConfigFileName(dsName string) string {
 
 func midHeaderRewriteConfigFileName(dsName string) string {
 	return "hdr_rw_mid_" + dsName + ".config"
-}
-
-func cacheURLConfigFileName(dsName string) string {
-	return "cacheurl_" + dsName + ".config"
 }
 
 // getQStringIgnoreRemap returns the remap, whether cacheurl was added, and whether cachekey was added.

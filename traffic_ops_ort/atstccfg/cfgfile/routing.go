@@ -81,7 +81,6 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 	{"astats.config", MakeAstatsDotConfig},
 	{"bg_fetch.config", MakeBGFetchDotConfig},
 	{"cache.config", MakeCacheDotConfig},
-	{"cacheurl.config", MakeCacheURLPlain},
 	{"chkconfig", MakeChkconfig},
 	{"drop_qstring.config", MakeDropQStringDotConfig},
 	{"hosting.config", MakeHostingDotConfig},
@@ -102,7 +101,6 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 }
 
 var configFilePrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
-	{"cacheurl", ".config", MakeCacheURL},
 	{atscfg.HeaderRewriteFirstPrefix, ".config", MakeTopologyHeaderRewrite},
 	{atscfg.HeaderRewriteInnerPrefix, ".config", MakeTopologyHeaderRewrite},
 	{atscfg.HeaderRewriteLastPrefix, ".config", MakeTopologyHeaderRewrite},

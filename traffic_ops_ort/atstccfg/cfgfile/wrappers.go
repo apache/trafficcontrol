@@ -67,14 +67,6 @@ func MakeCacheDotConfig(toData *config.TOData, fileName string, hdrCommentTxt st
 	return atscfg.MakeCacheDotConfig(toData.Server, toData.Servers, toData.DeliveryServices, toData.DeliveryServiceServers, hdrCommentTxt)
 }
 
-func MakeCacheURL(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
-	return atscfg.MakeCacheURLDotConfig(fileName, toData.Server, toData.DeliveryServices, toData.DeliveryServiceServers, hdrCommentTxt)
-}
-
-func MakeCacheURLPlain(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
-	return MakeCacheURL(toData, "cacheurl.config", hdrCommentTxt, cfg)
-}
-
 func MakeChkconfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
 	return atscfg.MakeChkconfig(toData.ServerParams)
 }
