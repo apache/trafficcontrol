@@ -105,7 +105,7 @@ under the License.
                     <textarea name="publicSshKey" rows="5" class="form-control" ng-model="user.publicSshKey"></textarea>
                 </div>
             </div>
-            <div class="form-group" ng-if="user.newUser" ng-class="{'has-error': hasError(userForm.registrationSent), 'has-feedback': hasError(userForm.registrationSent)}">
+            <div class="form-group" ng-if=!settings.isNew" ng-class="{'has-error': hasError(userForm.registrationSent), 'has-feedback': hasError(userForm.registrationSent)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Registration Sent</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="registrationSent" type="text" class="form-control" ng-model="user.registrationSent" ng-maxlength="128" readonly>
@@ -114,7 +114,7 @@ under the License.
             </div>
 
             <div class="modal-footer">
-                <button ng-if="!settings.isNew" type="button" class="btn btn-default" ng-click="resendRegistration(user)">Resend Registration</button>
+                <button ng-if="user.newUser" type="button" class="btn btn-default" ng-click="resendRegistration(user)">Resend Registration</button>
                 <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user)">{{settings.saveLabel}}</button>
             </div>
         </form>
