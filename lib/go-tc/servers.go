@@ -1019,6 +1019,8 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 }
 
 func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+	routerHostName := ""
+	routerPortName := ""
 	interfaces := make([]ServerInterfaceInfo, 0)
 	i := ServerInterfaceInfo{}
 	for _, in := range s.Interfaces {
@@ -1027,6 +1029,12 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		i.MaxBandwidth = in.MaxBandwidth
 		i.Monitor = in.Monitor
 		i.IPAddresses = in.IPAddresses
+		for _, ip := range i.IPAddresses {
+			if ip.ServiceAddress {
+				routerHostName = in.RouterHostName
+				routerPortName = in.RouterPortName
+			}
+		}
 		interfaces = append(interfaces, i)
 	}
 	serverV30 := ServerV30{
@@ -1035,13 +1043,15 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		StatusLastUpdated:      s.StatusLastUpdated,
 	}
 	if len(s.Interfaces) != 0 {
-		serverV30.RouterHostName = &s.Interfaces[0].RouterHostName
-		serverV30.RouterPortName = &s.Interfaces[0].RouterPortName
+		serverV30.RouterHostName = &routerHostName
+		serverV30.RouterPortName = &routerPortName
 	}
 	return serverV30, nil
 }
 
 func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+	routerHostName := ""
+	routerPortName := ""
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
 			CommonServerProperties: s.CommonServerProperties,
@@ -1058,6 +1068,12 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 		i.MaxBandwidth = in.MaxBandwidth
 		i.Monitor = in.Monitor
 		i.IPAddresses = in.IPAddresses
+		for _, ip := range i.IPAddresses {
+			if ip.ServiceAddress {
+				routerHostName = in.RouterHostName
+				routerPortName = in.RouterPortName
+			}
+		}
 		interfaces = append(interfaces, i)
 	}
 	var err error
@@ -1069,8 +1085,8 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
 	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
 	if len(s.Interfaces) != 0 {
-		legacyServer.RouterHostName = &s.Interfaces[0].RouterHostName
-		legacyServer.RouterPortName = &s.Interfaces[0].RouterPortName
+		legacyServer.RouterHostName = &routerHostName
+		legacyServer.RouterPortName = &routerPortName
 	}
 	return legacyServer, nil
 }
