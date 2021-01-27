@@ -30,9 +30,18 @@ func ExampleParseCacheControl() {
 	hdrs := http.Header{}
 
 	hdrs.Set(CacheControl, "no-store, no-cache, must-revalidate, post-check=0, pre-check=0")
-	fmt.Println(ParseCacheControl(hdrs))
+	cchm := ParseCacheControl(hdrs)
+	fmt.Println(cchm.Has("no-store"))
+	fmt.Println(cchm.Has("no-cache"))
+	fmt.Println(cchm.Has("must-revalidate"))
+	fmt.Println(cchm["post-check"])
+	fmt.Println(cchm["pre-check"])
 
-	// Output: Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+	// Output: true
+	// true
+	// true
+	// 0
+	// 0
 }
 
 func ExampleCacheControlMap_Has() {
