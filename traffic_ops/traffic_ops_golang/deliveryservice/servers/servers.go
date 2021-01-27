@@ -1027,8 +1027,6 @@ FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
 `
-	di := DSInfo{ID: id}
-	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.MaxOriginConnections, &di.Topology, &di.CDNID); err != nil {
 
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
