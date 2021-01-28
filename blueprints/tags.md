@@ -122,6 +122,7 @@ Specifically, it should add Tags for:
 	- `TRAFFIC_OPS` (which will need to be created if it doesn't already exist)
 	- `TRAFFIC_OPS_DB` (which will need to be created if it doesn't already exist)
 	- `TRAFFIC_STATS` (which will need to be created if it doesn't already exist)
+	- `INFRA` (which will need to be created if it doesn't already exist)
 - Delivery Service Types other than
 	- `HTTP`
 	- `HTTP_NO_CACHE`
