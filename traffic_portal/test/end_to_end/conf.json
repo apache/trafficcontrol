@@ -28,7 +28,8 @@
       "topologies/topologies-spec.js",
       "deliveryServices/delivery-services-spec.js",
       "jobs/jobs-spec.js",
-      "tenants/tenants-spec.js"
+      "tenants/tenants-spec.js",
+      "users/users-spec.js"
     ]
   }
 }
