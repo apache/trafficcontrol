@@ -108,11 +108,11 @@ ag-grid-angular {
 
 /* Table context menus */
 menu[type="contextmenu"] {
-    display: block;
-    position: fixed;
-    background-color: white;
-    padding: 0;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+	display: block;
+	position: fixed;
+	background-color: white;
+	padding: 0;
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
 	border-radius: 3px;
 
 	&[hidden] {
