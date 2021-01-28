@@ -106,7 +106,10 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-if="!settings.isNew" ng-class="{'has-error': hasError(userForm.registrationSent), 'has-feedback': hasError(userForm.registrationSent)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Registration Sent</label>
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Registration Sent<div class="helptooltip">
+                    <div class="helptext">The date on which a registration email was sent to create this user. The value is blank if the user was not created via a new user registration.</div>
+                </div>
+                </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="registrationSent" type="text" class="form-control" ng-model="user.registrationSent" ng-maxlength="128" readonly>
                     <span ng-show="hasError(userForm.registrationSent)" class="form-control-feedback"><i class="fa fa-times"></i></span>

@@ -26,14 +26,14 @@ describe('Traffic Portal Users Test Suite', function() {
 	const myNewUser = {
 		username: 'user-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		fullName: 'test-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
-		email: 'test@cdn.viper.com',
+		email: 'test@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com',
 		roleName: 'admin',
 		tenantId: ' - root',
 		localPasswd: 'test@123',
 		confirmLocalPasswd: 'test@123'
 	};
 	const myNewRegisteredUser = {
-		email: 'test1@cdn.viper.com',
+		email: 'test1@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com',
 		roleName: 'operations',
 		tenantId: ' -- tenant01'
 	};
@@ -129,8 +129,7 @@ describe('Traffic Portal Users Test Suite', function() {
 			});
 		}).get(0).click();
 		browser.sleep(1000);
-		expect(pageData.registerSent.isEnabled()).toBe(false);
-		expect(pageData.registerSent.getAttribute('disabled')).toBe('true');
+		expect(pageData.registerSent.getAttribute('readOnly')).toBe('true');
 		pageData.fullName.clear();
 		pageData.fullName.sendKeys('test1 updated');
 		pageData.updateButton.click();
