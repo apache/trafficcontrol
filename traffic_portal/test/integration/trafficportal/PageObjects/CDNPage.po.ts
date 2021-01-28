@@ -63,17 +63,29 @@ export class CDNPage extends BasePage {
     switch (cdn.description) {
       case 'perform snapshot':
         await this.btnDiffSnapshot.click();
-        await element(by.xpath(`//button[@title="Perform ` + cdn.Name + this.randomize + ` Snapshot"]`)).click();
+        if(await browser.isElementPresent(element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')))){
+          await element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')).click();
+        }else{
+          throw new Error("Cannot find Perform Snapshot button")
+        }
         await this.btnYes.click();
         break;
       case 'queue CDN updates':
         await this.btnQueueUpdates.click();
-        await element(by.linkText(`Queue ` + cdn.Name + this.randomize + ` Server Updates`)).click();
+        if(await browser.isElementPresent(element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')))){
+          await element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')).click();
+        }else{
+          throw new Error("Cannot find Queue CDN updates button")
+        }
         await this.btnYes.click();
         break;
       case 'clear CDN updates':
         await this.btnQueueUpdates.click();
-        await element(by.linkText(`Clear ` + cdn.Name + this.randomize + ` Server Updates`)).click();
+        if(await browser.isElementPresent(element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')))){
+          await element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')).click();
+        }else{
+          throw new Error("Cannot find Clear CDN updates button")
+        }
         await this.btnYes.click();
         break;
       default:
