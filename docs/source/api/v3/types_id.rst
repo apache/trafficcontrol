@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-types-id:
+.. _to-api-v3-types-id:
 
 ****************
 ``types/{{ID}}``

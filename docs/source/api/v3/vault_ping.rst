@@ -12,7 +12,7 @@
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
 ..
-.. _to-api-vault-ping:
+.. _to-api-v3-vault-ping:
 
 **************
 ``vault/ping``

@@ -55,19 +55,49 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := servers[0]
-	if inf.Version.Major < 3 {
-		v11server := tc.ServerDetailV11{}
-		v11server.ServerDetail = server.ServerDetail
-
-		interfaces := *server.ServerInterfaces
-		legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+	if inf.Version.Major <= 2 {
+		interfaces := server.ServerInterfaces
+		routerHostName := ""
+		routerPortName := ""
+		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+		if len(interfaces) != 0 {
+			routerHostName = interfaces[0].RouterHostName
+			routerPortName = interfaces[0].RouterPortName
+		}
+		legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 			return
 		}
+		v11server := tc.ServerDetailV11{}
+		v11server.ServerDetail = server.ServerDetail
+		v11server.RouterHostName = &routerHostName
+		v11server.RouterPortName = &routerPortName
 		v11server.LegacyInterfaceDetails = legacyInterface
-
 		server := v11server
+		alerts := api.CreateDeprecationAlerts(&alt)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
+		return
+	} else if inf.Version.Major <= 3 {
+		interfaces := server.ServerInterfaces
+		routerHostName := ""
+		routerPortName := ""
+		// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+		if len(interfaces) != 0 {
+			routerHostName = interfaces[0].RouterHostName
+			routerPortName = interfaces[0].RouterPortName
+		}
+		v3server := tc.ServerDetailV30{}
+		v3server.ServerDetail = server.ServerDetail
+		v3server.RouterHostName = &routerHostName
+		v3server.RouterPortName = &routerPortName
+		v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
+			return
+		}
+		v3server.ServerInterfaces = &v3Interfaces
+		server := v3server
 		alerts := api.CreateDeprecationAlerts(&alt)
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 		return
@@ -119,14 +149,22 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		"size":    len(servers),
 	}
 
-	if inf.Version.Major < 3 {
+	if inf.Version.Major <= 2 {
 		v11ServerList := []tc.ServerDetailV11{}
 		for _, server := range servers {
+			interfaces := server.ServerInterfaces
+			routerHostName := ""
+			routerPortName := ""
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPortName = interfaces[0].RouterPortName
+			}
 			v11server := tc.ServerDetailV11{}
 			v11server.ServerDetail = server.ServerDetail
-
-			interfaces := *server.ServerInterfaces
-			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			v11server.RouterHostName = &routerHostName
+			v11server.RouterPortName = &routerPortName
+			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
@@ -136,6 +174,31 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			v11ServerList = append(v11ServerList, v11server)
 		}
 		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
+		return
+	} else if inf.Version.Major <= 3 {
+		v3ServerList := []tc.ServerDetailV30{}
+		for _, server := range servers {
+			v3Server := tc.ServerDetailV30{}
+			interfaces := server.ServerInterfaces
+			routerHostName := ""
+			routerPortName := ""
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPortName = interfaces[0].RouterPortName
+			}
+			v3Server.ServerDetail = server.ServerDetail
+			v3Server.RouterHostName = &routerHostName
+			v3Server.RouterPortName = &routerPortName
+			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
+				return
+			}
+			v3Server.ServerInterfaces = &v3Interfaces
+			v3ServerList = append(v3ServerList, v3Server)
+		}
+		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v3ServerList, err)
 		return
 	}
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
@@ -157,36 +220,34 @@ func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationI
 	}
 }
 
-func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV40, error) {
 	allowedOrderByCols := map[string]string{
-		"":                 "",
-		"cachegroup":       "server.cachegroup",
-		"cdn_name":         "cdn.name",
-		"domain_name":      "server.domain_name",
-		"guid":             "server.guid",
-		"host_name":        "server.host_name",
-		"https_port":       "server.https_port",
-		"id":               "server.id",
-		"ilo_ip_address":   "server.ilo_ip_address",
-		"ilo_ip_gateway":   "server.ilo_ip_gateway",
-		"ilo_ip_netmask":   "server.ilo_ip_netmask",
-		"ilo_password":     "server.ilo_password",
-		"ilo_username":     "server.ilo_username",
-		"mgmt_ip_address":  "server.mgmt_ip_address",
-		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
-		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
-		"offline_reason":   "server.offline_reason",
-		"phys_location":    "pl.name",
-		"profile":          "p.name",
-		"profile_desc":     "p.description",
-		"rack":             "server.rack",
-		"router_host_name": "server.router_host_name",
-		"router_port_name": "server.router_port_name",
-		"status":           "st.name",
-		"tcp_port":         "server.tcp_port",
-		"server_type":      "t.name",
-		"xmpp_id":          "server.xmpp_id",
-		"xmpp_passwd":      "server.xmpp_passwd",
+		"":                "",
+		"cachegroup":      "server.cachegroup",
+		"cdn_name":        "cdn.name",
+		"domain_name":     "server.domain_name",
+		"guid":            "server.guid",
+		"host_name":       "server.host_name",
+		"https_port":      "server.https_port",
+		"id":              "server.id",
+		"ilo_ip_address":  "server.ilo_ip_address",
+		"ilo_ip_gateway":  "server.ilo_ip_gateway",
+		"ilo_ip_netmask":  "server.ilo_ip_netmask",
+		"ilo_password":    "server.ilo_password",
+		"ilo_username":    "server.ilo_username",
+		"mgmt_ip_address": "server.mgmt_ip_address",
+		"mgmt_ip_gateway": "server.mgmt_ip_gateway",
+		"mgmt_ip_netmask": "server.mgmt_ip_netmask",
+		"offline_reason":  "server.offline_reason",
+		"phys_location":   "pl.name",
+		"profile":         "p.name",
+		"profile_desc":    "p.description",
+		"rack":            "server.rack",
+		"status":          "st.name",
+		"tcp_port":        "server.tcp_port",
+		"server_type":     "t.name",
+		"xmpp_id":         "server.xmpp_id",
+		"xmpp_passwd":     "server.xmpp_passwd",
 	}
 	orderBy, ok := allowedOrderByCols[orderBy]
 	if !ok {
@@ -221,15 +282,12 @@ pl.name as phys_location,
 p.name as profile,
 p.description as profile_desc,
 server.rack,
-server.router_host_name,
-server.router_port_name,
 st.name as status,
 server.tcp_port,
 t.name as server_type,
 server.xmpp_id,
 server.xmpp_passwd
 `
-
 	queryFormatString := `
 SELECT
 	server.id
@@ -275,7 +333,7 @@ JOIN type t ON server.type = t.id
 
 	defer rows.Close()
 	sIDs := []int{}
-	servers := []tc.ServerDetailV30{}
+	servers := []tc.ServerDetailV40{}
 
 	serviceAddress := util.StrPtr("")
 	service6Address := util.StrPtr("")
@@ -286,14 +344,14 @@ JOIN type t ON server.type = t.id
 	serviceMtu := util.StrPtr("")
 
 	for rows.Next() {
-		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		s := tc.ServerDetailV40{}
+		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
-		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
 			for _, interfaceInfo := range interfacesMap {
-				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+				s.ServerInterfaces = append(s.ServerInterfaces, interfaceInfo)
 			}
 		}
 

@@ -23,8 +23,8 @@ under the License.
             <li class="active">Users</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Register New User" ng-click="register()">Register User</button>
-            <button class="btn btn-primary" title="Create New User" ng-click="create()"><i class="fa fa-plus"></i></button>
+            <button name="createRegisterUserButton" class="btn btn-primary" title="Register New User" ng-click="register()">Register User</button>
+            <button name="createUserButton" class="btn btn-primary" title="Create New User" ng-click="create()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -52,15 +52,17 @@ under the License.
                 <th>Email</th>
                 <th>Tenant</th>
                 <th>Role</th>
+                <th>Registration Sent</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editUser(u.id)" ng-repeat="u in ::users">
                 <td data-search="^{{::u.fullName}}$">{{::u.fullName}}</td>
-                <td data-search="^{{::u.username}}$">{{::u.username}}</td>
-                <td data-search="^{{::u.email}}$">{{::u.email}}</td>
+                <td name="username" data-search="^{{::u.username}}$">{{::u.username}}</td>
+                <td name="email" data-search="^{{::u.email}}$">{{::u.email}}</td>
                 <td data-search="^{{::u.tenant}}$">{{::u.tenant}}</td>
                 <td data-search="^{{::u.rolename}}$">{{::u.rolename}}</td>
+                <td data-search="^{{::u.registrationSent}}$">{{::u.registrationSent}}</td>
             </tr>
             </tbody>
         </table>

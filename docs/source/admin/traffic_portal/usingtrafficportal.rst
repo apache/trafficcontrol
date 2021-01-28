@@ -397,8 +397,8 @@ Use the `Quick Search` to search across all table columns or the column filter t
 :Profile:           [Visible by default] The :ref:`profile-name` of the :term:`Profile` used by this server
 :Rack:              A string indicating "server rack" location
 :Reval Pending:     [Visible by default] A boolean value represented as a clock (content invalidation/revalidation is pending) or green check mark (content invalidation/revalidation is not pending)
-:Router Hostname:   The human-readable name of the router responsible for reaching this server
-:Router Port Name:  The human-readable name of the port used by the router responsible for reaching this server
+:Router Hostname:   The human-readable name of the router responsible for reaching this server's interface
+:Router Port:       The human-readable name of the port used by the router responsible for reaching this server's interface
 :Status:            [Visible by default] The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`

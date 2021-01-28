@@ -30,6 +30,14 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
             });
     };
 
+    var sendRegistration = function(user) {
+        userService.registerUser(user).
+            then(function() {
+                $scope.userEmail = angular.copy(user.email);
+                $anchorScroll(); // scrolls window to top
+            });
+    };
+
     $scope.userName = angular.copy(user.username);
 
     $scope.settings = {
@@ -37,8 +45,12 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
         saveLabel: 'Update'
     };
 
-    $scope.confirmSave = function(user, usernameField) {
+    $scope.confirmSave = function(user) {
         saveUser(user);
+    };
+
+    $scope.resendRegistration = function(user) {
+        sendRegistration(user);
     };
 
 };
