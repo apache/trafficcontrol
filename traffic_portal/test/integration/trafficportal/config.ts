@@ -16,12 +16,14 @@ export let config: Config = {
   // Capabilities to be passed to the webdriver instance.
   capabilities: {
     browserName: 'chrome',
-    shardTestFiles: true,
-    maxInstances: 50,
+    //Parallelization Configuration (shardTestFiles and maxInstances)
+    // shardTestFiles: true,
+    // maxInstances: 50,
     marionette: true,
     acceptInsecureCerts: true,
     acceptSslCerts: true,
     chromeOptions: {
+      //Run protractor headlessly. Comment it out if user want to see the process.
       args: ["--headless", "--no-sandbox", "--window-size=1920,1080"],
       prefs: {
         download: {

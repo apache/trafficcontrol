@@ -3,32 +3,32 @@ import { async, delay } from 'q';
 import { BasePage } from './BasePage.po';
 
 export class SideNavigationPage extends BasePage{
-    //Navigation for Servers, Server Capabilities, Profiles, Parameters
+    private lnkDashboard = element(by.xpath("//div[@id='sidebar-menu']//a[contains(text(),'Dashboard')]"))
+    //Navigation for Configure
     private propConfigure  = "//div[@id='sidebar-menu']//a[contains(text(),'Configure')]";
     private mnuConfigure = element(by.xpath( this.propConfigure ))
     private lnkServers = element(by.xpath("(//a[@href='/#!/servers'])[1]"));
-    private lnkDashboard = element(by.xpath("//div[@id='sidebar-menu']//a[contains(text(),'Dashboard')]"))
     private lnkServerCapabilities = element(by.xpath("//a[@href='/#!/server-capabilities']"));
     private lnkOrigins = element(by.xpath("//a[@href='/#!/origins']"));
     private lnkProfiles = element(by.xpath("//a[@href='/#!/profiles']"));
     private lnkParameters = element(by.xpath("//a[@href='/#!/parameters']"))
     private lnkTypes = element(by.xpath("//a[@href='/#!/types']"))
     private lnkStatuses = element(by.xpath("//a[@href='/#!/statuses']"))
-    //Navigation for Delivery Services 
+    //Navigation for Services
     private propServices  = "//div[@id='sidebar-menu']//a[text()=' Services']"
     private mnuServices = element(by.xpath( this.propServices ));
     private lnkDeliveryServices = element(by.xpath("//a[@href='/#!/delivery-services']"));
     private lnkDeliveryServiceRequest = element(by.xpath("//a[@href='/#!/delivery-service-requests']"));
     private lnkServiceCategories = element(by.xpath("//a[@href='/#!/service-categories']"));
-    //Navigation for Users, Tenant
+    //Navigation for Users Admin
     private propUserAdmin  = "//div[@id='sidebar-menu']//a[contains(text(),'User Admin')]"
     private mnuUserAdmin = element(by.xpath( this.propUserAdmin ))
     private lnkTenants = element(by.xpath("//a[@href='/#!/tenants']"));
     private lnkUsers = element(by.xpath("//a[@href='/#!/users']"));
-    //Navigation for CDN
+    //Navigation for CDNs
     private propCDN  = "//div[@id='sidebar-menu']//a[contains(text(),'CDNs')]";
     private mnuCDN = element(by.xpath(this.propCDN)) 
-    //Navigation for PhysLocation
+    //Navigation for Topology
     private propTopology  = "//div[@id='sidebar-menu']//a[contains(text(),'Topology')]"
     private mnuTopology = element(by.xpath( this.propTopology ))
     private lnkPhysLocations = element(by.linkText('Phys Locations'))
