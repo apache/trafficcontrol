@@ -53,6 +53,7 @@ type TODeliveryService struct {
 type TODeliveryServiceOldDetails struct {
 	OldOrgServerFqdn *string
 	OldCdnName       string
+	OldCdnId         *int
 	OldRoutingName   string
 }
 
@@ -862,8 +863,8 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		if err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
 		}
-		if ds.CDNName != nil && ds.RoutingName != nil {
-			if sslKeysExist && (oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
+		if (ds.CDNName != nil || ds.CDNID != nil) && ds.RoutingName != nil {
+			if sslKeysExist && (*oldDetails.OldCdnId != *ds.CDNID || oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
 				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 			}
 		}
@@ -1180,7 +1181,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 
 func getOldDetails(id int, tx *sql.Tx) (TODeliveryServiceOldDetails, error, error, int) {
 	q := `
-SELECT ds.routing_name, cdn.name,
+SELECT ds.routing_name, cdn.name, cdn.id,
 (SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
 FROM origin o
 WHERE o.deliveryservice = ds.id
@@ -1190,7 +1191,7 @@ JOIN cdn ON ds.cdn_id = cdn.id
 WHERE ds.id=$1
 `
 	var oldDetails TODeliveryServiceOldDetails
-	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldCdnName, &oldDetails.OldOrgServerFqdn); err != nil {
+	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldCdnName, &oldDetails.OldCdnId, &oldDetails.OldOrgServerFqdn); err != nil {
 		if err == sql.ErrNoRows {
 			return oldDetails, fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
 		}
