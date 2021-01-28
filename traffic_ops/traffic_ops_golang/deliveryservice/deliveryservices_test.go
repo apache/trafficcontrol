@@ -70,7 +70,7 @@ func TestGetDetails(t *testing.T) {
 	if oldDetails.OldCdnName != "foo" {
 		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCdnName)
 	}
-	if *oldDetails.OldCdnId != 1 {
+	if oldDetails.OldCdnId != 1 {
 		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCdnName)
 	}
 }
