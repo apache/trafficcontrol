@@ -472,7 +472,7 @@ def main() -> int:
 	                    help="Sets the timeout in milliseconds for requests made to Traffic Ops.",
 	                    type=int,
 	                    default=None)
-	parser.add_argument("--via_string_release",
+	parser.add_argument("--via-string-release",
 			    		help="set the ATS via string to the package release instead of version",
 			    		type=int,
 			    		default=0)
