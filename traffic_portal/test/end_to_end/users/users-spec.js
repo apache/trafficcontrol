@@ -27,8 +27,7 @@ describe('Traffic Portal Users Test Suite', function() {
 		username: 'user-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		fullName: 'test-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		email: 'test@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com',
-		localPasswd: 'test@123',
-		confirmLocalPasswd: 'test@123'
+		localPasswd: commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 	};
 	const myNewRegisteredUser = {
 		email: 'test1@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com'
@@ -71,7 +70,7 @@ describe('Traffic Portal Users Test Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.roleName, 1);
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		pageData.localPasswd.sendKeys(myNewUser.localPasswd);
-		pageData.confirmLocalPasswd.sendKeys(myNewUser.confirmLocalPasswd);
+		pageData.confirmLocalPasswd.sendKeys(myNewUser.localPasswd);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users");
