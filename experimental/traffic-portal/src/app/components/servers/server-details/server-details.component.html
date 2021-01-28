@@ -137,4 +137,4 @@ limitations under the License.
 	</div>
 </form>
 
-<tp-update-status [servers]="[server]" (done)="done($event)" [open]="changeStatusDialogOpen"></tp-update-status>
+<tp-update-status [servers]="[server]" (done)="doneUpdatingStatus($event)" *ngIf="changeStatusDialogOpen"></tp-update-status>

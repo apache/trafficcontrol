@@ -304,18 +304,24 @@ export class ServerDetailsComponent implements OnInit {
 		if (this.isNew) {
 			throw new Error("cannot update the status of a server that doesn't exist yet");
 		}
-		this.changeStatusDialogOpen = false;
+		this.changeStatusDialogOpen = true;
 	}
 
-	public done(reload: boolean): void {
+	/**
+	 * Handles the completion of a server update, closing the dialog and updating the view if necessary.
+	 *
+	 * @param reload Whether or not the server was actually changed (and thus needs to be reloaded)
+	 */
+	public doneUpdatingStatus(reload: boolean): void {
 		this.changeStatusDialogOpen = false;
-		console.log("done emitted:", reload);
 		if (this.isNew || !this.server.id) {
 			console.error("done fired on server with no ID");
 			return;
 		}
 		if (reload) {
-			this.router.navigate(["servers", this.server.id], {replaceUrl: true});
+			this.serverService.getServers(this.server.id).subscribe(
+				s => this.server = s
+			);
 		}
 	}
 
