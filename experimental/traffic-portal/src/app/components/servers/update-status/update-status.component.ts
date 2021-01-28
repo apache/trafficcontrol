@@ -12,25 +12,39 @@ import { ServerService } from "src/app/services/api";
 })
 export class UpdateStatusComponent implements OnInit {
 
+	/** The servers being updated. */
 	@Input() public servers = new Array<Server>();
+	/** Emits 'false' when the status update is cancelled (or fails), 'true' when it completes successfully. */
 	@Output() public done = new EventEmitter<boolean>();
 
+	/**
+	 * Captures keypresses and emits 'false' from the 'done' output if the user presses the escape key.
+	 *
+	 * @param e The captured 'keydown' event.
+	 */
 	@HostListener("document:keydown", ["$event"]) public closeOnEscape(e: KeyboardEvent): void {
 		if (e.code === "Escape" || e.code === "Esc") {
 			this.done.emit(false);
 		}
 	}
 
+	/** The possible statuses of a server. */
 	public statuses = of(new Array<Status>());
+	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
+
+	/** Form control for the new status selection. */
 	public statusControl = new FormControl();
+	/** Form control for the offline reason input. */
 	public offlineReasonControl = new FormControl();
 
+	/** Tells whether the user's selected status is considered "OFFLINE". */
 	public get isOffline(): boolean {
 		const val = this.statusControl.value;
 		return val !== null && val !== undefined && val.name !== "ONLINE" && val.name !== "REPORTED";
 	}
 
+	/** An appropriate title for the server or collection of servers being updated. */
 	public get serverName(): string {
 		const len = this.servers.length;
 		if (len === 1) {
@@ -39,10 +53,11 @@ export class UpdateStatusComponent implements OnInit {
 		return `${len} servers`;
 	}
 
+	/** Constructor. */
 	constructor(private readonly api: ServerService) { }
 
 	/**
-	 *
+	 * Sets up the necessary data to complete the form.
 	 */
 	public ngOnInit(): void {
 		this.statuses = this.api.getStatuses();
@@ -62,6 +77,12 @@ export class UpdateStatusComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Triggered when the user submits the form; this attempts to update the server(s) and emits
+	 * from the `done` Output a value that depends on success or failure of the request.
+	 *
+	 * @param e The submission event.
+	 */
 	public submit(e: Event): void {
 		e.preventDefault();
 		e.stopPropagation();
@@ -82,6 +103,9 @@ export class UpdateStatusComponent implements OnInit {
 		);
 	}
 
+	/**
+	 * Emits from the `done` Output indicating the action was cancelled.
+	 */
 	public cancel(): void {
 		this.done.emit(false);
 	}
