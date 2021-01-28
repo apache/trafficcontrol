@@ -211,9 +211,9 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 // Update wraps tenant validation and the generic API Update call into a single call.
 func (ten *TOTenant) Update(h http.Header) (error, error, int) {
 
-	usererr, syserr, statusCode := ten.isUpdatable()
-	if usererr != nil || syserr != nil {
-		return usererr, syserr, statusCode
+	userErr, sysErr, statusCode := ten.isUpdatable()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
 	}
 
 	return api.GenericUpdate(h, ten)
