@@ -41,8 +41,8 @@ func TestGetDetails(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"routing_name", "name", "origin_server_fqdn"})
-	rows.AddRow("cdn", "foo", "http://123.34.32.21:9090")
+	rows := sqlmock.NewRows([]string{"routing_name", "name", "id", "origin_server_fqdn"})
+	rows.AddRow("cdn", "foo", 1, "http://123.34.32.21:9090")
 
 	rows2 := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "coalesce"})
 	rows2.AddRow("testDS", "HOST_REGEXP", ".*\\.testDS\\..*", 0)
@@ -69,6 +69,9 @@ func TestGetDetails(t *testing.T) {
 	}
 	if oldDetails.OldCdnName != "foo" {
 		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCdnName)
+	}
+	if *oldDetails.OldCdnId != 1 {
+		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCdnName)
 	}
 }
 
