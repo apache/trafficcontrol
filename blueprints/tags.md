@@ -97,6 +97,46 @@ Foreign-key constraints:
     "server_tag_tag_fkey" FOREIGN KEY (tag) REFERENCES tag(name) ON UPDATE CASCADE ON DELETE CASCADE
 ```
 
+Also, the release that includes Tags should also include a database migration
+that adds new tags based on existing Types, to make replacing them easier.
+
+Specifically, it should add Tags for:
+
+- Cache Group Types other than
+	- `ORG_LOC`
+	- `EDGE_LOC`
+	- `MID_LOC`
+	- `INFRA_LOC` (which will need to be created if it doesn't already exist)
+- Server Types other than
+	- `EDGE`
+	- `MID`
+	- `CCR`
+	- `TRAFFIC_ROUTER` (which will need to be created if it doesn't already exist)
+	- `ORG`
+	- `INFLUXDB` (which will need to be created if it doesn't already exist)
+	- `RASCAL`
+	- `TRAFFIC_MONITOR` (which will need to be created if it doesn't already exist)
+	- `RIAK`
+	- `TRAFFIC_VAULT` (which will need to be created if it doesn't already exist)
+	- `ORG`
+	- `TRAFFIC_OPS` (which will need to be created if it doesn't already exist)
+	- `TRAFFIC_OPS_DB` (which will need to be created if it doesn't already exist)
+	- `TRAFFIC_STATS` (which will need to be created if it doesn't already exist)
+- Delivery Service Types other than
+	- `HTTP`
+	- `HTTP_NO_CACHE`
+	- `HTTP_LIVE`
+	- `HTTP_LIVE_NATNL`
+	- `DNS`
+	- `DNS_LIVE`
+	- `DNS_LIVE_NATNL`
+	- `ANY_MAP`
+	- `CLIENT_STEERING`
+	- `STEERING`
+
+These created Tags should also be associated with the objects that have these
+Types at the time they are created.
+
 #### API Impact
 The actual amount of work to add Tags to all Taggable objects is rather large,
 considering the number of endpoints that need to be changed, but each change is
