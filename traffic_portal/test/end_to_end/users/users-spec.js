@@ -27,15 +27,11 @@ describe('Traffic Portal Users Test Suite', function() {
 		username: 'user-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		fullName: 'test-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		email: 'test@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com',
-		roleName: 'admin',
-		tenantId: ' - root',
 		localPasswd: 'test@123',
 		confirmLocalPasswd: 'test@123'
 	};
 	const myNewRegisteredUser = {
-		email: 'test1@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com',
-		roleName: 'operations',
-		tenantId: ' -- tenant01'
+		email: 'test1@cdn.' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz') + '.com'
 	};
 
 	it('should go to the users page', function() {
@@ -72,8 +68,8 @@ describe('Traffic Portal Users Test Suite', function() {
 		pageData.username.sendKeys(myNewUser.username);
 		pageData.fullName.sendKeys(myNewUser.fullName);
 		pageData.email.sendKeys(myNewUser.email);
-		pageData.roleName.sendKeys(myNewUser.roleName);
-		pageData.tenantId.sendKeys(myNewUser.tenantId);
+		commonFunctions.selectDropdownbyNum(pageData.roleName, 1);
+		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		pageData.localPasswd.sendKeys(myNewUser.localPasswd);
 		pageData.confirmLocalPasswd.sendKeys(myNewUser.confirmLocalPasswd);
 		expect(pageData.createButton.isEnabled()).toBe(true);
@@ -109,8 +105,8 @@ describe('Traffic Portal Users Test Suite', function() {
 		console.log("Creating a new registered user");
 		expect(pageData.registerEmailButton.isEnabled()).toBe(false);
 		pageData.email.sendKeys(myNewRegisteredUser.email);
-		pageData.roleName.sendKeys(myNewRegisteredUser.roleName);
-		pageData.tenantId.sendKeys(myNewRegisteredUser.tenantId);
+		commonFunctions.selectDropdownbyNum(pageData.roleName, 2);
+		commonFunctions.selectDropdownbyNum(pageData.tenantId, 2);
 		expect(pageData.registerEmailButton.isEnabled()).toBe(true);
 		pageData.registerEmailButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/users/register");
@@ -129,9 +125,9 @@ describe('Traffic Portal Users Test Suite', function() {
 			});
 		}).get(0).click();
 		browser.sleep(1000);
-		expect(pageData.registerSent.getAttribute('readOnly')).toBe('true');
 		pageData.fullName.clear();
 		pageData.fullName.sendKeys('test1 updated');
+		expect(pageData.registerSent.getAttribute('readOnly')).toBe('true');
 		pageData.updateButton.click();
 		expect(pageData.fullName.getText() === 'test1 updated');
 	});
