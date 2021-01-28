@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-system-info:
+.. _to-api-v3-system-info:
 
 ***************
 ``system/info``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-staticdnsentries:
+.. _to-api-v3-staticdnsentries:
 
 ********************
 ``staticdnsentries``

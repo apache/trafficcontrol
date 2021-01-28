@@ -13,12 +13,12 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profileparameter:
+.. _to-api-v3-profileparameter:
 
 ********************
 ``profileparameter``
 ********************
-.. seealso:: :ref:`to-api-profileparameters`.
+.. seealso:: :ref:`to-api-v3-profileparameters`.
 
 ``POST``
 ========

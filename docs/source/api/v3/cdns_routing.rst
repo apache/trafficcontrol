@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-routing:
+.. _to-api-v3-cdns-routing:
 
 ****************
 ``cdns/routing``

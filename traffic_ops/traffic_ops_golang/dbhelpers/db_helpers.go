@@ -538,13 +538,15 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 
 // GetServerInterfaces, given the IDs of one or more servers, returns all of their network
 // interfaces mapped by their ids, or an error if one occurs during retrieval.
-func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfo, error) {
+func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfoV40, error) {
 	q := `
 	SELECT max_bandwidth,
 	       monitor,
 	       mtu,
 	       name,
-	       server
+	       server,
+	       router_host_name,
+	       router_port_name
 	FROM interface
 	WHERE interface.server = ANY ($1)
 	`
@@ -554,16 +556,15 @@ func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerIn
 	}
 	defer ifaceRows.Close()
 
-	infs := map[int]map[string]tc.ServerInterfaceInfo{}
+	infs := map[int]map[string]tc.ServerInterfaceInfoV40{}
 	for ifaceRows.Next() {
-		var inf tc.ServerInterfaceInfo
+		var inf tc.ServerInterfaceInfoV40
 		var server int
-		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server); err != nil {
+		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPortName); err != nil {
 			return nil, err
 		}
-
 		if _, ok := infs[server]; !ok {
-			infs[server] = make(map[string]tc.ServerInterfaceInfo)
+			infs[server] = make(map[string]tc.ServerInterfaceInfoV40)
 		}
 
 		infs[server][inf.Name] = inf
