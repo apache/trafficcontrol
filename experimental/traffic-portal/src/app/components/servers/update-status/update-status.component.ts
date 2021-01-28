@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { merge, of } from "rxjs";
 import { mergeAll } from "rxjs/operators";
@@ -6,15 +6,20 @@ import { Server, Status } from "src/app/models";
 import { ServerService } from "src/app/services/api";
 
 @Component({
-	selector: "tp-update-status",
+	selector: "tp-update-status[servers]",
 	styleUrls: ["./update-status.component.scss"],
 	templateUrl: "./update-status.component.html"
 })
 export class UpdateStatusComponent implements OnInit {
 
-	@Input() public open = false;
 	@Input() public servers = new Array<Server>();
 	@Output() public done = new EventEmitter<boolean>();
+
+	@HostListener("document:keydown", ["$event"]) public closeOnEscape(e: KeyboardEvent): void {
+		if (e.code === "Escape" || e.code === "Esc") {
+			this.done.emit(false);
+		}
+	}
 
 	public statuses = of(new Array<Status>());
 	public currentStatus: null | number = null;
