@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 
 import { User } from "./models";
@@ -26,7 +26,7 @@ import { AuthenticationService } from "./services";
 	styleUrls: ["./app.component.scss"],
 	templateUrl: "./app.component.html",
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
 	/** The app's title */
 	public title = "Traffic Portal";
 
@@ -46,6 +46,13 @@ export class AppComponent {
 	public logout(): void {
 		this.auth.logout();
 		this.router.navigate(["/login"]);
+	}
+
+	/**
+	 * Sets up the current user.
+	 */
+	public ngOnInit(): void {
+		this.auth.updateCurrentUser().subscribe();
 	}
 
 }

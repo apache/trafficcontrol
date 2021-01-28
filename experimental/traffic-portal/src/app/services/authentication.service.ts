@@ -53,6 +53,7 @@ export class AuthenticationService {
 		this.currentUser = this.currentUserSubject.asObservable();
 		this.loggedIn = this.loggedInSubject.asObservable();
 		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
+		this.updateCurrentUser();
 	}
 
 	/** The current user's User, or 'null' if they are not logged in. */
@@ -80,11 +81,11 @@ export class AuthenticationService {
 			(u: User) => {
 				this.currentUserSubject.next(u);
 				if (u.role) {
-					this.api.getRoles(u.role).pipe(first()).pipe(map(
+					this.api.getRoles(u.role).subscribe(
 						r => {
 							this.currentUserCapabilitiesSubject.next(new Set<string>(r.capabilities));
 						}
-					));
+					);
 				}
 				return true;
 			},
