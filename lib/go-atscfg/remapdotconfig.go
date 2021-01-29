@@ -168,7 +168,7 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, _, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
+			qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 			if addedCacheKey {
 				hasCacheKey = true
 			}
@@ -347,7 +347,7 @@ func buildEdgeRemapLine(
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
 				warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
-				qstr, _, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
+				qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 				if addedCacheKey {
 					hasCacheKey = true
 				}
@@ -508,13 +508,13 @@ func midHeaderRewriteConfigFileName(dsName string) string {
 	return "hdr_rw_mid_" + dsName + ".config"
 }
 
-// getQStringIgnoreRemap returns the remap, whether cacheurl was added, and whether cachekey was added.
-func getQStringIgnoreRemap(atsMajorVersion int) (string, bool, bool) {
+// getQStringIgnoreRemap returns the remap, whether cachekey was added.
+func getQStringIgnoreRemap(atsMajorVersion int) (string, bool) {
 	if atsMajorVersion < 7 {
 		log.Errorf("Unsupport version of ats found %v", atsMajorVersion)
-		return "", false, false
+		return "", false
 	}
-	return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, false, true
+	return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, true
 }
 
 // makeServerPackageParamData returns a map[paramName]paramVal for this server, config file 'package'.
