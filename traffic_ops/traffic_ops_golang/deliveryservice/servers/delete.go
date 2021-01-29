@@ -45,10 +45,21 @@ func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 }
 
 const lastServerQuery = `
-SELECT COUNT(*) = 0
+SELECT
+(SELECT (CASE WHEN t.name LIKE '` + string(tc.EdgeTypePrefix) + `%' THEN TRUE ELSE FALSE END) AS available
+FROM type t
+JOIN server s ON s.type = t.id
+WHERE s.id = $2)
+AND
+(SELECT COUNT(*) = 0 AS available
 FROM deliveryservice_server
-WHERE deliveryservice = $1
-	AND server <> $2
+JOIN server s ON deliveryservice_server.server = s.id 
+JOIN type t ON t.id = s.type
+JOIN status st ON st.id = s.status
+WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+AND t.name LIKE '` + string(tc.EdgeTypePrefix) + `%'
+AND deliveryservice = $1
+AND server <> $2)
 `
 
 // checkLastServer checks if the given Server ID identifies the last server
@@ -68,7 +79,7 @@ func checkLastServer(dsID, serverID int, tx *sql.Tx) (int, error, error) {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}
 	if isLast {
-		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no assigned servers", serverID, dsID), nil
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE assigned servers", serverID, dsID), nil
 	}
 	return http.StatusOK, nil, nil
 }

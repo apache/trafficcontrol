@@ -16,10 +16,9 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -30,43 +29,16 @@ const (
 
 // Create a Division
 func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(division)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_DIVISIONS, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_DIVISIONS, division, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateDivisionByIDWithHdr(id int, division tc.Division, header http.Header) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(division)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s/%d", API_DIVISIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, division, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // Update a Division by ID
@@ -76,22 +48,9 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 }
 
 func (to *Session) GetDivisionsWithHdr(header http.Header) ([]tc.Division, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DIVISIONS, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Division{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.DivisionsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_DIVISIONS, header, &data)
+	return data.Response, reqInf, err
 }
 
 // Returns a list of Divisions
@@ -102,25 +61,9 @@ func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
 
 func (to *Session) GetDivisionByIDWithHdr(id int, header http.Header) ([]tc.Division, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DIVISIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Division{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.DivisionsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GET a Division by the Division id
@@ -130,26 +73,10 @@ func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 }
 
 func (to *Session) GetDivisionByNameWithHdr(name string, header http.Header) ([]tc.Division, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_DIVISIONS, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Division{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf("%s?name=%s", API_DIVISIONS, url.QueryEscape(name))
 	var data tc.DivisionsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GET a Division by the Division name
@@ -161,13 +88,7 @@ func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error)
 // DELETE a Division by Division id
 func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_DIVISIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }

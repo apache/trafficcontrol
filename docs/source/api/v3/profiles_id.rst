@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profiles-id:
+.. _to-api-v3-profiles-id:
 
 *******************
 ``profiles/{{ID}}``

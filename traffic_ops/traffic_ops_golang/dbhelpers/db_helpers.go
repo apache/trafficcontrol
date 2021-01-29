@@ -538,13 +538,15 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 
 // GetServerInterfaces, given the IDs of one or more servers, returns all of their network
 // interfaces mapped by their ids, or an error if one occurs during retrieval.
-func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfo, error) {
+func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfoV40, error) {
 	q := `
 	SELECT max_bandwidth,
 	       monitor,
 	       mtu,
 	       name,
-	       server
+	       server,
+	       router_host_name,
+	       router_port_name
 	FROM interface
 	WHERE interface.server = ANY ($1)
 	`
@@ -554,16 +556,15 @@ func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerIn
 	}
 	defer ifaceRows.Close()
 
-	infs := map[int]map[string]tc.ServerInterfaceInfo{}
+	infs := map[int]map[string]tc.ServerInterfaceInfoV40{}
 	for ifaceRows.Next() {
-		var inf tc.ServerInterfaceInfo
+		var inf tc.ServerInterfaceInfoV40
 		var server int
-		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server); err != nil {
+		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPortName); err != nil {
 			return nil, err
 		}
-
 		if _, ok := infs[server]; !ok {
-			infs[server] = make(map[string]tc.ServerInterfaceInfo)
+			infs[server] = make(map[string]tc.ServerInterfaceInfoV40)
 		}
 
 		infs[server][inf.Name] = inf
@@ -869,7 +870,7 @@ func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, e
 	}
 
 	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, ds.CDNID, err.Error()), nil
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, *ds.CDNID, err.Error()), nil
 	}
 
 	return statusCode, userErr, sysErr
@@ -1100,8 +1101,8 @@ GROUP BY t.name, ds.topology
 	return dsType, reqCap, topology, true, nil
 }
 
-// CheckOriginServerInCacheGroupTopology checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
-func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
+// CheckOriginServerInDSCG checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
+func CheckOriginServerInDSCG(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
 	// get servers and respective cachegroup name that have ORG type in a delivery service
 	q := `
 		SELECT s.host_name, c.name 
@@ -1129,11 +1130,12 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 	}
 
 	if len(servers) > 0 {
+		//Validation for DS
 		_, cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
 		if sysErr != nil {
 			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
 		}
-		// put slice values into map
+		// put slice values into map for DS's validation
 		topoCachegroups := make(map[string]string)
 		for _, cg := range cachegroups {
 			topoCachegroups[cg] = ""
@@ -1147,6 +1149,55 @@ func CheckOriginServerInCacheGroupTopology(tx *sql.Tx, dsID int, dsTopology stri
 	}
 	if len(offendingSCG) > 0 {
 		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckTopologyOrgServerCGInDSCG checks if ORG server are part of DS. IF they are then the user is not allowed to remove the ORG servers from the associated DS's topology
+func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string, topologyCGNames []string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type for evert delivery service
+	q := `
+		SELECT ARRAY_AGG(d.xml_id), s.id, c.name
+		FROM server s
+			INNER JOIN deliveryservice_server ds ON ds.server = s.id
+			INNER JOIN deliveryservice d ON d.id = ds.deliveryservice
+			INNER JOIN type t ON t.id = s.type
+			INNER JOIN cachegroup c ON c.id = s.cachegroup
+		WHERE d.cdn_id =ANY($1) AND t.name=$2 AND d.topology=$3
+		GROUP BY s.id, c.name
+	`
+	serverId := ""
+	cacheGroupName := ""
+	dsNames := []string{}
+	serversCG := make(map[string]string)
+	serversDS := make(map[string][]string)
+	rows, err := tx.Query(q, pq.Array(cdnIds), tc.OriginTypeName, dsTopology)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&dsNames), &serverId, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+		serversCG[cacheGroupName] = serverId
+		serversDS[serverId] = dsNames
+	}
+
+	var offendingDSSerCG []string
+	// put slice values into map for Topology's validation
+	topoCacheGroupNames := make(map[string]string)
+	for _, currentCG := range topologyCGNames {
+		topoCacheGroupNames[currentCG] = ""
+	}
+	for cg, s := range serversCG {
+		_, currentTopoCGOk := topoCacheGroupNames[cg]
+		if !currentTopoCGOk {
+			offendingDSSerCG = append(offendingDSSerCG, fmt.Sprintf("cachegroup=%s (serverID=%s, delivery_services=%s)", cg, s, serversDS[s]))
+		}
+	}
+	if len(offendingDSSerCG) > 0 {
+		return errors.New("ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed: " + strings.Join(offendingDSSerCG, ", ")), nil, http.StatusBadRequest
 	}
 	return nil, nil, http.StatusOK
 }

@@ -39,6 +39,10 @@ tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 
 
 %build
+set -o nounset
+# copy license
+cp "${TC_DIR}/LICENSE" %{_builddir}
+
 # copy atstccfg binary
 godir=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 ( mkdir -p "$godir" && \
@@ -76,6 +80,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %post
 
 %files
+%license LICENSE
 %attr(755, root, root)
 /opt/ort/traffic_ops_ort.pl
 /opt/ort/supermicro_udev_mapper.pl

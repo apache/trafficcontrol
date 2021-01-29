@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-topologies-name-queue_update:
+.. _to-api-v3-topologies-name-queue_update:
 
 ************************************
 ``topologies/{{name}}/queue_update``

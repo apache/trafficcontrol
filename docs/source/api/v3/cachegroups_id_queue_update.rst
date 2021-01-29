@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups-id-queue_update:
+.. _to-api-v3-cachegroups-id-queue_update:
 
 ***********************************
 ``cachegroups/{{ID}}/queue_update``

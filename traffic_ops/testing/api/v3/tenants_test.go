@@ -33,6 +33,7 @@ func TestTenants(t *testing.T) {
 		SortTestTenants(t)
 		GetTestTenants(t)
 		UpdateTestTenants(t)
+		UpdateTestRootTenant(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -62,12 +63,12 @@ func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
 	if newParent != nil {
 		modTenant.ParentID = newParent.ID
 
-		_, err = TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
+		_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
 		if err == nil {
 			t.Fatalf("expected a precondition failed error, got none")
 		}
-		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
-			t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("expected a status 412 Precondition Failed, but got %d", reqInf.StatusCode)
 		}
 	}
 }
@@ -168,6 +169,25 @@ func UpdateTestTenants(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
 
+}
+
+func UpdateTestRootTenant(t *testing.T) {
+	// Retrieve the Tenant by name so we can get the id for the Update
+	name := "root"
+	modTenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+	}
+
+	modTenant.Active = false
+	modTenant.ParentID = modTenant.ID
+	_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, nil)
+	if err == nil {
+		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a status 400 Bad Request, but got %d", reqInf.StatusCode)
+	}
 }
 
 func DeleteTestTenants(t *testing.T) {

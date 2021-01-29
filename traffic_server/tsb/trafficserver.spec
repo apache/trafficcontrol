@@ -98,6 +98,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
+%license LICENSE
 %defattr(-,root,root)
 %attr(644,-,-) /usr/lib/systemd/system/trafficserver.service
 %dir /opt/trafficserver

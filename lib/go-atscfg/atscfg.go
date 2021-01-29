@@ -70,7 +70,11 @@ func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService 
 func OldToDeliveryServices(dses []tc.DeliveryServiceNullable) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
-		upgradedDS := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds)}
+		upgradedDS := tc.DeliveryServiceNullableV30{
+			DeliveryServiceV30: tc.DeliveryServiceV30{
+				DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15(ds),
+			},
+		}
 		ad = append(ad, DeliveryService(upgradedDS))
 	}
 	return ad
@@ -360,6 +364,36 @@ func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 		topoNames[TopologyName(to.Name)] = to
 	}
 	return topoNames
+}
+
+// getTopologyDirectChildren returns the cachegroups which are immediate children of the given cachegroup in any topology.
+func getTopologyDirectChildren(
+	cg tc.CacheGroupName,
+	topologies []tc.Topology,
+) map[tc.CacheGroupName]struct{} {
+	children := map[tc.CacheGroupName]struct{}{}
+
+	for _, topo := range topologies {
+		svNodeI := -1
+		for nodeI, node := range topo.Nodes {
+			if node.Cachegroup == string(cg) {
+				svNodeI = nodeI
+				break
+			}
+		}
+		if svNodeI < 0 {
+			continue // this cg wasn't in the topology
+		}
+		for _, node := range topo.Nodes {
+			for _, parent := range node.Parents {
+				if parent == svNodeI {
+					children[tc.CacheGroupName(node.Cachegroup)] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+	return children
 }
 
 type parameterWithProfiles struct {

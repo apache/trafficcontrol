@@ -343,6 +343,10 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 	Specify the path to a file containing static data for the tests to use. This should almost never be used, because many of the tests depend on the data having a certain content and structure. If not specified, it will attempt to read a file named ``tc-fixtures.json`` in the working directory.
 
+.. option:: --includeSystemTests ``no``/``yes``
+
+	Specify whether to run tests that depend on additional components like an SMTP server or a Riak server. Default: ``no``
+
 Configuring the Integration Tests
 """""""""""""""""""""""""""""""""
 Configuration is mainly done through the configuration file passed as :option:`--cfg`, but is also available through the following environment variables.

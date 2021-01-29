@@ -93,6 +93,7 @@ func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 		toData.Server,
 		toData.Servers,
 		toData.CacheGroups,
+		toData.Topologies,
 		hdrCommentTxt,
 	)
 }
@@ -126,7 +127,10 @@ func MakeParentDotConfig(toData *config.TOData, fileName string, hdrCommentTxt s
 		toData.CacheGroups,
 		toData.DeliveryServiceServers,
 		toData.CDN,
-		hdrCommentTxt,
+		atscfg.ParentConfigOpts{
+			HdrComment:  hdrCommentTxt,
+			AddComments: true, // TODO add a CLI flag?
+		},
 	)
 }
 

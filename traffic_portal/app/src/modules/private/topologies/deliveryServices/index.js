@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.topologies.deliveryServic
 							},
 							deliveryServices: function(topologies, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ topology: topologies[0].name });
+							},
+							filter: function(topologies) {
+								return {
+									topology: {
+										filterType: "text",
+										type: "equals",
+										filter: topologies[0].name
+									}
+								}
 							}
 						}
 					}

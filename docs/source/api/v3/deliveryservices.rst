@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices:
+.. _to-api-v3-deliveryservices:
 
 ********************
 ``deliveryservices``
@@ -120,35 +120,36 @@ Response Structure
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
 	:type:      The type of match performed using ``pattern``.
 
-:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
-:maxOriginConnections: The :ref:`ds-max-origin-connections`
-:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
-:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
-:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
-:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
-:orgServerFqdn:        The :ref:`ds-origin-url`
-:originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
-:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
-:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
-:regexRemap:           A :ref:`ds-regex-remap`
-:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
-:remapText:            :ref:`ds-raw-remap`
-:serviceCategory:      The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
-:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
-:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
-:sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:topology:             The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
-:trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-:trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-:type:                 The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId:               The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:                This :term:`Delivery Service`'s :ref:`ds-xmlid`
+:maxDnsAnswers:         The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections:  The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes: The :ref:`ds-max-request-header-bytes`
+:midHeaderRewrite:      A set of :ref:`ds-mid-header-rw-rules`
+:missLat:               The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:              The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:       A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:         The :ref:`ds-origin-url`
+:originShield:          A :ref:`ds-origin-shield` string
+:profileDescription:    The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:             The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:           The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:              An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:         An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling:  An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:            A :ref:`ds-regex-remap`
+:regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:             :ref:`ds-raw-remap`
+:serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize:   An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:sslKeyVersion:         This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+:trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+:type:                  The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId:                The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:                 This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -247,6 +248,7 @@ Response Structure
 			"zyx"
 		],
 		"maxOriginConnections": 0,
+		"maxRequestHeaderBytes": 131072,
 		"ecsEnabled": false,
 		"rangeSliceBlockSize": null,
 		"topology": null
@@ -305,6 +307,7 @@ Request Structure
 :longDesc2:                 An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :maxDnsAnswers:             The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections:      The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes:     The :ref:`ds-max-request-header-bytes`
 :midHeaderRewrite:          A set of :ref:`ds-mid-header-rw-rules`
 :missLat:                   The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:                  The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -359,6 +362,7 @@ Request Structure
 		"missLat": 0,
 		"missLong": 0,
 		"maxOriginConnections": 0,
+		"maxRequestHeaderBytes": 131072,
 		"multiSiteOrigin": false,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
 		"protocol": 0,
@@ -426,35 +430,36 @@ Response Structure
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
 	:type:      The type of match performed using ``pattern``.
 
-:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
-:maxOriginConnections: The :ref:`ds-max-origin-connections`
-:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
-:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
-:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
-:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
-:orgServerFqdn:        The :ref:`ds-origin-url`
-:originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
-:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
-:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
-:regexRemap:           A :ref:`ds-regex-remap`
-:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
-:remapText:            :ref:`ds-raw-remap`
-:serviceCategory:      The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
-:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
-:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
-:sslKeyVersion: 	   This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:topology:             The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
-:trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-:trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-:type:                 The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId:               The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:                This :term:`Delivery Service`'s :ref:`ds-xmlid`
+:maxDnsAnswers:         The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections:  The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes: The :ref:`ds-max-request-header-bytes`
+:midHeaderRewrite:      A set of :ref:`ds-mid-header-rw-rules`
+:missLat:               The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:              The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:       A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:         The :ref:`ds-origin-url`
+:originShield:          A :ref:`ds-origin-shield` string
+:profileDescription:    The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:             The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:           The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:              An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:         An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling:  An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:            A :ref:`ds-regex-remap`
+:regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:             :ref:`ds-raw-remap`
+:serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize:   An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:sslKeyVersion: 	    This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+:trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+:type:                  The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId:                The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:                 This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -521,6 +526,7 @@ Response Structure
 			],
 			"maxDnsAnswers": null,
 			"maxOriginConnections": 0,
+			"maxRequestHeaderBytes": 131072,
 			"midHeaderRewrite": null,
 			"missLat": -1,
 			"missLong": -1,

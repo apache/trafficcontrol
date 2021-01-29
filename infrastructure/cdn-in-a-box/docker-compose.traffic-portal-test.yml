@@ -33,6 +33,8 @@ services:
       dockerfile: infrastructure/cdn-in-a-box/traffic_portal_integration_test/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
+    depends_on:
+      - edge
     env_file:
       - variables.env
     hostname: portal-integration

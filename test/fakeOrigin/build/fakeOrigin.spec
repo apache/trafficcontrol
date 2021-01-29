@@ -35,6 +35,10 @@ A fake HTTP CDN Origin for testing
 %prep
 
 %build
+set -o nounset
+# copy license
+cp "${DIR}/../../../LICENSE" %{_builddir}
+
 tar -xvzf %{_sourcedir}/%{name}-%{_version}-%{_release}.tgz --directory %{_builddir}
 
 %install
@@ -62,6 +66,7 @@ echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
+%license LICENSE
 /opt/%{name}/%{name}
 /opt/%{name}/example
 /var/log/%{name}

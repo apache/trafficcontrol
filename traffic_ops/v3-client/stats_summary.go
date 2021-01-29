@@ -13,9 +13,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -40,11 +38,11 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 		param.Add("statName", *statName)
 	}
 
-	url := API_STATS_SUMMARY
+	route := API_STATS_SUMMARY
 	if len(param) > 0 {
-		url = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
+		route = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 	}
-	reqInf, err := get(to, url, &resp, nil)
+	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
 }
 
@@ -57,21 +55,15 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	if statName != nil {
 		param.Add("statName", *statName)
 	}
-	url := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
+	route := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 
-	reqInf, err := get(to, url, &resp, nil)
+	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
 }
 
 // CreateSummaryStats creates a stats summary
 func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqBody, err := json.Marshal(statsSummary)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	reqInf, err = post(to, API_STATS_SUMMARY, reqBody, &alerts)
+	reqInf, err := to.post(API_STATS_SUMMARY, statsSummary, nil, &alerts)
 	return alerts, reqInf, err
 }

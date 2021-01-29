@@ -52,6 +52,7 @@ func MakeIPAllowDotConfig(
 	server *Server,
 	servers []Server,
 	cacheGroups []tc.CacheGroupNullable,
+	topologies []tc.Topology,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -168,7 +169,13 @@ func MakeIPAllowDotConfig(
 			return Cfg{}, makeErr(warnings, "server cachegroup not in cachegroups!")
 		}
 
+		childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
+
 		childCGs := map[string]tc.CacheGroupNullable{}
+		for cgName, _ := range childCGNames {
+			childCGs[string(cgName)] = cgMap[string(cgName)]
+		}
+
 		for cgName, cg := range cgMap {
 			if (cg.ParentName != nil && *cg.ParentName == *serverCG.Name) || (cg.SecondaryParentName != nil && *cg.SecondaryParentName == *serverCG.Name) {
 				childCGs[cgName] = cg
@@ -189,11 +196,6 @@ func MakeIPAllowDotConfig(
 			// We need to add IPs to the allow of
 			// - all children of this server
 			// - all monitors, if this server is a Mid
-			//
-			// TODO: handle Topologies. Mids currently block everything but Edges
-			//       We should decide how to handle that in a post-edge-mid world.
-			//       That probably means adding all child and monitor IPs, and blocking everything else,
-			//       for all non-first-tier caches.
 			//
 			_, isChild := childCGs[*childServer.Cachegroup]
 			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {

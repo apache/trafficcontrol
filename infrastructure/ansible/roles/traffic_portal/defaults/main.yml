@@ -144,6 +144,7 @@ tp_default_properties_template:
           rangeRequestHandling: 0
           qstringIgnore: 0
           maxOriginConnections: 0
+          maxRequestHeaderBytes: 0
           multiSiteOrigin: false
           logsEnabled: false
           geoProvider: 0
@@ -163,6 +164,7 @@ tp_default_properties_template:
           rangeRequestHandling: 0
           qstringIgnore: 0
           maxOriginConnections: 0
+          maxRequestHeaderBytes: 0
           multiSiteOrigin: false
           logsEnabled: false
           initialDispersion: 1

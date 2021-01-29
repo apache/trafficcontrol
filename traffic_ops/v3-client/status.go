@@ -16,10 +16,9 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -30,43 +29,16 @@ const (
 
 // CreateStatusNullable creates a new status, using the tc.StatusNullable structure.
 func (to *Session) CreateStatusNullable(status tc.StatusNullable) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(status)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_STATUSES, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_STATUSES, status, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http.Header) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(status)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, status, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // UpdateStatusByID updates a Status by ID.
@@ -76,22 +48,9 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf
 }
 
 func (to *Session) GetStatusesWithHdr(header http.Header) ([]tc.Status, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Status{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.StatusesResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_STATUSES, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetStatuses returns a list of Statuses.
@@ -102,25 +61,9 @@ func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 
 func (to *Session) GetStatusByIDWithHdr(id int, header http.Header) ([]tc.Status, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Status{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.StatusesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetStatusByID GETs a Status by the Status ID.
@@ -130,26 +73,10 @@ func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 }
 
 func (to *Session) GetStatusByNameWithHdr(name string, header http.Header) ([]tc.Status, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_STATUSES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Status{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf("%s?name=%s", API_STATUSES, url.QueryEscape(name))
 	var data tc.StatusesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetStatusByName GETs a Status by the Status name.
@@ -161,13 +88,7 @@ func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
 // DeleteStatusByID DELETEs a Status by ID.
 func (to *Session) DeleteStatusByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }

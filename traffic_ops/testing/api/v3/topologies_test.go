@@ -39,6 +39,7 @@ func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
+		UpdateValidateTopologyORGServerCacheGroup(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
 	})
 }
@@ -237,6 +238,59 @@ func UpdateTestTopologies(t *testing.T) {
 	_, _, err = TOSession.UpdateTopology(top.Name, *top)
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
+	}
+}
+
+func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
+	params := url.Values{}
+	params.Set("xmlId", "ds-top")
+
+	//Get the correct DS
+	remoteDS, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	if err != nil {
+		t.Errorf("cannot GET Delivery Services: %v", err)
+	}
+
+	//Assign ORG server to DS
+	assignServer := []string{"denver-mso-org-01"}
+	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS[0].XMLID)
+	if err != nil {
+		t.Errorf("cannot assign server to Delivery Services: %v", err)
+	}
+
+	//Get Topology node to update and remove ORG server nodes
+	origTopo := *remoteDS[0].Topology
+	resp, _, err := TOSession.GetTopologyWithHdr(origTopo, nil)
+	if err != nil {
+		t.Fatalf("couldn't find any topologies: %v", err)
+	}
+
+	// remove org server cachegroup
+	var p []int
+	newNodes := []tc.TopologyNode{{Id: 0, Cachegroup: "topology-edge-cg-01", Parents: p, LastUpdated: nil}}
+	if *remoteDS[0].Topology == resp.Name {
+		resp.Nodes = newNodes
+	}
+	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
+	if err == nil {
+		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
+	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
+		t.Errorf("expected error messsage containing: \"ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed\", got:%s", err.Error())
+
+	}
+
+	//Remove org server assignment and reset DS back to as it was for further testing
+	params.Set("hostName", "denver-mso-org-01")
+	serverResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if len(serverResp.Response) == 0 {
+		t.Fatal("no servers in response, quitting")
+	}
+	if serverResp.Response[0].ID == nil {
+		t.Fatal("ID of the response server is nil, quitting")
+	}
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].ID)
+	if err != nil {
+		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
 	}
 }
 

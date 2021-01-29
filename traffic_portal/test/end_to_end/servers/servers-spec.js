@@ -25,12 +25,14 @@ describe('Traffic Portal Servers Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
 	const mockVals = {
-		status: "OFFLINE",
+		status: "ONLINE",
 		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
 		interfaceMtu: "9000",
+		routerHostName: "testInterfaceRouterHostName",
+		routerPortName: "testInterfaceRouterPort",
 	};
 
 	it('should go to the Servers page', function() {
@@ -69,6 +71,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should toggle the visibility of the first table column ', function() {
+		console.log("Toggling visiblity of column");
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
@@ -79,6 +82,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should clear column filter when column is hidden', function() {
+		console.log("Clear filters when column is hidden");
 		// Confirm we have rows
 		let rows = element.all(by.css("div.ag-row"));
 		expect(rows.count()).not.toBe(0);

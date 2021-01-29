@@ -70,7 +70,7 @@ describe('Traffic Portal Parameters Test Suite', function() {
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#parametersTable tr:first-child td'));
+		let tableColumns = element.all(by.css('#parametersTable tr:first-child th'));
 		expect(tableColumns.count()).toBe(4);
 	});
 

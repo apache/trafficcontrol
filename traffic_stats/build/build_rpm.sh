@@ -83,6 +83,9 @@ initBuildArea() {
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 
+	# include LICENSE in the tarball
+	cp "${TC_DIR}/LICENSE" "$ts_dest"
+
 	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$ts_dest")" || { echo "Could not create tar archive $ts_dest.tgz: $?"; return 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
