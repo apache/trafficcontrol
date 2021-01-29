@@ -25,8 +25,6 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"net/http"
 	"strconv"
@@ -226,6 +224,12 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx.Commit()
 
+	if cfg == nil {
+		log.Errorf("lets encrypt: config was nil")
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("lets encrypt: config was nil")
+	}
+
 	letsEncryptAccount := config.ConfigAcmeAccount{
 		UserEmail:    cfg.ConfigLetsEncrypt.Email,
 		AcmeProvider: tc.LetsEncryptAuthType,
@@ -273,24 +277,22 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		Version:         *req.Version,
 	}
 
-	keyDer := x509.MarshalPKCS1PrivateKey(priv)
-	if keyDer == nil {
-		log.Errorf("marshalling private key: nil der")
+	keyPem, err := ConvertPrivateKeyToKeyPem(priv)
+	if err != nil {
+		log.Errorf(err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-		return errors.New("marshalling private key: nil der")
+		return err
 	}
-	keyBuf := bytes.Buffer{}
-	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyDer}); err != nil {
-		log.Errorf("pem-encoding private key: " + err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-		return errors.New("pem-encoding private key: " + err.Error())
-	}
-	keyPem := keyBuf.Bytes()
 
 	// remove extra line if LE returns it
 	trimmedCert := bytes.ReplaceAll(certificates.Certificate, []byte("\n\n"), []byte("\n"))
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(trimmedCert)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("Lets Encrypt Generated")))}
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{
+		Crt: string(EncodePEMToLegacyPerlRiakFormat(trimmedCert)),
+		Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)),
+		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("Lets Encrypt Generated"))),
+	}
+
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)

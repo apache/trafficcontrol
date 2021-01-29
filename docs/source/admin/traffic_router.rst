@@ -770,18 +770,18 @@ Automatic Certificate Management Environment (ACME) is a protocol for automatica
 
 External Account Binding
 ------------------------
-External Account Binding allows the user to use an existing account with an :abbr:`ACME (Automatic Certificate Management Environment)` provider to obtain, renew, and revoke SSL certificates.
+External account binding allows the user to use an existing account with an :abbr:`ACME (Automatic Certificate Management Environment)` provider to obtain, renew, and revoke SSL certificates.
 To use this functionality, fill in the fields in :ref:`cdn.conf` for the :abbr:`ACME (Automatic Certificate Management Environment)` provider with which the account is set up.
 The first time this is used for a specific :abbr:`ACME (Automatic Certificate Management Environment)` provider (defined by the `acme_provider` and `user_email` fields) the information will be used to get a private key and account URL from the :abbr:`ACME (Automatic Certificate Management Environment)` provider and register the account. These will be stored for later use.
-External Account Binding information can only be used once, so after the first time, the private key and URL will be used.
+External account binding information can only be used once, so after the first time, the private key and URL will be used.
 
 .. Important:: The `acme_provider` and `user_email` combination must be unique.  The `acme_provider` field must correlate to the `AuthType` field for each certificate to be renewed using that provider.
 
-.. Note:: As of writing, External Account Binding can only be used for certificate renewals.
+.. Note:: As of writing, external account binding can only be used for certificate renewals.
 
-External Account Binding can be set up through :ref:`cdn.conf` by updating the following fields:
+External account binding can be set up through :ref:`cdn.conf` by updating the following fields:
 
-.. table:: Fields to update for External Account Binding using :abbr:`ACME (Automatic Certificate Management Environment)` protocol under `acme_accounts`
+.. table:: Fields to update for external account binding using :abbr:`ACME (Automatic Certificate Management Environment)` protocol under `acme_accounts`
 
 	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name                         | Type    | Required | Description                                                                                                                                                                                                        |
@@ -792,9 +792,9 @@ External Account Binding can be set up through :ref:`cdn.conf` by updating the f
 	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| acme_url                     | string  | Yes      | The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.                                                                                                                                       |
 	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| kid                          | string  | No       | The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding.                                                                                      |
+	| kid                          | string  | No       | The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for external account binding.                                                                                      |
 	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| hmac_encoded                 | string  | No       | The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for External Account Binding. This should be in Base64 URL encoded. |
+	| hmac_encoded                 | string  | No       | The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for external account binding. This should be in Base64 URL encoded. |
 	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. Note:: The `kid` and `hmac_encoded` fields are required unless the account has already been registered and the information has been stored in the Traffic Ops Database.

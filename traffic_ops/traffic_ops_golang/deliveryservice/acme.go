@@ -28,10 +28,6 @@ import (
 	"database/sql"
 	"encoding/pem"
 	"errors"
-	"github.com/go-acme/lego/certcrypto"
-	"github.com/go-acme/lego/challenge"
-	"github.com/go-acme/lego/lego"
-	"github.com/go-acme/lego/registration"
 	"net/http"
 	"strconv"
 
@@ -43,9 +39,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
+	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/certificate"
+	"github.com/go-acme/lego/challenge"
+	"github.com/go-acme/lego/lego"
+	"github.com/go-acme/lego/registration"
 	"github.com/jmoiron/sqlx"
 )
+
+const validAccountStatus = "valid"
 
 func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
@@ -67,76 +69,79 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
-	err := renewAcmeCerts(inf.Config, xmlID, ctx, inf.User)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 	}
 
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Certificate for "+xmlID+" successfully renewed.")
 
 }
 
-func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, currentUser *auth.CurrentUser) error {
+func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, currentUser *auth.CurrentUser) (error, error, int) {
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf(dsName+": Error getting db: %s", err.Error())
-		return err
+		return nil, err, http.StatusInternalServerError
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
 		log.Errorf(dsName+": Error getting tx: %s", err.Error())
-		return err
+		return nil, err, http.StatusInternalServerError
 	}
 
 	userTx, err := db.Begin()
 	if err != nil {
 		log.Errorf(dsName+": Error getting userTx: %s", err.Error())
-		return err
+		return nil, err, http.StatusInternalServerError
 	}
 	defer userTx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {
 		log.Errorf(dsName+": Error getting logTx: %s", err.Error())
-		return err
+		return nil, err, http.StatusInternalServerError
 	}
 	defer logTx.Commit()
 
 	dsID, certVersion, err := getDSIdAndVersionFromName(db, dsName)
 	if err != nil {
-		return errors.New("querying DS info: " + err.Error())
+		return nil, errors.New("querying DS info: " + err.Error()), http.StatusInternalServerError
 	}
 	if dsID == nil || *dsID == 0 {
-		return errors.New("DS id for " + dsName + " was nil or 0")
+		return errors.New("DS id for " + dsName + " was nil or 0"), nil, http.StatusBadRequest
 	}
 	if certVersion == nil || *certVersion == 0 {
-		return errors.New("certificate for " + dsName + " could not be renewed because version was nil or 0")
+		return errors.New("certificate for " + dsName + " could not be renewed because version was nil or 0"), nil, http.StatusBadRequest
 	}
 
+	if cfg == nil {
+		return nil, errors.New("acme: config was nil"), http.StatusInternalServerError
+	}
 	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(dsName, strconv.Itoa(int(*certVersion)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
 	if err != nil {
-		return errors.New("getting ssl keys for xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion)) + " :" + err.Error())
+		return nil, errors.New("getting ssl keys for xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion)) + " : " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok {
-		return errors.New("no object found for the specified key with xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion)))
+		return nil, errors.New("no object found for the specified key with xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion))), http.StatusInternalServerError
 	}
 
 	err = base64DecodeCertificate(&keyObj.Certificate)
 	if err != nil {
-		return errors.New("decoding cert for XMLID " + dsName + " : " + err.Error())
+		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
 	}
 
 	acmeAccount := getAcmeAccountConfig(cfg, keyObj.AuthType)
 	if acmeAccount == nil {
-		return errors.New("No acme account information in cdn.conf for " + keyObj.AuthType)
+		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
 	}
 
 	client, err := GetAcmeClient(acmeAccount, userTx, db)
 	if err != nil {
 		log.Errorf(dsName+": Error getting acme client: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return errors.New("getting acme client: " + err.Error())
+		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError
 	}
 
 	renewRequest := certificate.Resource{
@@ -144,9 +149,9 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	}
 
 	cert, err := client.Certificate.Renew(renewRequest, true, false)
-	if err != nil {
+	if err != nil || cert == nil {
 		log.Errorf("Error obtaining acme certificate: %s", err.Error())
-		return err
+		return nil, err, http.StatusInternalServerError
 	}
 
 	newCertObj := tc.DeliveryServiceSSLKeys{
@@ -158,28 +163,33 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 		Version:         keyObj.Version + 1,
 	}
 
-	newCertObj.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(cert.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(cert.PrivateKey)), CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated")))}
+	newCertObj.Certificate = tc.DeliveryServiceSSLKeysCertificate{
+		Crt: string(EncodePEMToLegacyPerlRiakFormat(cert.Certificate)),
+		Key: string(EncodePEMToLegacyPerlRiakFormat(cert.PrivateKey)),
+		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated"))),
+	}
+
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(newCertObj, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting acme certificate to riak: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return errors.New(dsName + ": putting riak keys: " + err.Error())
+		return nil, errors.New(dsName + ": putting riak keys: " + err.Error()), http.StatusInternalServerError
 	}
 
 	tx2, err := db.Begin()
 	if err != nil {
 		log.Errorf("starting sql transaction for delivery service " + dsName + ": " + err.Error())
-		return errors.New("starting sql transaction for delivery service " + dsName + ": " + err.Error())
+		return nil, errors.New("starting sql transaction for delivery service " + dsName + ": " + err.Error()), http.StatusInternalServerError
 	}
 
 	if err := updateSSLKeyVersion(dsName, *certVersion+1, tx2); err != nil {
 		log.Errorf("updating SSL key version for delivery service '" + dsName + "': " + err.Error())
-		return errors.New("updating SSL key version for delivery service '" + dsName + "': " + err.Error())
+		return nil, errors.New("updating SSL key version for delivery service '" + dsName + "': " + err.Error()), http.StatusInternalServerError
 	}
 	tx2.Commit()
 
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: Added SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 
-	return nil
+	return nil, nil, http.StatusOK
 }
 
 func getAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
@@ -202,6 +212,7 @@ func getDSIdAndVersionFromName(db *sqlx.DB, xmlId string) (*int, *int64, error) 
 	return &dsID, &certVersion, nil
 }
 
+// GetAcmeClient uses the ACME account information in either cdn.conf or the database to create and register an ACME client
 func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sqlx.DB) (*lego.Client, error) {
 	if acmeAccount.UserEmail == "" {
 		log.Errorf("An email address must be provided to use ACME with %v", acmeAccount.AcmeProvider)
@@ -267,7 +278,7 @@ func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sq
 			return nil, err
 		}
 		myUser.Registration = reg
-		if reg.Body.Status != "valid" {
+		if reg.Body.Status != validAccountStatus {
 			log.Debugf("Account found with %s is not valid.", acmeAccount.AcmeProvider)
 			foundPreviousAccount = false
 		}
@@ -296,17 +307,10 @@ func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sq
 		}
 
 		// save account info
-		userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
-		if userKeyDer == nil {
-			log.Errorf("marshalling private key: nil der")
-			return nil, errors.New("marshalling private key: nil der")
+		userKeyPem, err := ConvertPrivateKeyToKeyPem(userPrivateKey)
+		if err != nil {
+			return nil, err
 		}
-		userKeyBuf := bytes.Buffer{}
-		if err := pem.Encode(&userKeyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: userKeyDer}); err != nil {
-			log.Errorf("pem-encoding private key: " + err.Error())
-			return nil, errors.New("pem-encoding private key: " + err.Error())
-		}
-		userKeyPem := userKeyBuf.Bytes()
 		err = storeAcmeAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI, acmeAccount.AcmeProvider)
 		if err != nil {
 			log.Errorf("storing user account info: " + err.Error())
@@ -315,6 +319,20 @@ func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sq
 	}
 
 	return client, nil
+}
+
+func ConvertPrivateKeyToKeyPem(userPrivateKey *rsa.PrivateKey) ([]byte, error) {
+	userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
+	if userKeyDer == nil {
+		log.Errorf("marshalling private key: nil der")
+		return nil, errors.New("marshalling private key: nil der")
+	}
+	userKeyBuf := bytes.Buffer{}
+	if err := pem.Encode(&userKeyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: userKeyDer}); err != nil {
+		log.Errorf("pem-encoding private key: " + err.Error())
+		return nil, errors.New("pem-encoding private key: " + err.Error())
+	}
+	return userKeyBuf.Bytes(), nil
 }
 
 func getStoredAcmeAccountInfo(tx *sql.Tx, email string, provider string) (*AcmeInfo, error) {
