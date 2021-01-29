@@ -70,9 +70,9 @@ func TestIsUpdateable(t *testing.T) {
 
 	// First test, attempt to change root
 	root := getRootTestTenant()
-	usererr, _, statusCode := root.isUpdatable()
-	if usererr == nil && statusCode != http.StatusBadRequest {
-		t.Errorf("Should not be able to update root tenant. usererr = %s, statuscode = %d", usererr, statusCode)
+	userErr, _, statusCode := root.isUpdatable()
+	if userErr == nil && statusCode != http.StatusBadRequest {
+		t.Errorf("Should not be able to update root tenant. userErr = %s, statuscode = %d", userErr, statusCode)
 	}
 
 	// Second test, attempt to change Child's (ID:7) parent from ID:3 to ID:1 (root)
@@ -84,9 +84,9 @@ func TestIsUpdateable(t *testing.T) {
 	mock.ExpectQuery("SELECT")
 
 	child.ReqInfo = &api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": strconv.Itoa(*child.ID)}}
-	usererr, _, statusCode = child.isUpdatable()
-	if usererr != nil && statusCode != http.StatusOK {
-		t.Errorf("Should be able to update child to new parent (from Parent to Root). usererr = %s, statuscode = %d", usererr, statusCode)
+	userErr, _, statusCode = child.isUpdatable()
+	if userErr != nil && statusCode != http.StatusOK {
+		t.Errorf("Should be able to update child to new parent (from Parent to Root). userErr = %s, statuscode = %d", userErr, statusCode)
 	}
 
 	// Third test, attempt to change Parent from ID:3 to ID:7 (Child)
@@ -107,9 +107,9 @@ func TestIsUpdateable(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	parent.ReqInfo = &api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": strconv.Itoa(*parent.ID)}}
-	usererr, _, statusCode = parent.isUpdatable()
-	if usererr == nil && statusCode != http.StatusBadRequest {
-		t.Errorf("Should NOT be able to update parent to own child (from Parent to Child). usererr = %s, statuscode = %d", usererr, statusCode)
+	userErr, _, statusCode = parent.isUpdatable()
+	if userErr == nil && statusCode != http.StatusBadRequest {
+		t.Errorf("Should NOT be able to update parent to own child (from Parent to Child). userErr = %s, statuscode = %d", userErr, statusCode)
 	}
 
 }
