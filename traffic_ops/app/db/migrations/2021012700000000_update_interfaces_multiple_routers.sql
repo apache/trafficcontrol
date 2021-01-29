@@ -32,23 +32,12 @@ ALTER TABLE server DROP COLUMN router_port_name;
 ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
 ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';
 
--- +goose StatementBegin
-DO $$
-DECLARE r record;
-BEGIN
-  FOR r IN (SELECT id FROM server)
-  LOOP
-    EXECUTE 'UPDATE server s SET (router_host_name, router_port_name) =
+UPDATE server s SET (router_host_name, router_port_name) =
 (SELECT interface.router_host_name, interface.router_port_name FROM interface
 JOIN ip_address ip ON ip.interface = name
 JOIN server on ip.server = server.id
 WHERE ip.service_address = true
-AND s.id = ip.server AND s.id = interface.server AND s.id = '|| quote_literal(r.id) || ' LIMIT 1);
-';
-  END LOOP;
-END
-$$ LANGUAGE plpgsql;
--- +goose StatementEnd
+AND s.id = ip.server AND s.id = interface.server LIMIT 1);
 
 ALTER TABLE interface DROP COLUMN router_host_name;
 ALTER TABLE interface DROP COLUMN router_port_name;
