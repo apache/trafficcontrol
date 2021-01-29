@@ -181,21 +181,9 @@ type DeliveryServiceV30 struct {
 	ServiceCategory    *string `json:"serviceCategory" db:"service_category"`
 }
 
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedV30 struct {
-	DeliveryServiceV30
-	DeliveryServiceRemovedNullableV15
-}
-
 type DeliveryServiceV31 struct {
 	DeliveryServiceV30
 	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
-}
-
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedV31 struct {
-	DeliveryServiceV31
-	DeliveryServiceRemovedV30
 }
 
 // DeliveryServiceNullableV30 is the aliased structure that we should be using for all api 3.x delivery structure operations
@@ -212,23 +200,11 @@ type DeliveryServiceNullableV15 struct {
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
 }
 
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedNullableV15 struct {
-	DeliveryServiceNullableV15
-	DeliveryServiceRemovedNullableV14
-}
-
 type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
-}
-
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedNullableV14 struct {
-	DeliveryServiceNullableV14
-	DeliveryServiceRemovedNullableV13
 }
 
 type DeliveryServiceNullableV13 struct {
@@ -241,25 +217,8 @@ type DeliveryServiceNullableV13 struct {
 	TRRequestHeaders  *string          `json:"trRequestHeaders"`
 }
 
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedNullableV13 struct {
-	DeliveryServiceNullableV13
-	DeliveryServiceRemovedNullableV12
-}
-
 type DeliveryServiceNullableV12 struct {
 	DeliveryServiceNullableV11
-}
-
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedNullableV12 struct {
-	DeliveryServiceNullableV12
-	DeliveryServiceRemovedNullableV11
-}
-
-// Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedNullableV11 struct {
-	CacheURL *string `json:"cacheurl"`
 }
 
 // DeliveryServiceNullableV11 is a version of the deliveryservice that allows

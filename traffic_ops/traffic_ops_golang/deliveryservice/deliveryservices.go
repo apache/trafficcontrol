@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,6 +43,7 @@ import (
 )
 
 //we need a type alias to define functions on
+
 type TODeliveryService struct {
 	api.APIInfoImpl
 	tc.DeliveryServiceNullableV30
@@ -100,73 +100,6 @@ func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, e
 	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullableV30)
 }
 
-func decodeDSV12(body io.ReadCloser) (tc.DeliveryServiceNullableV12, error) {
-	ds := tc.DeliveryServiceNullableV12{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedNullableV12{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceNullableV12
-	}
-	return ds, nil
-}
-func decodeDSV13(body io.ReadCloser) (tc.DeliveryServiceNullableV13, error) {
-	ds := tc.DeliveryServiceNullableV13{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedNullableV13{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceNullableV13
-	}
-	return ds, nil
-}
-func decodeDSV14(body io.ReadCloser) (tc.DeliveryServiceNullableV14, error) {
-	ds := tc.DeliveryServiceNullableV14{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedNullableV14{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceNullableV14
-	}
-	return ds, nil
-}
-func decodeDSV15(body io.ReadCloser) (tc.DeliveryServiceNullableV15, error) {
-	ds := tc.DeliveryServiceNullableV15{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedNullableV15{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceNullableV15
-	}
-	return ds, nil
-}
-func decodeDSV30(body io.ReadCloser) (tc.DeliveryServiceV30, error) {
-	ds := tc.DeliveryServiceV30{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedV30{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceV30
-	}
-	return ds, nil
-}
-func decodeDSV31(body io.ReadCloser) (tc.DeliveryServiceV31, error) {
-	ds := tc.DeliveryServiceV31{}
-	if err := json.NewDecoder(body).Decode(&ds); err != nil {
-		oldDS := tc.DeliveryServiceRemovedV31{}
-		if oldErr := json.NewDecoder(body).Decode(&oldDS); oldErr != nil {
-			return ds, err
-		}
-		ds = oldDS.DeliveryServiceV31
-	}
-	return ds, nil
-}
-
 func CreateV12(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -175,8 +108,8 @@ func CreateV12(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV12(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV12{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -197,8 +130,8 @@ func CreateV13(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV13(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV13{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -219,8 +152,8 @@ func CreateV14(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV14(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV14{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -242,8 +175,8 @@ func CreateV15(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV15(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -264,8 +197,8 @@ func CreateV31(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV31(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceV31{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -286,8 +219,8 @@ func CreateV30(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds, err := decodeDSV30(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceV30{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
@@ -598,8 +531,8 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV12(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV12{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
@@ -623,8 +556,8 @@ func UpdateV13(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV13(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV13{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
@@ -648,8 +581,8 @@ func UpdateV14(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV14(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV14{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
@@ -673,8 +606,8 @@ func UpdateV15(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV15(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
@@ -698,8 +631,8 @@ func UpdateV30(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV30(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceV30{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
@@ -723,8 +656,8 @@ func UpdateV31(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds, err := decodeDSV31(r.Body)
-	if err != nil {
+	ds := tc.DeliveryServiceV31{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
