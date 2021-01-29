@@ -53,6 +53,17 @@ Documents all API version 3 routes.
 
 	v3/*
 
+API V4 Routes
+=============
+Documents all API version 4 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v4/*
+
 How to Read this Documentation
 ==============================
 Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 1.5 in the version 1 documentation and version 2.0 in the version 2 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.

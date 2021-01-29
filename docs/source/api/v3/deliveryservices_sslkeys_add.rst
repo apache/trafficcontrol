@@ -13,13 +13,13 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-sslkeys-add:
+.. _to-api-v3-deliveryservices-sslkeys-add:
 
 ********************************
 ``deliveryservices/sslkeys/add``
 ********************************
 
-.. seealso:: In most cases it is preferable to allow Traffic Ops to generate the keys via :ref:`to-api-deliveryservices-sslkeys-generate`, rather than uploading them manually using this endpoint.
+.. seealso:: In most cases it is preferable to allow Traffic Ops to generate the keys via :ref:`to-api-v3-deliveryservices-sslkeys-generate`, rather than uploading them manually using this endpoint.
 
 ``POST``
 ========

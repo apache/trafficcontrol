@@ -5,10 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Portal: [#5340](https://github.com/apache/trafficcontrol/issues/5340) - Added the ability to resend a user registration from user screen.
 - Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
 - Traffic Portal: upgraded delivery service UI tables to use more powerful/performant ag-grid component
 - Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
+- [#5316](https://github.com/apache/trafficcontrol/issues/5316) - Add router host names and ports on a per interface basis, rather than a per server basis.
 - [#5344](https://github.com/apache/trafficcontrol/issues/5344) - Add a page that addresses migrating from Traffic Ops API v1 for each endpoint
 - [#5296](https://github.com/apache/trafficcontrol/issues/5296) - Fixed a bug where users couldn't update any regex in Traffic Ops/ Traffic Portal
 - Added API endpoints for ACME accounts
@@ -40,6 +42,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5364](https://github.com/apache/trafficcontrol/issues/5364) - Cascade server deletes to delete corresponding IP addresses and interfaces
 - [#5390](https://github.com/apache/trafficcontrol/issues/5390) - Improve the way TO deals with delivery service server assignments
 - [#5339](https://github.com/apache/trafficcontrol/issues/5339) - Ensure Changelog entries for SSL key changes
+- [#5405](https://github.com/apache/trafficcontrol/issues/5405) - Prevent Tenant update from choosing child as new parent
+- [#5461](https://github.com/apache/trafficcontrol/issues/5461) - Fixed steering endpoint to be ordered consistently
 
 ### Changed
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation

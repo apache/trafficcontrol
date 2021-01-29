@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups-id:
+.. _to-api-v3-cachegroups-id:
 
 **********************
 ``cachegroups/{{ID}}``
@@ -54,7 +54,7 @@ Request Structure
 :shortName:                   An abbreviation of the ``name``
 :typeId:                      An integral, unique identifier for the :ref:`Cache Group's Type <cache-group-type>`
 
-	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-types`.
+	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-v3-types`.
 
 .. code-block:: http
 	:caption: Request Example

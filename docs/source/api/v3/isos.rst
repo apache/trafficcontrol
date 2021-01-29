@@ -14,7 +14,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-isos:
+.. _to-api-v3-isos:
 
 ********
 ``isos``
@@ -52,7 +52,7 @@ Request Structure
 :ipNetmask:    An optional\ [1]_ string specifying the subnet mask of the generated system image
 :osversionDir: The name of the directory containing the ISO source
 
-	.. seealso:: :ref:`to-api-osversions`
+	.. seealso:: :ref:`to-api-v3-osversions`
 
 :rootPass: The password used by the generated system image's ``root`` user
 
