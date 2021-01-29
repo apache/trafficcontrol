@@ -120,7 +120,7 @@ type DeliveryServiceV13 struct {
 type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
 	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
-	CacheURL                 string                 `json:"cacheurl"`
+	CacheURL                 string                 `json:"cacheurl"` // Deprecated: Removed, kept for backwards compatibility  with ATC <v5.1
 	CCRDNSTTL                int                    `json:"ccrDnsTtl"`
 	CDNID                    int                    `json:"cdnId"`
 	CDNName                  string                 `json:"cdnName"`
@@ -197,20 +197,12 @@ type DeliveryServiceNullableV30 DeliveryServiceV31
 type DeliveryServiceNullable DeliveryServiceNullableV15
 type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
-	DeliveryServiceV15Fields
-}
-
-type DeliveryServiceV15Fields struct {
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
 }
 
 type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
-	DeliveryServiceV14Fields
-}
-
-type DeliveryServiceV14Fields struct {
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -218,10 +210,6 @@ type DeliveryServiceV14Fields struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	DeliveryServiceV13Fields
-}
-
-type DeliveryServiceV13Fields struct {
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
 	FQPacingRate      *int             `json:"fqPacingRate" db:"fq_pacing_rate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
@@ -238,14 +226,9 @@ type DeliveryServiceNullableV12 struct {
 // for all fields to be null.
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
-	CacheURL *string `json:"cacheurl" db:"cacheurl"`
-	CommonDeliveryServiceFields
-}
-
-type CommonDeliveryServiceFields struct {
 	Active                   *bool                   `json:"active" db:"active"`
 	AnonymousBlockingEnabled *bool                   `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
-	CacheURL                 *string                 `json:"cacheurl" db:"cacheurl"`
+	CacheURL                 *string                 `json:"cacheurl"` // Deprecated: Removed, kept for backwards compatibility  with ATC <v5.1
 	CCRDNSTTL                *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
 	CDNID                    *int                    `json:"cdnId" db:"cdn_id"`
 	CDNName                  *string                 `json:"cdnName"`

@@ -57,7 +57,6 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -179,7 +178,6 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -292,7 +290,6 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -419,7 +416,6 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = nil
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -532,7 +528,6 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("")
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -645,7 +640,6 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -669,7 +663,6 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	ds2.Type = &dsType2
 	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite2")
-	ds2.CacheURL = util.StrPtr("mycacheurl2")
 	ds2.RangeRequestHandling = util.IntPtr(0)
 	ds2.RemapText = util.StrPtr("myremaptext")
 	ds2.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -788,9 +781,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	hdr := "myHeaderComment"
-
 	server := makeTestRemapServer()
-
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
@@ -897,7 +888,6 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	if len(txtLines) != 1 {
 		t.Fatalf("expected one line, actual: '%v' count %v", txt, len(txtLines))
 	}
-
 }
 
 func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
@@ -911,7 +901,6 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = nil
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -1025,7 +1014,6 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(0)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -1174,7 +1162,6 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -1315,152 +1302,6 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-
-	dses := []DeliveryService{ds}
-
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
-		},
-	}
-
-	dsRegexes := []tc.DeliveryServiceRegexes{
-		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
-			Regexes: []tc.DeliveryServiceRegex{
-				tc.DeliveryServiceRegex{
-					Type:      string(tc.DSMatchTypeHostRegex),
-					SetNumber: 0,
-					Pattern:   "myregexpattern",
-				},
-			},
-		},
-	}
-
-	serverParams := []tc.Parameter{
-		tc.Parameter{
-			Name:       "trafficserver",
-			ConfigFile: "package",
-			Value:      "7",
-			Profiles:   []byte(`["global"]`),
-		},
-		tc.Parameter{
-			Name:       "serverpkgval",
-			ConfigFile: "package",
-			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(*server.Profile),
-		},
-	}
-
-	cacheKeyParams := []tc.Parameter{
-		tc.Parameter{
-			Name:       "cachekeykey",
-			ConfigFile: "cacheurl.config",
-			Value:      "cachekeyval",
-			Profiles:   []byte(`["dsprofile"]`),
-		},
-		tc.Parameter{
-			Name:       "shouldnotexist",
-			ConfigFile: "cacheurl.config",
-			Value:      "shouldnotexisteither",
-			Profiles:   []byte(`["not-dsprofile"]`),
-		},
-		tc.Parameter{
-			Name:       "cachekeykey",
-			ConfigFile: "cacheurl.config",
-			Value:      "cachekeyval",
-			Profiles:   []byte(`["global"]`),
-		},
-		tc.Parameter{
-			Name:       "not_location",
-			ConfigFile: "cacheurl.config",
-			Value:      "notinconfig",
-			Profiles:   []byte(`["global"]`),
-		},
-		tc.Parameter{
-			Name:       "not_location",
-			ConfigFile: "cachekey.config",
-			Value:      "notinconfig",
-			Profiles:   []byte(`["global"]`),
-		},
-	}
-
-	cdn := &tc.CDN{
-		DomainName: "cdndomain.example",
-		Name:       "my-cdn-name",
-	}
-
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
-	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	txt := cfg.Text
-
-	txt = strings.TrimSpace(txt)
-
-	testComment(t, txt, hdr)
-
-	txtLines := strings.Split(txt, "\n")
-
-	if len(txtLines) != 2 {
-		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
-	}
-
-	remapLine := txtLines[1]
-
-	if !strings.HasPrefix(remapLine, "map") {
-		t.Errorf("expected to start with 'map', actual '%v'", txt)
-	}
-
-	if strings.Count(remapLine, "origin.example.test") != 2 {
-		t.Errorf("expected to contain origin FQDN twice (Mids remap origins to themselves, as a forward proxy), actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "cache_range_requests.so") {
-		t.Errorf("expected to contain range request handling plugin, actual '%v'", txt)
-	}
-
-	if strings.Contains(remapLine, "slice.so") {
-		t.Errorf("expected to not contain range request handling slice plugin, actual '%v'", txt)
-	}
-}
-
-func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
-	hdr := "myHeaderComment"
-
-	server := makeTestRemapServer()
-
-	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
-	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("") // should be excluded
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -1485,7 +1326,6 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 	ds2.Type = &dsType2
 	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds2.MidHeaderRewrite = util.StrPtr("")
-	ds2.CacheURL = util.StrPtr("")
 	ds2.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds2.RemapText = util.StrPtr("myremaptext")
 	ds2.EdgeHeaderRewrite = nil
@@ -1613,7 +1453,6 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds.RemapText = util.StrPtr("") // should not be included, any map requires remap text
 	ds.EdgeHeaderRewrite = nil
@@ -1638,7 +1477,6 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	ds2.Type = &dsType2
 	ds2.OrgServerFQDN = util.StrPtr("myorigin")
 	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds2.CacheURL = util.StrPtr("mycacheurl")
 	ds2.RangeRequestHandling = util.IntPtr(0)
 	ds2.RemapText = util.StrPtr("myremaptext")
 	ds2.EdgeHeaderRewrite = util.StrPtr("myedgerewrite")
@@ -1794,7 +1632,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("myorigin")
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myreamptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1821,7 +1658,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("myorigin")
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1848,7 +1684,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("myorigin")
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1875,7 +1710,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("myorigin")
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1902,7 +1736,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("myorigin")
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1929,7 +1762,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = nil // nil origin should not be included
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1956,7 +1788,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -1983,7 +1814,6 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		ds.Type = &dsType
 		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
 		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.CacheURL = util.StrPtr("mycacheurl")
 		ds.RangeRequestHandling = util.IntPtr(0)
 		ds.RemapText = util.StrPtr("myremaptext")
 		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -2210,7 +2040,6 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -2356,7 +2185,6 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -2502,7 +2330,6 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -2648,7 +2475,6 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -2794,7 +2620,6 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -2936,7 +2761,6 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -3084,7 +2908,6 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -3232,7 +3055,6 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
@@ -3384,7 +3206,6 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = util.StrPtr("")
@@ -3536,7 +3357,6 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -3688,7 +3508,6 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -3835,7 +3654,6 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -3982,7 +3800,6 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4129,7 +3946,6 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4276,7 +4092,6 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4423,7 +4238,6 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4568,7 +4382,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4716,7 +4529,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4864,7 +4676,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -4984,7 +4795,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5103,7 +4913,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5219,7 +5028,6 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5332,7 +5140,6 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5441,7 +5248,6 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5597,7 +5403,6 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5745,7 +5550,6 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -5889,7 +5693,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = nil
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -6037,7 +5840,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingDontCache)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -6185,7 +5987,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingBackgroundFetch)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -6333,7 +6134,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds.RemapText = util.StrPtr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
@@ -6486,7 +6286,6 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua __RANGE_DIRECTIVE__")
 	ds.EdgeHeaderRewrite = nil
@@ -6652,7 +6451,6 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -6812,7 +6610,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -6960,7 +6757,6 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7104,7 +6900,6 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7248,7 +7043,6 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7392,7 +7186,6 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7540,7 +7333,6 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7684,7 +7476,6 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
@@ -7818,7 +7609,6 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	ds.Type = &dsType
 	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
 	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.CacheURL = util.StrPtr("mycacheurl")
 	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
 	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
