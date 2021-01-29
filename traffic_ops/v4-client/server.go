@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -39,13 +38,13 @@ func needAndCanFetch(id *int, name *string) bool {
 }
 
 // CreateServer creates a Server.
-func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
-		cg, _, err := to.GetCacheGroupNullableByName(*server.Cachegroup)
+		cg, _, err := to.GetCacheGroupNullableByNameWithHdr(*server.Cachegroup, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
 		}
@@ -58,7 +57,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.CachegroupID = cg[0].ID
 	}
 	if needAndCanFetch(server.CDNID, server.CDNName) {
-		c, _, err := to.GetCDNByName(*server.CDNName)
+		c, _, err := to.GetCDNByNameWithHdr(*server.CDNName, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no CDN named %s: %v", *server.CDNName, err)
 		}
@@ -68,7 +67,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.CDNID = &c[0].ID
 	}
 	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
-		ph, _, err := to.GetPhysLocationByName(*server.PhysLocation)
+		ph, _, err := to.GetPhysLocationByNameWithHdr(*server.PhysLocation, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
 		}
@@ -78,7 +77,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.PhysLocationID = &ph[0].ID
 	}
 	if needAndCanFetch(server.ProfileID, server.Profile) {
-		pr, _, err := to.GetProfileByName(*server.Profile)
+		pr, _, err := to.GetProfileByNameWithHdr(*server.Profile, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no profile named %s: %v", *server.Profile, err)
 		}
@@ -88,7 +87,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.ProfileID = &pr[0].ID
 	}
 	if needAndCanFetch(server.StatusID, server.Status) {
-		st, _, err := to.GetStatusByName(*server.Status)
+		st, _, err := to.GetStatusByNameWithHdr(*server.Status, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
 		}
@@ -98,7 +97,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.StatusID = &st[0].ID
 	}
 	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
-		ty, _, err := to.GetTypeByName(server.Type)
+		ty, _, err := to.GetTypeByNameWithHdr(server.Type, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no type named %s: %v", server.Type, err)
 		}
@@ -108,22 +107,7 @@ func (to *Session) CreateServer(server tc.ServerV40, header http.Header) (tc.Ale
 		server.TypeID = &ty[0].ID
 	}
 
-	reqBody, err := json.Marshal(server)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, header)
-	reqInf.RemoteAddr = remoteAddr
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(API_SERVERS, server, hdr, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -163,21 +147,7 @@ func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc
 	}
 
 	var data tc.ServersV4Response
-
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return tc.ServersV4Response{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return data, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(route, header, &data)
 	return data, reqInf, err
 }
 
@@ -220,44 +190,18 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 func (to *Session) GetServerDetailsByHostName(hostName string, header http.Header) ([]tc.ServerDetailV40, ReqInf, error) {
 	v := url.Values{}
 	v.Add("hostName", hostName)
-	url := API_SERVERS_DETAILS + "?" + v.Encode()
-
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.ServerDetailV40{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := API_SERVERS_DETAILS + "?" + v.Encode()
 	var data tc.ServersV4DetailResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // DeleteServerByID DELETEs a Server by ID.
 func (to *Session) DeleteServerByID(id int, header http.Header) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 // GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first
@@ -315,28 +259,9 @@ func (to *Session) GetServersShortNameSearch(shortname string, header http.Heade
 // assignments to the server will be replaced.
 func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool, header http.Header) (tc.Alerts, ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
-
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
 	endpoint := fmt.Sprintf(API_SERVER_ASSIGN_DELIVERY_SERVICES, server, replace)
-
-	reqBody, err := json.Marshal(dsIDs)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-
-	resp, remoteAddr, err := to.request(http.MethodPost, endpoint, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer log.Close(resp.Body, "unable to close response body")
-	reqInf.RemoteAddr = remoteAddr
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(endpoint, dsIDs, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -344,34 +269,17 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 // by the integral, unique identifier 'server'.
 func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	endpoint := fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, server)
-
-	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.DeliveryServicesNullableResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	reqInf, err := to.get(endpoint, header, &data)
 	return data.Response, reqInf, err
 }
 
 // GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
 func (to *Session) GetServerUpdateStatus(hostName string, header http.Header) (tc.ServerUpdateStatus, ReqInf, error) {
 	path := API_SERVERS + `/` + hostName + `/update_status`
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.ServerUpdateStatus{}, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	data := []tc.ServerUpdateStatus{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	reqInf, err := to.get(path, header, &data)
+	if err != nil {
 		return tc.ServerUpdateStatus{}, reqInf, err
 	}
 	if len(data) == 0 {

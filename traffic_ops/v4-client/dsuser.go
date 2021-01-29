@@ -16,7 +16,6 @@ package client
 */
 
 import (
-	"encoding/json"
 	"strconv"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -26,12 +25,8 @@ import (
 func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) (*tc.UserDeliveryServicePostResponse, error) {
 	uri := apiBase + `/deliveryservice_user`
 	ds := tc.DeliveryServiceUserPost{UserID: &userID, DeliveryServices: &dses, Replace: &replace}
-	jsonReq, err := json.Marshal(ds)
-	if err != nil {
-		return nil, err
-	}
 	resp := tc.UserDeliveryServicePostResponse{}
-	_, err = post(to, uri, jsonReq, &resp)
+	_, err := to.post(uri, ds, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +37,7 @@ func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) 
 func (to *Session) DeleteDeliveryServiceUser(userID int, dsID int) (*tc.UserDeliveryServiceDeleteResponse, error) {
 	uri := apiBase + `/deliveryservice_user/` + strconv.Itoa(dsID) + `/` + strconv.Itoa(userID)
 	resp := tc.UserDeliveryServiceDeleteResponse{}
-	if _, err := del(to, uri, &resp); err != nil {
+	if _, err := to.del(uri, nil, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil

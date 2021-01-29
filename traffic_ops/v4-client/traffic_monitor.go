@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -48,18 +47,8 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
-	url := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
-	resp, remoteAddr, err := to.request("GET", url, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
 	var data tc.TMConfigResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return &data.Response, reqInf, nil
+	reqInf, err := to.get(route, nil, &data)
+	return &data.Response, reqInf, err
 }

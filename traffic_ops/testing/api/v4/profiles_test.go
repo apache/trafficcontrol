@@ -424,9 +424,9 @@ func DeleteTestProfiles(t *testing.T) {
 		}
 
 		// Attempt to export Profile
-		profile, _, err := TOSession.ExportProfile(profileID)
-		if profile != nil {
-			t.Errorf("expected Profile: %s to be nil on export", pr.Name)
+		_, _, err = TOSession.ExportProfile(profileID)
+		if err == nil {
+			t.Errorf("export deleted profile %s - expected: error, actual: nil", pr.Name)
 		}
 	}
 }

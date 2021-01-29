@@ -1,4 +1,4 @@
-// Package v3 provides tests for the Traffic Ops API.
+// Package v4 provides tests for the Traffic Ops API.
 package v4
 
 /*

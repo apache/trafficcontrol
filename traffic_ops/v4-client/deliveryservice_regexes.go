@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -26,7 +24,7 @@ import (
 
 const (
 	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
-	API_DS_REGEXES = apiBase + "/deliveryservices/%v/regexes"
+	API_DS_REGEXES = apiBase + "/deliveryservices/%d/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
@@ -35,32 +33,26 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
+	reqInf, err := to.get(fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), nil, &response)
+	return response.Response, reqInf, err
+}
 
-	reqInf, err := get(to, fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), &response, nil)
-	if err != nil {
-		return []tc.DeliveryServiceIDRegex{}, reqInf, err
-	}
-	return response.Response, reqInf, nil
+// GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
+// Delivery Services.
+// Deprecated: GetDeliveryServiceRegexes will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
+func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+	return to.GetDeliveryServiceRegexesWithHdr(nil)
+}
+
+func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+	var data tc.DeliveryServiceRegexResponse
+	reqInf, err := to.get(API_DELIVERY_SERVICES_REGEXES, header, &data)
+	return data.Response, reqInf, err
 }
 
 func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqBody, err := json.Marshal(regex)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-
-	resp, remoteAddr, err := to.request(http.MethodPost, fmt.Sprintf(API_DS_REGEXES, dsID), reqBody, nil)
-	reqInf.RemoteAddr = remoteAddr
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	return alerts, reqInf, nil
+	route := fmt.Sprintf(API_DS_REGEXES, dsID)
+	reqInf, err := to.post(route, regex, nil, &alerts)
+	return alerts, reqInf, err
 }
