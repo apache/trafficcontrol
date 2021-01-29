@@ -41,8 +41,8 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	ipStr := "192.168.2.99"
 	setIP(server, ipStr)
 	server.Profile = util.StrPtr(profileName)
-
-	cfg, err := MakeRecordsDotConfig(server, paramData, hdr)
+	opt := RecordsConfigOpts{}
+	cfg, err := MakeRecordsDotConfig(server, paramData, hdr, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
