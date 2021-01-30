@@ -13,7 +13,7 @@ package client
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-import "encoding/json"
+
 import "fmt"
 import "net/http"
 import "net/url"
@@ -41,7 +41,7 @@ func (to *Session) getFederationResolvers(id *uint, ip *string, t *string, heade
 	var data struct {
 		Response []tc.FederationResolver `json:"response"`
 	}
-	inf, err := get(to, path, &data, header)
+	inf, err := to.get(path, header, &data)
 	return data.Response, inf, err
 }
 
@@ -98,39 +98,15 @@ func (to *Session) GetFederationResolversByType(t string) ([]tc.FederationResolv
 
 // CreateFederationResolver creates the Federation Resolver 'fr'.
 func (to *Session) CreateFederationResolver(fr tc.FederationResolver) (tc.Alerts, ReqInf, error) {
-	var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
-
-	req, err := json.Marshal(fr)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-
-	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+"/federation_resolvers", req, nil)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.post(apiBase+"/federation_resolvers", fr, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.
 func (to *Session) DeleteFederationResolver(id uint) (tc.Alerts, ReqInf, error) {
-	var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
-
-	var path = fmt.Sprintf("%s/federation_resolvers?id=%d", apiBase, id)
-	var resp *http.Response
-	var err error
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, path, nil, nil)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	path := fmt.Sprintf("%s/federation_resolvers?id=%d", apiBase, id)
+	reqInf, err := to.del(path, nil, &alerts)
 	return alerts, reqInf, err
 }

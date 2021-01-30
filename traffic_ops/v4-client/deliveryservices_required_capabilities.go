@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,13 +31,7 @@ const (
 // CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
 func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqBody, err := json.Marshal(capability)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	reqInf, err = post(to, API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, reqBody, &alerts)
+	reqInf, err := to.post(API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, capability, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -49,8 +41,8 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 	param := url.Values{}
 	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
 	param.Add("requiredCapability", capability)
-	url := fmt.Sprintf("%s?%s", API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, param.Encode())
-	reqInf, err := del(to, url, &alerts)
+	route := fmt.Sprintf("%s?%s", API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, param.Encode())
+	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -66,19 +58,16 @@ func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServic
 		param.Add("requiredCapability", *capability)
 	}
 
-	url := API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES
+	route := API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES
 	if len(param) > 0 {
-		url = fmt.Sprintf("%s?%s", url, param.Encode())
+		route = fmt.Sprintf("%s?%s", route, param.Encode())
 	}
 
 	resp := struct {
 		Response []tc.DeliveryServicesRequiredCapability `json:"response"`
 	}{}
-	reqInf, err := get(to, url, &resp, header)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &resp)
+	return resp.Response, reqInf, err
 }
 
 // GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service

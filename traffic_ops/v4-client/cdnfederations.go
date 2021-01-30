@@ -16,9 +16,9 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -29,21 +29,16 @@ import (
  * keep the same behavior from perl. */
 
 func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string) (*tc.CreateCDNFederationResponse, ReqInf, error) {
-	jsonReq, err := json.Marshal(f)
-	if err != nil { //There is no remoteAddr for ReqInf at this point
-		return nil, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
-	}
-
 	data := tc.CreateCDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
-	inf, err := makeReq(to, "POST", url, jsonReq, &data, nil)
+	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
+	inf, err := to.post(route, f, nil, &data)
 	return &data, inf, err
 }
 
 func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
-	inf, err := get(to, url, &data, header)
+	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
+	inf, err := to.get(route, header, &data)
 	return &data, inf, err
 }
 
@@ -53,21 +48,18 @@ func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationRes
 }
 
 func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, ReqInf, error) {
-	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
+	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
 	resp := struct {
 		Response []tc.CDNFederation `json:"response"`
 	}{}
-	inf, err := get(to, url, &resp, header)
-	if err != nil {
-		return nil, inf, err
-	}
-	return resp.Response, inf, nil
+	inf, err := to.get(route, header, &resp)
+	return resp.Response, inf, err
 }
 
 func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)
-	inf, err := get(to, url, &data, header)
+	route := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, url.QueryEscape(CDNName), ID)
+	inf, err := to.get(route, header, &data)
 	return &data, inf, err
 }
 
@@ -77,14 +69,9 @@ func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederat
 }
 
 func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName string, ID int, h http.Header) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
-	jsonReq, err := json.Marshal(f)
-	if err != nil { //There is no remoteAddr for ReqInf at this point
-		return nil, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
-	}
-
 	data := tc.UpdateCDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
-	inf, err := makeReq(to, "PUT", url, jsonReq, &data, h)
+	route := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, url.QueryEscape(CDNName), ID)
+	inf, err := to.put(route, f, h, &data)
 	return &data, inf, err
 }
 
@@ -95,7 +82,7 @@ func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, 
 
 func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, ReqInf, error) {
 	data := tc.DeleteCDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
-	inf, err := makeReq(to, "DELETE", url, nil, &data, nil)
+	route := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, url.QueryEscape(CDNName), ID)
+	inf, err := to.del(route, nil, &data)
 	return &data, inf, err
 }

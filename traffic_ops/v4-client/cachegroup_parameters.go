@@ -16,7 +16,6 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -51,40 +50,16 @@ func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryP
 
 func (to *Session) getCacheGroupParameters(route, queryParams string, header http.Header) ([]tc.CacheGroupParameter, ReqInf, error) {
 	r := fmt.Sprintf("%s%s", route, queryParams)
-	resp, remoteAddr, err := to.request(http.MethodGet, r, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.CacheGroupParameter{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CacheGroupParametersResponse
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(r, header, &data)
+	return data.Response, reqInf, err
 }
 
 func (to *Session) GetAllCacheGroupParametersWithHdr(header http.Header) ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/", API_CACHEGROUPPARAMETERS)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.AllCacheGroupParametersResponse
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-	return data.Response.CacheGroupParameters, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response.CacheGroupParameters, reqInf, err
 }
 
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
@@ -96,18 +71,9 @@ func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersRespon
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/%d", API_CACHEGROUPPARAMETERS, cacheGroupID, parameterID)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var alerts tc.Alerts
-	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 // CreateCacheGroupParameter Associates a Parameter with a Cache Group
@@ -116,20 +82,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc
 		CacheGroupID: cacheGroupID,
 		ParameterID:  parameterID,
 	}
-	reqBody, err := json.Marshal(cacheGroupParameterReq)
-	if err != nil {
-		return nil, ReqInf{}, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_CACHEGROUPPARAMETERS, reqBody, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CacheGroupParametersPostResponse
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-	return &data, reqInf, nil
+	reqInf, err := to.post(API_CACHEGROUPPARAMETERS, cacheGroupParameterReq, nil, &data)
+	return &data, reqInf, err
 }
