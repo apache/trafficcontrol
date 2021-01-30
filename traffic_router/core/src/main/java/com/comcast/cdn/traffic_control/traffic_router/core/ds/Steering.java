@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Steering {
 	@JsonProperty
@@ -83,17 +84,23 @@ public class Steering {
 	}
 
 	@Override
-	@SuppressWarnings("PMD")
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Steering steering = (Steering) o;
-
-		if (deliveryService != null ? !deliveryService.equals(steering.deliveryService) : steering.deliveryService != null)
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
 			return false;
-		if (targets != null ? !targets.equals(steering.targets) : steering.targets != null) return false;
-		return filters != null ? filters.equals(steering.filters) : steering.filters == null;
+		}
+
+		final Steering steering = (Steering) o;
+
+		if (!Objects.equals(deliveryService, steering.deliveryService)) {
+			return false;
+		}
+		if (!Objects.equals(targets, steering.targets)) {
+			return false;
+		}
+		return Objects.equals(filters, steering.filters);
 
 	}
 
