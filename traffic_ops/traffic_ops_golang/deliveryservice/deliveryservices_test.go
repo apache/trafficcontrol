@@ -91,7 +91,7 @@ func TestGetOldDetailsError(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{""})
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id").WillReturnRows(rows)
 	_, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
 	if userErr == nil {
 		t.Fatalf("expected error %v, but got none", expected)
