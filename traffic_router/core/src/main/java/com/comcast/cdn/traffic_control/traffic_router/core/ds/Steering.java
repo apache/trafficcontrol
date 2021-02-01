@@ -93,15 +93,9 @@ public class Steering {
 		}
 
 		final Steering steering = (Steering) o;
-
-		if (!Objects.equals(deliveryService, steering.deliveryService)) {
-			return false;
-		}
-		if (!Objects.equals(targets, steering.targets)) {
-			return false;
-		}
-		return Objects.equals(filters, steering.filters);
-
+		return Objects.equals(deliveryService, steering.deliveryService)
+				&& Objects.equals(targets, steering.targets)
+				&& Objects.equals(filters, steering.filters);
 	}
 
 	@Override
