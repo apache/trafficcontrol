@@ -573,7 +573,8 @@ func (topology *TOTopology) addParents() (error, error, int) {
 }
 
 func (topology *TOTopology) setDescription() (error, error, int) {
-	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name)
+	fmt.Println(topology.Name, topology.APIInfoImpl.ReqInfo.Params["name"])
+	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name, topology.APIInfoImpl.ReqInfo.Params["name"])
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
 	}
@@ -781,8 +782,9 @@ WHERE tcp.child IN
 func updateQuery() string {
 	query := `
 UPDATE topology t SET
-description = $1
-WHERE t.name = $2
+description = $1,
+name = $2
+WHERE t.name = $3
 RETURNING t.name, t.description, t.last_updated
 `
 	return query
