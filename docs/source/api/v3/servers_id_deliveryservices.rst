@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-id-deliveryservices:
+.. _to-api-v3-servers-id-deliveryservices:
 
 ***********************************
 ``servers/{{ID}}/deliveryservices``

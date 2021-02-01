@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroupparameters:
+.. _to-api-v3-cachegroupparameters:
 
 ************************
 ``cachegroupparameters``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-domains:
+.. _to-api-v3-cdns-domains:
 
 ****************
 ``cdns/domains``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-letsencrypt-autorenew:
+.. _to-api-v3-letsencrypt-autorenew:
 
 *************************
 ``letsencrypt/autorenew``

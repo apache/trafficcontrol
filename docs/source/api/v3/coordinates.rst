@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-coordinates:
+.. _to-api-v3-coordinates:
 
 ***************
 ``coordinates``

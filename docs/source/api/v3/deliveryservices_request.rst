@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-request:
+.. _to-api-v3-deliveryservices-request:
 
 ****************************
 ``deliveryservices/request``

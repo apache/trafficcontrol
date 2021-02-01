@@ -288,7 +288,7 @@ Response Structure
 ``POST``
 ========
 
-.. note:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-deliveryservices-request>`.
+.. note:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-v3-deliveryservices-request>`.
 
 Creates a new :term:`Delivery Service Request`.
 

@@ -1,0 +1,30 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#determine postgres major and minor versions
+pg_major_version: "{% if postgresql_version is defined and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[0]}}{% else %}9{% endif %}"
+valid_major_version: "{% if pg_major_version | int == 0 %}false{% else %}true{% endif %}"
+
+pg_minor_version: "{% if postgresql_version is defined and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[1]}}{% else %}6{% endif %}"
+valid_minor_version: "{% if pg_minor_version | int == 0 %}false{% else %}true{% endif %}"
+
+pg_build_num: "{% if postgresql_version is defined and pg_major_version | int < 10 and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[2]}}{% else %}11{% endif %}"
+valid_build_version: "{% if pg_major_version | int < 10 and pg_build_num | int == 0 %}false{% else %}true{% endif %}"
+
+#postgres bin PATH
+pg_bin_path: "{% if pg_major_version | int < 10 %}/usr/pgsql-{{pg_major_version}}.{{pg_minor_version}}/bin{%else%}/usr/pgsql-{{pg_major_version}}/bin{%endif%}"
+
+#postgres profile.d path
+pg_profile_path: "{% if pg_major_version | int < 10 %}/etc/profile.d/postgres{{pg_major_version}}{{pg_minor_version}}-bin.sh{%else%}/etc/profile.d/postgres{{pg_major_version}}-bin.sh{%endif%}"
