@@ -55,6 +55,7 @@ type TODeliveryServiceOldDetails struct {
 	OldCdnName       string
 	OldCdnId         int
 	OldRoutingName   string
+	OldSSLKeyVersion int
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
@@ -854,22 +855,32 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	var userErr error
 	var sysErr error
 	var oldDetails TODeliveryServiceOldDetails
+	var sslKeysExist, cdnDetailCheck bool
 	if dsType.HasSSLKeys() {
 		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
 			return nil, errCode, userErr, sysErr
 		}
-		sslKeysExist, err := getSSLVersion(*ds.XMLID, tx)
-		if err != nil {
+		if sslKeysExist, err = getSSLVersion(*ds.XMLID, tx); err != nil {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service with sslKeyVersion failed: %s", err)
 		}
 		if ds.CDNID == nil {
 			return nil, http.StatusBadRequest, errors.New("invalid request: 'cdnId' cannot be blank"), nil
 		}
-		if ds.CDNName != nil && ds.RoutingName != nil {
-			if sslKeysExist && (oldDetails.OldCdnId != *ds.CDNID || oldDetails.OldCdnName != *ds.CDNName || oldDetails.OldRoutingName != *ds.RoutingName) {
+		if sslKeysExist {
+			if oldDetails.OldCdnId != *ds.CDNID {
+				cdnDetailCheck = true
+			}
+			if ds.CDNName != nil && oldDetails.OldCdnName != *ds.CDNName {
+				cdnDetailCheck = true
+			}
+			if ds.RoutingName != nil && oldDetails.OldRoutingName != *ds.RoutingName {
+				cdnDetailCheck = true
+			}
+			if cdnDetailCheck {
 				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 			}
+			ds.SSLKeyVersion = &oldDetails.OldSSLKeyVersion
 		}
 	}
 
@@ -1184,7 +1195,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 
 func getOldDetails(id int, tx *sql.Tx) (TODeliveryServiceOldDetails, error, error, int) {
 	q := `
-SELECT ds.routing_name, cdn.name, cdn.id,
+SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id,
 (SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
 FROM origin o
 WHERE o.deliveryservice = ds.id
@@ -1194,7 +1205,7 @@ JOIN cdn ON ds.cdn_id = cdn.id
 WHERE ds.id=$1
 `
 	var oldDetails TODeliveryServiceOldDetails
-	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldCdnName, &oldDetails.OldCdnId, &oldDetails.OldOrgServerFqdn); err != nil {
+	if err := tx.QueryRow(q, id).Scan(&oldDetails.OldRoutingName, &oldDetails.OldSSLKeyVersion, &oldDetails.OldCdnName, &oldDetails.OldCdnId, &oldDetails.OldOrgServerFqdn); err != nil {
 		if err == sql.ErrNoRows {
 			return oldDetails, fmt.Errorf("querying delivery service %v host name: no such delivery service exists", id), nil, http.StatusNotFound
 		}
