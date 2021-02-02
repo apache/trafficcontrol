@@ -20,6 +20,57 @@
 ******************************************
 Assign a :term:`Delivery Service Request` to a user.
 
+``GET``
+=======
+.. versionadded:: 4.0
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                                     |
+	+======+=================================================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` for which assignment is being retrieved |
+	+------+-----------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/4.0/deliveryservice_requests/1/assign HTTP/1.1
+	User-Agent: python-requests/2.24.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+The response is the username of the user to whom the :term:`Delivery Service Request` is assigned - or ``null`` if it is unassigned.
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 02 Feb 2021 22:48:48 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 02 Feb 2021 21:48:48 GMT
+	Content-Length: 45
+
+	{ "response": "admin" }
+
+
 ``PUT``
 =======
 :Auth. Required: Yes
@@ -28,24 +79,37 @@ Assign a :term:`Delivery Service Request` to a user.
 
 Request Structure
 -----------------
-:id:            The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
-:assignee:      The username of the user to whom the :term:`Delivery Service Request` is assigned.
+.. table:: Request Path Parameters
+
+	+------+----------------------------------------------------------------------------------------+
+	| Name | Description                                                                            |
+	+======+========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being assigned |
+	+------+----------------------------------------------------------------------------------------+
+
+:assignee: The username of the user to whom the :term:`Delivery Service Request` is assigned
+
+	.. versionadded:: 4.0
+
+:assigneeId: The integral, unique identifier of the user to whom the :term:`Delivery Service Request` is assigned
+
+	.. versionchanged:: 4.0
+		Prior to APIv4.0, this was the only property that could be used to change a :term:`Delivery Service Request`'s Assignee - and thus was a required field.
+
+Only one of ``assignee`` or ``assigneeId`` must be given. If both are present in a request, ``assigneeId`` takes precedence.
 
 .. code-block:: http
 	:caption: Request Example
 
 	PUT /api/4.0/deliveryservice_requests/1/assign HTTP/1.1
-	User-Agent: python-requests/2.22.0
+	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 28
+	Content-Length: 20
 
-	{
-		"id": 1,
-		"assigneeId": 2
-	}
+	{"assignee": "admin"}
 
 Response Structure
 ------------------
@@ -153,12 +217,10 @@ Response Structure
 	Content-Length: 931
 
 	{
-		"alerts": [
-			{
-				"text": "deliveryservice_request was updated.",
-				"level": "success"
-			}
-		],
+		"alerts": [{
+			"text": "Changed assignee of 'test-ds2' Delivery Service Request to 'admin'",
+			"level": "success"
+		}],
 		"response": {
 			"assigneeId": 2,
 			"assignee": "admin",
