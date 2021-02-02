@@ -156,8 +156,8 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Don't accept "assignee" in lieu of "assigneeId" in API version < 3.0
-	if version.Major < 3 {
+	// Don't accept "assignee" in lieu of "assigneeId" in API version < 4.0
+	if version.Major < 4 {
 		req.Assignee = nil
 	}
 
@@ -201,7 +201,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	dsr.AssigneeID = req.AssigneeID
 
 	var resp interface{}
-	if inf.Version.Major >= 3 {
+	if inf.Version.Major >= 4 {
 		resp = dsr
 	} else {
 		resp = dsr.Downgrade()
