@@ -218,7 +218,7 @@ Response Structure
 
 	{
 		"alerts": [{
-			"text": "Changed assignee of 'test-ds2' Delivery Service Request to 'admin'",
+			"text": "Changed assignee of 'demo1' Delivery Service Request to 'admin'",
 			"level": "success"
 		}],
 		"response": {

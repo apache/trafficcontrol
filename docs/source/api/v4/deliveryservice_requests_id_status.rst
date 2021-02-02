@@ -18,7 +18,60 @@
 ******************************************
 ``deliveryservice_requests/{{ID}}/status``
 ******************************************
-Sets the status of a :term:`Delivery Service Request`.
+Get or set the status of a :term:`Delivery Service Request`.
+
+``GET``
+=======
+Gets the status of a :term:`DSR`.
+
+.. versionadded:: 4.0
+
+:Auth. Required: Yes
+:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Response Type:  Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------------------------------------+
+	| Name | Description                                                                             |
+	+======+=========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being inspected |
+	+======+=========================================================================================+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/4.0/deliveryservice_requests/1/status HTTP/1.1
+	User-Agent: python-requests/2.24.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+The response is the status of the requested :term:`DSR`.
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 02 Feb 2021 22:56:47 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 02 Feb 2021 21:56:47 GMT
+	Content-Length: 45
+
+	{ "response": "draft" }
+
 
 ``PUT``
 =======
@@ -28,8 +81,15 @@ Sets the status of a :term:`Delivery Service Request`.
 
 Request Structure
 -----------------
-:id:            The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
-:status:        The status of the `DSR <Delivery Service Request>`. Can be "draft", "submitted", "rejected", "pending", or "complete".
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------------------------------------+
+	| Name | Description                                                                             |
+	+======+=========================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being modified |
+	+======+=========================================================================================+
+
+:status: The status of the :term:`DSR`. Can be "draft", "submitted", "rejected", "pending", or "complete".
 
 .. code-block:: http
 	:caption: Request Example
@@ -43,7 +103,6 @@ Request Structure
 	Content-Length: 28
 
 	{
-		"id": 1,
 		"status": "rejected"
 	}
 
@@ -154,12 +213,10 @@ Response Structure
 	Content-Length: 930
 
 	{
-		"alerts": [
-			{
-				"text": "deliveryservice_request was updated.",
-				"level": "success"
-			}
-		],
+		"alerts": [{
+			"text": "Changed status of 'demo1' Delivery Service Request from 'draft' to 'submitted'",
+			"level": "success"
+		}],
 		"response": {
 			"assigneeId": 2,
 			"assignee": "admin",
@@ -256,7 +313,7 @@ Response Structure
 				"maxOriginConnections": 0,
 				"ecsEnabled": false
 			},
-			"status": "rejected"
+			"status": "submitted"
 		}
 	}
 
