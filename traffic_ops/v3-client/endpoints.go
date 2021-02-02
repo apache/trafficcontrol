@@ -34,18 +34,12 @@ func apiVersions() []string {
 }
 
 // APIBase returns the base API string for HTTP requests, such as /api/3.1.
-// If UseLatestSupportedAPI
 func (sn *Session) APIBase() string {
-	if sn.latestSupportedAPI == "" {
-		// this will be the case for a Session initalized with any creation func other than New,
-		// or if New was called with ClientOps.ForceLatestAPI.
-		return apiBaseStr + apiVersions()[0]
-	}
-	return apiBaseStr + sn.latestSupportedAPI
+	return apiBaseStr + sn.APIVersion()
 }
 
 // APIVersion is the version of the Traffic Ops API this client will use for requests.
-// If the client was created with any function except New, or with UseLatestSupportedAPI false,
+// If the client was created with any function except Login, or with UseLatestSupportedAPI false,
 // this will be LatestAPIVersion().
 // Otherwise, it will be the version dynamically determined to be the latest the Traffic Ops Server supports.
 func (sn *Session) APIVersion() string {
@@ -55,7 +49,7 @@ func (sn *Session) APIVersion() string {
 	return sn.LatestAPIVersion()
 }
 
-// LatestAPIVersion() returns the latest Traffic Ops API version this client supports.
+// LatestAPIVersion returns the latest Traffic Ops API version this client supports.
 func (sn *Session) LatestAPIVersion() string {
 	return apiVersions()[0]
 }
