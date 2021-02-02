@@ -27,7 +27,7 @@ const (
 	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
 	API_DS_REGEXES = apiBase + "/deliveryservices/%d/regexes"
 
-	APIDSRegexes = "/deliveryservices/%v/regexes"
+	APIDSRegexes = "/deliveryservices/%d/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
