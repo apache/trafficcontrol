@@ -35,7 +35,7 @@
 
 # Setting the monitor shell option enables job control, which we need in order
 # to bring traffic_ops_golang back to the foreground.
-set -o errexit -o monitor -o nounset -o pipefail -o xtrace;
+set -o errexit -o monitor -o pipefail -o xtrace;
 
 # Check that env vars are set
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
@@ -99,9 +99,9 @@ chmod -R a+rw "$X509_CA_PERSIST_DIR";
 # Write config files
 . /config.sh;
 
-pg_isready=$(rpm -ql postgresql12 | grep bin/pg_isready);
+pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready);
 if [[ ! -x $pg_isready ]]; then
-	echo "Can't find pg_ready in postgresql12" >&2;
+	echo "Can't find pg_ready in postgresql96" >&2;
 	echo "PATH: $PATH" >&2;
 	find / -name "*postgresql*";
 	exit 1;
