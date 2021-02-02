@@ -20,11 +20,8 @@
 # Based on CentOS 8
 ############################################################
 
-# Keep the trafficops-common-deps in Dockerfile-go the same
-# as trafficops-common-deps in Dockerfile to cache the same
-# layer.
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as trafficops-common-deps
+FROM centos:${RHEL_VERSION}
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION=$RHEL_VERSION
@@ -40,8 +37,8 @@ RUN set -o nounset -o errexit && \
 	else \
 		use_repo='--repo=pgdg96'; \
 	fi; \
-	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y $use_repo -- install postgresql12; \
+	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+	dnf -y $use_repo -- install postgresql96; \
 	dnf -y install epel-release; \
 	dnf -y install      \
 		jq              \
@@ -49,17 +46,17 @@ RUN set -o nounset -o errexit && \
 		net-tools       \
 		gettext         \
 		perl-JSON-PP    \
-		perl-ScryptKDF  \
+		perl-Crypt-ScryptKDF  \
 		mkisofs         \
 		isomd5sum       \
 		nmap-ncat       \
 		openssl         \
 		python3         \
+		golang          \
+		git             \
 		# Used to copy certs in "Shared SSL certificate generation" step
 		rsync;          \
 	dnf clean all
-
-FROM trafficops-common-deps
 
 EXPOSE 443
 
@@ -67,7 +64,7 @@ ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffi
 
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm /install_goose.sh
+RUN ./install_goose.sh && rm ./install_goose.sh && dnf -y remove git && dnf clean all
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
@@ -75,10 +72,9 @@ ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 #
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 
-COPY $TRAFFIC_OPS_RPM /
-RUN to_rpm_filename="$(basename $TRAFFIC_OPS_RPM)" && \
-	rpm --install --nodeps --verbose --hash "$to_rpm_filename" && \
-	rm "$to_rpm_filename"
+COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
+RUN rpm --install --nodeps --verbose --hash /traffic_ops.rpm && \
+	rm /traffic_ops.rpm
 
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
