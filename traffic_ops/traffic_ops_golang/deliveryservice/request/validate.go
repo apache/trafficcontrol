@@ -20,26 +20,33 @@ package request
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"strconv"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
-func (req *TODeliveryServiceRequest) Validate() error {
+// validateLegacy ensures all required fields are present and in correct form.
+// Also checks request JSON is complete and valid.
+func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
+	if tx == nil {
+		log.Errorln("validating a legacy Delivery Service Request: nil transaction was passed")
+	}
+
 	fromStatus := tc.RequestStatusDraft
-	if req.ID != nil && *req.ID > 0 {
-		err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
+	if dsr.ID != nil && *dsr.ID > 0 {
+		err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus)
 
 		if err != nil {
-			return err
+			log.Errorf("querying for dsr by ID %d: %v", *dsr.ID, err)
+			return errors.New("unknown error")
 		}
 	}
 
@@ -55,13 +62,13 @@ func (req *TODeliveryServiceRequest) Validate() error {
 	}
 
 	errMap := validation.Errors{
-		"changeType":      validation.Validate(req.ChangeType, validation.Required),
-		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status":          validation.Validate(req.Status, validation.Required, validation.By(validTransition)),
+		"changeType":      validation.Validate(dsr.ChangeType, validation.Required),
+		"deliveryservice": validation.Validate(dsr.DeliveryService, validation.Required),
+		"status":          validation.Validate(dsr.Status, validation.Required, validation.By(validTransition)),
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	e := deliveryservice.Validate(req.APIInfo().Tx.Tx, req.DeliveryService)
+	e := deliveryservice.Validate(tx, dsr.DeliveryService)
 
 	errs = append(errs, e)
 
