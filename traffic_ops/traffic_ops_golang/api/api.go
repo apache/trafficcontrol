@@ -541,6 +541,36 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	}, nil, nil, http.StatusOK
 }
 
+const createChangeLogQuery = `
+INSERT INTO log (
+	level,
+	message,
+	tm_user
+) VALUES (
+	$1,
+	$2,
+	$3
+)
+`
+
+// CreateChangeLog creates a new changelog message at the APICHANGE level for
+// the current user.
+func (inf APIInfo) CreateChangeLog(msg string) {
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
+	if err != nil {
+		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
+	}
+}
+
+// UseIMS returns whether or not If-Modified-Since constraints should be used to
+// service the given request.
+func (inf APIInfo) UseIMS(r *http.Request) bool {
+	if r == nil || inf.Config == nil {
+		return false
+	}
+	return inf.Config.UseIMS && r.Header.Get(rfc.IfModifiedSince) != ""
+}
+
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
 //
 // Close will commit the transaction, if it hasn't been rolled back.
