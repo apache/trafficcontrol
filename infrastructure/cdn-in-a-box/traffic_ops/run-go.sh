@@ -160,6 +160,9 @@ done
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
+# Add initial data to traffic ops
+/trafficops-init.sh
+
 to-enroll "to" ALL;
 
 while true; do
