@@ -235,7 +235,7 @@ func (to *Session) login() (net.Addr, error) {
 
 	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts)
 	if err != nil {
-		return reqInf.RemoteAddr, fmt.Errorf("Login error %v, alertss string: %+v", err, alerts)
+		return reqInf.RemoteAddr, fmt.Errorf("Login error %v, alerts string: %+v", err, alerts)
 	}
 
 	success := false
