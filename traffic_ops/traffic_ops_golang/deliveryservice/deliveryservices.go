@@ -55,7 +55,7 @@ type TODeliveryServiceOldDetails struct {
 	OldCdnName       string
 	OldCdnId         int
 	OldRoutingName   string
-	OldSSLKeyVersion int
+	OldSSLKeyVersion *int
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
@@ -857,7 +857,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	var userErr error
 	var sysErr error
 	var oldDetails TODeliveryServiceOldDetails
-	var sslKeysExist, cdnDetailCheck bool
+	var sslKeysExist, cdnRoutingDetailDiff bool
 	if dsType.HasSSLKeys() {
 		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
 		if userErr != nil || sysErr != nil {
@@ -871,18 +871,18 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		}
 		if sslKeysExist {
 			if oldDetails.OldCdnId != *ds.CDNID {
-				cdnDetailCheck = true
+				cdnRoutingDetailDiff = true
 			}
 			if ds.CDNName != nil && oldDetails.OldCdnName != *ds.CDNName {
-				cdnDetailCheck = true
+				cdnRoutingDetailDiff = true
 			}
 			if ds.RoutingName != nil && oldDetails.OldRoutingName != *ds.RoutingName {
-				cdnDetailCheck = true
+				cdnRoutingDetailDiff = true
 			}
-			if cdnDetailCheck {
+			if cdnRoutingDetailDiff {
 				return nil, http.StatusBadRequest, errors.New("delivery service has ssl keys that cannot be automatically changed, therefore CDN and routing name are immutable"), nil
 			}
-			ds.SSLKeyVersion = &oldDetails.OldSSLKeyVersion
+			ds.SSLKeyVersion = oldDetails.OldSSLKeyVersion
 		}
 	}
 

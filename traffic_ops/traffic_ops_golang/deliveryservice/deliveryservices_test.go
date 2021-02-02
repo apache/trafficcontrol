@@ -73,7 +73,7 @@ func TestGetDetails(t *testing.T) {
 	if oldDetails.OldCdnId != 1 {
 		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCdnId)
 	}
-	if oldDetails.OldSSLKeyVersion != 1 {
+	if *oldDetails.OldSSLKeyVersion != 1 {
 		t.Errorf("expected old ssl_key_version to be 1, but got %v", oldDetails.OldSSLKeyVersion)
 	}
 }
