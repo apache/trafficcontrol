@@ -68,7 +68,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	}
 	respDSR := resp[0]
 	if respDSR.ID == nil {
-		t.Fatalf("Got a DSR for XML ID '%s' that had a nil ID", dsr.DeliveryService.XMLID)
+		t.Fatalf("Got a DSR for XML ID '%s' that had a nil ID", *dsr.DeliveryService.XMLID)
 	}
 
 	respDSR.DeliveryService.DisplayName = new(string)
@@ -173,7 +173,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 
 		dsrs, _, _, err := TOSession.GetDeliveryServiceRequestsByXMLID(*dsr.DeliveryService.XMLID, nil)
 		if len(dsrs) != 1 {
-			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+			t.Fatalf("expected 1 deliveryservice_request with XMLID %s;  got %d", *dsr.DeliveryService.XMLID, len(dsrs))
 		}
 		if dsrs[0].ID == nil {
 			t.Fatalf("got a DSR with a null ID by XMLID '%s'", *dsr.DeliveryService.XMLID)
@@ -359,7 +359,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 		t.Fatalf("Got DSR by ID '%d' that had no DeliveryService - or said DeliveryService had no DisplayName", *respDSR.ID)
 	}
 	if *respDSR.DeliveryService.DisplayName != expDisplayName {
-		t.Errorf("results do not match actual: %s, expected: %s", respDSR.DeliveryService.DisplayName, expDisplayName)
+		t.Errorf("results do not match actual: %s, expected: %s", *respDSR.DeliveryService.DisplayName, expDisplayName)
 	}
 }
 
@@ -391,6 +391,6 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 		t.Errorf("error deleting DeliveryServiceRequest name: %s", err.Error())
 	}
 	if len(dsrs) > 0 {
-		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted", dsr.DeliveryService.XMLID)
+		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted", *dsr.DeliveryService.XMLID)
 	}
 }
