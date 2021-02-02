@@ -66,6 +66,9 @@ services:
     domainname: infra.ciab.test
     env_file:
       - variables.env
+    environment:
+      DIG_IP_RETRY: ${DIG_IP_RETRY:-10}
+      LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-true}
     hostname: trafficops
     image: trafficops
     volumes:
