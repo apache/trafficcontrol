@@ -169,8 +169,8 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 	}
 }
 
-const DefaultTimeout = time.Second * time.Duration(30)
-const DefaultAPIVersionCheckInterval = time.Second * time.Duration(60)
+const DefaultTimeout = time.Second * 30
+const DefaultAPIVersionCheckInterval = time.Second * 60
 
 // HTTPError is returned on Update Session failure.
 type HTTPError struct {
