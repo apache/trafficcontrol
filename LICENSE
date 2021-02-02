@@ -381,6 +381,10 @@ The riak-go-client component is used under the Apache license:
 @vendor/github.com/basho/riak-go-client/*
 ./vendor/github.com/basho/riak-go-client/LICENSE
 
+The dburl component is used under the MIT license:
+@traffic_ops/vendor/github.com/xo/dburl/*
+./traffic_ops/vendor/github.com/xo/dburl/LICENSE
+
 The envconfig component is used under the MIT license:
 @traffic_ops/vendor/github.com/kelseyhightower/envconfig/*
 ./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
