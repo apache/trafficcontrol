@@ -192,9 +192,6 @@ type CacheEntry struct {
 	RemoteAddr net.Addr
 }
 
-// TODO JvD
-const tmPollingInterval = 60
-
 // loginCreds gathers login credentials for Traffic Ops.
 func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 	credentials := tc.UserCredentials{
