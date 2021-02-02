@@ -208,3 +208,18 @@ func TestDeliveryServiceRequestV40_Downgrade(t *testing.T) {
 		t.Errorf("Incorrect XMLID; want: '%s', got: '%s'", xmlid, *downgraded.XMLID)
 	}
 }
+
+func ExampleDeliveryServiceRequestV40_SetXMLID() {
+	var dsr DeliveryServiceRequestV40
+	fmt.Println(dsr.XMLID == "")
+
+	dsr.DeliveryService = new(DeliveryServiceNullableV30)
+	dsr.DeliveryService.XMLID = new(string)
+	*dsr.DeliveryService.XMLID = "test"
+	dsr.SetXMLID()
+
+	fmt.Println(dsr.XMLID)
+
+	// Output: true
+	// test
+}
