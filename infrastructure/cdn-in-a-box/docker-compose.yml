@@ -72,6 +72,7 @@ services:
     hostname: trafficops
     image: trafficops
     volumes:
+      - ./traffic_ops/ca:/ca
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
