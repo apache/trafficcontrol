@@ -559,6 +559,8 @@ func reqAPI(reqF ReqF) ReqF {
 //                               Will try to log in again, and try the request again.
 //                               The second request is returned, even if it fails.
 //
+// To request the bytes without deserializing, pass a *[]byte response.
+//
 func makeRequestWithHeader(to *Session, method, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -582,6 +584,16 @@ func makeRequestWithHeader(to *Session, method, path string, body interface{}, h
 	if err != nil {
 		return reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
 	}
+
+	if btsPtr, isBytes := response.(*[]byte); isBytes {
+		bts, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return reqInf, errors.New("reading response body: " + err.Error())
+		}
+		*btsPtr = bts
+		return reqInf, nil
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
 		return reqInf, errors.New("decoding response body: " + err.Error())
 	}
@@ -721,62 +733,4 @@ func (to *Session) getCache(path string) (CacheEntry, bool) {
 	defer to.cacheMutex.RUnlock()
 	cacheEntry, ok := to.cache[path]
 	return cacheEntry, ok
-}
-
-//if cacheEntry, ok := to.Cache[path]; ok {
-
-// getBytesWithTTL gets the path, and caches in the session. Returns bytes from the cache, if found and the TTL isn't expired. Otherwise, gets it and store it in cache
-func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, ReqInf, error) {
-	var body []byte
-	var err error
-	var cacheHitStatus CacheHitStatus
-	var remoteAddr net.Addr
-
-	getFresh := false
-	if cacheEntry, ok := to.getCache(path); ok {
-		if cacheEntry.Entered > time.Now().Unix()-ttl {
-			cacheHitStatus = CacheHitStatusHit
-			body = cacheEntry.Bytes
-			remoteAddr = cacheEntry.RemoteAddr
-		} else {
-			cacheHitStatus = CacheHitStatusExpired
-			getFresh = true
-		}
-	} else {
-		cacheHitStatus = CacheHitStatusMiss
-		getFresh = true
-	}
-
-	if getFresh {
-		body, remoteAddr, err = to.getBytes(path)
-		if err != nil {
-			return nil, ReqInf{CacheHitStatus: CacheHitStatusInvalid, RemoteAddr: remoteAddr}, err
-		}
-
-		newEntry := CacheEntry{
-			Entered:    time.Now().Unix(),
-			Bytes:      body,
-			RemoteAddr: remoteAddr,
-		}
-		to.setCache(path, newEntry)
-	}
-
-	return body, ReqInf{CacheHitStatus: cacheHitStatus, RemoteAddr: remoteAddr}, nil
-}
-
-// GetBytes - get []bytes array for a certain path on the to session.
-// returns the raw body, the remote address the Traffic Ops URL resolved to, or any error. If the error is not nil, the RemoteAddr may or may not be nil, depending whether the error occurred before the request was executed.
-func (to *Session) getBytes(path string) ([]byte, net.Addr, error) {
-	resp, remoteAddr, err := to.request("GET", path, nil, nil)
-	if err != nil {
-		return nil, remoteAddr, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, remoteAddr, err
-	}
-
-	return body, remoteAddr, nil
 }

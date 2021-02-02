@@ -38,7 +38,8 @@ type OuterResponse struct {
 // GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -60,7 +61,8 @@ func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqI
 // GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot/new`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
