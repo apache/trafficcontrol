@@ -311,10 +311,10 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. versionadded:: 5.1
 
 	:acme_provider: The certificate provider. This field needs to correlate to the AuthType field for each certificate so the renewal functionality knows which provider to use.
-	:user_email: The email used to set up the account with the provider.
-	:acme_url: The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.
-	:kid: The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`.
-	:hmac_encoded: The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`. This should be in Base64 URL encoded.
+	:user_email:    The email used to set up the account with the provider.
+	:acme_url:      The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.
+	:kid:           The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`.
+	:hmac_encoded:  The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`. This should be in Base64 URL encoded.
 
 :geniso: This object contains configuration options for system ISO generation.
 
