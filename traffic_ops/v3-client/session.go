@@ -30,7 +30,6 @@ import (
 	"net/http/httptrace"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -69,7 +68,7 @@ func Login(url, user, pass string, opts ClientOpts) (*Session, ReqInf, error) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: opts.Insecure},
 		},
 		Jar: jar,
-	}, opts.UseCache)
+	}, false)
 
 	if !opts.ForceLatestAPI {
 		to.latestSupportedAPI = apiVersions()[0]
@@ -114,10 +113,6 @@ type ClientOpts struct {
 	// If 0 or not explicitly set, DefaultTimeout will be used.
 	RequestTimeout time.Duration
 
-	// UseCache is whether to use an internal cache for requests.
-	// This should be considered experimental, and is currently discouraged for production systems.
-	UseCache bool
-
 	// UserAgent is the HTTP User Agent to use set when communicating with Traffic Ops.
 	// This field is required, and Login will fail if it is unset or the empty string.
 	UserAgent string
@@ -139,9 +134,6 @@ type Session struct {
 	Password     string
 	URL          string
 	Client       *http.Client
-	cache        map[string]CacheEntry
-	cacheMutex   *sync.RWMutex
-	useCache     bool
 	UserAgentStr string
 
 	latestSupportedAPI string
@@ -162,9 +154,6 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 		Password:     password,
 		URL:          url,
 		Client:       client,
-		cache:        map[string]CacheEntry{},
-		cacheMutex:   &sync.RWMutex{},
-		useCache:     useCache,
 		UserAgentStr: userAgent,
 	}
 }
@@ -183,13 +172,6 @@ type HTTPError struct {
 // Error implements the error interface for our customer error type.
 func (e *HTTPError) Error() string {
 	return fmt.Sprintf("%s[%d] - Error requesting Traffic Ops %s %s", e.HTTPStatus, e.HTTPStatusCode, e.URL, e.Body)
-}
-
-// CacheEntry ...
-type CacheEntry struct {
-	Entered    int64
-	Bytes      []byte
-	RemoteAddr net.Addr
 }
 
 // loginCreds gathers login credentials for Traffic Ops.
@@ -313,6 +295,7 @@ func (to *Session) logout() (net.Addr, error) {
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
+// The useCache argument is ignored. It exists to avoid breaking compatibility, and does not exist in newer functions.
 func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
 	options := cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -369,7 +352,8 @@ func LoginWithToken(toURL string, token string, insecure bool, userAgent string,
 	return to, remoteAddr, nil
 }
 
-// Logout of traffic_ops
+// Logout of Traffic Ops.
+// The useCache argument is ignored. It exists to avoid breaking compatibility, and does not exist in newer functions.
 func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
 	options := cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -397,6 +381,7 @@ func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool
 
 // NewNoAuthSession returns a new Session without logging in
 // this can be used for querying unauthenticated endpoints without requiring a login
+// The useCache argument is ignored. It exists to avoid breaking compatibility, and does not exist in newer functions.
 func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) *Session {
 	return NewSession("", "", toURL, userAgent, &http.Client{
 		Timeout: requestTimeout,
@@ -684,22 +669,33 @@ func (to *Session) RawRequest(method, path string, body []byte) (*http.Response,
 }
 
 type ReqInf struct {
+	// CacheHitStatus is deprecated and will be removed in the next major version.
 	CacheHitStatus CacheHitStatus
 	RemoteAddr     net.Addr
 	StatusCode     int
 }
 
+// CacheHitStatus is deprecated and will be removed in the next major version.
 type CacheHitStatus string
 
+// CacheHitStatusHit is deprecated and will be removed in the next major version.
 const CacheHitStatusHit = CacheHitStatus("hit")
+
+// CacheHitStatusExpired is deprecated and will be removed in the next major version.
 const CacheHitStatusExpired = CacheHitStatus("expired")
+
+// CacheHitStatusMiss is deprecated and will be removed in the next major version.
 const CacheHitStatusMiss = CacheHitStatus("miss")
+
+// CacheHitStatusInvalid is deprecated and will be removed in the next major version.
 const CacheHitStatusInvalid = CacheHitStatus("")
 
+// String is deprecated and will be removed in the next major version.
 func (s CacheHitStatus) String() string {
 	return string(s)
 }
 
+// StringToCacheHitStatus is deprecated and will be removed in the next major version.
 func StringToCacheHitStatus(s string) CacheHitStatus {
 	s = strings.ToLower(s)
 	switch s {
@@ -712,22 +708,4 @@ func StringToCacheHitStatus(s string) CacheHitStatus {
 	default:
 		return CacheHitStatusInvalid
 	}
-}
-
-// setCache Sets the given cache key and value. This is threadsafe for multiple goroutines.
-func (to *Session) setCache(path string, entry CacheEntry) {
-	if !to.useCache {
-		return
-	}
-	to.cacheMutex.Lock()
-	defer to.cacheMutex.Unlock()
-	to.cache[path] = entry
-}
-
-// getCache gets the cache value at the given key, or false if it doesn't exist. This is threadsafe for multiple goroutines.
-func (to *Session) getCache(path string) (CacheEntry, bool) {
-	to.cacheMutex.RLock()
-	defer to.cacheMutex.RUnlock()
-	cacheEntry, ok := to.cache[path]
-	return cacheEntry, ok
 }
