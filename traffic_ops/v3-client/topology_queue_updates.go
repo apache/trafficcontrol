@@ -27,7 +27,6 @@ import (
 
 func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, ReqInf, error) {
 	path := fmt.Sprintf("%s/%s/queue_update", APITopologies, topologyName)
-	var reqInf ReqInf
 	var resp tc.TopologiesQueueUpdateResponse
 	reqInf, err := to.post(path, req, nil, &resp)
 	return resp, reqInf, err
