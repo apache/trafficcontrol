@@ -395,7 +395,7 @@ func (topology TOTopology) GetKeys() (map[string]interface{}, bool) {
 // SetKeys is a requirement of the api.Updater interface and is called by
 // api.UpdateHandler().
 func (topology *TOTopology) SetKeys(keys map[string]interface{}) {
-	topology.Name, _ = keys["name"].(string)
+	//topology.Name, _ = keys["name"].(string)
 }
 
 // GetAuditName is a requirement of the api.Identifier interface.

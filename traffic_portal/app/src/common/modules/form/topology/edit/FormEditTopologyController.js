@@ -37,12 +37,12 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		saveLabel: 'Update'
 	};
 
-	$scope.save = function(oldName, name, description, topologyTree) {
-		console.log(oldName, name);
-		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
-		topologyService.updateTopology(normalizedTopology, oldName).
+	$scope.save = function(currentName, newName, description, topologyTree) {
+		let normalizedTopology = topologyUtils.getNormalizedTopology(newName, description, topologyTree);
+		topologyService.updateTopology(normalizedTopology, currentName).
 			then(function(result) {
-				messageModel.setMessages(result.data.alerts, false);
+				messageModel.setMessages(result.data.alerts, true);
+				locationUtils.navigateToPath('/topologies');
 			});
 	};
 
