@@ -18,7 +18,10 @@
 name: "CodeQL - Javascript"
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
+    branches: [ master ]
     paths:
       - "**/*.js"
     types: [opened, reopened, ready_for_review, synchronize]

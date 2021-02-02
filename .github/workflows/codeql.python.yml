@@ -18,7 +18,10 @@
 name: "CodeQL - Python"
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
+    branches: [ master ]
     paths:
       - "**/*.py"
     types: [opened, reopened, ready_for_review, synchronize]

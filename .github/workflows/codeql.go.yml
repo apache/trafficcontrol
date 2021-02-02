@@ -18,7 +18,10 @@
 name: "CodeQL - Go"
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
+    branches: [ master ]
     paths:
       - "**/*.go"
     types: [opened, reopened, ready_for_review, synchronize]
