@@ -910,6 +910,16 @@ func (dsr *DeliveryServiceRequestV40) Validate(tx *sql.Tx) (error, error) {
 	return err, nil
 }
 
+// SetXMLID sets the DeliveryServiceRequestV40's XMLID based on its DeliveryService.
+func (dsr *DeliveryServiceRequestV40) SetXMLID() {
+	if dsr == nil {
+		return
+	}
+	if dsr.DeliveryService != nil && dsr.DeliveryService.XMLID != nil {
+		dsr.XMLID = *dsr.DeliveryService.XMLID
+	}
+}
+
 // StatusChangeRequest is the form of a PUT request body to
 // /deliveryservice_requests/{{ID}}/status.
 type StatusChangeRequest struct {
