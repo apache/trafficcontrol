@@ -41,14 +41,14 @@ func TestGetDetails(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"routing_name", "name", "origin_server_fqdn"})
-	rows.AddRow("cdn", "foo", "http://123.34.32.21:9090")
+	rows := sqlmock.NewRows([]string{"routing_name", "ssl_key_version", "name", "id", "origin_server_fqdn"})
+	rows.AddRow("cdn", 1, "foo", 1, "http://123.34.32.21:9090")
 
 	rows2 := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "coalesce"})
 	rows2.AddRow("testDS", "HOST_REGEXP", ".*\\.testDS\\..*", 0)
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ds.xml_id as ds_name, t.name as type, r.pattern").WillReturnRows(rows2)
 
 	oldDetails, userErr, sysErr, code := getOldDetails(1, db.MustBegin().Tx)
@@ -70,6 +70,12 @@ func TestGetDetails(t *testing.T) {
 	if oldDetails.OldCdnName != "foo" {
 		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCdnName)
 	}
+	if oldDetails.OldCdnId != 1 {
+		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCdnId)
+	}
+	if *oldDetails.OldSSLKeyVersion != 1 {
+		t.Errorf("expected old ssl_key_version to be 1, but got %v", oldDetails.OldSSLKeyVersion)
+	}
 }
 
 func TestGetOldDetailsError(t *testing.T) {
@@ -85,7 +91,7 @@ func TestGetOldDetailsError(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{""})
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT ds.routing_name, cdn.name").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ds.routing_name, ds.ssl_key_version, cdn.name, cdn.id").WillReturnRows(rows)
 	_, userErr, _, code := getOldDetails(1, db.MustBegin().Tx)
 	if userErr == nil {
 		t.Fatalf("expected error %v, but got none", expected)
