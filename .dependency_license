@@ -30,6 +30,8 @@ CHANGELOG$, Docs
 #
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
+^go\.sum$, Apache-2.0
+^vendor/modules\.txt$, Apache-2.0
 \.project$, Apache-2.0
 \.cfg$, Apache-2.0
 \.json$, Apache-2.0
@@ -123,10 +125,6 @@ traffic_portal/app/src/assets/css/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/dataTables.buttons\..*, MIT
 traffic_portal/app/src/assets/js/buttons.html5\..*, MIT
-traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
-traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
-traffic_ops_ort/vendor/github\.com/gofrs/flock/.*, BSD
-traffic_ops_ort/vendor/github\.com/pborman/getopt/.*, BSD
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.

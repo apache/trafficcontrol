@@ -41,6 +41,13 @@ traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
+vendor/**/appveyor.yml
+vendor/**/.gitattributes
+vendor/**/.gitignore
+vendor/**/.gitmodules
+vendor/golang.org/
+vendor/**/*.sh
+vendor/**/.travis.yml
 .dbInfo
 /dist
 *.pyc

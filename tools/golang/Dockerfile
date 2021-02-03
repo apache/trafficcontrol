@@ -40,25 +40,18 @@ ARG DIR=github.com/apache/trafficcontrol
 
 WORKDIR /go/src/github.com/apache/trafficcontrol
 
-RUN go get golang.org/x/crypto/ed25519\
-           golang.org/x/crypto/scrypt\
-           golang.org/x/net/idna\
-           golang.org/x/net/ipv4\
-           golang.org/x/net/ipv6\
-           golang.org/x/net/publicsuffix\
-           golang.org/x/sys/unix\
-           golang.org/x/text/secure/bidirule
-
 FROM base AS lint
 
 RUN apk --no-cache add curl
 
-RUN curl -L https://github.com/golangci/golangci-lint/releases/download/v1.21.0/golangci-lint-1.21.0-linux-amd64.tar.gz \
+RUN version=1.32.0 && \
+    curl -L https://github.com/golangci/golangci-lint/releases/download/v${version}/golangci-lint-${version}-linux-amd64.tar.gz \
 	| tar -zxC /tmp \
-	&& mv /tmp/golangci-lint-1.21.0-linux-amd64/golangci-lint /usr/local/bin/golangci-lint \
-	&& rm -rf /tmp/golangci-lint-1.21.0-linux-amd64
+	&& mv /tmp/golangci-lint-${version}-linux-amd64/golangci-lint /usr/local/bin/golangci-lint \
+	&& rm -rf /tmp/golangci-lint-${version}-linux-amd64
 
-CMD ["golangci-lint", "run", "./..."]
+CMD go mod vendor -v && \
+    golangci-lint run ./...
 
 FROM base AS unit
 

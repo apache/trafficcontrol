@@ -13,6 +13,7 @@
 # limitations under the License.
 
 set -e
+go mod vendor -v
 touch coverprofile
 covertmp="$(mktemp)"
 for pkg in $(go list ./lib/... ./traffic_monitor/... ./traffic_stats/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... | grep -v "/vendor/"); do

@@ -34,8 +34,8 @@ import (
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/fsnotify.v1"
 )
 
 var startedFile = "enroller-started"

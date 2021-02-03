@@ -36,14 +36,13 @@ ENV PATH="${PATH}:${GOPATH}/bin"
 
 RUN apk add --no-cache --update git gcc
 
-RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
 RUN go get -u github.com/jstemmer/go-junit-report
 RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 
+COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
+
 # integration source and dependencies
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
-COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
-COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
 COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
@@ -52,8 +51,11 @@ COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 
+COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
 # if we end up using a different versioning convention, the compile command will need to change
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
+RUN go mod vendor -v
+
 RUN CGO_ENABLED=0 go test -c ./v1* -ldflags="-w -s" -o traffic_ops_v1_integration_test
 RUN CGO_ENABLED=0 go test -c ./v2* -ldflags="-w -s" -o traffic_ops_v2_integration_test
 RUN CGO_ENABLED=0 go test -c ./v3* -ldflags="-w -s" -o traffic_ops_v3_integration_test

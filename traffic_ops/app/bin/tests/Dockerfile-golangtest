@@ -42,6 +42,6 @@ ADD vendor /go/src/$DIR/vendor
 
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 
-CMD bash -c 'go get -v && go test -cover -v ./... ../../lib/go-tc/...'
+CMD bash -c 'go mod vendor -v && go test -cover -v ./... ../../lib/go-tc/...'
 #
 # vi:syntax=Dockerfile

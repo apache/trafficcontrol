@@ -22,23 +22,31 @@ on:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - .github/workflows/traffic ops.yml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
+      - vendor/**.go
+      - vendor/modules.txt
   create:
   pull_request:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - .github/workflows/traffic ops.yml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
+      - vendor/**.go
+      - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:

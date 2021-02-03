@@ -27,11 +27,7 @@ httpd
 cd /
 echo Setting up go enviroment...
 export GOPATH=~/go
-go get golang.org/x/text
-go get golang.org/x/sys/unix
-go get golang.org/x/net/http2
-go get golang.org/x/net/ipv4
-go get golang.org/x/net/ipv6
+go mod vendor -v
 
 mkdir -p $GOPATH/src/github.com/apache/
 cd $GOPATH/src/github.com/apache/

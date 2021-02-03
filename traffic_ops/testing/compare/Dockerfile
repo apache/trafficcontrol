@@ -26,7 +26,6 @@ ENV GOPATH /go/
 RUN mkdir -p /go/src/github.com/apache/trafficcontrol/traffic_control/clients/python\
 	/go/src/github.com/apache/trafficcontrol/lib\
 	/go/src/github.com/apache/trafficcontrol/traffic_ops/testing/compare\
-	/go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/github.com/kelseyhightower\
 	/artifacts
 
 RUN apk update
@@ -36,11 +35,10 @@ RUN python3 -m ensurepip && python3 -m pip install --upgrade pip && python3 -m p
 
 ADD lib /go/src/github.com/apache/trafficcontrol/lib
 ADD vendor /go/src/github.com/apache/trafficcontrol/vendor
-ADD traffic_ops/vendor/github.com/kelseyhightower /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/github.com/kelseyhightower
 ADD traffic_ops/testing/compare /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/compare
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/compare/
-RUN go get -v ./...
+RUN go mod vendor -v
 RUN go build .
 RUN cp testroutes.txt /artifacts/
 
