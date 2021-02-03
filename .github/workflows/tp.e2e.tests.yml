@@ -86,6 +86,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/bower.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
