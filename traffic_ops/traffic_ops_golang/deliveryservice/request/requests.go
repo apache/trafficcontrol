@@ -685,7 +685,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 
 	if inf.UseIUS(r) {
 		var lastUpdated time.Time
-		if err := tx.QueryRow(selectMaxLastUpdatedQuery("WHERE id = $1"), id).Scan(&lastUpdated); err != nil {
+		if err := tx.QueryRow(selectMaxLastUpdatedQuery("WHERE r.id = $1"), id).Scan(&lastUpdated); err != nil {
 			sysErr = fmt.Errorf("getting last updated time for DSR #%d: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
