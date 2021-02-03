@@ -184,7 +184,7 @@ if ($via_string_release == 1) {
 
 my $atstccfg_parent_config_comments = "";
 if ($disable_parent_config_comments == 1) {
-	$atstccfg_parent_config_comments = "--disable-parent-config-header";
+	$atstccfg_parent_config_comments = "--disable-parent-config-comments";
 }
 
 my $TMP_BASE  = "/tmp/ort";
