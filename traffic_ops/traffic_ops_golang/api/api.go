@@ -571,6 +571,15 @@ func (inf APIInfo) UseIMS(r *http.Request) bool {
 	return inf.Config.UseIMS && r.Header.Get(rfc.IfModifiedSince) != ""
 }
 
+// UseIUS returns whether or not If-Unmodified-Since constraints should be used to
+// service the given request.
+func (inf APIInfo) UseIUS(r *http.Request) bool {
+	if r == nil || inf.Config == nil {
+		return false
+	}
+	return inf.Config.UseIMS && r.Header.Get(rfc.IfUnmodifiedSince) != ""
+}
+
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
 //
 // Close will commit the transaction, if it hasn't been rolled back.
