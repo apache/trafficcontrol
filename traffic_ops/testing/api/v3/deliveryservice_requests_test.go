@@ -243,7 +243,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("Expected an error-level alert creating a DSR, got none")
+			t.Errorf("Expected an error-level alert creating a duplicate DSR, got none")
 		}
 
 		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)

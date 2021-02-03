@@ -681,8 +681,23 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := inf.IntParams["id"]
+
+	if inf.UseIUS(r) {
+		var lastUpdated time.Time
+		if err := tx.QueryRow(selectMaxLastUpdatedQuery("WHERE id = $1"), id).Scan(&lastUpdated); err != nil {
+			sysErr = fmt.Errorf("getting last updated time for DSR #%d: %v", id, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if !api.IsUnmodified(r.Header, lastUpdated) {
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
+			return
+		}
+	}
+
 	var current tc.DeliveryServiceRequestV40
-	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&current); err != nil {
+	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", id).StructScan(&current); err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
