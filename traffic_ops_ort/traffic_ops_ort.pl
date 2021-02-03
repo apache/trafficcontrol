@@ -57,8 +57,8 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "to_timeout_ms=i" => \$to_timeout_ms,
             "syncds_updates_ipallow=i" => \$syncds_updates_ipallow,
             "traffic_ops_insecure=i" => \$traffic_ops_insecure,
-			"via_string_release=i" => \$via_string_release,
-			"disable_parent_config_comments=i" => \$parent_config_comments,
+            "via_string_release=i" => \$via_string_release,
+            "disable_parent_config_comments=i" => \$disable_parent_config_comments,
           );
 
 if ( $#ARGV < 1 ) {
@@ -368,7 +368,7 @@ sub usage {
 	print "\t   syncds_updates_ipallow=<0|1>   => Update ip_allow.config in syncds mode, which may trigger an ATS bug blocking random addresses on load! Default = 0, only update on badass and restart.\n";
 	print "\t   traffic_ops_insecure=<0|1>     => Turns off certificate checking when connecting to Traffic Ops.\n";
 	print "\t   via_string_release=<0|1>       => change the ATS via string to be the rpm release instead of the actual ATS version number\n";
-	print "\t   parent_config_header=<0|1>     => add comment header to the parent.config file\n";
+	print "\t   disable_parent_config_comments=<0|1>     => do not write line comments to the parent.config file\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
