@@ -13,6 +13,18 @@
     limitations under the License.
 */
 
+/*
+This migration removes the 'tm_path' property from the 'stats' property of the
+'crconfig' column of stored CDN Snapshots, if it exists.
+
+When reverted, it will insert (if possible) a 'tm_path' value of
+/api/4.0/cdns/{{CDN Name}}/snapshot
+where 'CDN Name' is the name of the CDN snapshotted as determined by the
+Snapshot data - NOT the linked CDN object. This is so it does not self-confilct
+afterward regarding which CDN is named, even if the one to which it is linked
+is wrong, somehow.
+*/
+
 -- +goose Up
 UPDATE snapshot
 SET crconfig = crconfig::jsonb #- '{stats,tm_path}'
