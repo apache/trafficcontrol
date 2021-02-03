@@ -343,7 +343,9 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		b, reqInf, e := ss.GetCRConfig(cdn)
 		err = e
 		data = b
-		remoteAddr = reqInf.RemoteAddr.String()
+		if reqInf.RemoteAddr != nil {
+			remoteAddr = reqInf.RemoteAddr.String()
+		}
 	} else {
 		ss := s.get()
 		if ss == nil {
@@ -352,7 +354,9 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		b, reqInf, e := ss.GetCRConfig(cdn)
 		err = e
 		data = b
-		remoteAddr = reqInf.RemoteAddr.String()
+		if reqInf.RemoteAddr != nil {
+			remoteAddr = reqInf.RemoteAddr.String()
+		}
 	}
 
 	if err == nil {
