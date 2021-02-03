@@ -1,0 +1,90 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "DeleteServers",
+            "Route" : "/servers",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver1",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver2",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver3",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver4",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver5",
+                            "replace": "route"                           
+                        }
+                    ]
+                },
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "testserver6",
+                            "replace": "route"                           
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Action": "DeleteServerCapabilities",
+            "Route" : "/server_capabilities",
+            "Method" : "delete",
+            "Data" : [
+                {
+                    "route": "/server_capabilities?name=servercap1"
+                },
+                {
+                    "route": "/server_capabilities?name=servercap2"
+                }
+            ]
+        }
+    ]
+}
