@@ -184,10 +184,6 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected: validation error, actual: nil")
 		}
-		expected := `'status' invalid transition from draft to pending`
-		if !strings.Contains(err.Error(), expected) {
-			t.Fatalf("expected: error message to contain %s, actual: %s", expected, err.Error())
-		}
 	})
 }
 
