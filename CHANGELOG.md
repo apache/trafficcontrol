@@ -47,11 +47,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5339](https://github.com/apache/trafficcontrol/issues/5339) - Ensure Changelog entries for SSL key changes
 - [#5405](https://github.com/apache/trafficcontrol/issues/5405) - Prevent Tenant update from choosing child as new parent
 - [#5461](https://github.com/apache/trafficcontrol/issues/5461) - Fixed steering endpoint to be ordered consistently
+- [#5395](https://github.com/apache/trafficcontrol/issues/5395) - Added validation to prevent changing the Type any Cache Group that is in use by a Topology
 
 ### Changed
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
 - Updated Flot libraries to supported versions
+- [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
 
 ## [5.0.0] - 2020-10-20
 ### Added

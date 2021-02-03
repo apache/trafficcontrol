@@ -456,6 +456,41 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
 		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
 	}
+
+	const topologyEdgeCGName = "topology-edge-cg-01"
+	resp, _, err = TOSession.GetCacheGroupNullableByNameWithHdr(topologyEdgeCGName, nil)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by name: '$%s', %v", topologyEdgeCGName, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
+	}
+	cg = resp[0]
+
+	var cacheGroupEdgeType, cacheGroupMidType tc.Type
+	types, _, err := TOSession.GetTypesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("unable to get types: %s", err.Error())
+	}
+	for _, typeObject := range types {
+		switch typeObject.Name {
+		case tc.CacheGroupEdgeTypeName:
+			cacheGroupEdgeType = typeObject
+		case tc.CacheGroupMidTypeName:
+			cacheGroupMidType = typeObject
+		}
+	}
+	if *cg.TypeID != cacheGroupEdgeType.ID {
+		t.Fatalf("expected cachegroup %s to have type %s, actual type was %s", topologyEdgeCGName, tc.CacheGroupEdgeTypeName, *cg.Type)
+	}
+	*cg.TypeID = cacheGroupMidType.ID
+	_, reqInfo, err := TOSession.UpdateCacheGroupNullableByIDWithHdr(*cg.ID, cg, nil)
+	if err == nil {
+		t.Fatalf("expected an error when updating the type of cache group %s because it is assigned to a topology, actual error was nil", *cg.Name)
+	}
+	if reqInfo.StatusCode < http.StatusBadRequest || reqInfo.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("expected to receive status code %d but received status code %d: %s", http.StatusBadRequest, reqInfo.StatusCode, err.Error())
+	}
 }
 
 func DeleteTestCacheGroups(t *testing.T) {

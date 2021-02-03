@@ -20,23 +20,35 @@ name: Go Unit Tests
 on:
   push:
     paths:
+      - .github/actions/go-test/**
+      - .github/workflows/go.unit.tests.yaml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
+      - vendor/**.go
+      - vendor/modules.txt
   create:
   pull_request:
     paths:
+      - .github/actions/go-test/**
+      - .github/workflows/go.unit.tests.yaml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
+      - vendor/**.go
+      - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -47,7 +59,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        path: src/github.com/apache/trafficcontrol
     - name: Run unit tests
-      uses: ./.github/actions/go-test
+      uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
       with:
         dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... ./traffic_stats/... ./traffic_ops/app/bin/...
+      env:
+        GOPATH: /github/workspace

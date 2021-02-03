@@ -203,7 +203,7 @@ func TestValidate(t *testing.T) {
 	rows.AddRow("EDGE_LOC", "cachegroup")
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT\\s+name,\\s+use_in_table").WillReturnRows(rows)
 	tx := db.MustBegin()
 	reqInfo := api.APIInfo{Tx: tx}
 
@@ -239,6 +239,7 @@ func TestValidate(t *testing.T) {
 		errors.New(`'longitude' Must be a floating point number within the range +-180`),
 		errors.New(`'name' invalid characters found - Use alphanumeric . or - or _ .`),
 		errors.New(`'shortName' invalid characters found - Use alphanumeric . or - or _ .`),
+		errors.New(`'type' unable to check whether cachegroup not!a!valid!cachegroup is used in any topologies`),
 	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
@@ -246,7 +247,10 @@ func TestValidate(t *testing.T) {
 	}
 
 	rows.AddRow("EDGE_LOC", "cachegroup")
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT\\s+name,\\s+use_in_table").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"id", "name"})
+	mock.ExpectQuery("SELECT\\s+t\\.id\\s+FROM\\s+cachegroup").WillReturnRows(rows)
 
 	//  valid name, shortName latitude, longitude
 	nm = "This.is.2.a-Valid---Cachegroup."

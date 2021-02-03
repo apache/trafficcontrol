@@ -158,6 +158,79 @@ func IsValidParentCachegroupID(id *int) bool {
 	return false
 }
 
+// ValidateTypeInTopology validates cachegroup updates to ensure the type of the cachegroup does not change
+// if it is assigned to a topology.
+func (cg *TOCacheGroup) ValidateTypeInTopology() error {
+	userErr := fmt.Errorf("unable to check whether cachegroup %s is used in any topologies", *cg.Name)
+
+	// language=SQL
+	const previousTypeQuery = `
+	SELECT t.id
+	FROM cachegroup c
+	JOIN "type" t ON c."type" = t.id
+	WHERE c.id = $1
+	`
+	var previousTypeID int
+	// We only run this validation on PUT, not POST
+	if cg.ID == nil {
+		return nil
+	}
+	err := cg.ReqInfo.Tx.QueryRow(previousTypeQuery, *cg.ID).Scan(&previousTypeID)
+	// Cachegroup does not exist in the database yet
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		log.Errorf("%s: getting the previous type of cachegroup %s: %s", userErr.Error(), *cg.Name, err.Error())
+		return userErr
+	}
+	if cg.TypeID == nil || *cg.TypeID == previousTypeID {
+		return nil
+	}
+
+	// language=SQL
+	const usedInTopologyQuery = `
+	SELECT EXISTS (SELECT
+	FROM topology_cachegroup tc
+	WHERE tc.cachegroup = $1)
+	`
+	var usedInTopology bool
+	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, *cg.Name).Scan(&usedInTopology)
+	if err != nil {
+		log.Errorf("%s: querying topology_cachegroup by cachegroup name: %s", userErr.Error(), err.Error())
+		return userErr
+	}
+	if !usedInTopology {
+		return nil
+	}
+
+	// language=SQL
+	const readableTypesQuery = `
+	SELECT t.id, t."name"
+	FROM "type" t
+	WHERE id = $1 OR id = $2
+	`
+	rows, err := cg.ReqInfo.Tx.Query(readableTypesQuery, previousTypeID, *cg.TypeID)
+	if err != nil {
+		log.Errorf("%s: querying type names: %s", userErr.Error(), err.Error())
+		return userErr
+	}
+	typeNameByID := map[int]string{}
+	for rows.Next() {
+		var typeID int
+		var typeName string
+		err = rows.Scan(&typeID, &typeName)
+		if err != nil {
+			log.Errorf("%s: scanning type names: %s", userErr.Error(), err.Error())
+			return userErr
+		}
+		typeNameByID[typeID] = typeName
+	}
+	log.Close(rows, "error closing rows for type names")
+
+	return fmt.Errorf("cannot change type of cachegroup %s from %s to %s because it is in use by a topology", *cg.Name, typeNameByID[previousTypeID], typeNameByID[*cg.TypeID])
+}
+
 // Validate fulfills the api.Validator interface
 func (cg TOCacheGroup) Validate() error {
 	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
@@ -196,6 +269,7 @@ func (cg TOCacheGroup) Validate() error {
 		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
 		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
 		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
+		"type":                        cg.ValidateTypeInTopology(),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }

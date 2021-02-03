@@ -51,8 +51,8 @@ initBuildArea() {
 	go env
 
 	# get x/* packages (everything else should be properly vendored)
-	go get -v golang.org/x/net/publicsuffix golang.org/x/sys/unix || \
-		{ echo "Could not get go package dependencies"; return 1; }
+	go mod vendor -v || \
+		{ echo "Could not vendor go module dependencies"; return 1; }
 
 	# compile traffic_monitor
 	gcflags=''

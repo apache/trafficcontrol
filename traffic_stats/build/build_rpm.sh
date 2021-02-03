@@ -64,8 +64,8 @@ initBuildArea() {
 				tags='osusergo netgo'
 
 				# get x/* packages (everything else should be properly vendored)
-				go get -v golang.org/x/net/publicsuffix || \
-								{ echo "Could not get go package dependencies"; return 1; }
+				go mod vendor -v || \
+								{ echo "Could not vendor go module dependencies"; return 1; }
 
 				# compile traffic_stats
 				go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \

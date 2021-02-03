@@ -77,7 +77,7 @@ buildRpmGrove() {
 	# build
 	ldflags='-s -w'
 	tags='osusergo netgo'
-	go get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
+	go mod vendor -v || { echo "Failed to vendor go dependencies: $?" >&2; return 1; }
 	go build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" -tags "$tags" || { echo "Failed to build grove: $?" >&2; return 1; }
 
 	# tar

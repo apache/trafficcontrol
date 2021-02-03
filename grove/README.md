@@ -25,18 +25,11 @@ HTTP caching proxy, implementing RFC 7234
 
 1. Install and set up a Golang development environment.
     * See https://golang.org/doc/install
-2. Get the latest necessary golang.org/x packages.
+2. Get the necessary dependencies.
 ```bash
-rm -rf $GOPATH/src/golang.org/x
-rm -rf $GOPATH/pkg/*
-
-go get golang.org/x/text
-go get golang.org/x/sys/unix
-go get golang.org/x/net/http2
-go get golang.org/x/net/ipv4
-go get golang.org/x/net/ipv6
+go mod vendor -v
 ```
-  * golang.org/x must be updated when the Go compiler is, so we treat it as part of the compiler, rather than vendoring it like other dependencies, to avoid breaking updating to newer compilers than we internally work with. If you know what you're doing, feel free to skip this step, or omit `rm` of old `go get` source and packages.
+  * golang.org/x must be updated when the Go compiler is, so we treat it as part of the compiler, rather than vendoring it like other dependencies, to avoid breaking updating to newer compilers than we internally work with. If you know what you're doing, feel free to skip this step.
 3. Clone this repository into your GOPATH.
 ```bash
 mkdir -p $GOPATH/src/github.com/apache/trafficcontrol
