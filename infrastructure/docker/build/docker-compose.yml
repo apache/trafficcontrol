@@ -73,6 +73,7 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
+      - ../../../.npm:/root/.npm:z
 
   traffic_router_build:
     image: apache/traffic_router_builder:master
