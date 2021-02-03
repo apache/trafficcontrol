@@ -315,7 +315,7 @@ Response Structure
 	:date:       The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:    The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
 	:tm_path:    A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
-		.. deprecated:: ATCv5.1
+		.. deprecated:: ATCv6
 
 			This information should never be used; instead all tools and (especially) components **must** use the documented API. This field was removed in APIv4
 
