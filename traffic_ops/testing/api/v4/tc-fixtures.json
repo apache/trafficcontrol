@@ -1217,6 +1217,71 @@
         },
         {
             "active": true,
+            "cdnName": "cdn1",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "top-ds-in-cdn1",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds-based-top-with-no-mids\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-with-no-mids",
+            "type": "HTTP",
+            "xmlId": "ds-based-top-with-no-mids",
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
             "cdnName": "cdn2",
             "cacheurl": "",
             "ccrDnsTtl": 3600,
@@ -2779,7 +2844,7 @@
             "xmppPasswd": "X"
         },
         {
-            "cachegroup": "cachegroup1",
+            "cachegroup": "parentCachegroup",
             "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
@@ -2818,7 +2883,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "MID1",
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4822,6 +4887,16 @@
                 {
                     "cachegroup": "dtrc3",
                     "parents": [0]
+                }
+            ]
+        },
+        {
+            "name": "top-with-no-mids",
+            "description": "A topology that has no MID_LOC cachegroups",
+            "nodes": [
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": []
                 }
             ]
         }

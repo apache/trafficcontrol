@@ -18,9 +18,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
 	"net/url"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const (
@@ -43,16 +44,13 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	if err := json.Unmarshal(bts, &resp); err != nil {
 		return nil, reqInf, err
 	}
-	return []byte(resp.Response), reqInf, nil
+	return resp.Response, reqInf, nil
 }
 
 func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqInf, error) {
 	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
-	resp, remoteAddr, err := to.request(http.MethodPut, uri, nil, header)
-	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
+	resp := OuterResponse{}
+	reqInf, err := to.put(uri, nil, header, &resp)
 	return reqInf, err
 }
 
@@ -68,7 +66,7 @@ func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
 	if err := json.Unmarshal(bts, &resp); err != nil {
 		return nil, reqInf, err
 	}
-	return []byte(resp.Response), reqInf, nil
+	return resp.Response, reqInf, nil
 }
 
 // SnapshotCRConfig snapshots a CDN by name.
@@ -80,13 +78,7 @@ func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
 // SnapshotCDNByID snapshots a CDN by ID.
 func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, ReqInf, error) {
 	url := fmt.Sprintf("%s?cdnID=%d", API_SNAPSHOT, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, url, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(url, nil, nil, &alerts)
+	return alerts, reqInf, err
 }

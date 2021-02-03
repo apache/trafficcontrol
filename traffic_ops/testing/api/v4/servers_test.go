@@ -527,8 +527,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
-	if len(servers.Response) != 2 {
-		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+	if len(servers.Response) != 3 {
+		t.Fatalf("expected to get 3 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
@@ -595,6 +595,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-01":                 false,
 		"atlanta-mid-16":                 false,
 		"edgeInCachegroup3":              false,
 		"midInSecondaryCachegroupInCDN1": false,
@@ -643,6 +644,35 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if !containsOrigin {
 		t.Fatalf("did not find origin server %s when querying servers by dsId after assigning %s to delivery service %s", originHostname, originHostname, topDsXmlId)
 	}
+
+	const topDsWithNoMids = "ds-based-top-with-no-mids"
+	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{topDsWithNoMids}})
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Fatal("Failed to get at least one Delivery Service")
+	}
+
+	ds = dses[0]
+	if ds.ID == nil {
+		t.Fatal("Got Delivery Service with nil ID")
+	}
+	params.Set("dsId", strconv.Itoa(*ds.ID))
+
+	response, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsWithNoMids, err)
+	}
+	if len(response.Response) == 0 {
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsWithNoMids, err)
+	}
+	for _, server := range response.Response {
+		if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
+			t.Fatalf("Expected to find no %s-typed servers when querying servers by the ID for Delivery Service with XMLID %s but found %s-typed server %s", tc.CacheTypeMid, topDsWithNoMids, tc.CacheTypeMid, *server.HostName)
+		}
+	}
+
 	params.Del("dsId")
 	params.Add("topology", topology)
 	expectedHostnames = map[string]bool{
@@ -650,6 +680,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"denver-mso-org-02":              false,
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
+		"atlanta-mid-01":                 false,
 		"atlanta-mid-16":                 false,
 		"atlanta-mid-17":                 false,
 		"edgeInCachegroup3":              false,

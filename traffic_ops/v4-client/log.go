@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -30,19 +28,9 @@ const (
 // GetLogsByQueryParams gets a list of logs filtered by query params.
 func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
 	URI := API_LOGS + queryParams
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.LogsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(URI, nil, &data)
+	return data.Response, reqInf, err
 }
 
 // GetLogs gets a list of logs.

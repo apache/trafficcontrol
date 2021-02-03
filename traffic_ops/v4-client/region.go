@@ -16,10 +16,8 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,7 +32,7 @@ const (
 // CreateRegion creates a Region.
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
-		divisions, _, err := to.GetDivisionByName(region.DivisionName)
+		divisions, _, err := to.GetDivisionByNameWithHdr(region.DivisionName, nil)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, err
 		}
@@ -43,43 +41,16 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 		}
 		region.Division = divisions[0].ID
 	}
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(region)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_REGIONS, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_REGIONS, region, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateRegionByIDWithHdr(id int, region tc.Region, header http.Header) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(region)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, region, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // UpdateRegionByID updates a Region by ID.
@@ -89,22 +60,9 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 }
 
 func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Region{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.RegionsResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_REGIONS, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetRegions returns a list of regions.
@@ -115,25 +73,9 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 
 func (to *Session) GetRegionByIDWithHdr(id int, header http.Header) ([]tc.Region, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Region{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.RegionsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetRegionByID GETs a Region by the Region ID.
@@ -143,26 +85,10 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 }
 
 func (to *Session) GetRegionByNameWithHdr(name string, header http.Header) ([]tc.Region, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Region{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
 	var data tc.RegionsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetRegionByName GETs a Region by the Region name.
@@ -174,15 +100,9 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 // DeleteRegionByID DELETEs a Region by ID.
 func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 // DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
@@ -199,13 +119,7 @@ func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error
 		URI = fmt.Sprintf("%s?%s", URI, qStr)
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	reqInf, err := to.del(URI, nil, &alerts)
 	return alerts, reqInf, err
 }

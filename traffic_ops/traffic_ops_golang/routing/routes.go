@@ -145,11 +145,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
-		// Acme account information
+		// ACME account information
 		{api.Version{4, 0}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 4034390561, noPerlBypass},
 		{api.Version{4, 0}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 4034390562, noPerlBypass},
 		{api.Version{4, 0}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 4034390563, noPerlBypass},
 		{api.Version{4, 0}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 4034390564, noPerlBypass},
+
+		//Delivery service ACME
+		{api.Version{4, 0}, http.MethodPost, `deliveryservices/xmlId/{xmlid}/sslkeys/renew$`, deliveryservice.RenewAcmeCertificate, auth.PrivLevelOperations, Authenticated, nil, 2534390573, noPerlBypass},
 
 		// API Capability
 		{api.Version{4, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 48132065893, noPerlBypass},
