@@ -105,6 +105,13 @@ The available options are:
     invalidation jobs. For Apache Traffic Server implementations, this limits
     the output to be only files named 'regex_revalidate.config'. Has no effect
     if --get-data or --set-queue-status/--set-reval-status is/are used.
+--via_string_release
+    Using this option will set the via string records.config options for Apache
+    Traffic Server so that it will have the rpm file release information in the via
+    string instead of the actual ATS version
+--disable-parent-config-comments
+    Disables having per-line parent.config comments. The file header will still be
+    generated.
 ```
 
 # Development

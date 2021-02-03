@@ -472,6 +472,14 @@ def main() -> int:
 	                    help="Sets the timeout in milliseconds for requests made to Traffic Ops.",
 	                    type=int,
 	                    default=None)
+	parser.add_argument("--via-string-release",
+			    		help="set the ATS via string to the package release instead of version",
+			    		type=int,
+			    		default=0)
+	parser.add_argument("--disable-parent-config-comments",
+						help="Do not insert comments in parent.config files",
+						type=int,
+						default=0)
 	parser.add_argument("-v", "--version",
 	                    action="version",
 	                    version="%(prog)s v"+__version__,
