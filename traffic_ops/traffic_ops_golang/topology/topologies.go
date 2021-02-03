@@ -394,6 +394,8 @@ func (topology TOTopology) GetKeys() (map[string]interface{}, bool) {
 
 // SetKeys is a requirement of the api.Updater interface and is called by
 // api.UpdateHandler().
+// SetKeys function will no longer makes the name key immutable by setting it to
+// query param. On 2/3/21, the requirement was added to change the topology name.
 func (topology *TOTopology) SetKeys(keys map[string]interface{}) {
 	//topology.Name, _ = keys["name"].(string)
 }
@@ -573,7 +575,6 @@ func (topology *TOTopology) addParents() (error, error, int) {
 }
 
 func (topology *TOTopology) setDescription() (error, error, int) {
-	fmt.Println(topology.Name, topology.APIInfoImpl.ReqInfo.Params["name"])
 	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name, topology.APIInfoImpl.ReqInfo.Params["name"])
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
