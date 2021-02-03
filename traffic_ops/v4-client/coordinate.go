@@ -16,9 +16,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,43 +28,16 @@ const (
 
 // Create a Coordinate
 func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(coordinate)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_COORDINATES, reqBody, nil)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.post(API_COORDINATES, coordinate, nil, &alerts)
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(coordinate)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.put(route, coordinate, header, &alerts)
+	return alerts, reqInf, err
 }
 
 // Update a Coordinate by ID
@@ -76,22 +47,9 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 }
 
 func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_COORDINATES, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Coordinate{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CoordinatesResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(API_COORDINATES, header, &data)
+	return data.Response, reqInf, err
 }
 
 // Returns a list of Coordinates
@@ -102,25 +60,9 @@ func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
 
 func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Coordinate{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
 	var data tc.CoordinatesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GET a Coordinate by the Coordinate id
@@ -136,38 +78,16 @@ func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, er
 }
 
 func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-		if reqInf.StatusCode == http.StatusNotModified {
-			return []tc.Coordinate{}, reqInf, nil
-		}
-	}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
+	route := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
 	var data tc.CoordinatesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
 }
 
 // DELETE a Coordinate by ID
 func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
 	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	reqInf, err := to.del(route, nil, &alerts)
+	return alerts, reqInf, err
 }

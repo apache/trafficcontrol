@@ -81,7 +81,9 @@ Go Implementation Requirements
 .. |install-go-link| replace:: Go :atc-go-version:`_` or later
 .. _install-go-link: http://golang.org/doc/install
 
-All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` and :atc-file:`traffic_ops/traffic_ops_golang/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
+All Go code dependencies are managed through the :atc-file:`go.mod`, :atc-file:`go.sum`, and :atc-file:`vendor/modules.txt` files. With the exception of ``golang.org/x`` packages (see :ref:`below <dev-traffic-ops-golang-x>`), module dependencies in :atc-file:`vendor/` are tracked in Git and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. No other :atc-file:`vendor/` directories exist, as Go modules only supports a single vendor directory.
+
+.. _dev-traffic-ops-golang-x:
 
 Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`go-get(1)` rather than downloaded by hand.
 
@@ -278,7 +280,7 @@ To install the Traffic Ops Developer environment:
 		:caption: Install Go Development Dependencies
 
 		# assuming current working directory is the repository root
-		go get -v ./lib/... ./traffic_ops/traffic_ops_golang/...
+		go mod vendor -v
 
 #. Set up a role (user) in PostgreSQL
 

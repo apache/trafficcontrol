@@ -37,7 +37,7 @@ UPDATE server s SET (router_host_name, router_port_name) =
 JOIN ip_address ip ON ip.interface = name
 JOIN server on ip.server = server.id
 WHERE ip.service_address = true
-AND s.id = ip.server);
+AND s.id = ip.server AND s.id = interface.server LIMIT 1);
 
 ALTER TABLE interface DROP COLUMN router_host_name;
 ALTER TABLE interface DROP COLUMN router_port_name;

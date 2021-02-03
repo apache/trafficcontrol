@@ -20,34 +20,14 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, ReqInf, error) {
 	path := fmt.Sprintf(ApiTopologies+"/%s/queue_update", topologyName)
-	var reqInf ReqInf
 	var resp tc.TopologiesQueueUpdateResponse
-
-	reqBody, err := json.Marshal(req)
-	if err != nil {
-		return resp, reqInf, err
-	}
-
-	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody, nil)
-	if httpResp != nil {
-		reqInf.StatusCode = httpResp.StatusCode
-		reqInf.RemoteAddr = remoteAddr
-	}
-	if err != nil {
-		return resp, reqInf, err
-	}
-	defer log.Close(httpResp.Body, "unable to close response")
-
-	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+	reqInf, err := to.post(path, req, nil, &resp)
 	return resp, reqInf, err
 }

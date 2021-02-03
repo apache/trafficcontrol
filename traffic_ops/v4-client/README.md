@@ -40,8 +40,8 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("Connected to: " + remoteaddr.String())
-	var cdns []v13.CDN
-	cdns, _, err = session.GetCDNs()
+	var cdns []tc.CDN
+	cdns, _, err = session.GetCDNsWithHdr(nil)
 	if err != nil {
 		fmt.Printf("An error occurred while getting cdns:\n\t%v\n", err)
 		os.Exit(1)

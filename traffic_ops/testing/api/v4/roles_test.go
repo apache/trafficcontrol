@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -118,7 +119,11 @@ func GetTestRolesIMS(t *testing.T) {
 }
 
 func CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}}
+	expectedAlerts := []string{
+		"",
+		"can not add non-existent capabilities: [invalid-capability]",
+		"",
+	}
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
@@ -126,10 +131,13 @@ func CreateTestRoles(t *testing.T) {
 		t.Log("Response: ", alerts)
 		if err != nil {
 			t.Logf("error: %v", err)
-			//t.Errorf("could not CREATE role: %v", err)
 		}
-		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
-			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
+		if expectedAlerts[i] == "" && err != nil {
+			t.Errorf("expected: no error, actual: %v", err)
+		} else if len(expectedAlerts[i]) > 0 && err == nil {
+			t.Errorf("expected: error containing '%s', actual: nil", expectedAlerts[i])
+		} else if err != nil && !strings.Contains(err.Error(), expectedAlerts[i]) {
+			t.Errorf("expected: error containing '%s', actual: %v", expectedAlerts[i], err)
 		}
 	}
 }

@@ -18,8 +18,10 @@
 
 set -e
 
+cd "${GOPATH}/src/github.com/apache/trafficcontrol"
+
 download_go() {
-	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
+	go_version="$(cat GO_VERSION)"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
 	tar -C /usr/local -xzf go.tar.gz
 	rm go.tar.gz
@@ -33,20 +35,7 @@ if [ -z "$INPUT_DIR" ]; then
 	INPUT_DIR="./lib/..."
 fi
 
-export GOPATH="$(mktemp -d)"
-srcdir="$GOPATH/src/github.com/apache"
-mkdir -p "$srcdir"
-ln -s "$PWD" "$srcdir/trafficcontrol"
-cd "$srcdir/trafficcontrol"
-
 # Need to fetch golang.org/x/* dependencies
-/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
-	golang.org/x/crypto/ed25519 \
-	golang.org/x/crypto/scrypt \
-	golang.org/x/net/idna \
-	golang.org/x/net/ipv4 \
-	golang.org/x/net/ipv6 \
-	golang.org/x/sys/unix \
-	golang.org/x/text/secure/bidirule
-/usr/local/go/bin/go test -v $INPUT_DIR
+go mod vendor -v
+go test -v $INPUT_DIR
 exit $?

@@ -112,13 +112,9 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
-		}
-
-		if len(alerts.Alerts) == 0 {
-			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err == nil {
+			t.Error("expected: validation error, actual: nil")
 		}
 	})
 }
@@ -135,12 +131,9 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 		dsr.DeliveryService.RoutingName = routingName
 		dsr.DeliveryService.XMLID = XMLID
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
-		}
-		if len(alerts.Alerts) == 0 {
-			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err == nil {
+			t.Error("expected: validation error, actual: nil")
 		}
 	})
 }
@@ -182,14 +175,14 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		}
 		src.Status = s
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		_, _, err = TOSession.CreateDeliveryServiceRequest(src)
+		if err == nil {
+			t.Fatal("expected: validation error, actual: nil")
 		}
-		expected := []string{
-			`'status' invalid transition from draft to pending`,
+		expected := `'status' invalid transition from draft to pending`
+		if !strings.Contains(err.Error(), expected) {
+			t.Fatalf("expected: error message to contain %s, actual: %s", expected, err.Error())
 		}
-		utils.Compare(t, expected, alerts.ToStrings())
 	})
 }
 
@@ -221,11 +214,14 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		if err == nil {
+			t.Fatal("expected: validation error, actual: nil")
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
+		expectedStr := `An active request exists for delivery service 'test-transitions'`
+		if !strings.Contains(err.Error(), expectedStr) {
+			t.Errorf("expected: error message containing %s, actual: %v", expectedStr, err)
+		}
 		utils.Compare(t, expected, alerts.ToStrings())
 
 		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)

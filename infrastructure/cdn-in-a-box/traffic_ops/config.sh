@@ -151,7 +151,16 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "convert_self_signed": false,
         "renew_days_before_expiration": 30,
         "environment": "staging"
-    }
+    },
+    "acme_accounts": [
+        {
+            "acme_provider" : "",
+            "user_email" : "",
+            "acme_url" : "",
+            "kid" : "",
+            "hmac_encoded" : ""
+        }
+    ]
 }
 EOF
 

@@ -153,14 +153,18 @@ sudo webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$C
 
 GOROOT=/usr/local/go
 export PATH="${PATH}:${GOROOT}/bin"
-export GOPATH="$(mktemp -d)"
 download_go
-SRCDIR="$GOPATH/src/github.com/apache"
-mkdir -p "$SRCDIR"
-ln -s "$PWD" "$SRCDIR/trafficcontrol"
+export GOPATH="${HOME}/go"
+readonly ORG_DIR="$GOPATH/src/github.com/apache"
+readonly REPO_DIR="${ORG_DIR}/trafficcontrol"
+if [[ ! -e "$REPO_DIR" ]]; then
+	mkdir -p "$ORG_DIR"
+	cd
+	mv "${GITHUB_WORKSPACE}" "${REPO_DIR}/"
+	ln -s "$REPO_DIR" "${GITHUB_WORKSPACE}"
+fi
 
-cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
-
+cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
 /usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
 	golang.org/x/crypto/ed25519 \
 	golang.org/x/crypto/scrypt \
@@ -169,6 +173,7 @@ cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 	golang.org/x/net/ipv6 \
 	golang.org/x/sys/unix \
 	golang.org/x/text/secure/bidirule > /dev/null
+/usr/local/go/bin/go mod vendor -v > /dev/null
 /usr/local/go/bin/go build . > /dev/null
 
 openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";

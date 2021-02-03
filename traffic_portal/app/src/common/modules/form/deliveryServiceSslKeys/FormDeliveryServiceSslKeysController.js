@@ -49,6 +49,29 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
 	};
 
+	$scope.renewCert = function() {
+		var params = {
+			title: 'Renew SSL Keys for Delivery Service: ' + deliveryService.xmlId
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceSslKeysService.renewCert(deliveryService).then(
+				function() {
+					$anchorScroll();
+					if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
+				});
+		});
+	};
+
 	$scope.save = function() {
 		var params = {
 			title: 'Add New SSL Keys for Delivery Service: ' + deliveryService.xmlId
