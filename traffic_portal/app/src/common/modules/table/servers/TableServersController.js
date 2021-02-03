@@ -418,7 +418,6 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			try {
 				const page = localStorage.getItem(tableName + "_table_page");
 				const pageSize = $scope.gridOptions.api.paginationGetPageSize();
-				console.log(page,  pageSize);
 				if (page !== undefined && page > 0 && page <= pageSize-1) {
 					$scope.gridOptions.api.paginationGoToPage(page);
 				}
