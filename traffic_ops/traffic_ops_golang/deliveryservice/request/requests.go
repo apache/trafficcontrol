@@ -168,7 +168,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var maxTime *time.Time
-	if inf.UseIMS(r) {
+	if inf.UseIMS() {
 		maxTime = new(time.Time)
 		var runSecond bool
 		runSecond, *maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
@@ -683,17 +683,10 @@ func Put(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	if inf.UseIUS(r) {
-		var lastUpdated time.Time
-		if err := tx.QueryRow(selectMaxLastUpdatedQuery("WHERE r.id = $1"), id).Scan(&lastUpdated); err != nil {
-			sysErr = fmt.Errorf("getting last updated time for DSR #%d: %v", id, err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-		if !api.IsUnmodified(r.Header, lastUpdated) {
-			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
-			return
-		}
+	errCode, userErr, sysErr = inf.CheckPrecondition(selectMaxLastUpdatedQuery("WHERE r.id = $1"), id)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
 	var current tc.DeliveryServiceRequestV40

@@ -584,17 +584,60 @@ func (inf APIInfo) CreateChangeLog(msg string) {
 
 // UseIMS returns whether or not If-Modified-Since constraints should be used to
 // service the given request.
-func (inf APIInfo) UseIMS(r *http.Request) bool {
-	if r == nil || inf.Config == nil {
+func (inf APIInfo) UseIMS() bool {
+	if inf.request == nil || inf.Config == nil {
 		return false
 	}
-	return inf.Config.UseIMS && r.Header.Get(rfc.IfModifiedSince) != ""
+	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
 }
 
-// UseIUS returns whether or not If-Unmodified-Since constraints should be used to
-// service the given request.
-func (inf APIInfo) UseIUS(r *http.Request) bool {
-	return r.Header.Get(rfc.IfUnmodifiedSince) != ""
+// CheckPrecondition checks a request's "preconditions" - its If-Match and
+// If-Unmodified-Since headers versus the last updated time of the requested
+// object(s), and returns (in order), an HTTP response code appropriate for the
+// precondition check results, a user-safe error that should be returned to
+// clients, and a server-side error that should be logged.
+// Callers must pass in a query that will return one row containing one column
+// that is the representative date/time of the last update of the requested
+// object(s), and optionally any values for placeholder arguments in the query.
+func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
+	if inf.request == nil {
+		return http.StatusInternalServerError, nil, NilRequestError
+	}
+
+	ius := inf.request.Header.Get(rfc.IfUnmodifiedSince)
+	etag := inf.request.Header.Get(rfc.IfMatch)
+	if ius == "" && etag == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if inf.Tx == nil || inf.Tx.Tx == nil {
+		return http.StatusInternalServerError, nil, NilTransactionError
+	}
+
+	var lastUpdated time.Time
+	if err := inf.Tx.Tx.QueryRow(query, args...).Scan(&lastUpdated); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %v", err)
+	}
+
+	if etag != "" {
+		if et, ok := rfc.ParseETags(strings.Split(etag, ",")); ok {
+			if lastUpdated.After(et) {
+				return http.StatusPreconditionFailed, ResourceModifiedError, nil
+			}
+		}
+	}
+
+	if ius == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if tm, ok := rfc.ParseHTTPDate(ius); ok {
+		if lastUpdated.After(tm) {
+			return http.StatusPreconditionFailed, ResourceModifiedError, nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
 }
 
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
