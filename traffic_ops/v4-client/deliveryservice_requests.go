@@ -109,7 +109,7 @@ func (to *Session) GetDeliveryServiceRequests(header http.Header) ([]tc.Delivery
 	return data.Response, data.Alerts, reqInf, err
 }
 
-// GetDeliveryServiceRequestByXMLID retrives all Delivery Service Requests that
+// GetDeliveryServiceRequestsByXMLID retrives all Delivery Service Requests that
 // are requests to create, modify, or delete a Delivery Service with the given
 // XMLID.
 func (to *Session) GetDeliveryServiceRequestsByXMLID(XMLID string, header http.Header) ([]tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
