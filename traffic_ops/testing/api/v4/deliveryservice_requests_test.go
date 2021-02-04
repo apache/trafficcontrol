@@ -407,6 +407,9 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServiceRequest by id: %v - %v", dsr.DeliveryService.XMLID, err)
 	}
+	if len(resp) < 1 {
+		t.Fatal("expected at least one Delivery Service Request, got none")
+	}
 	respDSR := resp[0]
 	if respDSR.ID == nil {
 		t.Fatalf("Got a DSR by XMLID '%s' that had no ID", *dsr.DeliveryService.XMLID)
