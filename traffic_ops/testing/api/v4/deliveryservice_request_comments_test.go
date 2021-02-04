@@ -89,8 +89,9 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
 	dsr := testData.DeliveryServiceRequests[0].DeliveryService
-	if dsr.XMLID != nil {
-		t.Fatal("first DSR in the test data had a DeliveryService with no XMLID")
+	resetDS(dsr)
+	if dsr == nil || dsr.XMLID == nil {
+		t.Fatal("first DSR in the test data had a nil DeliveryService or one with no XMLID")
 	}
 
 	resp, _, _, err := TOSession.GetDeliveryServiceRequestsByXMLID(*dsr.XMLID, nil)

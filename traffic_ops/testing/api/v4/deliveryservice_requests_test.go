@@ -32,6 +32,27 @@ const (
 	dsrDraft     = 3
 )
 
+// this resets the IDs of things attached to a DS, which needs to be done
+// because the WithObjs flow destroys and recreates those object IDs
+// non-deterministically with each test - BUT, the client method permanently
+// alters the DSR structures by adding these referential IDs. Older clients
+// got away with it by not making 'DeliveryService' a pointer, but to add
+// original/requested fields you need to sometimes allow each to be nil, so
+// this is a problem that needs to be solved at some point.
+// A better solution _might_ be to reload all the test fixtures every time
+// to wipe any and all referential modifications made to any test data, but
+// for now that's overkill.
+func resetDS(ds *tc.DeliveryServiceNullableV30) {
+	if ds == nil {
+		return
+	}
+	ds.CDNID = nil
+	ds.ID = nil
+	ds.ProfileID = nil
+	ds.TenantID = nil
+	ds.TypeID = nil
+}
+
 func TestDeliveryServiceRequests(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
 		GetTestDeliveryServiceRequestsIMS(t)
@@ -55,6 +76,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
@@ -84,6 +106,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
@@ -111,8 +134,10 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 	t.Log("CreateTestDeliveryServiceRequests")
 
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	respDSR, _, _, err := TOSession.CreateDeliveryServiceRequest(dsr, nil)
+	resetDS(dsr.DeliveryService)
+	respDSR, alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr, nil)
 	t.Log("Response: ", respDSR)
+	t.Logf("Alerts from creating a dsr: %+v", alerts)
 	if err != nil {
 		t.Errorf("could not CREATE DeliveryServiceRequests: %v", err)
 	}
@@ -122,6 +147,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
+		resetDS(dsr.DeliveryService)
 		_, _, _, err := TOSession.CreateDeliveryServiceRequest(dsr, nil)
 		if err == nil {
 			t.Error("expected: validation error, actual: nil")
@@ -137,6 +163,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 		displayName := strings.Repeat("X", 49)
 
 		dsr := testData.DeliveryServiceRequests[dsrGood]
+		resetDS(dsr.DeliveryService)
 		if dsr.DeliveryService == nil {
 			t.Fatalf("the %dth DSR in the test data had no DeliveryService", dsrGood)
 		}
@@ -154,6 +181,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrBadTenant]
+		resetDS(dsr.DeliveryService)
 		if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 			t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrBadTenant)
 		}
@@ -196,6 +224,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		// try to create non-draft/submitted
 		src := testData.DeliveryServiceRequests[dsrDraft]
+		resetDS(src.DeliveryService)
 		s, err := tc.RequestStatusFromString("pending")
 		if err != nil {
 			t.Errorf(`unable to create Status from string "pending"`)
@@ -226,6 +255,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		// Create a draft request
 		src := testData.DeliveryServiceRequests[dsrDraft]
+		resetDS(src.DeliveryService)
 
 		_, alerts, _, err := TOSession.CreateDeliveryServiceRequest(src, nil)
 		if err != nil {
@@ -324,6 +354,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
@@ -339,6 +370,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
@@ -352,6 +384,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
@@ -395,6 +428,7 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resetDS(dsr.DeliveryService)
 	if dsr.DeliveryService == nil || dsr.DeliveryService.XMLID == nil {
 		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
 	}
