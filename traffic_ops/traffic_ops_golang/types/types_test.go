@@ -89,7 +89,7 @@ func TestGetType(t *testing.T) {
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOType{
-		api.InfoImpl{&reqInfo},
+		api.InfoerImpl{&reqInfo},
 		tc.TypeNullable{},
 	}
 	types, userErr, sysErr, _, _ := obj.Read(nil, false)
@@ -130,7 +130,7 @@ func createDummyType(field string) *TOType {
 		Minor: 0,
 	}
 	apiInfo := api.Info{
-		Version: &version,
+		Version: version,
 	}
 	return &TOType{
 		TypeNullable: tc.TypeNullable{
@@ -138,7 +138,7 @@ func createDummyType(field string) *TOType {
 			Description: &field,
 			UseInTable:  &field,
 		},
-		InfoImpl: api.InfoImpl{
+		InfoerImpl: api.InfoerImpl{
 			ReqInfo: &apiInfo,
 		},
 	}

@@ -55,7 +55,7 @@ const (
 
 //we need a type alias to define functions on
 type TODeliveryService struct {
-	api.InfoImpl
+	api.InfoerImpl
 	tc.DeliveryServiceV4
 }
 
@@ -242,7 +242,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV30 tc.D
 	}
 	return nil, status, userErr, sysErr
 }
-func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func createV31(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	tx := inf.Tx.Tx
 	dsNullable := tc.DeliveryServiceNullableV30(dsV31)
 	ds := dsNullable.UpgradeToV4()
@@ -589,8 +589,8 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 }
 func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := ds.Info().Version
-	if version == nil {
-		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
+	if version.LessThan(api.Version{Major: 1, Minor: 1}) {
+		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %s", version), http.StatusInternalServerError, nil
 	}
 
 	returnable := []interface{}{}
@@ -822,7 +822,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV31 *tc.
 	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV3())
 	return &oldRes, http.StatusOK, nil, nil
 }
-func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+func updateV40(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 	ds := tc.DeliveryServiceV4(*dsV40)
@@ -1162,12 +1162,12 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 	ds.XMLID = &xmlID
 
 	if ds.CDNID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(ds.APIInfo().Tx.Tx, int64(*ds.CDNID), ds.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(ds.Info().Tx.Tx, int64(*ds.CDNID), ds.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
 	} else if ds.CDNName != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, *ds.CDNName, ds.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.Info().Tx.Tx, *ds.CDNName, ds.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -1176,7 +1176,7 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 		if err != nil {
 			return nil, fmt.Errorf("couldn't get cdn name for DS: %v", err), http.StatusBadRequest
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, string(cdnName), ds.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.Info().Tx.Tx, string(cdnName), ds.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}

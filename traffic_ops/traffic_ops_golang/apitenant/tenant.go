@@ -44,7 +44,7 @@ const rootName = `root`
 
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.TenantNullable
 }
 

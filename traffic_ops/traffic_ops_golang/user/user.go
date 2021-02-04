@@ -46,7 +46,7 @@ import (
 )
 
 type TOUser struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.User
 }
 
@@ -232,9 +232,6 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	orderBy = groupBy + orderBy
 
 	version := inf.Version
-	if version == nil {
-		return nil, nil, fmt.Errorf("TOUsers.Read called with invalid API version"), http.StatusInternalServerError, nil
-	}
 	if version.Major >= 4 {
 		query = this.SelectQuery40() + where + orderBy + pagination
 	} else {

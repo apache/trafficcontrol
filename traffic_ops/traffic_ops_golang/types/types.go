@@ -38,7 +38,7 @@ import (
 
 // TOType is a needed type alias to define functions on.
 type TOType struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.TypeNullable
 }
 

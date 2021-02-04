@@ -83,8 +83,8 @@ func TestValidate(t *testing.T) {
 	role := tc.Role{}
 	role.Name = &n
 	r := TORole{
-		InfoImpl: api.InfoImpl{&reqInfo},
-		Role:     role,
+		InfoerImpl: api.InfoerImpl{&reqInfo},
+		Role:       role,
 	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(r.Validate())))
 
@@ -103,8 +103,8 @@ func TestValidate(t *testing.T) {
 	role.Description = stringAddr("this is a description")
 	role.PrivLevel = intAddr(30)
 	r = TORole{
-		InfoImpl: api.InfoImpl{&reqInfo},
-		Role:     role,
+		InfoerImpl: api.InfoerImpl{&reqInfo},
+		Role:       role,
 	}
 	err := r.Validate()
 	if err != nil {

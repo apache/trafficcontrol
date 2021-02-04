@@ -526,6 +526,18 @@ type Version struct {
 	Minor uint64
 }
 
+func (v Version) Equals(other Version) bool {
+	return v.Major == other.Major && v.Minor == other.Minor
+}
+
+func (v Version) LessThan(other Version) bool {
+	return v.Major < other.Major || (v.Major == other.Major && v.Minor < other.Minor)
+}
+
+func (v Version) GreaterThan(other Version) bool {
+	return v.Major > other.Major || (v.Major == other.Major && v.Minor > other.Minor)
+}
+
 // String returns a string representation of the Version.
 func (v Version) String() string {
 	return fmt.Sprintf("%d.%d", v.Major, v.Minor)
@@ -1000,6 +1012,9 @@ func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
 
 // DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
 func DefaultSort(readerType *Info, param string) {
+	if readerType == nil {
+		return
+	}
 	if _, ok := readerType.Params["orderby"]; !ok {
 		readerType.Params["orderby"] = param
 	}

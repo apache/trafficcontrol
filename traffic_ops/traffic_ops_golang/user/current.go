@@ -112,12 +112,7 @@ func Current(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	version := inf.Version
-	if version == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("TOUsers.Read called with invalid API version"), nil)
-		return
-	}
-	if version.Major >= 4 {
+	if inf.Version.Major >= 4 {
 		api.WriteResp(w, r, currentUser)
 	} else {
 		legacyUser := currentUser.Downgrade()

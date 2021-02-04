@@ -51,7 +51,7 @@ const (
 
 // TOCacheGroupParameter is a type alias that is used to define CRUD functions on.
 type TOCacheGroupParameter struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.CacheGroupParameterNullable
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }

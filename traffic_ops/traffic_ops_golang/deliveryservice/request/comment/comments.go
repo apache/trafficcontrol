@@ -36,7 +36,7 @@ import (
 
 //we need a type alias to define functions on
 type TODeliveryServiceRequestComment struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.DeliveryServiceRequestCommentNullable
 }
 

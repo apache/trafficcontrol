@@ -65,10 +65,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	version := inf.Version
-	if version == nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("TODeliveryService.UpdateSafe called with nil API version"))
-		return
-	}
 	if version.Major == 1 && version.Minor < 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("TODeliveryService.UpdateSafe called with invalid API version: %d.%d", version.Major, version.Minor))
 		return
@@ -137,23 +133,18 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		ds = ds.RemoveLD1AndLD2()
 	}
 	alertMsg := "Delivery Service safe update successful."
-	if inf.Version == nil {
-		log.Warnln("API version found to be null in DS safe update")
+	switch version.Major {
+	default:
+		fallthrough
+	case 4:
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
-	} else {
-		switch inf.Version.Major {
-		default:
-			fallthrough
-		case 4:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
-		case 3:
-			if inf.Version.Minor >= 1 {
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV3())})
-			}
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV3().DeliveryServiceV30})
-		case 2:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
+	case 3:
+		if inf.Version.Minor >= 1 {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV3())})
 		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV3().DeliveryServiceV30})
+	case 2:
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", *ds.XMLID, *ds.ID), inf.User, tx)

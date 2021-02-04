@@ -44,7 +44,7 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if inf.Version == nil || inf.Version.Major < 4 {
+	if inf.Version.Major < 4 {
 		api.WriteRespRaw(w, r, serverUpdateStatus)
 	} else {
 		api.WriteResp(w, r, serverUpdateStatus)

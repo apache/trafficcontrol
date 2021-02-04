@@ -35,7 +35,7 @@ import (
 )
 
 type TOServiceCategory struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.ServiceCategory
 }
 

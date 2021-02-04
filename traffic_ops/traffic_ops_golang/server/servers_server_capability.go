@@ -48,7 +48,7 @@ const (
 
 type (
 	TOServerServerCapability struct {
-		api.InfoImpl `json:"-"`
+		api.InfoerImpl `json:"-"`
 		tc.ServerServerCapability
 	}
 

@@ -39,7 +39,7 @@ const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
 type TOASNV11 struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.ASNNullable
 }
 
@@ -133,7 +133,7 @@ func (as *TOASNV11) Update(h http.Header) (error, error, int) {
 func (as *TOASNV11) Delete() (error, error, int) { return api.GenericDelete(as) }
 
 func (asn TOASNV11) ASNExists(create bool) error {
-	if asn.Info() == nil || asn.Info().Tx == nil {
+	if asn.Info().Tx == nil {
 		return errors.New("couldn't perform check to see if asn number exists already")
 	}
 	if asn.ASN == nil || asn.CachegroupID == nil {

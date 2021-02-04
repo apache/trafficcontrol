@@ -101,7 +101,7 @@ func TestGetProfiles(t *testing.T) {
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"name": "1"}}
 
 	obj := TOProfile{
-		api.InfoImpl{&reqInfo},
+		api.InfoerImpl{&reqInfo},
 		tc.ProfileNullable{},
 	}
 	profiles, userErr, sysErr, _, _ := obj.Read(nil, false)

@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
 // GetAssignment is the handler for GET requests to
@@ -42,15 +41,8 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
 	// This should never happen because a route doesn't exist for it
-	if version.Major < 4 {
+	if inf.Version.Major < 4 {
 		w.Header().Set("Allow", http.MethodPut)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		api.WriteRespAlert(w, r, tc.ErrorLevel, http.StatusText(http.StatusMethodNotAllowed))
@@ -150,15 +142,8 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
 	// Don't accept "assignee" in lieu of "assigneeId" in API version < 4.0
-	if version.Major < 4 {
+	if inf.Version.Major < 4 {
 		req.Assignee = nil
 	}
 

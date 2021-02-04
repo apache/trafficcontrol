@@ -72,7 +72,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit, *inf.Version)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit, inf.Version)
 	respVals := map[string]interface{}{
 		"orderby": orderBy,
 		"limit":   limit,

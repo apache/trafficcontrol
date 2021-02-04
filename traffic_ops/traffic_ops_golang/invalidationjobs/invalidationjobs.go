@@ -43,7 +43,7 @@ import (
 )
 
 type InvalidationJob struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.InvalidationJob
 }
 
@@ -424,11 +424,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
-		return
-	}
-
-	if inf.Version == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("nil API version"))
 		return
 	}
 

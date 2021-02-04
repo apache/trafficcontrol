@@ -42,8 +42,8 @@ const (
 
 // TOUsers data structure to use on read/delete of federation users
 type TOUsers struct {
-	api.InfoImpl `json:"-"`
-	Federation   *int `json:"-" db:"federation"`
+	api.InfoerImpl `json:"-"`
+	Federation     *int `json:"-" db:"federation"`
 	tc.FederationUser
 }
 

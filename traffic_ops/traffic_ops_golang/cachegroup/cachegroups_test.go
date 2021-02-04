@@ -139,7 +139,7 @@ func TestReadCacheGroups(t *testing.T) {
 
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	obj := TOCacheGroup{
-		api.InfoImpl{ReqInfo: &reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{},
 	}
 	cachegroups, userErr, sysErr, _, _ := obj.Read(nil, false)
@@ -218,7 +218,7 @@ func TestValidate(t *testing.T) {
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
 	c := TOCacheGroup{
-		api.InfoImpl{ReqInfo: &reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{
 			ID:                  &id,
 			Name:                &nm,
@@ -259,7 +259,7 @@ func TestValidate(t *testing.T) {
 	lo = 90.0
 	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
 	c = TOCacheGroup{
-		api.InfoImpl{ReqInfo: &reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{
 			ID:                  &id,
 			Name:                &nm,
@@ -333,7 +333,7 @@ func TestBadTypeParamCacheGroups(t *testing.T) {
 
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"type": "wrong"}}
 	obj := TOCacheGroup{
-		api.InfoImpl{ReqInfo: &reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{},
 	}
 	_, userErr, _, sc, _ := obj.Read(nil, false)

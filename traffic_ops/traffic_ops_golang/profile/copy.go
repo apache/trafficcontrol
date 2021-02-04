@@ -104,7 +104,7 @@ func copyProfile(inf *api.Info, p *tc.ProfileCopy) errorDetails {
 		"name": p.ExistingName,
 	}
 	toProfile := &TOProfile{
-		api.InfoImpl{
+		api.InfoerImpl{
 			ReqInfo: inf,
 		},
 		tc.ProfileNullable{},
@@ -180,7 +180,7 @@ func copyParameters(inf *api.Info, p *tc.ProfileCopy) errorDetails {
 	}
 
 	toParam := &profileparameter.TOProfileParameter{
-		InfoImpl: api.InfoImpl{
+		InfoerImpl: api.InfoerImpl{
 			ReqInfo: inf,
 		},
 	}

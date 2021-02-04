@@ -49,7 +49,7 @@ const (
 
 // RequiredCapability provides a type to define methods on.
 type RequiredCapability struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.DeliveryServicesRequiredCapability
 }
 

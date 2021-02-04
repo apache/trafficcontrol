@@ -128,8 +128,8 @@ func getFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
 
 // TOFedDSes data structure to use on read/delete of federation deliveryservices
 type TOFedDSes struct {
-	api.InfoImpl `json:"-"`
-	fedID        *int
+	api.InfoerImpl `json:"-"`
+	fedID          *int
 	tc.FederationDeliveryServiceNullable
 }
 

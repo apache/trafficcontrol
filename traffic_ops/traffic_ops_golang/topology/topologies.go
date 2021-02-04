@@ -44,9 +44,9 @@ import (
 
 // TOTopology is a type alias on which we can define functions.
 type TOTopology struct {
-	api.InfoImpl  `json:"-"`
-	Alerts        tc.Alerts `json:"-"`
-	RequestedName string
+	api.InfoerImpl `json:"-"`
+	Alerts         tc.Alerts `json:"-"`
+	RequestedName  string
 	tc.Topology
 }
 
@@ -90,7 +90,7 @@ func (topology *TOTopology) GetType() string {
 
 // Validate is a requirement of the api.Validator interface.
 func (topology *TOTopology) Validate() error {
-	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
+	currentTopoName := topology.InfoerImpl.ReqInfo.Params["name"]
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
 	rules := validation.Errors{}
 	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
@@ -116,7 +116,7 @@ func (topology *TOTopology) Validate() error {
 		rules[fmt.Sprintf("node %v self parent", index)] = checkForSelfParents(topology.Nodes, index)
 		cacheGroupNames[index] = node.Cachegroup
 	}
-	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.InfoImpl.ReqInfo.Tx); userErr != nil || sysErr != nil {
+	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.InfoerImpl.ReqInfo.Tx); userErr != nil || sysErr != nil {
 		var err error
 		message := "could not get cachegroups"
 		if userErr != nil {
@@ -178,7 +178,7 @@ func (topology *TOTopology) Validate() error {
 }
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
-	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
+	currentTopoName := topology.InfoerImpl.ReqInfo.Params["name"]
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
 	where := `WHERE name != :topology_name`
 	query := selectQueryWithParentNames() + where + `
@@ -606,7 +606,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	}
 
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, topology.InfoImpl.Tx, topology.Name, "topology")
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -614,7 +614,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
-	oldTopology := TOTopology{InfoImpl: topology.InfoImpl, Topology: topologies[0].(tc.Topology)}
+	oldTopology := TOTopology{InfoerImpl: topology.InfoerImpl, Topology: topologies[0].(tc.Topology)}
 
 	if err := oldTopology.removeParents(); err != nil {
 		return nil, err, http.StatusInternalServerError

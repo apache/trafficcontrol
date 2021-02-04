@@ -118,3 +118,19 @@ type Infoer interface {
 	SetInfo(*Info)
 	Info() *Info
 }
+
+// InfoerImpl is an implementation of the Infoer interface.
+type InfoerImpl struct {
+	// ReqInfo is the stored API Info.
+	ReqInfo *Info `json:"-"`
+}
+
+// Info returns the InfoerImpl's stored API Info.
+func (i InfoerImpl) Info() *Info {
+	return i.ReqInfo
+}
+
+// SetInfo sets the InfoerImpl's stored API Info.
+func (i *InfoerImpl) SetInfo(inf *Info) {
+	i.ReqInfo = inf
+}

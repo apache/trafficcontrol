@@ -67,13 +67,13 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 	m := make(map[string]string)
 	m["deliveryservice"] = "3"
 	stObj := &TOSteeringTargetV11{
-		InfoImpl: api.InfoImpl{
+		InfoerImpl: api.InfoerImpl{
 			ReqInfo: &api.Info{
 				Params:    m,
 				IntParams: nil,
 				User:      nil,
 				ReqID:     0,
-				Version:   nil,
+				Version:   api.Version{},
 				Tx:        tx,
 				Config:    nil,
 			},

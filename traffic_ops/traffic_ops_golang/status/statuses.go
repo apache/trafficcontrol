@@ -37,7 +37,7 @@ import (
 
 //we need a type alias to define functions on
 type TOStatus struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.StatusNullable
 	SQLDescription sql.NullString `json:"-" db:"description"`
 }

@@ -35,8 +35,8 @@ import (
 )
 
 type TOServerCapability struct {
-	api.InfoImpl  `json:"-"`
-	RequestedName string
+	api.InfoerImpl `json:"-"`
+	RequestedName  string
 	tc.ServerCapability
 }
 

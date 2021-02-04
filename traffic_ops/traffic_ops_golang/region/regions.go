@@ -32,7 +32,7 @@ import (
 
 //we need a type alias to define functions on
 type TORegion struct {
-	api.InfoImpl `json:"-"`
+	api.InfoerImpl `json:"-"`
 	tc.Region
 }
 
