@@ -574,26 +574,11 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (topology *TOTopology) setDescription() (error, error, int) {
-	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name)
-	if err != nil {
-		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
-	}
-	defer log.Close(rows, "unable to close DB connection")
-	for rows.Next() {
-		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
-		if err != nil {
-			return api.ParseDBError(err)
-		}
-	}
-	return nil, nil, http.StatusOK
-}
-
-func (topology *TOTopology) setName() (error, error, int) {
+func (topology *TOTopology) setNameDescription() (error, error, int) {
 	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
-	rows, err := topology.ReqInfo.Tx.Query(updateNameQuery(), topology.Name, currentTopoName)
+	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Name, topology.Description, currentTopoName)
 	if err != nil {
-		return nil, fmt.Errorf("topology update: error setting the name for topology %v: %v", currentTopoName, err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", currentTopoName, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for rows.Next() {
@@ -615,9 +600,6 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
-	if userErr, sysErr, errCode := topology.setDescription(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
-	}
 
 	if err := oldTopology.removeParents(); err != nil {
 		return nil, err, http.StatusInternalServerError
@@ -642,7 +624,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
-	if userErr, sysErr, errCode := topology.setName(); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := topology.setNameDescription(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
@@ -802,18 +784,9 @@ WHERE tcp.child IN
 func updateQuery() string {
 	query := `
 UPDATE topology t SET
-description = $1
-WHERE t.name = $2
-RETURNING t.name, t.description, t.last_updated
-`
-	return query
-}
-
-func updateNameQuery() string {
-	query := `
-UPDATE topology t SET
-name = $1
-WHERE t.name = $2
+name = $1,
+description = $2
+WHERE t.name = $3
 RETURNING t.name, t.description, t.last_updated
 `
 	return query
