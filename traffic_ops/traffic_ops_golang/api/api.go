@@ -51,6 +51,24 @@ import (
 	"github.com/lib/pq"
 )
 
+type errorConstant string
+
+func (e errorConstant) Error() string {
+	return string(e)
+}
+
+// NilRequestError is returned by APIInfo methods when the request internally
+// referred to by the APIInfo cannot be found.
+const NilRequestError = errorConstant("method called on APIInfo with nil request")
+
+// NilTransactionError is returned by APIInfo methods when the transaction
+// internally referred to by the APIInfo cannot be found.
+const NilTransactionError = errorConstant("method called on APIInfo with nil transaction")
+
+// ResourceModifiedError is a user-safe error that indicates a precondition
+// failure.
+const ResourceModifiedError = errorConstant("resource was modified")
+
 // Common context.Context value keys.
 const (
 	DBContextKey      = "db"
