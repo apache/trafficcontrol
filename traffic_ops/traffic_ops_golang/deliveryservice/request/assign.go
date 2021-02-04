@@ -33,7 +33,7 @@ import (
 // GetAssignment is the handler for GET requests to
 // /deliveryservice_requests/{{ID}}/assign.
 func GetAssignment(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -128,7 +128,7 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 // PutAssignment is the handler for PUT requsets to
 // /deliveryservice_requests/{{ID}}/assign.
 func PutAssignment(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

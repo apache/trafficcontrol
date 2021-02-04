@@ -35,7 +35,7 @@ import (
 
 // Create handler for creating a new servercheck extension.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -177,7 +177,7 @@ func selectQuery() string {
 
 // Get handler for getting servercheck extensions.
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -231,7 +231,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for deleting servercheck extensions.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, sysErr, userErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

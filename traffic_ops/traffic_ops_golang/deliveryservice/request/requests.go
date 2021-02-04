@@ -163,7 +163,7 @@ func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliverySe
 
 // Get is the GET handler for /deliveryservice_requests.
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -562,7 +562,7 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.Info) (result
 
 // Post is the handler for POST requests to /deliveryservice_requests.
 func Post(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -590,7 +590,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 // Delete is the handler for DELETE requests to /deliveryservice_requests.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	var omitExtraLongDescFields bool
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -865,7 +865,7 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.Info) (result ds
 
 // Put is the handler for PUT requests to /deliveryservice_requests.
 func Put(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

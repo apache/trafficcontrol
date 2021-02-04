@@ -181,7 +181,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler readSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		useIMS := false
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		inf, userErr, sysErr, errCode := NewInfo(w, r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -226,7 +226,7 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 //   *forming and writing the body over the wire
 func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		inf, userErr, sysErr, errCode := NewInfo(w, r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -351,7 +351,7 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 // DeprecatedDeleteHandler always returns a deprecation alert in its response, whereas DeleteHandler does not.
 func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandler deleteSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		inf, userErr, sysErr, errCode := NewInfo(w, r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -457,7 +457,7 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 //   *forming and writing the body over the wire
 func CreateHandler(creator Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		inf, userErr, sysErr, errCode := NewInfo(w, r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return

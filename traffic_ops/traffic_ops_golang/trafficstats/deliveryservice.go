@@ -116,7 +116,7 @@ func dsConfigFromRequest(r *http.Request, i *api.Info) (tc.TrafficDSStatsConfig,
 // GetDSStats handler for getting deliveryservice stats
 func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	// Perl didn't require "interval", but it would only return summary data if it was not given
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"metricType", "startDate", "endDate"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"metricType", "startDate", "endDate"}, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

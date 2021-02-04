@@ -109,7 +109,7 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 
 // ReadDSSHandler is the handler for GET requests to /deliveryserviceserver.
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -346,7 +346,7 @@ func hasAvailableEdgesCurrentlyAssigned(tx *sql.Tx, dsID int) (bool, error) {
 
 // GetReplaceHandler is the handler for POST requests to the /deliveryserviceserver API endpoint.
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -450,7 +450,7 @@ type TODeliveryServiceServers tc.DeliveryServiceServers
 
 // GetCreateHandler is the handler for POST requests to /deliveryservices/{{XMLID}}/servers.
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"xml_id"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -676,7 +676,7 @@ VALUES (:id, :server )`
 
 // GetReadAssigned is the handler for GET requests to /deliveryservices/{id}/servers.
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -881,10 +881,7 @@ type TODSSDeliveryService struct {
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	version := dss.APIInfo().Version
-	if version == nil {
-		return nil, nil, errors.New("TODSSDeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
-	}
+	version := dss.Info().Version
 	if version.Major == 1 && version.Minor < 1 {
 		return nil, nil, fmt.Errorf("TODSSDeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 	}

@@ -38,7 +38,7 @@ import (
 )
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -88,7 +88,7 @@ WHERE ds.tenant_id = ANY($1)
 }
 
 func DSGet(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid"}, []string{"dsid"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"dsid"}, []string{"dsid"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -145,7 +145,7 @@ JOIN type as rt ON r.type = rt.id
 }
 
 func Post(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid"}, []string{"dsid"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"dsid"}, []string{"dsid"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -230,10 +230,10 @@ func getCurrentDetails(tx *sql.Tx, dsID int, regexID int) error {
 	var setNumber int
 	var typeName string
 	err := tx.QueryRow(`
-select dsr.set_number, t.name 
-from deliveryservice_regex as dsr 
-join regex as r on dsr.regex = r.id 
-join type as t on t.id = r.type 
+select dsr.set_number, t.name
+from deliveryservice_regex as dsr
+join regex as r on dsr.regex = r.id
+join type as t on t.id = r.type
 where dsr.deliveryservice=$1 and r.id=$2`,
 		dsID, regexID).Scan(&setNumber, &typeName)
 	if err != nil {
@@ -246,7 +246,7 @@ where dsr.deliveryservice=$1 and r.id=$2`,
 }
 
 func Put(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -329,7 +329,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 func canUpdate(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost) error {
 	var name string
 	err := tx.QueryRow(`
-select name from type as t 
+select name from type as t
 where t.id=$1`,
 		dsr.Type).Scan(&name)
 	if err != nil {
@@ -380,7 +380,7 @@ where deliveryservice = $1 and set_number = $2`,
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

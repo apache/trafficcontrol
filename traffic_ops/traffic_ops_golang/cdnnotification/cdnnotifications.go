@@ -64,7 +64,7 @@ cdn_notification.notification
 
 // Read is the handler for GET requests to /cdn_notifications.
 func Read(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -115,7 +115,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 // Create is the handler for POST requests to /cdn_notifications.
 func Create(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	inf, sysErr, userErr, errCode := api.NewInfo(w, r, nil, nil)
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -147,7 +147,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for DELETE requests to /cdn_notifications.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

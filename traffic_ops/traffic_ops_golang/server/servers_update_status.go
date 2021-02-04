@@ -32,7 +32,7 @@ import (
 )
 
 func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host_name"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"host_name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

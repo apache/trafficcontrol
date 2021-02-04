@@ -97,7 +97,7 @@ func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx
 }
 
 func deleteDSS(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

@@ -69,6 +69,7 @@ type Info struct {
 	// Vault implements the interaction interface for Traffic Vault.
 	Vault     trafficvault.TrafficVault
 	request   *http.Request
+	writer    http.ResponseWriter
 	ctxCancel context.CancelFunc
 }
 
@@ -90,7 +91,7 @@ type Info struct {
 //
 // Example:
 //  func handler(w http.ResponseWriter, r *http.Request) {
-//    inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+//    inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 //    if userErr != nil || sysErr != nil {
 //      api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 //      return
@@ -109,7 +110,7 @@ type Info struct {
 //    api.WriteResp(w, r, respObj)
 //  }
 //
-func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*Info, error, error, int) {
+func NewInfo(w http.ResponseWriter, r *http.Request, requiredParams, intParamNames []string) (*Info, error, error, int) {
 	db, err := GetDB(r.Context())
 	if err != nil {
 		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
@@ -147,6 +148,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		User:      user,
 		Tx:        tx,
 		request:   r,
+		writer:    w,
 		ctxCancel: ctxCancel,
 	}, nil, nil, http.StatusOK
 }

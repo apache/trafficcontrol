@@ -33,7 +33,7 @@ import (
 
 // GetStatsSummary handler for getting stats summaries
 func GetStatsSummary(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{}, []string{})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -113,7 +113,7 @@ func queryStatsSummary(tx *sqlx.Tx, q string, queryValues map[string]interface{}
 
 // CreateStatsSummary handler for creating stats summaries
 func CreateStatsSummary(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, []string{}, []string{})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

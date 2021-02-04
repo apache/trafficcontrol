@@ -32,7 +32,7 @@ import (
 
 func LogoutHandler(secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+		inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 		tx := inf.Tx.Tx
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)

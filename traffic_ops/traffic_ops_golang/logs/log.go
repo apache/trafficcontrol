@@ -47,7 +47,7 @@ const (
 
 // Get is the handler for GET requests to /logs.
 func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -74,7 +74,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // Get is the handler for GET requests to /logs V4.0.
 func Getv40(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -103,7 +103,7 @@ func Getv40(w http.ResponseWriter, r *http.Request) {
 
 // GetNewCount is the handler for GET requests to /logs/newcount.
 func GetNewCount(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -157,7 +157,7 @@ FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
 const countQuery = `SELECT count(l.tm_user) FROM log as l`
 
-func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
+func getLogV40(inf *api.Info, days int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 
@@ -208,7 +208,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
 	return ls, count, nil
 }
 
-func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
+func getLog(inf *api.Info, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 	if _, ok := inf.Params["limit"]; !ok {
