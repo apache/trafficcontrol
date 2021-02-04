@@ -518,31 +518,6 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	return http.StatusOK, nil, nil
 }
 
-// Version represents an API version.
-type Version struct {
-	// API major version - '3' in '3.1'.
-	Major uint64
-	// API minor version - '1' in '3.1'.
-	Minor uint64
-}
-
-func (v Version) Equals(other Version) bool {
-	return v.Major == other.Major && v.Minor == other.Minor
-}
-
-func (v Version) LessThan(other Version) bool {
-	return v.Major < other.Major || (v.Major == other.Major && v.Minor < other.Minor)
-}
-
-func (v Version) GreaterThan(other Version) bool {
-	return v.Major > other.Major || (v.Major == other.Major && v.Minor > other.Minor)
-}
-
-// String returns a string representation of the Version.
-func (v Version) String() string {
-	return fmt.Sprintf("%d.%d", v.Major, v.Minor)
-}
-
 // getRequestedAPIVersion returns the requested API Version from the request if it exists, or returns "0.0" otherwise.
 func getRequestedAPIVersion(path string) Version {
 	v := Version{
