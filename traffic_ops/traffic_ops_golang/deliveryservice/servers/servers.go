@@ -48,7 +48,7 @@ import (
 
 // TODeliveryServiceRequest provides a type alias to define functions on
 type TODeliveryServiceServer struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.DeliveryServiceServer
 	TenantIDs          pq.Int64Array `json:"-" db:"accessibleTenants"`
 	DeliveryServiceIDs pq.Int64Array `json:"-" db:"dsids"`
@@ -875,7 +875,7 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 }
 
 type TODSSDeliveryService struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.DeliveryServiceNullable
 }
 
@@ -891,9 +891,9 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	var maxTime time.Time
 	var runSecond bool
 	returnable := []interface{}{}
-	params := dss.APIInfo().Params
-	tx := dss.APIInfo().Tx.Tx
-	user := dss.APIInfo().User
+	params := dss.Info().Params
+	tx := dss.Info().Tx.Tx
+	user := dss.Info().User
 
 	if err := api.IsInt(params["id"]); err != nil {
 		return nil, err, nil, http.StatusBadRequest, nil
@@ -928,10 +928,10 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 	query := deliveryservice.SelectDeliveryServicesQuery + where + orderBy + pagination
-	queryValues["server"] = dss.APIInfo().Params["id"]
+	queryValues["server"] = dss.Info().Params["id"]
 
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(dss.Info().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return returnable, nil, nil, http.StatusNotModified, &maxTime
@@ -943,7 +943,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	dses, userErr, sysErr, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
+	dses, userErr, sysErr, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.Info().Tx)
 	if sysErr != nil {
 		sysErr = fmt.Errorf("reading server dses: %v ", sysErr)
 	}

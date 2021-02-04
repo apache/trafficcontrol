@@ -578,7 +578,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 	}
 }
 
-func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {
+func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *Info) ([]Creator, error) {
 	buf := ioutil.NopCloser(bytes.NewReader(data))
 
 	var genericInt interface{}

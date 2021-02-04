@@ -51,7 +51,7 @@ const (
 
 // TOCacheGroupParameter is a type alias that is used to define CRUD functions on.
 type TOCacheGroupParameter struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.CacheGroupParameterNullable
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
@@ -71,7 +71,7 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header, useIMS bool) ([]interf
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToQueryCols := cgparam.ParamColumns()
-	parameters := cgparam.APIInfo().Params
+	parameters := cgparam.Info().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
@@ -352,14 +352,14 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectAllQuery() string {
-	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name 
-				FROM cachegroup_parameter AS cgp 
+	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name
+				FROM cachegroup_parameter AS cgp
 				JOIN cachegroup AS cg ON cg.id = cachegroup`
 }
 
 func insertQuery() string {
-	return `INSERT INTO cachegroup_parameter 
-		(cachegroup, 
-		parameter) 
+	return `INSERT INTO cachegroup_parameter
+		(cachegroup,
+		parameter)
 		VALUES `
 }

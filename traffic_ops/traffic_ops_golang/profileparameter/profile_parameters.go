@@ -41,7 +41,7 @@ const (
 
 //we need a type alias to define functions on
 type TOProfileParameter struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.ProfileParameterNullable
 }
 
@@ -118,18 +118,18 @@ func (pp *TOProfileParameter) Validate() error {
 //to be added to the struct
 func (pp *TOProfileParameter) Create() (error, error, int) {
 	if pp.ProfileID != nil {
-		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.Info().Tx.Tx, *pp.ProfileID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.Info().Tx.Tx, string(cdnName), pp.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
 	} else {
 		return errors.New("no profile ID in request"), nil, http.StatusBadRequest
 	}
-	resultRows, err := pp.APIInfo().Tx.NamedQuery(insertQuery(), pp)
+	resultRows, err := pp.Info().Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
@@ -168,7 +168,7 @@ func (pp *TOProfileParameter) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.DefaultSort(pp.APIInfo(), "parameter")
+	api.DefaultSort(pp.Info(), "parameter")
 	return api.GenericRead(h, pp, useIMS)
 }
 func (pp *TOProfileParameter) Delete() (error, error, int) {

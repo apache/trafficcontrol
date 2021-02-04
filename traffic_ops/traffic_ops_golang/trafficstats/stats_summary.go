@@ -50,7 +50,7 @@ func GetStatsSummary(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.Info) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"statName": dbhelpers.WhereColumnInfo{Column: "stat_name"},
 	}
@@ -72,7 +72,7 @@ func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo
 	api.WriteResp(w, r, resp)
 }
 
-func getStatsSummary(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func getStatsSummary(w http.ResponseWriter, r *http.Request, inf *api.Info) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"statName":            dbhelpers.WhereColumnInfo{Column: "stat_name"},
 		"cdnName":             dbhelpers.WhereColumnInfo{Column: "cdn_name"},

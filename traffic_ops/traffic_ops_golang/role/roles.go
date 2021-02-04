@@ -42,7 +42,7 @@ import (
 )
 
 type TORole struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.Role
 	LastUpdated    *tc.TimeNoMod   `json:"-"`
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
@@ -64,7 +64,7 @@ WHERE name=$2 RETURNING last_updated`
 }
 
 func (v *TORole) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "role")
+	return api.GetLastUpdated(v.Info().Tx, *v.ID, "role")
 }
 
 func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -193,7 +193,7 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 }
 
 func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.DefaultSort(role.APIInfo(), "name")
+	api.DefaultSort(role.Info(), "name")
 	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
 	if errCode == http.StatusNotModified {
 		return []interface{}{}, nil, nil, errCode, maxTime

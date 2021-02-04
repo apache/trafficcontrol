@@ -307,7 +307,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // isTenantAuthorized ensures the user is authorized on the DSR's
 // DeliveryService's Tenant, as appropriate to the change type.
-func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (bool, error) {
+func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.Info) (bool, error) {
 	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
 		if dsr.Requested.TenantID == nil {
 			log.Debugf("requested.tenantID is nil")
@@ -340,7 +340,7 @@ func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (boo
 }
 
 // Warning: this assumes inf isn't nil, and neither is dsr, inf.Tx or inf.User or inf.Tx.Tx.
-func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, error) {
+func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.Info) (int, error, error) {
 	dsr.Author = inf.User.UserName
 	dsr.LastEditedBy = inf.User.UserName
 	if dsr.ChangeType != tc.DSRChangeTypeDelete {
@@ -420,7 +420,7 @@ func (d dsrManipulationResult) String() string {
 	return builder.String()
 }
 
-func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+func createV4(w http.ResponseWriter, r *http.Request, inf *api.Info) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV40
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
@@ -494,7 +494,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 	return
 }
 
-func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.Info) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestNullable
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
@@ -699,7 +699,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	inf.CreateChangeLog(res.String())
 }
 
-func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+func putV40(w http.ResponseWriter, r *http.Request, inf *api.Info) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV40
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
@@ -814,7 +814,7 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	return
 }
 
-func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.Info) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestNullable
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {

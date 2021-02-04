@@ -75,7 +75,7 @@ const (
 		GROUP BY time(%s, %s), cachegroup%s`
 )
 
-func dsConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficDSStatsConfig, int, error) {
+func dsConfigFromRequest(r *http.Request, i *api.Info) (tc.TrafficDSStatsConfig, int, error) {
 	c := tc.TrafficDSStatsConfig{}
 	statsConfig, rc, e := tsConfigFromRequest(r, i)
 	if e != nil {
@@ -178,7 +178,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	handleRequest(w, r, client, c, inf)
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
+func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.Info) {
 	// TODO: as above, this could be done on TO itself, thus sending only one synchronous request
 	// per hit on this endpoint, rather than the current two. Not sure if that's worth it for large
 	// data sets, though.

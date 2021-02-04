@@ -58,12 +58,12 @@ const (
 
 //we need a type alias to define functions on
 type TOProfile struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.ProfileNullable
 }
 
 func (v *TOProfile) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "profile")
+	return api.GetLastUpdated(v.Info().Tx, *v.ID, "profile")
 }
 
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -140,12 +140,12 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		IDQueryParam:    dbhelpers.WhereColumnInfo{Column: "prof.id", Checker: api.IsInt},
 		ParamQueryParam: dbhelpers.WhereColumnInfo{Column: "pp.parameter", Checker: api.IsInt},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.Info().Params, queryParamsToQueryCols)
 
 	query := selectProfilesQuery()
 	// Narrow down if the query parameter is 'param'
 	// TODO add generic where clause to api.GenericRead
-	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
+	if paramValue, ok := prof.Info().Params[ParamQueryParam]; ok {
 		if len(paramValue) > 0 {
 			query += " LEFT JOIN profile_parameter pp ON prof.id = pp.profile"
 		}
@@ -156,7 +156,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	}
 
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(prof.Info().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
@@ -188,8 +188,8 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	profileInterfaces := []interface{}{}
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
-		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
-			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
+		if _, ok := prof.Info().Params[IDQueryParam]; ok {
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.Info().Params, prof.ReqInfo.User, profile)
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
 			}
@@ -315,7 +315,7 @@ func (pr *TOProfile) Create() (error, error, int) {
 
 func (pr *TOProfile) Delete() (error, error, int) {
 	if pr.CDNName == nil && pr.CDNID == nil {
-		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pr.APIInfo().Tx.Tx, *pr.ID)
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pr.Info().Tx.Tx, *pr.ID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}

@@ -43,12 +43,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
-	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -59,13 +57,13 @@ func (e errorConstant) Error() string {
 	return string(e)
 }
 
-// NilRequestError is returned by APIInfo methods when the request internally
-// referred to by the APIInfo cannot be found.
-const NilRequestError = errorConstant("method called on APIInfo with nil request")
+// NilRequestError is returned by Info methods when the request internally
+// referred to by the Info cannot be found.
+const NilRequestError = errorConstant("method called on Info with nil request")
 
-// NilTransactionError is returned by APIInfo methods when the transaction
-// internally referred to by the APIInfo cannot be found.
-const NilTransactionError = errorConstant("method called on APIInfo with nil transaction")
+// NilTransactionError is returned by Info methods when the transaction
+// internally referred to by the Info cannot be found.
+const NilTransactionError = errorConstant("method called on Info with nil transaction")
 
 // ResourceModifiedError is a user-safe error that indicates a precondition
 // failure.
@@ -193,7 +191,7 @@ func WriteIMSHitResp(w http.ResponseWriter, r *http.Request, t time.Time) {
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
-// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common Info use case.
 //
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
@@ -223,7 +221,7 @@ func HandleErrOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sq
 //
 // The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
 //
-// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common Info use case.
 //
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, alternative *string) {
@@ -495,195 +493,6 @@ func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 	return nil
 }
 
-type APIInfo struct {
-	Params    map[string]string
-	IntParams map[string]int
-	User      *auth.CurrentUser
-	ReqID     uint64
-	Version   *Version
-	Tx        *sqlx.Tx
-	CancelTx  context.CancelFunc
-	Vault     trafficvault.TrafficVault
-	Config    *config.Config
-	request   *http.Request
-}
-
-// NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
-//
-// It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
-//
-// NewInfo guarantees the returned APIInfo.Tx is non-nil and APIInfo.Tx.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx.Tx to HandleErr when this returns errors.
-//
-// Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to finish the transaction.
-//
-// Example:
-//  func handler(w http.ResponseWriter, r *http.Request) {
-//    inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-//    if userErr != nil || sysErr != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-//      return
-//    }
-//    defer inf.Close()
-//
-//    respObj, err := finalDatabaseOperation(inf.Tx)
-//    if err != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
-//      return
-//    }
-//    if err := inf.Tx.Tx.Commit(); err != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
-//      return
-//    }
-//    api.WriteResp(w, r, respObj)
-//  }
-//
-func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
-	db, err := GetDB(r.Context())
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
-	}
-	cfg, err := GetConfig(r.Context())
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
-	}
-	tv, err := GetTrafficVault(r.Context())
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
-	}
-	reqID, err := getReqID(r.Context())
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
-	}
-	version := getRequestedAPIVersion(r.URL.Path)
-
-	user, err := auth.GetCurrentUser(r.Context())
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
-	}
-	params, intParams, userErr, sysErr, errCode := AllParams(r, requiredParams, intParamNames)
-	if userErr != nil || sysErr != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
-	}
-	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
-	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
-	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
-	}
-	return &APIInfo{
-		Config:    cfg,
-		ReqID:     reqID,
-		Version:   version,
-		Params:    params,
-		IntParams: intParams,
-		User:      user,
-		Tx:        tx,
-		CancelTx:  cancelTx,
-		Vault:     tv,
-		request:   r,
-	}, nil, nil, http.StatusOK
-}
-
-const createChangeLogQuery = `
-INSERT INTO log (
-	level,
-	message,
-	tm_user
-) VALUES (
-	$1,
-	$2,
-	$3
-)
-`
-
-// CreateChangeLog creates a new changelog message at the APICHANGE level for
-// the current user.
-func (inf APIInfo) CreateChangeLog(msg string) {
-	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
-	if err != nil {
-		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
-	}
-}
-
-// UseIMS returns whether or not If-Modified-Since constraints should be used to
-// service the given request.
-func (inf APIInfo) UseIMS() bool {
-	if inf.request == nil || inf.Config == nil {
-		return false
-	}
-	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
-}
-
-// CheckPrecondition checks a request's "preconditions" - its If-Match and
-// If-Unmodified-Since headers versus the last updated time of the requested
-// object(s), and returns (in order), an HTTP response code appropriate for the
-// precondition check results, a user-safe error that should be returned to
-// clients, and a server-side error that should be logged.
-// Callers must pass in a query that will return one row containing one column
-// that is the representative date/time of the last update of the requested
-// object(s), and optionally any values for placeholder arguments in the query.
-func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
-	if inf.request == nil {
-		return http.StatusInternalServerError, nil, NilRequestError
-	}
-
-	ius := inf.request.Header.Get(rfc.IfUnmodifiedSince)
-	etag := inf.request.Header.Get(rfc.IfMatch)
-	if ius == "" && etag == "" {
-		return http.StatusOK, nil, nil
-	}
-
-	if inf.Tx == nil || inf.Tx.Tx == nil {
-		return http.StatusInternalServerError, nil, NilTransactionError
-	}
-
-	var lastUpdated time.Time
-	if err := inf.Tx.Tx.QueryRow(query, args...).Scan(&lastUpdated); err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %v", err)
-	}
-
-	if etag != "" {
-		if et, ok := rfc.ParseETags(strings.Split(etag, ",")); ok {
-			if lastUpdated.After(et) {
-				return http.StatusPreconditionFailed, ResourceModifiedError, nil
-			}
-		}
-	}
-
-	if ius == "" {
-		return http.StatusOK, nil, nil
-	}
-
-	if tm, ok := rfc.ParseHTTPDate(ius); ok {
-		if lastUpdated.After(tm) {
-			return http.StatusPreconditionFailed, ResourceModifiedError, nil
-		}
-	}
-
-	return http.StatusOK, nil, nil
-}
-
-// Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
-//
-// Close will commit the transaction, if it hasn't been rolled back.
-func (inf *APIInfo) Close() {
-	defer inf.CancelTx()
-	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
-		log.Errorln("committing transaction: " + err.Error())
-	}
-}
-
-// SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
-func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
-	return SendMail(to, msg, inf.Config)
-}
-
-// IsResourceAuthorizedToCurrentUser is a convenience method used to call
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
-// using an APIInfo structure to provide the current user and database transaction.
-func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
-	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
-}
-
 // SendMail sends an email msg to the address identified by to. The msg parameter should be an
 // RFC822-style email with headers first, a blank line, and then the message body. The lines of msg
 // should be CRLF terminated. The msg headers should usually include fields such as "From", "To",
@@ -709,111 +518,47 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	return http.StatusOK, nil, nil
 }
 
-// CreateInfluxClient constructs and returns an InfluxDB HTTP client, if enabled and when possible.
-// The error this returns should not be exposed to the user; it's for logging purposes only.
-//
-// If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
-// that the caller will handle this situation appropriately.
-func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
-	if !inf.Config.InfluxEnabled {
-		return nil, nil
-	}
-
-	var fqdn string
-	var tcpPort uint
-	var httpsPort sql.NullInt64 // this is the only one that's optional
-
-	row := inf.Tx.Tx.QueryRow(influxServersQuery)
-	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
-		return nil, fmt.Errorf("Failed to create influx client: %v", e)
-	}
-
-	host := "http%s://%s:%d"
-	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
-		if !httpsPort.Valid {
-			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
-			httpsPort = sql.NullInt64{Int64: 8086, Valid: true}
-		}
-		port, err := httpsPort.Value()
-		if err != nil {
-			return nil, fmt.Errorf("Failed to create influx client: %v", err)
-		}
-
-		p := port.(int64)
-		if p <= 0 || p > 65535 {
-			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
-			p = 8086
-		}
-
-		host = fmt.Sprintf(host, "s", fqdn, p)
-	} else if tcpPort > 0 && tcpPort <= 65535 {
-		host = fmt.Sprintf(host, "", fqdn, tcpPort)
-	} else {
-		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
-		host = fmt.Sprintf(host, "", fqdn, 8086)
-	}
-
-	config := influx.HTTPConfig{
-		Addr:      host,
-		Username:  inf.Config.ConfigInflux.User,
-		Password:  inf.Config.ConfigInflux.Password,
-		UserAgent: fmt.Sprintf("TrafficOps/%s (Go)", inf.Config.Version),
-		Timeout:   time.Duration(float64(inf.Config.ReadTimeout)/2.1) * time.Second,
-	}
-
-	var client influx.Client
-	client, e := influx.NewHTTPClient(config)
-	if client == nil {
-		return nil, fmt.Errorf("Failed to create influx client (client was nil): %v", e)
-	}
-	return &client, e
-}
-
-// APIInfoImpl implements APIInfo via the APIInfoer interface
-type APIInfoImpl struct {
-	ReqInfo *APIInfo
-}
-
-func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
-	val.ReqInfo = inf
-}
-
-func (val APIInfoImpl) APIInfo() *APIInfo {
-	return val.ReqInfo
-}
-
+// Version represents an API version.
 type Version struct {
+	// API major version - '3' in '3.1'.
 	Major uint64
+	// API minor version - '1' in '3.1'.
 	Minor uint64
 }
 
-// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
-func getRequestedAPIVersion(path string) *Version {
-	pathParts := strings.Split(path, "/")
-	if len(pathParts) < 2 {
-		return nil // path doesn't start with `/api`, so it's not an api request
+// String returns a string representation of the Version.
+func (v Version) String() string {
+	return fmt.Sprintf("%d.%d", v.Major, v.Minor)
+}
+
+// getRequestedAPIVersion returns the requested API Version from the request if it exists, or returns "0.0" otherwise.
+func getRequestedAPIVersion(path string) Version {
+	v := Version{
+		Major: 0,
+		Minor: 0,
 	}
-	if strings.ToLower(pathParts[1]) != "api" {
-		return nil // path doesn't start with `/api`, so it's not an api request
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 2 || strings.ToLower(pathParts[1]) != "api" {
+		return v // path doesn't start with `/api`, so it's not an api request.
 	}
 	if len(pathParts) < 3 {
-		return nil // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+		return v // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
 	}
 	version := pathParts[2]
 
 	versionParts := strings.Split(version, ".")
 	if len(versionParts) != 2 {
-		return nil
+		return v // version part of the path isn't in 'major.minor' format.
 	}
 	majorVersion, err := strconv.ParseUint(versionParts[0], 10, 64)
 	if err != nil {
-		return nil
+		return v // version major part is not a number.
 	}
 	minorVersion, err := strconv.ParseUint(versionParts[1], 10, 64)
 	if err != nil {
-		return nil
+		return v // version minor part is not a number.
 	}
-	return &Version{Major: majorVersion, Minor: minorVersion}
+	return Version{Major: majorVersion, Minor: minorVersion}
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
@@ -1254,7 +999,7 @@ func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
 }
 
 // DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
-func DefaultSort(readerType *APIInfo, param string) {
+func DefaultSort(readerType *Info, param string) {
 	if _, ok := readerType.Params["orderby"]; !ok {
 		readerType.Params["orderby"] = param
 	}

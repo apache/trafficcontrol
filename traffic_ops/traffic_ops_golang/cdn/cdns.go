@@ -37,12 +37,12 @@ import (
 
 //we need a type alias to define functions on
 type TOCDN struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.CDNNullable
 }
 
 func (v *TOCDN) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "cdn")
+	return api.GetLastUpdated(v.Info().Tx, *v.ID, "cdn")
 }
 
 func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -137,13 +137,13 @@ func (cdn *TOCDN) Create() (error, error, int) {
 }
 
 func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.DefaultSort(cdn.APIInfo(), "name")
+	api.DefaultSort(cdn.Info(), "name")
 	return api.GenericRead(h, cdn, useIMS)
 }
 
 func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
 	if cdn.ID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.Info().Tx.Tx, int64(*cdn.ID), cdn.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -154,7 +154,7 @@ func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
 
 func (cdn *TOCDN) Delete() (error, error, int) {
 	if cdn.ID != nil {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.Info().Tx.Tx, int64(*cdn.ID), cdn.Info().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}

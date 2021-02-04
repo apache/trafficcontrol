@@ -43,7 +43,7 @@ import (
 )
 
 type TOCacheGroup struct {
-	api.APIInfoImpl `json:"-"`
+	api.InfoImpl `json:"-"`
 	tc.CacheGroupNullable
 }
 
@@ -371,10 +371,10 @@ func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
 func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT cachegroup.id 
-FROM cachegroup 
-JOIN type on type.id = cachegroup.type 
-WHERE cachegroup.name = $1 
+SELECT cachegroup.id
+FROM cachegroup
+JOIN type on type.id = cachegroup.type
+WHERE cachegroup.name = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -389,9 +389,9 @@ AND (type.name = 'EDGE_LOC')
 func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT type.name 
-FROM type 
-WHERE type.id = $1 
+SELECT type.name
+FROM type
+WHERE type.id = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -546,7 +546,7 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 	}
 
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cg.Info().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return cacheGroups, nil, nil, http.StatusNotModified, &maxTime

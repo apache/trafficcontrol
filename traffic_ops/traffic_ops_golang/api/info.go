@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -64,7 +65,9 @@ type Info struct {
 	// request. It will be closed with the Info itself.
 	Tx *sqlx.Tx
 	// Config is a reference to the Traffic Ops server's configuration.
-	Config    *config.Config
+	Config *config.Config
+	// Vault implements the interaction interface for Traffic Vault.
+	Vault     trafficvault.TrafficVault
 	request   *http.Request
 	ctxCancel context.CancelFunc
 }
@@ -227,17 +230,19 @@ func (inf Info) CheckPrecondition(query string, args ...interface{}) (int, error
 	return http.StatusOK, nil, nil
 }
 
-// Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
+// Close implements the io.Closer interface. It should be called in a defer
+// immediately after NewInfo().
 //
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *Info) Close() {
+	defer inf.ctxCancel()
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
-	inf.ctxCancel()
 }
 
-// SendMail is a convenience method used to call SendMail using an Info structure's configuration.
+// SendMail is a convenience method used to call SendMail using an Info
+// structure's configuration.
 func (inf *Info) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
 }

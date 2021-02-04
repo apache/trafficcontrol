@@ -55,7 +55,7 @@ const (
 
 //we need a type alias to define functions on
 type TODeliveryService struct {
-	api.APIInfoImpl
+	api.InfoImpl
 	tc.DeliveryServiceV4
 }
 
@@ -76,7 +76,7 @@ func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &ds.DeliveryServiceV4)
 }
 
-func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
+func (ds *TODeliveryService) Info() *api.Info { return ds.ReqInfo }
 
 func (ds *TODeliveryService) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
@@ -224,7 +224,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV40{*res})
 }
 
-func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+func createV15(w http.ResponseWriter, r *http.Request, inf *api.Info, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
 	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: reqDS}
 	res, status, userErr, sysErr := createV30(w, r, inf, dsV30)
 	if res != nil {
@@ -232,7 +232,9 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	}
 	return nil, status, userErr, sysErr
 }
-func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+
+// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	ds := tc.DeliveryServiceV31{DeliveryServiceV30: dsV30}
 	res, status, userErr, sysErr := createV31(w, r, inf, ds)
 	if res != nil {
@@ -298,7 +300,7 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+func createV40(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV40 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
 	ds := tc.DeliveryServiceV4(dsV40)
@@ -586,13 +588,13 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	version := ds.APIInfo().Version
+	version := ds.Info().Version
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
+	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.Info().Params, ds.Info().Tx, ds.Info().User, useIMS)
 
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
@@ -727,7 +729,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV40{*res})
 }
 
-func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+func updateV15(w http.ResponseWriter, r *http.Request, inf *api.Info, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
 	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: *reqDS}
 	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
 	query := `
@@ -759,7 +761,8 @@ WHERE
 	}
 	return nil, status, userErr, sysErr
 }
-func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: *dsV30}
 	// query the DB for existing 3.1 fields in order to "upgrade" this 3.0 request into a 3.1 request
 	query := `
@@ -783,7 +786,7 @@ WHERE
 	}
 	return nil, status, userErr, sysErr
 }
-func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func updateV31(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV40 := ds
@@ -2051,7 +2054,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV4) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceV4) (bool, error) {
+func isTenantAuthorized(inf *api.Info, ds *tc.DeliveryServiceV4) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
