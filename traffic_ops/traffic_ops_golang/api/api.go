@@ -489,6 +489,7 @@ type APIInfo struct {
 	Version   *Version
 	Tx        *sqlx.Tx
 	Config    *config.Config
+	request   *http.Request
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -556,6 +557,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		request:   r,
 	}, nil, nil, http.StatusOK
 }
 
