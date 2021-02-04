@@ -309,6 +309,8 @@ createDocsTarball() {
 verify_and_set_go_version() {
 	if [ -v GO_VERSION ]; then
 		GO_VERSION="$(getGoVersion .)"
+	else
+		GO_VERSION=''
 	fi
 	local major_version="$(echo "$GO_VERSION" | awk -F. '{print $1}')"
 	local minor_version="$(echo "$GO_VERSION" | awk -F. '{print $2}')"
