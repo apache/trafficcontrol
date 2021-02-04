@@ -802,7 +802,7 @@ WHERE tcp.child IN
 func updateQuery() string {
 	query := `
 UPDATE topology t SET
-description = $1,
+description = $1
 WHERE t.name = $2
 RETURNING t.name, t.description, t.last_updated
 `
