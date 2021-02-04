@@ -118,7 +118,7 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 		return false, nil, nil, http.StatusOK
 	}
 	options := optionsDeleter.DeleteKeyOptions()
-	for key, _ := range options {
+	for key := range options {
 		if params[key] != "" {
 			return true, nil, nil, http.StatusOK
 		}

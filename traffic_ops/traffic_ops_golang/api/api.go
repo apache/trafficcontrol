@@ -91,13 +91,20 @@ WHERE type in ( SELECT id
 AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
 
-type APIResponse struct {
+// Response is the basic structure of any given response from the Traffic Ops
+// API.
+type Response struct {
+	tc.Alerts
+	// Response is the actual object, the desired output of the client's
+	// request.
 	Response interface{} `json:"response"`
 }
 
-type APIResponseWithSummary struct {
-	Response interface{} `json:"response"`
-	Summary  struct {
+// ResponseWithSummary is an API response that includes the special "Summary"
+// section as laid out in the API guidelines.
+type ResponseWithSummary struct {
+	Response
+	Summary struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
 }
@@ -122,7 +129,7 @@ func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
-	resp := APIResponse{v}
+	resp := Response{Response: v}
 	WriteRespRaw(w, r, resp)
 }
 
@@ -149,8 +156,8 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 // object. It also provides a "summary" section to the response object that
 // contains the given "count".
 func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{}, count uint64) {
-	var resp APIResponseWithSummary
-	resp.Response = v
+	var resp ResponseWithSummary
+	resp.Response.Response = v
 	resp.Summary.Count = count
 
 	WriteRespRaw(w, r, resp)
@@ -158,6 +165,7 @@ func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{},
 
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// TODO: get rid of/deprecate this; it violates API guidelines.
 func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals map[string]interface{}) {
 	if respWritten(r) {
 		log.Errorf("WriteRespVals called after a write already occurred! Not double-writing! Path %s", r.URL.Path)

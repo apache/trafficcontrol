@@ -42,7 +42,7 @@ type Alert struct {
 // Alerts is merely a collection of arbitrary "Alert"s for ease of use in other structures, most
 // notably those used in Traffic Ops API responses.
 type Alerts struct {
-	Alerts []Alert `json:"alerts"`
+	Alerts []Alert `json:"alerts,omitempty"`
 }
 
 // CreateErrorAlerts creates and returns an Alerts structure filled with ErrorLevel-level "Alert"s
