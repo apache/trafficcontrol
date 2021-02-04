@@ -31,8 +31,8 @@ insert-self-into-dns.sh
 
 TO_URL="https://$TO_FQDN:$TO_PORT"
 while ! to-ping 2>/dev/null; do
-   echo waiting for trafficops
-   sleep 3
+	echo waiting for trafficops
+	sleep 3
 done
 
 # if [[ -r ]]; then; source config.sh; done    traffic_ops/run.sh
@@ -51,8 +51,8 @@ cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml /junit/golan
 
 if [ $v1 -eq 0 ] && [ $v2 -eq 0 ] && [ $v3 -eq 0 ]
 then
-  echo "TO API tests success"
+	echo "TO API tests success"
 else
-  echo "TO API tests failed"
-  exit 1
+	echo "TO API tests failed"
+	exit 1
 fi
