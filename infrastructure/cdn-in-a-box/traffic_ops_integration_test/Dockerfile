@@ -57,10 +57,10 @@ WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go mod vendor -v
 
 ENV CGO_ENABLED=0
-RUN go test -c ./v1 -ldflags="-w -s" -o traffic_ops_v1_integration_test
-RUN go test -c ./v2 -ldflags="-w -s" -o traffic_ops_v2_integration_test
-RUN go test -c ./v3 -ldflags="-w -s" -o traffic_ops_v3_integration_test
-RUN go test -c ./v4 -ldflags="-w -s" -o traffic_ops_v4_integration_test
+RUN set -o errexit -o xtrace;\
+    for api_version in v1 v2 v3 v4; do\
+        go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
+    done
 
 FROM alpine:3.11
 
