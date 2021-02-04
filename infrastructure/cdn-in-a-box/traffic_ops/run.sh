@@ -36,7 +36,7 @@
 envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS X509_CA_DIR TLD_DOMAIN INFRA_SUBDOMAIN CDN_SUBDOMAIN DS_HOSTS)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh

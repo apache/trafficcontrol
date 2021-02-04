@@ -35,7 +35,7 @@ set -m
 envvars=( TO_HOST TO_PORT TM_PORT TM_USER TM_PASSWORD)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh

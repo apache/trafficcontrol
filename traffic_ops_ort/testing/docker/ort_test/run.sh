@@ -59,8 +59,7 @@ else
 fi
 
 # fetch dependent packages for tests
-go get golang.org/x/crypto/scrypt
-go get golang.org/x/net/publicsuffix
+go mod vendor -v
 
 if [ -f /systemctl.sh ]; then
   mv /bin/systemctl /bin/systemctl.save
