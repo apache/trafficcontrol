@@ -330,6 +330,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		return
 	}
 
+	dsr.SetXMLID()
 	if ok, err = dbhelpers.DSRExistsWithXMLID(dsr.XMLID, tx); err != nil {
 		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", dsr.XMLID)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
