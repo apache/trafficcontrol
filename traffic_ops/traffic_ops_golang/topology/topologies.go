@@ -575,9 +575,25 @@ func (topology *TOTopology) addParents() (error, error, int) {
 }
 
 func (topology *TOTopology) setDescription() (error, error, int) {
-	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name, topology.APIInfoImpl.ReqInfo.Params["name"])
+	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name)
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	for rows.Next() {
+		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
+		if err != nil {
+			return api.ParseDBError(err)
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (topology *TOTopology) setName() (error, error, int) {
+	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
+	rows, err := topology.ReqInfo.Tx.Query(updateNameQuery(), topology.Name, currentTopoName)
+	if err != nil {
+		return nil, fmt.Errorf("topology update: error setting the name for topology %v: %v", currentTopoName, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for rows.Next() {
@@ -625,6 +641,9 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		if err := oldTopology.removeNodes(&toRemove); err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
+	}
+	if userErr, sysErr, errCode := topology.setName(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -784,13 +803,21 @@ func updateQuery() string {
 	query := `
 UPDATE topology t SET
 description = $1,
-name = $2
-WHERE t.name = $3
+WHERE t.name = $2
 RETURNING t.name, t.description, t.last_updated
 `
 	return query
 }
 
+func updateNameQuery() string {
+	query := `
+UPDATE topology t SET
+name = $1
+WHERE t.name = $2
+RETURNING t.name, t.description, t.last_updated
+`
+	return query
+}
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(ti) from (
 		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where +
