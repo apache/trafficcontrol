@@ -670,14 +670,14 @@ func enrollProfile(toSession *session, r io.Reader) error {
 // enrollServer takes a json file and creates a Server object using the TO API
 func enrollServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.ServerV30
+	var s tc.ServerV40
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding Server: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServerWithHdr(s, nil)
+	alerts, _, err := toSession.CreateServer(s, nil)
 	if err != nil {
 		log.Infof("error creating Server: %s\n", err)
 		return err
