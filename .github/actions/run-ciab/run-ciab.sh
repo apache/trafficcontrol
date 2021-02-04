@@ -45,5 +45,4 @@ elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compo
 	store_ciab_logs;
 fi;
 
-$docker_compose down -v --remove-orphans;
 exit "$exit_code";

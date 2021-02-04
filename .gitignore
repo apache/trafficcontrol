@@ -52,7 +52,8 @@ vendor/**/.travis.yml
 /dist
 *.pyc
 bin/docker-compose
-/.m2
+/.m2/
+/.npm/
 /.github/actions/**/node_modules/
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz

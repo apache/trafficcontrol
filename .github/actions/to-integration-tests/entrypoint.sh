@@ -189,13 +189,3 @@ cd "../testing/api/v$INPUT_VERSION"
 
 cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
 go test -test.v --cfg traffic-ops-test.conf
-CODE=$?
-rm traffic-ops-test.conf
-if [[ "$INPUT_VERSION" -ge 3 ]]; then
-	echo 'Stopping Traffic Vault...'
-	docker kill "$trafficvault";
-fi;
-echo 'Killing background jobs...';
-kill -9 $(jobs -p);
-
-exit "$CODE"
