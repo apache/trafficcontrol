@@ -39,6 +39,15 @@ type Alert struct {
 	Level string `json:"level"`
 }
 
+// NewAlert constructs and returns an Alert of the given level with the given
+// text.
+func NewAlert(level AlertLevel, text string) Alert {
+	return Alert{
+		Level: level.String(),
+		Text:  text,
+	}
+}
+
 // Alerts is merely a collection of arbitrary "Alert"s for ease of use in other structures, most
 // notably those used in Traffic Ops API responses.
 type Alerts struct {
@@ -51,7 +60,7 @@ func CreateErrorAlerts(errs ...error) Alerts {
 	alerts := []Alert{}
 	for _, err := range errs {
 		if err != nil {
-			alerts = append(alerts, Alert{err.Error(), ErrorLevel.String()})
+			alerts = append(alerts, NewAlert(ErrorLevel, err.Error()))
 		}
 	}
 	return Alerts{alerts}
@@ -62,7 +71,7 @@ func CreateErrorAlerts(errs ...error) Alerts {
 func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	alerts := []Alert{}
 	for _, message := range messages {
-		alerts = append(alerts, Alert{message, level.String()})
+		alerts = append(alerts, NewAlert(level, message))
 	}
 	return Alerts{alerts}
 }
