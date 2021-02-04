@@ -102,3 +102,9 @@ jobs:
       with:
         version: 3
         smtp_address: 172.17.0.1
+    - name: Run API v4 tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 4
+        smtp_address: 172.17.0.1
