@@ -1094,7 +1094,7 @@ func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (er
 		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
 	}
 	return nil, nil, http.StatusOK
 }
