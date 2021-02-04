@@ -199,11 +199,13 @@ type CRConfigMonitor struct {
 	ServerStatus *CRConfigServerStatus `json:"status,omitempty"`
 }
 
+// CRConfigStats is the type of the 'stats' property of a CDN Snapshot.
 type CRConfigStats struct {
 	CDNName         *string `json:"CDN_name,omitempty"`
 	DateUnixSeconds *int64  `json:"date,omitempty"`
 	TMHost          *string `json:"tm_host,omitempty"`
-	TMPath          *string `json:"tm_path,omitempty"`
-	TMUser          *string `json:"tm_user,omitempty"`
-	TMVersion       *string `json:"tm_version,omitempty"`
+	// Deprecated: Don't ever use this for anything. It's been removed from APIv4 responses.
+	TMPath    *string `json:"tm_path,omitempty"`
+	TMUser    *string `json:"tm_user,omitempty"`
+	TMVersion *string `json:"tm_version,omitempty"`
 }

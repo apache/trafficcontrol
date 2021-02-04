@@ -17,7 +17,6 @@ package v1
 
 import (
 	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -113,9 +112,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	if crc.Stats.TMPath == nil {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: 'snapshot/"+cdn+"', actual: %+v", crc.Stats.TMPath)
-	} else if !strings.HasSuffix(*crc.Stats.TMPath, "snapshot/"+cdn) {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot"+cdn+"', actual: %+v", *crc.Stats.TMPath)
+		t.Errorf("GetCRConfig crc.Stats.Path expected: some string (but deprecated so we don't check the contents), actual: null")
 	}
 
 	if crc.Stats.TMHost == nil {
