@@ -416,7 +416,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			}
 			
 			try {
-				const page = localStorage.getItem(tableName + "_table_page");
+				const page = parseInt(localStorage.getItem(tableName + "_table_page"));
 				const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
 				if (page !== undefined && page > 0 && page <= totalPages-1) {
 					$scope.gridOptions.api.paginationGoToPage(page);
