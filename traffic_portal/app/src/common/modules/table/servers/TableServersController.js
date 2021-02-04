@@ -417,12 +417,12 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			
 			try {
 				const page = localStorage.getItem(tableName + "_table_page");
-				const pageSize = $scope.gridOptions.api.paginationGetPageSize();
-				if (page !== undefined && page > 0 && page <= pageSize-1) {
+				const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
+				if (page !== undefined && page > 0 && page <= totalPages-1) {
 					$scope.gridOptions.api.paginationGoToPage(page);
 				}
 			} catch (e) {
-				console.error("failed to load stored page number:", e);
+				console.error("Failed to load stored page number:", e);
 			}
 
 			$scope.gridOptions.api.addEventListener("sortChanged", function() {
