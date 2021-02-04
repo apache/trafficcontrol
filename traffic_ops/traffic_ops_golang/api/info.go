@@ -22,6 +22,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,8 +31,11 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
@@ -314,4 +318,136 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 		return nil, fmt.Errorf("Failed to create influx client (client was nil): %v", e)
 	}
 	return &client, e
+}
+
+// HandleErr handles a client-safe or server-side error by writing a response
+// using the given HTTP status code and user and/or server error.
+func (inf Info) HandleErr(status int, userErr, sysErr error) {
+	HandleErr(inf.writer, inf.request, inf.Tx.Tx, status, userErr, sysErr)
+}
+
+// WriteResponse writes a response to the client. The 'response' property of
+// the response is provided by r, the HTTP status code is given by status, and
+// the alerts are, of course, any and all Alerts to be returned.
+func (inf Info) WriteResponse(r interface{}, status int, alerts []tc.Alert) {
+	resp := Response{
+		Alerts:   tc.Alerts{Alerts: alerts},
+		Response: r,
+	}
+	inf.writer.WriteHeader(status)
+	WriteRespRaw(inf.writer, inf.request, resp)
+}
+
+// WriteOKResponse is a helper method that works exactly like WriteResponse but
+// always uses the status code '200 OK'.
+func (inf Info) WriteOKResponse(r interface{}, alerts []tc.Alert) {
+	inf.WriteResponse(r, http.StatusOK, alerts)
+}
+
+// WriteResponseWithAlert is a helper method that writes a response - just like
+// WriteResponse, but it also constructs 'alerts' containing a single alert
+// with the specified level and text.
+func (inf Info) WriteResponseWithAlert(r interface{}, status int, alertLevel tc.AlertLevel, alertText string) {
+	alerts := []tc.Alert{tc.NewAlert(alertLevel, alertText)}
+	inf.WriteResponse(r, status, alerts)
+}
+
+// WriteResponseWithCount functions identically to WriteResponse but with the
+// added 'count' property of the special 'summary' property of the response
+// set to the provided value.
+func (inf Info) WriteResponseWithCount(r interface{}, alerts []tc.Alert, count uint64) {
+	var resp ResponseWithSummary
+	resp.Response = Response{
+		Alerts:   tc.Alerts{Alerts: alerts},
+		Response: r,
+	}
+	resp.Summary.Count = count
+	WriteRespRaw(inf.writer, inf.request, resp)
+}
+
+// HandleErrOptionalDeprecation handles an error - just like HandleErr - but
+// will optionally add a deprecation notice. This can be useful, for example,
+// if a single handler is shared by API versions, but one version should
+// include a deprecation notice.
+// The deprecation notice will be added if 'deprecated' is true, and if there
+// is an alternative route clients should use instead it can be provided as a
+// non-nil 'alternative'.
+func (inf Info) HandleErrOptionalDeprecation(statusCode int, userErr, sysErr error, deprecated bool, alternative *string) {
+	if deprecated {
+		HandleDeprecatedErr(inf.writer, inf.request, inf.Tx.Tx, statusCode, userErr, sysErr, alternative)
+	} else {
+		HandleErr(inf.writer, inf.request, inf.Tx.Tx, statusCode, userErr, sysErr)
+	}
+}
+
+// ParseBody decodes a JSON object from the client request into v, and validates
+// it. Use this function instead of the json package when writing API
+// endpoints to safely decode and validate PUT and POST requests.
+//
+// If an error occurs, it is handled internally. The value returned indicates
+// whether or not both the parse and validation completed successfully. If
+// 'false', handles MUST NOT continue, as a response has already been written.
+//
+// TODO: change to take data loaded from db, to remove sql from tc package.
+func (inf Info) ParseBody(v ParseValidator) bool {
+	if err := json.NewDecoder(inf.request.Body).Decode(&v); err != nil {
+		inf.HandleErr(http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
+		return false
+	}
+	if err := v.Validate(inf.Tx.Tx); err != nil {
+		inf.HandleErr(http.StatusBadRequest, fmt.Errorf("validating: %v", err), nil)
+		return false
+	}
+	return true
+}
+
+// HandleDBErr handles a database error by parsing it and returning any and all
+// client-safe information back to the user, logging system errors if
+// applicable, and using the appropriate response code for the situation.
+func (inf Info) HandleDBErr(err error) {
+	u, s, c := ParseDBError(err)
+	inf.HandleErr(c, u, s)
+}
+
+// GetFilteredRows returns the rows that result from running 'query' with the
+// given query string parameter-to-WhereColumnInfo mapping, and a boolean
+// indicating success or failure of the query. If that boolean is 'false', the
+// calling handler MUST NOT continue, as a response has already been written.
+func (inf Info) GetFilteredRows(query string, params map[string]dbhelpers.WhereColumnInfo) (*sqlx.Rows, bool) {
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
+	if len(errs) > 0 {
+		inf.HandleErr(http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return &sqlx.Rows{}, false
+	}
+
+	rows, err := inf.Tx.NamedQuery(query+where+orderBy+pagination, queryValues)
+	if err != nil {
+		inf.HandleErr(http.StatusInternalServerError, nil, err)
+		return &sqlx.Rows{}, false
+	}
+	return rows, true
+}
+
+// CreateOrUpdate uses the passed query to insert the given value into the
+// database, returning a boolean indicating success or failure of the query. If
+// that boolean is 'false', the calling handler MUST NOT continue, as a
+// response has already been written.
+func (inf Info) CreateOrUpdate(query string, value interface{}) bool {
+	resultRows, err := inf.Tx.NamedQuery(query, value)
+	if err != nil {
+		inf.HandleDBErr(err)
+		return false
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+	}
+	if rowsAffected == 0 {
+		inf.HandleErr(http.StatusInternalServerError, nil, errors.New("no rows affected"))
+		return false
+	}
+
+	return true
 }
