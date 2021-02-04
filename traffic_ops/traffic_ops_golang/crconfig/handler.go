@@ -83,7 +83,7 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to unmarshal stored snapshot for cdn '%s': %v", inf.Params["cdn"], err))
 	}
 
-	if inf.Version.Major < 4 {
+	if inf.Version.Major < 4 || (inf.Config != nil && inf.Config.CRConfigEmulateOldPath) {
 		decoded.Stats.TMPath = new(string)
 		*decoded.Stats.TMPath = fmt.Sprintf("/api/4.0/cdns/%s/snapshot", inf.Params["cdn"])
 	}
