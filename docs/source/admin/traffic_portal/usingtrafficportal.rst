@@ -389,7 +389,7 @@ Use the `Quick Search` to search across all table columns or the column filter t
 :Mgmt IP Gateway:   The IPv4 address of a gateway used by some network interface on the server used for 'management'
 :Mgmt IP Netmask:   The IPv4 subnet mask used by some network interface on the server used for 'management'
 :IPv4 Gateway:      The IPv4 address of the gateway used by ``interfaceName``
-:IPv4 Address:        [Visible by default] The IPv4 address of ``interfaceName``
+:IPv4 Address:      [Visible by default] The IPv4 address of ``interfaceName``
 :Network MTU:       The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
 :IPv4 Subnet:       The IPv4 subnet mask used by ``interfaceName``
 :Offline Reason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
