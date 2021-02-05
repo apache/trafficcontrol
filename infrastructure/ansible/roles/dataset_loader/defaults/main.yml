@@ -1398,7 +1398,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT -1
       - name: CONFIG proxy.config.crash_log_helper
         configFile: records.config
-        value: STRING /tmp/backtrace/invoker.sh
+        value: STRING /usr/local/bin/backtrace-invoker.sh
       - name: CONFIG proxy.config.diags.debug.enabled
         configFile: records.config
         value: INT 0
@@ -2772,7 +2772,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT -1
       - name: CONFIG proxy.config.crash_log_helper
         configFile: records.config
-        value: STRING /tmp/backtrace/invoker.sh
+        value: STRING /usr/local/bin/backtrace-invoker.sh
       - name: CONFIG proxy.config.diags.debug.enabled
         configFile: records.config
         value: INT 0
