@@ -1212,7 +1212,7 @@ dl_ds_default_profile_cdntemplates:
         value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
-        value: '1000'
+        value: '1500'
       - name: history.count
         configFile: rascal.properties
         value: '30'
@@ -2589,7 +2589,7 @@ dl_ds_default_profile_cdntemplates:
         value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
-        value: '1000'
+        value: '1500'
       - name: history.count
         configFile: rascal.properties
         value: '30'
