@@ -4456,6 +4456,7 @@
                             "serviceAddress": true
                         }
                     ],
+                    "mtu": 1280,
                     "routerHostName": "router53",
                     "routerPort": "9052"
                 }
