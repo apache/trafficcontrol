@@ -1926,7 +1926,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.wait_for_cache
         configFile: records.config
-        value: INT 0
+        value: INT 2
       - name: CONFIG proxy.config.http.websocket.max_number_of_connections
         configFile: records.config
         value: INT -1
