@@ -3825,8 +3825,7 @@ dl_ds_default_profile_cdntemplates:
         value: "/etc/udev/rules.d/"
       - name: udev_syncds
         configFile: 40-ats.rules
-        value: KERNEL=="sd*", DRIVERS=="mpt3sas", PROGRAM="/bin/supermicro_udev_mapper.pl
-          %k", SYMLINK+="ats/%c", OWNER="ats"
+        value: KERNEL=="sd*", DRIVERS=="mpt2sas", PROGRAM="/opt/ort/supermicro_udev_mapper.pl %k", SYMLINK+="ats/%c", OWNER="ats"
       - name: location
         configFile: 50-ats.rules
         value: "/etc/udev/rules.d/"
@@ -3940,7 +3939,7 @@ dl_ds_default_profile_cdntemplates:
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
       - name: health.threshold.availableBandwidthInKbps
         configFile: rascal.properties
-        value: ">{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
+        value: ">{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
         value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
@@ -4252,7 +4251,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 64
       - name: CONFIG proxy.config.hostdb.serve_stale_for
         configFile: records.config
-        value: INT 12
+        value: INT 20
       - name: CONFIG proxy.config.hostdb.strict_round_robin
         configFile: records.config
         value: INT 0
@@ -4423,7 +4422,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 3
       - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
         configFile: records.config
-        value: INT 3
+        value: INT 1
       - name: CONFIG proxy.config.http.connect_attempts_rr_retries
         configFile: records.config
         value: INT 0
@@ -4432,7 +4431,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 3
       - name: CONFIG proxy.config.http.connect_ports
         configFile: records.config
-        value: STRING 443 563
+        value: STRING 443
       - name: CONFIG proxy.config.http.default_buffer_size
         configFile: records.config
         value: INT 8
@@ -4531,10 +4530,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.number_of_redirections
         configFile: records.config
-        value: INT 1
+        value: INT 0
       - name: CONFIG proxy.config.http.origin_max_connections
         configFile: records.config
-        value: INT 1500
+        value: INT 500
       - name: CONFIG proxy.config.http.origin_max_connections_queue
         configFile: records.config
         value: INT 0
@@ -4615,10 +4614,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.server_max_connections
         configFile: records.config
-        value: INT 25000
+        value: INT 0
       - name: CONFIG proxy.config.http.server_ports
         configFile: records.config
-        value: STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl
+        value: STRING 80 80:ipv6
       - name: CONFIG proxy.config.http.server_session_sharing.match
         configFile: records.config
         value: STRING both
@@ -4783,13 +4782,13 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.net.listen_backlog
         configFile: records.config
-        value: INT 1024
+        value: INT -1
       - name: CONFIG proxy.config.net.max_connections_active_in
         configFile: records.config
-        value: INT 100000
+        value: INT 500000
       - name: CONFIG proxy.config.net.max_connections_in
         configFile: records.config
-        value: INT 100000
+        value: INT 500000
       - name: CONFIG proxy.config.net.poll_timeout
         configFile: records.config
         value: INT 10
@@ -4801,10 +4800,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.net.sock_option_flag_in
         configFile: records.config
-        value: INT 5
+        value: INT 13
       - name: CONFIG proxy.config.net.sock_option_flag_out
         configFile: records.config
-        value: INT 1
+        value: INT 9
       - name: CONFIG proxy.config.net.sock_packet_mark_in
         configFile: records.config
         value: INT 0
