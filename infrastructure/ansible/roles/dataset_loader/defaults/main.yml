@@ -1623,7 +1623,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 2
       - name: CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch
         configFile: records.config
-        value: INT 1
+        value: INT 2
       - name: CONFIG proxy.config.http.cache.ignore_accept_language_mismatch
         configFile: records.config
         value: INT 2
@@ -2994,7 +2994,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 2
       - name: CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch
         configFile: records.config
-        value: INT 1
+        value: INT 2
       - name: CONFIG proxy.config.http.cache.ignore_accept_language_mismatch
         configFile: records.config
         value: INT 2
