@@ -103,15 +103,15 @@ $(function(){
 					<td><input type="text" size=45 id="interface_name" name="interface_name" value="<%= stash 'interface_name' %>"></td>
 				</tr>
 				<tr>
-					<td>IPv4 Address</td>
+					<td>Network IP</td>
 					<td><input type="text" size=45 id="ip_address" name="ip_address" value="<%= stash 'ip_address' %>"></td>
 				</tr>
 				<tr>
-					<td>IPv4 Subnet</td>
+					<td>Network Subnet</td>
 					<td><input type="text" size=45 id="ip_netmask" name="ip_netmask" value="<%= stash 'ip_netmask' %>"></td>
 				</tr>
 				<tr>
-					<td>IPv4 Gateway</td>
+					<td>Network Gateway</td>
 					<td><input type="text" size=45 id="ip_gateway" name="ip_gateway" value="<%= stash 'ip_gateway' %>"></td>
 				</tr>
 				<tr>
