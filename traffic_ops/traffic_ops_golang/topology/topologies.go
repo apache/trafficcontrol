@@ -792,6 +792,7 @@ RETURNING t.name, t.description, t.last_updated
 `
 	return query
 }
+
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(ti) from (
 		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where +

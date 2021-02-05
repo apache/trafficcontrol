@@ -42,7 +42,7 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		topologyService.updateTopology(normalizedTopology, currentName).
 			then(function(result) {
 				messageModel.setMessages(result.data.alerts, true);
-				locationUtils.navigateToPath('/topologies');
+				locationUtils.navigateToPath('/topologies/edit?name=' + result.data.response.name);
 			});
 	};
 
