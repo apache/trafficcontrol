@@ -1204,9 +1204,9 @@ dl_ds_default_profile_cdntemplates:
       - name: health.polling.url
         configFile: rascal.properties
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
-      - name: health.threshold.availableBandwidthInKbps
+      - name: health.threshold.kbps
         configFile: rascal.properties
-        value: ">{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
+        value: "<{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
         value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
@@ -1335,7 +1335,7 @@ dl_ds_default_profile_cdntemplates:
         value: "INT {{ (dl_atsec_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
       - name: CONFIG proxy.config.cache.read_while_writer.max_retries
         configFile: records.config
-        value: INT 10
+        value: INT 3
       - name: CONFIG proxy.config.cache.read_while_writer_retry.delay
         configFile: records.config
         value: INT 50
@@ -1692,10 +1692,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.connect_attempts_max_retries
         configFile: records.config
-        value: INT 3
+        value: INT 6
       - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
         configFile: records.config
-        value: INT 3
+        value: INT 1
       - name: CONFIG proxy.config.http.connect_attempts_rr_retries
         configFile: records.config
         value: INT 0
@@ -1704,7 +1704,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 3
       - name: CONFIG proxy.config.http.connect_ports
         configFile: records.config
-        value: STRING 443 563
+        value: STRING 443
       - name: CONFIG proxy.config.http.default_buffer_size
         configFile: records.config
         value: INT 8
@@ -1722,7 +1722,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 10
       - name: CONFIG proxy.config.http.down_server.cache_time
         configFile: records.config
-        value: INT 2
+        value: INT 5
       - name: CONFIG proxy.config.http.enable_http_info
         configFile: records.config
         value: INT 0
@@ -1803,7 +1803,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.number_of_redirections
         configFile: records.config
-        value: INT 1
+        value: INT 0
       - name: CONFIG proxy.config.http.origin_max_connections
         configFile: records.config
         value: INT 500
@@ -1815,7 +1815,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
         configFile: records.config
-        value: INT 3
+        value: INT 2
       - name: CONFIG proxy.config.http.parent_proxy.fail_threshold
         configFile: records.config
         value: INT 10
@@ -1926,7 +1926,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.wait_for_cache
         configFile: records.config
-        value: INT 2
+        value: INT 0
       - name: CONFIG proxy.config.http.websocket.max_number_of_connections
         configFile: records.config
         value: INT -1
@@ -2073,10 +2073,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.net.sock_option_flag_in
         configFile: records.config
-        value: INT 5
+        value: INT 13
       - name: CONFIG proxy.config.net.sock_option_flag_out
         configFile: records.config
-        value: INT 1
+        value: INT 9
       - name: CONFIG proxy.config.net.sock_packet_mark_in
         configFile: records.config
         value: INT 0
