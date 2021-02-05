@@ -1146,7 +1146,7 @@ dl_ds_default_profile_cdntemplates:
         value: 127.0.0.1
       - name: LogFormat.Format
         configFile: logging.config
-        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\"'
+        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
       - name: LogFormat.Name
         configFile: logging.config
         value: custom_ats_2
@@ -1902,7 +1902,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.slow.log.threshold
         configFile: records.config
-        value: INT 450
+        value: INT 0
       - name: CONFIG proxy.config.http.strict_uri_parsing
         configFile: records.config
         value: INT 0
@@ -2109,13 +2109,13 @@ dl_ds_default_profile_cdntemplates:
         value: STRING traffic.out
       - name: CONFIG proxy.config.output.logfile.rolling_enabled
         configFile: records.config
-        value: INT 2
+        value: INT 0
       - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
         configFile: records.config
         value: INT 3600
       - name: CONFIG proxy.config.output.logfile.rolling_size_mb
         configFile: records.config
-        value: INT 1024
+        value: INT 100
       - name: CONFIG proxy.config.process_manager.mgmt_port
         configFile: records.config
         value: INT 8084
@@ -2529,7 +2529,7 @@ dl_ds_default_profile_cdntemplates:
         value: 127.0.0.1
       - name: LogFormat.Format
         configFile: logging.config
-        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\"'
+        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
       - name: LogFormat.Name
         configFile: logging.config
         value: custom_ats_2
@@ -3477,13 +3477,13 @@ dl_ds_default_profile_cdntemplates:
         value: STRING traffic.out
       - name: CONFIG proxy.config.output.logfile.rolling_enabled
         configFile: records.config
-        value: INT 2
+        value: INT 0
       - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
         configFile: records.config
         value: INT 3600
       - name: CONFIG proxy.config.output.logfile.rolling_size_mb
         configFile: records.config
-        value: INT 1024
+        value: INT 100
       - name: CONFIG proxy.config.process_manager.mgmt_port
         configFile: records.config
         value: INT 8084
