@@ -42,32 +42,30 @@ import (
 // GetAllConfigs gets all config files for cfg.CacheHostName.
 func GetAllConfigs(
 	toData *config.TOData,
-	revalOnly bool,
-	dir string,
 	appVersion string,
-	toURL string,
 	toIPs []net.Addr,
+	cfg config.TCCfg,
 ) ([]config.ATSConfigFile, error) {
 	if toData.Server.HostName == nil {
 		return nil, errors.New("server hostname is nil")
 	}
 
-	configFiles, warnings, err := MakeConfigFilesList(toData, dir)
+	configFiles, warnings, err := MakeConfigFilesList(toData, cfg.Dir)
 	logWarnings("generating config files list: ", warnings)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
 	}
 
 	genTime := time.Now()
-	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, toURL, toIPs, genTime)
+	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, cfg.TOClient.C.URL, toIPs, genTime)
 
 	hasSSLMultiCertConfig := false
 	configs := []config.ATSConfigFile{}
 	for _, fi := range configFiles {
-		if revalOnly && fi.Name != atscfg.RegexRevalidateFileName {
+		if cfg.RevalOnly && fi.Name != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, lineComment, err := GetConfigFile(toData, fi, hdrCommentTxt)
+		txt, contentType, lineComment, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.Name + "': " + err.Error())
 		}

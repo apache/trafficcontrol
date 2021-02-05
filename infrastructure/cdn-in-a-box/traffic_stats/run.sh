@@ -34,7 +34,7 @@ set -m
 envvars=( TO_HOST TO_PORT INFLUXDB_HOST)
 for v in $envvars
 do
-  if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+  if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh

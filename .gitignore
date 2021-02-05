@@ -23,9 +23,9 @@ docs/build/*
 /grove/grove
 /grove/grovetccfg/grovetccfg
 local
-!/infrastructure/cdn-in-a-box/traffic_ops/local/
-/infrastructure/cdn-in-a-box/traffic_ops/local/*
-!/infrastructure/cdn-in-a-box/traffic_ops/local/.gitkeep
+!/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-*/local/
+/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-*/local/*
+!/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-*/local/.gitkeep
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
 traffic_ops/app/log/*.log
@@ -41,11 +41,19 @@ traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
+vendor/**/appveyor.yml
+vendor/**/.gitattributes
+vendor/**/.gitignore
+vendor/**/.gitmodules
+vendor/golang.org/
+vendor/**/*.sh
+vendor/**/.travis.yml
 .dbInfo
 /dist
 *.pyc
 bin/docker-compose
-/.m2
+/.m2/
+/.npm/
 /.github/actions/**/node_modules/
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz
@@ -53,6 +61,7 @@ local.tar.gz
 *.sublime-project
 *.sublime-workspace
 .vscode/
+__debug_bin
 *.code-workspace
 *.pydevproject
 .idea/

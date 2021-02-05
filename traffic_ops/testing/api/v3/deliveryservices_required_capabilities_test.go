@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -45,7 +46,42 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilities(t)
+		OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t)
 	})
+}
+
+func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
+	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds-top-req-cap2", nil)
+	if err != nil {
+		t.Errorf("getting delivery service by xml ID: %v", err.Error())
+	}
+	if len(resp) != 1 {
+		t.Fatalf("expected to get only one delivery service in the response, but got %d", len(resp))
+	}
+	if resp[0].ID == nil {
+		t.Fatalf("no ID in the resulting delivery service")
+	}
+	dsID := *resp[0].ID
+	params := url.Values{}
+	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2")
+	if err != nil {
+		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
+	}
+	params.Add("dsId", strconv.Itoa(dsID))
+	params.Add("type", tc.OriginTypeName)
+	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
+	}
+	if len(responseServers.Response) != 1 {
+		t.Fatalf("expected just one ORG server in the response, but got %d", len(responseServers.Response))
+	}
+	if responseServers.Response[0].HostName == nil {
+		t.Fatal("expected a valid host name for the resulting ORG server, but got nothing")
+	}
+	if *responseServers.Response[0].HostName != "denver-mso-org-01" {
+		t.Errorf("expected host name of the resulting ORG server to be %v, but got %v", "denver-mso-org-01", *responseServers.Response[0].HostName)
+	}
 }
 
 func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, header http.Header) {
@@ -412,6 +448,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Disassociate server from DS
+	setInactive(t, *dsID)
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*dsID, sID)
 	if err != nil {
 		t.Fatalf("could not DELETE the server %v from ds %v: %v", sID, *dsID, err)

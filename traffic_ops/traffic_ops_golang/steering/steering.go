@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"sort"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -103,6 +104,11 @@ func findSteering(tx *sql.Tx) ([]tc.Steering, error) {
 	for _, steering := range steerings {
 		arr = append(arr, steering)
 	}
+
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i].DeliveryService < arr[j].DeliveryService
+	})
+
 	return arr, nil
 }
 

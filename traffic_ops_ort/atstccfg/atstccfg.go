@@ -120,7 +120,7 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly, tccfg.Dir, config.UserAgent, tccfg.TOClient.C.URL, toIPs)
+	configs, err := cfgfile.GetAllConfigs(toData, config.UserAgent, toIPs, tccfg)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)

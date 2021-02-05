@@ -17,7 +17,6 @@ package v3
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -176,39 +175,30 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := tc.DeliveryServiceNullableV30{
-		DeliveryServiceNullableV15: tc.DeliveryServiceNullableV15{
-			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-							Active:               util.BoolPtr(true),
-							CDNID:                util.IntPtr(oldCdn.ID),
-							DSCP:                 util.IntPtr(0),
-							DisplayName:          util.StrPtr("displayName"),
-							RoutingName:          util.StrPtr("routingName"),
-							GeoLimit:             util.IntPtr(0),
-							GeoProvider:          util.IntPtr(0),
-							IPV6RoutingEnabled:   util.BoolPtr(false),
-							InitialDispersion:    util.IntPtr(1),
-							LogsEnabled:          util.BoolPtr(true),
-							MissLat:              util.FloatPtr(0),
-							MissLong:             util.FloatPtr(0),
-							MultiSiteOrigin:      util.BoolPtr(false),
-							OrgServerFQDN:        util.StrPtr("https://test.com"),
-							Protocol:             util.IntPtr(2),
-							QStringIgnore:        util.IntPtr(0),
-							RangeRequestHandling: util.IntPtr(0),
-							RegionalGeoBlocking:  util.BoolPtr(false),
-							TenantID:             util.IntPtr(1),
-							TypeID:               util.IntPtr(types[0].ID),
-							XMLID:                util.StrPtr("dsID"),
-						},
-					},
-				},
-			},
-		},
-	}
+	customDS := tc.DeliveryServiceNullableV30{}
+	customDS.Active = util.BoolPtr(true)
+	customDS.CDNID = util.IntPtr(oldCdn.ID)
+	customDS.DSCP = util.IntPtr(0)
+	customDS.DisplayName = util.StrPtr("displayName")
+	customDS.RoutingName = util.StrPtr("routingName")
+	customDS.GeoLimit = util.IntPtr(0)
+	customDS.GeoProvider = util.IntPtr(0)
+	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
+	customDS.InitialDispersion = util.IntPtr(1)
+	customDS.LogsEnabled = util.BoolPtr(true)
+	customDS.MissLat = util.FloatPtr(0)
+	customDS.MissLong = util.FloatPtr(0)
+	customDS.MultiSiteOrigin = util.BoolPtr(false)
+	customDS.OrgServerFQDN = util.StrPtr("https://test.com")
+	customDS.Protocol = util.IntPtr(2)
+	customDS.QStringIgnore = util.IntPtr(0)
+	customDS.RangeRequestHandling = util.IntPtr(0)
+	customDS.RegionalGeoBlocking = util.BoolPtr(false)
+	customDS.TenantID = util.IntPtr(1)
+	customDS.TypeID = util.IntPtr(types[0].ID)
+	customDS.XMLID = util.StrPtr("dsID")
+	customDS.MaxRequestHeaderBytes = nil
+
 	ds, _, err := TOSession.CreateDeliveryServiceV30(customDS)
 	if err != nil {
 		t.Fatal(err)
@@ -459,6 +449,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
 	}
 
+	updatedMaxRequestHeaderSize := 131080
 	updatedLongDesc := "something different"
 	updatedMaxDNSAnswers := 164598
 	updatedMaxOriginConnections := 100
@@ -466,6 +457,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
+	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
 
 	if updateResp, _, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
@@ -483,10 +475,11 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	resp := apiResp[0]
 
-	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections {
-		t.Errorf("results do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
-		t.Errorf("results do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
-		t.Errorf("results do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
+	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections || *resp.MaxRequestHeaderBytes != updatedMaxRequestHeaderSize {
+		t.Errorf("long description do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
+		t.Errorf("max DNS answers do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+		t.Errorf("max origin connections do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
+		t.Errorf("max request header sizes do not match actual: %v, expected: %v", resp.MaxRequestHeaderBytes, updatedMaxRequestHeaderSize)
 	}
 }
 
@@ -901,10 +894,12 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 
 	//Update DS's Topology to a non-ORG server's cachegroup
 	origTopo := *remoteDS[0].Topology
-	*remoteDS[0].Topology = "4-tiers"
+	remoteDS[0].Topology = util.StrPtr("another-topology")
 	ds, reqInf, err := TOSession.UpdateDeliveryServiceV30WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err == nil {
 		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v, but update was successful", ds.XMLID)
+	} else if !strings.Contains(err.Error(), "the following ORG server cachegroups are not in the delivery service's topology") {
+		t.Errorf("expected: error containing \"the following ORG server cachegroups are not in the delivery service's topology\", actual: %s", err.Error())
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected to fail since ORG server's topology not part of DS. Expected:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
@@ -962,6 +957,8 @@ func GetAccessibleToTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get tenant " + err.Error())
 	}
+	// TODO: document that all DSes added to the fixture data need to have the
+	// Tenant 'tenant1' unless you change this code
 	err = getByTenants(childTenant.ID, len(testData.DeliveryServices)-1)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -981,7 +978,7 @@ func getByTenants(tenantID int, expectedCount int) error {
 		return err
 	}
 	if len(deliveryServices) != expectedCount {
-		return errors.New(fmt.Sprintf("expected %v delivery service, got %v", expectedCount, len(deliveryServices)))
+		return fmt.Errorf("expected %v delivery service, got %v", expectedCount, len(deliveryServices))
 	}
 	return nil
 }
@@ -992,6 +989,10 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
+		if testDS.XMLID == nil {
+			t.Errorf("testing Delivery Service has no XMLID")
+			continue
+		}
 		var ds tc.DeliveryServiceNullableV30
 		found := false
 		for _, realDS := range dses {
@@ -1002,7 +1003,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("DeliveryService not found in Traffic Ops: %v", *ds.XMLID)
+			t.Errorf("DeliveryService not found in Traffic Ops: %v", *testDS.XMLID)
 			continue
 		}
 

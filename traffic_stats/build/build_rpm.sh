@@ -64,8 +64,8 @@ initBuildArea() {
 				tags='osusergo netgo'
 
 				# get x/* packages (everything else should be properly vendored)
-				go get -v golang.org/x/net/publicsuffix || \
-								{ echo "Could not get go package dependencies"; return 1; }
+				go mod vendor -v || \
+								{ echo "Could not vendor go module dependencies"; return 1; }
 
 				# compile traffic_stats
 				go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
@@ -82,6 +82,9 @@ initBuildArea() {
 		 { echo "Could not copy to $ts_dest: $?"; return 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
+
+	# include LICENSE in the tarball
+	cp "${TC_DIR}/LICENSE" "$ts_dest"
 
 	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$ts_dest")" || { echo "Could not create tar archive $ts_dest.tgz: $?"; return 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }

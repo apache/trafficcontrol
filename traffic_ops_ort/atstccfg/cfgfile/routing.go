@@ -31,7 +31,7 @@ import (
 // # DO NOT EDIT - Generated for odol-atsec-sea-22 by Traffic Ops (https://trafficops.comcast.net/) on Mon Oct 26 16:22:19 UTC 2020
 
 // GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
-func GetConfigFile(toData *config.TOData, fileInfo atscfg.CfgMeta, hdrCommentTxt string) (string, string, string, error) {
+func GetConfigFile(toData *config.TOData, fileInfo atscfg.CfgMeta, hdrCommentTxt string, thiscfg config.TCCfg) (string, string, string, error) {
 	start := time.Now()
 	defer func() {
 		log.Infof("GetConfigFile %v took %v\n", fileInfo.Name, time.Since(start).Round(time.Millisecond))
@@ -39,7 +39,7 @@ func GetConfigFile(toData *config.TOData, fileInfo atscfg.CfgMeta, hdrCommentTxt
 	log.Infoln("GetConfigFile '" + fileInfo.Name + "'")
 
 	getConfigFile := getConfigFileFunc(fileInfo.Name)
-	cfg, err := getConfigFile(toData, fileInfo.Name, hdrCommentTxt)
+	cfg, err := getConfigFile(toData, fileInfo.Name, hdrCommentTxt, thiscfg)
 	logWarnings("getting config file '"+fileInfo.Name+"': ", cfg.Warnings)
 
 	if err != nil {
@@ -48,7 +48,7 @@ func GetConfigFile(toData *config.TOData, fileInfo atscfg.CfgMeta, hdrCommentTxt
 	return cfg.Text, cfg.ContentType, cfg.LineComment, nil
 }
 
-type ConfigFileFunc func(toData *config.TOData, fileName string, hdrCommentTxt string) (atscfg.Cfg, error)
+type ConfigFileFunc func(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error)
 
 type ConfigFilePrefixSuffixFunc struct {
 	Prefix string

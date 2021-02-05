@@ -78,8 +78,6 @@ func TestGetDetailServers(t *testing.T) {
 		"profile",
 		"profile_desc",
 		"rack",
-		"router_host_name",
-		"router_port_name",
 		"status",
 		"tcp_port",
 		"server_type",
@@ -95,6 +93,8 @@ func TestGetDetailServers(t *testing.T) {
 	serviceNetmask := util.StrPtr("")
 	serviceInterface := util.StrPtr("")
 	serviceMtu := util.StrPtr("")
+	//routerHostName := util.StrPtr("")
+	//routerPort := util.StrPtr("")
 
 	for _, sd := range testServerDetails {
 		detailRows = detailRows.AddRow(
@@ -126,8 +126,6 @@ func TestGetDetailServers(t *testing.T) {
 			sd.Profile,
 			sd.ProfileDesc,
 			sd.Rack,
-			sd.RouterHostName,
-			sd.RouterPortName,
 			sd.Status,
 			sd.TCPPort,
 			sd.Type,
@@ -158,7 +156,7 @@ func TestGetDetailServers(t *testing.T) {
 		t.Fatalf("servers.read expected len(actualSrvs[0].HardwareInfo) == 3, actual = %v", len(actualSrvs[0].HardwareInfo))
 	}
 
-	srvInts := *(actualSrvs[0]).ServerInterfaces
+	srvInts := actualSrvs[0].ServerInterfaces
 	if len(srvInts) != 2 {
 		t.Fatalf("servers.read expected len(srvInts) == 2, actual = %v", len(srvInts))
 	}
@@ -170,82 +168,90 @@ func TestGetDetailServers(t *testing.T) {
 	}
 }
 
-func getMockServerDetails() []tc.ServerDetailV30 {
-	srvData := tc.ServerDetailV30{
+func getMockServerDetails() []tc.ServerDetailV40 {
+	srvData := tc.ServerDetailV40{
 		tc.ServerDetail{
 			ID: util.IntPtr(1),
 		},
-		&[]tc.ServerInterfaceInfo{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+		[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
-	return []tc.ServerDetailV30{srvData}
+	return []tc.ServerDetailV40{srvData}
 }
 
-func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
-	return []tc.ServerInterfaceInfo{
+func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
+	return []tc.ServerInterfaceInfoV40{
 		{
-			IPAddresses: []tc.ServerIPAddress{
-				{
-					Address:        "5.6.7.8",
-					Gateway:        util.StrPtr("5.6.7.0/24"),
-					ServiceAddress: true,
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "6.7.8.9",
+						Gateway:        util.StrPtr("6.7.8.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd54::9"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "6.6.7.9",
+						Gateway:        util.StrPtr("6.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2022::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
+					},
 				},
-				{
-					Address:        "2020::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: true,
-				},
-				{
-					Address:        "5.6.7.9",
-					Gateway:        util.StrPtr("5.6.7.0/24"),
-					ServiceAddress: false,
-				},
-				{
-					Address:        "2021::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: false,
-				},
+				MaxBandwidth: util.Uint64Ptr(1500),
+				Monitor:      false,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "interfaceName2" + strconv.Itoa(cacheID),
 			},
-			MaxBandwidth: util.Uint64Ptr(2500),
-			Monitor:      true,
-			MTU:          util.Uint64Ptr(1500),
-			Name:         "interfaceName" + strconv.Itoa(cacheID),
+			RouterHostName: "",
+			RouterPortName: "",
 		},
 		{
-			IPAddresses: []tc.ServerIPAddress{
-				{
-					Address:        "6.7.8.9",
-					Gateway:        util.StrPtr("6.7.8.0/24"),
-					ServiceAddress: true,
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "5.6.7.8",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2020::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "5.6.7.9",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
+					},
 				},
-				{
-					Address:        "2021::4",
-					Gateway:        util.StrPtr("fd54::9"),
-					ServiceAddress: true,
-				},
-				{
-					Address:        "6.6.7.9",
-					Gateway:        util.StrPtr("6.6.7.0/24"),
-					ServiceAddress: false,
-				},
-				{
-					Address:        "2022::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: false,
-				},
+				MaxBandwidth: util.Uint64Ptr(2500),
+				Monitor:      true,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "interfaceName" + strconv.Itoa(cacheID),
 			},
-			MaxBandwidth: util.Uint64Ptr(1500),
-			Monitor:      false,
-			MTU:          util.Uint64Ptr(1500),
-			Name:         "interfaceName2" + strconv.Itoa(cacheID),
+			RouterHostName: "",
+			RouterPortName: "",
 		},
 	}
 }
 
-func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
-	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
+func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfoV40) {
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	for _, interf := range serverInterfaces {
-		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID)
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPortName)
 		for _, ip := range interf.IPAddresses {
 			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
 		}

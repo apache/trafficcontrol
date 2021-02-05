@@ -50,15 +50,8 @@ initBuildArea() {
 	go env
 
 	# get x/* packages (everything else should be properly vendored)
-	go get -v \
-		golang.org/x/crypto/ed25519 \
-		golang.org/x/crypto/scrypt \
-		golang.org/x/net/idna \
-		golang.org/x/net/ipv4 \
-		golang.org/x/net/ipv6 \
-		golang.org/x/sys/unix \
-		golang.org/x/text/secure/bidirule ||
-		{ echo "Could not get go package dependencies"; return 1; }
+	go mod vendor -v ||
+		{ echo "Could not vendor go module dependencies"; return 1; }
 
 	# compile traffic_ops_golang
 	cd traffic_ops_golang
@@ -93,8 +86,13 @@ initBuildArea() {
 		echo "Could not copy to $dest/app"
 		return 1
 	fi
+
+	# include LICENSE in the tarball
+	cp "${TC_DIR}/LICENSE" "$dest"
+
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")" || \
 		 { echo "Could not create tar archive $dest.tgz: $?"; return 1; }
+
 	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 

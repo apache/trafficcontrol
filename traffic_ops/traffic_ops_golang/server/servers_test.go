@@ -37,7 +37,7 @@ import (
 
 type ServerAndInterfaces struct {
 	Server    tc.Server
-	Interface tc.ServerInterfaceInfo
+	Interface tc.ServerInterfaceInfoV40
 }
 
 func getTestServers() []ServerAndInterfaces {
@@ -92,18 +92,22 @@ func getTestServers() []ServerAndInterfaces {
 
 	mtu := uint64(testServer.InterfaceMtu)
 
-	iface := tc.ServerInterfaceInfo{
-		IPAddresses: []tc.ServerIPAddress{
-			tc.ServerIPAddress{
-				Address:        testServer.IPAddress,
-				Gateway:        nil,
-				ServiceAddress: true,
+	iface := tc.ServerInterfaceInfoV40{
+		ServerInterfaceInfo: tc.ServerInterfaceInfo{
+			IPAddresses: []tc.ServerIPAddress{
+				{
+					Address:        testServer.IPAddress,
+					Gateway:        nil,
+					ServiceAddress: true,
+				},
 			},
+			MaxBandwidth: nil,
+			Monitor:      true,
+			MTU:          &mtu,
+			Name:         testServer.InterfaceName,
 		},
-		MaxBandwidth: nil,
-		Monitor:      true,
-		MTU:          &mtu,
-		Name:         testServer.InterfaceName,
+		RouterHostName: testServer.RouterHostName,
+		RouterPortName: testServer.RouterPortName,
 	}
 
 	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
@@ -179,7 +183,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
 
@@ -217,8 +221,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.ProfileID,
 			ts.Rack,
 			ts.RevalPending,
-			ts.RouterHostName,
-			ts.RouterPortName,
 			ts.Status,
 			ts.StatusID,
 			ts.TCPPort,
@@ -234,6 +236,8 @@ func TestGetServersByCachegroup(t *testing.T) {
 			srv.Interface.MTU,
 			srv.Interface.Name,
 			ts.ID,
+			srv.Server.RouterHostName,
+			srv.Server.RouterPortName,
 		)
 
 		for _, ip := range srv.Interface.IPAddresses {
@@ -248,6 +252,8 @@ func TestGetServersByCachegroup(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
+	mock.ExpectPrepare("SELECT COUNT\\(s.id\\) FROM s")
+	mock.ExpectPrepare("SELECT COUNT\\(s.id\\) FROM s")
 	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
@@ -257,7 +263,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	user := auth.CurrentUser{}
 
-	version := api.Version{Major: 3, Minor: 0}
+	version := api.Version{Major: 4, Minor: 0}
 
 	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
 	if userErr != nil || sysErr != nil {
@@ -290,7 +296,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
 
@@ -326,8 +332,6 @@ func TestGetMidServers(t *testing.T) {
 			ts.ProfileID,
 			ts.Rack,
 			ts.RevalPending,
-			ts.RouterHostName,
-			ts.RouterPortName,
 			ts.Status,
 			ts.StatusID,
 			ts.TCPPort,
@@ -343,6 +347,8 @@ func TestGetMidServers(t *testing.T) {
 			srv.Interface.MTU,
 			srv.Interface.Name,
 			ts.ID,
+			srv.Server.RouterHostName,
+			srv.Server.RouterPortName,
 		)
 
 		for _, ip := range srv.Interface.IPAddresses {
@@ -356,6 +362,8 @@ func TestGetMidServers(t *testing.T) {
 		}
 	}
 	mock.ExpectBegin()
+	mock.ExpectPrepare("SELECT COUNT\\(s.id\\) FROM s")
+	mock.ExpectPrepare("SELECT COUNT\\(s.id\\) FROM s")
 	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
@@ -416,7 +424,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 	cgs = append(cgs, testCG2)
 
-	serverMap := make(map[int]tc.ServerNullable, len(servers))
+	serverMap := make(map[int]tc.ServerV40, len(servers))
 	serverIDs := make([]int, 0, len(servers))
 	for _, server := range servers {
 		if server.ID == nil {
@@ -426,7 +434,7 @@ func TestGetMidServers(t *testing.T) {
 		serverMap[*server.ID] = server
 	}
 
-	var ts tc.ServerNullable
+	var ts tc.ServerV40
 	for _, s := range servers {
 		if s.HostName != nil && *s.HostName == "server2" {
 			ts = s
@@ -461,8 +469,6 @@ func TestGetMidServers(t *testing.T) {
 		ts.ProfileID,
 		ts.Rack,
 		ts.RevalPending,
-		ts.RouterHostName,
-		ts.RouterPortName,
 		ts.Status,
 		ts.StatusID,
 		ts.TCPPort,
@@ -475,7 +481,7 @@ func TestGetMidServers(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
-	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, 0, db.MustBegin())
+	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, 0, 0, db.MustBegin())
 
 	if userErr != nil || sysErr != nil {
 		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
@@ -512,7 +518,7 @@ func TestV3Validations(t *testing.T) {
 
 	goodInterface := tc.ServerInterfaceInfo{
 		IPAddresses: []tc.ServerIPAddress{
-			tc.ServerIPAddress{
+			{
 				Address:        "127.0.0.1/32",
 				Gateway:        nil,
 				ServiceAddress: true,
@@ -524,7 +530,7 @@ func TestV3Validations(t *testing.T) {
 		Name:         "eth0",
 	}
 
-	testServer := tc.ServerNullable{
+	testServer := tc.ServerV30{
 		CommonServerProperties: tc.CommonServerProperties{
 			CDNID:          util.IntPtr(1),
 			HostName:       util.StrPtr("test"),

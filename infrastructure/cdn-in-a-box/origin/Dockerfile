@@ -20,9 +20,10 @@
 # Apache Traffic Control
 ############################################################
 
-FROM alpine:latest
+FROM alpine:3.13
 
 RUN apk add --no-cache \
+    net-tools \
     lighttpd \
     bash \
     curl \
@@ -30,6 +31,8 @@ RUN apk add --no-cache \
     # contains envsubst for to-enroll
     gettext \
     jq
+
+RUN rm /sbin/route
 
 RUN rm /etc/lighttpd/lighttpd.conf
 RUN rm -rf /var/www/localhost/

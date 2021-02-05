@@ -32,6 +32,15 @@ module.exports = angular.module('trafficPortal.private.cdns.deliveryServices', [
 							},
 							deliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ cdn: $stateParams.cdnId });
+							},
+							filter: function(cdn) {
+								return {
+									cdnName: {
+										filterType: "text",
+										type: "equals",
+										filter: cdn.name
+									}
+								}
 							}
 						}
 					}

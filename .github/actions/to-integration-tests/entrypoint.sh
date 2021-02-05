@@ -77,8 +77,8 @@ start_traffic_vault() {
 
 	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" "building Traffic Vault";
-	if [[ "$INPUT_VERSION" -lt 3 ]]; then
-		echo 'Not starting Traffic Vault for API versions less than 3'
+	if [[ -n "$(docker ps -qf "name=^${trafficvault}")" ]]; then
+		echo 'Traffic Vault is already running.'
 		return;
 	fi;
 	echo 'Starting Traffic Vault...';
@@ -94,29 +94,25 @@ start_traffic_vault() {
 	docker logs -f "$trafficvault" 2>&1 |
 		color_and_prefix "$gray_bg" 'Traffic Vault';
 }
-start_traffic_vault &
+start_traffic_vault & disown
 
 sudo apt-get install -y --no-install-recommends gettext
 
 GOROOT=/usr/local/go
 export GOROOT PATH="${PATH}:${GOROOT}/bin"
 download_go
-export GOPATH="$(mktemp -d)"
-srcdir="$GOPATH/src/github.com/apache"
-mkdir -p "$srcdir"
-ln -s "$PWD" "$srcdir/trafficcontrol"
+export GOPATH="${HOME}/go"
+org_dir="$GOPATH/src/github.com/apache"
+repo_dir="${org_dir}/trafficcontrol"
+if [[ ! -e "$repo_dir" ]]; then
+	mkdir -p "$org_dir"
+	cd
+	mv "${GITHUB_WORKSPACE}" "${repo_dir}/"
+	ln -s "$repo_dir" "${GITHUB_WORKSPACE}"
+fi
 
-cd "$srcdir/trafficcontrol/traffic_ops/traffic_ops_golang"
-
-
-/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
-	golang.org/x/crypto/ed25519 \
-	golang.org/x/crypto/scrypt \
-	golang.org/x/net/idna \
-	golang.org/x/net/ipv4 \
-	golang.org/x/net/ipv6 \
-	golang.org/x/sys/unix \
-	golang.org/x/text/secure/bidirule
+cd "${repo_dir}/traffic_ops/traffic_ops_golang"
+go mod vendor -v
 go build .
 
 echo "
@@ -193,13 +189,3 @@ cd "../testing/api/v$INPUT_VERSION"
 
 cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
 go test -test.v --cfg traffic-ops-test.conf
-CODE=$?
-rm traffic-ops-test.conf
-if [[ "$INPUT_VERSION" -ge 3 ]]; then
-	echo 'Stopping Traffic Vault...'
-	docker kill "$trafficvault";
-fi;
-echo 'Killing background jobs...';
-kill -9 $(jobs -p);
-
-exit "$CODE"

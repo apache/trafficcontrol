@@ -15,10 +15,14 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 var rxAlphanumericUnderscoreDash = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
@@ -177,4 +181,13 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 	default:
 		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
 	}
+}
+
+// StringIsValidFloat returns a reference to a validation.StringRule function that only returns true
+// if the string value given string argument can be parsed to a 64-bit float that is not NaN.
+func StringIsValidFloat() *validation.StringRule {
+	return validation.NewStringRule(func(value string) bool {
+		validated, err := strconv.ParseFloat(value, 64)
+		return err == nil && !math.IsNaN(validated)
+	}, "must be a valid float")
 }

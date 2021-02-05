@@ -337,6 +337,69 @@ type DSServerIds struct {
 
 type TODSServerIds DSServerIds
 
+const verifyStatusesQuery = `
+SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
+FROM server
+INNER JOIN status ON server.status = status.id
+JOIN type t on server.type = t.id
+WHERE server.id = ANY($1::BIGINT[])
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
+`
+
+const checkPreExistingEdgeServersQuery = `
+SELECT t.name AS name
+FROM type t
+JOIN server s ON t.id = s.type
+JOIN status st ON s.status = st.id
+JOIN deliveryservice_server dss ON dss.server = s.id
+WHERE s.id = ANY(ARRAY(SELECT server FROM deliveryservice_server WHERE deliveryservice=$1))
+AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
+AND dss.deliveryservice=$1
+`
+
+func checkIfEdgesExistedBefore(tx *sql.Tx, dsID int) (error, bool) {
+	rows, err := tx.Query(checkPreExistingEdgeServersQuery, dsID)
+	if err != nil {
+		return fmt.Errorf("couldn't query for pre existing edge servers for this DS: %v", err.Error()), false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		return nil, true
+	}
+	return nil, false
+}
+
+func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
+	if len(ids) < 1 {
+		return false, nil
+	}
+
+	if tx == nil {
+		return false, errors.New("nil transaction")
+	}
+
+	rows, err := tx.Query(verifyStatusesQuery, pq.Array(ids))
+	if err != nil {
+		return false, fmt.Errorf("querying: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var isAvailable bool
+		err = rows.Scan(&isAvailable)
+		if err != nil {
+			return false, fmt.Errorf("scanning: %v", err)
+		}
+		if isAvailable {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// GetReplaceHandler is the handler for POST requests to the /deliveryserviceserver API endpoint.
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
@@ -385,7 +448,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos)
+	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, *payload.Replace)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -461,7 +524,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos)
+	userErr, sysErr, status := validateDSSAssignments(inf.Tx.Tx, ds, serverInfos, false)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -493,10 +556,50 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
-func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo) (error, error, int) {
+func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
+	valid := false
 	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, status
+	}
+
+	if ds.Active && replace {
+		ids := make([]int, 0, len(serverInfos))
+		for _, inf := range serverInfos {
+			ids = append(ids, inf.ID)
+			// We dont check for the cache type to be = EDGE here because if this is a new DS, and we want to assign an online/ reported ORG to it,
+			// we should be able to do that.
+			if inf.Status == string(tc.CacheStatusOnline) || inf.Status == string(tc.CacheStatusReported) {
+				valid = true
+			}
+		}
+		// Prevent the user from deleting all the servers in an active DS
+		if len(ids) == 0 {
+			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		}
+		// The following check is necessary because of the following:
+		// Consider a brand new active DS that has no server assignments.
+		// Now, you wish to assign an online/ reported ORG server to it.
+		// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
+		// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
+		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
+		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
+		if err != nil {
+			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
+		}
+		if preExistingEdges {
+			ok, err := verifyAtLeastOneAvailableServer(ids, tx)
+			if err != nil {
+				return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
+			}
+			if !ok {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
+		} else {
+			if !valid {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
+		}
 	}
 
 	userErr, sysErr, status = ValidateServerCapabilities(tx, ds.ID, serverInfos)
@@ -564,7 +667,7 @@ func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.S
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, fmt.Errorf("validating server capabilities: %v", err), http.StatusInternalServerError
 	}
 
 	for _, name := range nonOriginServerNames {
@@ -614,30 +717,62 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 		return
 	}
 
-	if inf.Version.Major < 3 {
+	if inf.Version.Major <= 2 {
 		v11ServerList := []tc.DSServerV11{}
 		for _, srv := range servers {
-			v11server := tc.DSServerV11{}
-			v11server.DSServerBase = srv.DSServerBase
-
+			routerHostName := ""
+			routerPort := ""
 			interfaces := *srv.ServerInterfaces
-			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPortName
+			}
+			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
 			}
+			v11server := tc.DSServerV11{}
+			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+
 			v11server.LegacyInterfaceDetails = legacyInterface
 
 			v11ServerList = append(v11ServerList, v11server)
 		}
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v11ServerList)
 		return
+	} else if inf.Version.Major <= 3 {
+		v3ServerList := []tc.DSServer{}
+		for _, srv := range servers {
+			routerHostName := ""
+			routerPort := ""
+			interfaces := *srv.ServerInterfaces
+			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
+			if len(interfaces) != 0 {
+				routerHostName = interfaces[0].RouterHostName
+				routerPort = interfaces[0].RouterPortName
+			}
+			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v3server := tc.DSServer{}
+			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+
+			v3server.ServerInterfaces = &v3Interfaces
+
+			v3ServerList = append(v3ServerList, v3server)
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v3ServerList)
+		return
 	}
 
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
+func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServerV4, error) {
 	queryDataString :=
 		`,
 cg.name as cachegroup,
@@ -664,8 +799,6 @@ p.name as profile,
 p.description as profile_desc,
 s.profile as profile_id,
 s.rack,
-s.router_host_name,
-s.router_port_name,
 st.name as status,
 s.status as status_id,
 s.tcp_port,
@@ -717,9 +850,9 @@ JOIN type t ON s.type = t.id `
 	}
 	defer rows.Close()
 
-	servers := []tc.DSServer{}
+	servers := []tc.DSServerV4{}
 	for rows.Next() {
-		s := tc.DSServer{}
+		s := tc.DSServerV4{}
 		err := rows.Scan(
 			&s.ID,
 			&s.Cachegroup,
@@ -746,8 +879,6 @@ JOIN type t ON s.type = t.id `
 			&s.ProfileDesc,
 			&s.ProfileID,
 			&s.Rack,
-			&s.RouterHostName,
-			&s.RouterPortName,
 			&s.Status,
 			&s.StatusID,
 			&s.TCPPort,
@@ -758,7 +889,7 @@ JOIN type t ON s.type = t.id `
 		if err != nil {
 			return nil, errors.New("error scanning dss rows: " + err.Error())
 		}
-		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
 			for _, interfaceInfo := range interfacesMap {
 				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
@@ -857,6 +988,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 }
 
 type DSInfo struct {
+	Active               bool
 	ID                   int
 	Name                 string
 	Type                 tc.DSType
@@ -873,6 +1005,7 @@ type DSInfo struct {
 // language=sql
 const getDSInfoBaseQuery = `
 SELECT
+  ds.active,
   ds.id,
   ds.xml_id,
   tp.name as type,
@@ -892,6 +1025,7 @@ FROM
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
 	if err := row.Scan(
+		&di.Active,
 		&di.ID,
 		&di.Name,
 		&di.Type,

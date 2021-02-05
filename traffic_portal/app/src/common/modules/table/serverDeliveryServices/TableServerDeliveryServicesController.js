@@ -17,12 +17,10 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, deliveryServices, $controller, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
+var TableServerDeliveryServicesController = function(server, deliveryServices, filter, $controller, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
-
-	let serverDeliveryServicesTable;
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'serverDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	var removeDeliveryService = function(dsId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
@@ -35,28 +33,12 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 
 	$scope.server = server[0];
 
-	// adds some items to the base delivery services context menu
-	$scope.contextMenuItems.splice(2, 0,
-		{
-			text: 'Unlink Delivery Service from Server',
-			hasBottomDivider: function() {
-				return true;
-			},
-			click: function ($itemScope) {
-				$scope.confirmRemoveDS($itemScope.ds);
-			}
-		}
-	);
-
 	$scope.isEdge = serverUtils.isEdge;
 
 	$scope.isOrigin = serverUtils.isOrigin;
 
-	$scope.confirmRemoveDS = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-
+	$scope.confirmRemoveDS = function(ds, event) {
+		event.stopPropagation();
 		var params = {
 			title: 'Remove Delivery Service from Server?',
 			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
@@ -142,40 +124,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
-	$scope.toggleVisibility = function(colName) {
-		const col = serverDeliveryServicesTable.column(colName + ':name');
-		col.visible(!col.visible());
-		serverDeliveryServicesTable.rows().invalidate().draw();
-	};
-
-	$scope.columnFilterFn = function(column) {
-		if (column.name === 'Action') {
-			return false;
-		}
-		return true;
-	};
-
-	angular.element(document).ready(function () {
-		serverDeliveryServicesTable = $('#serverDeliveryServicesTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 55 }
-			],
-			"columns": $scope.columns.concat([{ "name": "Action", "visible": true, "searchable": false }]),
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_serverDeliveryServicesTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_serverDeliveryServicesTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'deliveryServices', '$controller', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
+TableServerDeliveryServicesController.$inject = ['server', 'deliveryServices', 'filter', '$controller', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
 module.exports = TableServerDeliveryServicesController;

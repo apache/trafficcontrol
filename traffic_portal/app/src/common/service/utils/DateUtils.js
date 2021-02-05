@@ -127,6 +127,19 @@ var DateUtils = function() {
 		]
 	};
 
+	/**
+	 * Converts a date into a string that tells how much time is between the current time and the given date.
+	 *
+	 * @example
+	 * // returns "1 hour ago"
+	 * getRelativeTime(new Date(Date.now() - 60*60*1000)) ;
+	 *
+	 * // returns "1 hour from now"
+	 * getRelativeTime(new Date(Date.now() + 60*60*1000)) ;
+	 *
+	 * @param {Date | string} date Either a Date object or a string that can be parsed by momentjs.
+	 * @returns {string} A human readable description of how much time is between now and `date`.
+	 */
 	this.getRelativeTime = function(date) {
 		return moment(date).fromNow();
 	}

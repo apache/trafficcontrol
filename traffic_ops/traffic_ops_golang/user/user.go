@@ -398,7 +398,6 @@ func (user *TOUser) UpdateQuery() string {
 	phone_number=:phone_number,
 	postal_code=:postal_code,
 	country=:country,
-	registration_sent=:registration_sent,
 	tenant_id=:tenant_id,
 	local_passwd=COALESCE(:local_passwd, local_passwd)
 	WHERE id=:id

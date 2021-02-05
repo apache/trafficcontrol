@@ -17,28 +17,40 @@
 
 name: Traffic Ops Go client/API integration tests
 
+env:
+  # alpine:3.13
+  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+
 on:
   push:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - .github/workflows/traffic ops.yml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
+      - vendor/**.go
+      - vendor/modules.txt
   create:
   pull_request:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - .github/workflows/traffic ops.yml
+      - go.mod
+      - go.sum
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
+      - vendor/**.go
+      - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -75,6 +87,13 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
+    - name: Cache Alpine Docker image
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/docker-images
+        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+    - name: Import cached Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
     - name: Initialize Traffic Ops Database
       id: todb
       uses: ./.github/actions/todb-init
@@ -94,3 +113,11 @@ jobs:
       with:
         version: 3
         smtp_address: 172.17.0.1
+    - name: Run API v4 tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 4
+        smtp_address: 172.17.0.1
+    - name: Save Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

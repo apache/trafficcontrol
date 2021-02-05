@@ -20,16 +20,22 @@ const spawnOptions = {
 };
 
 let atcComponent = process.env.ATC_COMPONENT;
-const dockerComposeArgs = ["-f", `${process.env.GITHUB_WORKSPACE}/infrastructure/docker/build/docker-compose.yml`, "run", "--rm"];
+const dockerCompose = ["docker-compose", "-f", `${process.env.GITHUB_WORKSPACE}/infrastructure/docker/build/docker-compose.yml`];
 if (typeof atcComponent !== "string" || atcComponent.length === 0) {
 	console.error("Missing environment variable ATC_COMPONENT");
 	process.exit(1);
 }
 atcComponent += "_build";
-dockerComposeArgs.push(atcComponent);
-const proc = child_process.spawnSync(
-	"docker-compose",
-	dockerComposeArgs,
-	spawnOptions
-);
-process.exit(proc.status);
+
+function runProcess(...commandArguments) {
+	console.info(...commandArguments);
+	const status = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions).status;
+	if (status === 0) {
+		return;
+	}
+	console.error("Child process \"", ...commandArguments, "\" exited with status code", status, "!");
+	process.exit(status ? status : 1);
+}
+
+runProcess(...dockerCompose, "pull", atcComponent);
+runProcess(...dockerCompose, "run", atcComponent);

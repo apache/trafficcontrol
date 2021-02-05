@@ -32,6 +32,15 @@ import (
  * under the License.
  */
 
+// ServersV4Response is the format of a response to a GET request for API v4.x /servers.
+type ServersV4Response struct {
+	Response []ServerV40 `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+	Alerts
+}
+
 // ServersV3Response is the format of a response to a GET request for /servers.
 type ServersV3Response struct {
 	Response []ServerV30 `json:"response"`
@@ -63,12 +72,22 @@ type ServersV1Response struct {
 type ServerDetailV11 struct {
 	ServerDetail
 	LegacyInterfaceDetails
+	RouterHostName *string `json:"routerHostName" db:"router_host_name"`
+	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
 }
 
 // ServerDetailV30 is the details for a server for API v3
 type ServerDetailV30 struct {
 	ServerDetail
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces"`
+	RouterHostName   *string                `json:"routerHostName" db:"router_host_name"`
+	RouterPortName   *string                `json:"routerPortName" db:"router_port_name"`
+}
+
+// ServerDetailV40 is the details for a server for API v4
+type ServerDetailV40 struct {
+	ServerDetail
+	ServerInterfaces []ServerInterfaceInfoV40 `json:"interfaces"`
 }
 
 // ServersV1DetailResponse is the JSON object returned for a single server for v1.
@@ -80,6 +99,12 @@ type ServersV1DetailResponse struct {
 // ServersV3DetailResponse is the JSON object returned for a single server for v3.
 type ServersV3DetailResponse struct {
 	Response []ServerDetailV30 `json:"response"`
+	Alerts
+}
+
+// ServersV4DetailResponse is the JSON object returned for a single server for v4.
+type ServersV4DetailResponse struct {
+	Response []ServerDetailV40 `json:"response"`
 	Alerts
 }
 
@@ -97,6 +122,13 @@ type ServerInterfaceInfo struct {
 	Monitor      bool              `json:"monitor" db:"monitor"`
 	MTU          *uint64           `json:"mtu" db:"mtu"`
 	Name         string            `json:"name" db:"name"`
+}
+
+// ServerInterfaceInfoV40 is the data associated with a V40 server's interface.
+type ServerInterfaceInfoV40 struct {
+	ServerInterfaceInfo
+	RouterHostName string `json:"routerHostName" db:"router_host_name"`
+	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 }
 
 // GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
@@ -207,6 +239,79 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 	return []ServerInterfaceInfo{iface}, nil
 }
 
+func ToInterfacesV4(oldInterfaces []ServerInterfaceInfo, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
+	v4Interfaces := make([]ServerInterfaceInfoV40, 0)
+	var v4Int ServerInterfaceInfoV40
+	for _, i := range oldInterfaces {
+		v4Int.ServerInterfaceInfo = i
+		if routerName != nil {
+			v4Int.RouterHostName = *routerName
+		}
+		if routerPort != nil {
+			v4Int.RouterPortName = *routerPort
+		}
+		v4Interfaces = append(v4Interfaces, v4Int)
+	}
+	return v4Interfaces, nil
+}
+
+func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService bool, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
+	var iface ServerInterfaceInfoV40
+	if lid.InterfaceMtu == nil {
+		return nil, errors.New("interfaceMtu is null")
+	}
+	mtu := uint64(*lid.InterfaceMtu)
+	iface.MTU = &mtu
+
+	if lid.InterfaceName == nil {
+		return nil, errors.New("interfaceName is null")
+	}
+	iface.Name = *lid.InterfaceName
+
+	var ips []ServerIPAddress
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
+		if lid.IPGateway != nil && *lid.IPGateway == "" {
+			lid.IPGateway = nil
+		}
+
+		ipStr := *lid.IPAddress
+		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
+			mask := net.ParseIP(*lid.IPNetmask).To4()
+			if mask == nil {
+				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+			}
+			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
+			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
+		}
+
+		ips = append(ips, ServerIPAddress{
+			Address:        ipStr,
+			Gateway:        lid.IPGateway,
+			ServiceAddress: ipv4IsService,
+		})
+	}
+
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
+		if lid.IP6Gateway != nil && *lid.IP6Gateway == "" {
+			lid.IP6Gateway = nil
+		}
+		ips = append(ips, ServerIPAddress{
+			Address:        *lid.IP6Address,
+			Gateway:        lid.IP6Gateway,
+			ServiceAddress: ipv6IsService,
+		})
+	}
+
+	iface.IPAddresses = ips
+	if routerName != nil {
+		iface.RouterHostName = *routerName
+	}
+	if routerPort != nil {
+		iface.RouterPortName = *routerPort
+	}
+	return []ServerInterfaceInfoV40{iface}, nil
+}
+
 // String implements the fmt.Stringer interface.
 func (lid LegacyInterfaceDetails) String() string {
 	var b strings.Builder
@@ -275,6 +380,89 @@ func (lid LegacyInterfaceDetails) String() string {
 	b.WriteRune(')')
 
 	return b.String()
+}
+
+func V4InterfaceInfoToV3Interfaces(serverInterfaces []ServerInterfaceInfoV40) ([]ServerInterfaceInfo, error) {
+	var interfaces []ServerInterfaceInfo
+
+	for _, intFace := range serverInterfaces {
+		var interfaceV3 ServerInterfaceInfo
+		interfaceV3.IPAddresses = intFace.IPAddresses
+		interfaceV3.Monitor = intFace.Monitor
+		interfaceV3.MaxBandwidth = intFace.MaxBandwidth
+		interfaceV3.MTU = intFace.MTU
+		interfaceV3.Name = intFace.Name
+		interfaces = append(interfaces, interfaceV3)
+	}
+
+	return interfaces, nil
+}
+
+func V4InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfoV40) (LegacyInterfaceDetails, error) {
+	var legacyDetails LegacyInterfaceDetails
+
+	for _, intFace := range serverInterfaces {
+
+		foundServiceInterface := false
+
+		for _, addr := range intFace.IPAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+
+			foundServiceInterface = true
+
+			address := addr.Address
+			gateway := addr.Gateway
+
+			var parsedIp net.IP
+			var mask *net.IPNet
+			var err error
+			parsedIp, mask, err = net.ParseCIDR(address)
+			if err != nil {
+				parsedIp = net.ParseIP(address)
+				if parsedIp == nil {
+					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				}
+			}
+
+			if parsedIp.To4() == nil {
+				legacyDetails.IP6Address = &address
+				legacyDetails.IP6Gateway = gateway
+			} else if mask != nil {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = util.StrPtr(fmt.Sprintf("%d.%d.%d.%d", mask.Mask[0], mask.Mask[1], mask.Mask[2], mask.Mask[3]))
+			} else {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = new(string)
+			}
+
+			if intFace.MTU != nil {
+				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
+			}
+
+			// This should no longer matter now that short-circuiting is better,
+			// but this temporary variable is necessary because the 'intFace'
+			// variable is referential, so taking '&intFace.Name' would cause
+			// problems when intFace is reassigned.
+			name := intFace.Name
+			legacyDetails.InterfaceName = &name
+
+			// we can jump out here since servers can only legally have one
+			// IPv4 and one IPv6 service address
+			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
+				break
+			}
+		}
+
+		if foundServiceInterface {
+			return legacyDetails, nil
+		}
+	}
+
+	return legacyDetails, errors.New("no service addresses found")
 }
 
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
@@ -483,8 +671,6 @@ type CommonServerProperties struct {
 	ProfileID        *int                 `json:"profileId" db:"profile_id"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
-	RouterHostName   *string              `json:"routerHostName" db:"router_host_name"`
-	RouterPortName   *string              `json:"routerPortName" db:"router_port_name"`
 	Status           *string              `json:"status" db:"status"`
 	StatusID         *int                 `json:"statusId" db:"status_id"`
 	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
@@ -499,6 +685,8 @@ type CommonServerProperties struct {
 type ServerNullableV11 struct {
 	LegacyInterfaceDetails
 	CommonServerProperties
+	RouterHostName *string `json:"routerHostName" db:"router_host_name"`
+	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
 }
 
 // ServerNullableV2 is a server as it appeared in API v2.
@@ -551,8 +739,6 @@ func (s Server) ToNullable() ServerNullableV2 {
 				ProfileID:        &s.ProfileID,
 				Rack:             &s.Rack,
 				RevalPending:     &s.RevalPending,
-				RouterHostName:   &s.RouterHostName,
-				RouterPortName:   &s.RouterPortName,
 				Status:           &s.Status,
 				StatusID:         &s.StatusID,
 				TCPPort:          &s.TCPPort,
@@ -571,6 +757,8 @@ func (s Server) ToNullable() ServerNullableV2 {
 				IP6Address:    &s.IP6Address,
 				IP6Gateway:    &s.IP6Gateway,
 			},
+			RouterHostName: &s.RouterHostName,
+			RouterPortName: &s.RouterPortName,
 		},
 		IPIsService:  &s.IPIsService,
 		IP6IsService: &s.IP6IsService,
@@ -609,8 +797,6 @@ func (s ServerV1) ToNullable() ServerNullableV11 {
 			ProfileID:        &s.ProfileID,
 			Rack:             &s.Rack,
 			RevalPending:     &s.RevalPending,
-			RouterHostName:   &s.RouterHostName,
-			RouterPortName:   &s.RouterPortName,
 			Status:           &s.Status,
 			StatusID:         &s.StatusID,
 			TCPPort:          &s.TCPPort,
@@ -629,6 +815,8 @@ func (s ServerV1) ToNullable() ServerNullableV11 {
 			IP6Address:    &s.IP6Address,
 			IP6Gateway:    &s.IP6Gateway,
 		},
+		RouterHostName: &s.RouterHostName,
+		RouterPortName: &s.RouterPortName,
 	}
 }
 
@@ -734,6 +922,8 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 
 	upgraded := ServerV30{
 		CommonServerProperties: s.CommonServerProperties,
+		RouterHostName:         s.RouterHostName,
+		RouterPortName:         s.RouterPortName,
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfaces(ipv4IsService, ipv6IsService)
@@ -744,19 +934,70 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	return upgraded, nil
 }
 
-// ServerNullable represents an ATC server, as returned by the TO API.
-type ServerNullable struct {
+func (s ServerV30) UpgradeToV40() (ServerV40, error) {
+	upgraded := ServerV40{
+		CommonServerProperties: s.CommonServerProperties,
+		StatusLastUpdated:      s.StatusLastUpdated,
+	}
+	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
+}
+
+func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
+	ipv4IsService := false
+	if s.IPIsService != nil {
+		ipv4IsService = *s.IPIsService
+	}
+	ipv6IsService := false
+	if s.IP6IsService != nil {
+		ipv6IsService = *s.IP6IsService
+	}
+	upgraded := ServerV40{
+		CommonServerProperties: s.CommonServerProperties,
+	}
+
+	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
+}
+
+// ServerV40 is the representation of a Server in version 3.1 of the Traffic Ops API
+type ServerV40 struct {
 	CommonServerProperties
+	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
+	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
+}
+
+// ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
+type ServerV30 struct {
+	CommonServerProperties
+	RouterHostName    *string               `json:"routerHostName" db:"router_host_name"`
+	RouterPortName    *string               `json:"routerPortName" db:"router_port_name"`
 	Interfaces        []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time            `json:"statusLastUpdated" db:"status_last_updated"`
 }
 
-// ServerV30 is the server struct to be used by the TO API
-type ServerV30 ServerNullable
+// ServerNullable represents an ATC server, as returned by the TO API.
+// Deprecated: please use versioned structures instead of this alias from now on.
+type ServerNullable ServerV30
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
 // if possible. If the conversion could not be performed, an error is returned.
 func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
+	nullable := ServerV30(*s)
+	return nullable.ToServerV2()
+}
+
+// ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
+// if possible. If the conversion could not be performed, an error is returned.
+func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
 			CommonServerProperties: s.CommonServerProperties,
@@ -774,6 +1015,79 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
 	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
 
+	return legacyServer, nil
+}
+
+func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+	routerHostName := ""
+	routerPortName := ""
+	interfaces := make([]ServerInterfaceInfo, 0)
+	i := ServerInterfaceInfo{}
+	for _, in := range s.Interfaces {
+		i.Name = in.Name
+		i.MTU = in.MTU
+		i.MaxBandwidth = in.MaxBandwidth
+		i.Monitor = in.Monitor
+		i.IPAddresses = in.IPAddresses
+		for _, ip := range i.IPAddresses {
+			if ip.ServiceAddress {
+				routerHostName = in.RouterHostName
+				routerPortName = in.RouterPortName
+			}
+		}
+		interfaces = append(interfaces, i)
+	}
+	serverV30 := ServerV30{
+		CommonServerProperties: s.CommonServerProperties,
+		Interfaces:             interfaces,
+		StatusLastUpdated:      s.StatusLastUpdated,
+	}
+	if len(s.Interfaces) != 0 {
+		serverV30.RouterHostName = &routerHostName
+		serverV30.RouterPortName = &routerPortName
+	}
+	return serverV30, nil
+}
+
+func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+	routerHostName := ""
+	routerPortName := ""
+	legacyServer := ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: s.CommonServerProperties,
+		},
+		IPIsService:  new(bool),
+		IP6IsService: new(bool),
+	}
+
+	interfaces := make([]ServerInterfaceInfo, 0)
+	i := ServerInterfaceInfo{}
+	for _, in := range s.Interfaces {
+		i.Name = in.Name
+		i.MTU = in.MTU
+		i.MaxBandwidth = in.MaxBandwidth
+		i.Monitor = in.Monitor
+		i.IPAddresses = in.IPAddresses
+		for _, ip := range i.IPAddresses {
+			if ip.ServiceAddress {
+				routerHostName = in.RouterHostName
+				routerPortName = in.RouterPortName
+			}
+		}
+		interfaces = append(interfaces, i)
+	}
+	var err error
+	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(interfaces)
+	if err != nil {
+		return legacyServer, err
+	}
+
+	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
+	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
+	if len(s.Interfaces) != 0 {
+		legacyServer.RouterHostName = &routerHostName
+		legacyServer.RouterPortName = &routerPortName
+	}
 	return legacyServer, nil
 }
 
@@ -799,6 +1113,8 @@ type ServerInfo struct {
 	CDNID        int
 	DomainName   string
 	HostName     string
+	ID           int
+	Status       string
 	Type         string
 }
 
@@ -825,8 +1141,6 @@ type ServerDetail struct {
 	Profile            *string           `json:"profile" db:"profile"`
 	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
 	Rack               *string           `json:"rack" db:"rack"`
-	RouterHostName     *string           `json:"routerHostName" db:"router_host_name"`
-	RouterPortName     *string           `json:"routerPortName" db:"router_port_name"`
 	Status             *string           `json:"status" db:"status"`
 	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
 	Type               string            `json:"type" db:"server_type"`

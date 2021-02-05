@@ -1,0 +1,23 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "DeleteStatuses",
+            "Route": "/statuses",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/statuses/",
+                    "getRequest": [
+                        {
+                            "route": "/statuses",
+                            "queryKey": "name",
+                            "queryValue": "TPStatus2",
+                            "replace": "route"
+                        }
+                    ]   
+                }
+            ]
+        }
+
+    ]
+}

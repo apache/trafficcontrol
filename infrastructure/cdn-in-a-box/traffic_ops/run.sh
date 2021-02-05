@@ -36,7 +36,7 @@
 envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS X509_CA_DIR TLD_DOMAIN INFRA_SUBDOMAIN CDN_SUBDOMAIN DS_HOSTS)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh
@@ -116,6 +116,9 @@ cd $TO_DIR && \
 
 cd $TO_DIR || exit 1;
 
+touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" /var/log/traffic_ops/perl_access.log
+tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" /var/log/traffic_ops/perl_access.log &
+
 if [[ "$TO_PERL_DEBUG_ENABLE" == true ]]; then
   set -o allexport;
   PERL5_DEBUG_HOST=0.0.0.0;
@@ -143,4 +146,4 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
-exec tail -f /var/log/traffic_ops/traffic_ops.log
+exec tail -f /dev/null

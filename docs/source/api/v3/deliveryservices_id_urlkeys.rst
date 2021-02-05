@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-.. seealso:: :ref:`to-api-deliveryservices-xmlid-xmlid-urlkeys`
+.. seealso:: :ref:`to-api-v3-deliveryservices-xmlid-xmlid-urlkeys`
 
 Retrieves URL signing keys for a :term:`Delivery Service`.
 

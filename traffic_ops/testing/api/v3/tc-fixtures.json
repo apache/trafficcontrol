@@ -179,7 +179,8 @@
             "longitude": 0,
             "name": "topology-mid-cg-04",
             "shortName": "tm4",
-            "typeName": "MID_LOC"
+            "typeName": "MID_LOC",
+            "parentCachegroupName": "multiOriginCachegroup"
         },
         {
             "latitude": 0,
@@ -427,7 +428,8 @@
             "tenantName": "tenant1",
             "type": "HTTP",
             "xmlId": "ds1",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -495,7 +497,8 @@
             "tenantName": "tenant2",
             "type": "HTTP_LIVE",
             "xmlId": "ds2",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -563,7 +566,8 @@
             "tenantName": "tenant3",
             "type": "HTTP_LIVE",
             "xmlId": "ds3",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -621,7 +625,8 @@
             "tenantName": "tenant3",
             "type": "ANY_MAP",
             "xmlId": "anymap-ds",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -680,7 +685,8 @@
             "trResponseHeaders": "Access-Control-Allow-Origin: *\nContent-Type: text/html; charset=utf-8",
             "type": "HTTP_LIVE",
             "xmlId": "ds-test-minor-versions",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -747,7 +753,8 @@
             "tenantName": "tenant1",
             "type": "HTTP_LIVE",
             "xmlId": "msods1",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -814,7 +821,8 @@
             "tenantName": "tenant1",
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds1nat",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -881,7 +889,8 @@
             "topology": "mso-topology",
             "firstHeaderRewrite": "first header rewrite",
             "innerHeaderRewrite": "inner header rewrite",
-            "lastHeaderRewrite": "last header rewrite"
+            "lastHeaderRewrite": "last header rewrite",
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -945,7 +954,8 @@
             "topology": "top-for-ds-req",
             "type": "HTTP",
             "xmlId": "ds-top-req-cap",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1009,7 +1019,8 @@
             "topology": "top-for-ds-req2",
             "type": "HTTP",
             "xmlId": "ds-top-req-cap2",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1072,7 +1083,8 @@
             "tenantName": "tenant1",
             "type": "CLIENT_STEERING",
             "xmlId": "ds-client-steering",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1136,7 +1148,8 @@
             "topology": "forked-topology",
             "type": "HTTP",
             "xmlId": "ds-forked-topology",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1200,7 +1213,73 @@
             "topology": "top-used-by-cdn1-and-cdn2",
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn1",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "cdnName": "cdn1",
+            "cacheurl": "",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "top-ds-in-cdn1",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds-based-top-with-no-mids\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "topology": "top-with-no-mids",
+            "type": "HTTP",
+            "xmlId": "ds-based-top-with-no-mids",
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": true,
@@ -1264,7 +1343,8 @@
             "topology": "top-used-by-cdn1-and-cdn2",
             "type": "HTTP",
             "xmlId": "top-ds-in-cdn2",
-            "anonymousBlockingEnabled": false
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
         },
         {
             "active": false,
@@ -1331,7 +1411,32 @@
             "tenantName": "tenant1",
             "type": "HTTP",
             "xmlId": "inactiveds",
-            "anonymousBlockingEnabled": true
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "anonymousBlockingEnabled": false,
+            "cdnName": "cdn1",
+            "displayName": "test",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": false,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "https://example.com",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenant": "tenant1",
+            "type": "HTTP",
+            "xmlId": "test-ds-server-assignments",
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [
@@ -1569,6 +1674,24 @@
             "name": "CONFIG proxy.config.cache.control.filename",
             "secure": false,
             "value": "STRING cache.config"
+        },
+        {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "5."
+        },
+        {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "0"
+        },
+        {
+            "configFile": "parent.config",
+            "name": "weight",
+            "secure": false,
+            "value": "-2.0e3"
         },
         {
             "configFile": "plugin.config",
@@ -2142,6 +2265,13 @@
             "description": "mso origin description",
             "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
             "name": "MSO",
+            "routing_disabled": false,
+            "type": "ORG_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "mso origin description",
+            "name": "MSO-CDN2",
             "routing_disabled": false,
             "type": "ORG_PROFILE"
         },
@@ -2733,7 +2863,7 @@
             "xmppPasswd": "X"
         },
         {
-            "cachegroup": "cachegroup1",
+            "cachegroup": "parentCachegroup",
             "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
@@ -2770,7 +2900,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profile": "MID1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
@@ -2971,14 +3101,63 @@
             "physLocation": "Denver",
             "profile": "MSO",
             "rack": "RR 119.02",
-            "revalPending": false,
+            "revalPending": true,
             "routerHostName": "",
             "routerPortName": "",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "ORG",
-            "updPending": false,
+            "updPending": true,
             "xmppId": "denver-mso-org-01\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "multiOriginCachegroup",
+            "cdnName": "cdn2",
+            "domainName": "ga.denver.kabletown.net",
+            "guid": null,
+            "hostName": "denver-mso-org-02",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.1/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:8::20/64",
+                            "gateway": "2345:1234:12:8::20",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "MSO-CDN2",
+            "rack": "RR 119.02",
+            "revalPending": true,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "ORG",
+            "updPending": true,
+            "xmppId": "denver-mso-org-02\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {
@@ -4143,11 +4322,11 @@
             "physLocation": "Denver",
             "profile": "CDN2_MID",
             "rack": "RR 119.02",
-            "revalPending": false,
-            "status": "REPORTED",
+            "revalPending": true,
+            "status": "OFFLINE",
             "tcpPort": 80,
             "type": "MID",
-            "updPending": false
+            "updPending": true
         },
         {
             "cachegroup": "topology-mid-cg-06",
@@ -4215,6 +4394,31 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
+            "updPending": false
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "test-ds-server-assignments",
+            "hostName": "test-ds-server-assignments",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "name": "eth0",
+                    "ipAddresses": [
+                        {
+                            "address": "198.51.100.1",
+                            "serviceAddress": true
+                        }
+                    ]
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "revalPending": false,
+            "status": "ONLINE",
+            "tcpPort": 80,
+            "type": "EDGE",
             "updPending": false
         }
     ],
@@ -4575,6 +4779,12 @@
                 },
                 {
                     "cachegroup": "topology-mid-cg-07",
+                    "parents": [
+                        9
+                    ]
+                },
+                {
+                    "cachegroup": "multiOriginCachegroup",
                     "parents": []
                 }
             ]
@@ -4630,6 +4840,16 @@
                 {
                     "cachegroup": "dtrc3",
                     "parents": [0]
+                }
+            ]
+        },
+        {
+            "name": "top-with-no-mids",
+            "description": "A topology that has no MID_LOC cachegroups",
+            "nodes": [
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": []
                 }
             ]
         }

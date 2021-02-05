@@ -47,7 +47,7 @@ Installing The Developer Environment
 ====================================
 #. Clone the traffic_control repository using Git into a location accessible by your $GOPATH
 #. Navigate to the traffic_ops/client directory of your cloned repository. (This is the directory containing Traffic Ops client code used by Traffic Stats)
-#. From the traffic_ops/client directory run ``go test`` to test the client code. This will run all unit tests for the client and return the results. If there are missing dependencies you will need to run ``go get <dependency name>`` to get the dependency
+#. From the traffic_ops/client directory run ``go test`` to test the client code. This will run all unit tests for the client and return the results. If there are missing dependencies you will need to run ``go mod vendor -v`` to get the dependencies
 #. Once the tests pass, run ``go install`` to build and install the Traffic Ops client package. This makes it accessible to Traffic Stats.
 #. Navigate to your cloned repository under Traffic Stats
-#. Run ``go build traffic_stats.go`` to build traffic_stats.  You will need to run ``go get`` for any missing dependencies.
+#. Run ``go build traffic_stats.go`` to build traffic_stats.  You will need to run ``go mod vendor -v`` for any missing dependencies.

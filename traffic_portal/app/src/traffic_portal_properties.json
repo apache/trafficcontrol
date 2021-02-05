@@ -142,7 +142,8 @@
           "ccrDnsTtl": 30,
           "regionalGeoBlocking": false,
           "anonymousBlockingEnabled": false,
-          "ecsEnabled": false
+          "ecsEnabled": false,
+          "maxRequestHeaderBytes": 0
         },
         "HTTP": {
           "routingName": "cdn",
@@ -164,7 +165,8 @@
           "ccrDnsTtl": 3600,
           "anonymousBlockingEnabled": false,
           "consistentHashQueryParams": [],
-          "ecsEnabled": false
+          "ecsEnabled": false,
+          "maxRequestHeaderBytes": 0
         },
         "STEERING": {
           "dscp": 0,

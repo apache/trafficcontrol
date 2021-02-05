@@ -13,12 +13,12 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-servers:
+.. _to-api-v3-deliveryservices-id-servers:
 
 ***********************************
 ``deliveryservices/{{ID}}/servers``
 ***********************************
-.. caution:: It's often much easier to use :ref:`to-api-deliveryservices-xmlid-servers` instead
+.. caution:: It's often much easier to use :ref:`to-api-v3-deliveryservices-xmlid-servers` instead
 
 ``GET``
 =======

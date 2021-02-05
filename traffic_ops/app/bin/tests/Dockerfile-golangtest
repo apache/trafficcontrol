@@ -38,10 +38,11 @@ ENV PATH="${PATH}:${GOPATH}/bin"
 ADD traffic_ops /go/src/$DIR/traffic_ops
 ADD lib /go/src/$DIR/lib
 ADD traffic_monitor /go/src/$DIR/traffic_monitor
+ADD go.mod go.sum /go/src/$DIR/
 ADD vendor /go/src/$DIR/vendor
 
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 
-CMD bash -c 'go get -v && go test -cover -v ./... ../../lib/go-tc/...'
+CMD bash -c 'go mod vendor -v && go test -cover -v ./... ../../lib/go-tc/...'
 #
 # vi:syntax=Dockerfile

@@ -65,7 +65,7 @@ describe('Traffic Portal Cache Groups Test Suite', function() {
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#cacheGroupsTable tr:first-child td'));
+		let tableColumns = element.all(by.css('#cacheGroupsTable tr:first-child th'));
 		expect(tableColumns.count()).toBe(6);
 	});
 

@@ -17,6 +17,11 @@
 
 name: CDN-in-a-Box CI
 
+env:
+  RHEL_VERSION: 8
+  # alpine:3.13
+  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+
 on:
   push:
     paths-ignore:
@@ -112,6 +117,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/**/package*.json traffic_portal/bower.json') }}-
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -206,24 +218,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Cache Alpine Docker image
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/docker-images
+          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+      - name: Import cached Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Download RPMs
         uses: actions/download-artifact@v2
         with:
           path: ${{ github.workspace }}/dist/
       - name: Cache Perl modules
-        env:
-          RHEL_VERSION: 8
         uses: actions/cache@v2
         with:
-          path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic_ops/local
-          key: ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
-          restore-keys: |
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-${{ hashFiles('**/perllocal.pod') }}
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('cache/**.tar.gz') }}-
-            ${{ runner.os }}-cpan-centos-${{ env.RHEL_VERSION }}-
+          path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-${{ env.RHEL_VERSION }}/local
+          key: ${{ runner.os }}-perl-cache-centos-${{ env.RHEL_VERSION }}-${{ hashFiles('traffic_ops/app/cpanfile') }}
       - name: Build CDN-in-a-Box images
-        env:
-          RHEL_VERSION: 8
         uses: ./.github/actions/build-ciab
       - name: Start CDN-in-a-Box
         uses: ./.github/actions/run-ciab
@@ -233,3 +244,5 @@ jobs:
           name: ciab-logs
           path: infrastructure/cdn-in-a-box/logs/*.log
         if: ${{ failure() }}
+      - name: Save Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestUsers(t *testing.T) {
@@ -378,6 +378,10 @@ func UpdateTestUsers(t *testing.T) {
 	if *updatedUser.City != newCity {
 		t.Errorf("results do not match actual: %s, expected: %s", *updatedUser.City, newCity)
 	}
+	if resp[0].RegistrationSent != resp2[0].RegistrationSent {
+		t.Errorf("registration_sent value shouldn't have been updated, expectd: %s, got: %s", resp[0].RegistrationSent, resp2[0].RegistrationSent)
+	}
+
 }
 
 func GetTestUsers(t *testing.T) {

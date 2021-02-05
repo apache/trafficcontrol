@@ -56,6 +56,12 @@ Built: %(date) by %{getenv: USER}
 %setup
 
 %build
+		set -o nounset
+		# copy LICENSE
+		cp "${TC_DIR}/LICENSE" %{_builddir}
+		# avoid detecting LICENSE as an unpackaged RPM file
+		rm LICENSE
+
 		# update version referenced in the source
 		sed -i.bak 's/__VERSION__/%{version}-%{release}/g' app/lib/UI/Utils.pm
 
@@ -205,6 +211,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
+%license ../LICENSE
 %defattr(644,root,root,755)
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/config2json
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/extensions

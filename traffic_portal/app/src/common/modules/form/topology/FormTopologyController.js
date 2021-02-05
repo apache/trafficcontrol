@@ -106,6 +106,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
+	$scope.clone = function(topology) {
+		locationUtils.navigateToPath('/topologies/clone?name=' + topology.name);
+	};
+
 	$scope.viewCacheGroups = function() {
 		$location.path('/topologies/cache-groups');
 	};
@@ -185,14 +189,6 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.toggle = function(scope) {
 		scope.toggle();
-	};
-
-	$scope.nodeError = function(node) {
-		// only EDGE_LOCs can serve as a leaf node on the topology
-		if (node.type !== 'EDGE_LOC' && node.children.length === 0) {
-			return node.type + ' requires 1+ child cache group';
-		}
-		return '';
 	};
 
 	$scope.nodeWarning = function(node) {

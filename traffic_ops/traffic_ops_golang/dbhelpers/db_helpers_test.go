@@ -149,72 +149,80 @@ func TestGetCacheGroupByName(t *testing.T) {
 }
 
 // createServerInterfaces takes in a cache id and creates the interfaces/ipaddresses for it
-func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
-	return []tc.ServerInterfaceInfo{
+func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfoV40 {
+	return []tc.ServerInterfaceInfoV40{
 		{
-			IPAddresses: []tc.ServerIPAddress{
-				{
-					Address:        "5.6.7.8",
-					Gateway:        util.StrPtr("5.6.7.0/24"),
-					ServiceAddress: true,
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "5.6.7.8",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2020::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "5.6.7.9",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
+					},
 				},
-				{
-					Address:        "2020::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: true,
-				},
-				{
-					Address:        "5.6.7.9",
-					Gateway:        util.StrPtr("5.6.7.0/24"),
-					ServiceAddress: false,
-				},
-				{
-					Address:        "2021::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: false,
-				},
+				MaxBandwidth: util.Uint64Ptr(2500),
+				Monitor:      true,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "interfaceName" + strconv.Itoa(cacheID),
 			},
-			MaxBandwidth: util.Uint64Ptr(2500),
-			Monitor:      true,
-			MTU:          util.Uint64Ptr(1500),
-			Name:         "interfaceName" + strconv.Itoa(cacheID),
+			RouterHostName: "",
+			RouterPortName: "",
 		},
 		{
-			IPAddresses: []tc.ServerIPAddress{
-				{
-					Address:        "6.7.8.9",
-					Gateway:        util.StrPtr("6.7.8.0/24"),
-					ServiceAddress: true,
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "6.7.8.9",
+						Gateway:        util.StrPtr("6.7.8.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd54::9"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "6.6.7.9",
+						Gateway:        util.StrPtr("6.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2022::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
+					},
 				},
-				{
-					Address:        "2021::4",
-					Gateway:        util.StrPtr("fd54::9"),
-					ServiceAddress: true,
-				},
-				{
-					Address:        "6.6.7.9",
-					Gateway:        util.StrPtr("6.6.7.0/24"),
-					ServiceAddress: false,
-				},
-				{
-					Address:        "2022::4",
-					Gateway:        util.StrPtr("fd53::9"),
-					ServiceAddress: false,
-				},
+				MaxBandwidth: util.Uint64Ptr(1500),
+				Monitor:      false,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "interfaceName2" + strconv.Itoa(cacheID),
 			},
-			MaxBandwidth: util.Uint64Ptr(1500),
-			Monitor:      false,
-			MTU:          util.Uint64Ptr(1500),
-			Name:         "interfaceName2" + strconv.Itoa(cacheID),
+			RouterHostName: "",
+			RouterPortName: "",
 		},
 	}
 }
 
-func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
-	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
+func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfoV40) {
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	for _, interf := range serverInterfaces {
-		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID)
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID, interf.RouterHostName, interf.RouterPortName)
 		for _, ip := range interf.IPAddresses {
 			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
 		}
@@ -372,23 +380,27 @@ func TestGetCDNIDFromName(t *testing.T) {
 				"id",
 			})
 			mock.ExpectBegin()
+			expectedIDValue := 3
 			if testCase.storageError != nil {
 				mock.ExpectQuery("SELECT").WillReturnError(testCase.storageError)
 			} else {
 				if testCase.found {
-					rows = rows.AddRow(1)
+					rows = rows.AddRow(expectedIDValue)
 				}
 				mock.ExpectQuery("SELECT").WillReturnRows(rows)
 			}
 			mock.ExpectCommit()
-			_, exists, err := GetCDNIDFromName(db.MustBegin().Tx, "testCdn")
-			if testCase.storageError != nil && err == nil {
+			id, exists, err := GetCDNIDFromName(db.MustBegin().Tx, "testCdn")
+			if testCase.storageError != nil && err == nil && id == expectedIDValue {
 				t.Errorf("Storage error expected: received no storage error")
 			}
-			if testCase.storageError == nil && err != nil {
+			if testCase.storageError == nil && err != nil && id == expectedIDValue {
 				t.Errorf("Storage error not expected: received storage error")
 			}
-			if testCase.found != exists {
+			if exists && testCase.storageError == nil && err == nil && id != expectedIDValue {
+				t.Errorf("Expected ID %d, but got %d", expectedIDValue, id)
+			}
+			if testCase.found != exists && id == 0 {
 				t.Errorf("Expected return exists: %t, actual %t", testCase.found, exists)
 			}
 		})

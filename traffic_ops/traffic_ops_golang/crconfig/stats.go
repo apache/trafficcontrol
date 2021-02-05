@@ -25,13 +25,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func makeStats(cdn string, user string, host string, path string, version string) tc.CRConfigStats {
+func makeStats(cdn string, user string, host string, version string) tc.CRConfigStats {
 	epoch := time.Now().Unix()
 	return tc.CRConfigStats{
 		CDNName:         &cdn,
 		DateUnixSeconds: &epoch,
 		TMHost:          &host,
-		TMPath:          &path,
 		TMUser:          &user,
 		TMVersion:       &version,
 	}

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.11
+FROM alpine:3.13
 
 RUN apk add --no-cache --update \
   curl \

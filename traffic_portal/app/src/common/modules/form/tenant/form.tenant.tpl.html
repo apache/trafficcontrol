@@ -25,7 +25,16 @@ under the License.
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button class="btn btn-primary" title="View Users" ng-click="viewUsers()">View Users</button>
-            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDSs()">View Delivery Services</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button name="moreBtn" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    View Delivery Services&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a href="/#!/tenants/{{tenant.id}}/delivery-services">Assigned To Tenant</a></li>
+                    <li role="menuitem"><a href="/#!/tenants/{{tenant.id}}/delivery-services?all=true">Accessible To Tenant</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

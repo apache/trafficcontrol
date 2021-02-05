@@ -91,7 +91,10 @@ class API(TOSession):
 			self.atstccfg_cmd.append("--traffic-ops-disable-proxy")
 		if not conf.verify:
 			self.atstccfg_cmd.append("--traffic-ops-insecure")
-
+		if conf.via_string_release > 0:
+			self.atstccfg_cmd.append("--via-string-release")
+		if conf.disable_parent_config_comments > 0:
+			self.atstccfg_cmd.append("--disable-parent-config-comments")
 
 	def __enter__(self):
 		"""

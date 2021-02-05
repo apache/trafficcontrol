@@ -51,8 +51,8 @@ initBuildArea() {
 	go env
 
 	# get x/* packages (everything else should be properly vendored)
-	go get -v golang.org/x/net/publicsuffix golang.org/x/sys/unix || \
-		{ echo "Could not get go package dependencies"; return 1; }
+	go mod vendor -v || \
+		{ echo "Could not vendor go module dependencies"; return 1; }
 
 	# compile traffic_monitor
 	gcflags=''
@@ -73,6 +73,9 @@ initBuildArea() {
 		 { echo "Could not copy to $tm_dest: $?"; return 1; }
 	cp -av "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
+
+	# include LICENSE in the source RPM
+	cp "${TC_DIR}/LICENSE" "$tm_dest"
 
 	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$tm_dest")" || { echo "Could not create tar archive $tm_dest.tgz: $?"; return 1; }
 	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }

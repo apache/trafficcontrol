@@ -231,7 +231,7 @@ func ExpectedGetAllServers(params map[string]ServerParams, ipIsService bool, ip6
 
 func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string, ipIsService bool, ip6IsService bool) {
 	serverRows := sqlmock.NewRows([]string{"id", "host_name", "cachegroup", "fqdn", "hashid", "https_port", "tcp_port", "profile_name", "routing_disabled", "status", "type", "capabilities"})
-	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"})
 	ipRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	i := 1
 	for name, s := range expected {
@@ -241,7 +241,7 @@ func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cd
 			i++
 			continue
 		}
-		interfaceRows = interfaceRows.AddRow(nil, true, nil, *s.InterfaceName, i)
+		interfaceRows = interfaceRows.AddRow(nil, true, nil, *s.InterfaceName, i, "", "")
 
 		if s.Ip != nil {
 			ipRows = ipRows.AddRow(*s.Ip, nil, ipIsService, *s.InterfaceName, i)

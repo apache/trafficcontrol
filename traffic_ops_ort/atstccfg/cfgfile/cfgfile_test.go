@@ -29,7 +29,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
 )
 
 func TestWriteConfigs(t *testing.T) {
@@ -140,7 +142,14 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	revalOnly := false
 	cfgPath := "/etc/trafficserver/"
 
-	configs, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
+	cfg := config.TCCfg{}
+	cfg.Dir = cfgPath
+	cfg.RevalOnly = revalOnly
+	cfg.TOClient = &toreq.TOClient{}
+	cfg.TOClient.C = &client.Session{}
+	cfg.TOClient.C.URL = ""
+
+	configs, err := GetAllConfigs(toData, "", nil, cfg)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -149,11 +158,10 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 		t.Fatalf("error writing configs: " + err.Error())
 	}
 	configStr := buf.String()
-
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath, "", "", nil)
+		configs2, err := GetAllConfigs(toData, "", nil, cfg)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}

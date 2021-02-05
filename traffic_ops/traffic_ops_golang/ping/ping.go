@@ -20,15 +20,16 @@ package ping
  */
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
-// PingHandler simply returns a canned response to show that the server is responding
-func PingHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		m := map[string]string{"ping": "pong"}
-		enc := json.NewEncoder(w)
-		enc.Encode(m)
-	}
+const pingResponse = `{"ping":"pong"}`
+
+// Handler simply sends a static response to the client to show that the
+// server is responding.
+func Handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append([]byte(pingResponse), '\n'))
 }

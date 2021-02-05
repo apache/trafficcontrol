@@ -39,7 +39,7 @@
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_PERL_SCHEME TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 until [[ -f "$X509_CA_ENV_FILE" ]]
@@ -50,7 +50,7 @@ done
 
 # these expected to be stored in $X509_CA_ENV_FILE, but a race condition could render the contents
 # blank until it gets sync'd.  Ensure vars defined before writing cdn.conf.
-until [[ -n "$X509_GENERATION_COMPLETE" ]]
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
 do
   echo "Waiting on X509 vars to be defined"
   sleep 1
@@ -151,7 +151,16 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "convert_self_signed": false,
         "renew_days_before_expiration": 30,
         "environment": "staging"
-    }
+    },
+    "acme_accounts": [
+        {
+            "acme_provider" : "",
+            "user_email" : "",
+            "acme_url" : "",
+            "kid" : "",
+            "hmac_encoded" : ""
+        }
+    ]
 }
 EOF
 
