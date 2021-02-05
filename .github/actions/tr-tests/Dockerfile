@@ -16,8 +16,8 @@
 FROM alpine@sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
 
 RUN apk add --no-cache \
-		openjdk8=8.252.09-r0 \
-		maven=3.6.3-r0 \
+		openjdk8 \
+		maven \
 		tomcat-native
 
 ENTRYPOINT	cd traffic_router && \
