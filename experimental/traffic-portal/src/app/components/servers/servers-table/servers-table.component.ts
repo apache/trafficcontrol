@@ -155,7 +155,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 			cellRenderer: "sshCellRenderer",
 			field: "ipGateway",
 			filter: true,
-			headerName: "Network Gateway",
+			headerName: "IPv4 Gateway",
 			hide: true,
 			onCellClicked: null
 		},
@@ -163,7 +163,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 			cellRenderer: "sshCellRenderer",
 			field: "ipv4Address",
 			filter: true,
-			headerName: "Network IP",
+			headerName: "IPv4 Address",
 			hide: false,
 			onCellClicked: null
 		},
@@ -175,7 +175,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		},
 		{
 			field: "ipNetmask",
-			headerName: "Network Subnet",
+			headerName: "IPv4 Subnet",
 			hide: true
 		},
 		{
