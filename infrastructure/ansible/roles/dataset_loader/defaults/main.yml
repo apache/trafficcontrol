@@ -1335,7 +1335,7 @@ dl_ds_default_profile_cdntemplates:
         value: "INT {{ (dl_atsec_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
       - name: CONFIG proxy.config.cache.read_while_writer.max_retries
         configFile: records.config
-        value: INT 3
+        value: INT 10
       - name: CONFIG proxy.config.cache.read_while_writer_retry.delay
         configFile: records.config
         value: INT 50
@@ -1452,7 +1452,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.dns.lookup_timeout
         configFile: records.config
-        value: INT 20
+        value: INT 2
       - name: CONFIG proxy.config.dns.max_dns_in_flight
         configFile: records.config
         value: INT 2048
@@ -1647,10 +1647,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.cache.max_open_read_retries
         configFile: records.config
-        value: INT 3
+        value: INT 150
       - name: CONFIG proxy.config.http.cache.max_open_write_retries
         configFile: records.config
-        value: INT 1
+        value: INT 150
       - name: CONFIG proxy.config.http.cache.max_stale_age
         configFile: records.config
         value: INT 604800
@@ -1692,7 +1692,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.connect_attempts_max_retries
         configFile: records.config
-        value: INT 6
+        value: INT 3
       - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
         configFile: records.config
         value: INT 3
@@ -1701,7 +1701,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.connect_attempts_timeout
         configFile: records.config
-        value: INT 10
+        value: INT 3
       - name: CONFIG proxy.config.http.connect_ports
         configFile: records.config
         value: STRING 443 563
@@ -1722,7 +1722,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 10
       - name: CONFIG proxy.config.http.down_server.cache_time
         configFile: records.config
-        value: INT 5
+        value: INT 2
       - name: CONFIG proxy.config.http.enable_http_info
         configFile: records.config
         value: INT 0
@@ -1785,7 +1785,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.negative_caching_lifetime
         configFile: records.config
-        value: INT 1
+        value: INT 2
+      - name: CONFIG proxy.config.http.negative_caching_list
+        configFile: records.config
+        value: STRING 204 305 403 404 405 414 500 501 502 503 504
       - name: CONFIG proxy.config.http.negative_revalidating_enabled
         configFile: records.config
         value: INT 0
@@ -1803,16 +1806,13 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.origin_max_connections
         configFile: records.config
-        value: INT 10000
+        value: INT 500
       - name: CONFIG proxy.config.http.origin_max_connections_queue
         configFile: records.config
-        value: INT 10000
+        value: INT 0
       - name: CONFIG proxy.config.http.origin_min_keep_alive_connections
         configFile: records.config
         value: INT 0
-      - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
-        configFile: records.config
-        value: INT 1
       - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
         configFile: records.config
         value: INT 3
@@ -1830,10 +1830,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.parent_proxy.retry_time
         configFile: records.config
-        value: INT 60
+        value: INT 10
       - name: CONFIG proxy.config.http.parent_proxy.total_connect_attempts
         configFile: records.config
-        value: INT 10
+        value: INT 3
       - name: CONFIG proxy.config.http.parent_proxy_routing_enable
         configFile: records.config
         value: INT 1
@@ -1869,7 +1869,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.request_header_max_size
         configFile: records.config
-        value: INT 131072
+        value: INT 32000
       - name: CONFIG proxy.config.http.response_header_max_size
         configFile: records.config
         value: INT 131072
@@ -1914,10 +1914,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.transaction_no_activity_timeout_in
         configFile: records.config
-        value: INT 30
+        value: INT 5
       - name: CONFIG proxy.config.http.transaction_no_activity_timeout_out
         configFile: records.config
-        value: INT 30
+        value: INT 5
       - name: CONFIG proxy.config.http.uncacheable_requests_bypass_parent
         configFile: records.config
         value: INT 1
@@ -2040,7 +2040,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 10
       - name: CONFIG proxy.config.net.connections_throttle
         configFile: records.config
-        value: INT 500000
+        value: INT 350000
       - name: CONFIG proxy.config.net.default_inactivity_timeout
         configFile: records.config
         value: INT 180
@@ -2058,10 +2058,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT -1
       - name: CONFIG proxy.config.net.max_connections_active_in
         configFile: records.config
-        value: INT 500000
+        value: INT 100000
       - name: CONFIG proxy.config.net.max_connections_in
         configFile: records.config
-        value: INT 500000
+        value: INT 100000
       - name: CONFIG proxy.config.net.poll_timeout
         configFile: records.config
         value: INT 10
@@ -3025,10 +3025,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.cache.max_open_read_retries
         configFile: records.config
-        value: INT 5
+        value: INT 150
       - name: CONFIG proxy.config.http.cache.max_open_write_retries
         configFile: records.config
-        value: INT 1
+        value: INT 150
       - name: CONFIG proxy.config.http.cache.max_stale_age
         configFile: records.config
         value: INT 604800
@@ -3070,7 +3070,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.connect_attempts_max_retries
         configFile: records.config
-        value: INT 6
+        value: INT 3
       - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
         configFile: records.config
         value: INT 3
@@ -3079,7 +3079,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.connect_attempts_timeout
         configFile: records.config
-        value: INT 10
+        value: INT 3
       - name: CONFIG proxy.config.http.connect_ports
         configFile: records.config
         value: STRING 443 563
@@ -3100,7 +3100,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 10
       - name: CONFIG proxy.config.http.down_server.cache_time
         configFile: records.config
-        value: INT 5
+        value: INT 2
       - name: CONFIG proxy.config.http.enable_http_info
         configFile: records.config
         value: INT 0
@@ -3163,7 +3163,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.negative_caching_lifetime
         configFile: records.config
-        value: INT 1
+        value: INT 2
+      - name: CONFIG proxy.config.http.negative_caching_list
+        configFile: records.config
+        value: STRING 204 305 403 404 405 414 500 501 502 503 504
       - name: CONFIG proxy.config.http.negative_revalidating_enabled
         configFile: records.config
         value: INT 0
@@ -3181,16 +3184,16 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.origin_max_connections
         configFile: records.config
-        value: INT 10000
+        value: INT 1500
       - name: CONFIG proxy.config.http.origin_max_connections_queue
         configFile: records.config
-        value: INT 10000
+        value: INT 0
       - name: CONFIG proxy.config.http.origin_min_keep_alive_connections
         configFile: records.config
         value: INT 0
       - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
         configFile: records.config
-        value: INT 5
+        value: INT 1
       - name: CONFIG proxy.config.http.parent_proxy.fail_threshold
         configFile: records.config
         value: INT 10
@@ -3205,7 +3208,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 2
       - name: CONFIG proxy.config.http.parent_proxy.retry_time
         configFile: records.config
-        value: INT 60
+        value: INT 10
       - name: CONFIG proxy.config.http.parent_proxy.total_connect_attempts
         configFile: records.config
         value: INT 4
@@ -3244,7 +3247,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.request_header_max_size
         configFile: records.config
-        value: INT 131072
+        value: INT 32000
       - name: CONFIG proxy.config.http.response_header_max_size
         configFile: records.config
         value: INT 131072
@@ -3262,7 +3265,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.http.server_max_connections
         configFile: records.config
-        value: INT 0
+        value: INT 25000
       - name: CONFIG proxy.config.http.server_ports
         configFile: records.config
         value: STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl
@@ -3289,10 +3292,10 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.http.transaction_no_activity_timeout_in
         configFile: records.config
-        value: INT 30
+        value: INT 5
       - name: CONFIG proxy.config.http.transaction_no_activity_timeout_out
         configFile: records.config
-        value: INT 30
+        value: INT 5
       - name: CONFIG proxy.config.http.uncacheable_requests_bypass_parent
         configFile: records.config
         value: INT 1
@@ -3415,7 +3418,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 10
       - name: CONFIG proxy.config.net.connections_throttle
         configFile: records.config
-        value: INT 500000
+        value: INT 350000
       - name: CONFIG proxy.config.net.default_inactivity_timeout
         configFile: records.config
         value: INT 180
@@ -3430,13 +3433,13 @@ dl_ds_default_profile_cdntemplates:
         value: INT 1
       - name: CONFIG proxy.config.net.listen_backlog
         configFile: records.config
-        value: INT -1
+        value: INT 1024
       - name: CONFIG proxy.config.net.max_connections_active_in
         configFile: records.config
-        value: INT 500000
+        value: INT 100000
       - name: CONFIG proxy.config.net.max_connections_in
         configFile: records.config
-        value: INT 500000
+        value: INT 100000
       - name: CONFIG proxy.config.net.poll_timeout
         configFile: records.config
         value: INT 10
