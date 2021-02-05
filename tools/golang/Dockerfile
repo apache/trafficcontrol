@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.11 AS base
+FROM alpine:3.13 AS base
 
 COPY GO_VERSION /
 RUN set -o errexit; \

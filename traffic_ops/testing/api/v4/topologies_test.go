@@ -41,6 +41,7 @@ func TestTopologies(t *testing.T) {
 		ValidationTestTopologies(t)
 		UpdateValidateTopologyORGServerCacheGroup(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
+		UpdateTopologyName(t)
 	})
 }
 
@@ -291,6 +292,43 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].ID)
 	if err != nil {
 		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
+	}
+}
+
+func UpdateTopologyName(t *testing.T) {
+	currentTopologyName := "top-used-by-cdn1-and-cdn2"
+
+	// Get details on existing topology
+	resp, _, err := TOSession.GetTopologyWithHdr(currentTopologyName, nil)
+	if err != nil {
+		t.Errorf("unable to get topology with name: %v", currentTopologyName)
+	}
+	newTopologyName := "test-topology"
+	resp.Name = newTopologyName
+
+	// Update topology with new name
+	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, *resp)
+	if err != nil {
+		t.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
+	}
+	if updateResponse.Response.Name != newTopologyName {
+		t.Errorf("update topology name failed, expected: %v but got:%v", newTopologyName, updateResponse.Response.Name)
+	}
+
+	//To check whether the primary key change trickled down to DS table
+	resp1, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("top-ds-in-cdn2", nil)
+	if err != nil {
+		t.Errorf("failed to get details on DS: %v", err)
+	}
+	if *resp1[0].Topology != newTopologyName {
+		t.Errorf("topology name change failed to trickle to delivery service table, expected: %v but got:%v", newTopologyName, *resp1[0].Topology)
+	}
+
+	// Set everything back as it was for further testing.
+	resp.Name = currentTopologyName
+	r, _, err := TOSession.UpdateTopology(newTopologyName, *resp)
+	if err != nil {
+		t.Errorf("cannot PUT topology: %v - %v", err, r)
 	}
 }
 

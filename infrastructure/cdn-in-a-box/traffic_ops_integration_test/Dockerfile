@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.11 AS integration-builder
+FROM alpine:3.13 AS integration-builder
 
 COPY GO_VERSION /
 RUN set -o errexit; \
@@ -62,7 +62,7 @@ RUN set -o errexit -o xtrace;\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
     done
 
-FROM alpine:3.11
+FROM alpine:3.13
 
 RUN apk add --no-cache --update \
   curl \

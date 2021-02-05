@@ -30,8 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 type AvailabilityType string
@@ -243,9 +242,6 @@ func TestGetStats(t *testing.T) {
 	}
 	if st.FreeMemoryMB != appData.FreeMemoryMB {
 		t.Fatalf("expected getStats FreeMemoryMB '%+v', actual: '%+v'\n", appData.FreeMemoryMB, st.FreeMemoryMB)
-	}
-	if st.TotalMemoryMB <= 0 {
-		t.Fatalf("expected getStats TotalMemoryMB > 0, actual: '%+v'\n", st.TotalMemoryMB)
 	}
 	if st.Version != appData.Version {
 		t.Fatalf("expected getStats Version '%+v', actual: '%+v'\n", appData.Version, st.Version)
