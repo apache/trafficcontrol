@@ -62,7 +62,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="topology.name" ng-disabled="!settings.isNew" pattern="^[a-zA-Z0-9\-_]+$" required autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" pattern="^[a-zA-Z0-9\-_]+$" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">Alphanumeric, dash, or underscore characters only</small>
                     <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -87,7 +87,8 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$pristine || topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
+                <button ng-if="settings.isNew" type="button" class="btn btn-success" ng-disabled="topologyForm.$pristine || topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
+                <button ng-if="!settings.isNew" type="button" class="btn btn-success" ng-disabled="topologyForm.$pristine || topologyForm.$invalid" ng-click="save(topologyName, topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

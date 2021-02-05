@@ -46,6 +46,7 @@ import (
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
 	Alerts          tc.Alerts `json:"-"`
+	RequestedName   string
 	tc.Topology
 }
 
@@ -89,6 +90,7 @@ func (topology *TOTopology) GetType() string {
 
 // Validate is a requirement of the api.Validator interface.
 func (topology *TOTopology) Validate() error {
+	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
 	rules := validation.Errors{}
 	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
@@ -142,17 +144,17 @@ func (topology *TOTopology) Validate() error {
 	for index, cacheGroup := range cacheGroups {
 		cacheGroupIds[index] = *cacheGroup.ID
 	}
-	dsCDNs, err := dbhelpers.GetDeliveryServiceCDNsByTopology(topology.ReqInfo.Tx.Tx, topology.Name)
+	dsCDNs, err := dbhelpers.GetDeliveryServiceCDNsByTopology(topology.ReqInfo.Tx.Tx, currentTopoName)
 	if err != nil {
 		log.Errorf("validating topology: %v", err)
 		return errors.New("unable to validate topology")
 	}
 	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
-	rules["required capabilities"] = topology.validateDSRequiredCapabilities()
+	rules["required capabilities"] = topology.validateDSRequiredCapabilities(currentTopoName)
 
 	//Get current Topology-CG for the requested change.
 	topoCachegroupNames := topology.getCachegroupNames()
-	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, topology.Name, topoCachegroupNames)
+	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
 	if userErr != nil {
 		return userErr
 	}
@@ -176,6 +178,7 @@ func (topology *TOTopology) Validate() error {
 }
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
+	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
 	where := `WHERE name != :topology_name`
 	query := selectQueryWithParentNames() + where + `
@@ -183,7 +186,7 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 		UNION ` + selectNonTopologyParentCacheGroupsQuery()
 
 	parameters := map[string]interface{}{
-		"topology_name":    topology.Name,
+		"topology_name":    currentTopoName,
 		"edge_type_prefix": strings.ToLower(tc.EdgeTypePrefix) + "%",
 		"mid_type_prefix":  strings.ToLower(tc.MidTypePrefix) + "%",
 	}
@@ -268,12 +271,12 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 	return nodes, topologiesByCacheGroup, nil
 }
 
-func (topology TOTopology) validateDSRequiredCapabilities() error {
+func (topology TOTopology) validateDSRequiredCapabilities(currentTopoName string) error {
 	baseError := errors.New("unable to verify that delivery service required capabilities are satisfied")
 	tx := topology.APIInfo().Tx.Tx
-	dsRequiredCapabilities, dsCDNs, err := getDSRequiredCapabilitiesByTopology(topology.Name, tx)
+	dsRequiredCapabilities, dsCDNs, err := getDSRequiredCapabilitiesByTopology(currentTopoName, tx)
 	if err != nil {
-		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", currentTopoName, err)
 		return baseError
 	}
 	if len(dsRequiredCapabilities) == 0 {
@@ -310,7 +313,7 @@ GROUP BY s.id, s.cdn_id, c.name
 	}
 	cachegroupServers, serverCapabilities, serverCDNs, err := dbhelpers.ScanCachegroupsServerCapabilities(rows)
 	if err != nil {
-		log.Errorf("validating delivery service required capabilities for topology %s: %v", topology.Name, err)
+		log.Errorf("validating delivery service required capabilities for topology %s: %v", currentTopoName, err)
 		return baseError
 	}
 
@@ -395,6 +398,7 @@ func (topology TOTopology) GetKeys() (map[string]interface{}, bool) {
 // SetKeys is a requirement of the api.Updater interface and is called by
 // api.UpdateHandler().
 func (topology *TOTopology) SetKeys(keys map[string]interface{}) {
+	topology.RequestedName = topology.Name
 	topology.Name, _ = keys["name"].(string)
 }
 
@@ -572,10 +576,10 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (topology *TOTopology) setDescription() (error, error, int) {
-	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name)
+func (topology *TOTopology) setTopologyDetails() (error, error, int) {
+	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.RequestedName, topology.Description, topology.Name)
 	if err != nil {
-		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for rows.Next() {
@@ -597,9 +601,6 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
-	if userErr, sysErr, errCode := topology.setDescription(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
-	}
 
 	if err := oldTopology.removeParents(); err != nil {
 		return nil, err, http.StatusInternalServerError
@@ -623,6 +624,9 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		if err := oldTopology.removeNodes(&toRemove); err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
+	}
+	if userErr, sysErr, errCode := topology.setTopologyDetails(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -781,8 +785,9 @@ WHERE tcp.child IN
 func updateQuery() string {
 	query := `
 UPDATE topology t SET
-description = $1
-WHERE t.name = $2
+name = $1,
+description = $2
+WHERE t.name = $3
 RETURNING t.name, t.description, t.last_updated
 `
 	return query

@@ -77,7 +77,6 @@ describe('Traffic Portal Topologies Test Suite', function() {
 			});
 		}).get(0).click();
 		expect(pageData.updateButton.isEnabled()).toBe(false);
-		expect(pageData.name.getAttribute('disabled')).toBe('true');
 		pageData.description.clear().then(function() {
 			pageData.description.sendKeys("Updated description");
 		});

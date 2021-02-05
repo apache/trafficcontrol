@@ -76,16 +76,16 @@ var TopologyUtils = function() {
 		Object.keys(all).forEach(function (guid) {
 			let item = all[guid];
 			if (!('children' in item)) {
-				item.children = []
+				item.children = [];
 			}
 			if (item.parents.length === 0) {
 				item.parent = { name: '', type: '' };
 				item.secParent = { name: '', type: '' };
-				roots.push(item)
+				roots.push(item);
 			} else if (item.parents[0] in all) {
-				let p = all[item.parents[0]]
+				let p = all[item.parents[0]];
 				if (!('children' in p)) {
-					p.children = []
+					p.children = [];
 				}
 				p.children.push(item);
 				// add parent to each node

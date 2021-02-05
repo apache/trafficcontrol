@@ -42,8 +42,8 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
-	this.updateTopology = function(topology) {
-		return $http.put(ENV.api['root'] + 'topologies', topology, { params: { name: topology.name } }).then(
+	this.updateTopology = function(topology, currentName) {
+		return $http.put(ENV.api['root'] + 'topologies', topology, { params: { name: currentName } }).then(
 			function(result) {
 				return result;
 			},
