@@ -20,7 +20,7 @@
 # Apache Traffic Control
 ############################################################
 
-FROM alpine:latest
+FROM alpine:3.13
 
 RUN apk add --no-cache \
     net-tools \
