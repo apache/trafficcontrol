@@ -2471,6 +2471,13 @@ dl_ds_default_profile_cdntemplates:
         configFile: 12M_facts
         value: "/opt/ort"
       - name: location
+        configFile: 40-ats.rules
+        value: "/etc/udev/rules.d/"
+      - name: udev_syncds
+        configFile: 40-ats.rules
+        value: KERNEL=="sd*", DRIVERS=="mpt3sas", PROGRAM="/bin/supermicro_udev_mapper.pl
+          %k", SYMLINK+="ats/%c", OWNER="ats"
+      - name: location
         configFile: 50-ats.rules
         value: "/etc/udev/rules.d/"
       - name: domain_name
