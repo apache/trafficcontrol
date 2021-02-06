@@ -860,7 +860,7 @@ dl_ds_default_profile_layers:
           value: '1.0'
         - name: CONFIG proxy.config.accept_threads
           configFile: records.config
-          value: INT
+          value: INT 3
         - name: CONFIG proxy.config.cache.hostdb.sync_frequency
           configFile: records.config
           value: INT 120
