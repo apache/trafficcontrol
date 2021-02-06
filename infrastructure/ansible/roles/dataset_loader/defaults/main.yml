@@ -830,7 +830,7 @@ dl_ds_default_profile_layers:
         - name: data
           configFile: anymap_hdr_rw.config
           value: cond %{SEND_REQUEST_HDR_HOOK} __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-GLOBAL '%<cque>' __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-ORIGINAL-REQUESTOR '%<chi>' __RETURN__ cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header ATS_ANYMAP_GLOBAL 'Anymap_Global_Match' [L]
-      7:
+      v7:
         - name: LogFormat.Format
           configFile: logging.config
           value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
@@ -840,7 +840,7 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.cop.active_health_checks
           configFile: records.config
           value: INT 3
-      8:
+      v8:
         - name: remap_stats.so -p
           configFile: plugin.config
           value: ''
@@ -903,7 +903,7 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.url_remap.remap_required
           configFile: records.config
           value: INT 0
-      7:
+      v7:
         - name: ramdisk_size
           configFile: grub.conf
           value: ramdisk_size=16777216
@@ -916,7 +916,7 @@ dl_ds_default_profile_layers:
         - name: LOCAL proxy.local.cluster.type
           configFile: records.config
           value: INT 3
-      8:
+      v8:
         - name: CONFIG proxy.config.http.zombie_killer_threshold
           configFile: records.config
           value: INT 0
@@ -2032,7 +2032,7 @@ dl_ds_default_profile_layers:
         - name: location
           configFile: volume.config
           value: "/opt/trafficserver/etc/trafficserver/"
-      7:
+      v7:
         - name: LogFormat.Name
           configFile: logging.config
           value: custom_ats_2
@@ -2150,7 +2150,7 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.snapshot_dir
           configFile: records.config
           value: STRING snapshots
-      8:
+      v8:
         - name: LogFormat.Format
           configFile: logging.yaml
           value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
@@ -2622,25 +2622,25 @@ dl_ds_default_profile_cdntemplates:
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters: "{{ dl_ds_default_profile_layers.common.common + dl_ds_default_profile_layers.common[dl_ds_ats_major_version] + dl_ds_default_profile_layers.edge.common + dl_ds_default_profile_layers.edge[dl_ds_ats_major_version] }}"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
   - name: "ATS_Edge8_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - ATS 8"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters: "{{ dl_ds_default_profile_layers.common.common + dl_ds_default_profile_layers.common[dl_ds_ats_major_version] + dl_ds_default_profile_layers.edge.common + dl_ds_default_profile_layers.edge[dl_ds_ats_major_version] }}"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
   - name: "ATS_Mid7_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 7"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters: "{{ dl_ds_default_profile_layers.common.common + dl_ds_default_profile_layers.common[dl_ds_ats_major_version] + dl_ds_default_profile_layers.mid.common + dl_ds_default_profile_layers.mid[dl_ds_ats_major_version] }}"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
   - name: "ATS_Mid8_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 8"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters: "{{ dl_ds_default_profile_layers.common.common + dl_ds_default_profile_layers.common[dl_ds_ats_major_version] + dl_ds_default_profile_layers.mid.common + dl_ds_default_profile_layers.mid[dl_ds_ats_major_version] }}"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
   - name: "DS_{{ target_xmlId }}_consistenthash"
     description: "MSO {{ target_xmlId }} - consistent hash"
     cdn: "{{ Target_cdn_delegation }}"
