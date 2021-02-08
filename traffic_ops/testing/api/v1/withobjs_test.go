@@ -74,6 +74,7 @@ const (
 	TOExtensions
 	Types
 	Users
+	UsersDeliveryServices
 )
 
 type TCObjFuncs struct {
@@ -115,4 +116,5 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	TOExtensions:                         {CreateTestTOExtensions, DeleteTestTOExtensions},
 	Types:                                {CreateTestTypes, DeleteTestTypes},
 	Users:                                {CreateTestUsers, ForceDeleteTestUsers},
+	UsersDeliveryServices:                {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
 }
