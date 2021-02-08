@@ -424,6 +424,7 @@ func CreateTestBlankFields(t *testing.T) {
 		t.Fatal("should not be able to update server with blank DomainName")
 	}
 }
+
 func CreateTestServerWithoutProfileId(t *testing.T) {
 	params := url.Values{}
 	servers := testData.Servers[19]
@@ -885,6 +886,7 @@ func UpdateTestServers(t *testing.T) {
 
 	originalHostname := *resp.Response[0].HostName
 	originalXMPIDD := *resp.Response[0].XMPPID
+
 	// Creating idParam to get server when hostname changes.
 	id := fmt.Sprintf("%v", *resp.Response[0].ID)
 	idParam := url.Values{}
@@ -895,11 +897,16 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
 	}
 	inf := infs[0]
+	if resp.Response[0].Interfaces[0].MTU == nil {
+		t.Fatalf("got null value for interface MTU related to server %s", hostName)
+	}
+	originalMTU := *resp.Response[0].Interfaces[0].MTU
 
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
 	updatedHostName := "atl-edge-01"
 	updatedXMPPID := "change-it"
+	updatedMTU := uint64(1280)
 
 	// update rack, interfaceName and hostName values on server
 	inf.Name = updatedServerInterface
@@ -907,13 +914,14 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.Interfaces = infs
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
+	remoteServer.Interfaces[0].MTU = &updatedMTU
 
 	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	// Retrieve the server to check rack, interfaceName, hostName values were updated
+	// Retrieve the server to check rack, interfaceName, hostName and MTU values were updated
 	resp, _, err = TOSession.GetServersWithHdr(&idParam, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
@@ -950,9 +958,18 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Cannot test server type change update; server '%s' had nil type ID", hostName)
 	}
 
+	// Check to verify mtu changed
+	if len(respServer.Interfaces) >= 1 {
+		if respServer.Interfaces[0].MTU != nil {
+			if originalMTU == *respServer.Interfaces[0].MTU {
+				t.Errorf("MTU value didn't update. Expected: %v, actual: %v", updatedMTU, originalMTU)
+			}
+		}
+	}
+
 	//Check change in hostname with no change to xmppid
 	if originalHostname == *respServer.HostName && originalXMPIDD == *respServer.XMPPID {
-		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
+		t.Errorf("HostName didn't change. Expected: %s, actual: %s", updatedHostName, originalHostname)
 	}
 
 	//Check to verify XMPPID never gets updated
@@ -962,9 +979,10 @@ func UpdateTestServers(t *testing.T) {
 		t.Logf("error making sure that XMPPID does not get updated, %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
 	}
 
-	//Change back hostname and xmppid to its original name for other tests to pass
+	//Change back hostname, xmppid, mtu to its original name for other tests to pass
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
+	remoteServer.Interfaces[0].MTU = &originalMTU
 	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
