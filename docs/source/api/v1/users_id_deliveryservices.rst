@@ -54,11 +54,6 @@ Response Structure
 ------------------
 :active:                   A boolean that defines :ref:`ds-active`.
 :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:cacheurl:                 A :ref:`ds-cacheurl`
-
-	.. deprecated:: ATCv3.0
-		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
-
 :ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:             Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
