@@ -65,7 +65,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.CoordinateID == nil && origin.Coordinate != nil {
-		coordinates, _, err := to.GetCoordinateByNameWithHdr(*origin.Coordinate, nil)
+		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate, nil)
 		if err != nil {
 			return err
 		}
