@@ -886,7 +886,7 @@ func UpdateTestServers(t *testing.T) {
 
 	originalHostname := *resp.Response[0].HostName
 	originalXMPIDD := *resp.Response[0].XMPPID
-	originalMTU := *resp.Response[0].Interfaces[0].MTU
+
 	// Creating idParam to get server when hostname changes.
 	id := fmt.Sprintf("%v", *resp.Response[0].ID)
 	idParam := url.Values{}
@@ -897,6 +897,10 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
 	}
 	inf := infs[0]
+	if resp.Response[0].Interfaces[0].MTU == nil {
+		t.Fatalf("got null value for interface MTU related to server %s", hostName)
+	}
+	originalMTU := *resp.Response[0].Interfaces[0].MTU
 
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
@@ -955,13 +959,17 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Check to verify mtu changed
-	if originalMTU == *respServer.Interfaces[0].MTU {
-		t.Errorf("MTU value didn't update. Expected: #{*updatedMTU}, actual: #{*originalMTU}")
+	if len(respServer.Interfaces) >= 1 {
+		if respServer.Interfaces[0].MTU != nil {
+			if originalMTU == *respServer.Interfaces[0].MTU {
+				t.Errorf("MTU value didn't update. Expected: %v, actual: %v", updatedMTU, originalMTU)
+			}
+		}
 	}
 
 	//Check change in hostname with no change to xmppid
 	if originalHostname == *respServer.HostName && originalXMPIDD == *respServer.XMPPID {
-		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
+		t.Errorf("HostName didn't change. Expected: %s, actual: %s", updatedHostName, originalHostname)
 	}
 
 	//Check to verify XMPPID never gets updated
