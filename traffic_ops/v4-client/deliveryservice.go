@@ -32,89 +32,75 @@ import (
 const (
 	// API_DELIVERY_SERVICES is the API path on which Traffic Ops serves Delivery Service
 	// information. More specific information is typically found on sub-paths of this.
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
 	APIDeliveryServices = "/deliveryservices"
 
 	// APIDeliveryServiceId is the API path on which Traffic Ops serves information about
 	// a specific Delivery Service identified by an integral, unique identifier. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
 	APIDeliveryServiceID = APIDeliveryServices + "/%v"
 
 	// APIDeliveryServiceHealth is the API path on which Traffic Ops serves information about
 	// the 'health' of a specific Delivery Service identified by an integral, unique identifier. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_health.html
 	APIDeliveryServiceHealth = APIDeliveryServiceID + "/health"
 
 	// APIDeliveryServiceCapacity is the API path on which Traffic Ops serves information about
 	// the 'capacity' of a specific Delivery Service identified by an integral, unique identifier. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_capacity.html
 	APIDeliveryServiceCapacity = APIDeliveryServiceID + "/capacity"
 
 	// APIDeliveryServiceEligibleServers is the API path on which Traffic Ops serves information about
 	// the servers which are eligible to be assigned to a specific Delivery Service identified by an integral,
 	// unique identifier. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the ID of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_servers_eligible.html
 	APIDeliveryServiceEligibleServers = APIDeliveryServiceID + "/servers/eligible"
 
 	// APIDeliveryServicesSafeUpdate is the API path on which Traffic Ops provides the functionality to
 	// update the "safe" subset of properties of a Delivery Service identified by an integral, unique
 	// identifer. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the ID of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_safe.html
 	APIDeliveryServicesSafeUpdate = APIDeliveryServiceID + "/safe"
 
 	// APIDeliveryServiceXMLIDSSLKeys is the API path on which Traffic Ops serves information about
 	// and functionality relating to the SSL keys used by a Delivery Service identified by its XMLID. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the XMLID
 	// of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_sslkeys.html
 	APIDeliveryServiceXMLIDSSLKeys = APIDeliveryServices + "/xmlId/%s/sslkeys"
 
 	// APIDeliveryServiceGenerateSSLKeys is the API path on which Traffic Ops will generate new SSL keys
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_sslkeys_generate.html
 	APIDeliveryServiceGenerateSSLKeys = APIDeliveryServices + "/sslkeys/generate"
 
 	// APIDeliveryServiceURISigningKeys is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URI-signing keys used by a Delivery Service identified
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the XMLID of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_urisignkeys.html
 	APIDeliveryServicesURISigningKeys = APIDeliveryServices + "/%s/urisignkeys"
 
 	// APIDeliveryServicesURLSigKeys is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URL-signing keys used by a Delivery Service identified
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the XMLID of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_urlkeys.html
 	APIDeliveryServicesURLSigKeys = APIDeliveryServices + "/xmlId/%s/urlkeys"
 
 	// APIDeliveryServicesRegexes is the API path on which Traffic Ops serves Delivery Service
 	// 'regex' (Regular Expression) information.
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_regexes.html
 	APIDeliveryServicesRegexes = "/deliveryservices_regexes"
 
 	// APIServerDeliveryServices is the API path on which Traffic Ops serves functionality
 	// related to the associations a specific server and its assigned Delivery Services. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the server of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/servers_id_deliveryservices.html
 	APIServerDeliveryServices = "/servers/%d/deliveryservices"
 
 	// APIDeliveryServiceServer is the API path on which Traffic Ops serves functionality related
 	// to the associations between Delivery Services and their assigned Server(s).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryserviceserver.html
 	APIDeliveryServiceServer = "/deliveryserviceserver"
 
 	// APIDeliveryServicesServers is the API path on which Traffic Ops serves functionality related
 	// to the associations between a Delivery Service and its assigned Server(s).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_servers.html
 	APIDeliveryServicesServers = "/deliveryservices/%s/servers"
 )
 
