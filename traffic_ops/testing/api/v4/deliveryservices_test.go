@@ -625,21 +625,21 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
 	}
 
-	const xmlId = "top-ds-in-cdn2"
-	dses, _, err = TOSession.GetDeliveryServicesV4(nil, url.Values{"xmlId": {xmlId}})
+	const xmlID = "top-ds-in-cdn2"
+	dses, _, err = TOSession.GetDeliveryServicesV4(nil, url.Values{"xmlId": {xmlID}})
 	if err != nil {
-		t.Fatalf("getting Delivery Service %s: %s", xmlId, err.Error())
+		t.Fatalf("getting Delivery Service %s: %s", xmlID, err.Error())
 	}
 	const expectedSize = 1
 	if len(dses) != expectedSize {
-		t.Fatalf("expected %d Delivery Service with xmlId %s but instead received %d Delivery Services", expectedSize, xmlId, len(dses))
+		t.Fatalf("expected %d Delivery Service with xmlId %s but instead received %d Delivery Services", expectedSize, xmlID, len(dses))
 	}
 	ds = dses[0]
 	dsTopology := ds.Topology
 	ds.Topology = nil
 	ds, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
-		t.Fatalf("updating Delivery Service %s: %s", xmlId, err.Error())
+		t.Fatalf("updating Delivery Service %s: %s", xmlID, err.Error())
 	}
 	const cdn1Name = "cdn1"
 	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdn1Name, nil)
@@ -705,7 +705,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	ds.Topology = dsTopology
 	_, reqInf, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err == nil {
-		t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlId, cacheGroupName, *ds.CDNID)
+		t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlID, cacheGroupName, *ds.CDNID)
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("expected %d-level status code but received status code %d", http.StatusBadRequest, reqInf.StatusCode)
@@ -726,7 +726,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 
 	ds, reqInf, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
-		t.Fatalf("updating Delivery Service %s: %s", xmlId, err.Error())
+		t.Fatalf("updating Delivery Service %s: %s", xmlID, err.Error())
 	}
 }
 

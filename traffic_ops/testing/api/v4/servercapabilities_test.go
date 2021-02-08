@@ -64,7 +64,7 @@ func SortTestServerCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i, _ := range resp {
+	for i := range resp {
 		sortedList = append(sortedList, resp[i].Name)
 	}
 

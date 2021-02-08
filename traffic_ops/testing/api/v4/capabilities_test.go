@@ -32,27 +32,27 @@ import (
 // These capabilities are defined during the setup process in todb.go.
 // ANY TIME THOSE ARE CHANGED THIS MUST BE UPDATED.
 var staticCapabilities = []tc.Capability{
-	tc.Capability{
+	{
 		Name:        "all-read",
 		Description: "Full read access",
 	},
-	tc.Capability{
+	{
 		Name:        "all-write",
 		Description: "Full write access",
 	},
-	tc.Capability{
+	{
 		Name:        "cdn-read",
 		Description: "View CDN configuration",
 	},
-	tc.Capability{
+	{
 		Name:        "asns-read",
 		Description: "Read ASNs",
 	},
-	tc.Capability{
+	{
 		Name:        "asns-write",
 		Description: "Write ASNs",
 	},
-	tc.Capability{
+	{
 		Name:        "cache-groups-read",
 		Description: "Read CGs",
 	},
@@ -145,7 +145,7 @@ func GetTestCapabilities(t *testing.T) {
 		}
 	}
 
-	for c, _ := range capMap {
+	for c := range capMap {
 		t.Errorf("Capability '%s' existed in the test data but didn't appear in the response!", c)
 	}
 }

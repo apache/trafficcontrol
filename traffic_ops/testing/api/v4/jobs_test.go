@@ -216,8 +216,8 @@ func CreateTestInvalidJob(t *testing.T) {
 }
 
 func GetTestJobsQueryParams(t *testing.T) {
-	var xmlId interface{} = "ds2"
-	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlId, nil)
+	var xmlID interface{} = "ds2"
+	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlID, nil)
 	if err != nil {
 		t.Fatalf("error getting jobs: %v", err)
 	}

@@ -487,7 +487,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	}
 
 	testCases := []testCase{
-		testCase{
+		{
 			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid delivery service id; deliveryServiceID: -1, requiredCapability: %s", *capabilities[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  util.IntPtr(-1),
@@ -495,7 +495,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			},
 			err: "no deliveryservice.RequiredCapability with that key found",
 		},
-		testCase{
+		{
 			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid required capability; deliveryServiceID: %d, requiredCapability: bogus", *capabilities[0].DeliveryServiceID),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  capabilities[0].DeliveryServiceID,

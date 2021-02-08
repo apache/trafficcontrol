@@ -135,13 +135,13 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 		nullTimeStamp     bool
 	}
 	testCases := []testCase{
-		testCase{
+		{
 			description:       "latest updated timestamp",
 			stat:              nil,
 			errExpected:       false,
 			expectedTimestamp: latestTime,
 		},
-		testCase{
+		{
 			description:   "non-existant stat name",
 			stat:          util.StrPtr("bogus"),
 			errExpected:   false,

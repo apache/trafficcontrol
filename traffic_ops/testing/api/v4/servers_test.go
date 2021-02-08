@@ -49,7 +49,7 @@ func TestServers(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestServersWithHeaders(t, header)
 		CreateTestBlankFields(t)
-		CreateTestServerWithoutProfileId(t)
+		CreateTestServerWithoutProfileID(t)
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
 		LastServerInTopologyCacheGroup(t)
@@ -426,7 +426,7 @@ func CreateTestBlankFields(t *testing.T) {
 	}
 }
 
-func CreateTestServerWithoutProfileId(t *testing.T) {
+func CreateTestServerWithoutProfileID(t *testing.T) {
 	params := url.Values{}
 	servers := testData.Servers[19]
 	params.Set("hostName", *servers.HostName)
@@ -550,18 +550,18 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	foundTopDs := false
 	const (
-		topDsXmlId = "ds-top"
+		topDSXmlID = "ds-top"
 		topology   = "mso-topology"
 	)
 	for _, ds = range dses {
-		if ds.XMLID == nil || *ds.XMLID != topDsXmlId {
+		if ds.XMLID == nil || *ds.XMLID != topDSXmlID {
 			continue
 		}
 		foundTopDs = true
 		break
 	}
 	if !foundTopDs {
-		t.Fatalf("unable to find deliveryservice %s", topDsXmlId)
+		t.Fatalf("unable to find deliveryservice %s", topDSXmlID)
 	}
 
 	/* Create a deliveryservice server assignment that should not show up in the
@@ -581,16 +581,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
 	ds, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
-		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDSXmlID, err)
 	}
 	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
 	if err != nil {
-		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
+		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDSXmlID, err)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
 	ds, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
-		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDSXmlID, err)
 	}
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
@@ -604,10 +604,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	response, _, err := TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsXmlId, err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDSXmlID, err)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsXmlId, err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDSXmlID, err)
 	}
 	for _, server := range response.Response {
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
@@ -625,15 +625,15 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
 	}
 	const originHostname = "denver-mso-org-01"
-	if _, _, err = TOSession.AssignServersToDeliveryService([]string{originHostname}, topDsXmlId); err != nil {
-		t.Fatalf("assigning origin server %s to delivery service %s: %s", originHostname, topDsXmlId, err.Error())
+	if _, _, err = TOSession.AssignServersToDeliveryService([]string{originHostname}, topDSXmlID); err != nil {
+		t.Fatalf("assigning origin server %s to delivery service %s: %s", originHostname, topDSXmlID, err.Error())
 	}
 	response, _, err = TOSession.GetServersWithHdr(&params, nil)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsXmlId, err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDSXmlID, err)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsXmlId, err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDSXmlID, err)
 	}
 	containsOrigin := false
 	for _, server := range response.Response {
@@ -644,7 +644,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		break
 	}
 	if !containsOrigin {
-		t.Fatalf("did not find origin server %s when querying servers by dsId after assigning %s to delivery service %s", originHostname, originHostname, topDsXmlId)
+		t.Fatalf("did not find origin server %s when querying servers by dsId after assigning %s to delivery service %s", originHostname, originHostname, topDSXmlID)
 	}
 
 	const topDsWithNoMids = "ds-based-top-with-no-mids"
@@ -787,7 +787,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	if len(serversResp.Response) < 1 {
 		t.Fatal("expected more than 0 servers")
 	}
-	xmppId := "unique"
+	xmppID := "unique"
 	var server tc.ServerV40
 	for _, s := range serversResp.Response {
 		if len(s.Interfaces) >= 1 && s.Interfaces[0].Monitor {
@@ -813,7 +813,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 			StatusID:     server.StatusID,
 			Type:         server.Type,
 			UpdPending:   util.BoolPtr(false),
-			XMPPID:       &xmppId,
+			XMPPID:       &xmppID,
 		},
 		Interfaces: server.Interfaces,
 	}, nil)
@@ -822,7 +822,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		t.Error("expected an error when updating a server with an ipaddress that already exists on another server with the same profile")
 		// Cleanup, don't want to break other tests
 		pathParams := url.Values{}
-		pathParams.Add("xmppid", xmppId)
+		pathParams.Add("xmppid", xmppID)
 		server, _, err := TOSession.GetServersWithHdr(&pathParams, nil)
 		if err != nil {
 			t.Fatal(err)
