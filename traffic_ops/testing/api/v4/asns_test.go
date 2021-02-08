@@ -94,7 +94,7 @@ func GetTestASNsIMS(t *testing.T) {
 
 func CreateTestASNs(t *testing.T) {
 	var header http.Header
-	resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*testData.CacheGroups[0].Name, header)
+	resp, _, err := TOSession.GetCacheGroupByName(*testData.CacheGroups[0].Name, header)
 	if err != nil {
 		t.Fatalf("unable to get cachgroup ID: %v", err)
 	}
