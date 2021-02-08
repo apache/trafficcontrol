@@ -57,7 +57,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.CachegroupID = cg[0].ID
 	}
 	if needAndCanFetch(server.CDNID, server.CDNName) {
-		c, _, err := to.GetCDNByNameWithHdr(*server.CDNName, nil)
+		c, _, err := to.GetCDNByName(*server.CDNName, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no CDN named %s: %v", *server.CDNName, err)
 		}

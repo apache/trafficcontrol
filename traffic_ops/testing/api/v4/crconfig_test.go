@@ -225,7 +225,7 @@ func SnapshotTestCDNbyID(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the snapshot
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}

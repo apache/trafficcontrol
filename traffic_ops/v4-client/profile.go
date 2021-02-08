@@ -32,7 +32,7 @@ const (
 // CreateProfile creates a Profile.
 func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.CDNID == 0 && pl.CDNName != "" {
-		cdns, _, err := to.GetCDNByNameWithHdr(pl.CDNName, nil)
+		cdns, _, err := to.GetCDNByName(pl.CDNName, nil)
 		if err != nil {
 			return tc.Alerts{}, toclientlib.ReqInf{}, err
 		}

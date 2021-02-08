@@ -345,7 +345,7 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, _, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
+		cdns, _, err := to.GetCDNByName(*ds.CDNName, nil)
 		if err != nil {
 			return tc.DeliveryServiceNullableV30{}, reqInf, err
 		}
@@ -407,7 +407,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, _, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
+		cdns, _, err := to.GetCDNByName(*ds.CDNName, nil)
 		if err != nil {
 			return nil, err
 		}

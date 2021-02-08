@@ -122,19 +122,19 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 		t.Fatal("unable to create cdn: " + err.Error())
 	}
 
-	originalKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
+	originalKeys, _, err := TOSession.GetCDNSSLKeys(cdnName, nil)
 	if err != nil {
 		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
 	}
 
-	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
+	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v: %v", cdnName, err)
 	}
 	if len(cdns) < 1 {
 		t.Fatal("expected more than 0 cdns")
 	}
-	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(cdnName, nil)
+	keys, _, err := TOSession.GetCDNSSLKeys(cdnName, nil)
 	if err != nil {
 		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
 	}
@@ -225,7 +225,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	var oldCDNKeys []tc.CDNSSLKeys
 	for tries < 5 {
 		time.Sleep(time.Second)
-		oldCDNKeys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+		oldCDNKeys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, nil)
 		if err == nil && len(oldCDNKeys) > 0 {
 			break
 		}
@@ -238,7 +238,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least 1 key")
 	}
 
-	newCDNKeys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	newCDNKeys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
 	}
@@ -258,7 +258,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 
 	// Check new CDN still has an ssl key
-	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
+	keys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
 	}
@@ -267,7 +267,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 
 	// Check old CDN does not have ssl key
-	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
+	keys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, nil)
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
 	}
@@ -642,7 +642,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("updating Delivery Service %s: %s", xmlID, err.Error())
 	}
 	const cdn1Name = "cdn1"
-	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdn1Name, nil)
+	cdns, _, err := TOSession.GetCDNByName(cdn1Name, nil)
 	if err != nil {
 		t.Fatalf("getting CDN %s: %s", cdn1Name, err.Error())
 	}

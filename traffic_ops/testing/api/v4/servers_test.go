@@ -63,7 +63,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	const topologyName = "forked-topology"
 	const cdnName = "cdn2"
 	const expectedLength = 1
-	cdns, _, err := TOSession.GetCDNByNameWithHdr(cdnName, nil)
+	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
 	if err != nil {
 		t.Fatalf("unable to GET CDN: %v", err)
 	}
@@ -89,7 +89,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	}
 
 	// attempt to move it to another CDN while it's the last server in the cachegroup in its CDN
-	cdns, _, err = TOSession.GetCDNByNameWithHdr("cdn1", nil)
+	cdns, _, err = TOSession.GetCDNByName("cdn1", nil)
 	if err != nil {
 		t.Fatalf("unable to GET CDN: %v", err)
 	}

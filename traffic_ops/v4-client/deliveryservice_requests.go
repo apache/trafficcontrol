@@ -64,7 +64,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.CDNID == nil && dsr.DeliveryService.CDNName != nil {
-		cdns, reqInf, err := to.GetCDNByNameWithHdr(*dsr.DeliveryService.CDNName, nil)
+		cdns, reqInf, err := to.GetCDNByName(*dsr.DeliveryService.CDNName, nil)
 		if err != nil || len(cdns) == 0 {
 			return created, alerts, reqInf, fmt.Errorf("no CDN named '%s'", *dsr.DeliveryService.CDNName)
 		}
