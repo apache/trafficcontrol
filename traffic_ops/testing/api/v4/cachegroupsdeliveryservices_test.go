@@ -47,7 +47,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName)
+	clientCGs, _, err := TOSession.GetCacheGroupByName(TestEdgeServerCacheGroupName, nil)
 	if err != nil {
 		t.Fatalf("getting cachegroup: %v", err)
 	}
@@ -79,7 +79,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
 	}
 
-	_, reqInf, err := TOSession.SetCachegroupDeliveryServices(cgID, topologyDsIDs)
+	_, reqInf, err := TOSession.SetCacheGroupDeliveryServices(cgID, topologyDsIDs)
 	if err == nil {
 		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
 	}
@@ -87,7 +87,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
+	resp, _, err := TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}
@@ -98,7 +98,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query
 	// failed if any servers with location parameters were already assigned, due to a foreign key
 	// violation. See https://github.com/apache/trafficcontrol/pull/3199
-	resp, _, err = TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
+	resp, _, err = TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}

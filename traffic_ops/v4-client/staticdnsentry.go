@@ -31,7 +31,7 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupNullableByNameWithHdr(sdns.CacheGroupName, nil)
+		p, _, err := to.GetCacheGroupByName(sdns.CacheGroupName, nil)
 		if err != nil {
 			return err
 		}

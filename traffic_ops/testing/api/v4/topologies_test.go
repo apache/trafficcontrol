@@ -282,7 +282,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	cgs, _, err := TOSession.GetCacheGroupNullableByNameWithHdr("cdn1-only", nil)
+	cgs, _, err := TOSession.GetCacheGroupByName("cdn1-only", nil)
 	if err != nil {
 		t.Fatalf("unable to GET cachegroup by name: %v", err)
 	}

@@ -651,7 +651,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	cdn1 := cdns[0]
 	const cacheGroupName = "dtrc1"
-	cachegroups, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(url.Values{"name": {cacheGroupName}}, nil)
+	cachegroups, _, err := TOSession.GetCacheGroups(url.Values{"name": {cacheGroupName}}, nil)
 	if err != nil {
 		t.Fatalf("getting Cache Group %s: %s", cacheGroupName, err.Error())
 	}

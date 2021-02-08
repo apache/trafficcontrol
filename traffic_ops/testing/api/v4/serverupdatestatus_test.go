@@ -407,7 +407,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("unable to find topology node with cachegroup %s", cacheGroupName)
 			}
 
-			cacheGroups, _, err := TOSession.GetCacheGroupNullableByName(cacheGroupName)
+			cacheGroups, _, err := TOSession.GetCacheGroupByName(cacheGroupName, nil)
 			if err != nil {
 				t.Fatalf("unable to get cachegroup %s: %s", cacheGroupName, err.Error())
 			}

@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -154,7 +154,7 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCacheGroupNullable(s)
+	alerts, _, err := toSession.CreateCacheGroup(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("cachegroup %s already exists\n", *s.Name)

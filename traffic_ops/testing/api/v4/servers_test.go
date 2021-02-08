@@ -112,7 +112,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 
 	params = url.Values{}
 	params.Add("name", moveToCacheGroup)
-	cgs, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(params, nil)
+	cgs, _, err := TOSession.GetCacheGroups(params, nil)
 	if err != nil {
 		t.Fatalf("getting cachegroup with hostname %s: %s", moveToCacheGroup, err.Error())
 	}
@@ -761,7 +761,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		params.Del("profileId")
 	}
 
-	cgs, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cgs, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to get Cache Groups: %v", err)
 	}

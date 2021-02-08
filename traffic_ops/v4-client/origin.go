@@ -32,7 +32,7 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupNullableByNameWithHdr(*origin.Cachegroup, nil)
+		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup, nil)
 		if err != nil {
 			return err
 		}
