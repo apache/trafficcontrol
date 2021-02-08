@@ -160,7 +160,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			onCellClicked: null
 		},
 		{
-			headerName: "Network Gateway",
+			headerName: "IPv4 Gateway",
 			field: "ipGateway",
 			hide: true,
 			filter: true,
@@ -168,7 +168,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			onCellClicked: null
 		},
 		{
-			headerName: "Network IP",
+			headerName: "IPv4 Address",
 			field: "ipAddress",
 			hide: false,
 			filter: true,
@@ -182,7 +182,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			filter: "agNumberColumnFilter"
 		},
 		{
-			headerName: "Network Subnet",
+			headerName: "IPv4 Subnet",
 			field: "ipNetmask",
 			hide: true
 		},
