@@ -49,14 +49,14 @@ func TestCDNFederations(t *testing.T) {
 
 func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByIDWithHdr("foo", id, h)
+		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, h)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
 		if fed != nil && len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
-			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "foo", id, h)
+			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, h)
 			if err == nil {
 				t.Errorf("Expected an error saying precondition failed, but got none")
 			}
@@ -119,12 +119,12 @@ func SortTestCDNFederations(t *testing.T) {
 	id := *data.Response.ID
 
 	//Get list of federations for one type of cdn
-	resp, _, err := TOSession.GetCDNFederationsByNameWithHdrReturnList("cdn1", header)
+	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i := range resp {
-		sortedList = append(sortedList, *resp[i].CName)
+	for i := range resp.Response {
+		sortedList = append(sortedList, *resp.Response[i].CName)
 	}
 
 	// Check if list was sorted
@@ -147,21 +147,21 @@ func SortTestCDNFederations(t *testing.T) {
 func UpdateTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
 
 		expectedCName := "new.cname."
 		fed.Response[0].CName = &expectedCName
-		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
+		resp, _, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot PUT federation by id: %v", err)
 		}
 		bytes, _ := json.Marshal(resp)
 		t.Logf("PUT Response: %s\n", bytes)
 
-		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id after PUT: %v", err)
 		}
@@ -185,7 +185,7 @@ func GetTestCDNFederations(t *testing.T) {
 	// clean up fedIDs connection?)
 
 	for _, id := range fedIDs {
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
@@ -313,7 +313,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 		bytes, err := json.Marshal(resp)
 		t.Logf("DELETE Response: %s\n", bytes)
 
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}
