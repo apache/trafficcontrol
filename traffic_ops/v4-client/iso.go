@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	// APIOSVersions is the full path to the /osversions API endpoint.
 	APIOSVersions = "/osversions"
 )
 
