@@ -182,7 +182,7 @@ type DeliveryServiceV40 struct {
 	DeliveryServiceNullableFieldsV11
 }
 
-func DSV40ToV31(v40 DeliveryServiceNullableV40) DeliveryServiceV31 {
+func DSV40ToV31(v40 DeliveryServiceV40) DeliveryServiceV31 {
 	return DeliveryServiceV31{
 		DeliveryServiceV30: DeliveryServiceV30{
 			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
@@ -242,7 +242,6 @@ type DeliveryServiceFieldsV30 struct {
 // type DeliveryServiceNullableV30 DeliveryServiceV32
 // DeliveryServiceV32 = DeliveryServiceV31 + the new fields
 type DeliveryServiceNullableV30 DeliveryServiceV31
-type DeliveryServiceNullableV40 DeliveryServiceV40
 
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
@@ -419,7 +418,7 @@ func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error)
 	return &protocol, &FQDN, port, nil
 }
 
-func (ds *DeliveryServiceNullableV40) Sanitize() {
+func (ds *DeliveryServiceV40) Sanitize() {
 	if ds.GeoLimitCountries != nil {
 		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}
@@ -579,7 +578,7 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullableV40) validateTypeFields(tx *sql.Tx) error {
+func (ds *DeliveryServiceV40) validateTypeFields(tx *sql.Tx) error {
 	// Validate the TypeName related fields below
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
@@ -761,7 +760,7 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullableV40) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceV40) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -830,7 +829,7 @@ func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(errs)
 }
 
-func (ds *DeliveryServiceNullableV40) validateTopologyFields() error {
+func (ds *DeliveryServiceV40) validateTopologyFields() error {
 	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
 		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
 	}

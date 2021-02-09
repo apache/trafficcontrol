@@ -476,7 +476,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
-	ds := tc.DeliveryServiceNullableV40(dsV40)
+	ds := tc.DeliveryServiceV40(dsV40)
 	if err := ds.Validate(tx); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -1285,7 +1285,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40) (*tc.DeliveryServiceV40, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	ds := tc.DeliveryServiceNullableV40(*dsV40)
+	ds := tc.DeliveryServiceV40(*dsV40)
 	if err := ds.Validate(tx); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -2229,7 +2229,7 @@ func getTenantIDV30(tx *sql.Tx, ds *tc.DeliveryServiceNullableV30) (*int, error)
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
-func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV40) (*int, error) {
+func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV40) (*int, error) {
 	if ds.ID == nil && ds.XMLID == nil {
 		return nil, errors.New("delivery service has no ID or XMLID")
 	}
@@ -2241,7 +2241,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV40) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullableV40) (bool, error) {
+func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceV40) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
