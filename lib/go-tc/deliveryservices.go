@@ -56,6 +56,13 @@ type DeliveryServicesResponseV30 struct {
 	Alerts
 }
 
+// DeliveryServicesResponseV40 is the type of a response from the
+// /api/3.0/deliveryservices Traffic Ops endpoint.
+type DeliveryServicesResponseV40 struct {
+	Response []DeliveryServiceV40 `json:"response"`
+	Alerts
+}
+
 // DeliveryServicesNullableResponse ...
 // Deprecated: Please only use the versioned structures.
 type DeliveryServicesNullableResponse struct {

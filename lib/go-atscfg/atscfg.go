@@ -50,7 +50,7 @@ type ServerCapability string
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type Server tc.ServerV30
+type Server tc.ServerV40
 
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
@@ -82,7 +82,7 @@ func OldToDeliveryServices(dses []tc.DeliveryServiceNullable) []DeliveryService 
 }
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServers(servers []tc.ServerV30) []Server {
+func ToServers(servers []tc.ServerV40) []Server {
 	as := []Server{}
 	for _, sv := range servers {
 		as = append(as, Server(sv))

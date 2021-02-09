@@ -42,7 +42,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 )
 
@@ -135,7 +135,7 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 	unsupported := false
 	toAddr := net.Addr(nil)
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
-		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName))
+		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName), nil)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
