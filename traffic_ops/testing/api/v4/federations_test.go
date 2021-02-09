@@ -46,7 +46,7 @@ func GetTestFederationsIMS(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	_, reqInf, err := TOSession.AllFederationsWithHdr(header)
+	_, reqInf, err := TOSession.AllFederations(header)
 	if err != nil {
 		t.Fatalf("No error expected, but got: %v", err)
 	}
@@ -60,7 +60,7 @@ func GetTestFederations(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	feds, _, err := TOSession.AllFederations()
+	feds, _, err := TOSession.AllFederations(nil)
 	if err != nil {
 		t.Errorf("getting federations: " + err.Error())
 	}
@@ -137,7 +137,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	}
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
@@ -154,7 +154,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Make sure it is deleted
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
