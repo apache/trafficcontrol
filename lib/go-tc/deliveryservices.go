@@ -600,3 +600,18 @@ type DeliveryServiceSafeUpdateResponseV30 struct {
 	// been updated.
 	Response []DeliveryServiceNullableV30 `json:"response"`
 }
+
+// DeliveryServiceSafeUpdateResponseV40 represents Traffic Ops's response to a PUT
+// request to its /api/4.0/deliveryservices/{{ID}}/safe endpoint.
+type DeliveryServiceSafeUpdateResponseV40 struct {
+	Alerts
+	// Response contains the representation of the Delivery Service after it has
+	// been updated.
+	Response []DeliveryServiceV40 `json:"response"`
+}
+
+// DeliveryServiceSafeUpdateResponseV4 represents TrafficOps's response to a
+// PUT request to its /api/4.x/deliveryservices/{{ID}}/safe endpoint.
+// This is always a type alias for the structure of a response in the latest
+// minor APIv4 version.
+type DeliveryServiceSafeUpdateResponseV4 = DeliveryServiceSafeUpdateResponseV40
