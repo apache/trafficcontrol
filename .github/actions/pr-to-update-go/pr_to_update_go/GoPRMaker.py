@@ -147,6 +147,16 @@ class GoPRMaker:
                                       f'refs/heads/{branch}').decoded_content.rstrip().decode()
 
     def set_go_version(self, go_version: str, commit_message: str, source_branch_name: str) -> None:
+        try:
+            repo_go_version = self.get_repo_go_version(source_branch_name)
+            if go_version == repo_go_version:
+                print(f'Branch {source_branch_name} already exists')
+                return
+        except GithubException as e:
+            message = e.data.get('message')
+            if not re.match(r'No commit found for the ref', message):
+                raise e
+
         master: Branch = self.repo.get_branch('master')
         sha: str = master.commit.sha
         ref: str = f'refs/heads/{source_branch_name}'
@@ -175,6 +185,14 @@ class GoPRMaker:
 
     def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
                   source_branch_name: str, target_branch: str) -> None:
+        prs: PaginatedList = self.gh.search_issues(f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
+        for list_item in prs:
+            pr: PullRequest = self.repo.get_pull(list_item.number)
+            if pr.head.ref != source_branch_name:
+                continue
+            print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
+            return
+
         milestone_url: str = self.get_go_milestone(latest_go_version)
         pr_body: str = self.get_pr_body(latest_go_version, milestone_url)
         pr: PullRequest = self.repo.create_pull(
