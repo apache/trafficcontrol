@@ -17,7 +17,9 @@
  * under the License.
  */
 
-var NotificationsController = function($scope, cdnService) {
+var NotificationsController = function($scope, $interval, cdnService) {
+
+	let interval;
 
 	let getCDNs = function() {
 		cdnService.getCDNs()
@@ -26,12 +28,28 @@ var NotificationsController = function($scope, cdnService) {
 			});
 	};
 
+	let createInterval = function() {
+		interval = $interval(function() { getCDNs() }, 30000 );
+	};
+
+	let killInterval = function() {
+		if (angular.isDefined(interval)) {
+			$interval.cancel(interval);
+			interval = undefined;
+		}
+	};
+
+	$scope.$on("$destroy", function() {
+		killInterval();
+	});
+
 	let init = function () {
 		getCDNs();
+		createInterval();
 	};
 	init();
 
 };
 
-NotificationsController.$inject = ['$scope', 'cdnService'];
+NotificationsController.$inject = ['$scope', '$interval', 'cdnService'];
 module.exports = NotificationsController;
