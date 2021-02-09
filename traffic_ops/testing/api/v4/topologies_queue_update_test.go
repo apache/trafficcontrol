@@ -48,7 +48,7 @@ func getCDNIDAndDSID(t *testing.T) (int64, int) {
 	xmlID := "ds-top"
 	params := url.Values{}
 	params.Set("xmlId", xmlID)
-	dses, _, err := TOSession.GetDeliveryServicesV4(nil, params)
+	dses, _, err := TOSession.GetDeliveryServices(nil, params)
 	if err != nil {
 		t.Fatalf("unable to get deliveryservice %s: %s", xmlID, err)
 	}

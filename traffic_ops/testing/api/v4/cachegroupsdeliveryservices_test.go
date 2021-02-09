@@ -42,7 +42,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -123,7 +123,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		if serverID == nil {
 			t.Fatalf("got a nil server ID in response, quitting")
 		}
-		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID)
+		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID, nil)
 
 		for _, dsID := range dsIDs {
 			found := false
@@ -141,7 +141,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 }
 
 func setInactive(t *testing.T, dsID int) {
-	ds, _, err := TOSession.GetDeliveryServiceNullableWithHdr(strconv.Itoa(dsID), nil)
+	ds, _, err := TOSession.GetDeliveryServiceByID(strconv.Itoa(dsID), nil)
 	if err != nil {
 		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
 		return
@@ -156,7 +156,7 @@ func setInactive(t *testing.T, dsID int) {
 	}
 	if *ds.Active {
 		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryServiceV4(dsID, *ds, nil)
+		_, _, err = TOSession.UpdateDeliveryService(dsID, *ds, nil)
 		if err != nil {
 			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 		}

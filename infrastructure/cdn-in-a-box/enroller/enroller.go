@@ -199,14 +199,14 @@ func enrollTopology(toSession *session, r io.Reader) error {
 
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.DeliveryServiceNullableV30
+	var s tc.DeliveryServiceV4
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDeliveryServiceV30(s)
+	alerts, _, err := toSession.CreateDeliveryService(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
@@ -233,7 +233,7 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullableWithHdr(*dsrc.XMLID, nil)
+	dses, _, err := toSession.GetDeliveryServiceByXMLID(*dsrc.XMLID, nil)
 	if err != nil {
 		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
 		return err
@@ -270,7 +270,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 
 	params := url.Values{"xmlId": []string{dss.XmlId}}
-	dses, _, err := toSession.GetDeliveryServicesV4(nil, params)
+	dses, _, err := toSession.GetDeliveryServices(nil, params)
 	if err != nil {
 		return err
 	}

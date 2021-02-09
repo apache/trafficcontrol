@@ -45,7 +45,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullableWithHdr(sdns.DeliveryService, nil)
+		dses, _, err := to.GetDeliveryServiceByXMLID(sdns.DeliveryService, nil)
 		if err != nil {
 			return err
 		}

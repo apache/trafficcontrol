@@ -105,13 +105,13 @@ func GetTestFederations(t *testing.T) {
 	}
 }
 
-func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceNullable, tc.DeliveryServiceNullable, error) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, tc.DeliveryServiceV4, error) {
+	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
-		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 	if len(dses) == 0 {
-		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
+		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
 	}
 	ds := dses[0]
 	ds1 := dses[1]

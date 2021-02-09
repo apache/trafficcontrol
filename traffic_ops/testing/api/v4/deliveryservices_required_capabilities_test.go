@@ -51,7 +51,7 @@ func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 }
 
 func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds-top-req-cap2", nil)
+	resp, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top-req-cap2", nil)
 	if err != nil {
 		t.Errorf("getting delivery service by xml ID: %v", err.Error())
 	}
@@ -528,7 +528,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if xmlID == nil {
 		t.Fatal("xml id must not be nil")
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(*xmlID, nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

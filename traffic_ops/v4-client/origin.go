@@ -43,7 +43,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullableWithHdr(*origin.DeliveryService, nil)
+		dses, _, err := to.GetDeliveryServiceByXMLID(*origin.DeliveryService, nil)
 		if err != nil {
 			return err
 		}

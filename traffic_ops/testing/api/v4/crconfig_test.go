@@ -114,7 +114,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if serverID == 0 {
 		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
 	}
-	res, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("anymap-ds")
+	res, _, err := TOSession.GetDeliveryServiceByXMLID("anymap-ds", nil)
 	if err != nil {
 		t.Errorf("GetDeliveryServiceByXMLIDNullable err expected nil, actual %+v", err)
 	}

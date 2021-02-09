@@ -296,7 +296,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery services: %v", err)
 	}
