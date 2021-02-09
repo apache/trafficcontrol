@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Is time to Update Go?
+name: Is it time to update Go?
 
 on:
   schedule:
