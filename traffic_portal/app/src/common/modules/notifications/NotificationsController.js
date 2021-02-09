@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var NotificationsController = function($scope, $interval, cdnService) {
+var NotificationsController = function($scope, $rootScope, $interval, cdnService) {
 
 	let interval;
 
@@ -28,8 +28,12 @@ var NotificationsController = function($scope, $interval, cdnService) {
 			});
 	};
 
+	let updateNotifications = function() {
+		$rootScope.$broadcast('notificationsController::updateNotifications');
+	}
+
 	let createInterval = function() {
-		interval = $interval(function() { getCDNs() }, 30000 );
+		interval = $interval(function() { updateNotifications() }, 30000 );
 	};
 
 	let killInterval = function() {
@@ -43,6 +47,10 @@ var NotificationsController = function($scope, $interval, cdnService) {
 		killInterval();
 	});
 
+	$rootScope.$on('notificationsController::updateNotifications', function() {
+		getCDNs();
+	});
+
 	let init = function () {
 		getCDNs();
 		createInterval();
@@ -51,5 +59,5 @@ var NotificationsController = function($scope, $interval, cdnService) {
 
 };
 
-NotificationsController.$inject = ['$scope', '$interval', 'cdnService'];
+NotificationsController.$inject = ['$scope', '$rootScope', '$interval', 'cdnService'];
 module.exports = NotificationsController;

@@ -228,6 +228,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         $scope.user = angular.copy(userModel.user);
     });
 
+    $rootScope.$on('notificationsController::updateNotifications', function() {
+        getCDNs();
+    });
+
     var init = function () {
         scrollToTop();
         initToggleMenu();
