@@ -145,7 +145,20 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceV40, ReqInf, error) {
+func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+	uri := API_DELIVERY_SERVICES
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+	var data tc.DeliveryServicesResponseV30
+	reqInf, err := to.get(uri, header, &data)
+	return data.Response, reqInf, err
+}
+
+// GetDeliveryServicesV40WithHdr returns all (tenant-visible) Delivery Services that
+// satisfy the passed query string parameters. See the API documentation for
+// information on the available parameters.
+func (to *Session) GetDeliveryServicesV40WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceV40, ReqInf, error) {
 	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
@@ -259,6 +272,61 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.Deliver
 		}
 	}
 	return ret, reqInf, err
+}
+
+func (to *Session) CreateDeliveryServiceV40(ds tc.DeliveryServiceV40) (tc.DeliveryServiceV40, ReqInf, error) {
+	var reqInf ReqInf
+	if ds.TypeID == nil && ds.Type != nil {
+		ty, _, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
+		if err != nil {
+			return tc.DeliveryServiceV40{}, reqInf, err
+		}
+		if len(ty) == 0 {
+			return tc.DeliveryServiceV40{}, reqInf, fmt.Errorf("no type named %s", ds.Type)
+		}
+		ds.TypeID = &ty[0].ID
+	}
+
+	if ds.CDNID == nil && ds.CDNName != nil {
+		cdns, _, err := to.GetCDNByNameWithHdr(*ds.CDNName, nil)
+		if err != nil {
+			return tc.DeliveryServiceV40{}, reqInf, err
+		}
+		if len(cdns) == 0 {
+			return tc.DeliveryServiceV40{}, reqInf, errors.New("no CDN named " + *ds.CDNName)
+		}
+		ds.CDNID = &cdns[0].ID
+	}
+
+	if ds.ProfileID == nil && ds.ProfileName != nil {
+		profiles, _, err := to.GetProfileByNameWithHdr(*ds.ProfileName, nil)
+		if err != nil {
+			return tc.DeliveryServiceV40{}, reqInf, err
+		}
+		if len(profiles) == 0 {
+			return tc.DeliveryServiceV40{}, reqInf, errors.New("no Profile named " + *ds.ProfileName)
+		}
+		ds.ProfileID = &profiles[0].ID
+	}
+
+	if ds.TenantID == nil && ds.Tenant != nil {
+		ten, _, err := to.TenantByNameWithHdr(*ds.Tenant, nil)
+		if err != nil {
+			return tc.DeliveryServiceV40{}, reqInf, err
+		}
+		ds.TenantID = &ten.ID
+	}
+
+	var data tc.DeliveryServicesResponseV40
+	reqInf, err := to.post(API_DELIVERY_SERVICES, ds, nil, &data)
+	if err != nil {
+		return tc.DeliveryServiceV40{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceV40{}, reqInf, fmt.Errorf("failed to create Delivery Service, response indicated %d were created", len(data.Response))
+	}
+
+	return data.Response[0], reqInf, nil
 }
 
 // CreateDeliveryServiceV30 creates the Delivery Service it's passed.
@@ -388,7 +456,20 @@ func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryService
 		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
 	}
 	return data.Response[0], reqInf, nil
+}
 
+// UpdateDeliveryServiceV40WithHdr replaces the Delivery Service identified by the
+// integral, unique identifier 'id' with the one it's passed.
+func (to *Session) UpdateDeliveryServiceV40WithHdr(id int, ds tc.DeliveryServiceV40, header http.Header) (tc.DeliveryServiceV40, ReqInf, error) {
+	var data tc.DeliveryServicesResponseV40
+	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
+	if err != nil {
+		return tc.DeliveryServiceV40{}, reqInf, err
+	}
+	if len(data.Response) != 1 {
+		return tc.DeliveryServiceV40{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
+	}
+	return data.Response[0], reqInf, nil
 }
 
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
