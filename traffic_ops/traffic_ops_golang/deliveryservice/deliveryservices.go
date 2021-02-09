@@ -307,6 +307,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 	resultRows, err := tx.Query(insertQuery(),
 		&ds.Active,
 		&ds.AnonymousBlockingEnabled,
+		&ds.CacheURL,
 		&ds.CCRDNSTTL,
 		&ds.CDNID,
 		&ds.CheckPath,
@@ -426,7 +427,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 
 	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
-	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
@@ -919,6 +920,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 
 	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
+		&ds.CacheURL,
 		&ds.CCRDNSTTL,
 		&ds.CDNID,
 		&ds.CheckPath,
@@ -1032,7 +1034,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		ds.MatchList = &ml
 	}
 
-	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
@@ -1313,6 +1315,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		cdnDomain := ""
 		err := rows.Scan(&ds.Active,
 			&ds.AnonymousBlockingEnabled,
+			&ds.CacheURL,
 			&ds.CCRDNSTTL,
 			&ds.CDNID,
 			&ds.CDNName,
@@ -1574,8 +1577,8 @@ const (
 )
 
 // EnsureParams ensures the given delivery service's necessary parameters exist on profiles of servers assigned to the delivery service.
-// Note the edgeHeaderRewrite, midHeaderRewrite, and regexRemap may be nil, if the delivery service does not have those values.
-func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, signingAlgorithm *string, dsType tc.DSType, maxOriginConns *int) error {
+// Note the edgeHeaderRewrite, midHeaderRewrite, regexRemap, and cacheURL may be nil, if the delivery service does not have those values.
+func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, signingAlgorithm *string, dsType tc.DSType, maxOriginConns *int) error {
 	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, edgeHeaderRewrite, edgeTier, dsType, maxOriginConns); err != nil {
 		return errors.New("creating edge header rewrite parameters: " + err.Error())
 	}
@@ -1584,6 +1587,9 @@ func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string,
 	}
 	if err := ensureRegexRemapParams(tx, dsID, xmlID, regexRemap); err != nil {
 		return errors.New("creating mid regex remap parameters: " + err.Error())
+	}
+	if err := ensureCacheURLParams(tx, dsID, xmlID, cacheURL); err != nil {
+		return errors.New("creating mid cacheurl parameters: " + err.Error())
 	}
 	if err := ensureURLSigParams(tx, dsID, xmlID, signingAlgorithm); err != nil {
 		return errors.New("creating urlsig parameters: " + err.Error())
@@ -1641,6 +1647,18 @@ func ensureURLSigParams(tx *sql.Tx, dsID int, xmlID string, signingAlgorithm *st
 func ensureRegexRemapParams(tx *sql.Tx, dsID int, xmlID string, regexRemap *string) error {
 	configFile := "regex_remap_" + xmlID + ".config"
 	if regexRemap == nil || *regexRemap == "" {
+		return deleteLocationParam(tx, configFile)
+	}
+	locationParamID, err := ensureLocation(tx, configFile)
+	if err != nil {
+		return err
+	}
+	return createDSLocationProfileParams(tx, locationParamID, dsID)
+}
+
+func ensureCacheURLParams(tx *sql.Tx, dsID int, xmlID string, cacheURL *string) error {
+	configFile := "cacheurl_" + xmlID + ".config"
+	if cacheURL == nil || *cacheURL == "" {
 		return deleteLocationParam(tx, configFile)
 	}
 	locationParamID, err := ensureLocation(tx, configFile)
@@ -1816,6 +1834,7 @@ func selectQuery() string {
 SELECT
 ds.active,
 ds.anonymous_blocking_enabled,
+ds.cacheurl,
 ds.ccr_dns_ttl,
 ds.cdn_id,
 cdn.name as cdnName,
@@ -1901,65 +1920,66 @@ func updateDSQuery() string {
 UPDATE
 deliveryservice SET
 active=$1,
-ccr_dns_ttl=$2,
-cdn_id=$3,
-check_path=$4,
-deep_caching_type=$5,
-display_name=$6,
-dns_bypass_cname=$7,
-dns_bypass_ip=$8,
-dns_bypass_ip6=$9,
-dns_bypass_ttl=$10,
-dscp=$11,
-edge_header_rewrite=$12,
-geolimit_redirect_url=$13,
-geo_limit=$14,
-geo_limit_countries=$15,
-geo_provider=$16,
-global_max_mbps=$17,
-global_max_tps=$18,
-fq_pacing_rate=$19,
-http_bypass_fqdn=$20,
-info_url=$21,
-initial_dispersion=$22,
-ipv6_routing_enabled=$23,
-logs_enabled=$24,
-long_desc=$25,
-long_desc_1=$26,
-long_desc_2=$27,
-max_dns_answers=$28,
-mid_header_rewrite=$29,
-miss_lat=$30,
-miss_long=$31,
-multi_site_origin=$32,
-origin_shield=$33,
-profile=$34,
-protocol=$35,
-qstring_ignore=$36,
-range_request_handling=$37,
-regex_remap=$38,
-regional_geo_blocking=$39,
-remap_text=$40,
-routing_name=$41,
-signing_algorithm=$42,
-ssl_key_version=$43,
-tenant_id=$44,
-tr_request_headers=$45,
-tr_response_headers=$46,
-type=$47,
-xml_id=$48,
-anonymous_blocking_enabled=$49,
-consistent_hash_regex=$50,
-max_origin_connections=$51,
-ecs_enabled=$52,
-range_slice_block_size=$53,
-topology=$54,
-first_header_rewrite=$55,
-inner_header_rewrite=$56,
-last_header_rewrite=$57,
-service_category=$58,
-max_request_header_bytes=$59
-WHERE id=$60
+cacheurl=$2,
+ccr_dns_ttl=$3,
+cdn_id=$4,
+check_path=$5,
+deep_caching_type=$6,
+display_name=$7,
+dns_bypass_cname=$8,
+dns_bypass_ip=$9,
+dns_bypass_ip6=$10,
+dns_bypass_ttl=$11,
+dscp=$12,
+edge_header_rewrite=$13,
+geolimit_redirect_url=$14,
+geo_limit=$15,
+geo_limit_countries=$16,
+geo_provider=$17,
+global_max_mbps=$18,
+global_max_tps=$19,
+fq_pacing_rate=$20,
+http_bypass_fqdn=$21,
+info_url=$22,
+initial_dispersion=$23,
+ipv6_routing_enabled=$24,
+logs_enabled=$25,
+long_desc=$26,
+long_desc_1=$27,
+long_desc_2=$28,
+max_dns_answers=$29,
+mid_header_rewrite=$30,
+miss_lat=$31,
+miss_long=$32,
+multi_site_origin=$33,
+origin_shield=$34,
+profile=$35,
+protocol=$36,
+qstring_ignore=$37,
+range_request_handling=$38,
+regex_remap=$39,
+regional_geo_blocking=$40,
+remap_text=$41,
+routing_name=$42,
+signing_algorithm=$43,
+ssl_key_version=$44,
+tenant_id=$45,
+tr_request_headers=$46,
+tr_response_headers=$47,
+type=$48,
+xml_id=$49,
+anonymous_blocking_enabled=$50,
+consistent_hash_regex=$51,
+max_origin_connections=$52,
+ecs_enabled=$53,
+range_slice_block_size=$54,
+topology=$55,
+first_header_rewrite=$56,
+inner_header_rewrite=$57,
+last_header_rewrite=$58,
+service_category=$59,
+max_request_header_bytes=$60
+WHERE id=$61
 RETURNING last_updated
 `
 }
@@ -1969,6 +1989,7 @@ func insertQuery() string {
 INSERT INTO deliveryservice (
 active,
 anonymous_blocking_enabled,
+cacheurl,
 ccr_dns_ttl,
 cdn_id,
 check_path,
@@ -2027,7 +2048,7 @@ last_header_rewrite,
 service_category,
 max_request_header_bytes
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)
 RETURNING id, last_updated
 `
 }
