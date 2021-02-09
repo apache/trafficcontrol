@@ -79,12 +79,14 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(8080)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
+		server.Interfaces = []tc.ServerInterfaceInfoV40{
+			tc.ServerInterfaceInfoV40{
+				ServerInterfaceInfo: tc.ServerInterfaceInfo{
+					IPAddresses: []tc.ServerIPAddress{
+						tc.ServerIPAddress{
+							Address:        "127.0.2.1",
+							ServiceAddress: true,
+						},
 					},
 				},
 			},
@@ -105,12 +107,14 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(80)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
+		server.Interfaces = []tc.ServerInterfaceInfoV40{
+			tc.ServerInterfaceInfoV40{
+				ServerInterfaceInfo: tc.ServerInterfaceInfo{
+					IPAddresses: []tc.ServerIPAddress{
+						tc.ServerIPAddress{
+							Address:        "127.0.2.1",
+							ServiceAddress: true,
+						},
 					},
 				},
 			},
@@ -333,21 +337,25 @@ func randServer() *atscfg.Server {
 	sv.ILOPassword = randStr()
 	sv.ILOUsername = randStr()
 
-	sv.Interfaces = []tc.ServerInterfaceInfo{
-		tc.ServerInterfaceInfo{
-			Name: *randStr(),
-			IPAddresses: []tc.ServerIPAddress{
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
-				},
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
+	sv.Interfaces = []tc.ServerInterfaceInfoV40{
+		tc.ServerInterfaceInfoV40{
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				Name: *randStr(),
+				IPAddresses: []tc.ServerIPAddress{
+					tc.ServerIPAddress{
+						Address:        *randStr(),
+						Gateway:        randStr(),
+						ServiceAddress: true,
+					},
+					tc.ServerIPAddress{
+						Address:        *randStr(),
+						Gateway:        randStr(),
+						ServiceAddress: true,
+					},
 				},
 			},
+			RouterHostName: *randStr(),
+			RouterPortName: *randStr(),
 		},
 	}
 
@@ -363,8 +371,6 @@ func randServer() *atscfg.Server {
 	sv.ProfileID = randInt()
 	sv.Rack = randStr()
 	sv.RevalPending = randBool()
-	sv.RouterHostName = randStr()
-	sv.RouterPortName = randStr()
 	sv.Status = randStr()
 	sv.StatusID = randInt()
 	sv.TCPPort = randInt()
