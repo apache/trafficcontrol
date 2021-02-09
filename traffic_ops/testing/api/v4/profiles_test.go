@@ -17,6 +17,7 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -203,6 +204,7 @@ func CreateTestProfiles(t *testing.T) {
 		}
 		profileID := profiles[0].ID
 
+		params := url.Values{}
 		for _, param := range pr.Parameters {
 			if param.Name == nil || param.Value == nil || param.ConfigFile == nil {
 				t.Errorf("invalid parameter specification: %+v", param)
@@ -216,7 +218,10 @@ func CreateTestProfiles(t *testing.T) {
 					continue
 				}
 			}
-			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
+			params.Set("name", *param.Name)
+			params.Set("configFile", *param.ConfigFile)
+			params.Set("value", *param.Value)
+			p, _, err := TOSession.GetParameters(nil, params)
 			if err != nil {
 				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
 			}
@@ -403,7 +408,7 @@ func DeleteTestProfiles(t *testing.T) {
 		// delete any profile_parameter associations first
 		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter
 		for _, param := range resp[0].Parameters {
-			_, _, err := TOSession.DeleteParameterByID(*param.ID)
+			_, _, err := TOSession.DeleteParameter(*param.ID)
 			if err != nil {
 				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
 			}

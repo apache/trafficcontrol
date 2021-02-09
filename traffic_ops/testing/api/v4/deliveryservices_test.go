@@ -1028,9 +1028,12 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	}
 
 	// clean up parameter created in CreateTestDeliveryServices()
-	params, _, err := TOSession.GetParameterByNameAndConfigFile("location", "remap.config")
+	qParams := url.Values{}
+	qParams.Set("name", "location")
+	qParams.Set("configFile", "remap.config")
+	params, _, err := TOSession.GetParameters(nil, qParams)
 	for _, param := range params {
-		deleted, _, err := TOSession.DeleteParameterByID(param.ID)
+		deleted, _, err := TOSession.DeleteParameter(param.ID)
 		if err != nil {
 			t.Errorf("cannot DELETE parameter by ID (%d): %v - %v", param.ID, err, deleted)
 		}

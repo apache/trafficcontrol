@@ -18,6 +18,7 @@ package v4
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -69,7 +70,7 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to log in with test_user: %v", err.Error())
 	}
-	reqInf, err := client.SnapshotCRConfigWithHdr(testData.CDNs[0].Name, nil)
+	reqInf, err := client.SnapshotCRConfig(testData.CDNs[0].Name, nil)
 	if err == nil {
 		t.Errorf("expected to get an error about a read-only client trying to snap a CDN, but got none")
 	}
@@ -171,7 +172,9 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
 	}
 
-	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
+	params := url.Values{}
+	params.Set("name", tmURLParamName)
+	paramResp, _, err := TOSession.GetParameters(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}
@@ -180,7 +183,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 	tmURLParam := paramResp[0]
 
-	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
+	delResp, _, err := TOSession.DeleteParameter(tmURLParam.ID)
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 	}

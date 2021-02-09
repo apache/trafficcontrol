@@ -52,7 +52,7 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParametersWithHdr(header)
+	parameters, _, err := s.GetParameters(header, nil)
 	if err != nil {
 		return m, err
 	}
@@ -369,7 +369,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameterByID(eparam.ID, p)
+			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, nil)
 			if err != nil {
 				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
 				break

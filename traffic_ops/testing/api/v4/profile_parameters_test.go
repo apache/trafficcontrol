@@ -18,6 +18,7 @@ package v4
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"testing"
@@ -65,7 +66,9 @@ func CreateTestProfileParameters(t *testing.T) {
 	}
 
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByNameWithHdr(firstParameter.Name, nil)
+	params := url.Values{}
+	params.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
