@@ -81,7 +81,7 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService,
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
 		params := url.Values{}
 		params.Set("cdn", strconv.Itoa(cdnID))
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesV30WithHdr(nil, params)
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesV40WithHdr(nil, params)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
