@@ -852,9 +852,33 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	return count > 0, err
 }
 
+// CheckTopologyV30 returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
+// empty with respect to the Delivery Service's CDN.
+func CheckTopologyV30(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
+
+	if ds.Topology == nil {
+		return statusCode, userErr, sysErr
+	}
+
+	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+	}
+	if len(cacheGroupIDs) == 0 {
+		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+	}
+
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, *ds.CDNID, err.Error()), nil
+	}
+
+	return statusCode, userErr, sysErr
+}
+
 // CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
 // empty with respect to the Delivery Service's CDN.
-func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV30) (int, error, error) {
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV40) (int, error, error) {
 	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
 
 	if ds.Topology == nil {

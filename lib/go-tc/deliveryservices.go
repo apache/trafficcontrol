@@ -120,6 +120,7 @@ type DeliveryServiceV13 struct {
 type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
 	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
+	CacheURL                 string                 `json:"cacheurl"`
 	CCRDNSTTL                int                    `json:"ccrDnsTtl"`
 	CDNID                    int                    `json:"cdnId"`
 	CDNName                  string                 `json:"cdnName"`
@@ -261,7 +262,6 @@ type DeliveryServiceNullableV14 struct {
 }
 
 type DeliveryServiceNullableFieldsV14 struct {
-	DeliveryServiceNullableV13
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -761,6 +761,40 @@ func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
+func (ds *DeliveryServiceNullableV40) Validate(tx *sql.Tx) error {
+	ds.Sanitize()
+	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
+		"must be one of 'NEVER' or 'ALWAYS'")
+	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
+	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"active":              validation.Validate(ds.Active, validation.NotNil),
+		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
+		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
+		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
+		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
+		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
+		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
+	})
+	if err := ds.validateTopologyFields(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := ds.validateTypeFields(tx); err != nil {
+		errs = append(errs, errors.New("type fields: "+err.Error()))
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return util.JoinErrs(errs)
+}
 func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
@@ -794,6 +828,16 @@ func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 		return nil
 	}
 	return util.JoinErrs(errs)
+}
+
+func (ds *DeliveryServiceNullableV40) validateTopologyFields() error {
+	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
+		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
+	}
+	if ds.Topology == nil && (ds.FirstHeaderRewrite != nil || ds.InnerHeaderRewrite != nil || ds.LastHeaderRewrite != nil) {
+		return errors.New("cannot set firstHeaderRewrite, innerHeaderRewrite, or lastHeaderRewrite unless this delivery service is assigned to a Topology. Use edgeHeaderRewrite and/or midHeaderRewrite instead")
+	}
+	return nil
 }
 
 func (ds *DeliveryServiceNullableV30) validateTopologyFields() error {
