@@ -17,5 +17,21 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.alerts', [])
-	.controller('AlertsController', require('./AlertsController'));
+var NotificationsController = function($scope, cdnService) {
+
+	let getCDNs = function() {
+		cdnService.getCDNs()
+			.then(function(result) {
+				$scope.cdns = result;
+			});
+	};
+
+	let init = function () {
+		getCDNs();
+	};
+	init();
+
+};
+
+NotificationsController.$inject = ['$scope', 'cdnService'];
+module.exports = NotificationsController;

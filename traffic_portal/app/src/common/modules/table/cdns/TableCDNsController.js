@@ -101,18 +101,18 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    let toggleCDNAlert = function(cdn) {
-        if (cdn.alertCreatedBy) {
-            confirmDeleteAlert(cdn);
+    let toggleNotification = function(cdn) {
+        if (cdn.notificationCreatedBy) {
+            confirmDeleteNotification(cdn);
         } else {
-            confirmCreateAlert(cdn);
+            confirmCreateNotification(cdn);
         }
     };
 
-    let confirmCreateAlert = function(cdn) {
+    let confirmCreateNotification = function(cdn) {
         const params = {
-            title: 'Create Global ' + cdn.name + ' Alert',
-            message: 'What is the content of your global alert for the ' + cdn.name + ' CDN?'
+            title: 'Create Global ' + cdn.name + ' Notification',
+            message: 'What is the content of your global notification for the ' + cdn.name + ' CDN?'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
@@ -124,8 +124,8 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
                 }
             }
         });
-        modalInstance.result.then(function(alert) {
-            cdnService.createCDNAlert(cdn, alert).
+        modalInstance.result.then(function(notification) {
+            cdnService.createNotification(cdn, notification).
             then(
                 function() {
                     $state.reload();
@@ -136,10 +136,10 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    let confirmDeleteAlert = function(cdn) {
+    let confirmDeleteNotification = function(cdn) {
         const params = {
-            title: 'Delete Global ' + cdn.name + ' Alert',
-            message: 'Are you sure you want to delete the global alert for the ' + cdn.name + ' CDN? This will remove the alert from the view of all users.'
+            title: 'Delete Global ' + cdn.name + ' Notification',
+            message: 'Are you sure you want to delete the global notification for the ' + cdn.name + ' CDN? This will remove the notification from the view of all users.'
         };
         const modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -152,7 +152,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             }
         });
         modalInstance.result.then(function() {
-            cdnService.deleteCDNAlert(cdn).
+            cdnService.deleteNotification(cdn).
             then(
                 function() {
                     $state.reload();
@@ -194,21 +194,21 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         },
         null, // Dividier
         {
-            text: 'Create CDN Alert',
+            text: 'Create CDN Notification',
             click: function ($itemScope) {
-                toggleCDNAlert($itemScope.cdn);
+                toggleNotification($itemScope.cdn);
             },
             displayed: function ($itemScope) {
-                return !$itemScope.cdn.alertCreatedBy;
+                return !$itemScope.cdn.notificationCreatedBy;
             }
         },
         {
-            text: 'Delete CDN Alert',
+            text: 'Delete CDN Notification',
             click: function ($itemScope) {
-                toggleCDNAlert($itemScope.cdn);
+                toggleNotification($itemScope.cdn);
             },
             displayed: function ($itemScope) {
-                return $itemScope.cdn.alertCreatedBy;
+                return $itemScope.cdn.notificationCreatedBy;
             }
         },
         null, // Dividier

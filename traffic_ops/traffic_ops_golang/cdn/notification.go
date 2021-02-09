@@ -32,20 +32,20 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-func CreateAlert(w http.ResponseWriter, r *http.Request) {
+func CreateNotification(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	reqObj := tc.CDNAlertRequest{}
+	reqObj := tc.CDNNotificationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	if err := create(inf.Tx.Tx, int64(inf.IntParams["id"]), inf.User.UserName, reqObj.Alert); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create alert: "+err.Error()))
+	if err := create(inf.Tx.Tx, int64(inf.IntParams["id"]), inf.User.UserName, reqObj.Notification); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create notification: "+err.Error()))
 		return
 	}
 
@@ -57,11 +57,11 @@ func CreateAlert(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN alert created, Alert: " +reqObj.Alert, inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.CDNAlertResponse{CDNID: int64(inf.IntParams["id"]), Username: "bob", Alert: reqObj.Alert})
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification created, Notification: " +reqObj.Notification, inf.User, inf.Tx.Tx)
+	api.WriteResp(w, r, tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "bob", Notification: reqObj.Notification})
 }
 
-func DeleteAlert(w http.ResponseWriter, r *http.Request) {
+func DeleteNotification(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -69,7 +69,7 @@ func DeleteAlert(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if err := delete(inf.Tx.Tx, int64(inf.IntParams["id"])); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN delete alert: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN delete notification: "+err.Error()))
 		return
 	}
 
@@ -81,21 +81,20 @@ func DeleteAlert(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN alert deleted", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.CDNAlertResponse{CDNID: int64(inf.IntParams["id"]), Username: "", Alert: ""})
-
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification deleted", inf.User, inf.Tx.Tx)
+	api.WriteResp(w, r, tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "", Notification: ""})
 }
 
-func create(tx *sql.Tx, cdnID int64, username string, alert string) error {
-	if _, err := tx.Exec(`UPDATE cdn SET alert_created_by = $1, alert = $2 WHERE id = $3`, username, alert, cdnID); err != nil {
-		return errors.New("creating cdn alert: " + err.Error())
+func create(tx *sql.Tx, cdnID int64, username string, notification string) error {
+	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE id = $3`, username, notification, cdnID); err != nil {
+		return errors.New("creating cdn notification: " + err.Error())
 	}
 	return nil
 }
 
 func delete(tx *sql.Tx, cdnID int64) error {
-	if _, err := tx.Exec(`UPDATE cdn SET alert_created_by = $1, alert = $2 WHERE id = $3`, nil, nil, cdnID); err != nil {
-		return errors.New("deleting cdn alert: " + err.Error())
+	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE id = $3`, nil, nil, cdnID); err != nil {
+		return errors.New("deleting cdn notification: " + err.Error())
 	}
 	return nil
 }

@@ -33,9 +33,9 @@ module.exports = angular.module('trafficPortal.private', [])
                         templateUrl: 'common/modules/header/header.tpl.html',
                         controller: 'HeaderController'
                     },
-                    alerts: {
-                        templateUrl: 'common/modules/alerts/alerts.tpl.html',
-                        controller: 'AlertsController'
+                    notifications: {
+                        templateUrl: 'common/modules/notifications/notifications.tpl.html',
+                        controller: 'NotificationsController'
                     },
                     message: {
                         templateUrl: 'common/modules/message/message.tpl.html',

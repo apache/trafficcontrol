@@ -154,8 +154,8 @@ dnssec_enabled,
 domain_name,
 id,
 last_updated,
-alert_created_by,
-alert,
+notification_created_by,
+notification,
 name
 
 FROM cdn c`

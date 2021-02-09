@@ -81,8 +81,8 @@ under the License.
                 </div>
             </li>
             <li ng-repeat="cdn in cdns">
-                <div class="btn-group" title="{{(cdn.alertCreatedBy) ? 'Delete Global ' + cdn.name + ' Alert' : 'Create Global ' + cdn.name + ' Alert'}}">
-                    <button type="button" class="btn btn-link" ng-click="toggleCDNAlert(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.alertCreatedBy, 'fa-bell-o': !cdn.alertCreatedBy }"></i></button>
+                <div class="btn-group" title="{{(cdn.notificationCreatedBy) ? 'Delete Global ' + cdn.name + ' Notification' : 'Create Global ' + cdn.name + ' Notification'}}">
+                    <button type="button" class="btn btn-link" ng-click="toggleNotification(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.notificationCreatedBy, 'fa-bell-o': !cdn.notificationCreatedBy }"></i></button>
                 </div>
             </li>
         </ul>

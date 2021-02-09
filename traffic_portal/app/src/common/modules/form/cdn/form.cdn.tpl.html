@@ -41,8 +41,8 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li ng-if="!cdn.alertCreatedBy" role="menuitem"><a ng-click="toggleCDNAlert(cdn)">Create CDN Alert</a></li>
-                    <li ng-if="cdn.alertCreatedBy" role="menuitem"><a ng-click="toggleCDNAlert(cdn)">Delete CDN Alert</a></li>
+                    <li ng-if="!cdn.notificationCreatedBy" role="menuitem"><a ng-click="toggleNotification(cdn)">Create CDN Notification</a></li>
+                    <li ng-if="cdn.notificationCreatedBy" role="menuitem"><a ng-click="toggleNotification(cdn)">Delete CDN Notification</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
                     <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
@@ -84,15 +84,15 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-if="!settings.isNew">
-                <label for="alert" class="control-label col-md-2 col-sm-2 col-xs-12">Alert</label>
+                <label for="notification" class="control-label col-md-2 col-sm-2 col-xs-12">Notification</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="alert" name="alert" type="text" class="form-control" ng-model="cdn.alert" disabled>
+                    <input id="notification" name="notification" type="text" class="form-control" ng-model="cdn.notification" disabled>
                 </div>
             </div>
             <div class="form-group" ng-if="!settings.isNew">
-                <label for="alertCreatedBy" class="control-label col-md-2 col-sm-2 col-xs-12">Alert Created By</label>
+                <label for="notificationCreatedBy" class="control-label col-md-2 col-sm-2 col-xs-12">Notification Created By</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="alertCreatedBy" name="alertCreatedBy" type="text" class="form-control" ng-model="cdn.alertCreatedBy" disabled>
+                    <input id="notificationCreatedBy" name="notificationCreatedBy" type="text" class="form-control" ng-model="cdn.notificationCreatedBy" disabled>
                 </div>
             </div>
             <div class="modal-footer">

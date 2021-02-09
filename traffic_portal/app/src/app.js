@@ -239,7 +239,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/custom').name,
 
         // common modules
-        require('./common/modules/alerts').name,
         require('./common/modules/chart/bps').name,
         require('./common/modules/chart/httpStatus').name,
         require('./common/modules/chart/tps').name,
@@ -260,6 +259,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
+        require('./common/modules/notifications').name,
         require('./common/modules/release').name,
 
         // forms

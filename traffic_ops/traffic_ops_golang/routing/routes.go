@@ -355,6 +355,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{4, 0}, http.MethodPost, `coordinates/?$`, api.CreateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 44281121573},
 		{api.Version{4, 0}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 43038498893},
 
+		//CDN notification
+		{api.Version{4, 0}, http.MethodPost, `cdns/{id}/notification`, cdn.CreateNotification, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
+		{api.Version{4, 0}, http.MethodDelete, `cdns/{id}/notification`, cdn.DeleteNotification, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
+
 		//CDN generic handlers:
 		{api.Version{4, 0}, http.MethodGet, `cdns/?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 42303186213},
 		{api.Version{4, 0}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 43111789343},
@@ -527,10 +531,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 1}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 2034390562},
 		{api.Version{3, 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, Authenticated, nil, 2034390563},
 		{api.Version{3, 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, Authenticated, nil, 2034390564},
-
-		// cdn alert
-		{api.Version{3, 1}, http.MethodPost, `cdns/{id}/alert`, cdn.CreateAlert, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
-		{api.Version{3, 1}, http.MethodDelete, `cdns/{id}/alert`, cdn.DeleteAlert, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
 
 		// API Capability
 		{api.Version{3, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 28132065893},
