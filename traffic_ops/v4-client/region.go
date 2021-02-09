@@ -33,7 +33,7 @@ const (
 // CreateRegion creates a Region.
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, toclientlib.ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
-		divisions, _, err := to.GetDivisionByNameWithHdr(region.DivisionName, nil)
+		divisions, _, err := to.GetDivisionByName(region.DivisionName, nil)
 		if err != nil {
 			return tc.Alerts{}, toclientlib.ReqInf{}, err
 		}
