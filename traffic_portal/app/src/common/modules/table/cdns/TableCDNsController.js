@@ -194,25 +194,6 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         },
         null, // Dividier
         {
-            text: 'Create CDN Notification',
-            click: function ($itemScope) {
-                toggleNotification($itemScope.cdn);
-            },
-            displayed: function ($itemScope) {
-                return !$itemScope.cdn.notificationCreatedBy;
-            }
-        },
-        {
-            text: 'Delete CDN Notification',
-            click: function ($itemScope) {
-                toggleNotification($itemScope.cdn);
-            },
-            displayed: function ($itemScope) {
-                return $itemScope.cdn.notificationCreatedBy;
-            }
-        },
-        null, // Dividier
-        {
             text: 'Queue Server Updates',
             click: function ($itemScope) {
                 confirmQueueServerUpdates($itemScope.cdn);
