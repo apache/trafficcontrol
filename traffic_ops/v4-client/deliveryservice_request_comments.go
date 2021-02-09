@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	// APIDeliveryServiceRequestComments is the full API route to the
-	// /deliveryservice_request_comments endpoint.
+	// APIDeliveryServiceRequestComments is the API version-relative route to
+	// the /deliveryservice_request_comments endpoint.
 	APIDeliveryServiceRequestComments = "/deliveryservice_request_comments"
 )
 
