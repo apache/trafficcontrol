@@ -226,7 +226,7 @@ func (to *Session) UpdateDeliveryService(id int, ds tc.DeliveryServiceV4, header
 }
 
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed.
-func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceResponse, error) {
+func (to *Session) DeleteDeliveryService(id int) (*tc.DeleteDeliveryServiceResponse, error) {
 	var data tc.DeleteDeliveryServiceResponse
 	_, err := to.del(fmt.Sprintf(APIDeliveryServiceID, id), nil, &data)
 	if err != nil {

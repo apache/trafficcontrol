@@ -149,7 +149,7 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int) 
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+	_, err = TOSession.DeleteDeliveryService(*ds.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -1009,7 +1009,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			continue
 		}
 
-		delResp, err := TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
+		delResp, err := TOSession.DeleteDeliveryService(*ds.ID)
 		if err != nil {
 			t.Errorf("cannot DELETE DeliveryService by ID: %v - %v", err, delResp)
 			continue
@@ -1162,7 +1162,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot delete tenant3user's deliveryservice
-	if _, err = tenant4TOClient.DeleteDeliveryService(strconv.Itoa(*tenant3DS.ID)); err == nil {
+	if _, err = tenant4TOClient.DeleteDeliveryService(*tenant3DS.ID); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 
