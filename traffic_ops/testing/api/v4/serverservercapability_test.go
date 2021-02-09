@@ -311,7 +311,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	assignedServers := make(map[int]bool)
 	for _, ssc := range sscs {
 
-		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, ssc.ServerCapability, nil)
+		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability, nil)
 		if err != nil {
 			t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 		}

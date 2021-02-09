@@ -117,7 +117,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -132,7 +132,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -203,7 +203,7 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
+			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
 			if err != nil {
 				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
@@ -250,7 +250,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -383,7 +383,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Tests that a capability cannot be made required if the DS's services do not have it assigned
 
 	// Get Delivery Capability for a DS
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("ds1"), nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 	}
@@ -472,7 +472,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

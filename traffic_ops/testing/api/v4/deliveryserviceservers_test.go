@@ -443,7 +443,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestMSODSServerWithReqCap(t *testing.T) {
-	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("msods1"), nil, nil)
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil, nil)
 	if err != nil {
 		t.Fatalf("GET delivery service required capabilites: %v", err)
 	}
