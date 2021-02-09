@@ -247,6 +247,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
@@ -313,6 +314,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl2",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
@@ -380,6 +382,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl3",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": null,
@@ -447,6 +450,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "deepCachingType": "NEVER",
@@ -504,6 +508,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": ["a", "b", "c"],
@@ -562,6 +567,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
@@ -628,6 +634,7 @@
         {
             "active": true,
             "cdnName": "cdn1",
+            "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],

@@ -474,7 +474,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		respServers = append(respServers, server)
 	}
 
-	if err := deliveryservice.EnsureParams(inf.Tx.Tx, *dsId, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, *dsId, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
@@ -551,7 +551,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deliveryservice.EnsureParams(inf.Tx.Tx, ds.ID, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, ds.ID, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
@@ -1004,6 +1004,7 @@ type DSInfo struct {
 	MidHeaderRewrite     *string
 	RegexRemap           *string
 	SigningAlgorithm     *string
+	CacheURL             *string
 	MaxOriginConnections *int
 	Topology             *string
 	CDNID                *int
@@ -1020,6 +1021,7 @@ SELECT
   ds.mid_header_rewrite,
   ds.regex_remap,
   ds.signing_algorithm,
+  ds.cacheurl,
   ds.max_origin_connections,
   ds.topology,
   ds.cdn_id
@@ -1039,6 +1041,7 @@ func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 		&di.MidHeaderRewrite,
 		&di.RegexRemap,
 		&di.SigningAlgorithm,
+		&di.CacheURL,
 		&di.MaxOriginConnections,
 		&di.Topology,
 		&di.CDNID,
