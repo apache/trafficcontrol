@@ -145,12 +145,12 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceV40, ReqInf, error) {
 	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
 	}
-	var data tc.DeliveryServicesResponseV30
+	var data tc.DeliveryServicesResponseV40
 	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
