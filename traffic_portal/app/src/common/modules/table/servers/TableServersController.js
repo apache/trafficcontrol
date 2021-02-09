@@ -414,6 +414,16 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			} catch (e) {
 				console.error("Failure to load stored page size:", e);
 			}
+			
+			try {
+				const page = parseInt(localStorage.getItem(tableName + "_table_page"));
+				const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
+				if (page !== undefined && page > 0 && page <= totalPages-1) {
+					$scope.gridOptions.api.paginationGoToPage(page);
+				}
+			} catch (e) {
+				console.error("Failed to load stored page number:", e);
+			}
 
 			$scope.gridOptions.api.addEventListener("sortChanged", function() {
 				localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
@@ -421,6 +431,10 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 			$scope.gridOptions.api.addEventListener("columnMoved", function() {
 				localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			});
+			
+			$scope.gridOptions.api.addEventListener("paginationChanged", function() {
+				localStorage.setItem(tableName + "_table_page", $scope.gridOptions.api.paginationGetCurrentPage());	
 			});
 
 			$scope.gridOptions.api.addEventListener("columnVisible", function() {
