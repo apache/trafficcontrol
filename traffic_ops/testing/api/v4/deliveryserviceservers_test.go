@@ -540,7 +540,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	dsServers, _, err := TOSession.GetDeliveryServiceServersWithHdr(nil)
+	dsServers, _, err := TOSession.GetDeliveryServiceServers(nil, nil)
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}
@@ -568,7 +568,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
-	dsServers, _, err = TOSession.GetDeliveryServiceServersWithHdr(nil)
+	dsServers, _, err = TOSession.GetDeliveryServiceServers(nil, nil)
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}

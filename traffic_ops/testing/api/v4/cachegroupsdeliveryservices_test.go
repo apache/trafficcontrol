@@ -34,7 +34,7 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 const TestEdgeServerCacheGroupName = "cachegroup3"
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
-	dss, _, err := TOSession.GetDeliveryServiceServers()
+	dss, _, err := TOSession.GetDeliveryServiceServers(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServiceServers: %v", err)
 	}
@@ -164,7 +164,9 @@ func setInactive(t *testing.T, dsID int) {
 }
 
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	dss, _, err := TOSession.GetDeliveryServiceServersNWithHdr(1000000, nil)
+	params := url.Values{}
+	params.Set("limit", "1000000")
+	dss, _, err := TOSession.GetDeliveryServiceServers(params, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
@@ -187,7 +189,7 @@ func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 		}
 	}
 
-	dss, _, err = TOSession.GetDeliveryServiceServersWithHdr(nil)
+	dss, _, err = TOSession.GetDeliveryServiceServers(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
