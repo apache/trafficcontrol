@@ -62,3 +62,12 @@ Example usage
 	    GIT_AUTHOR_NAME: asfgit
 	    GITHUB_TOKEN: ${{ github.token }}
 	    GO_VERSION_FILE: GO_VERSION
+
+Tests
+=====
+
+To run the unit tests:
+
+.. code-block:: shell
+
+	python3 -m unittest discover ./tests
