@@ -205,7 +205,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatal("not enough federation resolvers to test")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers()
+	frs, _, err := TOSession.GetFederationResolvers(nil, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
 	}
