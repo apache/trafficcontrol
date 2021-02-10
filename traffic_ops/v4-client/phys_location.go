@@ -33,7 +33,7 @@ const (
 // CreatePhysLocation creates the passed Physical Location.
 func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.RegionID == 0 && pl.RegionName != "" {
-		regions, _, err := to.GetRegionByNameWithHdr(pl.RegionName, nil)
+		regions, _, err := to.GetRegionByName(pl.RegionName, nil)
 		if err != nil {
 			return tc.Alerts{}, toclientlib.ReqInf{}, err
 		}

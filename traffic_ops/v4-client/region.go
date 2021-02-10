@@ -27,10 +27,11 @@ import (
 )
 
 const (
+	// APIRegions is the API version-relative path to the /regions API endpoint.
 	APIRegions = "/regions"
 )
 
-// CreateRegion creates a Region.
+// CreateRegion creates the given Region.
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, toclientlib.ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
 		divisions, _, err := to.GetDivisionByName(region.DivisionName, nil)
@@ -47,63 +48,35 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, toclientlib.ReqInf
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateRegionByIDWithHdr(id int, region tc.Region, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateRegion replaces the Region identified by ID with the one provided.
+func (to *Session) UpdateRegion(id int, region tc.Region, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIRegions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, region, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateRegionByID updates a Region by ID.
-// Deprecated: UpdateRegionByID will be removed in 6.0. Use UpdateRegionByIDWithHdr.
-func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdateRegionByIDWithHdr(id, region, nil)
-}
-
-func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+// GetRegions returns all Regions in Traffic Ops.
+func (to *Session) GetRegions(header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
 	var data tc.RegionsResponse
 	reqInf, err := to.get(APIRegions, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetRegions returns a list of regions.
-// Deprecated: GetRegions will be removed in 6.0. Use GetRegionsWithHdr.
-func (to *Session) GetRegions() ([]tc.Region, toclientlib.ReqInf, error) {
-	return to.GetRegionsWithHdr(nil)
-}
-
-func (to *Session) GetRegionByIDWithHdr(id int, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+// GetRegionByID returns the Region with the given ID.
+func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIRegions, id)
 	var data tc.RegionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetRegionByID GETs a Region by the Region ID.
-// Deprecated: GetRegionByID will be removed in 6.0. Use GetRegionByIDWithHdr.
-func (to *Session) GetRegionByID(id int) ([]tc.Region, toclientlib.ReqInf, error) {
-	return to.GetRegionByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetRegionByNameWithHdr(name string, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+// GetRegionByName retrieves the Region with the given Name.
+func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIRegions, url.QueryEscape(name))
 	var data tc.RegionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
-}
-
-// GetRegionByName GETs a Region by the Region name.
-// Deprecated: GetRegionByName will be removed in 6.0. Use GetRegionByNameHdr.
-func (to *Session) GetRegionByName(name string) ([]tc.Region, toclientlib.ReqInf, error) {
-	return to.GetRegionByNameWithHdr(name, nil)
-}
-
-// DeleteRegionByID DELETEs a Region by ID.
-func (to *Session) DeleteRegionByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIRegions, id)
-	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
-	return alerts, reqInf, err
 }
 
 // DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
