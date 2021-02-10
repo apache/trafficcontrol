@@ -17,6 +17,7 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"sort"
 	"testing"
 	"time"
@@ -185,7 +186,7 @@ func GetTestPhysLocations(t *testing.T) {
 }
 
 func GetSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"}, nil)
+	resp, _, err := TOSession.GetPhysLocations(url.Values{"orderby": {"id"}}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

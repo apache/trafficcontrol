@@ -18,6 +18,7 @@ package v4
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -181,8 +182,8 @@ func QueryDSRegexTest(t *testing.T) {
 		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
 	}
 
-	params := make(map[string]string)
-	params["id"] = strconv.Itoa(dsRegexes[0].ID)
+	params := url.Values{}
+	params.Set("id", strconv.Itoa(dsRegexes[0].ID))
 	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, params)
 	if err != nil {
 		t.Fatalf("unable to get ds_regex by id %v with query param %v", dsID, params["id"])

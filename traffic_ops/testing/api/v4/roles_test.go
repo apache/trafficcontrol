@@ -17,6 +17,7 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"strings"
@@ -216,16 +217,16 @@ func GetTestRoles(t *testing.T) {
 }
 
 func VerifyGetRolesOrder(t *testing.T) {
-	params := map[string]string{
-		"orderby":   "name",
-		"sortOrder": "desc",
+	params := url.Values{
+		"orderby":   {"name"},
+		"sortOrder": {"desc"},
 	}
 	descResp, _, status, err := TOSession.GetRoles(params, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, descResp)
 	}
-	params["sortOrder"] = "asc"
+	params.Set("sortOrder", "asc")
 	ascResp, _, status, err := TOSession.GetRoles(params, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
