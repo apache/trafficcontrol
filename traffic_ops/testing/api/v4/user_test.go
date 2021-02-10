@@ -114,7 +114,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Fatal("there should be at least one role to test the user")
 	}
 
-	tenants, _, err := TOSession.Tenants()
+	tenants, _, err := TOSession.GetTenants(nil)
 	if err != nil {
 		t.Errorf("could not get tenants: %v", err)
 	}
@@ -210,7 +210,7 @@ func UserRegistrationTest(t *testing.T) {
 	ForceDeleteTestUsers(t)
 	var emails []string
 	for _, user := range testData.Users {
-		tenant, _, err := TOSession.TenantByName(*user.Tenant)
+		tenant, _, err := TOSession.GetTenantByName(*user.Tenant, nil)
 		if err != nil {
 			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
 		}
@@ -463,7 +463,7 @@ func UserTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot create a user outside of its tenant
-	rootTenant, _, err := TOSession.TenantByName("root")
+	rootTenant, _, err := TOSession.GetTenantByName("root", nil)
 	if err != nil {
 		t.Error("expected to be able to GET the root tenant")
 	}

@@ -932,7 +932,7 @@ func GetAccessibleToTest(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	tenant := &tc.Tenant{
+	tenant := tc.Tenant{
 		Active:     true,
 		Name:       "the strongest",
 		ParentID:   1,
@@ -943,10 +943,7 @@ func GetAccessibleToTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if resp == nil {
-		t.Fatal("unexpected null response when creating tenant")
-	}
-	tenant = &resp.Response
+	tenant = resp.Response
 
 	//No delivery services are associated with this new tenant
 	err = getByTenants(tenant.ID, 0)
@@ -955,7 +952,7 @@ func GetAccessibleToTest(t *testing.T) {
 	}
 
 	//First and only child tenant, no access to root
-	childTenant, _, err := TOSession.TenantByName("tenant1")
+	childTenant, _, err := TOSession.GetTenantByName("tenant1", nil)
 	if err != nil {
 		t.Fatal("unable to get tenant " + err.Error())
 	}
@@ -966,7 +963,7 @@ func GetAccessibleToTest(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant.ID))
+	_, err = TOSession.DeleteTenant(tenant.ID)
 	if err != nil {
 		t.Fatalf("unable to clean up tenant %v", err.Error())
 	}

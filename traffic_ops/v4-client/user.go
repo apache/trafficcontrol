@@ -106,12 +106,9 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, toclien
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, toclientlib.ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByNameWithHdr(*user.Tenant, nil)
+		tenant, _, err := to.GetTenantByName(*user.Tenant, nil)
 		if err != nil {
 			return nil, toclientlib.ReqInf{}, err
-		}
-		if tenant == nil {
-			return nil, toclientlib.ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
 		}
 		user.TenantID = &tenant.ID
 	}

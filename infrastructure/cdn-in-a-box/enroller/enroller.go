@@ -507,7 +507,7 @@ func enrollTenant(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, err := toSession.CreateTenant(&s)
+	alerts, err := toSession.CreateTenant(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("tenant %s already exists\n", s.Name)

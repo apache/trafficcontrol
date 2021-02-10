@@ -192,7 +192,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4) (tc.DeliverySe
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.TenantByNameWithHdr(*ds.Tenant, nil)
+		ten, _, err := to.GetTenantByName(*ds.Tenant, nil)
 		if err != nil {
 			return tc.DeliveryServiceV4{}, reqInf, err
 		}

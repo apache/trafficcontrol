@@ -78,7 +78,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByNameWithHdr(*origin.Tenant, nil)
+		tenant, _, err := to.GetTenantByName(*origin.Tenant, nil)
 		if err != nil {
 			return err
 		}

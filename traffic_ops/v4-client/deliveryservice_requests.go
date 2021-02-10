@@ -80,8 +80,8 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.TenantID == nil && dsr.DeliveryService.Tenant != nil {
-		ten, reqInf, err := to.TenantByNameWithHdr(*dsr.DeliveryService.Tenant, nil)
-		if err != nil || ten == nil {
+		ten, reqInf, err := to.GetTenantByName(*dsr.DeliveryService.Tenant, nil)
+		if err != nil {
 			return created, alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *dsr.DeliveryService.Tenant)
 		}
 		dsr.DeliveryService.TenantID = &ten.ID
