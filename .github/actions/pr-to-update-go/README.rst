@@ -19,7 +19,7 @@ pr-to-update-go
 
 Opens a PR if a new minor Go revision is available.
 
-For example, it will open a PR if the ``GO_VERSION`` contains ``1.14.7`` but Go versions 1.15.1 and 1.14.8 are available, it will
+For example, if the ``GO_VERSION`` contains ``1.14.7`` but Go versions 1.15.1 and 1.14.8 are available, it will
 
 1. Create a branch named ``go-1.14.8`` to update the repo's Go version to 1.14.8
 2. Open a PR targeting the ``master`` branch from branch ``go-1.14.8``
