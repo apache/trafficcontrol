@@ -31,180 +31,183 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from pr_to_update_go.constants import ENV_GITHUB_TOKEN, GO_VERSION_URL, ENV_GITHUB_REPOSITORY, \
-    ENV_GITHUB_REPOSITORY_OWNER, GO_REPO_NAME, RELEASE_PAGE_URL, ENV_GO_VERSION_FILE, ENV_GIT_AUTHOR_NAME, \
-    GIT_AUTHOR_EMAIL_TEMPLATE
+	ENV_GITHUB_REPOSITORY_OWNER, GO_REPO_NAME, RELEASE_PAGE_URL, ENV_GO_VERSION_FILE, \
+	ENV_GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL_TEMPLATE
 
 
 class GoPRMaker:
-    gh: Github
-    latest_go_version: str
-    repo: Repository
+	gh: Github
+	latest_go_version: str
+	repo: Repository
 
-    def __init__(self, gh: Github) -> None:
-        self.gh = gh
-        repo_name: str = self.get_repo_name()
-        self.repo = self.get_repo(repo_name)
+	def __init__(self, gh: Github) -> None:
+		self.gh = gh
+		repo_name: str = self.get_repo_name()
+		self.repo = self.get_repo(repo_name)
 
-    def run(self) -> None:
-        repo_go_version = self.get_repo_go_version()
-        self.latest_go_version = self.get_latest_major_upgrade(repo_go_version)
-        commit_message: str = f'Update Go version to {self.latest_go_version}'
+	def run(self) -> None:
+		repo_go_version = self.get_repo_go_version()
+		self.latest_go_version = self.get_latest_major_upgrade(repo_go_version)
+		commit_message: str = f'Update Go version to {self.latest_go_version}'
 
-        source_branch_name: str = f'go-{self.latest_go_version}'
-        target_branch: str = 'master'
-        if repo_go_version == self.latest_go_version:
-            print(f'Go version is up-to-date on {target_branch}, nothing to do.')
-            return
+		source_branch_name: str = f'go-{self.latest_go_version}'
+		target_branch: str = 'master'
+		if repo_go_version == self.latest_go_version:
+			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
+			return
 
-        self.set_go_version(self.latest_go_version, commit_message, source_branch_name)
-        owner: str = self.get_repo_owner()
-        self.create_pr(self.latest_go_version, commit_message, owner, source_branch_name, target_branch)
+		self.set_go_version(self.latest_go_version, commit_message, source_branch_name)
+		owner: str = self.get_repo_owner()
+		self.create_pr(self.latest_go_version, commit_message, owner, source_branch_name,
+			target_branch)
 
-    @staticmethod
-    def getenv(env_name: str) -> str:
-        return os.environ[env_name]
+	@staticmethod
+	def getenv(env_name: str) -> str:
+		return os.environ[env_name]
 
-    def get_repo(self, repo_name: str) -> Repository:
-        try:
-            repo: Repository = self.gh.get_repo(repo_name)
-        except BadCredentialsException:
-            print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.')
-            sys.exit(1)
-        return repo
+	def get_repo(self, repo_name: str) -> Repository:
+		try:
+			repo: Repository = self.gh.get_repo(repo_name)
+		except BadCredentialsException:
+			print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.')
+			sys.exit(1)
+		return repo
 
-    @staticmethod
-    def get_major_version(from_go_version: str) -> str:
-        return re.search(pattern=r'^\d+\.\d+', string=from_go_version).group(0)
+	@staticmethod
+	def get_major_version(from_go_version: str) -> str:
+		return re.search(pattern=r'^\d+\.\d+', string=from_go_version).group(0)
 
-    def get_latest_major_upgrade(self, from_go_version: str) -> str:
-        major_version = self.get_major_version(from_go_version)
-        go_version_response: Response = requests.get(GO_VERSION_URL)
-        go_version_response.raise_for_status()
-        go_version_content: list = json.loads(go_version_response.content)
-        index = 0
-        fetched_go_version: str = ''
-        while True:
-            if not go_version_content[index]['stable']:
-                continue
-            go_version_name: str = go_version_content[index]['version']
-            fetched_go_version = re.search(pattern=r'[\d.]+', string=go_version_name).group(0)
-            if major_version == self.get_major_version(fetched_go_version):
-                break
-            index += 1
-        if major_version != self.get_major_version(fetched_go_version):
-            raise Exception(f'No supported {major_version} Go versions exist.')
-        print(f'Latest version of Go {major_version} is {fetched_go_version}')
-        return fetched_go_version
+	def get_latest_major_upgrade(self, from_go_version: str) -> str:
+		major_version = self.get_major_version(from_go_version)
+		go_version_response: Response = requests.get(GO_VERSION_URL)
+		go_version_response.raise_for_status()
+		go_version_content: list = json.loads(go_version_response.content)
+		index = 0
+		fetched_go_version: str = ''
+		while True:
+			if not go_version_content[index]['stable']:
+				continue
+			go_version_name: str = go_version_content[index]['version']
+			fetched_go_version = re.search(pattern=r'[\d.]+', string=go_version_name).group(0)
+			if major_version == self.get_major_version(fetched_go_version):
+				break
+			index += 1
+		if major_version != self.get_major_version(fetched_go_version):
+			raise Exception(f'No supported {major_version} Go versions exist.')
+		print(f'Latest version of Go {major_version} is {fetched_go_version}')
+		return fetched_go_version
 
-    def get_repo_name(self) -> str:
-        repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY)
-        return repo_name
+	def get_repo_name(self) -> str:
+		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY)
+		return repo_name
 
-    def get_repo_owner(self) -> str:
-        repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
-        return repo_name
+	def get_repo_owner(self) -> str:
+		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
+		return repo_name
 
-    def get_go_milestone(self, go_version: str) -> str:
-        go_repo: Repository = self.get_repo(GO_REPO_NAME)
-        milestones: PaginatedList[Milestone] = go_repo.get_milestones(state='all', sort='due_on', direction='desc')
-        milestone_title = f'Go{go_version}'
-        for milestone in milestones:  # type: Milestone
-            if milestone.title == milestone_title:
-                print(f'Found Go milestone {milestone.title}')
-                return milestone.raw_data.get('html_url')
-        raise Exception(f'Could not find a milestone named {milestone_title}.')
+	def get_go_milestone(self, go_version: str) -> str:
+		go_repo: Repository = self.get_repo(GO_REPO_NAME)
+		milestones: PaginatedList[Milestone] = go_repo.get_milestones(state='all', sort='due_on',
+			direction='desc')
+		milestone_title = f'Go{go_version}'
+		for milestone in milestones:  # type: Milestone
+			if milestone.title == milestone_title:
+				print(f'Found Go milestone {milestone.title}')
+				return milestone.raw_data.get('html_url')
+		raise Exception(f'Could not find a milestone named {milestone_title}.')
 
-    @staticmethod
-    def get_release_notes_page() -> str:
-        release_history_response: Response = requests.get(RELEASE_PAGE_URL)
-        release_history_response.raise_for_status()
-        return release_history_response.content.decode()
+	@staticmethod
+	def get_release_notes_page() -> str:
+		release_history_response: Response = requests.get(RELEASE_PAGE_URL)
+		release_history_response.raise_for_status()
+		return release_history_response.content.decode()
 
-    @staticmethod
-    def get_release_notes(go_version: str, release_notes_content: str) -> str:
-        go_version_pattern = go_version.replace('.', '\\.')
-        release_notes_pattern: str = f'<p>\\s*\\n\\s*go{go_version_pattern}.*?</p>'
-        release_notes_matches = re.search(release_notes_pattern, release_notes_content,
-                                          re.MULTILINE | re.DOTALL)
-        if release_notes_matches is None:
-            raise Exception(f'Could not find release notes on {RELEASE_PAGE_URL}')
-        release_notes = re.sub(r'[\s\t]+', ' ', release_notes_matches.group(0))
-        return release_notes
+	@staticmethod
+	def get_release_notes(go_version: str, release_notes_content: str) -> str:
+		go_version_pattern = go_version.replace('.', '\\.')
+		release_notes_pattern: str = f'<p>\\s*\\n\\s*go{go_version_pattern}.*?</p>'
+		release_notes_matches = re.search(release_notes_pattern, release_notes_content,
+			re.MULTILINE | re.DOTALL)
+		if release_notes_matches is None:
+			raise Exception(f'Could not find release notes on {RELEASE_PAGE_URL}')
+		release_notes = re.sub(r'[\s\t]+', ' ', release_notes_matches.group(0))
+		return release_notes
 
-    def get_pr_body(self, go_version: str, milestone_url: str) -> str:
-        with open(os.path.dirname(__file__) + '/pr_template.md') as file:
-            pr_template = file.read()
-        go_major_version = self.get_major_version(go_version)
+	def get_pr_body(self, go_version: str, milestone_url: str) -> str:
+		with open(os.path.dirname(__file__) + '/pr_template.md') as file:
+			pr_template = file.read()
+		go_major_version = self.get_major_version(go_version)
 
-        release_notes = self.get_release_notes(go_version, self.get_release_notes_page())
-        pr_body: str = pr_template.format(GO_VERSION=go_version, GO_MAJOR_VERSION=go_major_version,
-                                          RELEASE_NOTES=release_notes, MILESTONE_URL=milestone_url)
-        print('Templated PR body')
-        return pr_body
+		release_notes = self.get_release_notes(go_version, self.get_release_notes_page())
+		pr_body: str = pr_template.format(GO_VERSION=go_version, GO_MAJOR_VERSION=go_major_version,
+			RELEASE_NOTES=release_notes, MILESTONE_URL=milestone_url)
+		print('Templated PR body')
+		return pr_body
 
-    def get_repo_go_version(self, branch: str = 'master') -> str:
-        return self.repo.get_contents(self.getenv(ENV_GO_VERSION_FILE),
-                                      f'refs/heads/{branch}').decoded_content.rstrip().decode()
+	def get_repo_go_version(self, branch: str = 'master') -> str:
+		return self.repo.get_contents(self.getenv(ENV_GO_VERSION_FILE),
+			f'refs/heads/{branch}').decoded_content.rstrip().decode()
 
-    def set_go_version(self, go_version: str, commit_message: str, source_branch_name: str) -> None:
-        try:
-            repo_go_version = self.get_repo_go_version(source_branch_name)
-            if go_version == repo_go_version:
-                print(f'Branch {source_branch_name} already exists')
-                return
-        except GithubException as e:
-            message = e.data.get('message')
-            if not re.match(r'No commit found for the ref', message):
-                raise e
+	def set_go_version(self, go_version: str, commit_message: str, source_branch_name: str) -> None:
+		try:
+			repo_go_version = self.get_repo_go_version(source_branch_name)
+			if go_version == repo_go_version:
+				print(f'Branch {source_branch_name} already exists')
+				return
+		except GithubException as e:
+			message = e.data.get('message')
+			if not re.match(r'No commit found for the ref', message):
+				raise e
 
-        master: Branch = self.repo.get_branch('master')
-        sha: str = master.commit.sha
-        ref: str = f'refs/heads/{source_branch_name}'
-        self.repo.create_git_ref(ref, sha)
+		master: Branch = self.repo.get_branch('master')
+		sha: str = master.commit.sha
+		ref: str = f'refs/heads/{source_branch_name}'
+		self.repo.create_git_ref(ref, sha)
 
-        print(f'Created branch {source_branch_name}')
-        go_version_file: str = self.getenv(ENV_GO_VERSION_FILE)
-        go_file_contents = self.repo.get_contents(go_version_file, ref)
-        kwargs = {'path': go_version_file,
-                  'message': commit_message,
-                  'content': (go_version + '\n'),
-                  'sha': go_file_contents.sha,
-                  'branch': source_branch_name,
-                  }
-        try:
-            git_author_name = self.getenv(ENV_GIT_AUTHOR_NAME)
-            git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
-            author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
-            kwargs['author'] = author
-            kwargs['committer'] = author
-        except KeyError:
-            print('Committing using the default author')
+		print(f'Created branch {source_branch_name}')
+		go_version_file: str = self.getenv(ENV_GO_VERSION_FILE)
+		go_file_contents = self.repo.get_contents(go_version_file, ref)
+		kwargs = {'path': go_version_file,
+			'message': commit_message,
+			'content': (go_version + '\n'),
+			'sha': go_file_contents.sha,
+			'branch': source_branch_name,
+		}
+		try:
+			git_author_name = self.getenv(ENV_GIT_AUTHOR_NAME)
+			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
+			author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
+			kwargs['author'] = author
+			kwargs['committer'] = author
+		except KeyError:
+			print('Committing using the default author')
 
-        self.repo.update_file(**kwargs)
-        print(f'Updated {go_version_file} on {self.repo.name}')
+		self.repo.update_file(**kwargs)
+		print(f'Updated {go_version_file} on {self.repo.name}')
 
-    def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
-                  source_branch_name: str, target_branch: str) -> None:
-        prs: PaginatedList = self.gh.search_issues(f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
-        for list_item in prs:
-            pr: PullRequest = self.repo.get_pull(list_item.number)
-            if pr.head.ref != source_branch_name:
-                continue
-            print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
-            return
+	def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
+			source_branch_name: str, target_branch: str) -> None:
+		prs: PaginatedList = self.gh.search_issues(
+			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
+		for list_item in prs:
+			pr: PullRequest = self.repo.get_pull(list_item.number)
+			if pr.head.ref != source_branch_name:
+				continue
+			print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
+			return
 
-        milestone_url: str = self.get_go_milestone(latest_go_version)
-        pr_body: str = self.get_pr_body(latest_go_version, milestone_url)
-        pr: PullRequest = self.repo.create_pull(
-            title=commit_message,
-            body=pr_body,
-            head=f'{owner}:{source_branch_name}',
-            base=target_branch,
-            maintainer_can_modify=True,
-        )
-        try:
-            go_version_label: Label = self.repo.get_label('go version')
-            pr.add_to_labels(go_version_label)
-        except UnknownObjectException:
-            print('Unable to find a label named "go version".')
-        print(f'Created pull request {pr.html_url}')
+		milestone_url: str = self.get_go_milestone(latest_go_version)
+		pr_body: str = self.get_pr_body(latest_go_version, milestone_url)
+		pr: PullRequest = self.repo.create_pull(
+			title=commit_message,
+			body=pr_body,
+			head=f'{owner}:{source_branch_name}',
+			base=target_branch,
+			maintainer_can_modify=True,
+		)
+		try:
+			go_version_label: Label = self.repo.get_label('go version')
+			pr.add_to_labels(go_version_label)
+		except UnknownObjectException:
+			print('Unable to find a label named "go version".')
+		print(f'Created pull request {pr.html_url}')

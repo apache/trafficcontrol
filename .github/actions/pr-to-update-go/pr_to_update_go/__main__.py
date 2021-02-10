@@ -20,13 +20,13 @@ from pr_to_update_go.constants import ENV_GITHUB_TOKEN
 
 
 def main() -> None:
-    try:
-        github_token: str = os.environ[ENV_GITHUB_TOKEN]
-    except KeyError:
-        print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
-        sys.exit(1)
-    gh = Github(login_or_token=github_token)
-    GoPRMaker(gh).run()
+	try:
+		github_token: str = os.environ[ENV_GITHUB_TOKEN]
+	except KeyError:
+		print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
+		sys.exit(1)
+	gh = Github(login_or_token=github_token)
+	GoPRMaker(gh).run()
 
 
 main()
