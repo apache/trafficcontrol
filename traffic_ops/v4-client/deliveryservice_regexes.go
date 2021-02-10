@@ -18,6 +18,7 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -31,11 +32,15 @@ const (
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
 // also accepts an optional map of query parameters
-func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]string) ([]tc.DeliveryServiceIDRegex, toclientlib.ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params url.Values) ([]tc.DeliveryServiceIDRegex, toclientlib.ReqInf, error) {
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
-	reqInf, err := to.get(fmt.Sprintf(APIDSRegexes, dsID)+mapToQueryParameters(params), nil, &response)
+	route := APIDSRegexes
+	if len(params) > 0 {
+		route += "?" + params.Encode()
+	}
+	reqInf, err := to.get(route, nil, &response)
 	return response.Response, reqInf, err
 }
 

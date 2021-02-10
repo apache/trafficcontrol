@@ -61,8 +61,11 @@ func (to *Session) GetRoleByName(name string, header http.Header) ([]tc.Role, to
 }
 
 // GetRoles retrieves Roles from Traffic Ops.
-func (to *Session) GetRoles(queryParams map[string]string, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s%s", APIRoles, mapToQueryParameters(queryParams))
+func (to *Session) GetRoles(queryParams url.Values, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
+	route := APIRoles
+	if len(queryParams) > 0 {
+		route += "?" + queryParams.Encode()
+	}
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
