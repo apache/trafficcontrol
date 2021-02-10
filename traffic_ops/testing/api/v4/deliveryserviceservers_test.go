@@ -471,7 +471,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Make sure server has no caps to ensure test correctness
-	sccs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(s.ID, nil, nil, nil)
+	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v", err)
 	}
