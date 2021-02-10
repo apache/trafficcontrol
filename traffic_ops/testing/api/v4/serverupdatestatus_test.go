@@ -391,7 +391,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		cachesByCacheGroup := map[string]tc.ServerV40{}
 		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
 
-		forkedTopology, _, err := TOSession.GetTopology(topologyName)
+		forkedTopology, _, err := TOSession.GetTopology(topologyName, nil)
 		if err != nil {
 			t.Fatalf("topology %s was not found", topologyName)
 		}

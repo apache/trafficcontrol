@@ -84,7 +84,7 @@ func TestTopologies(t *testing.T) {
 
 func CreateTestTopologies(t *testing.T) {
 	var (
-		postResponse *tc.TopologyResponse
+		postResponse tc.TopologyResponse
 		err          error
 	)
 	for _, topology := range testData.Topologies {
@@ -103,7 +103,7 @@ func GetTestTopologies(t *testing.T) {
 	if len(testData.Topologies) < 1 {
 		t.Fatalf("test data has no topologies, can't test")
 	}
-	topos, _, err := TOSession.GetTopologiesWithHdr(nil)
+	topos, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("expected GET error to be nil, actual: %v", err)
 	}
@@ -117,19 +117,17 @@ func UpdateTestTopologiesWithHeaders(t *testing.T, header http.Header) {
 	newName := "blah"
 
 	// Retrieve the Topology by name so we can get the id for Update()
-	resp, _, err := TOSession.GetTopologyWithHdr(originalName, nil)
+	resp, _, err := TOSession.GetTopology(originalName, nil)
 	if err != nil {
 		t.Errorf("cannot GET Topology by name: '%s', %v", originalName, err)
 	}
-	if (resp) != nil {
-		resp.Name = newName
-		_, reqInf, err := TOSession.UpdateTopology(originalName, *resp, header)
-		if err == nil {
-			t.Errorf("Expected error about Precondition Failed, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
+	resp.Name = newName
+	_, reqInf, err := TOSession.UpdateTopology(originalName, resp, header)
+	if err == nil {
+		t.Errorf("Expected error about Precondition Failed, got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -246,18 +244,18 @@ func UpdateTestTopologies(t *testing.T) {
 	}
 
 	// attempt to add cachegroup that doesn't meet DS required capabilities
-	top, _, err := TOSession.GetTopologyWithHdr("top-for-ds-req", nil)
+	top, _, err := TOSession.GetTopology("top-for-ds-req", nil)
 	if err != nil {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
 	top.Nodes = append(top.Nodes, tc.TopologyNode{Cachegroup: "cachegroup1", Parents: []int{0}})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology - expected: error, actual: nil")
 	}
 
 	// attempt to add a cachegroup that only has caches in one CDN while the topology is assigned to DSes from multiple CDNs
-	top, _, err = TOSession.GetTopologyWithHdr("top-used-by-cdn1-and-cdn2", nil)
+	top, _, err = TOSession.GetTopology("top-used-by-cdn1-and-cdn2", nil)
 	if err != nil {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
@@ -307,7 +305,7 @@ func UpdateTestTopologies(t *testing.T) {
 		Cachegroup: "cdn1-only",
 		Parents:    []int{0},
 	})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
@@ -332,7 +330,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Get Topology node to update and remove ORG server nodes
 	origTopo := *remoteDS[0].Topology
-	resp, _, err := TOSession.GetTopologyWithHdr(origTopo, nil)
+	resp, _, err := TOSession.GetTopology(origTopo, nil)
 	if err != nil {
 		t.Fatalf("couldn't find any topologies: %v", err)
 	}
@@ -343,7 +341,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if *remoteDS[0].Topology == resp.Name {
 		resp.Nodes = newNodes
 	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp, nil)
+	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, resp, nil)
 	if err == nil {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
 	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
@@ -370,7 +368,7 @@ func UpdateTopologyName(t *testing.T) {
 	currentTopologyName := "top-used-by-cdn1-and-cdn2"
 
 	// Get details on existing topology
-	resp, _, err := TOSession.GetTopologyWithHdr(currentTopologyName, nil)
+	resp, _, err := TOSession.GetTopology(currentTopologyName, nil)
 	if err != nil {
 		t.Errorf("unable to get topology with name: %v", currentTopologyName)
 	}
@@ -378,7 +376,7 @@ func UpdateTopologyName(t *testing.T) {
 	resp.Name = newTopologyName
 
 	// Update topology with new name
-	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, *resp, nil)
+	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
 	}
@@ -397,7 +395,7 @@ func UpdateTopologyName(t *testing.T) {
 
 	// Set everything back as it was for further testing.
 	resp.Name = currentTopologyName
-	r, _, err := TOSession.UpdateTopology(newTopologyName, *resp, nil)
+	r, _, err := TOSession.UpdateTopology(newTopologyName, resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, r)
 	}
@@ -420,12 +418,9 @@ func DeleteTestTopologies(t *testing.T) {
 			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
 		}
 
-		topology, _, err := TOSession.GetTopology(top.Name)
+		_, _, err = TOSession.GetTopology(top.Name, nil)
 		if err == nil {
 			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
-		}
-		if topology != nil {
-			t.Fatalf("expected nil trying to GET deleted topology: %s, actual: non-nil", top.Name)
 		}
 	}
 }
