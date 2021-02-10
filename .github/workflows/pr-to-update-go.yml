@@ -18,6 +18,8 @@
 name: Is it time to update Go?
 
 on:
+  # run manually
+  workflow_dispatch:
   schedule:
     # 14:00 UTC every day
     - cron: '0 14 * * *'
@@ -28,7 +30,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@master
-        if: ${{ github.repository_owner == 'apache' }}
+        if: ${{ github.repository_owner == 'apache' || github.event_name != 'schedule' }}
         id: checkout
       - name: Install Python 3.9
         uses: actions/setup-python@v2
