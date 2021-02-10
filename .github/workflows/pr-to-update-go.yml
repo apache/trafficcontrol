@@ -19,7 +19,8 @@ name: Is it time to update Go?
 
 on:
   schedule:
-    - cron: 0 14 * * *
+    # 14:00 UTC every day
+    - cron: '0 14 * * *'
 
 jobs:
   pr-to-update-go:
