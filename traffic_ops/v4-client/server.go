@@ -93,7 +93,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.ProfileID = &pr[0].ID
 	}
 	if needAndCanFetch(server.StatusID, server.Status) {
-		st, _, err := to.GetStatusByNameWithHdr(*server.Status, nil)
+		st, _, err := to.GetStatusByName(*server.Status, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
 		}

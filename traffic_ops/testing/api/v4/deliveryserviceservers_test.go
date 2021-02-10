@@ -59,7 +59,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Fatalf("Delivery Service '%s' has no ID", dssaTestingXMLID)
 	}
 
-	statuses, _, err := TOSession.GetStatusesWithHdr(nil)
+	statuses, _, err := TOSession.GetStatuses(nil)
 	if err != nil {
 		t.Fatalf("Could not fetch Statuses: %v", err)
 	}

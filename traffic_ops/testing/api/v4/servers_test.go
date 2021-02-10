@@ -171,7 +171,7 @@ func UpdateTestServerStatus(t *testing.T) {
 	originalStatusID := 0
 	updatedStatusID := 0
 
-	statuses, _, err := TOSession.GetStatusesWithHdr(nil)
+	statuses, _, err := TOSession.GetStatuses(nil)
 	if err != nil {
 		t.Fatalf("cannot get statuses: %v", err.Error())
 	}

@@ -130,7 +130,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE via status ID
-		status, _, err := TOSession.GetStatusByName("OFFLINE")
+		status, _, err := TOSession.GetStatusByName("OFFLINE", nil)
 		if err != nil {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}

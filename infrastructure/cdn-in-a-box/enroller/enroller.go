@@ -481,7 +481,7 @@ func enrollStatus(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatusNullable(s)
+	alerts, _, err := toSession.CreateStatus(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("status %s already exists\n", s.Name)
