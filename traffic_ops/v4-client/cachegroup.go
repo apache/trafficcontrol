@@ -34,7 +34,7 @@ const (
 // CreateCacheGroup creates the given Cache Group.
 func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, toclientlib.ReqInf, error) {
 	if cachegroup.TypeID == nil && cachegroup.Type != nil {
-		ty, _, err := to.GetTypeByNameWithHdr(*cachegroup.Type, nil)
+		ty, _, err := to.GetTypeByName(*cachegroup.Type, nil)
 		if err != nil {
 			return nil, toclientlib.ReqInf{}, err
 		}

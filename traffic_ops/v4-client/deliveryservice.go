@@ -159,7 +159,7 @@ func (to *Session) GetDeliveryServiceByXMLID(XMLID string, header http.Header) (
 func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4) (tc.DeliveryServiceV4, toclientlib.ReqInf, error) {
 	var reqInf toclientlib.ReqInf
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
+		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
 		if err != nil {
 			return tc.DeliveryServiceV4{}, reqInf, err
 		}

@@ -61,7 +61,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {
-		types, _, err := to.GetTypeByNameWithHdr(sdns.Type, nil)
+		types, _, err := to.GetTypeByName(sdns.Type, nil)
 		if err != nil {
 			return err
 		}

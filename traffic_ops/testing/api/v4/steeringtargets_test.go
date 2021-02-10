@@ -174,7 +174,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 		}
 
 		{
-			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type)
+			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type, nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting type: %v", err)
 			} else if len(respTypes) < 1 {

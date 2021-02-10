@@ -67,7 +67,7 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 		cg.ShortName = &expectedShortName
 
 		// fix the type id for test
-		typeResp, _, err := TOSession.GetTypeByIDWithHdr(*cg.TypeID, h)
+		typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, h)
 		if err != nil {
 			t.Fatalf("could not lookup a typeID for this cachegroup: %v", err.Error())
 		}
@@ -272,7 +272,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.ShortName = &expectedShortName
 
 	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID)
+	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, nil)
 	if err != nil {
 		t.Error("could not lookup a typeID for this cachegroup")
 	}
@@ -470,7 +470,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg = resp[0]
 
 	var cacheGroupEdgeType, cacheGroupMidType tc.Type
-	types, _, err := TOSession.GetTypesWithHdr(nil)
+	types, _, err := TOSession.GetTypes(nil)
 	if err != nil {
 		t.Fatalf("unable to get types: %s", err.Error())
 	}

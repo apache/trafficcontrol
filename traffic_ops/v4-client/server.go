@@ -103,7 +103,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.StatusID = &st[0].ID
 	}
 	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
-		ty, _, err := to.GetTypeByNameWithHdr(server.Type, nil)
+		ty, _, err := to.GetTypeByName(server.Type, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no type named %s: %v", server.Type, err)
 		}

@@ -124,7 +124,7 @@ func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 }
 
 func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
-	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
+	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName, nil)
 	if err != nil {
 		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
 	}

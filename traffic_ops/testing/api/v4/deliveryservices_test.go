@@ -169,7 +169,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	cdnNameNew := "sslkeytransfer1"
 	newCdn := createBlankCDN(cdnNameNew, t)
 
-	types, _, err := TOSession.GetTypeByNameWithHdr("HTTP", nil)
+	types, _, err := TOSession.GetTypeByName("HTTP", nil)
 	if err != nil {
 		t.Fatal("unable to get types: " + err.Error())
 	}

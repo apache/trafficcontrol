@@ -1002,7 +1002,7 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
 	}
 
-	serverTypes, _, err := TOSession.GetTypesWithHdr(nil, "server")
+	serverTypes, _, err := TOSession.GetTypes(nil, "server")
 	if err != nil {
 		t.Fatalf("cannot GET Server Types: %v", err)
 	}

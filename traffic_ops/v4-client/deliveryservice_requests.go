@@ -56,7 +56,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.TypeID == nil && dsr.DeliveryService.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByNameWithHdr(dsr.DeliveryService.Type.String(), nil)
+		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String(), nil)
 		if err != nil || len(ty) == 0 {
 			return created, alerts, reqInf, errors.New("no type named " + dsr.DeliveryService.Type.String())
 		}
