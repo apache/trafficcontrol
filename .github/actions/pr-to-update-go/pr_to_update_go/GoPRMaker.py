@@ -23,7 +23,7 @@ from github.Label import Label
 from requests import Response
 
 from github.Branch import Branch
-from github.GithubException import BadCredentialsException, GithubException
+from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
 from github.MainClass import Github
 from github.Milestone import Milestone
 from github.PaginatedList import PaginatedList
@@ -202,6 +202,9 @@ class GoPRMaker:
             base=target_branch,
             maintainer_can_modify=True,
         )
-        go_version_label: Label = self.repo.get_label('go version')
-        pr.add_to_labels(go_version_label)
+        try:
+            go_version_label: Label = self.repo.get_label('go version')
+            pr.add_to_labels(go_version_label)
+        except UnknownObjectException:
+            print('Unable to find a label named "go version".')
         print(f'Created pull request {pr.html_url}')
