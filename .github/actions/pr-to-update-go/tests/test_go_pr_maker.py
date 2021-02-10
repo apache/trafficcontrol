@@ -12,7 +12,7 @@
 #
 from unittest import TestCase
 
-from pr_to_update_go.GoPRMaker import GoPRMaker
+from pr_to_update_go.go_pr_maker import GoPRMaker
 
 
 class TestGoPRMaker(TestCase):

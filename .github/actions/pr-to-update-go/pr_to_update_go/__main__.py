@@ -15,7 +15,7 @@ import sys
 
 from github.MainClass import Github
 
-from pr_to_update_go.GoPRMaker import GoPRMaker
+from pr_to_update_go.go_pr_maker import GoPRMaker
 from pr_to_update_go.constants import ENV_GITHUB_TOKEN
 
 
