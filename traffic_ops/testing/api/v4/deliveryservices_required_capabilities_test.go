@@ -69,7 +69,7 @@ func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing
 	}
 	params.Add("dsId", strconv.Itoa(dsID))
 	params.Add("type", tc.OriginTypeName)
-	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	responseServers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
 	}
@@ -395,7 +395,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// TODO: DON'T hard-code hostnames!
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}

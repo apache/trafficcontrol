@@ -286,7 +286,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServersWithHdr(&params, nil)
+		servers, _, err := toSession.GetServers(params, nil)
 		if err != nil {
 			return err
 		}
@@ -723,7 +723,7 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	resp, _, err := toSession.GetServersWithHdr(&url.Values{"hostName": []string{*s.Server}}, nil)
+	resp, _, err := toSession.GetServers(url.Values{"hostName": []string{*s.Server}}, nil)
 	if err != nil {
 		log.Infof("getting server %s: %s\n", *s.Server, err.Error())
 		return err

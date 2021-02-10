@@ -660,7 +660,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	cachegroup := cachegroups[0]
 	params = url.Values{"cdn": {strconv.Itoa(*ds.CDNID)}, "cachegroup": {strconv.Itoa(*cachegroup.ID)}}
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("getting Server with params %v: %s", params, err.Error())
 	}
@@ -698,7 +698,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	*server.ProfileID = profile.ID
 
 	// Empty Cache Group dtrc1 with respect to CDN 2
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server, nil)
+	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
 	if err != nil {
 		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
 	}
@@ -714,7 +714,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	*server.ProfileID = profileCopy.ExistingID
 
 	// Put things back the way they were
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server, nil)
+	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
 	if err != nil {
 		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
 	}

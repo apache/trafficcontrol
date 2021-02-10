@@ -46,7 +46,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
 
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -121,7 +121,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", hostname)
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
@@ -182,7 +182,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -235,7 +235,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {

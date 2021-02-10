@@ -69,7 +69,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 			t.Fatalf("server-server-capability structure had nil server")
 		}
 		params.Set("hostName", *ssc.Server)
-		resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, err := TOSession.GetServers(params, nil)
 		if err != nil {
 			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
 		}
@@ -137,7 +137,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Attempt to assign a server capability to a non MID/EDGE server
 	// TODO: DON'T hard-code server hostnames!
 	params.Set("hostName", "trafficvault")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname 'trafficvault': %v - %v", err, resp.Alerts)
 	}
@@ -382,7 +382,7 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 	var edge1 tc.ServerV40
 	var edge2 tc.ServerV40
 
-	servers, _, err := TOSession.GetServersWithHdr(nil, nil)
+	servers, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET servers: %v", err)
 	}

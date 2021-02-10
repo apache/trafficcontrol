@@ -85,7 +85,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Set("hostName", dssaTestingXMLID)
 	params.Set("domainName", dssaTestingXMLID)
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error fetching server '%s.%s': %v", dssaTestingXMLID, dssaTestingXMLID, err)
 	}
@@ -116,7 +116,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to remove the only server assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err := TOSession.DeleteServerByID(*server.ID, nil)
+	alerts, _, err := TOSession.DeleteServer(*server.ID, nil)
 	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
@@ -147,7 +147,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
 	}
 
-	alerts, _, err = TOSession.UpdateServerByID(*server.ID, server, nil)
+	alerts, _, err = TOSession.UpdateServer(*server.ID, server, nil)
 	t.Logf("Alerts from updating server status: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err == nil {
 		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
@@ -175,7 +175,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
 	}
 	params.Set("hostName", *server.HostName)
-	servers, _, err = TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err = TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Could not fetch server after creation: %v", err)
 	}
@@ -196,7 +196,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	// Cleanup
 	setInactive(t, *ds.ID)
-	alerts, _, err = TOSession.DeleteServerByID(*server.ID, nil)
+	alerts, _, err = TOSession.DeleteServer(*server.ID, nil)
 	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
 	if err != nil {
 		t.Errorf("Failed to delete server: %v", err)
@@ -216,7 +216,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
-	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	serversResp, _, err := TOSession.GetServers(nil, nil)
 	servers := []tc.ServerV40{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
@@ -255,7 +255,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	// attempt to assign ORG server to a topology-based DS while the ORG server's cachegroup doesn't belong to the topology
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("unable to GET server: %v", err)
 	}
@@ -332,7 +332,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	if dsWithMid[0].Topology != nil {
 		t.Fatal("expected delivery service: 'ds1' to have a nil Topology, actual: non-nil")
 	}
-	serversResp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	serversResp, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("unable to fetch all servers: %v", err)
 	}
@@ -352,7 +352,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	}
 
 	params = url.Values{"dsId": []string{strconv.Itoa(*dsWithMid[0].ID)}}
-	dsServersResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	dsServersResp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("unable to fetch delivery service servers: %v", err)
 	}
@@ -408,7 +408,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
-			resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+			resp, _, err := TOSession.GetServers(params, nil)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
@@ -456,7 +456,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// TODO: DON'T hard-code server hostnames!
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("GET server denver-mso-org-01: %v", err)
 	}
@@ -594,7 +594,7 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV40) 
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	resp, _, err := TOSession.GetServersWithHdr(nil, nil)
+	resp, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Servers: %v", err)
 	}

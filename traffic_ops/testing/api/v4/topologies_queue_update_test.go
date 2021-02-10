@@ -115,7 +115,7 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnID int64, d
 	params := url.Values{}
 	dsIDString := strconv.Itoa(dsID)
 	params.Set("dsId", dsIDString)
-	serversResponse, _, err := TOSession.GetServersWithHdr(&params, nil)
+	serversResponse, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("getting servers for delivery service with id %s: %s", dsIDString, err)
 	}

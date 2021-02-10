@@ -291,7 +291,7 @@ func UpdateTestTopologies(t *testing.T) {
 	}
 	params = url.Values{}
 	params.Add("cachegroup", strconv.Itoa(*cgs[0].ID))
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("unable to GET servers by cachegroup: %v", err)
 	}
@@ -353,7 +353,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Remove org server assignment and reset DS back to as it was for further testing
 	params.Set("hostName", "denver-mso-org-01")
-	serverResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	serverResp, _, err := TOSession.GetServers(params, nil)
 	if len(serverResp.Response) == 0 {
 		t.Fatal("no servers in response, quitting")
 	}
