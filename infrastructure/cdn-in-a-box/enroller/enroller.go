@@ -396,7 +396,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByNameWithHdr(n, nil)
+				profiles, _, err := toSession.GetProfileByName(n, nil)
 				if err != nil {
 					return err
 				}
@@ -573,7 +573,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByNameWithHdr(profile.Name, nil)
+	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -595,7 +595,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByNameWithHdr(profile.Name, nil)
+		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -605,7 +605,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		profile = profiles[0]
 		action = "creating"
 	} else {
-		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile)
+		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, nil)
 		action = "updating"
 	}
 

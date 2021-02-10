@@ -72,7 +72,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.ProfileID == nil && dsr.DeliveryService.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByNameWithHdr(*dsr.DeliveryService.ProfileName, nil)
+		profiles, reqInf, err := to.GetProfileByName(*dsr.DeliveryService.ProfileName, nil)
 		if err != nil || len(profiles) == 0 {
 			return created, alerts, reqInf, fmt.Errorf("no Profile named '%s'", *dsr.DeliveryService.ProfileName)
 		}

@@ -60,7 +60,7 @@ func GetTestProfileParametersIMS(t *testing.T) {
 func CreateTestProfileParameters(t *testing.T) {
 
 	firstProfile := testData.Profiles[0]
-	profileResp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, nil)
+	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}

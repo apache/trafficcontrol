@@ -181,7 +181,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4) (tc.DeliverySe
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByNameWithHdr(*ds.ProfileName, nil)
+		profiles, _, err := to.GetProfileByName(*ds.ProfileName, nil)
 		if err != nil {
 			return tc.DeliveryServiceV4{}, reqInf, err
 		}

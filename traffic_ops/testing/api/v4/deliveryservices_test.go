@@ -682,7 +682,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("copying Profile %s: %s", *server.Profile, err.Error())
 	}
 
-	profiles, _, err := TOSession.GetProfileByNameWithHdr(profileCopy.Name, nil)
+	profiles, _, err := TOSession.GetProfileByName(profileCopy.Name, nil)
 	if err != nil {
 		t.Fatalf("getting Profile %s: %s", profileCopy.Name, err.Error())
 	}
@@ -691,7 +691,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	profile := profiles[0]
 	profile.CDNID = cdn1.ID
-	_, _, err = TOSession.UpdateProfileByIDWithHdr(profile.ID, profile, nil)
+	_, _, err = TOSession.UpdateProfile(profile.ID, profile, nil)
 	if err != nil {
 		t.Fatalf("updating Profile %s: %s", profile.Name, err.Error())
 	}
@@ -719,7 +719,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
 	}
 
-	_, _, err = TOSession.DeleteProfileByID(profile.ID)
+	_, _, err = TOSession.DeleteProfile(profile.ID)
 	if err != nil {
 		t.Fatalf("deleting Profile %s: %s", profile.Name, err.Error())
 	}

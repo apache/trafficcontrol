@@ -56,7 +56,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByNameWithHdr(*origin.Profile, nil)
+		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
 		if err != nil {
 			return err
 		}

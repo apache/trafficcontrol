@@ -54,7 +54,7 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.Parameters) > 0 {
 		firstParameter := testData.Parameters[0]
 		// Retrieve the Parameter by name so we can get the id for the Update
-		resp, _, err := TOSession.GetParametersByProfileNameWithHdr(firstParameter.Name, header)
+		resp, _, err := TOSession.GetParametersByProfileName(firstParameter.Name, header)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 		}

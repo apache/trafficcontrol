@@ -77,7 +77,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.PhysLocationID = &ph[0].ID
 	}
 	if needAndCanFetch(server.ProfileID, server.Profile) {
-		pr, _, err := to.GetProfileByNameWithHdr(*server.Profile, nil)
+		pr, _, err := to.GetProfileByName(*server.Profile, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no profile named %s: %v", *server.Profile, err)
 		}

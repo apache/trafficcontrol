@@ -96,7 +96,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	newCDNID := cdns[0].ID
 	oldCDNID := *server.CDNID
 	server.CDNID = &newCDNID
-	profiles, _, err := TOSession.GetProfileByNameWithHdr("MID1", nil)
+	profiles, _, err := TOSession.GetProfileByName("MID1", nil)
 	if err != nil {
 		t.Fatalf("unable to GET profile: %v", err)
 	}
