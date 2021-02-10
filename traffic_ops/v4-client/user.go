@@ -117,7 +117,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, toclientli
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByNameWithHdr(*user.RoleName, nil)
+		roles, _, _, err := to.GetRoleByName(*user.RoleName, nil)
 		if err != nil {
 			return nil, toclientlib.ReqInf{}, err
 		}

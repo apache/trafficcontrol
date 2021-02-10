@@ -106,7 +106,7 @@ func CreateTestUsers(t *testing.T) {
 
 func RolenameCapitalizationTest(t *testing.T) {
 
-	roles, _, _, err := TOSession.GetRoles()
+	roles, _, _, err := TOSession.GetRoles(nil, nil)
 	if err != nil {
 		t.Errorf("could not get roles: %v", err)
 	}
