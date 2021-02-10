@@ -15,15 +15,16 @@
 import json
 import os
 import re
-import requests
 import sys
 
-from github.InputGitAuthor import InputGitAuthor
-from github.Label import Label
+import requests
+
 from requests import Response
 
 from github.Branch import Branch
 from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
+from github.InputGitAuthor import InputGitAuthor
+from github.Label import Label
 from github.MainClass import Github
 from github.Milestone import Milestone
 from github.PaginatedList import PaginatedList
