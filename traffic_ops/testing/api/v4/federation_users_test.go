@@ -66,7 +66,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Fatalf("getting users: " + err.Error())
 	}
@@ -136,7 +136,7 @@ func CreateTestValidFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Fatalf("getting users: " + err.Error())
 	}
@@ -158,7 +158,7 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Fatalf("getting users: " + err.Error())
 	}

@@ -202,7 +202,7 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	}
 
 	// need to assign myself the federation to set its mappings
-	me, _, err := TOSession.GetUserCurrent()
+	me, _, err := TOSession.GetUserCurrent(nil)
 	if err != nil {
 		t.Fatalf("Couldn't figure out who I am: %v", err)
 	}

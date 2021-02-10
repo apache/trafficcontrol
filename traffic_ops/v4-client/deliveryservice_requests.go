@@ -34,7 +34,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	var alerts tc.Alerts
 	var created tc.DeliveryServiceRequestV40
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
-		res, reqInf, err := to.GetUserByUsernameWithHdr(*dsr.Assignee, nil)
+		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee, nil)
 		if err != nil {
 			return created, alerts, reqInf, err
 		}
@@ -45,7 +45,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.AuthorID == nil && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsernameWithHdr(dsr.Author, nil)
+		res, reqInf, err := to.GetUserByUsername(dsr.Author, nil)
 		if err != nil {
 			return created, alerts, reqInf, err
 		}

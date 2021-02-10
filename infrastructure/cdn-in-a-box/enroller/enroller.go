@@ -534,7 +534,7 @@ func enrollUser(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateUser(&s)
+	alerts, _, err := toSession.CreateUser(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("user %s already exists\n", *s.Username)
