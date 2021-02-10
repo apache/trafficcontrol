@@ -88,7 +88,7 @@ func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
 	}
 	st.Value = &expected
 
-	_, reqInf, err := SteeringUserSession.UpdateSteeringTargetWithHdr(st, header)
+	_, reqInf, err := SteeringUserSession.UpdateSteeringTarget(st, header)
 	if err == nil {
 		t.Errorf("Expected error about precondition failed, but got none")
 	}
@@ -254,7 +254,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	st.Value = &expected
 
-	_, _, err = SteeringUserSession.UpdateSteeringTarget(st)
+	_, _, err = SteeringUserSession.UpdateSteeringTarget(st, nil)
 	if err != nil {
 		t.Fatalf("updating steering targets: updating: %+v", err)
 	}

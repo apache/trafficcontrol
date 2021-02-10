@@ -24,6 +24,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// CreateSteeringTarget adds the given Steering Target to a Steering Delivery
+// Service.
 func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	if st.DeliveryServiceID == nil {
 		return tc.Alerts{}, toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}, errors.New("missing delivery service id")
@@ -34,7 +36,10 @@ func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateSteeringTarget replaces an existing Steering Target association with
+// the newly provided configuration. 'st' must have both a Delivery Service ID
+// and a Target ID.
+func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if st.DeliveryServiceID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing delivery service id")
@@ -48,13 +53,10 @@ func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, hea
 	return alerts, reqInf, err
 }
 
-// Deprecated: UpdateSteeringTarget will be removed in 6.0. Use UpdateSteeringTargetWithHdr.
-func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdateSteeringTargetWithHdr(st, nil)
-}
-
+// GetSteeringTargets retrieves all Targets for the Steering Delivery Service
+// with the given ID.
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("/steering/%d/targets", dsID)
+	route := fmt.Sprintf("steering/%d/targets", dsID)
 	data := struct {
 		Response []tc.SteeringTargetNullable `json:"response"`
 	}{}
@@ -62,8 +64,10 @@ func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, to
 	return data.Response, reqInf, err
 }
 
+// DeleteSteeringTarget removes the Target identified by 'targetID' from the
+// Delivery Service identified by 'dsID'.
 func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("/steering/%d/targets/%d", dsID, targetID)
+	route := fmt.Sprintf("steering/%d/targets/%d", dsID, targetID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
