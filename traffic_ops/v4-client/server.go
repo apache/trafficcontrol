@@ -67,7 +67,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.CDNID = &c[0].ID
 	}
 	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
-		ph, _, err := to.GetPhysLocationByNameWithHdr(*server.PhysLocation, nil)
+		ph, _, err := to.GetPhysLocationByName(*server.PhysLocation, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
 		}

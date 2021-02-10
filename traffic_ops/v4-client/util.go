@@ -19,6 +19,8 @@ import (
 	"net/url"
 )
 
+// mapToQueryParameters converts the given map to a full query string.
+// The returned string is properly encoded, and includes the '?' prefix.
 func mapToQueryParameters(paramsMap map[string]string) string {
 	params := url.Values{}
 	for key, value := range paramsMap {
