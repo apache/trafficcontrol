@@ -486,8 +486,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		////DeliveryServices
 		{api.Version{4, 0}, http.MethodGet, `deliveryservices/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 42383172943, noPerlBypass},
-		{api.Version{4, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV40, auth.PrivLevelOperations, Authenticated, nil, 4064315323, noPerlBypass},
-		{api.Version{4, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV40, auth.PrivLevelOperations, Authenticated, nil, 47665675673, noPerlBypass},
+		{api.Version{4, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV30, auth.PrivLevelOperations, Authenticated, nil, 4064315323, noPerlBypass},
+		{api.Version{4, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV30, auth.PrivLevelOperations, Authenticated, nil, 47665675673, noPerlBypass},
 		{api.Version{4, 0}, http.MethodPut, `deliveryservices/{id}/safe/?$`, deliveryservice.UpdateSafe, auth.PrivLevelOperations, Authenticated, nil, 4472109313, perlBypass},
 		{api.Version{4, 0}, http.MethodDelete, `deliveryservices/{id}/?$`, api.DeleteHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelOperations, Authenticated, nil, 4226420743, noPerlBypass},
 		{api.Version{4, 0}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 4747615843, noPerlBypass},
