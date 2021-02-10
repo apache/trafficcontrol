@@ -1,23 +1,5 @@
-<!--
-************ STOP!! ************
-If this Pull Request is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
-the Apache Software Foundation Security Team at security@trafficcontrol.apache.org and follow the
-guidelines at https://www.apache.org/security/ regarding vulnerability disclosure.
--->
 ## What does this PR (Pull Request) do?
-<!-- Explain the changes you made here. If this fixes an Issue, identify it by
-replacing the text in the checkbox item with the Issue number e.g.
-
-- [x] This PR fixes #9001 OR is not related to any Issue
-
-^ This will automatically close Issue number 9001 when the Pull Request is
-merged (The '#' is important).
-
-Be sure you check the box properly, see the "The following criteria are ALL
-met by this PR" section for details.
--->
-- [x] This PR is not related to any Issue<!-- You can check for an issue here: https://github.com/apache/trafficcontrol/issues -->
-
+- [x] This PR is not related to any Issue
 
 This PR makes the Go components of Traffic Control build using Go version {GO_VERSION}.
 
@@ -57,13 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 > {RELEASE_NOTES}
 
 ## Which Traffic Control components are affected by this PR?
-<!-- Please delete all components from this list that are NOT affected by this
-Pull Request. Also, feel free to add the name of a tool or script that is
-affected but not on the list.
-
-Additionally, if this Pull Request does NOT affect documentation, please
-explain why documentation is not required. -->
-
 - CDN in a Box - Enroller
 - Grove
 - Traffic Control Client (Go)
@@ -74,25 +49,9 @@ explain why documentation is not required. -->
 - CI tests for Go components
 
 ## What is the best way to verify this PR?
-<!-- Please include here ALL the steps necessary to test your Pull Request. If
-it includes tests (and most should), outline here the steps needed to run the
-tests. If not, lay out the manual testing procedure and please explain why
-tests are unnecessary for this Pull Request. -->
 Run unit tests and API tests. Since this is only a patch-level version update, [the only changes]({MILESTONE_URL}?closed=1) were bugfixes. Breaking changes would be unexpected.
 
 ## The following criteria are ALL met by this PR
-<!-- Check the boxes to signify that the associated statement is true. To
-"check a box", replace the space inside of the square brackets with an 'x'.
-e.g.
-
-- [ x] <- Wrong
-- [x ] <- Wrong
-- [] <- Wrong
-- [*] <- Wrong
-- [x] <- Correct!
-
--->
-
 - [x] Existing tests are sufficient, no additional tests necessary
 - [x] The documentation only mentions the major Go version, no documentation updates necessary.
 - [x] The changelog already mentions updating to Go {GO_MAJOR_VERSION}, no additional changelog message necessary.
