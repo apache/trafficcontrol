@@ -421,8 +421,8 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
-			if len(srvs.Response) != 1 {
-				t.Fatalf("Expected exactly one server with ID %d - found: %d", *cacheGroup.ID, len(srvs.Response))
+			if len(srvs.Response) < 1 {
+				t.Fatalf("Expected at least one server in Cache Group #%d - found none", *cacheGroup.ID)
 			}
 			cachesByCacheGroup[cacheGroupName] = srvs.Response[0]
 		}
