@@ -132,14 +132,13 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
 	}
 
-	acmeAccount := getAcmeAccountConfig(cfg, keyObj.AuthType)
+	acmeAccount := GetAcmeAccountConfig(cfg, keyObj.AuthType)
 	if acmeAccount == nil {
 		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
 	}
 
 	client, err := GetAcmeClient(acmeAccount, userTx, db)
 	if err != nil {
-		log.Errorf(dsName+": Error getting acme client: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError
 	}
@@ -192,7 +191,8 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	return nil, nil, http.StatusOK
 }
 
-func getAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
+// GetAcmeAccountConfig returns the ACME account information from cdn.conf for a given provider
+func GetAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
 	for _, acmeCfg := range cfg.AcmeAccounts {
 		if acmeCfg.AcmeProvider == acmeProvider {
 			return &acmeCfg

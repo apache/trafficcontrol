@@ -827,14 +827,26 @@ Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fi
 	| user_email                   | string  | Yes      | Email to create account with Let's Encrypt or to receive expiration updates.                                                                                           |
 	|                              |         |          | If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.                                       |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| send_expiration_email        | boolean | No       | Option to send email summarizing certificate expiration status                                                                                                         |
-	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| convert_self_signed          | boolean | No       | Option to convert self signed to Let's Encrypt certificates as they expire. Only works for certificates labeled as Self Signed in the Certificate Source field.        |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates                                                                                                            |
+	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'.                                                                    |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                     |
-	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Automatic Certificate Renewal
+-----------------------------
+If desired, an automated certificate renewal script is located at :file:`/traffic_ops/etc/cron.d/autorenew_certs`. This job is setup to be run, but the file must be updated with the username and password for Traffic Ops in order to be run.  In :ref:`cdn.conf` the following fields can be defined in order to alter the number of days in advance to renew and send a summary email after renewal.
+
+.. important:: After the automatic renewal script has run, a queue and snapshot must be run manually in order for the certificates to be used.
+
+.. table:: Fields to update to run the automatic renewal script under `acme_renewal`:
+
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                |
+	+==============================+=========+==========+============================================================================================================================+
+	| summary_email                | boolean | No       | The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent. |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates. Default is 30 days.                                           |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 

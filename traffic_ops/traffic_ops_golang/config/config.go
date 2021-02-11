@@ -48,6 +48,7 @@ type Config struct {
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
+	ConfigAcmeRenewal      `json:"acme_renewal"`
 	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
 	DB                     ConfigDatabase      `json:"db"`
 	Secrets                []string            `json:"secrets"`
@@ -152,11 +153,15 @@ type ConfigSMTP struct {
 
 // ConfigLetsEncrypt contains configuration information for integration with the Let's Encrypt certificate authority.
 type ConfigLetsEncrypt struct {
-	Email                     string `json:"user_email,omitempty"`
-	SendExpEmail              bool   `json:"send_expiration_email"`
-	ConvertSelfSigned         bool   `json:"convert_self_signed"`
+	Email             string `json:"user_email,omitempty"`
+	ConvertSelfSigned bool   `json:"convert_self_signed"`
+	Environment       string `json:"environment"`
+}
+
+// ConfigAcmeRenewal continas configuration information for automated ACME renewals.
+type ConfigAcmeRenewal struct {
+	SummaryEmail              string `json:"summary_email"`
 	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
-	Environment               string `json:"environment"`
 }
 
 // ConfigAcmeAccount contains all account information for a single ACME provider to be registered with External Account Binding

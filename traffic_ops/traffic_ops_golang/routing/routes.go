@@ -153,6 +153,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Delivery service ACME
 		{api.Version{4, 0}, http.MethodPost, `deliveryservices/xmlId/{xmlid}/sslkeys/renew$`, deliveryservice.RenewAcmeCertificate, auth.PrivLevelOperations, Authenticated, nil, 2534390573, noPerlBypass},
+		{api.Version{4, 0}, http.MethodPost, `acme_autorenew/?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390574, noPerlBypass},
 
 		// API Capability
 		{api.Version{4, 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 48132065893, noPerlBypass},
@@ -505,7 +506,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Delivery service LetsEncrypt
 		{api.Version{4, 0}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelOperations, Authenticated, nil, 4534390523, noPerlBypass},
 		{api.Version{4, 0}, http.MethodGet, `letsencrypt/dnsrecords/?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelOperations, Authenticated, nil, 4534390553, noPerlBypass},
-		{api.Version{4, 0}, http.MethodPost, `letsencrypt/autorenew/?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 4534390563, noPerlBypass},
+		{api.Version{4, 0}, http.MethodPost, `letsencrypt/autorenew/?$`, deliveryservice.RenewCertificatesDeprecated, auth.PrivLevelOperations, Authenticated, nil, 4534390563, noPerlBypass},
 
 		{api.Version{4, 0}, http.MethodGet, `deliveryservices/{id}/health/?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 42345901013, noPerlBypass},
 
