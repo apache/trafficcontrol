@@ -1,7 +1,7 @@
 ## What does this PR (Pull Request) do?
 - [x] This PR is not related to any Issue
 
-This PR makes the Go components of Traffic Control build using Go version {GO_VERSION}.
+This PR makes the Go components of Traffic Control build using Go version {GO_VERSION} and updates the `golang.org/x/` dependencies..
 
 See the Go {GO_VERSION} [release notes](https://golang.org/doc/devel/release.html#go{GO_MAJOR_VERSION}):
 
