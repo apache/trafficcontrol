@@ -19,17 +19,25 @@ Classes:
     GoPRMaker
 
 """
-
 import json
 import os
 import re
+import subprocess
 import sys
+from typing import Union
 
 import requests
+from github.Branch import Branch
+from github.Commit import Commit
+from github.GitCommit import GitCommit
+from github.GitRef import GitRef
+from github.GitTree import GitTree
+from github.GithubObject import NotSet
+from github.InputGitTreeElement import InputGitTreeElement
+from github.Requester import Requester
 
 from requests import Response
 
-from github.Branch import Branch
 from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
 from github.InputGitAuthor import InputGitAuthor
 from github.Label import Label
@@ -51,6 +59,7 @@ class GoPRMaker:
 	gh: Github
 	latest_go_version: str
 	repo: Repository
+	author: InputGitAuthor
 
 	def __init__(self, gh: Github) -> None:
 		"""
@@ -60,6 +69,50 @@ class GoPRMaker:
 		self.gh = gh
 		repo_name: str = self.get_repo_name()
 		self.repo = self.get_repo(repo_name)
+
+		try:
+			git_author_name = self.getenv(ENV_GIT_AUTHOR_NAME)
+			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
+			self.author = InputGitAuthor(git_author_name, git_author_email)
+		except KeyError:
+			self.author = NotSet
+			print('Will commit using the default author')
+
+	def branch_exists(self, branch: str) -> bool:
+		"""
+		:param branch:
+		:type branch:
+		:return:
+		:rtype: bool
+		"""
+		try:
+			repo_go_version = self.get_repo_go_version(branch)
+			if self.latest_go_version == repo_go_version:
+				print(f'Branch {branch} already exists')
+				return True
+		except GithubException as e:
+			message = e.data.get('message')
+			if not re.match(r'No commit found for the ref', message):
+				raise e
+		return False
+
+	def update_branch(self, branch_name: str, sha: str) -> None:
+		"""
+		:param branch_name:
+		:type branch_name:
+		:param sha:
+		:type sha:
+		:return:
+		:rtype: None
+		"""
+		requester: Requester = self.repo._requester
+		patch_parameters = {
+			'sha': sha,
+		}
+		requester.requestJsonAndCheck(
+			'PATCH', self.repo.url + f'/git/refs/heads/{branch_name}', input=patch_parameters
+		)
+		return
 
 	def run(self) -> None:
 		"""
@@ -76,7 +129,14 @@ class GoPRMaker:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
 
-		self.set_go_version(self.latest_go_version, commit_message, source_branch_name)
+		if not self.branch_exists(source_branch_name):
+			commit: Commit = self.set_go_version(self.latest_go_version, commit_message,
+				source_branch_name)
+			update_golang_org_x_commit: Union[GitCommit, None] = self.update_golang_org_x(commit)
+			if isinstance(update_golang_org_x_commit, GitCommit):
+				sha: str = update_golang_org_x_commit.sha
+				self.update_branch(source_branch_name, sha)
+
 		owner: str = self.get_repo_owner()
 		self.create_pr(self.latest_go_version, commit_message, owner, source_branch_name,
 			target_branch)
@@ -221,7 +281,8 @@ class GoPRMaker:
 		return self.repo.get_contents(self.getenv(ENV_GO_VERSION_FILE),
 			f'refs/heads/{branch}').decoded_content.rstrip().decode()
 
-	def set_go_version(self, go_version: str, commit_message: str, source_branch_name: str) -> None:
+	def set_go_version(self, go_version: str, commit_message: str,
+			source_branch_name: str) -> Commit:
 		"""
 		:param go_version: str
 		:param commit_message: str
@@ -229,16 +290,6 @@ class GoPRMaker:
 		:return:
 		:rtype: str
 		"""
-		try:
-			repo_go_version = self.get_repo_go_version(source_branch_name)
-			if go_version == repo_go_version:
-				print(f'Branch {source_branch_name} already exists')
-				return
-		except GithubException as e:
-			message = e.data.get('message')
-			if not re.match(r'No commit found for the ref', message):
-				raise e
-
 		master: Branch = self.repo.get_branch('master')
 		sha: str = master.commit.sha
 		ref: str = f'refs/heads/{source_branch_name}'
@@ -262,8 +313,46 @@ class GoPRMaker:
 		except KeyError:
 			print('Committing using the default author')
 
-		self.repo.update_file(**kwargs)
+		commit: Commit = self.repo.update_file(**kwargs).get('commit')
 		print(f'Updated {go_version_file} on {self.repo.name}')
+		return commit
+
+	def update_golang_org_x(self, previous_commit: Commit) -> Union[GitCommit, None]:
+		"""
+		:param previous_commit:
+		:type previous_commit:
+		:return:
+		:rtype: Union[GitCommit, None]
+		"""
+		subprocess.run(['git', 'fetch', 'origin'], check=True)
+		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
+		script_path: str = f'.github/actions/pr-to-update-go/update_golang_org_x.sh'
+		subprocess.run([script_path], check=True)
+		files_to_check: list[str] = ['go.mod', 'go.sum', 'vendor/modules.txt']
+		tree_elements: list[InputGitTreeElement] = []
+		for file in files_to_check:
+			diff_process = subprocess.run(['git', 'diff', '--exit-code', '--', file])
+			if diff_process.returncode == 0:
+				continue
+			with open(file) as stream:
+				content: str = stream.read()
+			tree_element: InputGitTreeElement = InputGitTreeElement(path=file, mode='100644',
+				type='blob', content=content)
+			tree_elements.append(tree_element)
+		if len(tree_elements) == 0:
+			print('No golang.org/x/ dependencies need to be updated.')
+			return
+		tree_hash = subprocess.check_output(
+			['git', 'log', '-1', '--pretty=%T', previous_commit.sha]).decode().strip()
+		base_tree: GitTree = self.repo.get_git_tree(sha=tree_hash)
+		tree: GitTree = self.repo.create_git_tree(tree_elements, base_tree)
+		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
+		previous_git_commit: GitCommit = self.repo.get_git_commit(previous_commit.sha)
+		git_commit: GitCommit = self.repo.create_git_commit(message=commit_message, tree=tree,
+			parents=[previous_git_commit],
+			author=self.author, committer=self.author)
+		print(f'Updated golang.org/x/ dependencies')
+		return git_commit
 
 	def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
 			source_branch_name: str, target_branch: str) -> None:
