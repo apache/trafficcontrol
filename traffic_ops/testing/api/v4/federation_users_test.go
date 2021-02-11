@@ -63,6 +63,9 @@ func CreateTestFederationUsers(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
+	if len(fedIDs) < 1 {
+		t.Fatal("need at least one stored Federation ID to test Federations")
+	}
 	fedID := fedIDs[0]
 
 	// Get Users
@@ -133,6 +136,9 @@ func CreateTestValidFederationUsers(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
+	if len(fedIDs) < 1 {
+		t.Fatal("need at least one stored Federation ID to test Federations")
+	}
 	fedID := fedIDs[0]
 
 	// Get Users
@@ -155,6 +161,9 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
+	if len(fedIDs) < 1 {
+		t.Fatal("need at least one stored Federation ID to test Federations")
+	}
 	fedID := fedIDs[0]
 
 	// Get Users
@@ -184,6 +193,9 @@ func DeleteTestFederationUsers(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
+	if len(fedIDs) < 1 {
+		t.Fatal("need at least one stored Federation ID to test Federations")
+	}
 	fedID := fedIDs[0]
 
 	fedUsers, _, err := TOSession.GetFederationUsers(fedID, nil)
