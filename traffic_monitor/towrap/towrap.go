@@ -363,12 +363,12 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		ioutil.WriteFile(s.CRConfigBackupFile, data, 0644)
 	} else {
 		if s.BackupFileExists() {
+			log.Errorln("using backup file for CRConfig snapshot due to error fetching CRConfig snapshot from Traffic Ops: " + err.Error())
 			data, err = ioutil.ReadFile(s.CRConfigBackupFile)
 			if err != nil {
 				return nil, fmt.Errorf("file Read Error: %v", err)
 			}
 			remoteAddr = localHostIP
-			log.Errorln("Error getting CRConfig from traffic_ops, backup file exists, reading from file")
 			err = nil
 		} else {
 			return nil, fmt.Errorf("Failed to get CRConfig from Traffic Ops (%v), and there is no backup file", err)
@@ -473,17 +473,17 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 		if !s.BackupFileExists() {
 			return nil, err
 		}
+		log.Errorln("using backup file for monitoring config snapshot due to invalid monitoring config snapshot from Traffic Ops: " + err.Error())
 
 		b, err := ioutil.ReadFile(s.TMConfigBackupFile)
 		if err != nil {
 			return nil, errors.New("reading TMConfigBackupFile: " + err.Error())
 		}
 
-		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
 		var tmConfig tc.TrafficMonitorConfig
 		if err := json.Unmarshal(b, &tmConfig); err != nil {
-			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
+			return nil, errors.New("unmarshalling backup file monitoring.json: " + err.Error())
 		}
 		return tc.TrafficMonitorTransformToMap(&tmConfig)
 	}
