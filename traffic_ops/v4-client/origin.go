@@ -138,7 +138,7 @@ func (to *Session) GetOriginByID(id int) ([]tc.Origin, toclientlib.ReqInf, error
 // GetOriginByName retrieves the Origin with the given Name.
 func (to *Session) GetOriginByName(name string) ([]tc.Origin, toclientlib.ReqInf, error) {
 	params := url.Values{}
-	params.Set("id", name)
+	params.Set("name", name)
 	return to.GetOrigins(params)
 }
 
