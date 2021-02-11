@@ -30,7 +30,7 @@ const APITopologies = "/topologies"
 // CreateTopology creates the passed Topology.
 func (to *Session) CreateTopology(top tc.Topology) (tc.TopologyResponse, toclientlib.ReqInf, error) {
 	var resp tc.TopologyResponse
-	reqInf, err := to.post(APITopologies, top, nil, resp)
+	reqInf, err := to.post(APITopologies, top, nil, &resp)
 	return resp, reqInf, err
 }
 
