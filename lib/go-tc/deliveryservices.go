@@ -565,7 +565,7 @@ func (ds *DeliveryServiceNullableV4) validateTypeFields(tx *sql.Tx) error {
 	errs := validation.Errors{
 		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
+				ds := dsi.(*DeliveryServiceNullableV4)
 				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
 					return nil
 				}
@@ -591,7 +591,7 @@ func (ds *DeliveryServiceNullableV4) validateTypeFields(tx *sql.Tx) error {
 			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
 		"rangeSliceBlockSize": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
+				ds := dsi.(*DeliveryServiceNullableV4)
 				if ds.RangeRequestHandling != nil {
 					if *ds.RangeRequestHandling == 3 {
 						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
@@ -614,7 +614,7 @@ func (ds *DeliveryServiceNullableV4) validateTypeFields(tx *sql.Tx) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"topology": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
+				ds := dsi.(*DeliveryServiceNullableV4)
 				if ds.Topology != nil && DSType(typeName).IsSteering() {
 					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
 				}
@@ -622,7 +622,7 @@ func (ds *DeliveryServiceNullableV4) validateTypeFields(tx *sql.Tx) error {
 			})),
 		"maxRequestHeaderBytes": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
+				ds := dsi.(*DeliveryServiceNullableV4)
 				if ds.MaxRequestHeaderBytes == nil {
 					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
 				}
