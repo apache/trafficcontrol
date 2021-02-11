@@ -60,7 +60,7 @@ func (to *Session) UpdatePhysLocation(id int, pl tc.PhysLocation, header http.He
 func (to *Session) GetPhysLocations(params url.Values, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
 	path := APIPhysLocations
 	if len(params) > 0 {
-		path += params.Encode()
+		path += "?" + params.Encode()
 	}
 	var data tc.PhysLocationsResponse
 	reqInf, err := to.get(path, header, &data)
