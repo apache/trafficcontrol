@@ -836,6 +836,8 @@ Automatic Certificate Renewal
 -----------------------------
 If desired, an automated certificate renewal script is located at :file:`/traffic_ops/etc/cron.d/autorenew_certs`. This job is setup to be run, but the file must be updated with the username and password for Traffic Ops in order to be run.  In :ref:`cdn.conf` the following fields can be defined in order to alter the number of days in advance to renew and send a summary email after renewal.
 
+.. note:: In order for this to work, the AuthType field for the certificate must match the ACME provider in the :ref:`cdn.conf`.
+
 .. important:: After the automatic renewal script has run, a queue and snapshot must be run manually in order for the certificates to be used.
 
 .. table:: Fields to update to run the automatic renewal script under `acme_renewal`:
