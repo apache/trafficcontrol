@@ -56,10 +56,10 @@ type DeliveryServicesResponseV30 struct {
 	Alerts
 }
 
-// DeliveryServicesResponseV40 is the type of a response from the
-// /api/3.0/deliveryservices Traffic Ops endpoint.
-type DeliveryServicesResponseV40 struct {
-	Response []DeliveryServiceV40 `json:"response"`
+// DeliveryServicesResponseV4 is the type of a response from the
+// /api/4.0/deliveryservices Traffic Ops endpoint.
+type DeliveryServicesResponseV4 struct {
+	Response []DeliveryServiceNullableV4 `json:"response"`
 	Alerts
 }
 
@@ -189,40 +189,6 @@ type DeliveryServiceV40 struct {
 	DeliveryServiceNullableFieldsV11
 }
 
-func DSV40ToV31(v40 DeliveryServiceV40) DeliveryServiceV31 {
-	return DeliveryServiceV31{
-		DeliveryServiceV30: DeliveryServiceV30{
-			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
-				DeliveryServiceNullableV14: DeliveryServiceNullableV14{
-					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
-						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
-							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
-								DeliveryServiceNullableFieldsV11: v40.DeliveryServiceNullableFieldsV11,
-							},
-						},
-						DeliveryServiceNullableFieldsV13: v40.DeliveryServiceNullableFieldsV13,
-					},
-					DeliveryServiceNullableFieldsV14: v40.DeliveryServiceNullableFieldsV14,
-				},
-				DeliveryServiceNullableFieldsV15: v40.DeliveryServiceNullableFieldsV15,
-			},
-			DeliveryServiceFieldsV30: v40.DeliveryServiceFieldsV30,
-		},
-		DeliveryServiceFieldsV31: v40.DeliveryServiceFieldsV31,
-	}
-}
-
-func DSV31ToV40(v31 DeliveryServiceV31) DeliveryServiceV40 {
-	return DeliveryServiceV40{
-		DeliveryServiceFieldsV31:         v31.DeliveryServiceFieldsV31,
-		DeliveryServiceFieldsV30:         v31.DeliveryServiceFieldsV30,
-		DeliveryServiceNullableFieldsV15: v31.DeliveryServiceNullableFieldsV15,
-		DeliveryServiceNullableFieldsV14: v31.DeliveryServiceNullableFieldsV14,
-		DeliveryServiceNullableFieldsV13: v31.DeliveryServiceNullableFieldsV13,
-		DeliveryServiceNullableFieldsV11: v31.DeliveryServiceNullableFieldsV11,
-	}
-}
-
 type DeliveryServiceV31 struct {
 	DeliveryServiceV30
 	DeliveryServiceFieldsV31
@@ -249,6 +215,9 @@ type DeliveryServiceFieldsV30 struct {
 // type DeliveryServiceNullableV30 DeliveryServiceV32
 // DeliveryServiceV32 = DeliveryServiceV31 + the new fields
 type DeliveryServiceNullableV30 DeliveryServiceV31
+
+// DeliveryServiceNullableV4 is the aliased structure that we should be using for all api 4.x delivery structure operations
+type DeliveryServiceNullableV4 DeliveryServiceV40
 
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
@@ -425,47 +394,41 @@ func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error)
 	return &protocol, &FQDN, port, nil
 }
 
-func (ds *DeliveryServiceV40) Sanitize() {
-	if ds.GeoLimitCountries != nil {
-		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
-	}
-	if ds.ProfileID != nil && *ds.ProfileID == -1 {
-		ds.ProfileID = nil
-	}
-	setNilIfEmpty(
-		&ds.EdgeHeaderRewrite,
-		&ds.MidHeaderRewrite,
-		&ds.FirstHeaderRewrite,
-		&ds.InnerHeaderRewrite,
-		&ds.LastHeaderRewrite,
-	)
-	if ds.RoutingName == nil || *ds.RoutingName == "" {
-		ds.RoutingName = util.StrPtr(DefaultRoutingName)
-	}
-	if ds.AnonymousBlockingEnabled == nil {
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	}
-	signedAlgorithm := SigningAlgorithmURLSig
-	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
-		ds.SigningAlgorithm = &signedAlgorithm
-	}
-	if !ds.Signed && ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == signedAlgorithm {
-		ds.Signed = true
-	}
-	if ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 0 {
-		ds.MaxOriginConnections = util.IntPtr(0)
-	}
-	if ds.DeepCachingType == nil {
-		s := DeepCachingType("")
-		ds.DeepCachingType = &s
-	}
-	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
-	if ds.MaxRequestHeaderBytes == nil {
-		ds.MaxRequestHeaderBytes = util.IntPtr(DefaultMaxRequestHeaderBytes)
+func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 {
+	return DeliveryServiceNullableV30{
+		DeliveryServiceV30: DeliveryServiceV30{
+			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
+				DeliveryServiceNullableV14: DeliveryServiceNullableV14{
+					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
+						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
+							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
+								DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+							},
+						},
+						DeliveryServiceNullableFieldsV13: ds.DeliveryServiceNullableFieldsV13,
+					},
+					DeliveryServiceNullableFieldsV14: ds.DeliveryServiceNullableFieldsV14,
+				},
+				DeliveryServiceNullableFieldsV15: ds.DeliveryServiceNullableFieldsV15,
+			},
+			DeliveryServiceFieldsV30: ds.DeliveryServiceFieldsV30,
+		},
+		DeliveryServiceFieldsV31: ds.DeliveryServiceFieldsV31,
 	}
 }
 
-func (ds *DeliveryServiceNullableV30) Sanitize() {
+func (ds DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceNullableV4 {
+	return DeliveryServiceNullableV4{
+		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
+		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
+		DeliveryServiceNullableFieldsV15: ds.DeliveryServiceNullableFieldsV15,
+		DeliveryServiceNullableFieldsV14: ds.DeliveryServiceNullableFieldsV14,
+		DeliveryServiceNullableFieldsV13: ds.DeliveryServiceNullableFieldsV13,
+		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+	}
+}
+
+func (ds *DeliveryServiceNullableV4) sanitize() {
 	if ds.GeoLimitCountries != nil {
 		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}
@@ -585,7 +548,7 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceV40) validateTypeFields(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullableV4) validateTypeFields(tx *sql.Tx) error {
 	// Validate the TypeName related fields below
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
@@ -676,133 +639,8 @@ func (ds *DeliveryServiceV40) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullableV30) validateTypeFields(tx *sql.Tx) error {
-	// Validate the TypeName related fields below
-	err := error(nil)
-	DNSRegexType := "^DNS.*$"
-	HTTPRegexType := "^HTTP.*$"
-	SteeringRegexType := "^STEERING.*$"
-	latitudeErr := "Must be a floating point number within the range +-90"
-	longitudeErr := "Must be a floating point number within the range +-180"
-
-	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
-	if err != nil {
-		return err
-	}
-
-	errs := validation.Errors{
-		"consistentHashQueryParams": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
-				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
-					return nil
-				}
-				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
-			})),
-		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
-			validation.By(tovalidate.IsGreaterThanZero)),
-		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"missLat": validation.Validate(ds.MissLat,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.Min(-90.0).Error(latitudeErr),
-			validation.Max(90.0).Error(latitudeErr)),
-		"missLong": validation.Validate(ds.MissLong,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.Min(-180.0).Error(longitudeErr),
-			validation.Max(180.0).Error(longitudeErr)),
-		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
-		"rangeSliceBlockSize": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
-				if ds.RangeRequestHandling != nil {
-					if *ds.RangeRequestHandling == 3 {
-						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
-							// Per Slice Plugin implementation
-							validation.Min(MinRangeSliceBlockSize), // 256KiB
-							validation.Max(MaxRangeSliceBlockSize), // 32MiB
-						)
-					}
-					if ds.RangeSliceBlockSize != nil {
-						return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
-					}
-				}
-				return nil
-			})),
-		"protocol": validation.Validate(ds.Protocol,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"qstringIgnore": validation.Validate(ds.QStringIgnore,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"topology": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
-				if ds.Topology != nil && DSType(typeName).IsSteering() {
-					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
-				}
-				return nil
-			})),
-		"maxRequestHeaderBytes": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullableV30)
-				if ds.MaxRequestHeaderBytes == nil {
-					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
-				}
-				if *ds.MaxRequestHeaderBytes < 0 || *ds.MaxRequestHeaderBytes > 2147483647 {
-					return errors.New("maxRequestHeaderBytes must be a valid non negative value between 0 and 2147483647")
-				}
-				return nil
-			})),
-	}
-	toErrs := tovalidate.ToErrors(errs)
-	if len(toErrs) > 0 {
-		return errors.New(util.JoinErrsStr(toErrs))
-	}
-	return nil
-}
-
-func (ds *DeliveryServiceV40) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
-	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
-		"must be one of 'NEVER' or 'ALWAYS'")
-	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
-	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
-	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
-	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
-	errs := tovalidate.ToErrors(validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
-		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
-		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
-		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
-		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
-		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
-		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
-		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
-		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
-	})
-	if err := ds.validateTopologyFields(); err != nil {
-		errs = append(errs, err)
-	}
-	if err := ds.validateTypeFields(tx); err != nil {
-		errs = append(errs, errors.New("type fields: "+err.Error()))
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return util.JoinErrs(errs)
-}
-func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
+func (ds *DeliveryServiceNullableV4) Validate(tx *sql.Tx) error {
+	ds.sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
@@ -836,17 +674,7 @@ func (ds *DeliveryServiceNullableV30) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(errs)
 }
 
-func (ds *DeliveryServiceV40) validateTopologyFields() error {
-	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
-		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
-	}
-	if ds.Topology == nil && (ds.FirstHeaderRewrite != nil || ds.InnerHeaderRewrite != nil || ds.LastHeaderRewrite != nil) {
-		return errors.New("cannot set firstHeaderRewrite, innerHeaderRewrite, or lastHeaderRewrite unless this delivery service is assigned to a Topology. Use edgeHeaderRewrite and/or midHeaderRewrite instead")
-	}
-	return nil
-}
-
-func (ds *DeliveryServiceNullableV30) validateTopologyFields() error {
+func (ds *DeliveryServiceNullableV4) validateTopologyFields() error {
 	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
 		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
 	}
@@ -887,13 +715,13 @@ func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
 
 // Value implements the driver.Valuer interface --
 // marshals struct to json to pass back as a json.RawMessage.
-func (ds *DeliveryServiceNullableV30) Value() (driver.Value, error) {
+func (ds *DeliveryServiceNullableV4) Value() (driver.Value, error) {
 	return jsonValue(ds)
 }
 
 // Scan implements the sql.Scanner interface --
-// expects json.RawMessage and unmarshals to a DeliveryServiceNullableV30 struct.
-func (ds *DeliveryServiceNullableV30) Scan(src interface{}) error {
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullableV4 struct.
+func (ds *DeliveryServiceNullableV4) Scan(src interface{}) error {
 	return jsonScan(src, ds)
 }
 

@@ -406,19 +406,19 @@ type DeliveryServiceRequest struct {
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequestNullable struct {
-	AssigneeID      *int                        `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee        *string                     `json:"assignee,omitempty"`
-	AuthorID        *IDNoMod                    `json:"authorId" db:"author_id"`
-	Author          *string                     `json:"author"`
-	ChangeType      *string                     `json:"changeType" db:"change_type"`
-	CreatedAt       *TimeNoMod                  `json:"createdAt" db:"created_at"`
-	ID              *int                        `json:"id" db:"id"`
-	LastEditedBy    *string                     `json:"lastEditedBy"`
-	LastEditedByID  *IDNoMod                    `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *TimeNoMod                  `json:"lastUpdated" db:"last_updated"`
-	DeliveryService *DeliveryServiceNullableV30 `json:"deliveryService" db:"deliveryservice"`
-	Status          *RequestStatus              `json:"status" db:"status"`
-	XMLID           *string                     `json:"-" db:"xml_id"`
+	AssigneeID      *int                       `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee        *string                    `json:"assignee,omitempty"`
+	AuthorID        *IDNoMod                   `json:"authorId" db:"author_id"`
+	Author          *string                    `json:"author"`
+	ChangeType      *string                    `json:"changeType" db:"change_type"`
+	CreatedAt       *TimeNoMod                 `json:"createdAt" db:"created_at"`
+	ID              *int                       `json:"id" db:"id"`
+	LastEditedBy    *string                    `json:"lastEditedBy"`
+	LastEditedByID  *IDNoMod                   `json:"lastEditedById" db:"last_edited_by_id"`
+	LastUpdated     *TimeNoMod                 `json:"lastUpdated" db:"last_updated"`
+	DeliveryService *DeliveryServiceNullableV4 `json:"deliveryService" db:"deliveryservice"`
+	Status          *RequestStatus             `json:"status" db:"status"`
+	XMLID           *string                    `json:"-" db:"xml_id"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod

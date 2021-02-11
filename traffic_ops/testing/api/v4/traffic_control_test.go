@@ -30,7 +30,7 @@ type TrafficControl struct {
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
 	DeliveryServiceRequests                           []tc.DeliveryServiceRequest             `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
-	DeliveryServices                                  []tc.DeliveryServiceV40                 `json:"deliveryservices"`
+	DeliveryServices                                  []tc.DeliveryServiceNullableV4          `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	TopologyBasedDeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"topologyBasedDeliveryServicesRequiredCapabilities"`
 	Divisions                                         []tc.Division                           `json:"divisions"`

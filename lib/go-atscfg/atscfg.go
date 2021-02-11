@@ -55,10 +55,10 @@ type Server tc.ServerV40
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceV40
+type DeliveryService tc.DeliveryServiceNullableV4
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceNullableV4) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -76,7 +76,7 @@ func OldToDeliveryServices(dses []tc.DeliveryServiceNullable) []DeliveryService 
 			},
 		}
 
-		ad = append(ad, DeliveryService(tc.DSV31ToV40(tc.DeliveryServiceV31(upgradedDS))))
+		ad = append(ad, DeliveryService(upgradedDS.UpgradeToV4()))
 	}
 	return ad
 }

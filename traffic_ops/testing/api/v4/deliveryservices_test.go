@@ -142,7 +142,7 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
-func cleanUp(t *testing.T, ds tc.DeliveryServiceV40, oldCDNID int, newCDNID int) {
+func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV4, oldCDNID int, newCDNID int) {
 	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
 	if err != nil {
 		t.Error(err)
@@ -175,7 +175,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := tc.DeliveryServiceV40{}
+	customDS := tc.DeliveryServiceNullableV4{}
 	customDS.Active = util.BoolPtr(true)
 	customDS.CDNID = util.IntPtr(oldCdn.ID)
 	customDS.DSCP = util.IntPtr(0)
@@ -199,7 +199,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	customDS.XMLID = util.StrPtr("dsID")
 	customDS.MaxRequestHeaderBytes = nil
 
-	ds, _, err := TOSession.CreateDeliveryServiceV40(customDS)
+	ds, _, err := TOSession.CreateDeliveryServiceV4(customDS)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +242,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 
 	ds.RoutingName = util.StrPtr("anothername")
-	_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err == nil {
 		t.Fatal("should not be able to update delivery service (routing name) as it has ssl keys")
 	}
@@ -250,7 +250,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 
 	ds.CDNID = &newCdn.ID
 	ds.CDNName = &newCdn.Name
-	_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err == nil {
 		t.Fatal("should not be able to update delivery service (cdn) as it has ssl keys")
 	}
@@ -275,7 +275,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 }
 
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
-	_, reqInf, err := TOSession.GetDeliveryServicesV40WithHdr(header, nil)
+	_, reqInf, err := TOSession.GetDeliveryServicesV4WithHdr(header, nil)
 	if err != nil {
 		t.Fatalf("could not GET Delivery Services: %v", err)
 	}
@@ -286,7 +286,7 @@ func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = TOSession.GetDeliveryServicesV40WithHdr(header, nil)
+	_, reqInf, err = TOSession.GetDeliveryServicesV4WithHdr(header, nil)
 	if err != nil {
 		t.Fatalf("could not GET Delivery Services: %v", err)
 	}
@@ -306,12 +306,12 @@ func PostDeliveryServiceTest(t *testing.T) {
 	xmlid := *ds.XMLID + "-topology-test"
 
 	ds.XMLID = util.StrPtr("")
-	_, _, err := TOSession.CreateDeliveryServiceV40(ds)
+	_, _, err := TOSession.CreateDeliveryServiceV4(ds)
 	if err == nil {
 		t.Error("Expected error with empty xmlid")
 	}
 	ds.XMLID = nil
-	_, _, err = TOSession.CreateDeliveryServiceV40(ds)
+	_, _, err = TOSession.CreateDeliveryServiceV4(ds)
 	if err == nil {
 		t.Error("Expected error with nil xmlid")
 	}
@@ -319,7 +319,7 @@ func PostDeliveryServiceTest(t *testing.T) {
 	ds.Topology = new(string)
 	ds.XMLID = &xmlid
 
-	_, reqInf, err := TOSession.CreateDeliveryServiceV40(ds)
+	_, reqInf, err := TOSession.CreateDeliveryServiceV4(ds)
 	if err == nil {
 		t.Error("Expected error with non-existent Topology")
 	}
@@ -339,7 +339,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot create parameter: %v", err)
 	}
 	for _, ds := range testData.DeliveryServices {
-		_, _, err = TOSession.CreateDeliveryServiceV40(ds)
+		_, _, err = TOSession.CreateDeliveryServiceV4(ds)
 		if err != nil {
 			t.Errorf("could not CREATE delivery service '%s': %v", *ds.XMLID, err)
 		}
@@ -352,7 +352,7 @@ func GetTestDeliveryServicesIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServicesV40WithHdr(header, nil)
+	_, reqInf, err := TOSession.GetDeliveryServicesV4WithHdr(header, nil)
 	if err != nil {
 		t.Fatalf("could not GET Delivery Services: %v", err)
 	}
@@ -362,11 +362,11 @@ func GetTestDeliveryServicesIMS(t *testing.T) {
 }
 
 func GetTestDeliveryServices(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	actualDSes, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
-	actualDSMap := make(map[string]tc.DeliveryServiceV40, len(actualDSes))
+	actualDSMap := make(map[string]tc.DeliveryServiceNullableV4, len(actualDSes))
 	for _, ds := range actualDSes {
 		actualDSMap[*ds.XMLID] = ds
 	}
@@ -391,7 +391,7 @@ func GetTestDeliveryServices(t *testing.T) {
 func GetInactiveTestDeliveryServices(t *testing.T) {
 	params := url.Values{}
 	params.Set("active", strconv.FormatBool(false))
-	inactiveDSes, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	inactiveDSes, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, inactiveDSes)
 	}
@@ -401,7 +401,7 @@ func GetInactiveTestDeliveryServices(t *testing.T) {
 		}
 	}
 	params.Set("active", strconv.FormatBool(true))
-	activeDSes, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	activeDSes, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, activeDSes)
 	}
@@ -413,11 +413,11 @@ func GetInactiveTestDeliveryServices(t *testing.T) {
 }
 
 func GetTestDeliveryServicesCapacity(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	actualDSes, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
-	actualDSMap := map[string]tc.DeliveryServiceV40{}
+	actualDSMap := map[string]tc.DeliveryServiceNullableV4{}
 	for _, ds := range actualDSes {
 		actualDSMap[*ds.XMLID] = ds
 		capDS, _, err := TOSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(*ds.ID), nil)
@@ -431,12 +431,12 @@ func GetTestDeliveryServicesCapacity(t *testing.T) {
 func UpdateTestDeliveryServices(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
 
-	remoteDS := tc.DeliveryServiceV40{}
+	remoteDS := tc.DeliveryServiceNullableV4{}
 	found := false
 	for _, ds := range dses {
 		if *ds.XMLID == *firstDS.XMLID {
@@ -459,14 +459,14 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
 
-	if updateResp, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
+	if updateResp, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
 	params := url.Values{}
 	params.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	apiResp, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
 	}
@@ -486,12 +486,12 @@ func UpdateTestDeliveryServices(t *testing.T) {
 func UpdateNullableTestDeliveryServices(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceV40
+	var remoteDS tc.DeliveryServiceNullableV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -512,13 +512,13 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	remoteDS.LongDesc = &updatedLongDesc
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 
-	if updateResp, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
+	if updateResp, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS.ID, remoteDS, nil); err != nil {
 		t.Fatalf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
 	}
 
 	params := url.Values{}
 	params.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	apiResp, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
 	}
@@ -542,13 +542,13 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 // - assigned to (CLIENT_)STEERING delivery services
 // - assigned to any delivery services which have required capabilities that the topology can't satisfy
 func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
 	found := false
-	var nonCSDS *tc.DeliveryServiceV40
+	var nonCSDS *tc.DeliveryServiceNullableV4
 	for _, ds := range dses {
 		if ds.Type == nil || ds.ID == nil {
 			continue
@@ -556,11 +556,11 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
 			ds.Topology = util.StrPtr("my-topology")
-			if _, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil); err == nil {
+			if _, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil); err == nil {
 				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
 			}
 		} else if nonCSDS == nil {
-			nonCSDS = new(tc.DeliveryServiceV40)
+			nonCSDS = new(tc.DeliveryServiceNullableV4)
 			*nonCSDS = ds
 		}
 	}
@@ -572,7 +572,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 
 	nonCSDS.Topology = new(string)
-	_, inf, err := TOSession.UpdateDeliveryServiceV40WithHdr(*nonCSDS.ID, *nonCSDS, nil)
+	_, inf, err := TOSession.UpdateDeliveryServiceV4WithHdr(*nonCSDS.ID, *nonCSDS, nil)
 	if err == nil {
 		t.Error("Expected an error assigning a non-existent topology")
 	}
@@ -582,7 +582,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("xmlId", "ds-top-req-cap")
-	dses, _, err = TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	dses, _, err = TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service: %v", err)
 	}
@@ -594,7 +594,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	// can't satisfy, then attempt to reassign its topology
 	top := *ds.Topology
 	ds.Topology = nil
-	_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("updating DS to remove topology, expected: no error, actual: %v", err)
 	}
@@ -607,7 +607,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v", *ds.XMLID, err)
 	}
 	ds.Topology = &top
-	_, reqInf, err := TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, reqInf, err := TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err == nil {
 		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: error, actual: nil")
 	}
@@ -618,13 +618,13 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v", *ds.XMLID, err)
 	}
-	_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
 	}
 
 	const xmlId = "top-ds-in-cdn2"
-	dses, _, err = TOSession.GetDeliveryServicesV40WithHdr(nil, url.Values{"xmlId": {xmlId}})
+	dses, _, err = TOSession.GetDeliveryServicesV4WithHdr(nil, url.Values{"xmlId": {xmlId}})
 	if err != nil {
 		t.Fatalf("getting Delivery Service %s: %s", xmlId, err.Error())
 	}
@@ -635,7 +635,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	ds = dses[0]
 	dsTopology := ds.Topology
 	ds.Topology = nil
-	ds, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	ds, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("updating Delivery Service %s: %s", xmlId, err.Error())
 	}
@@ -701,7 +701,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
 	}
 	ds.Topology = dsTopology
-	_, reqInf, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	_, reqInf, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err == nil {
 		t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlId, cacheGroupName, *ds.CDNID)
 	}
@@ -722,7 +722,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("deleting Profile %s: %s", profile.Name, err.Error())
 	}
 
-	ds, reqInf, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+	ds, reqInf, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("updating Delivery Service %s: %s", xmlId, err.Error())
 	}
@@ -731,7 +731,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 // UpdateDeliveryServiceTopologyHeaderRewriteFields ensures that a delivery service can only use firstHeaderRewrite,
 // innerHeaderRewrite, or lastHeadeRewrite if a topology is assigned.
 func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
@@ -743,7 +743,7 @@ func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
 		ds.FirstHeaderRewrite = util.StrPtr("foo")
 		ds.InnerHeaderRewrite = util.StrPtr("bar")
 		ds.LastHeaderRewrite = util.StrPtr("baz")
-		_, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+		_, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 		if ds.Topology != nil && err != nil {
 			t.Errorf("expected: no error updating topology-based header rewrite fields for topology-based DS, actual: %v", err)
 		}
@@ -755,7 +755,7 @@ func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
 		ds.LastHeaderRewrite = nil
 		ds.EdgeHeaderRewrite = util.StrPtr("foo")
 		ds.MidHeaderRewrite = util.StrPtr("bar")
-		_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*ds.ID, ds, nil)
+		_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*ds.ID, ds, nil)
 		if ds.Topology != nil && err == nil {
 			t.Errorf("expected: error updating legacy header rewrite fields for topology-based DS, actual: nil")
 		}
@@ -772,12 +772,12 @@ func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
 func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceV40
+	var remoteDS tc.DeliveryServiceNullableV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -796,7 +796,7 @@ func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 	updatedRemapText := "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2"
 	remoteDS.RemapText = &updatedRemapText
 
-	if _, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS.ID, remoteDS, nil); err == nil {
+	if _, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS.ID, remoteDS, nil); err == nil {
 		t.Errorf("Delivery service updated with invalid remap text: %v", updatedRemapText)
 	}
 }
@@ -815,12 +815,12 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		t.Fatal("no HTTP or DNS Delivery Services to test with")
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceV40
+	var remoteDS tc.DeliveryServiceNullableV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -866,7 +866,7 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			remoteDS.RangeSliceBlockSize = tc.slicePluginSize
 			remoteDS.RangeRequestHandling = tc.rangeRequestSetting
-			if _, _, err := TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS.ID, remoteDS, nil); err == nil {
+			if _, _, err := TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS.ID, remoteDS, nil); err == nil {
 				t.Error("Delivery service updated with invalid slice plugin configuration")
 			}
 		})
@@ -880,7 +880,7 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 	params.Set("xmlId", "ds-top")
 
 	//Get the correct DS
-	remoteDS, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	remoteDS, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
@@ -895,7 +895,7 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 	//Update DS's Topology to a non-ORG server's cachegroup
 	origTopo := *remoteDS[0].Topology
 	remoteDS[0].Topology = util.StrPtr("another-topology")
-	ds, reqInf, err := TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	ds, reqInf, err := TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err == nil {
 		t.Errorf("shouldnot UPDATE DeliveryService by ID: %v, but update was successful", ds.XMLID)
 	} else if !strings.Contains(err.Error(), "the following ORG server cachegroups are not in the delivery service's topology") {
@@ -907,7 +907,7 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 
 	// Retrieve the DS to check if topology was updated with missing ORG server
 	params.Set("id", strconv.Itoa(*remoteDS[0].ID))
-	apiResp, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	apiResp, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", *remoteDS[0].XMLID, err)
 	}
@@ -917,7 +917,7 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 
 	//Set topology back to as it was for further testing
 	remoteDS[0].Topology = &origTopo
-	_, _, err = TOSession.UpdateDeliveryServiceV40WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
+	_, _, err = TOSession.UpdateDeliveryServiceV4WithHdr(*remoteDS[0].ID, remoteDS[0], nil)
 	if err != nil {
 		t.Fatalf("couldn't update topology:%v, %v", *remoteDS[0].Topology, err)
 	}
@@ -973,7 +973,7 @@ func GetAccessibleToTest(t *testing.T) {
 func getByTenants(tenantID int, expectedCount int) error {
 	params := url.Values{}
 	params.Set("accessibleTo", strconv.Itoa(tenantID))
-	deliveryServices, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+	deliveryServices, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 	if err != nil {
 		return err
 	}
@@ -984,7 +984,7 @@ func getByTenants(tenantID int, expectedCount int) error {
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
@@ -993,7 +993,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			t.Errorf("testing Delivery Service has no XMLID")
 			continue
 		}
-		var ds tc.DeliveryServiceV40
+		var ds tc.DeliveryServiceNullableV4
 		found := false
 		for _, realDS := range dses {
 			if realDS.XMLID != nil && *realDS.XMLID == *testDS.XMLID {
@@ -1016,7 +1016,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		// Retrieve the Server to see if it got deleted
 		params := url.Values{}
 		params.Set("id", strconv.Itoa(*ds.ID))
-		foundDS, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, params)
+		foundDS, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, params)
 		if err != nil {
 			t.Errorf("Unexpected error deleting Delivery Service '%s': %v", *ds.XMLID, err)
 		}
@@ -1047,12 +1047,12 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("expected XMLID: ds-test-minor-versions, actual: %s", *testDS.XMLID)
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	var ds tc.DeliveryServiceV40
+	var ds tc.DeliveryServiceNullableV4
 	found := false
 	for _, d := range dses {
 		if d.XMLID != nil && *d.XMLID == *testDS.XMLID {
@@ -1120,11 +1120,11 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 }
 
 func DeliveryServiceTenancyTest(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV40WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4WithHdr(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
-	var tenant3DS tc.DeliveryServiceV40
+	var tenant3DS tc.DeliveryServiceNullableV4
 	foundTenant3DS := false
 	for _, d := range dses {
 		if *d.XMLID == "ds3" {
@@ -1155,7 +1155,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's deliveryservice
-	if _, _, err = tenant4TOClient.UpdateDeliveryServiceV40WithHdr(*tenant3DS.ID, tenant3DS, nil); err == nil {
+	if _, _, err = tenant4TOClient.UpdateDeliveryServiceV4WithHdr(*tenant3DS.ID, tenant3DS, nil); err == nil {
 		t.Errorf("expected tenant4user to be unable to update tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 
@@ -1167,7 +1167,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	// assert that tenant4user cannot create a deliveryservice outside of its tenant
 	tenant3DS.XMLID = util.StrPtr("deliveryservicetenancytest")
 	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
-	if _, _, err = tenant4TOClient.CreateDeliveryServiceV40(tenant3DS); err == nil {
+	if _, _, err = tenant4TOClient.CreateDeliveryServiceV4(tenant3DS); err == nil {
 		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
 	}
 }

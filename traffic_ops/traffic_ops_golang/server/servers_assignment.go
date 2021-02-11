@@ -350,8 +350,8 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		atsConfigLocation = atsConfigLocation[:len(atsConfigLocation)-1]
 	}
 
-	//we need dses: xmlids and edge_header_rewrite, regex_remap,
-	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
+	//we need dses: xmlids and edge_header_rewrite, regex_remap, and cache_url
+	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
 	if err != nil {
 		return nil, errors.New("querying deliveryservice: " + err.Error())
 	}
@@ -369,7 +369,8 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		var xmlID sql.NullString
 		var edgeHeaderRewrite sql.NullString
 		var regexRemap sql.NullString
-		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap); err != nil {
+		var cacheURL sql.NullString
+		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 		const headerRewritePrefix = `hdr_rw_`
@@ -385,6 +386,12 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 			}
 			param = getConfigFile(regexRemapPrefix, xmlID.String)
 			if regexRemap.Valid && len(regexRemap.String) > 0 {
+				insert = append(insert, param)
+			} else {
+				delete = append(delete, param)
+			}
+			param = getConfigFile(cacheURLPrefix, xmlID.String)
+			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
