@@ -4748,34 +4748,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 	cdn := &tc.CDN{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
 	}
 
 	topologies := []tc.Topology{}
@@ -6112,34 +6084,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	cdn := &tc.CDN{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingBackgroundFetch),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
 	}
 
 	topologies := []tc.Topology{}

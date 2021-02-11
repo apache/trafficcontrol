@@ -145,20 +145,20 @@ func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceV40, ReqInf, error) {
+func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
 	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
 	}
-	var data tc.DeliveryServicesResponseV40
+	var data tc.DeliveryServicesResponseV30
 	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetDeliveryServicesV4WithHdr returns all (tenant-visible) Delivery Services that
+// GetDeliveryServicesV4 returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV4WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV4, ReqInf, error) {
+func (to *Session) GetDeliveryServicesV4(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV4, ReqInf, error) {
 	uri := API_DELIVERY_SERVICES
 	if params != nil {
 		uri += "?" + params.Encode()
@@ -208,9 +208,9 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNu
 }
 
 // GetDeliveryServiceNullableWithHdr fetches the Delivery Service with the given ID.
-func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullableV4, ReqInf, error) {
 	data := struct {
-		Response []tc.DeliveryServiceNullableV30 `json:"response"`
+		Response []tc.DeliveryServiceNullableV4 `json:"response"`
 	}{}
 	route := fmt.Sprintf("%s?id=%s", API_DELIVERY_SERVICES, id)
 	reqInf, err := to.get(route, header, &data)
@@ -444,23 +444,9 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
-// UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
+// UpdateDeliveryServiceV4 replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	var data tc.DeliveryServicesResponseV30
-	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
-	if err != nil {
-		return tc.DeliveryServiceNullableV30{}, reqInf, err
-	}
-	if len(data.Response) != 1 {
-		return tc.DeliveryServiceNullableV30{}, reqInf, fmt.Errorf("failed to update Delivery Service #%d; response indicated that %d were updated", id, len(data.Response))
-	}
-	return data.Response[0], reqInf, nil
-}
-
-// UpdateDeliveryServiceV4WithHdr replaces the Delivery Service identified by the
-// integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV4WithHdr(id int, ds tc.DeliveryServiceNullableV4, header http.Header) (tc.DeliveryServiceNullableV4, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceV4(id int, ds tc.DeliveryServiceNullableV4, header http.Header) (tc.DeliveryServiceNullableV4, ReqInf, error) {
 	var data tc.DeliveryServicesResponseV4
 	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
 	if err != nil {

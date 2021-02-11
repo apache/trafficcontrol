@@ -206,7 +206,7 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Set("xmlId", "ds-top")
-	ds, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	ds, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
 	}
@@ -272,7 +272,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	}
 	params = url.Values{}
 	params.Set("xmlId", "ds-top-req-cap")
-	ds, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	ds, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top-req-cap': %s", err.Error())
 	}
@@ -300,7 +300,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	}
 	params = url.Values{}
 	params.Set("xmlId", "ds-top")
-	ds, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	ds, _, err = TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
 	}
@@ -322,7 +322,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T) {
 	params := url.Values{}
 	params.Set("xmlId", "ds1")
-	dsWithMid, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	dsWithMid, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds1': %s", err.Error())
 	}
@@ -558,7 +558,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 
 	if *ds.Active {
 		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+		_, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 		if err != nil {
 			t.Errorf("Setting Delivery Service #%d to inactive", *ds.ID)
 		}
@@ -585,8 +585,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.ServerV40) {
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV4, tc.ServerV40) {
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -612,5 +612,5 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV30, tc.Se
 	}
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
-	return tc.DeliveryServiceNullableV30{}, tc.ServerV40{}
+	return tc.DeliveryServiceNullableV4{}, tc.ServerV40{}
 }

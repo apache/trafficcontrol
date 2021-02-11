@@ -230,11 +230,11 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery services: %v", err)
 	}
-	dsIDtoDS := make(map[int]tc.DeliveryServiceNullableV30, len(dses))
+	dsIDtoDS := make(map[int]tc.DeliveryServiceNullableV4, len(dses))
 	for _, ds := range dses {
 		dsIDtoDS[*ds.ID] = ds
 	}
