@@ -36,7 +36,7 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params url.Values) 
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
-	route := APIDSRegexes
+	route := fmt.Sprintf(APIDSRegexes, dsID)
 	if len(params) > 0 {
 		route += "?" + params.Encode()
 	}
