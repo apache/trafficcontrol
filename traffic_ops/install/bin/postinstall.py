@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env -S sh -c 'PATH="${PATH}:/usr/libexec" exec "$(type -p python platform-python | head -n1)" "$0" "$@"'
 # There's a bug in asteroid with Python 3.9's NamedTuple being
 # recognized for the dynamically generated class that it is. Should be fixed
 # with the next release, but 'till then...
