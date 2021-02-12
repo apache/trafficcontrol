@@ -239,6 +239,10 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 
 func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
 	extensions := make(map[string]string)
+	api.DefaultSort(inf, "id")
+	serverID := inf.IntParams["id"]
+	fmt.Println(serverID)
+
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
 		sysErr := fmt.Errorf("querying for extensions: %v", err)
@@ -254,7 +258,7 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		extensions[shortName] = checkName
 	}
 
-	colRows, err := inf.Tx.Queryx(serverChecksQuery)
+	colRows, err := inf.Tx.Queryx(serverChecksQuery, serverID)
 	if err != nil {
 		sysErr := fmt.Errorf("Querying server checks columns: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
