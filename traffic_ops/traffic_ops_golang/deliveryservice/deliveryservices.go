@@ -69,7 +69,7 @@ func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 }
 
 func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullableV4)
+	return json.Unmarshal(data, &ds.DeliveryServiceNullableV4)
 }
 
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
@@ -298,20 +298,23 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 t
 }
 func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	tx := inf.Tx.Tx
-	ds := tc.DeliveryServiceNullableV30(dsV31).UpgradeToV4()
+	dsNullable := tc.DeliveryServiceNullableV30(dsV31)
+	ds := dsNullable.UpgradeToV4()
 	res, status, userErr, sysErr := createV40(w, r, inf, tc.DeliveryServiceV40(ds))
 	if res == nil {
 		return nil, status, userErr, sysErr
 	}
 
+	ds = tc.DeliveryServiceNullableV4(*res)
 	if dsV31.CacheURL != nil {
-		_, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
+		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
 		}
+		rows.Close()
 	}
 
 	if err := EnsureCacheURLParams(tx, *ds.ID, *ds.XMLID, dsV31.CacheURL); err != nil {
@@ -479,8 +482,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		}
 	}
 
-	oldDS := ds.DowngradeToV3()
-	if err := createPrimaryOrigin(tx, user, oldDS); err != nil {
+	if err := createPrimaryOrigin(tx, user, ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
@@ -881,21 +883,24 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
-	ds := tc.DeliveryServiceNullableV30(*dsV31).UpgradeToV4()
+	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
+	ds := dsNull.UpgradeToV4()
 	dsV40 := tc.DeliveryServiceV40(ds)
 	tx := inf.Tx.Tx
 	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV40)
 	if res == nil {
 		return nil, status, usrErr, sysErr
 	}
+	ds = tc.DeliveryServiceNullableV4(*res)
 	if dsV31.CacheURL != nil {
-		_, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
+		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
 		}
+		rows.Close()
 	}
 
 	if err := EnsureCacheURLParams(tx, *ds.ID, *ds.XMLID, dsV31.CacheURL); err != nil {
@@ -1119,7 +1124,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	}
 
 	if oldDetails.OldOrgServerFqdn != nil && ds.OrgServerFQDN != nil && *oldDetails.OldOrgServerFqdn != *ds.OrgServerFQDN {
-		if err := updatePrimaryOrigin(tx, user, ds.DowngradeToV3()); err != nil {
+		if err := updatePrimaryOrigin(tx, user, ds); err != nil {
 			return nil, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 		}
 	}
@@ -1305,7 +1310,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	return tc.DSTypeFromString(name), nil
 }
 
-func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
+func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV4) error {
 	count := 0
 	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
 	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
@@ -1345,7 +1350,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV30) error {
+func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV4) error {
 	if ds.OrgServerFQDN == nil {
 		return nil
 	}

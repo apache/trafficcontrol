@@ -49,6 +49,17 @@ Enables/Disables blocking of anonymized IP address - proxies, :abbr:`TOR (The On
 
 .. seealso:: The :ref:`anonymous_blocking-qht` "Quick-How-To" guide.
 
+.. _ds-cacheurl:
+
+Cache URL Expression
+--------------------
+.. deprecated:: 3.0
+	This feature is no longer supported by :abbr:`ATS (Apache Traffic Server)` and consequently it will be removed from Traffic Control in the future. Current plans are to remove after ATC 5.X is no longer supported.
+
+Manipulates the cache key of the incoming requests. Normally, the cache key is the :term:`Origin` domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
+
+.. warning:: This field provides access to a feature that was only present in :abbr:`ATS (Apache Traffic Server)` 6.X and earlier. As :term:`cache servers` must now use :abbr:`ATS (Apache Traffic Server)` 7.1.X, this field **must** be blank unless all :term:`cache servers` can be guaranteed to use that older :abbr:`ATS (Apache Traffic Server)` version (**NOT** recommended).
+
 .. _ds-cdn:
 
 CDN

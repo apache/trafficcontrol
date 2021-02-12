@@ -417,7 +417,7 @@ func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 
 	}
 }
 
-func (ds DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceNullableV4 {
+func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceNullableV4 {
 	return DeliveryServiceNullableV4{
 		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
 		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
