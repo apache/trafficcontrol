@@ -119,19 +119,10 @@ func (to *Session) GetParameterByNameAndConfigFile(name string, configFile strin
 }
 
 func (to *Session) GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	params, reqInf, err := to.GetParameterByNameAndConfigFileWithHdr(name, configFile, header)
-	if reqInf.StatusCode == http.StatusNotModified {
-		return []tc.Parameter{}, reqInf, nil
-	}
-	if err != nil {
-		return params, reqInf, err
-	}
-	for _, p := range params {
-		if p.Value == value {
-			return []tc.Parameter{p}, reqInf, err
-		}
-	}
-	return nil, reqInf, err
+	URI := fmt.Sprintf("%s?name=%s&configFile=%s&value=%s", API_PARAMETERS, url.QueryEscape(name), url.QueryEscape(configFile), url.QueryEscape(value))
+	var data tc.ParametersResponse
+	reqInf, err := to.get(URI, header, &data)
+	return data.Response, reqInf, err
 }
 
 // GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
