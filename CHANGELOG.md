@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
+## [5.1.0] - 2021-02-21
 ### Added
 - Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
 - Traffic Portal: upgraded delivery service UI tables to use more powerful/performant ag-grid component
