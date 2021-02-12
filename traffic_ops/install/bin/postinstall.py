@@ -1,4 +1,8 @@
 #!/usr/bin/python3
+# There's a bug in asteroid with Python 3.9's NamedTuple being
+# recognized for the dynamically generated class that it is. Should be fixed
+# with the next release, but 'till then...
+#pylint:disable=inherit-non-class
 """
 This script is meant as a drop-in replacement for the old _postinstall Perl script.
 
@@ -55,7 +59,7 @@ import stat
 import string
 import subprocess
 import sys
-import typing
+from typing import Dict, NamedTuple, List, Optional
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
@@ -118,7 +122,7 @@ class Question:
 		"""
 		if self.hidden:
 			while True:
-				passwd = getpass.getpass(self)
+				passwd = getpass.getpass(str(self))
 				if not passwd:
 					continue
 				if passwd == getpass.getpass(f"Re-Enter {self.question}: "):
@@ -147,7 +151,7 @@ class Question:
 		"""Returns a serializable dictionary, suitable for converting to JSON."""
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
-class User(typing.NamedTuple):
+class User(NamedTuple):
 	"""Users represents a user that will be inserted into the Traffic Ops database."""
 
 	#: The user's username.
@@ -158,14 +162,14 @@ class User(typing.NamedTuple):
 class SSLConfig:
 	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
 
-	def __init__(self, gen_cert: bool, cfg_map: typing.Dict[str, str]):
+	def __init__(self, gen_cert: bool, cfg_map: Dict[str, str]):
 
 		self.gen_cert = gen_cert
 		self.rsa_password = cfg_map["rsaPassword"]
 		self.params = "/C={country}/ST={state}/L={locality}/O={company}/OU={org_unit}/CN={common_name}/"
 		self.params = self.params.format(**cfg_map)
 
-class CDNConfig(typing.NamedTuple):
+class CDNConfig(NamedTuple):
 	"""CDNConfig holds all of the options needed to format a cdn.conf file."""
 	gen_secret: bool
 	num_secrets: int
@@ -205,7 +209,6 @@ class CDNConfig(typing.NamedTuple):
 			conf["to"] = {}
 		conf["to"]["base_url"] = self.url
 
-#pylint:disable=bad-continuation
 # The default question/answer set
 DEFAULTS = {
 	DATABASE_CONF_FILE: [
@@ -266,7 +269,6 @@ DEFAULTS = {
 		)
 	]
 }
-#pylint:enable=bad-continuation
 
 class ConfigEncoder(json.JSONEncoder):
 	"""
@@ -277,7 +279,6 @@ class ConfigEncoder(json.JSONEncoder):
 	"""
 
 	# The linter is just wrong about this
-	#pylint:disable=method-hidden
 	def default(self, o) -> object:
 		"""
 		Returns a serializable representation of 'o'.
@@ -290,9 +291,8 @@ class ConfigEncoder(json.JSONEncoder):
 			return o.serialize()
 
 		return json.JSONEncoder.default(self, o)
-	#pylint:enable=method-hidden
 
-def get_config(questions: typing.List[Question], fname: str, automatic: bool = False) -> dict:
+def get_config(questions: List[Question], fname: str, automatic: bool = False) -> Dict[str, str]:
 	"""Asks all provided questions, or uses their defaults in automatic mode"""
 
 	logging.info("===========%s===========", fname)
@@ -306,7 +306,7 @@ def get_config(questions: typing.List[Question], fname: str, automatic: bool = F
 
 	return config
 
-def generate_db_conf(qstns: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
+def generate_db_conf(qstns: List[Question], fname: str, automatic: bool, root: str) -> dict:
 	"""
 	Generates the database.conf file and returns a map of its configuration.
 
@@ -357,7 +357,7 @@ def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dic
 
 	return todbconf
 
-def generate_ldap_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str):
+def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, root: str):
 	"""
 	Generates the ldap.conf file by asking the questions or using default answers in auto mode.
 
@@ -405,16 +405,16 @@ def hash_pass(passwd: str) -> str:
 	"""
 	salt = os.urandom(64)
 	n = 16384
-	r = 8
-	p = 1
-	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r, p=p, dklen=64)
+	r_val = 8
+	p_val = 1
+	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r_val, p=p_val, dklen=64)
 
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
 	salt_b64 = base64.standard_b64encode(salt).decode()
 
-	return f"SCRYPT:{n}:{r}:{p}:{salt_b64}:{hashed_b64}"
+	return f"SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}"
 
-def generate_users_conf(qstns: typing.List[Question], fname: str, auto: bool, root: str) -> User:
+def generate_users_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> User:
 	"""
 	Generates a users.json file from the given questions and returns a User containing the same
 	information.
@@ -433,14 +433,16 @@ def generate_users_conf(qstns: typing.List[Question], fname: str, auto: bool, ro
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
 
-def generate_profiles_dir(questions: typing.List[Question]):
+def generate_profiles_dir(questions: List[Question]):
 	"""
 	I truly have no idea what's going on here. This is what the Perl did, so I
 	copied it. It does nothing. Literally nothing.
 	"""
+	#pylint:disable=unused-variable
 	user_in = questions
+	#pylint:enable=unused-variable
 
-def generate_openssl_conf(questions: typing.List[Question], fname: str, auto: bool) -> SSLConfig:
+def generate_openssl_conf(questions: List[Question], fname: str, auto: bool) -> SSLConfig:
 	"""
 	Constructs an SSLConfig by asking the passed questions, or using their default answers if in
 	auto mode.
@@ -453,7 +455,7 @@ def generate_openssl_conf(questions: typing.List[Question], fname: str, auto: bo
 
 	return SSLConfig(gen_cert, cfg_map)
 
-def generate_param_conf(qstns: typing.List[Question], fname: str, auto: bool, root: str) -> dict:
+def generate_param_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> dict:
 	"""
 	Generates a profiles.json by asking the passed questions, or using their default answers in auto
 	mode.
@@ -469,7 +471,7 @@ def generate_param_conf(qstns: typing.List[Question], fname: str, auto: bool, ro
 
 	return conf
 
-def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic: bool) -> int:
+def sanity_check_config(cfg: Dict[str, List[Question]], automatic: bool) -> int:
 	"""
 	Checks a user-input configuration file, and outputs the number of files in the
 	default question set that did not appear in the input.
@@ -509,7 +511,7 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 
 	return diffs
 
-def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
+def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
 	"""
 	Reads in a raw parsed configuration file and returns the resulting configuration.
 
@@ -578,7 +580,9 @@ def setup_maxmind(maxmind_answer: str, root: str):
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv4) Exception: %s", e)
 
-	cmd[1] = "https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
+	cmd[1] = (
+		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
+	)
 	try:
 		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
 	except subprocess.SubprocessError as e:
@@ -771,7 +775,7 @@ def random_word(length: int = 12) -> str:
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str):
+def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, root: str):
 	"""
 	Generates some properties of a cdn.conf file based on the passed questions.
 
@@ -792,7 +796,7 @@ def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: b
 		raise ValueError(f"invalid 'keepSecrets' config_var value: {e}") from e
 
 	try:
-		port = cdn_conf.get("port")
+		port = int(cdn_conf["port"])
 	except KeyError as e:
 		raise ValueError("missing 'port' config_var") from e
 	except ValueError as e:
@@ -803,7 +807,7 @@ def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: b
 	except KeyError as e:
 		raise ValueError("missing 'workers' config_var") from e
 	except ValueError as e:
-		raise ValueError(f"invalid 'workers' config_var value: {e}")
+		raise ValueError(f"invalid 'workers' config_var value: {e}") from e
 
 	try:
 		url = cdn_conf["base_url"]
@@ -1012,8 +1016,8 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 def main(
 automatic: bool,
 debug: bool,
-defaults: typing.Optional[str],
-cfile: typing.Optional[str],
+defaults: Optional[str],
+cfile: Optional[str],
 root_dir: str,
 ops_user: str,
 ops_group: str,
@@ -1074,13 +1078,6 @@ no_database: bool
 			return 1
 
 	try:
-		path = os.path.join(root_dir, "opt/traffic_ops/install/bin")
-		# os.chdir(path)
-	except OSError as e:
-		logging.critical("Attempting to change directory to '%s': %s", path, e)
-		return 1
-
-	try:
 		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
 		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
 		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
@@ -1129,7 +1126,11 @@ no_database: bool
 			conn_str = db_connection_string(dbconf)
 		except KeyError as e:
 			logging.error("Missing database connection variable: %s", e)
-			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+			logging.error(
+				"Can't connect to the database.  " \
+				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
+				"on the db server to create it and run `postinstall` again."
+			)
 			return -1
 
 		if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
@@ -1140,7 +1141,11 @@ no_database: bool
 			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
 		except (OSError, subprocess.SubprocessError)as e:
 			logging.error("Failed to set up database: %s", e)
-			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+			logging.error(
+				"Can't connect to the database.  " \
+				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
+				"on the db server to create it and run `postinstall` again."
+			)
 			return -1
 
 
@@ -1148,10 +1153,13 @@ no_database: bool
 		logging.info("Starting Traffic Ops")
 		try:
 			cmd = ["/sbin/service", "traffic_ops", "restart"]
-			proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
+			subprocess.run(cmd, capture_output=True, universal_newlines=True, check=True)
+		except subprocess.CalledProcessError as e:
+			logging.critical("Failed to restart Traffic Ops, return code %s: %s", e.returncode, e)
+			logging.debug("stderr: %s\n\tstdout: %s", e.stderr, e.stdout)
+			return 1
 		except (OSError, subprocess.SubprocessError) as e:
-			logging.critical("Failed to restart Traffic Ops, return code %s: %s", proc.returncode, e)
-			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+			logging.critical("Failed to restart Traffic Ops: unknown error occurred")
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so
 		# neither do we
