@@ -378,7 +378,7 @@ if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_gol
 	print('Malformed traffic_ops_golang object in cdn.conf:', conf['traffic_ops_golang'], sys.stderr)
 	exit(1)
 
-if conf['traffic_ops_golang']['port'] != '443':
+if conf['traffic_ops_golang']['port'] != 443:
 	print('Incorrect traffic_ops_golang.port, expected: 443, got:', conf['traffic_ops_golang']['port'], file=sys.stderr)
 	exit(1)
 
