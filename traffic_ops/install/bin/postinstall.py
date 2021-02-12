@@ -1249,15 +1249,15 @@ if __name__ == '__main__':
 	ARGS = PARSER.parse_args()
 
 	USED_LEGACY_ARGS = False
-	DEFAULTS = None
+	DEFAULTS_ARG = None
 	if ARGS.legacy_defaults:
 		if ARGS.defaults:
 			logging.error("cannot specify both '--defaults' and '-defaults'")
 			sys.exit(1)
 		USED_LEGACY_ARGS = True
-		DEFAULTS = ARGS.legacy_defaults
+		DEFAULTS_ARG = ARGS.legacy_defaults
 	else:
-		DEFAULTS = ARGS.defaults
+		DEFAULTS_ARG = ARGS.defaults
 
 	DEBUG = False
 	if ARGS.legacy_debug:
@@ -1293,7 +1293,7 @@ if __name__ == '__main__':
 		EXIT_CODE = main(
 		ARGS.automatic,
 		DEBUG,
-		DEFAULTS,
+		DEFAULTS_ARG,
 		CFILE,
 		os.path.abspath(ARGS.root_directory),
 		ARGS.ops_user,
