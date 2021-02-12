@@ -49,6 +49,17 @@ ansible-playbook -i localhost analyze.ats.profiles.yml -e "dl_to_url=$TO_URL" -e
 * override_target_host_fqdn : Bypass the selection of a target host to obtain defaults by profile association
 * override_base_host_fqdn : Bypass the selection of a base host to obtain defaults by profile association
 * output_path : Alternate path to send output files.  Defaults to playbook directory.
+* exclution_file_path : A path to a variable file containing exclusions to consider when comparing profiles
+
+##### Additional Requirements:
+* The target and base profiles must exist in TrafficOps
+* Either:
+    * A host override optional parameter is supplied
+    * A host must be attached and reachable to each profile
+* Each specified host must have ATS installed and running
+
+#### Parameter exclusions
+Included is a default set of parameter names/configFiles that are excluded from comparison with the dataset loader and TO diff output.  This is because there are some parameters which naturally vary by hardware, CDN, or delivery service assignments.  It does use a simple string contains logic to know about exclusions, so generally being more specific is appropriate if adjusting them.
 
 #### Output
 There are two output files from this playbook:

@@ -326,7 +326,6 @@
         params_changed_from_dsl_set_in_target: "{{ ((params_changed_from_dsl_set_in_target | default([])) + [item]) if item_valdrop|intersect(params_missing_from_dsl_set_in_target_valdrop) != [] else ((params_changed_from_dsl_set_in_target | default([])) + []) }}"
       with_items: "{{ params_missing_from_target_set }}"
 
-    # Correct
     - name: Render the differences in a more useful way
       set_fact:
         param_differences_in_target: "{{ (param_differences_in_target | default([])) + [outdiff] }}"
@@ -403,7 +402,6 @@
     block:
     - name: Compute redundant target parameters against TO
       set_fact:
-        # Parameters which exist in TO and are the same value as the target ATS default
         redundant_target_parameters: "{{ ((redundant_target_parameters | default([])) + [item]) if ([param_to_record] | intersect(target_ats_defaults.stdout_lines) != []) else (redundant_target_parameters | default([])) + [] }}"
       with_items: "{{ target_params | to_json | from_json | json_query(parameter_filter_query) }}"
       loop_control:
@@ -411,7 +409,6 @@
 
     - name: Compute redundant base parameters against TO
       set_fact:
-        # Parameters which exist in TO and are the same value as the base ATS default
         redundant_base_parameters: "{{ ((redundant_base_parameters | default([])) + [item]) if ([param_to_record] | intersect(base_ats_defaults.stdout_lines) != []) else (redundant_base_parameters | default([])) + [] }}"
       with_items: "{{ base_params | to_json | from_json | json_query(parameter_filter_query) }}"
       loop_control:
