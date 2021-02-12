@@ -200,8 +200,12 @@
 							"TSAbstractClassProperty"
 						],
 						"require": {
+							"ClassDeclaration": true,
 							"MethodDefinition": true
-						}
+						},
+						"checkConstructors": false,
+						"checkGetters": true,
+						"checkSetters": true
 					}
 				],
 				"@typescript-eslint/unbound-method": "error",
