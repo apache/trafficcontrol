@@ -575,7 +575,13 @@ def setup_maxmind(maxmind_answer: str, root: str):
 	cmd = [wget, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
-		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
+		subprocess.run(
+			cmd,
+			stderr=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			check=True,
+			universal_newlines=True
+		)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv4) Exception: %s", e)
@@ -584,7 +590,13 @@ def setup_maxmind(maxmind_answer: str, root: str):
 		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
 	)
 	try:
-		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
+		subprocess.run(
+			cmd,
+			stderr=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			check=True,
+			universal_newlines=True
+		)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv6) Exception: %s", e)
@@ -601,7 +613,13 @@ def exec_openssl(description: str, *cmd_args) -> bool:
 	cmd = ["/usr/bin/openssl", *cmd_args]
 
 	while True:
-		proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
+		proc = subprocess.run(
+			cmd,
+			stderr=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			universal_newlines=True,
+			check=False
+		)
 		if proc.returncode == 0:
 			return True
 
@@ -878,7 +896,13 @@ def exec_psql(conn_str: str, query: str) -> str:
 	:returns: The comma-separated columns of each line-delimited row of the results of the query.
 	"""
 	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
-	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
+	proc = subprocess.run(
+		cmd,
+		stderr=subprocess.PIPE,
+		stdout=subprocess.PIPE,
+		universal_newlines=True,
+		check=False
+	)
 	if proc.returncode != 0:
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
@@ -893,7 +917,13 @@ def invoke_db_admin_pl(action: str, root: str):
 	# should be fixed at some point, IMO, but for now this works.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
-	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
+	proc = subprocess.run(
+		cmd,
+		stderr=subprocess.PIPE,
+		stdout=subprocess.PIPE,
+		universal_newlines=True,
+		check=False
+	)
 	if proc.returncode != 0:
 		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError(f"Database {action} failed")
@@ -1153,13 +1183,19 @@ no_database: bool
 		logging.info("Starting Traffic Ops")
 		try:
 			cmd = ["/sbin/service", "traffic_ops", "restart"]
-			subprocess.run(cmd, capture_output=True, universal_newlines=True, check=True)
+			subprocess.run(
+				cmd,
+				stderr=subprocess.PIPE,
+				stdout=subprocess.PIPE,
+				universal_newlines=True,
+				check=True
+			)
 		except subprocess.CalledProcessError as e:
 			logging.critical("Failed to restart Traffic Ops, return code %s: %s", e.returncode, e)
 			logging.debug("stderr: %s\n\tstdout: %s", e.stderr, e.stdout)
 			return 1
 		except (OSError, subprocess.SubprocessError) as e:
-			logging.critical("Failed to restart Traffic Ops: unknown error occurred")
+			logging.critical("Failed to restart Traffic Ops: unknown error occurred: %s", e)
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so
 		# neither do we
