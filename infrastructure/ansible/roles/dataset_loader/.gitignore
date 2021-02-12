@@ -16,3 +16,5 @@
 # under the License.
 #
 profile.parameters.*
+ats_profile_diff_output.json
+ats_profile_diff_output.yml

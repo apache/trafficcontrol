@@ -1,0 +1,77 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# These use a contains comparision, usually best to be as specific as possible
+parameter_diff_exclusions:
+  - configFile: astats.config
+    name: allow_ip
+  - configFile: records.config
+    name: CONFIG proxy.config.cache.ram_cache.size
+  - configFile: CRConfig.json
+    name: domain_name
+  - configFile: storage.config
+    name: Drive_Letters
+  - configFile: storage.config
+    name: Drive_Prefix
+  - configFile: rascal.properties
+    name: health.threshold.kbps
+  - configFile: rascal.properties
+    name: health.threshold.loadavg
+  - configFile: ip_allow.config
+    name: purge_allow_ip
+  - configFile: storage.config
+    name: RAM_Drive_Letters
+  - configFile: storage.config
+    name: RAM_Drive_Prefix
+  - configFile: parent.config
+    name: weight
+  - configFile: chkconfig
+    name: trafficserver
+  - configFile: records.config
+    name: CONFIG proxy.config.http.referer_default_redirect
+  - configFile: rascal.properties
+    name: health.threshold.availableBandwidthInKbps
+  - configFile: package
+    name: jemalloc-
+  - configFile: hdr_rw_
+    name: location
+  - configFile: plugin.config
+    name: remap_stats.so
+  - configFile: .config
+    name: access_key
+  - configFile: url_sig_
+    name: error_url
+  - configFile: regex_remap_
+    name: location
+  - configFile: s3_auth_
+    name: location
+  - configFile: s3_auth_
+    name: secret_key
+  - configFile: s3_auth_
+    name: v4-include-headers
+  - configFile: s3_auth_
+    name: version
+  - configFile: url_sig_
+    name: location
+  - configFile: url_sig_
+    name: excl_regex
+  - configFile: .lua
+    name: data
+  - configFile: .lua
+    name: location
+  - configFile: anymap_hdr_rw.config
+    name: location
+  - configFile: anymap_hdr_rw.config
+    name: data
