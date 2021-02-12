@@ -1186,7 +1186,15 @@ if __name__ == '__main__':
 		type=str,
 		default=None
 	)
+	PARSER.add_argument(
+		"-cfile",
+		help=argparse.SUPPRESS,
+		type=str,
+		default=None,
+		dest="legacy_cfile"
+	)
 	PARSER.add_argument("--debug", help="Enables verbose output", action="store_true")
+	PARSER.add_argument("-debug", help=argparse.SUPPRESS, dest="legacy_debug", action="store_true")
 	PARSER.add_argument(
 		"--defaults",
 		help="Writes out a configuration file with defaults which can be used as input",
@@ -1194,6 +1202,15 @@ if __name__ == '__main__':
 		nargs="?",
 		default=None,
 		const=""
+	)
+	PARSER.add_argument(
+		"-defaults",
+		help=argparse.SUPPRESS,
+		type=str,
+		nargs="?",
+		default=None,
+		const="",
+		dest="legacy_defaults"
 	)
 	PARSER.add_argument(
 		"-n",
@@ -1231,17 +1248,53 @@ if __name__ == '__main__':
 
 	ARGS = PARSER.parse_args()
 
+	USED_LEGACY_ARGS = False
+	DEFAULTS = None
+	if ARGS.legacy_defaults:
+		if ARGS.defaults:
+			logging.error("cannot specify both '--defaults' and '-defaults'")
+			sys.exit(1)
+		USED_LEGACY_ARGS = True
+		DEFAULTS = ARGS.legacy_defaults
+	else:
+		DEFAULTS = ARGS.defaults
+
+	DEBUG = False
+	if ARGS.legacy_debug:
+		if ARGS.debug:
+			logging.error("cannot specify both '--debug' and '-debug'")
+			sys.exit(1)
+		USED_LEGACY_ARGS = True
+		DEBUG = ARGS.legacy_debug
+	else:
+		DEBUG = ARGS.debug
+
+	CFILE = None
+	if ARGS.legacy_cfile:
+		if ARGS.cfile:
+			logging.error("cannot specify both '--cfile' and '-cfile'")
+			sys.exit(1)
+		USED_LEGACY_ARGS = True
+		CFILE = ARGS.legacy_cfile
+	else:
+		CFILE = ARGS.cfile
+
 	if not ARGS.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
 		logging.shutdown()
 		sys.exit(1)
 
+	if USED_LEGACY_ARGS:
+		logging.warning(
+			"passing long options with a single '-' is deprecated, please use '--' in the future"
+		)
+
 	try:
 		EXIT_CODE = main(
 		ARGS.automatic,
-		ARGS.debug,
-		ARGS.defaults,
-		ARGS.cfile,
+		DEBUG,
+		DEFAULTS,
+		CFILE,
 		os.path.abspath(ARGS.root_directory),
 		ARGS.ops_user,
 		ARGS.ops_group,
