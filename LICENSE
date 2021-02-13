@@ -213,125 +213,125 @@ For readability, subcomponent licenses have been broken out into their own
 files, largely located in the licenses directory. Each subcomponent enumerated
 below lists the files it comprises and a link to the full text of the license.
 
-For the fontawesome component:
+This product bundles binary fontawesome fonts, which are available under an SIL OFL 1.1 license.
 @traffic_portal/app/src/assets/fonts/[Ff]ont[Aa]wesome*
 
 These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
 ./licenses/SIL-1.1
 
-The fontawesome CSS files are provided under an MIT license:
+The fontawesome CSS files are provided under an MIT license.
 ./licenses/MIT-fontawesome
 
-This product bundles bootstrap, which is available under a MIT license.
+This product bundles bootstrap, which is available under an MIT license.
 @misc/traffic-control-cdn/*/bootstrap*
 
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 ./licenses/MIT-normalize
 
-For the jQuery component:
+This product bundles jQuery, which is available under an MIT license.:
 ./licenses/MIT-jquery
 
-For the JSON formatter component:
+This product bundles JSON formatter, which is available under an Apache-2.0 license.
 @traffic_portal/app/src/assets/css/jsonformatter.min_0.6.0.css
 @traffic_portal/app/src/assets/js/jsonformatter.min_0.6.0.js
 ./licenses/AL2-jsonformatter
 
-For the DataTables component:
+This product bundles DataTables, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
 @traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.19_patched.js
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
 
-For the DataTables ColReorder component:
+This product bundles DataTables ColReorder, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/colReorder.dataTables.min_1.5.1.css
 @traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
 ./licenses/MIT-ColReorder
 
-For the DataTables Buttons component:
+This product bundles DataTables Buttons, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/dataTables.buttons.min_1.5.6.js
 ./licenses/MIT-datatables-buttons
 
-For the HTML5 Buttons component:
+This product bundles HTML5 Buttons, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/buttons.html5.min_1.5.6.js
 ./licenses/MIT-buttons-html5
 
-For the moment.js component:
+This product bundles moment.js, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/moment-min_2.22.1.js
 ./licenses/MIT-momentjs
 
-For the jsdiff component:
+This product bundles jsdiff, which is available under a BSD-3-Clause license.
 @traffic_portal/app/src/assets/js/jsdiff-min_3.5.0.js
 ./licenses/BSD-jsdiff
 
-For the fast-json-patch component:
+This product bundles fast-json-patch, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/fast-json-patch_v2.1.0.js
 ./licenses/MIT-fast-json-patch
 
-For the angular-moment-picker component:
+This product bundles angular-moment-picker, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/angular-moment-picker_0.10.2.css
 @traffic_portal/app/src/assets/js/moment-picker/angular-moment-picker.min_0.10.2.js
 ./licenses/MIT-angular_moment_picker
 
-For the angular-ui-tree component:
+This product bundles angular-ui-tree, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/angular-ui-tree.min_2.22.6.css
 @traffic_portal/app/src/assets/js/angular-ui-tree.min_2.22.6.js
 ./licenses/MIT-angular_ui_tree
 
-For the Chart.js component:
+This product bundles Chart.js, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/chartjs/Chart.min_2.7.2.js
 ./licenses/MIT-chartjs
 
-For the angular-chart.js component:
+This product bundles angular-chart.js, which is available under a BSD-2-Clause license.
 @traffic_portal/app/src/assets/js/chartjs/angular-chart.min_1.1.1.js
 ./licenses/BSD-angular-chartjs
 
-For the downloadjs component:
+This product bundles downloadjs, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/downloadjs-min_v4.21.js
 ./licenses/MIT-downloadjs
 
-For the angular-loading-bar component:
+This product bundles angular-loading-bar, which is available under an MIT license.
 @traffic_portal/app/src/styles/loading.scss
 ./licenses/MIT-angular_loading_bar
 
-For the gentelella admin theme:
+This product bundles the gentelella admin theme, which is available under an MIT license:
 @traffic_portal/app/src/styles/theme.scss
 ./licenses/MIT-gentelella
 
-For the underscore component:
+This product bundles underscore, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/underscore-min_1.8.3.js
 ./licenses/MIT-underscore
 
-For the stoppableListener component:
+This product bundles stoppableListener, which is available under a BSD-2-Clause license.
 @traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/*
 ./traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/LICENSE
 
-For the fsnotify component:
+This product bundles fsnotify, which is available under a BSD-3-Clause license.
 @vendor/gopkg.in/fsnotify.v1/*
 ./vendor/gopkg.in/fsnotify.v1/LICENSE
 
-For the yaml component:
+This product bundles yaml, which is available under an Apache-2.0 license.
 @vendor/gopkg.in/yaml.v2/*
 ./vendor/gopkg.in/yaml.v2/LICENSE
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
-For the pq component:
+This product bundles pq, which is available under a BSD-3-Clause license.
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 
-For the influxdb component:
+This product bundles influxdb, which is available under an MIT license.
 @vendor/github.com/influxdata/influxdb/*
 ./vendor/github.com/influxdata/influxdb/LICENSE
 ./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
 
-For the MaxMind DB GeoLite2 Database:
+This product bundles the MaxMind DB GeoLite2 Database, which is available under a CC-BY-SA-4.0 license.
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
 ./licenses/CC_A_SA_4-maxmind
 
-For the gofmt github hook:
+This product bundles a gofmt git pre-commit hook, which is available under a BSD-3-Clause license.
 @misc/git/pre-commit-hooks/01-gofmt
 ./licenses/BSD-go
 
-For the IPv6 Perl Module component:
+This product bundles the IPv6 Perl Module, which is available under a Artistic 2.0 license.
 @traffic_ops/app/bin/checks/NetPacket/IPv6.pm
 ./licenses/ISC-netpacket_ipv6
 
@@ -348,35 +348,35 @@ Several subsections of main.css are under the MIT license, as noted in the file:
     For the bootstrap-progressbar component:
     ./licenses/MIT-bootstrap_progressbar
 
-For the seelog component:
+This product bundles seelog, which is available under a BSD-3-Clause license.
 @traffic_stats/vendor/github.com/cihub/seelog/*
 ./licenses/BSD-seelog
 
-The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provided under a MIT license:
+This product bundles an invalid_passwords.txt file from the Projects/OWASP SecLists Project, which is available under an MIT license.
 @traffic_ops/app/conf/invalid_passwords.txt
 ./licenses/MIT-SecLists
 
-For the go-sqlmock component:
+This product bundles go-sqlmock, which is available under a BSD-3-Clause license.
 @traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/*
 ./traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
 
-For the go-jwx component:
+This product bundles go-jwx, which is available under an MIT license.
 @traffic_ops/vendor/github.com/lestrrat/go-jwx/*
 ./traffic_ops/vendor/github.com/lestrrat/go-jwx/LICENSE
 
-For the protobuf component:
+This product bundles protobuf, which is available under a BSD-3-Clause license.
 @vendor/github.com/golang/protobuf/*
 ./vendor/github.com/golang/protobuf/LICENSE
 
-For the sqlx component:
+This product bundles sqlx, which is available under an MIT license.
 @vendor/github.com/jmoiron/sqlx/*
 ./vendor/github.com/jmoiron/sqlx/LICENSE
 
-For the backoff component:
+This product bundles backoff, which is available under an MIT license.
 @vendor/github.com/basho/backoff/*
 ./vendor/github.com/basho/backoff/README.md
 
-The riak-go-client component is used under the Apache license:
+The riak-go-client component is used under the Apache-2.0 license:
 @vendor/github.com/basho/riak-go-client/*
 ./vendor/github.com/basho/riak-go-client/LICENSE
 
@@ -400,11 +400,11 @@ The bbolt component is used under the MIT license:
 @grove/vendor/go.etcd.io/bbolt/*
 ./grove/vendor/go.etcd.io/bbolt/LICENSE
 
-For the siphash component:
+This product bundles siphash, which is available under a CC0-1.0 license.
 @grove/vendor/github.com/dchest/siphash/*
 ./licenses/CC0
 
-For the miekg/dns component:
+This product bundles miekg/dns, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/miekg/dns/*
 ./licenses/BSD-miekg-dns
 
@@ -424,294 +424,294 @@ The json-iterator/go component is used under the MIT license:
 @vendor/github.com/json-iterator/go/*
 ./vendor/github.com/json-iterator/go/LICENSE
 
-The modern-go/concurrent component is used under the Apache 2.0 license:
+The modern-go/concurrent component is used under the Apache-2.0 license:
 @vendor/github.com/modern-go/concurrent/*
 ./vendor/github.com/modern-go/concurrent/LICENSE
 
-The modern-go/reflect2 component is used under the Apache 2.0 license:
+The modern-go/reflect2 component is used under the Apache-2.0 license:
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
 
-For the lestrrat-go/jwx component:
+This product bundles lestrrat-go/jwx, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
 
-For the dgrijalva/jwt-go component:
+This product bundles dgrijalva/jwt-go, which is available under an MIT license.
 @vendor/github.com/dgrijalva/jwt-go/*
 ./vendor/github.com/dgrijalva/jwt-go/LICENSE
 
-For the ogier/pflag component:
+This product bundles ogier/pflag, which is available under a BSD-3-Clause license.
 @vendor/github.com/ogier/pflag/*
 ./licenses/BSD-pflag
 
-For the errors component:
+This product bundles errors, which is available under a BSD-2-Clause license.
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE
 
-For the GehirnInc/crypt component:
+This product bundles GehirnInc/crypt, which is available under a BSD-2-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/LICENSE
 
-For the go-acme/lego component:
+This product bundles go-acme/lego, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/LICENSE
 
-For the google/uuid component:
+This product bundles google/uuid, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/LICENSE
 
-For the gofrs/flock component:
+This product bundles gofrs/flock, which is available under a BSD-3-Clause license.
 @traffic_ops_ort/vendor/github.com/gofrs/flock/*
 ./traffic_ops_ort/vendor/github.com/gofrs/flock/LICENSE
 
-For the pborman/getopt component:
+This product bundles pborman/getopt/v2, which is available under a BSD-3-Clause license.
 @vendor/github.com/pborman/getopt/*
 vendor/github.com/pborman/getopt/LICENSE
 
-For the contrib.go.opencensus.io/exporter/ocagent component:
+This product bundles contrib.go.opencensus.io/exporter/ocagent, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/*
 @traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/LICENSE
 
-For the google.golang.org/api/googleapi/internal/uritemplates component:
+This product bundles google.golang.org/api/googleapi/internal/uritemplates, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/*
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/LICENSE
 
-For the google.golang.org/api component:
+This product bundles google.golang.org/api, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/*
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/LICENSE
 
-For the google.golang.org/appengine component:
+This product bundles google.golang.org/appengine, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/*
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/LICENSE
 
-For the google.golang.org/genproto component:
+This product bundles google.golang.org/genproto, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/*
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/LICENSE
 
-For the google.golang.org/grpc component:
+This product bundles google.golang.org/grpc, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/*
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/LICENSE
 
-For the go.opencensus.io component:
+This product bundles go.opencensus.io, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/*
 @traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/LICENSE
 
-For the gopkg.in/ini.v1 component:
+This product bundles gopkg.in/ini.v1, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/*
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/LICENSE
 
-For the gopkg.in/ns1/ns1-go.v2 component:
+This product bundles gopkg.in/ns1/ns1-go.v2, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/*
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/LICENSE.txt
 
-For the gopkg.in/resty.v1 component:
+This product bundles gopkg.in/resty.v1, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/*
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/LICENSE
 
-For the gopkg.in/square/go-jose.v2/json component:
+This product bundles gopkg.in/square/go-jose.v2/json, which is available under an BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/*
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/LICENSE
 
-For the gopkg.in/square/go-jose.v2 component:
+This product bundles gopkg.in/square/go-jose.v2, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/*
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/LICENSE
 
-For the go.uber.org/ratelimit component:
+This product bundles go.uber.org/ratelimit, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/*
 @traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/LICENSE
 
-For the akamai/AkamaiOPEN-edgegrid-golang component:
+This product bundles akamai/AkamaiOPEN-edgegrid-golang, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/akamai/AkamaiOPEN-edgegrid-golang/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/akamai/AkamaiOPEN-edgegrid-golang/LICENSE
 
-For the aliyun/alibaba-cloud-sdk-go component:
+This product bundles aliyun/alibaba-cloud-sdk-go, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/aliyun/alibaba-cloud-sdk-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/aliyun/alibaba-cloud-sdk-go/LICENSE
 
-For the aws/aws-sdk-go component:
+This product bundles aws/aws-sdk-go, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/aws/aws-sdk-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/aws/aws-sdk-go/LICENSE.txt
 
-For the Azure/azure-sdk-for-go component:
+This product bundles Azure/azure-sdk-for-go, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/Azure/azure-sdk-for-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/Azure/azure-sdk-for-go/LICENSE
 
-For the Azure/go-autorest component:
+This product bundles google.golang.org/api, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/Azure/go-autorest/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/Azure/go-autorest/LICENSE
 
-For the  BurntSushi/toml component:
+This product bundles BurntSushi/toml, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/BurntSushi/toml/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/BurntSushi/toml/COPYING
 
-For the cenkalti/backoff component:
+This product bundles cenkalti/backoff, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/cenkalti/backoff/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/cenkalti/backoff/LICENSE
 
-For the census-instrumentation/opencensus-proto component:
+This product bundles census-instrumentation/opencensus-proto, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/census-instrumentation/opencensus-proto/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/census-instrumentation/opencensus-proto/LICENSE
 
-For the cloudflare/cloudflare-go component:
+This product bundles cloudflare/cloudflare-go, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/cloudflare/cloudflare-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/cloudflare/cloudflare-go/LICENSE
 
-For the cpu/goacmedns component:
+This product bundles cpu/goacmedns, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/cpu/goacmedns/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/cpu/goacmedns/LICENSE
 
-For the davecgh/go-spew component:
+This product bundles davecgh/go-spew, which is available under a ISC license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/davecgh/go-spew/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/davecgh/go-spew/LICENSE
 
-For the decker502/dnspod-go component:
+This product bundles decker502/dnspod-go, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/decker502/dnspod-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/decker502/dnspod-go/LICENSE
 
-For the dimchansky/utfbom component:
+This product bundles dimchansky/utfbom, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/dimchansky/utfbom/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/dimchansky/utfbom/LICENSE
 
-For the dnsimple/dnsimple-go component:
+This product bundles dnsimple/dnsimple-go, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/dnsimple/dnsimple-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/dnsimple/dnsimple-go/LICENSE.txt
 
-For the exoscale/egoscale component:
+This product bundles exoscale/egoscale, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/exoscale/egoscale/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/exoscale/egoscale/LICENSE
 
-For the fatih/structs component:
+This product bundles fatih/structs, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/fatih/structs/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/fatih/structs/LICENSE
 
-For the go-errors/errors component:
+This product bundles go-errors/errors, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-errors/errors/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-errors/errors/LICENSE.MIT
 
-For the gofrs/uuid component:
+This product bundles gofrs/uuid, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/gofrs/uuid/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/gofrs/uuid/LICENSE
 
-For the go-ini/ini component:
+This product bundles go-ini/ini, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-ini/ini/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-ini/ini/LICENSE
 
-For the google/google component:
+This product bundles google/go-querystring, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/google/go-querystring/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/google/go-querystring/LICENSE
 
-For the gophercloud/gophercloud component:
+This product bundles gophercloud/gophercloud, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/gophercloud/gophercloud/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/gophercloud/gophercloud/LICENSE
 
-For the grpc-ecosystem/grpc-gateway component:
+This product bundles grpc-ecosystem/grpc-gateway, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/grpc-ecosystem/grpc-gateway/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/grpc-ecosystem/grpc-gateway/LICENSE.txt
 
-For the hashicorp/golang-lru component:
+This product bundles hashicorp/golang-lru, which is available under a MPL-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/hashicorp/golang-lru/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/hashicorp/golang-lru/LICENSE
 
-For the iij/doapi component:
+This product bundles iij/doapi, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/iij/doapi/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/iij/doapi/LICENSE.md
 
-For the jmespath/go-jmespath component:
+This product bundles jmespath/go-jmespath, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/jmespath/go-jmespath/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/jmespath/go-jmespath/LICENSE
 
-For the kolo/xmlrpc component:
+This product bundles kolo/xmlrpc, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/kolo/xmlrpc/LICENSE
 
-For the kylelemons/godebug component:
+This product bundles kylelemons/godebug, which is available under an Apache-2.0 license.
 @vendor/github.com/kylelemons/godebug/*
 .vendor/github.com/kylelemons/godebug/LICENSE
 
-For the labbsr0x/bindman-dns-webhook component:
+This product bundles labbsr0x/bindman-dns-webhook, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/bindman-dns-webhook/LICENSE
 
-For the labbsr0x/goh component:
+This product bundles labbsr0x/goh, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/goh/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/labbsr0x/goh/LICENSE
 
-For the linode/linodego component:
+This product bundles linode/linodego, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/linode/linodego/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/linode/linodego/LICENSE
 
-For the mitchellh/go-homedir component:
+This product bundles mitchellh/go-homedir, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/go-homedir/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/go-homedir/LICENSE
 
-For the mitchellh/mapstructure component:
+This product bundles mitchellh/mapstructure, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/mapstructure/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/mitchellh/mapstructure/LICENSE
 
-For the namedotcom/go component:
+This product bundles namedotcom/go, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/namedotcom/go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/namedotcom/go/LICENSE
 
-For the nrdcg/auroradns component:
+This product bundles nrdcg/auroradns, which is available under a MPL-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/auroradns/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/auroradns/LICENSE
 
-For the nrdcg/goinwx component:
+This product bundles nrdcg/goinwx, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/goinwx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/goinwx/LICENSE
 
-For the nrdcg/namesilo component:
+This product bundles nrdcg/namesilo, which is available under a MPL-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/namesilo/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/nrdcg/namesilo/LICENSE
 
-For the OpenDNS/vegadns2client component:
+This product bundles OpenDNS/vegadns2client, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/OpenDNS/vegadns2client/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/OpenDNS/vegadns2client/LICENSE
 
-For the oracle/oci-go-sdk component:
+This product bundles oracle/oci-go-sdk, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/oracle/oci-go-sdk/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/oracle/oci-go-sdk/LICENSE.txt
 
-For the ovh/go-ovh component:
+This product bundles ovh/go-ovh, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/ovh/go-ovh/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/ovh/go-ovh/LICENSE
 
-For the pmezard/go-difflib component:
+This product bundles pmezard/go-difflib, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/pmezard/go-difflib/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/pmezard/go-difflib/LICENSE
 
-For the rainycape/memcache component:
+This product bundles rainycape/memcache, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/rainycape/memcache/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/rainycape/memcache/LICENSE
 
-For the sacloud/libsacloud component:
+This product bundles sacloud/libsacloud, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/sacloud/libsacloud/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/sacloud/libsacloud/LICENSE.txt
 
-For the sirupsen/logrus component:
+This product bundles sirupsen/logrus, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/sirupsen/logrus/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/sirupsen/logrus/LICENSE
 
-For the stretchr/objx component:
+This product bundles stretchr/objx, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/objx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/objx/LICENSE
 
-For the stretchr/testify component:
+This product bundles stretchr/testify, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/testify/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/stretchr/testify/LICENSE
 
-For the timewasted/linode component:
+This product bundles timewasted/linode, which is available under a BSD-2-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/timewasted/linode/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/timewasted/linode/LICENSE
 
-For the transip/gotransip component:
+This product bundles transip/gotransip, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/transip/gotransip/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/transip/gotransip/LICENSE
 
-For the urfave/cli component:
+This product bundles urfave/cli, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/urfave/cli/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/urfave/cli/LICENSE
 
-For the vultr/govultr component:
+This product bundles vultr/govultr, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/vultr/govultr/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/vultr/govultr/LICENSE
