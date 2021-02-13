@@ -351,7 +351,7 @@ This product bundles bootstrap-progressbar, which is available under an MIT lice
 
 This product bundles seelog, which is available under a BSD-3-Clause license.
 @vendor/github.com/cihub/seelog/*
-./licenses/BSD-seelog
+./vendor/github.com/cihub/seelog/LICENSE.txt
 
 This product bundles an invalid_passwords.txt file from the Projects/OWASP SecLists Project, which is available under an MIT license.
 @traffic_ops/app/conf/invalid_passwords.txt
@@ -407,7 +407,7 @@ This product bundles siphash, which is available under a CC0-1.0 license.
 
 This product bundles miekg/dns, which is available under a BSD-3-Clause license.
 @vendor/github.com/miekg/dns/*
-./licenses/BSD-miekg-dns
+./vendor/github.com/miekg/dns/LICENSE
 
 This product bundles asn1-ber.v1, which is available under an MIT license.
 @vendor/gopkg.in/asn1-ber.v1/*
@@ -455,7 +455,7 @@ This product bundles dgrijalva/jwt-go, which is available under an MIT license.
 
 This product bundles ogier/pflag, which is available under a BSD-3-Clause license.
 @vendor/github.com/ogier/pflag/*
-./licenses/BSD-pflag
+./vendor/github.com/ogier/pflag/LICENSE
 
 This product bundles errors, which is available under a BSD-2-Clause license.
 @vendor/github.com/pkg/errors/*
