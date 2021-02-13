@@ -222,9 +222,8 @@ These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
 The fontawesome CSS files are provided under an MIT license:
 ./licenses/MIT-fontawesome
 
-For the bootstrap component:
+This product bundles bootstrap, which is available under a MIT license.
 @misc/traffic-control-cdn/*/bootstrap*
-./licenses/MIT-bootstrap
 
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 ./licenses/MIT-normalize
