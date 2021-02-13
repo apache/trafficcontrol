@@ -219,13 +219,13 @@ This product bundles binary fontawesome fonts, which are available under an SIL 
 These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
 ./licenses/SIL-1.1
 
-The fontawesome CSS files are provided under an MIT license.
+This product bundles fontawesome CSS files, which are available under an MIT license.
 ./licenses/MIT-fontawesome
 
 This product bundles bootstrap, which is available under an MIT license.
 @misc/traffic-control-cdn/*/bootstrap*
 
-/*! normalize.css v3.0.1 | MIT License | git.io/normalize */
+This product bundles normalize.css, which is available under an MIT license.
 ./licenses/MIT-normalize
 
 This product bundles jQuery, which is available under an MIT license.:
@@ -293,7 +293,7 @@ This product bundles angular-loading-bar, which is available under an MIT licens
 @traffic_portal/app/src/styles/loading.scss
 ./licenses/MIT-angular_loading_bar
 
-This product bundles the gentelella admin theme, which is available under an MIT license:
+This product bundles the gentelella admin theme, which is available under an MIT license.
 @traffic_portal/app/src/styles/theme.scss
 ./licenses/MIT-gentelella
 
@@ -335,18 +335,17 @@ This product bundles the IPv6 Perl Module, which is available under a Artistic 2
 @traffic_ops/app/bin/checks/NetPacket/IPv6.pm
 ./licenses/ISC-netpacket_ipv6
 
-Several subsections of main.css are under the MIT license, as noted in the file:
+This product bundles cropper, which is available under an MIT license.
 @traffic_portal/app/src/styles/main.scss
+./licenses/MIT-cropper
+
+This product bundles bootstrap-vertical-tabs, which is available under an MIT license.
 @traffic_portal/app/src/styles/main.scss
+./licenses/MIT-bootstrap_vertical_tabs
 
-    For the bootstrap-vertical-tabs component:
-    ./licenses/MIT-bootstrap_vertical_tabs
-
-    For the cropper component:
-    ./licenses/MIT-cropper
-
-    For the bootstrap-progressbar component:
-    ./licenses/MIT-bootstrap_progressbar
+This product bundles bootstrap-progressbar, which is available under an MIT license.
+@traffic_portal/app/src/styles/main.scss
+./licenses/MIT-bootstrap_progressbar
 
 This product bundles seelog, which is available under a BSD-3-Clause license.
 @traffic_stats/vendor/github.com/cihub/seelog/*
@@ -376,27 +375,27 @@ This product bundles backoff, which is available under an MIT license.
 @vendor/github.com/basho/backoff/*
 ./vendor/github.com/basho/backoff/README.md
 
-The riak-go-client component is used under the Apache-2.0 license:
+This product bundles riak-go-client, which is available under an Apache-2.0 license.
 @vendor/github.com/basho/riak-go-client/*
 ./vendor/github.com/basho/riak-go-client/LICENSE
 
-The envconfig component is used under the MIT license:
+This product bundles envconfig, which is available under an MIT license.
 @traffic_ops/vendor/github.com/kelseyhightower/envconfig/*
 ./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
 
-The govalidator component is used under the MIT license:
+This product bundles govalidator, which is available under an MIT license.
 @vendor/github.com/asaskevich/govalidator/*
 ./vendor/github.com/asaskevich/govalidator/LICENSE
 
-The ozzo-validation component is used under the MIT license:
+This product bundles ozzo-validation, which is available under an MIT license.
 @vendor/github.com/go-ozzo/ozzo-validation/*
 ./vendor/github.com/go-ozzo/ozzo-validation/LICENSE
 
-The bytefmt component is used under the Apache 2.0 license:
+This product bundles bytefmt, which is available under an Apache-2.0 license.
 @grove/vendor/code.cloudfoundry.org/bytefmt/*
 ./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
-The bbolt component is used under the MIT license:
+This product bundles bbolt, which is available under an MIT license.
 @grove/vendor/go.etcd.io/bbolt/*
 ./grove/vendor/go.etcd.io/bbolt/LICENSE
 
@@ -408,27 +407,27 @@ This product bundles miekg/dns, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/github.com/miekg/dns/*
 ./licenses/BSD-miekg-dns
 
-The asn1-ber.v1 component is used under the MIT license:
+This product bundles asn1-ber.v1, which is available under an MIT license.
 @traffic_ops/vendor/gopkg.in/asn1-ber.v1/*
 ./traffic_ops/vendor/gopkg.in/asn1-ber.v1/LICENSE
 
-The ldap.v2 component is used under the MIT license:
+This product bundles ldap.v2 component, which is available under an MIT license.
 @traffic_ops/vendor/gopkg.in/ldap.v2/*
 ./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
 
-The fakeOrigin example video is used the Public Domain license:
+This product bundles an example video for fakeOrigin, which is available under an CC-PDM-1.0 license.
 @test/fakeOrigin/example/video/*
 ./test/fakeOrigin/example/video/LICENSE
 
-The json-iterator/go component is used under the MIT license:
+This product bundles json-iterator/go, which is available under an MIT license.
 @vendor/github.com/json-iterator/go/*
 ./vendor/github.com/json-iterator/go/LICENSE
 
-The modern-go/concurrent component is used under the Apache-2.0 license:
+This product bundles modern-go/concurrent, which is available under an Apache-2.0 license.
 @vendor/github.com/modern-go/concurrent/*
 ./vendor/github.com/modern-go/concurrent/LICENSE
 
-The modern-go/reflect2 component is used under the Apache-2.0 license:
+This product bundles modern-go/reflect2, which is available under an Apache-2.0 license.
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
 
