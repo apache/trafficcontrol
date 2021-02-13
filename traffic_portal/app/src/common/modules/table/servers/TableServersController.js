@@ -23,12 +23,21 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	// browserify can't handle classes...
 	function SSHCellRenderer() {}
 	SSHCellRenderer.prototype.init = function(params) {
-		this.eGui = document.createElement("A");
-		this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
-		this.eGui.setAttribute("target", "_blank");
+		this.eGui = document.createElement("div");
 		this.eGui.textContent = params.value;
+		this.data.cellHrefValue = "ssh://" + userModel.user.username + "@" + params.value;
+
 	};
 	SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
+
+	function ILOCellRenderer() {}
+	ILOCellRenderer.prototype.init = function(params) {
+		this.eGui = document.createElement("div");
+		this.eGui.textContent =  params.value;
+		this.data.cellHrefValue = "https://" + params.value;
+	};
+	ILOCellRenderer.prototype.getGui = function() { return this.eGui;};
+
 
 	function UpdateCellRenderer() {}
 	UpdateCellRenderer.prototype.init = function(params) {
@@ -52,6 +61,10 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	}
 
 	/**** Constants, scope data, etc. ****/
+
+	function openCellInNewWindow(event) {
+		window.open(event.cell.data.cellHrefValue, "_blank");
+	}
 
 	/** The columns of the ag-grid table */
 	const columns = [
@@ -96,15 +109,15 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			cellRenderer: "iloCellRenderer",
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "ILO IP Gateway",
 			field: "iloIpGateway",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			cellRenderer: "iloCellRenderer",
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "ILO IP Netmask",
@@ -149,7 +162,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Mgmt IP Netmask",
@@ -157,7 +170,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "IPv4 Gateway",
@@ -165,7 +178,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "IPv4 Address",
@@ -173,7 +186,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: false,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: openCellInNewWindow
 		},
 		{
 			headerName: "Network MTU",
@@ -290,6 +303,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
+			iloCellRenderer: ILOCellRenderer,
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
@@ -353,7 +367,16 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		},
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
-			if(selection === "" || selection === $scope.mouseDownSelectionText) {
+			const overrideCells = [
+				"iloIpAddress",
+				"iloIpGateway",
+				"mgmtIpGateway",
+				"mgmtIpNetmask",
+				"ipGateway",
+				"ipAddress"
+			];
+			let columnId = params.column.getColId();
+			if(selection === "" || selection === $scope.mouseDownSelectionText && overrideCells.indexOf(columnId) === -1) {
 				locationUtils.navigateToPath('/servers/' + params.data.id);
 				// Event is outside the digest cycle, so we need to trigger one.
 				$scope.$apply();
