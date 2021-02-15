@@ -25,10 +25,20 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	SSHCellRenderer.prototype.init = function(params) {
 		this.eGui = document.createElement("A");
 		this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
-		this.eGui.setAttribute("class", "ssh-link");
+		this.eGui.setAttribute("class", "link");
 		this.eGui.textContent = params.value;
 	};
 	SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
+
+	function HTTPSCellRenderer() {}
+	HTTPSCellRenderer.prototype.init = function(params) {
+		this.eGui = document.createElement("A");
+		this.eGui.href = "https://" + params.value;
+		this.eGui.setAttribute("class", "link");
+		this.eGui.setAttribute("target", "_blank");
+		this.eGui.textContent = params.value;
+	};
+	HTTPSCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	function UpdateCellRenderer() {}
 	UpdateCellRenderer.prototype.init = function(params) {
@@ -96,7 +106,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
+			cellRenderer: "HTTPSCellRenderer",
 			onCellClicked: null
 		},
 		{
@@ -286,6 +296,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
+			HTTPSCellRenderer: HTTPSCellRenderer,
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
@@ -348,7 +359,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.mouseDownSelectionText = window.getSelection().toString();
 		},
 		onRowClicked: function(params) {
-			if (params.event.target.classList.contains('ssh-link')) {
+			if (params.event.target.classList.contains('link')) {
 				// no need to navigate to server detail page
 				return;
 			}
