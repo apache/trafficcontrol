@@ -102,9 +102,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "ILO IP Gateway",
 			field: "iloIpGateway",
-			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			hide: true
 		},
 		{
 			headerName: "ILO IP Netmask",
@@ -124,7 +122,9 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "IPv6 Address",
 			field: "ip6Address",
-			hide: false
+			hide: false,
+			cellRenderer: "sshCellRenderer",
+			onCellClicked: null
 		},
 		{
 			headerName: "IPv6 Gateway",
@@ -141,31 +141,27 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "Mgmt IP Address",
 			field: "mgmtIpAddress",
-			hide: true
+			hide: true,
+			cellRenderer: "sshCellRenderer",
+			onCellClicked: null
 		},
 		{
 			headerName: "Mgmt IP Gateway",
 			field: "mgmtIpGateway",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "Mgmt IP Netmask",
 			field: "mgmtIpNetmask",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "IPv4 Gateway",
 			field: "ipGateway",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "IPv4 Address",
