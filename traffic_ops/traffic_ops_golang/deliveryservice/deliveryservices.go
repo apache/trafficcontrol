@@ -1838,6 +1838,7 @@ func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string,
 	return nil
 }
 
+// EnsureCacheURLParams ensures the given delivery service's cachrurl parameters exist on profiles of servers assigned to the delivery service.
 func EnsureCacheURLParams(tx *sql.Tx, dsID int, xmlID string, cacheURL *string) error {
 	configFile := "cacheurl_" + xmlID + ".config"
 	if cacheURL == nil || *cacheURL == "" {

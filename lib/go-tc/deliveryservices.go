@@ -176,9 +176,9 @@ type DeliveryServiceV11 struct {
 type DeliveryServiceV40 struct {
 	DeliveryServiceFieldsV31
 	DeliveryServiceFieldsV30
-	DeliveryServiceNullableFieldsV15
-	DeliveryServiceNullableFieldsV14
-	DeliveryServiceNullableFieldsV13
+	DeliveryServiceFieldsV15
+	DeliveryServiceFieldsV14
+	DeliveryServiceFieldsV13
 	DeliveryServiceNullableFieldsV11
 }
 
@@ -187,6 +187,7 @@ type DeliveryServiceV31 struct {
 	DeliveryServiceFieldsV31
 }
 
+// DeliveryServiceFieldsV31 contains additions to delivery services in api v3.1
 type DeliveryServiceFieldsV31 struct {
 	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
 }
@@ -195,6 +196,8 @@ type DeliveryServiceV30 struct {
 	DeliveryServiceNullableV15
 	DeliveryServiceFieldsV30
 }
+
+// DeliveryServiceFieldsV30 contains additions to delivery services in api v3.0
 type DeliveryServiceFieldsV30 struct {
 	Topology           *string `json:"topology" db:"topology"`
 	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
@@ -216,20 +219,22 @@ type DeliveryServiceNullableV4 DeliveryServiceV40
 type DeliveryServiceNullable DeliveryServiceNullableV15
 type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
-	DeliveryServiceNullableFieldsV15
+	DeliveryServiceFieldsV15
 }
 
-type DeliveryServiceNullableFieldsV15 struct {
+// DeliveryServiceFieldsV15 contains additions to delivery services in api v1.5
+type DeliveryServiceFieldsV15 struct {
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
 }
 
 type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
-	DeliveryServiceNullableFieldsV14
+	DeliveryServiceFieldsV14
 }
 
-type DeliveryServiceNullableFieldsV14 struct {
+// DeliveryServiceFieldsV14 contains additions to delivery services in api v1.4
+type DeliveryServiceFieldsV14 struct {
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -237,10 +242,11 @@ type DeliveryServiceNullableFieldsV14 struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	DeliveryServiceNullableFieldsV13
+	DeliveryServiceFieldsV13
 }
 
-type DeliveryServiceNullableFieldsV13 struct {
+// DeliveryServiceFieldsV13 contains additions to delivery services in api v1.3
+type DeliveryServiceFieldsV13 struct {
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
 	FQPacingRate      *int             `json:"fqPacingRate" db:"fq_pacing_rate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
@@ -258,7 +264,7 @@ type DeliveryServiceNullableV12 struct {
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
 	DeliveryServiceNullableFieldsV11
-	DeliveryServiceRemovedFieldsNullableV11
+	DeliveryServiceRemovedFieldsV11
 }
 
 type DeliveryServiceNullableFieldsV11 struct {
@@ -319,10 +325,12 @@ type DeliveryServiceNullableFieldsV11 struct {
 }
 
 // Deprecated: used for backwards compatibility  with ATC <v5.1
-type DeliveryServiceRemovedFieldsNullableV11 struct {
+// DeliveryServiceRemovedFieldsV11 contains additions to delivery services in api v1.1 that were later removed
+type DeliveryServiceRemovedFieldsV11 struct {
 	CacheURL *string `json:"cacheurl" db:"cacheurl"`
 }
 
+// DowngradeToV3 converts the 4.x DS to a 3.x DS
 func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	return DeliveryServiceNullableV30{
 		DeliveryServiceV30: DeliveryServiceV30{
@@ -334,11 +342,11 @@ func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 
 								DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 							},
 						},
-						DeliveryServiceNullableFieldsV13: ds.DeliveryServiceNullableFieldsV13,
+						DeliveryServiceFieldsV13: ds.DeliveryServiceFieldsV13,
 					},
-					DeliveryServiceNullableFieldsV14: ds.DeliveryServiceNullableFieldsV14,
+					DeliveryServiceFieldsV14: ds.DeliveryServiceFieldsV14,
 				},
-				DeliveryServiceNullableFieldsV15: ds.DeliveryServiceNullableFieldsV15,
+				DeliveryServiceFieldsV15: ds.DeliveryServiceFieldsV15,
 			},
 			DeliveryServiceFieldsV30: ds.DeliveryServiceFieldsV30,
 		},
@@ -346,13 +354,14 @@ func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 
 	}
 }
 
+// UpgradeToV4 converts the 3.x DS to a 4.x DS
 func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceNullableV4 {
 	return DeliveryServiceNullableV4{
 		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
 		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
-		DeliveryServiceNullableFieldsV15: ds.DeliveryServiceNullableFieldsV15,
-		DeliveryServiceNullableFieldsV14: ds.DeliveryServiceNullableFieldsV14,
-		DeliveryServiceNullableFieldsV13: ds.DeliveryServiceNullableFieldsV13,
+		DeliveryServiceFieldsV15:         ds.DeliveryServiceFieldsV15,
+		DeliveryServiceFieldsV14:         ds.DeliveryServiceFieldsV14,
+		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
 		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 	}
 }
