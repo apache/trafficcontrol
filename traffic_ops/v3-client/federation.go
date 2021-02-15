@@ -26,14 +26,17 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// APIFederations is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const APIFederations = apiBase + "/federations"
+
+const APIFederationsPath = "/federations"
 
 func (to *Session) FederationsWithHdr(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	type FederationResponse struct {
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := to.get(APIFederations, header, &data)
+	inf, err := to.get(APIFederationsPath, header, &data)
 	return data.Response, inf, err
 }
 
@@ -47,7 +50,7 @@ func (to *Session) AllFederationsWithHdr(header http.Header) ([]tc.AllDeliverySe
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := to.get(apiBase+"/federations/all", header, &data)
+	inf, err := to.get("/federations/all", header, &data)
 	return data.Response, inf, err
 }
 
@@ -62,7 +65,7 @@ func (to *Session) AllFederationsForCDNWithHdr(cdnName string, header http.Heade
 		Response []json.RawMessage `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := to.get(apiBase+"/federations/all?cdnName="+url.QueryEscape(cdnName), header, &data)
+	inf, err := to.get("/federations/all?cdnName="+url.QueryEscape(cdnName), header, &data)
 	if err != nil {
 		return nil, inf, err
 	}
@@ -90,7 +93,7 @@ func (to *Session) AllFederationsForCDN(cdnName string) ([]tc.AllDeliveryService
 func (to *Session) CreateFederationDeliveryServices(federationID int, deliveryServiceIDs []int, replace bool) (ReqInf, error) {
 	req := tc.FederationDSPost{DSIDs: deliveryServiceIDs, Replace: &replace}
 	resp := map[string]interface{}{}
-	inf, err := to.post(apiBase+`/federations/`+strconv.Itoa(federationID)+`/deliveryservices`, req, nil, &resp)
+	inf, err := to.post(`/federations/`+strconv.Itoa(federationID)+`/deliveryservices`, req, nil, &resp)
 	return inf, err
 }
 
@@ -99,7 +102,7 @@ func (to *Session) GetFederationDeliveryServicesWithHdr(federationID int, header
 		Response []tc.FederationDeliveryServiceNullable `json:"response"`
 	}
 	data := FederationDSesResponse{}
-	inf, err := to.get(fmt.Sprintf("%s/federations/%d/deliveryservices", apiBase, federationID), header, &data)
+	inf, err := to.get(fmt.Sprintf("/federations/%d/deliveryservices", federationID), header, &data)
 	return data.Response, inf, err
 }
 
@@ -111,7 +114,7 @@ func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.Federat
 
 // DeleteFederationDeliveryService Deletes a given Delivery Service from a Federation
 func (to *Session) DeleteFederationDeliveryService(federationID, deliveryServiceID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/federations/%d/deliveryservices/%d", apiBase, federationID, deliveryServiceID)
+	route := fmt.Sprintf("/federations/%d/deliveryservices/%d", federationID, deliveryServiceID)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -121,7 +124,7 @@ func (to *Session) DeleteFederationDeliveryService(federationID, deliveryService
 func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
 	req := tc.FederationUserPost{IDs: userIDs, Replace: &replace}
 	var alerts tc.Alerts
-	inf, err := to.post(fmt.Sprintf("%s/federations/%d/users", apiBase, federationID), req, nil, &alerts)
+	inf, err := to.post(fmt.Sprintf("/federations/%d/users", federationID), req, nil, &alerts)
 	return alerts, inf, err
 }
 
@@ -130,7 +133,7 @@ func (to *Session) GetFederationUsersWithHdr(federationID int, header http.Heade
 		Response []tc.FederationUser `json:"response"`
 	}
 	data := FederationUsersResponse{}
-	inf, err := to.get(fmt.Sprintf("%s/federations/%d/users", apiBase, federationID), header, &data)
+	inf, err := to.get(fmt.Sprintf("/federations/%d/users", federationID), header, &data)
 	return data.Response, inf, err
 }
 
@@ -142,7 +145,7 @@ func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, Re
 
 // DeleteFederationUser Deletes a given User from a Federation
 func (to *Session) DeleteFederationUser(federationID, userID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/federations/%d/users/%d", apiBase, federationID, userID)
+	route := fmt.Sprintf("/federations/%d/users/%d", federationID, userID)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -152,7 +155,7 @@ func (to *Session) DeleteFederationUser(federationID, userID int) (tc.Alerts, Re
 // Delivery Services for the current user.
 func (to *Session) AddFederationResolverMappingsForCurrentUser(mappings tc.DeliveryServiceFederationResolverMappingRequest) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIFederations, mappings, nil, &alerts)
+	reqInf, err := to.post(APIFederationsPath, mappings, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -161,7 +164,7 @@ func (to *Session) AddFederationResolverMappingsForCurrentUser(mappings tc.Deliv
 // Federation Resolvers themselves.
 func (to *Session) DeleteFederationResolverMappingsForCurrentUser() (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.del(APIFederations, nil, &alerts)
+	reqInf, err := to.del(APIFederationsPath, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -173,6 +176,6 @@ func (to *Session) DeleteFederationResolverMappingsForCurrentUser() (tc.Alerts, 
 // AddFederationResolverMappingsForCurrentUser .
 func (to *Session) ReplaceFederationResolverMappingsForCurrentUser(mappings tc.DeliveryServiceFederationResolverMappingRequest) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(APIFederations, mappings, nil, &alerts)
+	reqInf, err := to.put(APIFederationsPath, mappings, nil, &alerts)
 	return alerts, reqInf, err
 }

@@ -26,7 +26,10 @@ import (
 )
 
 const (
+	// API_REGIONS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_REGIONS = apiBase + "/regions"
+
+	APIRegions = "/regions"
 )
 
 // CreateRegion creates a Region.
@@ -42,12 +45,12 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 		region.Division = divisions[0].ID
 	}
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_REGIONS, region, nil, &alerts)
+	reqInf, err := to.post(APIRegions, region, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateRegionByIDWithHdr(id int, region tc.Region, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", APIRegions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, region, header, &alerts)
 	return alerts, reqInf, err
@@ -61,7 +64,7 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 
 func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, ReqInf, error) {
 	var data tc.RegionsResponse
-	reqInf, err := to.get(API_REGIONS, header, &data)
+	reqInf, err := to.get(APIRegions, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -72,7 +75,7 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 }
 
 func (to *Session) GetRegionByIDWithHdr(id int, header http.Header) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
+	route := fmt.Sprintf("%s?id=%d", APIRegions, id)
 	var data tc.RegionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -85,7 +88,7 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 }
 
 func (to *Session) GetRegionByNameWithHdr(name string, header http.Header) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
+	route := fmt.Sprintf("%s?name=%s", APIRegions, url.QueryEscape(name))
 	var data tc.RegionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -99,7 +102,7 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 
 // DeleteRegionByID DELETEs a Region by ID.
 func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
+	route := fmt.Sprintf("%s?id=%d", APIRegions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -114,12 +117,12 @@ func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error
 	if name != nil {
 		v.Add("name", *name)
 	}
-	URI := apiBase + "/regions"
+	uri := "/regions"
 	if qStr := v.Encode(); len(qStr) > 0 {
-		URI = fmt.Sprintf("%s?%s", URI, qStr)
+		uri = fmt.Sprintf("%s?%s", uri, qStr)
 	}
 
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(uri, nil, &alerts)
 	return alerts, reqInf, err
 }

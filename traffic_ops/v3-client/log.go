@@ -22,14 +22,17 @@ import (
 )
 
 const (
+	// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_LOGS = apiBase + "/logs"
+
+	APILogs = "/logs"
 )
 
 // GetLogsByQueryParams gets a list of logs filtered by query params.
 func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
-	URI := API_LOGS + queryParams
+	uri := APILogs + queryParams
 	var data tc.LogsResponse
-	reqInf, err := to.get(URI, nil, &data)
+	reqInf, err := to.get(uri, nil, &data)
 	return data.Response, reqInf, err
 }
 

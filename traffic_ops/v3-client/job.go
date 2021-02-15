@@ -27,14 +27,14 @@ import (
 // Creates a new Content Invalidation Job
 func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(apiBase+`/jobs`, job, nil, &alerts)
+	reqInf, err := to.post(`/jobs`, job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // Deletes a Content Invalidation Job
 func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.del(fmt.Sprintf("%s/jobs?id=%d", apiBase, jobID), nil, &alerts)
+	reqInf, err := to.del(fmt.Sprintf("/jobs?id=%d", jobID), nil, &alerts)
 	return alerts, reqInf, err
 
 }
@@ -42,7 +42,7 @@ func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, ReqInf, error
 // Updates a Content Invalidation Job
 func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(fmt.Sprintf(`%s/jobs?id=%d`, apiBase, *job.ID), job, nil, &alerts)
+	reqInf, err := to.put(fmt.Sprintf(`/jobs?id=%d`, *job.ID), job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -59,7 +59,7 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqIn
 	if userID != nil {
 		params.Add("userId", strconv.Itoa(*userID))
 	}
-	path := apiBase + "/jobs?" + params.Encode()
+	path := "/jobs?" + params.Encode()
 	data := struct {
 		Response []tc.Job `json:"response"`
 	}{}
@@ -143,7 +143,7 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 			return nil, ReqInf{}, fmt.Errorf("invalid type for argument 'user': %T*", t)
 		}
 	}
-	path := apiBase + "/jobs"
+	path := "/jobs"
 	if len(params) > 0 {
 		path += "?" + params.Encode()
 	}

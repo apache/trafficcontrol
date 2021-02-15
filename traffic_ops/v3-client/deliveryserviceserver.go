@@ -28,7 +28,6 @@ import (
 
 // CreateDeliveryServiceServers associates the given servers with the given delivery services. If replace is true, it deletes any existing associations for the given delivery service.
 func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool) (*tc.DSServerIDs, ReqInf, error) {
-	path := API_DELIVERY_SERVICE_SERVER
 	req := tc.DSServerIDs{
 		DeliveryServiceID: util.IntPtr(dsID),
 		ServerIDs:         serverIDs,
@@ -37,7 +36,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 	resp := struct {
 		Response tc.DSServerIDs `json:"response"`
 	}{}
-	reqInf, err := to.post(path, req, nil, &resp)
+	reqInf, err := to.post(APIDeliveryServiceServer, req, nil, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -45,7 +44,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 }
 
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
-	route := apiBase + `/deliveryserviceserver/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
+	route := `/deliveryserviceserver/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
 	resp := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &resp)
 	return resp, reqInf, err
@@ -53,7 +52,7 @@ func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alert
 
 // AssignServersToDeliveryService assigns the given list of servers to the delivery service with the given xmlId.
 func (to *Session) AssignServersToDeliveryService(servers []string, xmlId string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf(API_DELIVERY_SERVICES_SERVERS, url.QueryEscape(xmlId))
+	route := fmt.Sprintf(APIDeliveryServicesServers, url.QueryEscape(xmlId))
 	dss := tc.DeliveryServiceServers{ServerNames: servers, XmlId: xmlId}
 	resp := tc.Alerts{}
 	reqInf, err := to.post(route, dss, nil, &resp)
@@ -70,7 +69,7 @@ func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliverySe
 func (to *Session) GetDeliveryServiceServerWithHdr(page, limit string, header http.Header) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	var data tc.DeliveryServiceServerResponse
 	// TODO: page and limit should be integers not strings
-	reqInf, err := to.get(API_DELIVERY_SERVICE_SERVER+"?page="+url.QueryEscape(page)+"&limit="+url.QueryEscape(limit), header, &data)
+	reqInf, err := to.get(APIDeliveryServiceServer+"?page="+url.QueryEscape(page)+"&limit="+url.QueryEscape(limit), header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -127,7 +126,7 @@ func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServic
 }
 
 func (to *Session) getDeliveryServiceServers(urlQuery url.Values, h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	route := API_DELIVERY_SERVICE_SERVER
+	route := APIDeliveryServiceServer
 	if qry := urlQuery.Encode(); qry != "" {
 		route += `?` + qry
 	}

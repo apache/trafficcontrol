@@ -27,7 +27,7 @@ import (
 func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICapabilityResponse, ReqInf, error) {
 	var (
 		vals   = url.Values{}
-		path   = fmt.Sprintf("%s/api_capabilities", apiBase)
+		path   = "/api_capabilities"
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 		resp   tc.APICapabilityResponse
 	)

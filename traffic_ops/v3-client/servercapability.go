@@ -24,13 +24,16 @@ import (
 )
 
 const (
+	// API_SERVER_CAPABILITIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SERVER_CAPABILITIES = apiBase + "/server_capabilities"
+
+	APIServerCapabilities = "/server_capabilities"
 )
 
 // CreateServerCapability creates a server capability and returns the response.
 func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCapabilityDetailResponse, ReqInf, error) {
 	var scResp tc.ServerCapabilityDetailResponse
-	reqInf, err := to.post(API_SERVER_CAPABILITIES, sc, nil, &scResp)
+	reqInf, err := to.post(APIServerCapabilities, sc, nil, &scResp)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -39,7 +42,7 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 
 func (to *Session) GetServerCapabilitiesWithHdr(header http.Header) ([]tc.ServerCapability, ReqInf, error) {
 	var data tc.ServerCapabilitiesResponse
-	reqInf, err := to.get(API_SERVER_CAPABILITIES, header, &data)
+	reqInf, err := to.get(APIServerCapabilities, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -50,7 +53,7 @@ func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error
 }
 
 func (to *Session) GetServerCapabilityWithHdr(name string, header http.Header) (*tc.ServerCapability, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", API_SERVER_CAPABILITIES, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
 	var data tc.ServerCapabilitiesResponse
 	reqInf, err := to.get(reqUrl, header, &data)
 	if err != nil {
@@ -70,7 +73,7 @@ func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqIn
 
 // DeleteServerCapability deletes the given server capability by name.
 func (to *Session) DeleteServerCapability(name string) (tc.Alerts, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", API_SERVER_CAPABILITIES, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
 	var alerts tc.Alerts
 	reqInf, err := to.del(reqUrl, nil, &alerts)
 	return alerts, reqInf, err

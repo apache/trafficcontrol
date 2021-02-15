@@ -25,13 +25,16 @@ import (
 )
 
 const (
+	// API_SERVER_SERVER_CAPABILITIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SERVER_SERVER_CAPABILITIES = apiBase + "/server_server_capabilities"
+
+	APIServerServerCapabilities = "/server_server_capabilities"
 )
 
 // CreateServerServerCapability assigns a Server Capability to a Server
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_SERVER_SERVER_CAPABILITIES, ssc, nil, &alerts)
+	reqInf, err := to.post(APIServerServerCapabilities, ssc, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -42,7 +45,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	v.Add("serverId", strconv.Itoa(serverID))
 	v.Add("serverCapability", serverCapability)
 	qStr := v.Encode()
-	queryURL := fmt.Sprintf("%s?%s", API_SERVER_SERVER_CAPABILITIES, qStr)
+	queryURL := fmt.Sprintf("%s?%s", APIServerServerCapabilities, qStr)
 	reqInf, err := to.del(queryURL, nil, &alerts)
 	return alerts, reqInf, err
 }
@@ -58,7 +61,7 @@ func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostN
 	if serverCapability != nil {
 		v.Add("serverCapability", *serverCapability)
 	}
-	queryURL := API_SERVER_SERVER_CAPABILITIES
+	queryURL := APIServerServerCapabilities
 	if qStr := v.Encode(); len(qStr) > 0 {
 		queryURL = fmt.Sprintf("%s?%s", queryURL, qStr)
 	}

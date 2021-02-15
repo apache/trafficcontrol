@@ -25,7 +25,10 @@ import (
 )
 
 const (
+	// API_SNAPSHOT is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SNAPSHOT = apiBase + "/snapshot"
+
+	APISnapshot = "/snapshot"
 )
 
 type OuterResponse struct {
@@ -34,8 +37,9 @@ type OuterResponse struct {
 
 // GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
-	uri := apiBase + `/cdns/` + cdn + `/snapshot`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	uri := `/cdns/` + cdn + `/snapshot`
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -48,7 +52,7 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 }
 
 func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqInf, error) {
-	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
+	uri := fmt.Sprintf("%s?cdn=%s", APISnapshot, url.QueryEscape(cdn))
 	resp := OuterResponse{}
 	reqInf, err := to.put(uri, nil, header, &resp)
 	return reqInf, err
@@ -56,8 +60,9 @@ func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqI
 
 // GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
 func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
-	uri := apiBase + `/cdns/` + cdn + `/snapshot/new`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+	uri := `/cdns/` + cdn + `/snapshot/new`
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -77,7 +82,7 @@ func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
 
 // SnapshotCDNByID snapshots a CDN by ID.
 func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, ReqInf, error) {
-	url := fmt.Sprintf("%s?cdnID=%d", API_SNAPSHOT, id)
+	url := fmt.Sprintf("%s?cdnID=%d", APISnapshot, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(url, nil, nil, &alerts)
 	return alerts, reqInf, err

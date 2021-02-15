@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added API endpoints for ACME accounts
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 - Traffic Ops: Added validation to ensure that the `weight` parameter of `parent.config` is a float
+- Traffic Ops Client: New Login function with more options, including falling back to previous minor versions. See traffic_ops/v3-client documentation for details.
 - Added license files to the RPMs
 
 ### Fixed

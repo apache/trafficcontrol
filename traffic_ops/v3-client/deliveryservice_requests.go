@@ -25,7 +25,10 @@ import (
 )
 
 const (
+	// API_DS_REQUESTS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DS_REQUESTS = apiBase + "/deliveryservice_requests"
+
+	APIDSRequests = "/deliveryservice_requests"
 )
 
 // CreateDeliveryServiceRequest creates a Delivery Service Request.
@@ -85,7 +88,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 		dsr.DeliveryService.TenantID = ten.ID
 	}
 
-	reqInf, err := to.post(API_DS_REQUESTS, dsr, nil, &alerts)
+	reqInf, err := to.post(APIDSRequests, dsr, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -93,7 +96,7 @@ func (to *Session) GetDeliveryServiceRequestsWithHdr(header http.Header) ([]tc.D
 	data := struct {
 		Response []tc.DeliveryServiceRequest `json:"response"`
 	}{}
-	reqInf, err := to.get(API_DS_REQUESTS, header, &data)
+	reqInf, err := to.get(APIDSRequests, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -104,7 +107,7 @@ func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, Re
 }
 
 func (to *Session) GetDeliveryServiceRequestByXMLIDWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, url.QueryEscape(XMLID))
+	route := fmt.Sprintf("%s?xmlId=%s", APIDSRequests, url.QueryEscape(XMLID))
 	data := struct {
 		Response []tc.DeliveryServiceRequest `json:"response"`
 	}{}
@@ -119,7 +122,7 @@ func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.Delivery
 }
 
 func (to *Session) GetDeliveryServiceRequestByIDWithHdr(id int, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
 	data := struct {
 		Response []tc.DeliveryServiceRequest `json:"response"`
 	}{}
@@ -134,7 +137,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 }
 
 func (to *Session) UpdateDeliveryServiceRequestByIDWithHdr(id int, dsr tc.DeliveryServiceRequest, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, dsr, header, &alerts)
 	return alerts, reqInf, err
@@ -148,7 +151,7 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
 func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
