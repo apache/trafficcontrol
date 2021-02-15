@@ -25,7 +25,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	SSHCellRenderer.prototype.init = function(params) {
 		this.eGui = document.createElement("A");
 		this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
-		this.eGui.setAttribute("target", "_blank");
+		this.eGui.setAttribute("class", "ssh-link");
 		this.eGui.textContent = params.value;
 	};
 	SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
@@ -352,6 +352,10 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.mouseDownSelectionText = window.getSelection().toString();
 		},
 		onRowClicked: function(params) {
+			if (params.event.target.classList.contains('ssh-link')) {
+				// no need to navigate to server detail page
+				return;
+			}
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
 				locationUtils.navigateToPath('/servers/' + params.data.id);
