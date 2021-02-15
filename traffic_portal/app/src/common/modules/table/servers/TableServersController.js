@@ -106,7 +106,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
-			cellRenderer: "HTTPSCellRenderer",
+			cellRenderer: "httpsCellRenderer",
 			onCellClicked: null
 		},
 		{
@@ -296,7 +296,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
-			HTTPSCellRenderer: HTTPSCellRenderer,
+			httpsCellRenderer: HTTPSCellRenderer,
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
