@@ -28,7 +28,7 @@ import (
 
 func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users", apiBase)
+	route := "/users"
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
@@ -41,7 +41,7 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 
 func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
+	route := fmt.Sprintf("/users?role=%s", url.QueryEscape(roleName))
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
@@ -54,7 +54,7 @@ func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
 
 func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users/%d", apiBase, id)
+	route := fmt.Sprintf("/users/%d", id)
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
@@ -66,7 +66,7 @@ func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
 
 func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users?username=%s", apiBase, url.QueryEscape(username))
+	route := fmt.Sprintf("/users?username=%s", url.QueryEscape(username))
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
@@ -77,7 +77,7 @@ func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error)
 }
 
 func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, ReqInf, error) {
-	route := apiBase + `/user/current`
+	route := `/user/current`
 	resp := tc.UserCurrentResponse{}
 	reqInf, err := to.get(route, header, &resp)
 	if err != nil {
@@ -97,8 +97,9 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 	user := struct {
 		User tc.User `json:"user"`
 	}{u}
+
 	var clientResp tc.UpdateUserResponse
-	reqInf, err := to.put(apiBase+"/user/current", user, nil, &clientResp)
+	reqInf, err := to.put("/user/current", user, nil, &clientResp)
 	return &clientResp, reqInf, err
 }
 
@@ -126,7 +127,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 		user.Role = roles[0].ID
 	}
 
-	route := apiBase + "/users"
+	route := "/users"
 	var clientResp tc.CreateUserResponse
 	reqInf, err := to.post(route, user, nil, &clientResp)
 	return &clientResp, reqInf, err
@@ -134,7 +135,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 
 // UpdateUserByID updates user with the given id
 func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
-	route := apiBase + "/users/" + strconv.Itoa(id)
+	route := "/users/" + strconv.Itoa(id)
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put(route, u, nil, &clientResp)
 	return &clientResp, reqInf, err
@@ -142,7 +143,7 @@ func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, R
 
 // DeleteUserByID updates user with the given id
 func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
-	route := apiBase + "/users/" + strconv.Itoa(id)
+	route := "/users/" + strconv.Itoa(id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -157,6 +158,6 @@ func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAd
 		TenantID: tenantID,
 		Role:     roleID,
 	}
-	reqInf, err := to.post(apiBase+"/users/register", reqBody, nil, &alerts)
+	reqInf, err := to.post("/users/register", reqBody, nil, &alerts)
 	return alerts, reqInf, err
 }

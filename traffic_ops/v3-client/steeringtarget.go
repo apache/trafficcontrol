@@ -28,7 +28,7 @@ func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, errors.New("missing delivery service id")
 	}
 	alerts := tc.Alerts{}
-	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, *st.DeliveryServiceID)
+	route := fmt.Sprintf("/steering/%d/targets", *st.DeliveryServiceID)
 	reqInf, err := to.post(route, st, nil, &alerts)
 	return alerts, reqInf, err
 }
@@ -41,7 +41,7 @@ func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, hea
 	if st.TargetID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing target id")
 	}
-	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, *st.DeliveryServiceID, *st.TargetID)
+	route := fmt.Sprintf("/steering/%d/targets/%d", *st.DeliveryServiceID, *st.TargetID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.put(route, st, header, &alerts)
 	return alerts, reqInf, err
@@ -53,7 +53,7 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 }
 
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, dsID)
+	route := fmt.Sprintf("/steering/%d/targets", dsID)
 	data := struct {
 		Response []tc.SteeringTargetNullable `json:"response"`
 	}{}
@@ -62,7 +62,7 @@ func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, Re
 }
 
 func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, dsID, targetID)
+	route := fmt.Sprintf("/steering/%d/targets/%d", dsID, targetID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

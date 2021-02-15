@@ -25,7 +25,7 @@ func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, e
 	data := struct {
 		Response []tc.Steering `json:"response"`
 	}{}
-	reqInf, err := to.get(apiBase+`/steering`, header, &data)
+	reqInf, err := to.get(`/steering`, header, &data)
 	return data.Response, reqInf, err
 }
 

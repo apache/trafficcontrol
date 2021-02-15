@@ -33,7 +33,7 @@ func (to *Session) getFederationResolvers(id *uint, ip *string, t *string, heade
 		vals.Set("type", *t)
 	}
 
-	var path = apiBase + "/federation_resolvers"
+	path := "/federation_resolvers"
 	if len(vals) > 0 {
 		path = fmt.Sprintf("%s?%s", path, vals.Encode())
 	}
@@ -99,14 +99,14 @@ func (to *Session) GetFederationResolversByType(t string) ([]tc.FederationResolv
 // CreateFederationResolver creates the Federation Resolver 'fr'.
 func (to *Session) CreateFederationResolver(fr tc.FederationResolver) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(apiBase+"/federation_resolvers", fr, nil, &alerts)
+	reqInf, err := to.post("/federation_resolvers", fr, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.
 func (to *Session) DeleteFederationResolver(id uint) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	path := fmt.Sprintf("%s/federation_resolvers?id=%d", apiBase, id)
+	path := fmt.Sprintf("/federation_resolvers?id=%d", id)
 	reqInf, err := to.del(path, nil, &alerts)
 	return alerts, reqInf, err
 }
