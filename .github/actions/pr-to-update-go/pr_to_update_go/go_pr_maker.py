@@ -326,7 +326,7 @@ class GoPRMaker:
 		"""
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
-		script_path: str = f'.github/actions/pr-to-update-go/update_golang_org_x.sh'
+		script_path: str = '.github/actions/pr-to-update-go/update_golang_org_x.sh'
 		subprocess.run([script_path], check=True)
 		files_to_check: list[str] = ['go.mod', 'go.sum', 'vendor/modules.txt']
 		tree_elements: list[InputGitTreeElement] = []
@@ -351,7 +351,7 @@ class GoPRMaker:
 		git_commit: GitCommit = self.repo.create_git_commit(message=commit_message, tree=tree,
 			parents=[previous_git_commit],
 			author=self.author, committer=self.author)
-		print(f'Updated golang.org/x/ dependencies')
+		print('Updated golang.org/x/ dependencies')
 		return git_commit
 
 	def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
