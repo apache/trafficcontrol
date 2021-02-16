@@ -19,6 +19,6 @@ under the License.
 
 <div id="notificationsContainer">
     <div ng-show="cdn.notificationCreatedBy" class="alert alert-info" ng-repeat="cdn in cdns">
-        <div ng-bind-html="cdn.notification + ' [ CDN: ' + cdn.name + '; Created By: ' + cdn.notificationCreatedBy + ' ]' | linky:'_blank'"></div>
+        <div ng-bind-html="cdn.name + ': ' + cdn.notification + ' (' + cdn.notificationCreatedBy + ')' | linky:'_blank'"></div>
     </div>
 </div>
