@@ -13,19 +13,19 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-letsencrypt-autorenew:
+.. _to-api-acnme-autorenew:
 
-*************************
-``letsencrypt/autorenew``
-*************************
+******************
+``acme_autorenew``
+******************
 
 ``POST``
 ========
-Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
+Generates SSL certificates and private keys for all :term:`Delivery Services` that have certificates expiring within the configured time. This uses:abbr:`ACME (Automatic Certificate Management Environment)` or Let's Encrypt depending on the certificate.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
@@ -38,14 +38,10 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
+	HTTP/1.1 202 Accepted
 	Content-Type: application/json
 
 	{ "alerts": [
-		{
-			"text": "This endpoint is deprecated, please use letsencrypt/autorenew instead",
-			"level": "warning"
-		},
 		{
 			"text": "Beginning async call to renew certificates. This may take a few minutes.",
 			"level": "success"

@@ -49,6 +49,7 @@ import (
 
 const validAccountStatus = "valid"
 
+// RenewAcmeCertificate renews the SSL certificate for a delivery service if possible through ACME protocol.
 func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -132,14 +133,13 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
 	}
 
-	acmeAccount := getAcmeAccountConfig(cfg, keyObj.AuthType)
+	acmeAccount := GetAcmeAccountConfig(cfg, keyObj.AuthType)
 	if acmeAccount == nil {
 		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
 	}
 
 	client, err := GetAcmeClient(acmeAccount, userTx, db)
 	if err != nil {
-		log.Errorf(dsName+": Error getting acme client: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError
 	}
@@ -192,7 +192,8 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	return nil, nil, http.StatusOK
 }
 
-func getAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
+// GetAcmeAccountConfig returns the ACME account information from cdn.conf for a given provider.
+func GetAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
 	for _, acmeCfg := range cfg.AcmeAccounts {
 		if acmeCfg.AcmeProvider == acmeProvider {
 			return &acmeCfg
@@ -212,7 +213,7 @@ func getDSIdAndVersionFromName(db *sqlx.DB, xmlId string) (*int, *int64, error) 
 	return &dsID, &certVersion, nil
 }
 
-// GetAcmeClient uses the ACME account information in either cdn.conf or the database to create and register an ACME client
+// GetAcmeClient uses the ACME account information in either cdn.conf or the database to create and register an ACME client.
 func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sqlx.DB) (*lego.Client, error) {
 	if acmeAccount.UserEmail == "" {
 		log.Errorf("An email address must be provided to use ACME with %v", acmeAccount.AcmeProvider)
@@ -321,6 +322,7 @@ func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sq
 	return client, nil
 }
 
+// ConvertPrivateKeyToKeyPem converts an rsa.PrivateKey to be PEM encoded.
 func ConvertPrivateKeyToKeyPem(userPrivateKey *rsa.PrivateKey) ([]byte, error) {
 	userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
 	if userKeyDer == nil {

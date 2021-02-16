@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops Client: New Login function with more options, including falling back to previous minor versions. See traffic_ops/v3-client documentation for details.
 - Added license files to the RPMs
 - Added ACME certificate renewals and ACME account registration using external account binding
+- Added functionality to automatically renew ACME certificates.
 
 ### Fixed
 - [#5288](https://github.com/apache/trafficcontrol/issues/5288) - Fixed the ability to create and update a server with MTU value >= 1280.
