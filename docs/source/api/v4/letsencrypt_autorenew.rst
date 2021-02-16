@@ -47,7 +47,7 @@ Response Structure
 			"level": "warning"
 		},
 		{
-			"text": "Beginning async call to renew certificates.  This may take a few minutes.",
+			"text": "Beginning async call to renew certificates. This may take a few minutes.",
 			"level": "success"
 		}
 	]}

@@ -59,10 +59,14 @@ type ExpirationSummary struct {
 const emailTemplateFile = "/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.html"
 const API_ACME_AUTORENEW = "acme_autorenew"
 
+// RenewCertificatesDeprecated renews all SSL certificates that are expiring within a certain time limit with a deprecation alert.
+//// This will renew Let's Encrypt and ACME certificates.
 func RenewCertificatesDeprecated(w http.ResponseWriter, r *http.Request) {
 	renewCertificates(w, r, true)
 }
 
+// RenewCertificates renews all SSL certificates that are expiring within a certain time limit.
+// This will renew Let's Encrypt and ACME certificates.
 func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	renewCertificates(w, r, false)
 }
@@ -108,7 +112,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 
 	alerts.AddAlert(tc.Alert{
-		Text:  "Beginning async call to renew certificates.  This may take a few minutes.",
+		Text:  "Beginning async call to renew certificates. This may take a few minutes.",
 		Level: tc.SuccessLevel.String(),
 	})
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
