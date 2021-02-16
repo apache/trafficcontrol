@@ -15,7 +15,7 @@
 		"port": "6443",
 		"log_location_error": "error.log",
 		"log_location_warning": "warning.log",
-		"log_location_info": null,
+		"log_location_info": "info.log",
 		"log_location_debug": null,
 		"log_location_event": "event.log",
 		"max_db_connections": 20,

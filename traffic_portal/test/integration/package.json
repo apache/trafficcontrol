@@ -27,12 +27,10 @@
     "jasmine-data-provider": "^2.2.0",
     "typescript": "^3.6.4"
   },
-  "scripts": {
-    "test": "protractor config.ts"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
-    "url": "https://github.comcast.com/cdn/cdn-tests"
+    "url": "https://github.com/apache/trafficcontrol"
   },
   "author": "Lavanya, Dandy",
   "license": "ISC"

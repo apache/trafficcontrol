@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: TP E2E Tests
+name: TP Integration Tests
 
 env:
   # alpine:3.13
@@ -25,8 +25,8 @@ on:
   push:
     paths:
       - .github/actions/todb-init/**
-      - .github/actions/tp-e2e-tests/**
-      - .github/workflows/tp.e2e.tests.yml
+      - .github/actions/tp-integration-tests/**
+      - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
@@ -37,8 +37,8 @@ on:
   pull_request:
     paths:
       - .github/actions/todb-init/**
-      - .github/actions/tp-e2e-tests/**
-      - .github/workflows/tp.e2e.tests.yml
+      - .github/actions/tp-integration-tests/**
+      - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
@@ -48,7 +48,7 @@ on:
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
-  E2E_tests:
+  TP_Integration_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     services:
@@ -57,6 +57,8 @@ jobs:
         ports:
           - "4444:4444"
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
+        env:
+          GRID_DEBUG: true
       chrome:
         image: selenium/node-chrome
         env:
@@ -90,27 +92,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Cache Alpine Docker image
-        uses: actions/cache@v2
-        with:
-          path: ${{ github.workspace }}/docker-images
-          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-      - name: Import cached Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/bower.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
+#      - name: Cache Alpine Docker image
+#        uses: actions/cache@v2
+#        with:
+#          path: ${{ github.workspace }}/docker-images
+#          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+#      - name: Import cached Alpine Docker image
+#        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+#      - name: Cache node modules
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.npm
+#          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/bower.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
       - name: Run TP
-        uses: ./.github/actions/tp-e2e-tests
+        uses: ./.github/actions/tp-integration-tests
         with:
           smtp_address: 172.17.0.1
+      - name: Upload Report
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/traffic_portal/test/integration/Reports/
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 

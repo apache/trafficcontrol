@@ -138,14 +138,16 @@ export class ServersPage extends BasePage {
     await this.txtStatus.sendKeys(server.Status);
     await this.txtHostname.sendKeys(server.Hostname+this.randomize);
     await this.txtDomainName.sendKeys(server.Domainname);
-    await this.txtCDN.sendKeys(server.CDN);
-    await this.txtCacheGroup.sendKeys(server.CacheGroup);
+    await this.txtCDN.sendKeys("ALL");
+    await this.txtCDN.sendKeys(server.CDN + this.randomize);
+    await this.txtCacheGroup.sendKeys(server.CacheGroup + this.randomize);
     await this.txtType.sendKeys(server.Type);
-    await this.txtProfile.sendKeys(server.Profile);
+    await this.txtProfile.sendKeys(server.Profile + this.randomize);
     await this.txtPhysLocation.sendKeys(server.PhysLocation);
     await this.txtInterfaceName.sendKeys(server.InterfaceName);
     await element(by.id(""+server.InterfaceName+"-")).sendKeys(ipv6.toString());
-    await basePage.ClickCreate();
+    if (!await basePage.ClickCreate()) 
+        result = false;
     await basePage.GetOutputMessage().then(function(value){
       if(server.validationMessage == value){
         result = true;
@@ -153,8 +155,8 @@ export class ServersPage extends BasePage {
         result = false;
       }
     })
-  await this.OpenServerPage();
-  return result;
+    await this.OpenServerPage();
+    return result;
   }
 
   async SearchServer(nameServer:string){
