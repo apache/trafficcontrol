@@ -102,16 +102,16 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 
 	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User)
 
+	var alerts tc.Alerts
 	if deprecated {
-		alerts := api.CreateDeprecationAlerts(deprecation)
-		alerts.AddAlert(tc.Alert{
-			Text:  "Beginning async call to renew certificates.  This may take a few minutes.",
-			Level: tc.SuccessLevel.String(),
-		})
-		api.WriteAlerts(w, r, http.StatusOK, alerts)
-	} else {
-		api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async call to renew certificates.  This may take a few minutes.")
+		alerts.AddAlerts(api.CreateDeprecationAlerts(deprecation))
 	}
+
+	alerts.AddAlert(tc.Alert{
+		Text:  "Beginning async call to renew certificates.  This may take a few minutes.",
+		Level: tc.SuccessLevel.String(),
+	})
+	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
 func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser) {

@@ -356,7 +356,17 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. versionadded:: 4.1
 
 	:user_email: A required email address to create an account with Let's Encrypt or to receive expiration updates. If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.
+	:send_expiration_email: A boolean option to send email summarizing certificate expiration status
+
+		.. deprecated:: 5.1
+			Future versions of Traffic Ops will not support this legacy configuration option, see acme_renewal: { summary_email: <string> } instead.
+
 	:convert_self_signed: A boolean option to convert self signed to Let's Encrypt certificates as they expire. This only works for certificates labeled as Self Signed in the Certificate Source field.
+	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
+
+		.. deprecated:: 5.1
+			Future versions of Traffic Ops will not support this legacy configuration option, see acme_renewal: { renew_days_before_expiration: <int> } instead.
+
 	:environment: This specifies which Let's Encrypt environment to use: 'staging' or 'production'. It defaults to 'production'.
 
 :portal: This section provides information regarding a connected UI with which users interact, so that emails can include links to it.

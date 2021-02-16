@@ -147,7 +147,9 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf",
     "lets_encrypt" : {
         "user_email" : "",
+        "send_expiration_email": false,
         "convert_self_signed": false,
+        "renew_days_before_expiration": 30,
         "environment": "staging"
     },
     "acme_renewal": {

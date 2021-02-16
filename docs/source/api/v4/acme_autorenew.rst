@@ -25,7 +25,7 @@ Generates SSL certificates and private keys for all :term:`Delivery Services` th
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
@@ -38,12 +38,12 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
+	HTTP/1.1 202 Accepted
 	Content-Type: application/json
 
 	{ "alerts": [
-      {
-         "text": "Beginning async call to renew certificates.  This may take a few minutes.",
-         "level": "success"
-      }
+		{
+			"text": "Beginning async call to renew certificates.  This may take a few minutes.",
+			"level": "success"
+		}
 	]}
