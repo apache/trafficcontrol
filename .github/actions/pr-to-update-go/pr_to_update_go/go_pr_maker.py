@@ -30,7 +30,6 @@ import requests
 from github.Branch import Branch
 from github.Commit import Commit
 from github.GitCommit import GitCommit
-from github.GitRef import GitRef
 from github.GitTree import GitTree
 from github.GithubObject import NotSet
 from github.InputGitTreeElement import InputGitTreeElement
