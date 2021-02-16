@@ -25,10 +25,20 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	SSHCellRenderer.prototype.init = function(params) {
 		this.eGui = document.createElement("A");
 		this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
-		this.eGui.setAttribute("target", "_blank");
+		this.eGui.setAttribute("class", "link");
 		this.eGui.textContent = params.value;
 	};
 	SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
+
+	function HTTPSCellRenderer() {}
+	HTTPSCellRenderer.prototype.init = function(params) {
+		this.eGui = document.createElement("A");
+		this.eGui.href = "https://" + params.value;
+		this.eGui.setAttribute("class", "link");
+		this.eGui.setAttribute("target", "_blank");
+		this.eGui.textContent = params.value;
+	};
+	HTTPSCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	function UpdateCellRenderer() {}
 	UpdateCellRenderer.prototype.init = function(params) {
@@ -96,15 +106,13 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
-			cellRenderer: "sshCellRenderer",
+			cellRenderer: "httpsCellRenderer",
 			onCellClicked: null
 		},
 		{
 			headerName: "ILO IP Gateway",
 			field: "iloIpGateway",
-			hide: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			hide: true
 		},
 		{
 			headerName: "ILO IP Netmask",
@@ -124,7 +132,9 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "IPv6 Address",
 			field: "ip6Address",
-			hide: false
+			hide: false,
+			cellRenderer: "sshCellRenderer",
+			onCellClicked: null
 		},
 		{
 			headerName: "IPv6 Gateway",
@@ -141,31 +151,27 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "Mgmt IP Address",
 			field: "mgmtIpAddress",
-			hide: true
+			hide: true,
+			cellRenderer: "sshCellRenderer",
+			onCellClicked: null
 		},
 		{
 			headerName: "Mgmt IP Gateway",
 			field: "mgmtIpGateway",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "Mgmt IP Netmask",
 			field: "mgmtIpNetmask",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "Network Gateway",
 			field: "ipGateway",
 			hide: true,
-			filter: true,
-			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			filter: true
 		},
 		{
 			headerName: "Network IP",
@@ -290,6 +296,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
+			httpsCellRenderer: HTTPSCellRenderer,
 			sshCellRenderer: SSHCellRenderer,
 			updateCellRenderer: UpdateCellRenderer
 		},
@@ -352,6 +359,10 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			$scope.mouseDownSelectionText = window.getSelection().toString();
 		},
 		onRowClicked: function(params) {
+			if (params.event.target.classList.contains('link')) {
+				// no need to navigate to server detail page
+				return;
+			}
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
 				locationUtils.navigateToPath('/servers/' + params.data.id);

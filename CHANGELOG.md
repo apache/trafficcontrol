@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [5.1.0] - 2021-02-21
 ### Added
 - Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
+- Traffic Portal: [#5317](https://github.com/apache/trafficcontrol/issues/5317) - Clicking IP addresses in the servers table no longer navigates to server details page.
 - Traffic Portal: upgraded delivery service UI tables to use more powerful/performant ag-grid component
 - Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
