@@ -37,7 +37,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 
 func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, ReqInf, error) {
 	var data tc.TopologiesResponse
-	reqInf, err := to.get(ApiTopologies, header, &data)
+	reqInf, err := to.get(APITopologies, header, &data)
 	return data.Response, reqInf, err
 }
 
