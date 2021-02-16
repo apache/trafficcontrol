@@ -47,6 +47,7 @@ const (
 	CacheGroupParameters
 	CDNs
 	CDNFederations
+	CDNNotifications
 	Coordinates
 	DeliveryServices
 	DeliveryServicesRegexes
@@ -91,6 +92,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	CacheGroupsDeliveryServices:           {CreateTestCachegroupsDeliveryServices, DeleteTestCachegroupsDeliveryServices},
 	CacheGroupParameters:                  {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
 	CDNs:                                  {CreateTestCDNs, DeleteTestCDNs},
+	CDNNotifications:                      {CreateTestCDNNotifications, DeleteTestCDNNotifications},
 	CDNFederations:                        {CreateTestCDNFederations, DeleteTestCDNFederations},
 	Coordinates:                           {CreateTestCoordinates, DeleteTestCoordinates},
 	DeliveryServices:                      {CreateTestDeliveryServices, DeleteTestDeliveryServices},
