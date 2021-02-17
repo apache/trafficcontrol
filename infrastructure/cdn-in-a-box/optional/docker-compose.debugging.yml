@@ -32,7 +32,7 @@ services:
       - trafficmonitor-nondebug
   trafficops:
     build:
-      context: ../..
+      context: .
       dockerfile: traffic_ops/Dockerfile-debug
     image: trafficops-debug
     ports:
@@ -70,7 +70,7 @@ services:
       context: ../../
       dockerfile: traffic_ops/Dockerfile
       args:
-        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
+        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     command: /usr/bin/true
   # The trafficstats-nondebug service exists to ensure that the trafficstats
   # base image exists before building trafficstats-debug.
