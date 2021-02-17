@@ -151,6 +151,11 @@ SELECT
 	s.status_last_updated
 ` + serversFromAndJoin
 
+const selectIDQuery = `
+SELECT
+	s.id
+` + serversFromAndJoin
+
 const insertQueryV3 = `
 INSERT INTO server (
 	cachegroup,
@@ -1119,10 +1124,15 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, dsID, cdnID, tx)
+		includeCapabilities := false
+		if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
+			includeCapabilities = true
+		}
+		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, dsID, cdnID, tx, includeCapabilities)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
+		serverCount = serverCount + uint64(len(midIDs))
 		if userErr != nil || sysErr != nil {
 			return nil, serverCount, userErr, sysErr, errCode, nil
 		}
@@ -1215,7 +1225,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 }
 
 // getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID int, tx *sqlx.Tx) ([]int, error, error, int) {
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID int, tx *sqlx.Tx, includeCapabilities bool) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
 	}
@@ -1226,8 +1236,9 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		"ds_id":          dsID,
 	}
 
-	// TODO: include secondary parent?
-	query := selectQuery + `
+	query := ""
+	if includeCapabilities {
+		q := selectIDQuery + `
 	WHERE t.name = :cache_type_mid AND s.cachegroup IN (
 	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 	WHERE cg.id IN (
@@ -1237,6 +1248,22 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		FROM deliveryservice d
 		WHERE d.id = :ds_id) IS NULL
 	`
+		query = selectQuery + `
+	WHERE (SELECT ARRAY_AGG(ssc.server_capability) FROM server_server_capability ssc WHERE ssc."server" = ANY(
+	` + q + `)) @> (SELECT ARRAY_AGG(drc.required_capability) FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = :ds_id)`
+	} else {
+		// TODO: include secondary parent?
+		query = selectQuery + `
+	WHERE t.name = :cache_type_mid AND s.cachegroup IN (
+	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
+	WHERE cg.id IN (
+	SELECT s.cachegroup FROM server AS s
+	WHERE s.id = ANY(:edge_ids)))
+	AND (SELECT d.topology
+		FROM deliveryservice d
+		WHERE d.id = :ds_id) IS NULL
+	`
+	}
 
 	if cdnID > 0 {
 		query += ` AND s.cdn_id = :cdn_id`
