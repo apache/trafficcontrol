@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel, messageModel) {
 
     let getCDNs = function() {
         cdnService.getCDNs()
@@ -97,7 +97,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         modalInstance.result.then(function(notification) {
             cdnService.createNotification(cdn, notification).
                 then(
-                    function() {
+                    function(result) {
+                        messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
                 );
@@ -124,7 +125,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         modalInstance.result.then(function() {
             cdnService.deleteNotification(cdn).
                 then(
-                    function() {
+                    function(result) {
+                        messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
                 );
@@ -240,5 +242,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel', 'messageModel'];
 module.exports = HeaderController;
