@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
 - Updated Apache Tomcat from 8.5.57 to 8.5.63
+- Updated Apache Tomcat Native from 1.2.16 to 1.2.23
 
 ## [5.0.0] - 2020-10-20
 ### Added
