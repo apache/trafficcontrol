@@ -58,7 +58,7 @@ func CreateNotification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification created, Notification: " +reqObj.Notification, inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "bob", Notification: reqObj.Notification})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was created", tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "bob", Notification: reqObj.Notification})
 }
 
 func DeleteNotification(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func DeleteNotification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification deleted", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "", Notification: ""})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was deleted", nil)
 }
 
 func create(tx *sql.Tx, cdnID int64, username string, notification string) error {
