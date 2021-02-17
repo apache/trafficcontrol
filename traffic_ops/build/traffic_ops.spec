@@ -103,7 +103,6 @@ echo "go rming $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}"
 %__rm -rf $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}
 
 %__mkdir -p $RPM_BUILD_ROOT/var/www/files
-%__cp install/data/perl/osversions.cfg $RPM_BUILD_ROOT/var/www/files/.
 %__cp install/data/json/osversions.json $RPM_BUILD_ROOT/var/www/files/.
 
 if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
@@ -215,7 +214,6 @@ fi
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/script/generate_raid0_files.pl
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/conf
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
-%config(noreplace)/var/www/files/osversions.cfg
 %config(noreplace)/var/www/files/osversions.json
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/admin
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
