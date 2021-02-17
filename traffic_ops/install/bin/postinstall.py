@@ -1,7 +1,7 @@
-#!/usr/bin/env -S sh -c 'PATH="${PATH}:/usr/libexec" exec "$(type -p python platform-python | head -n1)" "$0" "$@"'
+#!/usr/bin/env python3
 # There's a bug in asteroid with Python 3.9's NamedTuple being
 # recognized for the dynamically generated class that it is. Should be fixed
-# with the next release, but 'till then...
+# with the next release, but 'til then...
 #pylint:disable=inherit-non-class
 """
 This script is meant as a drop-in replacement for the old _postinstall Perl script.
