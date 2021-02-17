@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5395](https://github.com/apache/trafficcontrol/issues/5395) - Added validation to prevent changing the Type any Cache Group that is in use by a Topology
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
 - Fix for public schema in 2020062923101648_add_deleted_tables.sql
+- Fix for config gen missing max_origin_connections on mids in certain scenarios
 - Fixed and issue with 2020082700000000_server_id_primary_key.sql trying to create multiple primary keys when there are multiple schemas.
 
 ### Changed
