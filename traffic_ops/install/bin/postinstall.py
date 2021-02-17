@@ -59,7 +59,7 @@ import stat
 import string
 import subprocess
 import sys
-from typing import Dict, NamedTuple, List, Optional
+from typing import NamedTuple
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
@@ -96,25 +96,25 @@ class Question:
 	Question(question='question', default='answer', config_var='var', hidden=False)
 	"""
 
-	def __init__(self, question: str, default: str, config_var: str, hidden: bool = False):
+	def __init__(self, question, default, config_var, hidden = False): # type: (str, str, str, bool) -> None
 		self.question = question
 		self.default = default
 		self.config_var = config_var
 		self.hidden = hidden
 
-	def __str__(self) -> str:
+	def __str__(self): # type: () -> str
 		if self.default:
 			return f"{self.question} [{self.default}]: "
 		return f"{self.question}: "
 
-	def __repr__(self) -> str:
+	def __repr__(self): # type: () -> str
 		qstn = self.question
 		ans = self.default
 		cfgvr = self.config_var
 		hddn = self.hidden
 		return f"Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})"
 
-	def ask(self) -> str:
+	def ask(self): # type: () -> str
 		"""
 		Asks the user the Question interactively.
 
@@ -131,7 +131,7 @@ class Question:
 		ipt = input(self)
 		return ipt if ipt else self.default
 
-	def to_json(self) -> str:
+	def to_json(self): # type: () -> str
 		"""
 		Converts a question to JSON encoding.
 
@@ -147,7 +147,7 @@ class Question:
 			return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'
 		return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'
 
-	def serialize(self) -> object:
+	def serialize(self): # type: () -> object
 		"""Returns a serializable dictionary, suitable for converting to JSON."""
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
@@ -155,14 +155,14 @@ class User(NamedTuple):
 	"""Users represents a user that will be inserted into the Traffic Ops database."""
 
 	#: The user's username.
-	username: str
+	username = None # type: str
 	#: The user's password - IN PLAINTEXT.
-	password: str
+	password = None # type: str
 
 class SSLConfig:
 	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
 
-	def __init__(self, gen_cert: bool, cfg_map: Dict[str, str]):
+	def __init__(self, gen_cert, cfg_map): # type: (bool, dict[str, str]) -> None
 
 		self.gen_cert = gen_cert
 		self.rsa_password = cfg_map["rsaPassword"]
@@ -171,12 +171,12 @@ class SSLConfig:
 
 class CDNConfig(NamedTuple):
 	"""CDNConfig holds all of the options needed to format a cdn.conf file."""
-	gen_secret: bool
-	num_secrets: int
-	port: int
-	num_workers: int
-	url: str
-	ldap_conf_location: str
+	gen_secret = None # type: bool
+	num_secrets = None # type: int
+	port = None # type: int
+	num_workers = None # type: int
+	url = None # type: str
+	ldap_conf_location = None # type: str
 
 	def generate_secret(self, conf):
 		"""
@@ -279,7 +279,7 @@ class ConfigEncoder(json.JSONEncoder):
 	"""
 
 	# The linter is just wrong about this
-	def default(self, o) -> object:
+	def default(self, o): # type: (object) -> object
 		"""
 		Returns a serializable representation of 'o'.
 
@@ -292,7 +292,7 @@ class ConfigEncoder(json.JSONEncoder):
 
 		return json.JSONEncoder.default(self, o)
 
-def get_config(questions: List[Question], fname: str, automatic: bool = False) -> Dict[str, str]:
+def get_config(questions, fname, automatic = False): # type: (list[Question], str, bool) -> dict[str, str]
 	"""Asks all provided questions, or uses their defaults in automatic mode"""
 
 	logging.info("===========%s===========", fname)
@@ -306,7 +306,7 @@ def get_config(questions: List[Question], fname: str, automatic: bool = False) -
 
 	return config
 
-def generate_db_conf(qstns: List[Question], fname: str, automatic: bool, root: str) -> dict:
+def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, bool, str) -> dict
 	"""
 	Generates the database.conf file and returns a map of its configuration.
 
@@ -328,7 +328,7 @@ def generate_db_conf(qstns: List[Question], fname: str, automatic: bool, root: s
 
 	return db_conf
 
-def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dict) -> dict:
+def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str, dict) -> dict
 	"""
 	Generates the dbconf.yml file and returns a map of its configuration.
 
@@ -357,7 +357,7 @@ def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dic
 
 	return todbconf
 
-def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, root: str):
+def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
 	Generates the ldap.conf file by asking the questions or using default answers in auto mode.
 
@@ -397,7 +397,7 @@ def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, r
 		json.dump(ldap_conf, conf_file, indent="\t")
 		print(file=conf_file)
 
-def hash_pass(passwd: str) -> str:
+def hash_pass(passwd): # type: (str) -> str
 	"""
 	Generates a Scrypt-based hash of the given password in a Perl-compatible format.
 	It's hard-coded - like the Perl - to use 64 random bytes for the salt, n=16384,
@@ -414,7 +414,7 @@ def hash_pass(passwd: str) -> str:
 
 	return f"SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}"
 
-def generate_users_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> User:
+def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> User
 	"""
 	Generates a users.json file from the given questions and returns a User containing the same
 	information.
@@ -433,7 +433,7 @@ def generate_users_conf(qstns: List[Question], fname: str, auto: bool, root: str
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
 
-def generate_profiles_dir(questions: List[Question]):
+def generate_profiles_dir(questions): # type: (list[Question]) -> None
 	"""
 	I truly have no idea what's going on here. This is what the Perl did, so I
 	copied it. It does nothing. Literally nothing.
@@ -442,7 +442,7 @@ def generate_profiles_dir(questions: List[Question]):
 	user_in = questions
 	#pylint:enable=unused-variable
 
-def generate_openssl_conf(questions: List[Question], fname: str, auto: bool) -> SSLConfig:
+def generate_openssl_conf(questions, fname, auto): # type: (list[Question], str, bool) -> SSLConfig
 	"""
 	Constructs an SSLConfig by asking the passed questions, or using their default answers if in
 	auto mode.
@@ -455,7 +455,7 @@ def generate_openssl_conf(questions: List[Question], fname: str, auto: bool) -> 
 
 	return SSLConfig(gen_cert, cfg_map)
 
-def generate_param_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> dict:
+def generate_param_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> dict
 	"""
 	Generates a profiles.json by asking the passed questions, or using their default answers in auto
 	mode.
@@ -471,7 +471,7 @@ def generate_param_conf(qstns: List[Question], fname: str, auto: bool, root: str
 
 	return conf
 
-def sanity_check_config(cfg: Dict[str, List[Question]], automatic: bool) -> int:
+def sanity_check_config(cfg, automatic): # type: (dict[str, list[Question]], bool) -> int
 	"""
 	Checks a user-input configuration file, and outputs the number of files in the
 	default question set that did not appear in the input.
@@ -511,7 +511,7 @@ def sanity_check_config(cfg: Dict[str, List[Question]], automatic: bool) -> int:
 
 	return diffs
 
-def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
+def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 	"""
 	Reads in a raw parsed configuration file and returns the resulting configuration.
 
@@ -560,7 +560,7 @@ def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
 
 	return ret
 
-def setup_maxmind(maxmind_answer: str, root: str):
+def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 	"""
 	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
 	database using `wget`.
@@ -601,7 +601,7 @@ def setup_maxmind(maxmind_answer: str, root: str):
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv6) Exception: %s", e)
 
-def exec_openssl(description: str, *cmd_args) -> bool:
+def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
 	Executes openssl with the supplied command-line arguments.
 
@@ -631,7 +631,7 @@ def exec_openssl(description: str, *cmd_args) -> bool:
 			if ans.casefold().startswith('y'):
 				break
 
-def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str) -> int:
+def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str, str, str) -> int
 	"""
 	Generates self-signed SSL certificates from the given configuration.
 	:returns: For whatever reason this subroutine needs to dictate the return code of the script, so that's what it returns.
@@ -785,7 +785,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 
 	return 0
 
-def random_word(length: int = 12) -> str:
+def random_word(length = 12): # type: (int) -> str
 	"""
 	Returns a randomly generated string 'length' characters long containing only word
 	characters ([a-zA-Z0-9_]).
@@ -793,7 +793,7 @@ def random_word(length: int = 12) -> str:
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, root: str):
+def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
 	Generates some properties of a cdn.conf file based on the passed questions.
 
@@ -875,7 +875,7 @@ def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, ro
 		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
 
-def db_connection_string(dbconf: dict) -> str:
+def db_connection_string(dbconf): # type: (dict) -> str
 	"""
 	Constructs a database connection string from the passed configuration object.
 	"""
@@ -886,7 +886,7 @@ def db_connection_string(dbconf: dict) -> str:
 	port = dbconf["port"]
 	return f"postgresql://{user}:{password}@{hostname}:{port}/{db_name}"
 
-def exec_psql(conn_str: str, query: str) -> str:
+def exec_psql(conn_str, query): # type: (str, str) -> str
 	"""
 	Executes SQL queries by forking and exec-ing '/usr/bin/psql'.
 
@@ -908,7 +908,7 @@ def exec_psql(conn_str: str, query: str) -> str:
 		raise OSError("failed to execute database query")
 	return proc.stdout.strip()
 
-def invoke_db_admin_pl(action: str, root: str):
+def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	"""
 	Exectues admin with the given action, and looks for it from the given root directory.
 	"""
@@ -929,7 +929,7 @@ def invoke_db_admin_pl(action: str, root: str):
 		raise OSError(f"Database {action} failed")
 	logging.info("Database %s succeeded", action)
 
-def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
+def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
@@ -1044,18 +1044,19 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 def main(
-automatic: bool,
-debug: bool,
-defaults: Optional[str],
-cfile: Optional[str],
-root_dir: str,
-ops_user: str,
-ops_group: str,
-no_restart_to: bool,
-no_database: bool
-) -> int:
+automatic, # type: bool
+debug, # type: bool
+defaults, # type: str
+cfile, # type: str
+root_dir, # type: str
+ops_user, # type: str
+ops_group, # type: str
+no_restart_to, # type: bool
+no_database, # type: bool
+):
 	"""
 	Runs the main routine given the parsed arguments as input.
+	:rtype: int
 	"""
 	if debug:
 		logging.getLogger().setLevel(logging.DEBUG)
