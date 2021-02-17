@@ -24,12 +24,19 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// API_TENANTS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_TENANTS = apiBase + "/tenants"
+
+// API_TENANT_ID is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_TENANT_ID = API_TENANTS + "/%s"
+
+const APITenants = "/tenants"
+
+const APITenantID = APITenants + "/%v"
 
 func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := to.get(API_TENANTS, header, &data)
+	reqInf, err := to.get(APITenants, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -41,7 +48,7 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 
 func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", API_TENANTS, id), header, &data)
+	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", APITenants, id), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -60,7 +67,7 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 
 func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	query := API_TENANTS + "?name=" + url.QueryEscape(name)
+	query := APITenants + "?name=" + url.QueryEscape(name)
 	reqInf, err := to.get(query, header, &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -95,7 +102,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	}
 
 	var data tc.TenantResponse
-	_, err := to.post(API_TENANTS, t, nil, &data)
+	_, err := to.post(APITenants, t, nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +111,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 
 func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, ReqInf, error) {
 	var data tc.TenantResponse
-	reqInf, err := to.put(fmt.Sprintf(API_TENANT_ID, id), t, header, &data)
+	reqInf, err := to.put(fmt.Sprintf(APITenantID, id), t, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -122,7 +129,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 // DeleteTenant deletes the Tenant matching the ID it's passed.
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	_, err := to.del(fmt.Sprintf(API_TENANT_ID, id), nil, &data)
+	_, err := to.del(fmt.Sprintf(APITenantID, id), nil, &data)
 	if err != nil {
 		return nil, err
 	}

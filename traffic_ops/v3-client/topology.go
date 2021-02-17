@@ -23,12 +23,15 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// ApiTopologies is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const ApiTopologies = apiBase + "/topologies"
+
+const APITopologies = "/topologies"
 
 // CreateTopology creates a topology and returns the response.
 func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
 	resp := new(tc.TopologyResponse)
-	reqInf, err := to.post(ApiTopologies, top, nil, resp)
+	reqInf, err := to.post(APITopologies, top, nil, resp)
 	return resp, reqInf, err
 }
 
@@ -45,7 +48,7 @@ func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 }
 
 func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topology, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var data tc.TopologiesResponse
 	reqInf, err := to.get(reqUrl, header, &data)
 	if err != nil {
@@ -65,7 +68,7 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 
 // UpdateTopology updates a Topology by name.
 func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
+	route := fmt.Sprintf("%s?name=%s", APITopologies, name)
 	var response = new(tc.TopologyResponse)
 	reqInf, err := to.put(route, t, nil, &response)
 	return response, reqInf, err
@@ -73,7 +76,7 @@ func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyRespo
 
 // DeleteTopology deletes the given topology by name.
 func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var alerts tc.Alerts
 	reqInf, err := to.del(reqUrl, nil, &alerts)
 	return alerts, reqInf, err

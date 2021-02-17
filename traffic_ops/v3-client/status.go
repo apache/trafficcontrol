@@ -24,18 +24,21 @@ import (
 )
 
 const (
+	// API_STATUSES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_STATUSES = apiBase + "/statuses"
+
+	APIStatuses = "/statuses"
 )
 
 // CreateStatusNullable creates a new status, using the tc.StatusNullable structure.
 func (to *Session) CreateStatusNullable(status tc.StatusNullable) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_STATUSES, status, nil, &alerts)
+	reqInf, err := to.post(APIStatuses, status, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
+	route := fmt.Sprintf("%s/%d", APIStatuses, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, status, header, &alerts)
 	return alerts, reqInf, err
@@ -49,7 +52,7 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf
 
 func (to *Session) GetStatusesWithHdr(header http.Header) ([]tc.Status, ReqInf, error) {
 	var data tc.StatusesResponse
-	reqInf, err := to.get(API_STATUSES, header, &data)
+	reqInf, err := to.get(APIStatuses, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -60,7 +63,7 @@ func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 }
 
 func (to *Session) GetStatusByIDWithHdr(id int, header http.Header) ([]tc.Status, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
+	route := fmt.Sprintf("%s?id=%d", APIStatuses, id)
 	var data tc.StatusesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -73,7 +76,7 @@ func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 }
 
 func (to *Session) GetStatusByNameWithHdr(name string, header http.Header) ([]tc.Status, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_STATUSES, url.QueryEscape(name))
+	route := fmt.Sprintf("%s?name=%s", APIStatuses, url.QueryEscape(name))
 	var data tc.StatusesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -87,7 +90,7 @@ func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
 
 // DeleteStatusByID DELETEs a Status by ID.
 func (to *Session) DeleteStatusByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
+	route := fmt.Sprintf("%s/%d", APIStatuses, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

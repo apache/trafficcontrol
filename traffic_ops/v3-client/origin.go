@@ -26,7 +26,10 @@ import (
 )
 
 const (
+	// API_ORIGINS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ORIGINS = apiBase + "/origins"
+
+	APIOrigins = "/origins"
 )
 
 func originIDs(to *Session, origin *tc.Origin) error {
@@ -95,7 +98,7 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 		return nil, reqInf, err
 	}
 	var originResp tc.OriginDetailResponse
-	reqInf, err = to.post(API_ORIGINS, origin, nil, &originResp)
+	reqInf, err = to.post(APIOrigins, origin, nil, &originResp)
 	return &originResp, reqInf, err
 }
 
@@ -107,7 +110,7 @@ func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
+	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var originResp tc.OriginDetailResponse
 	reqInf, err = to.put(route, origin, header, &originResp)
 	return &originResp, reqInf, err
@@ -121,9 +124,9 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 
 // GET a list of Origins by a query parameter string
 func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, ReqInf, error) {
-	URI := API_ORIGINS + queryParams
+	uri := APIOrigins + queryParams
 	var data tc.OriginsResponse
-	reqInf, err := to.get(URI, nil, &data)
+	reqInf, err := to.get(uri, nil, &data)
 	return data.Response, reqInf, err
 }
 
@@ -149,7 +152,7 @@ func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, ReqInf, e
 
 // DELETE an Origin by ID
 func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
+	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

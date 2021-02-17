@@ -23,7 +23,7 @@ import (
 
 func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, ReqInf, error) {
 	var data tc.DomainsResponse
-	inf, err := to.get(apiBase+"/cdns/domains", header, &data)
+	inf, err := to.get("/cdns/domains", header, &data)
 	return data.Response, inf, err
 }
 

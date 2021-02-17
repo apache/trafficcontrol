@@ -20,11 +20,14 @@ import "net/url"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
+// API_CAPABILITIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_CAPABILITIES = apiBase + "/capabilities"
+
+const APICapabilities = "/capabilities"
 
 func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, ReqInf, error) {
 	var data tc.CapabilitiesResponse
-	reqInf, err := to.get(API_CAPABILITIES, header, &data)
+	reqInf, err := to.get(APICapabilities, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -37,7 +40,7 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capability, ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
-	endpoint := API_CAPABILITIES + "?" + v.Encode()
+	endpoint := APICapabilities + "?" + v.Encode()
 	var data tc.CapabilitiesResponse
 	reqInf, err := to.get(endpoint, header, &data)
 	if err != nil {

@@ -24,25 +24,28 @@ import (
 )
 
 const (
+	// API_PARAMETERS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_PARAMETERS = apiBase + "/parameters"
+
+	APIParameters = "/parameters"
 )
 
 // CreateParameter performs a POST to create a Parameter.
 func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_PARAMETERS, pl, nil, &alerts)
+	reqInf, err := to.post(APIParameters, pl, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // CreateMultipleParameters performs a POST to create multiple Parameters at once.
 func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_PARAMETERS, pls, nil, &alerts)
+	reqInf, err := to.post(APIParameters, pls, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateParameterByIDWithHdr(id int, pl tc.Parameter, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
+	route := fmt.Sprintf("%s/%d", APIParameters, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, pl, header, &alerts)
 	return alerts, reqInf, err
@@ -56,7 +59,7 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 
 func (to *Session) GetParametersWithHdr(header http.Header) ([]tc.Parameter, ReqInf, error) {
 	var data tc.ParametersResponse
-	reqInf, err := to.get(API_PARAMETERS, header, &data)
+	reqInf, err := to.get(APIParameters, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -67,7 +70,7 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 }
 
 func (to *Session) GetParameterByIDWithHdr(id int, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_PARAMETERS, id)
+	route := fmt.Sprintf("%s?id=%d", APIParameters, id)
 	var data tc.ParametersResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -80,9 +83,9 @@ func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 }
 
 func (to *Session) GetParameterByNameWithHdr(name string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	URI := API_PARAMETERS + "?name=" + url.QueryEscape(name)
+	uri := APIParameters + "?name=" + url.QueryEscape(name)
 	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -93,9 +96,9 @@ func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, erro
 }
 
 func (to *Session) GetParameterByConfigFileWithHdr(configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	URI := API_PARAMETERS + "?configFile=" + url.QueryEscape(configFile)
+	uri := APIParameters + "?configFile=" + url.QueryEscape(configFile)
 	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -106,9 +109,9 @@ func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, 
 }
 
 func (to *Session) GetParameterByNameAndConfigFileWithHdr(name string, configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
-	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_PARAMETERS, url.QueryEscape(name), url.QueryEscape(configFile))
+	uri := fmt.Sprintf("%s?name=%s&configFile=%s", APIParameters, url.QueryEscape(name), url.QueryEscape(configFile))
 	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -144,8 +147,8 @@ func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, val
 
 // DeleteParameterByID DELETEs a Parameter by ID.
 func (to *Session) DeleteParameterByID(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
+	uri := fmt.Sprintf("%s/%d", APIParameters, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(uri, nil, &alerts)
 	return alerts, reqInf, err
 }

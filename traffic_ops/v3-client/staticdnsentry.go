@@ -25,7 +25,10 @@ import (
 )
 
 const (
+	// API_STATIC_DNS_ENTRIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_STATIC_DNS_ENTRIES = apiBase + "/staticdnsentries"
+
+	APIStaticDNSEntries = "/staticdnsentries"
 )
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
@@ -79,7 +82,7 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqI
 	if err != nil {
 		return alerts, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
 	}
-	reqInf, err := to.post(API_STATIC_DNS_ENTRIES, sdns, nil, &alerts)
+	reqInf, err := to.post(APIStaticDNSEntries, sdns, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -90,7 +93,7 @@ func (to *Session) UpdateStaticDNSEntryByIDWithHdr(id int, sdns tc.StaticDNSEntr
 	if err != nil {
 		return alerts, ReqInf{CacheHitStatus: CacheHitStatusMiss}, 0, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
+	route := fmt.Sprintf("%s?id=%d", APIStaticDNSEntries, id)
 	reqInf, err := to.put(route, sdns, header, &alerts)
 	return tc.Alerts{}, reqInf, reqInf.StatusCode, err
 }
@@ -103,7 +106,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 
 func (to *Session) GetStaticDNSEntriesWithHdr(header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	var data tc.StaticDNSEntriesResponse
-	reqInf, err := to.get(API_STATIC_DNS_ENTRIES, header, &data)
+	reqInf, err := to.get(APIStaticDNSEntries, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -114,7 +117,7 @@ func (to *Session) GetStaticDNSEntries() ([]tc.StaticDNSEntry, ReqInf, error) {
 }
 
 func (to *Session) GetStaticDNSEntryByIDWithHdr(id int, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
+	route := fmt.Sprintf("%s?id=%d", APIStaticDNSEntries, id)
 	var data tc.StaticDNSEntriesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -127,7 +130,7 @@ func (to *Session) GetStaticDNSEntryByID(id int) ([]tc.StaticDNSEntry, ReqInf, e
 }
 
 func (to *Session) GetStaticDNSEntriesByHostWithHdr(host string, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
-	route := fmt.Sprintf("%s?host=%s", API_STATIC_DNS_ENTRIES, url.QueryEscape(host))
+	route := fmt.Sprintf("%s?host=%s", APIStaticDNSEntries, url.QueryEscape(host))
 	var data tc.StaticDNSEntriesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -141,7 +144,7 @@ func (to *Session) GetStaticDNSEntriesByHost(host string) ([]tc.StaticDNSEntry, 
 
 // DeleteStaticDNSEntryByID DELETEs a Static DNS Entry by ID.
 func (to *Session) DeleteStaticDNSEntryByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
+	route := fmt.Sprintf("%s?id=%d", APIStaticDNSEntries, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

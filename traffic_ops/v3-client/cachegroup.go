@@ -26,7 +26,10 @@ import (
 )
 
 const (
+	// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_CACHEGROUPS = apiBase + "/cachegroups"
+
+	APICachegroups = "/cachegroups"
 )
 
 // Create a CacheGroup.
@@ -65,12 +68,12 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	}
 
 	var cachegroupResp tc.CacheGroupDetailResponse
-	reqInf, err := to.post(API_CACHEGROUPS, cachegroup, nil, &cachegroupResp)
+	reqInf, err := to.post(APICachegroups, cachegroup, nil, &cachegroupResp)
 	return &cachegroupResp, reqInf, err
 }
 
 func (to *Session) UpdateCacheGroupNullableByIDWithHdr(id int, cachegroup tc.CacheGroupNullable, h http.Header) (*tc.CacheGroupDetailResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
+	route := fmt.Sprintf("%s/%d", APICachegroups, id)
 	var cachegroupResp tc.CacheGroupDetailResponse
 	reqInf, err := to.put(route, cachegroup, h, &cachegroupResp)
 	return &cachegroupResp, reqInf, err
@@ -84,7 +87,7 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 
 func (to *Session) GetCacheGroupsNullableWithHdr(header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	var data tc.CacheGroupsNullableResponse
-	reqInf, err := to.get(API_CACHEGROUPS, header, &data)
+	reqInf, err := to.get(APICachegroups, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -95,7 +98,7 @@ func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, er
 }
 
 func (to *Session) GetCacheGroupNullableByIDWithHdr(id int, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%v", API_CACHEGROUPS, id)
+	route := fmt.Sprintf("%s?id=%v", APICachegroups, id)
 	var data tc.CacheGroupsNullableResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -108,7 +111,7 @@ func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, R
 }
 
 func (to *Session) GetCacheGroupNullableByNameWithHdr(name string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_CACHEGROUPS, url.QueryEscape(name))
+	route := fmt.Sprintf("%s?name=%s", APICachegroups, url.QueryEscape(name))
 	var data tc.CacheGroupsNullableResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -121,7 +124,7 @@ func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNull
 }
 
 func (to *Session) GetCacheGroupNullableByShortNameWithHdr(shortName string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s?shortName=%s", API_CACHEGROUPS, url.QueryEscape(shortName))
+	route := fmt.Sprintf("%s?shortName=%s", APICachegroups, url.QueryEscape(shortName))
 	var data tc.CacheGroupsNullableResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -135,7 +138,7 @@ func (to *Session) GetCacheGroupNullableByShortName(shortName string) ([]tc.Cach
 
 // DELETE a CacheGroup by ID.
 func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
+	route := fmt.Sprintf("%s/%d", APICachegroups, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -148,7 +151,7 @@ func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGr
 }
 
 func (to *Session) GetCacheGroupsByQueryParamsWithHdr(qparams url.Values, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := API_CACHEGROUPS
+	route := APICachegroups
 	if len(qparams) > 0 {
 		route += "?" + qparams.Encode()
 	}
@@ -158,7 +161,7 @@ func (to *Session) GetCacheGroupsByQueryParamsWithHdr(qparams url.Values, header
 }
 
 func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
-	uri := apiBase + `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
+	uri := `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
 	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
 	resp := tc.CacheGroupPostDSRespResponse{}
 	reqInf, err := to.post(uri, req, nil, &resp)

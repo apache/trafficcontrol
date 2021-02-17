@@ -24,18 +24,21 @@ import (
 )
 
 const (
+	// API_ROLES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ROLES = apiBase + "/roles"
+
+	APIRoles = "/roles"
 )
 
 // CreateRole creates a Role.
 func (to *Session) CreateRole(role tc.Role) (tc.Alerts, ReqInf, int, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_ROLES, role, nil, &alerts)
+	reqInf, err := to.post(APIRoles, role, nil, &alerts)
 	return alerts, reqInf, reqInf.StatusCode, err
 }
 
 func (to *Session) UpdateRoleByIDWithHdr(id int, role tc.Role, header http.Header) (tc.Alerts, ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
+	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, role, header, &alerts)
 	return alerts, reqInf, reqInf.StatusCode, err
@@ -50,7 +53,7 @@ func (to *Session) UpdateRoleByID(id int, role tc.Role) (tc.Alerts, ReqInf, int,
 
 func (to *Session) GetRolesWithHdr(header http.Header) ([]tc.Role, ReqInf, int, error) {
 	var data tc.RolesResponse
-	reqInf, err := to.get(API_ROLES, header, &data)
+	reqInf, err := to.get(APIRoles, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
 }
 
@@ -61,7 +64,7 @@ func (to *Session) GetRoles() ([]tc.Role, ReqInf, int, error) {
 }
 
 func (to *Session) GetRoleByIDWithHdr(id int, header http.Header) ([]tc.Role, ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
+	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
@@ -74,7 +77,7 @@ func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
 }
 
 func (to *Session) GetRoleByNameWithHdr(name string, header http.Header) ([]tc.Role, ReqInf, int, error) {
-	route := fmt.Sprintf("%s?name=%s", API_ROLES, url.QueryEscape(name))
+	route := fmt.Sprintf("%s?name=%s", APIRoles, url.QueryEscape(name))
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
@@ -87,7 +90,7 @@ func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
 }
 
 func (to *Session) GetRoleByQueryParamsWithHdr(queryParams map[string]string, header http.Header) ([]tc.Role, ReqInf, int, error) {
-	route := fmt.Sprintf("%s%s", API_ROLES, mapToQueryParameters(queryParams))
+	route := fmt.Sprintf("%s%s", APIRoles, mapToQueryParameters(queryParams))
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
@@ -101,7 +104,7 @@ func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Rol
 
 // DeleteRoleByID DELETEs a Role by ID.
 func (to *Session) DeleteRoleByID(id int) (tc.Alerts, ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
+	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, reqInf.StatusCode, err

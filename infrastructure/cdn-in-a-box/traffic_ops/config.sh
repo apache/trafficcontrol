@@ -152,6 +152,10 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "renew_days_before_expiration": 30,
         "environment": "staging"
     },
+    "acme_renewal": {
+        "summary_email": "",
+        "renew_days_before_expiration": 30
+    },
     "acme_accounts": [
         {
             "acme_provider" : "",

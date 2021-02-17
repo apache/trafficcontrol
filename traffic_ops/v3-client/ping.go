@@ -16,12 +16,15 @@
 package client
 
 const (
+	// API_PING is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_PING = apiBase + "/ping"
+
+	APIPing = "/ping"
 )
 
 // Ping returns a static json object to show that traffic_ops is responsive
 func (to *Session) Ping() (map[string]string, ReqInf, error) {
 	var data map[string]string
-	reqInf, err := to.get(API_PING, nil, &data)
+	reqInf, err := to.get(APIPing, nil, &data)
 	return data, reqInf, err
 }

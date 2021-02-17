@@ -23,18 +23,21 @@ import (
 )
 
 const (
+	// API_COORDINATES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_COORDINATES = apiBase + "/coordinates"
+
+	APICoordinates = "/coordinates"
 )
 
 // Create a Coordinate
 func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_COORDINATES, coordinate, nil, &alerts)
+	reqInf, err := to.post(APICoordinates, coordinate, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
+	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, coordinate, header, &alerts)
 	return alerts, reqInf, err
@@ -48,7 +51,7 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 
 func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	var data tc.CoordinatesResponse
-	reqInf, err := to.get(API_COORDINATES, header, &data)
+	reqInf, err := to.get(APICoordinates, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -59,7 +62,7 @@ func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
 }
 
 func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
+	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var data tc.CoordinatesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -78,7 +81,7 @@ func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, er
 }
 
 func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
+	route := fmt.Sprintf("%s?name=%s", APICoordinates, name)
 	var data tc.CoordinatesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -86,7 +89,7 @@ func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) (
 
 // DELETE a Coordinate by ID
 func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
+	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

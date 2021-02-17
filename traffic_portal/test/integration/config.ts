@@ -35,8 +35,8 @@ export let config: Config = {
   capabilities: {
     browserName: 'chrome',
     //Parallelization Configuration (shardTestFiles and maxInstances)
-    // shardTestFiles: true,
-    // maxInstances: 50,
+    shardTestFiles: false,
+    maxInstances: 1,
     marionette: true,
     acceptInsecureCerts: true,
     acceptSslCerts: true,
