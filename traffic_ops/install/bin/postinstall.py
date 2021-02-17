@@ -104,15 +104,15 @@ class Question:
 
 	def __str__(self): # type: () -> str
 		if self.default:
-			return f"{self.question} [{self.default}]: "
-		return f"{self.question}: "
+			return "{question} [{default}]: ".format(question=self.question, default=self.default)
+		return "{question}: ".format(question=self.question)
 
 	def __repr__(self): # type: () -> str
 		qstn = self.question
 		ans = self.default
 		cfgvr = self.config_var
 		hddn = self.hidden
-		return f"Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})"
+		return "Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})".format(qstn=qstn, ans=ans, cfgvr=cfgvr, hddn=hddn)
 
 	def ask(self): # type: () -> str
 		"""
@@ -125,7 +125,7 @@ class Question:
 				passwd = getpass.getpass(str(self))
 				if not passwd:
 					continue
-				if passwd == getpass.getpass(f"Re-Enter {self.question}: "):
+				if passwd == getpass.getpass("Re-Enter {question}: ".format(question=self.question)):
 					return passwd
 				print("Error: passwords do not match, try again")
 		ipt = input(self)
@@ -144,8 +144,8 @@ class Question:
 		ans = self.default
 		cfgvr = self.config_var
 		if self.hidden:
-			return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'
-		return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'
+			return '{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'.format(qstn=qstn, ans=ans, cfgvr=cfgvr)
+		return '{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'.format(qstn=qstn, ans=ans, cfgvr=cfgvr)
 
 	def serialize(self): # type: () -> object
 		"""Returns a serializable dictionary, suitable for converting to JSON."""
@@ -317,7 +317,7 @@ def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, boo
 	hostname = db_conf.get("hostname", "UNKNOWN")
 	port = db_conf.get("port", "UNKNOWN")
 
-	db_conf["description"] = f"{typ} database on {hostname}:{port}"
+	db_conf["description"] = "{typ} database on {hostname}:{port}".format(typ=typ, hostname=hostname, port=port)
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
@@ -349,11 +349,11 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 	password = conf.get('password', 'UNKNOWN')
 	dbname = conf.get('dbname', 'UNKNOWN')
 
-	open_line = f"host={hostname} port={port} user={user} password={password} dbname={dbname}"
+	open_line = "host={hostname} port={port} user={user} password={password} dbname={dbname}".format(hostname=hostname, port=port, user=user, password=password, dbname=dbname)
 	with open(path, 'w+') as conf_file:
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
-		print(f"    open: {open_line} sslmode=disable", file=conf_file)
+		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
 
 	return todbconf
 
@@ -386,10 +386,10 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 
 	for key in keys:
 		if key not in ldap_conf:
-			raise ValueError(f"{key} is a required key in {fname}")
+			raise ValueError("{key} is a required key in {fname}".format(key=key, fname=fname))
 
 	if not re.fullmatch(r"\S+:\d+", ldap_conf["host"]):
-		raise ValueError(f"host in {fname} must be of form 'hostname:port'")
+		raise ValueError("host in {fname} must be of form 'hostname:port'".format(fname=fname))
 
 	path = os.path.join(root, fname.lstrip('/'))
 	os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -412,7 +412,7 @@ def hash_pass(passwd): # type: (str) -> str
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
 	salt_b64 = base64.standard_b64encode(salt).decode()
 
-	return f"SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}"
+	return "SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}".format(n=n, r_val=r_val, p_val=p_val, salt_b64=salt_b64, hashed_b64=hashed_b64)
 
 def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> User
 	"""
@@ -422,7 +422,7 @@ def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str,
 	config = get_config(qstns, fname, auto)
 
 	if "tmAdminUser" not in config or "tmAdminPw" not in config:
-		raise ValueError(f"{fname} must include 'tmAdminUser' and 'tmAdminPw'")
+		raise ValueError("{fname} must include 'tmAdminUser' and 'tmAdminPw'".format(fname=fname))
 
 	hashed_pass = hash_pass(config["tmAdminPw"])
 
@@ -523,20 +523,20 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 	ret = {}
 	for file, questions in dct.items():
 		if not isinstance(questions, list):
-			raise ValueError(f"file '{file}' has malformed questions")
+			raise ValueError("file '{file}' has malformed questions".format(file=file))
 
 		qstns = []
 		for qstn in questions:
 			if not isinstance(qstn, dict):
-				raise ValueError(f"file '{file}' has a malformed question ({qstn})")
+				raise ValueError("file '{file}' has a malformed question ({qstn})".format(file=file, qstn=qstn))
 			try:
 				question = next(key for key in qstn.keys() if qstn not in ("hidden", "config_var"))
 			except StopIteration:
-				raise ValueError(f"question in '{file}' has no question/answer properties ({qstn})")
+				raise ValueError("question in '{file}' has no question/answer properties ({qstn})".format(file=file, qstn=qstn))
 
 			answer = qstn[question]
 			if not isinstance(question, str) or not isinstance(answer, str):
-				errstr = f"question in '{file}' has malformed question/answer property ({question}: {answer})"
+				errstr = "question in '{file}' has malformed question/answer property ({question}: {answer})".format(file=file, question=question, answer=answer)
 				raise ValueError(errstr)
 
 			del qstn[question]
@@ -546,10 +546,10 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 				del qstn["hidden"]
 
 			if "config_var" not in qstn:
-				raise ValueError(f"question in '{file}' has no 'config_var' property")
+				raise ValueError("question in '{file}' has no 'config_var' property".format(file=file))
 			cfg_var = qstn["config_var"]
 			if not isinstance(cfg_var, str):
-				raise ValueError(f"question in '{file}' has malformed 'config_var' property ({cfg_var})")
+				raise ValueError("question in '{file}' has malformed 'config_var' property ({cfg_var})".format(file=file, cfg_var=cfg_var))
 			del qstn["config_var"]
 
 			if qstn:
@@ -625,7 +625,7 @@ def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 
 		logging.debug("openssl exec failed with code %s; stderr: %s", proc.returncode, proc.stderr)
 		while True:
-			ans = input(f"{description} failed. Try again (y/n) [y]: ")
+			ans = input("{description} failed. Try again (y/n) [y]: ".format(description=description))
 			if not ans or ans.casefold().startswith('n'):
 				return False
 			if ans.casefold().startswith('y'):
@@ -659,7 +659,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 		"-out",
 		"server.key",
 		"-passout",
-		f"pass:{conf.rsa_password}",
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password),
 		"1024"
 	)
 	if not exec_openssl("Generating an RSA Private Server Key", *args):
@@ -673,7 +673,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 		"-out",
 		"server.csr",
 		"-passin",
-		f"pass:{conf.rsa_password}",
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password),
 		"-subj",
 		conf.params
 	)
@@ -690,7 +690,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 		"-out",
 		"server.key",
 		"-passin",
-		f"pass:{conf.rsa_password}"
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password)
 	)
 	if not exec_openssl("Removing the pass phrase from the server key", *args):
 		return 1
@@ -750,7 +750,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 		with open(cdn_conf_path) as conf_file:
 			cdn_conf = json.load(conf_file)
 	except (OSError, json.JSONDecodeError) as e:
-		raise OSError(f"reading {cdn_conf_path}: {e}") from e
+		raise OSError("reading {cdn_conf_path}: {e}".format(cdn_conf_path=cdn_conf_path, e=e)) from e
 
 	if (
 		not isinstance(cdn_conf, dict) or
@@ -774,7 +774,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 
 	listen = hypnotoad["listen"][0]
 
-	if f"cert={certpath}" not in listen or f"key={keypath}" not in listen:
+	if "cert={certpath}".format(certpath=certpath) not in listen or "key={keypath}".format(keypath=keypath) not in listen:
 		log_msg = """	The "listen" portion of %s is:
 	%s
 	and does not reference the same "cert=" and "key=" values as are created here.
@@ -811,21 +811,21 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	except KeyError as e:
 		raise ValueError("missing 'keepSecrets' config_var") from e
 	except ValueError as e:
-		raise ValueError(f"invalid 'keepSecrets' config_var value: {e}") from e
+		raise ValueError("invalid 'keepSecrets' config_var value: {e}".format(e=e)) from e
 
 	try:
 		port = int(cdn_conf["port"])
 	except KeyError as e:
 		raise ValueError("missing 'port' config_var") from e
 	except ValueError as e:
-		raise ValueError(f"invalid 'port' config_var value: {e}") from e
+		raise ValueError("invalid 'port' config_var value: {e}".format(e=e)) from e
 
 	try:
 		workers = int(cdn_conf["workers"])
 	except KeyError as e:
 		raise ValueError("missing 'workers' config_var") from e
 	except ValueError as e:
-		raise ValueError(f"invalid 'workers' config_var value: {e}") from e
+		raise ValueError("invalid 'workers' config_var value: {e}".format(e=e)) from e
 
 	try:
 		url = cdn_conf["base_url"]
@@ -846,7 +846,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 			try:
 				existing_conf = json.load(conf_file)
 			except json.JSONDecodeError as e:
-				raise ValueError(f"invalid existing cdn.config at {path}: {e}") from e
+				raise ValueError("invalid existing cdn.config at {path}: {e}".format(path=path, e=e)) from e
 
 	if not isinstance(existing_conf, dict):
 		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
@@ -884,7 +884,7 @@ def db_connection_string(dbconf): # type: (dict) -> str
 	db_name = "traffic_ops" if dbconf["type"] == "Pg" else dbconf["type"]
 	hostname = dbconf["hostname"]
 	port = dbconf["port"]
-	return f"postgresql://{user}:{password}@{hostname}:{port}/{db_name}"
+	return "postgresql://{user}:{password}@{hostname}:{port}/{db_name}".format(user=user, password=password, hostname=hostname, port=port, db_name=db_name)
 
 def exec_psql(conn_str, query): # type: (str, str) -> str
 	"""
@@ -926,7 +926,7 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	)
 	if proc.returncode != 0:
 		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
-		raise OSError(f"Database {action} failed")
+		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
 def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
