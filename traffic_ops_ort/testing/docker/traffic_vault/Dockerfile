@@ -20,44 +20,21 @@
 # Based on CentOS 6.6
 ############################################################
 
-FROM centos:7
-MAINTAINER dev@trafficcontrol.apache.org
+FROM basho/riak-kv:ubuntu-2.2.3
 
-ARG TV_ADMIN_PASS
+EXPOSE 8087 8088 8098
 
-# Install openssl
-RUN yum install -y openssl
+RUN rm -rfv /etc/riak/prestart.d/* /etc/riak/poststart.d/*
 
-# Install the initscripts
-RUN yum -y install initscripts
+RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
+ && echo 'APT::Install-Suggests 0;' >> /etc/apt/apt.conf.d/01norecommends \
+ && rm /etc/apt/sources.list.d/basho_riak.list \
+ && apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y net-tools ca-certificates dnsutils gettext-base \
+ && rm -rf /var/lib/apt/lists/* && rm -rf /etc/apt/apt.conf.d/docker-gzip-indexes
 
-# Install curl which is used to configure the riak search schema.
-RUN yum -y install curl
+ADD traffic_vault/prestart.d/* /etc/riak/prestart.d/
+ADD traffic_vault/poststart.d/* /etc/riak/poststart.d/
+ADD traffic_vault/run.sh traffic_vault/sslkeys.xml /
 
-# On CentOS/RedHat/Fedora (recommended)
-RUN yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel
-
-# Install Riak
-ADD traffic_vault/riak-2.2.3-1.el7.centos.x86_64.rpm /
-RUN rpm -i /riak-2.2.3-1.el7.centos.x86_64.rpm
-
-# Set the Riak certs in the config (this cert+key will be created in the run.sh script
-RUN sed -i -- 's/## ssl.certfile = $(platform_etc_dir)\/cert.pem/ssl.certfile = \/etc\/riak\/certs\/server.crt/g' /etc/riak/riak.conf
-RUN sed -i -- 's/## ssl.keyfile = $(platform_etc_dir)\/key.pem/ssl.keyfile = \/etc\/riak\/certs\/server.key/g' /etc/riak/riak.conf
-RUN sed -i -- 's/## ssl.cacertfile = $(platform_etc_dir)\/cacertfile.pem/ssl.cacertfile = \/etc\/riak\/certs\/ca-bundle.crt/g' /etc/riak/riak.conf
-
-RUN sed -i -- "s/nodename = riak@127.0.0.1/nodename = riak@0.0.0.0/g" /etc/riak/riak.conf
-RUN sed -i -- "s/listener.http.internal = 127.0.0.1:8098/listener.http.internal = 0.0.0.0:8098/g" /etc/riak/riak.conf
-RUN sed -i -- "s/listener.protobuf.internal = 127.0.0.1:8087/listener.protobuf.internal = 0.0.0.0:8087/g" /etc/riak/riak.conf
-RUN sed -i -- "s/## listener.https.internal = 127.0.0.1:8098/listener.https.internal = 0.0.0.0:8088/g" /etc/riak/riak.conf
-
-RUN sed -i -- "s/search = off/search = on/g" /etc/riak/riak.conf
-
-RUN mkdir /etc/riak/certs
-
-RUN echo "tls_protocols.tlsv1.1 = on" >> /etc/riak/riak.conf
-
-EXPOSE 8098 8087 8088
-ADD traffic_vault/run.sh /
-ADD traffic_vault/sslkeys.xml /
-ENTRYPOINT /run.sh
+CMD /run.sh
