@@ -35,7 +35,7 @@ const HeaderRewritePrefix = "hdr_rw_"
 const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
 const LineCommentHeaderRewriteDotConfig = LineCommentHash
 
-const ServiceCategoryHeader = "CDN-SVC"
+const ServiceCategoryHeader = "X-CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
@@ -147,7 +147,12 @@ func MakeHeaderRewriteDotConfig(
 	}
 
 	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
-		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsName, ds.ServiceCategory)
+		scHeaderVal := fmt.Sprintf("\nset-header %s \"%s|%s\" %s", ServiceCategoryHeader, dsName, ds.ServiceCategory, "[L]")
+		if strings.Contains(text, "[L]") {
+			text = strings.Replace(text, "[L]", scHeaderVal, 1)
+		} else {
+			text += scHeaderVal
+		}
 	}
 
 	text += "\n"
