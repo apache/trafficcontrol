@@ -53,7 +53,7 @@ func CreateTestCDNNotifications(t *testing.T) {
 			respCDN := resp[0]
 			_, _, err := TOSession.CreateCDNNotification(respCDN, tc.CDNNotificationRequest{Notification: "test notification: " + respCDN.Name})
 			if err != nil {
-				t.Errorf("cannot CREATE CDN notification by CDN ID: '%d' %v", respCDN.ID, err)
+				t.Errorf("cannot CREATE CDN notification: '%s' %v", respCDN.Name, err)
 			}
 		}
 	}
@@ -68,9 +68,9 @@ func DeleteTestCDNNotifications(t *testing.T) {
 		}
 		if len(resp) > 0 {
 			respCDN := resp[0]
-			_, _, err := TOSession.DeleteCDNNotificationByID(respCDN)
+			_, _, err := TOSession.DeleteCDNNotification(respCDN)
 			if err != nil {
-				t.Errorf("cannot DELETE CDN notification by CDN ID: '%d' %v", respCDN.ID, err)
+				t.Errorf("cannot DELETE CDN notification: '%s' %v", respCDN.Name, err)
 			}
 		}
 	}

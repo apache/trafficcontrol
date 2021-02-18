@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-id-notification:
+.. _to-api-cdns-name-notification:
 
-****************************
-``cdns/{{ID}}/notification``
-****************************
+******************************
+``cdns/{{name}}/notification``
+******************************
 
 ``POST``
 ========
@@ -31,18 +31,18 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------+
-	| Name | Description                                                                   |
-	+======+===============================================================================+
-	| ID   | The integral, unique identifier for the CDN on which to create a notification.|
-	+------+-------------------------------------------------------------------------------+
+	+------+----------------------------------------------------+
+	| Name | Description                                        |
+	+======+====================================================+
+	| name | The name of the CDN for the notification           |
+	+------+----------------------------------------------------+
 
 :notification: The content of the CDN notification
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/cdns/2/notification HTTP/1.1
+	POST /api/4.0/cdns/cdn-name/notification HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -54,8 +54,7 @@ Request Structure
 
 Response Structure
 ------------------
-:cdnId:			The integral, unique identifier for the CDN on which :term:`Queue Updates` was performed or cleared
-:notification:	The notification added to the CDN
+:notification:	The notification added to the specified CDN
 :username:		The username of the user responsible for creating the CDN notification
 
 .. code-block:: http
@@ -74,7 +73,6 @@ Response Structure
 	Content-Length: 41
 
 	{ "response": {
-		"cdnId": 2,
 		"notification": "No changes to Traffic Ops over the weekend.",
 		"username": "user1234"
 	}}
@@ -92,11 +90,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------+
-	| Name | Description                                                                   |
-	+======+===============================================================================+
-	| ID   | The integral, unique identifier for the CDN on which to delete a notification.|
-	+------+-------------------------------------------------------------------------------+
+	+------+----------------------------------------------------+
+	| Name | Description                                        |
+	+======+====================================================+
+	| name | The name of the CDN for the notification           |
+	+------+----------------------------------------------------+
 
 Response Structure
 ------------------

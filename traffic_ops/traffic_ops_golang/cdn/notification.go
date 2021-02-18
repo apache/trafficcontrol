@@ -23,17 +23,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strconv"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"net/http"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 func CreateNotification(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -44,56 +42,54 @@ func CreateNotification(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	if err := create(inf.Tx.Tx, int64(inf.IntParams["id"]), inf.User.UserName, reqObj.Notification); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create notification: "+err.Error()))
-		return
-	}
-
-	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(inf.IntParams["id"]))
+	ok, err := dbhelpers.CDNExists(inf.Params["name"], inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn name from ID '"+inf.Params["id"]+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create notification: "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification created, Notification: " +reqObj.Notification, inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was created", tc.CDNNotificationResponse{CDNID: int64(inf.IntParams["id"]), Username: "bob", Notification: reqObj.Notification})
+	if err := create(inf.Tx.Tx, inf.Params["name"], inf.User.UserName, reqObj.Notification); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create notification: "+err.Error()))
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+inf.Params["name"]+", ACTION: CDN notification created, Notification: " +reqObj.Notification, inf.User, inf.Tx.Tx)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was created", tc.CDNNotificationResponse{Username: inf.User.UserName, Notification: reqObj.Notification})
 }
 
 func DeleteNotification(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	if err := delete(inf.Tx.Tx, int64(inf.IntParams["id"])); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN delete notification: "+err.Error()))
-		return
-	}
-
-	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(inf.IntParams["id"]))
+	ok, err := dbhelpers.CDNExists(inf.Params["name"], inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn name from ID '"+inf.Params["id"]+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN delete notification: "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN notification deleted", inf.User, inf.Tx.Tx)
+	if err := delete(inf.Tx.Tx, inf.Params["name"]); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN delete notification: "+err.Error()))
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+inf.Params["name"]+", ACTION: CDN notification deleted", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was deleted", nil)
 }
 
-func create(tx *sql.Tx, cdnID int64, username string, notification string) error {
-	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE id = $3`, username, notification, cdnID); err != nil {
+func create(tx *sql.Tx, cdnName string, username string, notification string) error {
+	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE name = $3`, username, notification, cdnName); err != nil {
 		return errors.New("creating cdn notification: " + err.Error())
 	}
 	return nil
 }
 
-func delete(tx *sql.Tx, cdnID int64) error {
-	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE id = $3`, nil, nil, cdnID); err != nil {
+func delete(tx *sql.Tx, cdnName string) error {
+	if _, err := tx.Exec(`UPDATE cdn SET notification_created_by = $1, notification = $2 WHERE name = $3`, nil, nil, cdnName); err != nil {
 		return errors.New("deleting cdn notification: " + err.Error())
 	}
 	return nil

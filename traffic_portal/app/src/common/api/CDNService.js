@@ -92,7 +92,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createNotification = function(cdn, notification) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdn.id + '/notification', { notification: notification}).then(
+        return $http.post(ENV.api['root'] + 'cdns/' + cdn.name + '/notification', { notification: notification}).then(
             function(result) {
                 return result;
             },
@@ -104,7 +104,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteNotification = function(cdn) {
-        return $http.delete(ENV.api['root'] + 'cdns/' + cdn.id + '/notification').then(
+        return $http.delete(ENV.api['root'] + 'cdns/' + cdn.name + '/notification').then(
             function(result) {
                 return result;
             },

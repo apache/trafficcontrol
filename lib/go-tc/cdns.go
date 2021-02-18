@@ -170,7 +170,6 @@ type CDNNotificationRequest struct {
 // CDNNotificationResponse encodes the response data for the POST
 // cdns/{{ID}}/notification endpoint.
 type CDNNotificationResponse struct {
-	CDNID  int64  `json:"cdnId"`
 	Username string `json:"username"`
 	Notification string `json:"notification"`
 }
