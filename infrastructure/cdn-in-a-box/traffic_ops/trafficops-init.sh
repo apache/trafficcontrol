@@ -19,7 +19,7 @@
 
 # Required env vars
 # Check that env vars are set
-set -x
+set -ex
 for v in TO_HOST TO_PORT TO_ADMIN_USER TO_ADMIN_PASSWORD; do
     [[ -z $(eval echo \$$v) ]] || continue
     echo "$v is unset"
@@ -109,10 +109,14 @@ load_data_from() {
            sync
         fi
         [[ -d $d ]] || continue
-        for f in "$d"/*.json; do
+        for f in $(find "$d" -name "*.json" -type f); do
             echo "Loading $f"
+            if [ ! -f "$f" ]; then
+              echo "No such file: $f" >&2;
+              continue;
+            fi
             delayfor "$f"
-            envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
+            envsubst "$vars" <"$f"  > "$ENROLLER_DIR/$f"
             sync
         done
     done

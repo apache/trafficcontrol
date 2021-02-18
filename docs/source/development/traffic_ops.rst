@@ -18,7 +18,7 @@
 ***********
 Traffic Ops
 ***********
-At its current stage in development, "Traffic Ops" actually refers to a concept with two implementations. The original Traffic Ops was written as a collection of Perl scripts based on the `Mojolicious framework <https://mojolicious.org/>`_ framework. At some point, the relatively poor performance and lack of knowledgeable developers as the project expanded became serious issues, and so for the past few years Traffic Ops has undergone a rewrite to Go.
+At one point, Traffic Ops was a collection of Perl scripts, and while the current program is written in Go, many of its tools and utilities are still written in Perl.
 
 Introduction
 ============
@@ -37,11 +37,10 @@ The two different implementations have different requirements, but they do share
 
 .. tip:: Alternatively, development and testing can be done using :ref:`ciab` - albeit somewhat more slowly.
 
-Perl Implementation Requirements
---------------------------------
-Most dependencies are managed by `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_, but there are some - outside of those shared with the Go implementation - that are not managed by that system.
+Perl Script Requirements
+------------------------
+Not much code is still in Perl, but for the scripts the following are needed:
 
-- `Carton itself <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
 - Perl 5.10.1
 - libpcap and libpcap development library - usually ``libpcap-dev`` or ``libpcap-devel`` in your system's native package manager.
 - libpq and libpq development library - usually ``libpq-dev`` or ``libpq-devel`` in your system's native package manager.
@@ -73,8 +72,8 @@ Most dependencies are managed by `Carton 1.0.12 <http://search.cpan.org/~miyagaw
 		-wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x="
 
 
-Go Implementation Requirements
-------------------------------
+Go Program Requirements
+-----------------------
 - |install-go-link|_
 - If the system's Go compiler doesn't provide it implicitly, also note that all Go code in the :abbr:`ATC (Apache Traffic Control)` repository should be formatted using `gofmt <https://golang.org/cmd/gofmt/>`_
 
@@ -95,13 +94,13 @@ Traffic Ops Project Tree Overview
 
 	- app/ - Holds most of the Perl code base, though many of the files contained herein are also used by the Go implementation
 
-		.. note:: This directory is home to many things that no longer work as intended or have been superseded by other things - most notably code for the now-removed Traffic Ops UI. That does *not*, however, mean that they are safe to remove. The API code that is still relied upon today is deeply entangled with the UI code, and in a dynamic language like Perl it can be very dangerous to remove things, because it may not be apparent that something is broken until it's already in production. So please don't remove anything in here until we're ready to excise the Perl implementation entirely.
+		.. note:: This directory is home to many things that no longer work as intended or have been superseded by other things.
 
 		- bin/ - Directory for scripts and tools, :manpage:`cron(8)` jobs, etc.
 
 			- checks/ - Contains the :ref:`to-check-ext` scripts that are provided by default
 			- db/ - Contains scripts that manipulate the database beyond the scope of setup, migration, and seeding
-			- tests/ - Integration and unit test scripts for automation purposes - in general this has been superseded by :atc-file:`traffic_ops/testing/api/`\ [#perltest]_
+			- tests/ - Integration and unit test scripts for automation purposes - in general this has been superseded by :atc-file:`traffic_ops/testing/api/`
 
 		- conf/ - Aggregated configuration for Traffic Ops. For convenience, different environments for the :ref:`database-management` tool are already set up
 
@@ -116,36 +115,10 @@ Traffic Ops Project Tree Overview
 			- migrations/ - Database migration files
 			- tools/ - Contains helper scripts for easing upgrade transitions when selective data manipulation must be done to achieve a desirable state
 
-		- lib/ - Contains the main handling logic for the Perl implementation
-
-			- API/ - Mojolicious Controllers for the :ref:`to-api`
-			- Common/ - Code that is shared between both the :ref:`to-api` and the now-removed Traffic Ops UI
-			- Connection/ - Adapter definitions for connecting to external services
-			- Extensions/ - Contains :ref:`to-datasource-ext`
-			- Fixtures/ - Test-case fixture data for the "testing" environment\ [#perltest]_
-
-				- Integration/ - Integration tests\ [#perltest]_
-
-			- Helpers/ - Contains route handlers for the Traffic Stats-related endpoints
-			- MojoPlugins/ - Mojolicious Plugins for common controller code
-			- Schema/Result/ - Contains schema definitions generated from a constructed database for use with the `DBIx Perl pod suite <https://metacpan.org/search?q=DBIx>`_. These were machine-generated in 2016 and *absolutely* **no one** *should be touching them ever again*.
-			- /Test - Common helpers for testing
-			- UI/ - Mojolicious controllers for the now-removed Traffic Ops UI
-			- Utils/ - Contains helpful utilities for certain objects and tasks
-
-				- Helper/ - Common utilities for the Traffic Ops application
-
-		- public/ - A directory from which files are served statically over HTTP by the Perl implementation. One common use-case is for hosting a :term:`Coverage Zone File` for Traffic Router.
 		- script/ - Mojolicious bootstrap/startup scripts.
-		- t/ - Unit tests for both the API (in ``api/``) and the now-removed Traffic Ops UI\ [#perltest]_
-
-			- api/ - Unit tests for the API\ [#perltest]_
-
-		- t_integration/ - High-level integration tests\ [#perltest]_
 		- templates/ - Mojolicious Embedded Perl (:file:`{template name}.ep`) files for the now-removed Traffic Ops UI
 
 	- build/ - Contains files that are responsible for packaging Traffic Ops into an RPM file - and also for doing the same with :term:`ORT`
-	- client/ - The Go client library for Traffic Ops
 	- etc/ - Configuration files for various systems associated with running production instances of Traffic Ops, which are installed under ``/etc`` by the Traffic Ops RPM
 
 		- cron.d/ - Holds specifications for :manpage:`cron(8)` jobs that need to be run periodically on Traffic Ops servers
@@ -187,6 +160,10 @@ Traffic Ops Project Tree Overview
 		- tocookie/ - Defines the method of generating the ``mojolicious`` cookie used by Traffic Ops for authentication
 		- vendor/ - contains "vendored" Go packages from third party sources
 
+	- v1-client - The official Traffic Ops Go client package for working with the version 1 :ref:`to-api`.
+	- v2-client - The official Traffic Ops Go client package for working with the version 2 :ref:`to-api`.
+	- v3-client - The official Traffic Ops Go client package for working with the version 3 :ref:`to-api`.
+	- v4-client - The official Traffic Ops Go client package for working with the version 4 :ref:`to-api`.
 	- vendor/ - contains "vendored" Go packages from third party sources
 
 .. _database-management:
@@ -265,14 +242,6 @@ Installing The Developer Environment
 To install the Traffic Ops Developer environment:
 
 #. Clone the `Traffic Control repository <https://github.com/apache/trafficcontrol>`_ from GitHub. In most cases it is best to clone this directly into :file:`{GOPATH}/src/github.com/apache/trafficcontrol`, as otherwise the Go implementation will not function properly.
-#. Install the local dependencies using `Carton <https://metacpan.org/release/Carton>`_.
-
-	.. code-block:: bash
-		:caption: Install Perl Dependencies
-
-		# assuming current working directory is the repository root
-		cd traffic_ops/app
-		carton
 
 #. Install any required Go dependencies - the suggested method is using :manpage:`go-get(1)`.
 
@@ -293,13 +262,6 @@ To install the Traffic Ops Developer environment:
 
 Test Cases
 ==========
-
-Perl Tests
-----------
-Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl) to execute test cases\ [#perltest]_. Execute after a ``carton install`` of all required dependencies:
-
-- To run the Unit Tests: ``prove -qrp  app/t/``
-- To run the Integration Tests: ``prove -qrp app/t_integration/``
 
 .. _to-go-tests:
 
@@ -529,7 +491,7 @@ The configuration file for the tests (defined by :option:`--cfg`) is a JSON-enco
 
 Writing New Endpoints
 =====================
-All new :ref:`to-api` endpoints should be written in Go, so writing endpoints for the Perl implementation is not discussed here. Furthermore, most new endpoints are accompanied by database schema changes which necessitate a new migration under :atc-file:`traffic_ops/app/db/migrations` and database best-practices are not discussed in this section.
+.. note:: Most new endpoints are accompanied by database schema changes which necessitate a new migration under :atc-file:`traffic_ops/app/db/migrations` and database best-practices are not discussed in this section.
 
 .. seealso:: This section contains a quick overview of API endpoint development; for the full guidelines for API endpoints, consult :ref:`api-guidelines`.
 
@@ -576,22 +538,11 @@ This method offers fine control over the endpoint's logic, but tends to be much 
 
 This method is best used when requests are meant to have extensive side-effects, are performed on unusually structured objects, need fine control of the HTTP headers/options, or operate on objects that have different structures or meanings across API versions.
 
-Rewriting a Perl Endpoint
--------------------------
-When rewriting endpoints from Perl, some special considerations must be taken.
-
-- Any rules and guidelines herein outlined that are broken by the Perl handler *must* also be broken in the rewritten Go handler to maintain compatibility within the API. New features can be added in the latest unreleased version of the API so long as they are appropriately documented, but avoid the temptation to fix things that seem broken. Such changes are best left to re-implementation of the API in a subsequent major version. The exceptions to this rule are if the broken behavior constitutes a security vulnerability (in which case be sure to follow the instructions on `the Apache Software Foundation security page <https://www.apache.org/security/>`_) or if it happens in the event of a server or client error. For example, many Perl handlers will spit out an HTML page in the event of a server-side error while the standard behavior of the :ref:`to-api` in such cases is to return the appropriate HTTP response code and a response body containing a JSON-encoded ``alerts`` object describing the nature of the error.
-- Mark newly rewritten endpoints in their :atc-file:`traffic_ops/traffic_ops_golang/routing/routes.go` definition with ``perlBypass`` to ensure that upon upgrading it is possible to configure the server to fall back on the Perl implementation. That way, any erroneous rewrites that wind up in production environments can be quickly bypassed in favor of the old, known-to-be-working version.
-- The Perl handlers support any combination of optional trailing ``/`` and ``.json`` on endpoint routes, and rewritten route definitions ought to support that. For example, the endpoint ``/foo`` can with equal validity from the Perl implementation's perspective as ``/foo.json``, ``/foo/``, ``/foo.json/`` (for some reason), and even (horrendously) as ``/foo/.json``.
-- It's possible that a route definition for the newly rewritten route already exists, explicitly defining a proxy to the Perl implementation using ``handlerToFunc(proxyHandler)`` to avoid collisions with later-defined routes. These will need to be deleted in order for the route to be properly handled.
-
 Extensions
 ==========
-Both the Perl and Go implementation support different kinds of extensions.
+What's typically meant by "extension" in the context of Traffic Ops is a :ref:`to-check-ext` which provides data for server "checks" which can be viewed in Traffic Portal under :menuselection:`Monitor --> Cache Checks`. This type of extension need not know nor even care which implementation it is being used with, as it interacts with Traffic Ops through the :ref:`to-api`.
 
-What's typically meant by "extension" in the context of Traffic Ops is a :ref:`to-check-ext` which provides data for server "checks" which can be viewed in Traffic Portal under :menuselection:`Monitor --> Cache Checks`. This type of extension need not know nor even care which implementation it is being used with, as it interacts with Traffic Ops through the :ref:`to-api`. These are described in `Legacy Perl Extensions`_ as their description remains rather Perl-centric, but in principle their operation is not limited to the context of the Perl Implementation.
-
-Both Perl and Go also support overrides or new definitions for non-standard :ref:`to-api` routes. It is strongly recommended that no Perl-based extensions of this type be written, but for posterity they are described in `Legacy Perl Extensions`_. The Go implementation refers to this type of "extension" as a "plugin," and they are described in `Go Plugins`_.
+Traffic Ops supports overrides or new definitions for non-standard :ref:`to-api` routes. This type of "extension" is typically reffered to as a "plugin," and they are described in `Go Plugins`_.
 
 .. _to_go_plugins:
 
@@ -621,41 +572,13 @@ An example "Hello World" plugin that serves the ``/_hello`` request path by just
 	:linenos:
 	:tab-width: 4
 
-Legacy Perl Extensions
-----------------------
-Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a customizable manner. There are two types of extensions:
-
-:ref:`to-check-ext`
-	These allow you to add custom checks to the :menuselection:`Monitor --> Cache Checks` view.
-
-:ref:`to-datasource-ext`
-	These allow you to add statistic sources for the graph views and APIs.
+Check Extensions
+----------------
+:ref:`to-check-ext` allow you to add custom checks to the :menuselection:`Monitor --> Cache Checks` view.
 
 Extensions are managed using the ``$TO_HOME/bin/extensions`` command line script
 
 .. seealso:: For more information see :ref:`admin-to-ext-script`.
 
-
-Extensions at Runtime
-"""""""""""""""""""""
-The search path for :ref:`to-datasource-ext` depends on the configuration of the ``PERL5LIB`` environment variable, which is pre-configured in the Traffic Ops start scripts. All :ref:`to-check-ext` must be located in ``$TO_HOME/bin/checks``
-
-	.. code-block:: bash
-		:caption: Example ``PERL5LIB`` Configuration
-
-		export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
-
-To prevent :ref:`to-datasource-ext` namespace collisions within Traffic Ops all :ref:`to-datasource-ext` should follow the package naming convention '``Extensions::<ExtensionName>``'
-
-``TrafficOpsRoutes.pm``
-"""""""""""""""""""""""
-Traffic Ops accesses each extension through the addition of a URL route as a custom hook. These routes will be defined in a file called ``TrafficOpsRoutes.pm`` that should be present in the top directory of your Extension. The routes that are defined should follow the `Mojolicious route conventions <https://mojolicious.org/perldoc/Mojolicious/Guides/Routing#Routes>`_.
-
-
-Development Configuration
-"""""""""""""""""""""""""
-To incorporate any custom :ref:`to-datasource-ext` during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
-
-.. [#perltest] As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has steadily decreased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
 .. [#integrationdb] The Traffic Ops instance *must* be using the same PostgreSQL database that the tests will use.
 .. [#existinguser] This does not need to match the name of any pre-existing user.

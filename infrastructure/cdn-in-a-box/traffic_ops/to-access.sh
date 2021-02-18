@@ -30,7 +30,6 @@ export MID_02_FQDN="$MID_02_HOST.$INFRA_FQDN"
 export ORIGIN_FQDN="$ORIGIN_HOST.$INFRA_FQDN"
 export SMTP_FQDN="$SMTP_HOST.$INFRA_FQDN"
 export TO_FQDN="$TO_HOST.$INFRA_FQDN"
-export TO_PERL_FQDN="$TO_PERL_HOST.$INFRA_FQDN"
 export TM_FQDN="$TM_HOST.$INFRA_FQDN"
 export TP_FQDN="$TP_HOST.$INFRA_FQDN"
 export TR_FQDN="$TR_HOST.$INFRA_FQDN"
@@ -183,8 +182,7 @@ to-enroll() {
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
 	MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
 	export MY_NETMASK=${MY_NETMASK#"Mask:"}
-	MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
-	export MY_IP6_ADDRESS=${MY_IP6_ADDRESS%%/*}
+	export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in

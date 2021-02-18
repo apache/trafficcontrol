@@ -34,7 +34,7 @@ until to-ping 2>/dev/null; do
 done
 
 until [[ -e "${ENROLLER_DIR}/initial-load-done" ]]; do
-	echo 'Waiting for Traffic Ops Perl to finish seeding the Traffic Ops data so Traffic Portal will start...'
+	echo 'Waiting for Traffic Ops to finish seeding the Traffic Ops data so Traffic Portal will start...'
 	sleep 3;
 done
 

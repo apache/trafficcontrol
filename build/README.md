@@ -70,7 +70,6 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
 * git 1.7.12 or higher
 
 #### traffic_ops:
-* perl 5.10 or higher
 * go 1.7 or higher
 
 #### traffic_stats:
@@ -100,4 +99,3 @@ Dockerfiles for each sub-project are located in the build directory (e.g. `traff
 > export GITHUB_REPO=https://github.com/myuser/traffic_control
 > export BRANCH=feature/my-new-feature
 > ./build/docker-build.sh
-
