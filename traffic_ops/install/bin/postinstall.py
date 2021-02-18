@@ -387,7 +387,7 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 		if key not in ldap_conf:
 			raise ValueError("{key} is a required key in {fname}".format(key=key, fname=fname))
 
-	if not re.fullmatch(r"\S+:\d+", ldap_conf["host"]):
+	if not re.match(r"^\S+:\d+$", ldap_conf["host"]):
 		raise ValueError("host in {fname} must be of form 'hostname:port'".format(fname=fname))
 
 	path = os.path.join(root, fname.lstrip('/'))
