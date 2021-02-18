@@ -16,6 +16,8 @@ package v4
 */
 
 import (
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -28,6 +30,8 @@ func TestServerChecks(t *testing.T) {
 		CreateTestInvalidServerChecks(t)
 		UpdateTestServerChecks(t)
 		GetTestServerChecks(t)
+		GetTestServerChecksWithName(t)
+		GetTestServerChecksWithID(t)
 	})
 }
 
@@ -135,6 +139,36 @@ func GetTestServerChecks(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("expected to find servercheck for host %v", hostname)
+	}
+}
+
+func GetTestServerChecksWithName(t *testing.T) {
+	params := url.Values{}
+	params.Set("name", "atlanta-edge-01")
+
+	// Get server checks
+	scResp, alerts, _, err := TOSession.GetServerCheckWithParamHdr(params, nil)
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", scResp.HostName, err, alerts)
+	}
+}
+
+func GetTestServerChecksWithID(t *testing.T) {
+	params := url.Values{}
+	serverChecksResp, _, _, err := TOSession.GetServersChecks()
+	if len(serverChecksResp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if serverChecksResp[0].ID == 0 {
+		t.Fatal("ID of the response server is nil, quitting")
+	}
+	id := serverChecksResp[0].ID
+	params.Set("id", strconv.Itoa(id))
+
+	// Get server checks
+	scResp, alerts, _, err := TOSession.GetServerCheckWithParamHdr(params, nil)
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by id (%v): %v (alerts: %+v)", scResp.ID, err, alerts)
 	}
 }
 

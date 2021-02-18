@@ -17,6 +17,8 @@ package client
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"net/http"
+	"net/url"
 )
 
 const API_SERVERCHECK = apiBase + "/servercheck"
@@ -40,4 +42,24 @@ func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqIn
 	}
 	reqInf, err := to.get(API_SERVERCHECK, nil, &response)
 	return response.Response, response.Alerts, reqInf, err
+}
+
+// GetServerCheckNameIDWithHdr fetches the Delivery Service with the given ID.
+func (to *Session) GetServerCheckWithParamHdr(params url.Values, header http.Header) (*tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+	data := struct {
+		tc.Alerts
+		Response []tc.GenericServerCheck `json:"response"`
+	}{}
+	route := API_SERVERCHECK
+	if params != nil {
+		route += "?" + params.Encode()
+	}
+	reqInf, err := to.get(route, header, &data)
+	if err != nil {
+		return nil, data.Alerts, reqInf, err
+	}
+	if len(data.Response) == 0 {
+		return nil, data.Alerts, reqInf, nil
+	}
+	return &data.Response[0], data.Alerts, reqInf, nil
 }
