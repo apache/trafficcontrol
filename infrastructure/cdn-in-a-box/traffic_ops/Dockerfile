@@ -37,6 +37,8 @@ RUN set -o nounset -o errexit && \
 	else \
 		use_repo='--repo=pgdg96'; \
 	fi; \
+	yum install -y dnf-plugins-core; \
+	dnf config-manager --set-enabled powertools; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
 	dnf -y $use_repo -- install postgresql96; \
 	dnf -y install epel-release; \
@@ -54,6 +56,9 @@ RUN set -o nounset -o errexit && \
 		python3         \
 		golang          \
 		git             \
+		libidn-devel    \
+		libpcap-devel   \
+		perl-Digest-SHA1\
 		# Used to copy certs in "Shared SSL certificate generation" step
 		rsync;          \
 	dnf clean all
@@ -73,7 +78,7 @@ ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 
 COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
-RUN rpm --install --verbose --hash /traffic_ops.rpm && \
+RUN yum -y install /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
