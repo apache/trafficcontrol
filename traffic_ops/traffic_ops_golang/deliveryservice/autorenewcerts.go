@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -104,7 +105,32 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout*time.Duration(len(existingCerts)))
 
-	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User)
+	resultRows, err := inf.Tx.Query(api.InsertAsyncStatusQuery, api.AsyncPending, "ACME async job has started.")
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	var asyncStatusId int
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&asyncStatusId); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("async status create scanning: %v", err))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("async status create: no status was inserted, no id was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from async status insert"))
+	}
+
+	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId)
 
 	var alerts tc.Alerts
 	if deprecated {
@@ -112,32 +138,46 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 
 	alerts.AddAlert(tc.Alert{
-		Text:  "Beginning async call to renew certificates. This may take a few minutes.",
+		Text:  "Beginning async call to renew certificates. This may take a few minutes. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId),
 		Level: tc.SuccessLevel.String(),
 	})
+
+	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
-func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser) {
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int) {
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+		}
 		return
 	}
 	tx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting tx: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+		}
 		return
 	}
 
 	logTx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting logTx: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+		}
 		return
 	}
 	defer logTx.Commit()
 
 	keysFound := ExpirationSummary{}
+
+	renewedCount := 0
+	errorCount := 0
 
 	for _, ds := range existingCerts {
 		if !ds.Version.Valid || ds.Version.Int64 == 0 {
@@ -166,13 +206,21 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		err = base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
 			log.Errorf("cert autorenewal: error getting SSL keys for XMLID '%s': %s", ds.XmlId, err.Error())
-			return
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("decoding the certificate for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
+			continue
 		}
 
 		expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
 		if err != nil {
 			log.Errorf("cert autorenewal: %s: %s", ds.XmlId, err.Error())
-			return
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("parsing the expiration for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
+			continue
 		}
 
 		// Renew only certificates within configured limit. Default is 30 days.
@@ -204,6 +252,9 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 
 			if error := GetLetsEncryptCertificates(cfg, req, ctx, currentUser); error != nil {
 				dsExpInfo.Error = error
+				errorCount++
+			} else {
+				renewedCount++
 			}
 			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
 
@@ -216,17 +267,35 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			} else {
 				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser)
 				if userErr != nil {
+					errorCount++
 					dsExpInfo.Error = userErr
 				} else if sysErr != nil {
+					errorCount++
 					dsExpInfo.Error = sysErr
 				} else if statusCode != http.StatusOK {
+					errorCount++
 					dsExpInfo.Error = errors.New("Status code not 200: " + strconv.Itoa(statusCode))
+				} else {
+					renewedCount++
 				}
 				keysFound.AcmeExpirations = append(keysFound.AcmeExpirations, dsExpInfo)
 			}
 
 		}
 
+		if err = api.UpdateAsyncStatus(db, api.AsyncPending, "ACME renewal in progress. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, false); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+		}
+
+	}
+
+	// put status as succeeded if any certs were successfully renewed
+	asyncStatus := api.AsyncSucceeded
+	if errorCount > 0 && renewedCount == 0 {
+		asyncStatus = api.AsyncFailed
+	}
+	if err = api.UpdateAsyncStatus(db, asyncStatus, "ACME renewal complete. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, true); err != nil {
+		log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
 	}
 
 	if cfg.SMTP.Enabled && cfg.ConfigAcmeRenewal.SummaryEmail != "" {

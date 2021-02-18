@@ -13,19 +13,19 @@
 .. limitations under the License.
 ..
 
-.. _to-api-acme-autorenew:
+.. _to-api-async_status:
 
-******************
-``acme_autorenew``
-******************
+****************
+``async_status``
+****************
 
-``POST``
-========
-Generates SSL certificates and private keys for all :term:`Delivery Services` that have certificates expiring within the configured time. This uses:abbr:`ACME (Automatic Certificate Management Environment)` or Let's Encrypt depending on the certificate.
+``GET``
+=======
+Returns a status update for an asynchronous task.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  ``undefined``
+:Response Type:  Object
 
 Request Structure
 -----------------
@@ -38,12 +38,15 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 202 Accepted
+	HTTP/1.1 200 OK
 	Content-Type: application/json
 
-	{ "alerts": [
+	{ "response":
 		{
-			"text": "Beginning async call to renew certificates. This may take a few minutes. Status updates can be found here: /api/4.0/async_status/1",
-			"level": "success"
+			"id":1,
+			"status":"PENDING",
+			"start_time":"2021-02-18T17:13:56.352261Z",
+			"end_time":null,
+			"message":"Async job has started."
 		}
-	]}
+	}
