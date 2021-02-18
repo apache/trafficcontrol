@@ -34,15 +34,15 @@ RUN set -o nounset -o errexit && \
 	mkdir -p /etc/cron.d; \
 	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
+		enable_repo=''; \
 	else \
 		use_repo='--repo=pgdg96'; \
+		enable_repo='--enablerepo=powertools'; \
 	fi; \
-	yum install -y dnf-plugins-core; \
-	dnf config-manager --set-enabled powertools; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
 	dnf -y $use_repo -- install postgresql96; \
 	dnf -y install epel-release; \
-	dnf -y install      \
+	dnf -y $enable_repo install      \
 		jq              \
 		bind-utils      \
 		net-tools       \
