@@ -609,7 +609,7 @@ def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
 	logging.info(description)
 
-	cmd = ["/usr/bin/openssl", *cmd_args]
+	cmd = ("/usr/bin/openssl",) + cmd_args
 
 	while True:
 		proc = subprocess.run(
