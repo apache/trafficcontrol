@@ -43,6 +43,7 @@ RUN yum install -y /$(basename $RPM)
 RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
 RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
 RUN mkdir /root/go
+RUN mkdir -p /opt/ort/status
 
 EXPOSE 80 443
 ADD ort_test/run.sh /

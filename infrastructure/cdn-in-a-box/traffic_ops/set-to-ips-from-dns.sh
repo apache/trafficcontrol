@@ -22,7 +22,7 @@ base_data_dir="/traffic_ops_data"
 servers_dir="${base_data_dir}/servers"
 profiles_dir="${base_data_dir}/profiles"
 
-service_names='db trafficops trafficops-perl trafficportal trafficmonitor trafficvault trafficrouter enroller dns'
+service_names='db trafficops trafficportal trafficmonitor trafficvault trafficrouter enroller dns'
 
 service_domain='infra.ciab.test'
 

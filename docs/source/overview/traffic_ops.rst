@@ -25,8 +25,6 @@ Traffic Ops generates all the application-specific configuration files for the :
 
 Traffic Ops also runs a collection of periodic checks to determine the operating state of the :term:`cache servers`. These periodic checks are customizable by the Traffic Ops administrative user using `Traffic Ops Extension`_\ s.
 
-Traffic Ops is in the process of migrating from Perl to Go, and currently runs as two separate applications. The Go application serves all endpoints which have been rewritten in the Go language, and transparently proxies all other requests to the old Perl application. For this reason, users and administrators should direct all requests solely at the Go-based implementation. Both applications are installed by the RPM, and both run as a single service. When the project has fully migrated to Go, the Perl application will be removed, and the RPM and service will consist solely of the Go application.
-
 .. _trops-ext:
 
 Traffic Ops Extension
@@ -35,11 +33,3 @@ Traffic Ops Extensions are a way to enhance the basic functionality of Traffic O
 
 :ref:`to-check-ext`
 	Allow you to add custom checks to the :menuselection:`Monitor --> Cache Checks` view in :ref:`tp-overview`.
-
-:ref:`to-datasource-ext`
-	Allow you to add data sources for the graph views and usage APIs.
-
-
-.. These are listed as "in beta" as far back as TO 1.0, sooo
-.. Configuration Extension
-.. 	Allows you to add custom configuration file generators.

@@ -13,10 +13,8 @@
 #
 
 TO_DIR="/opt/traffic_ops/app"; export TO_DIR
-TO_EXT_PRIVATE_LIB="/opt/traffic_ops_extensions/private/lib"; export TO_PRIVATE_LIB
-PERL5LIB=$TO_EXT_PRIVATE_LIB:$TO_DIR/lib:$TO_DIR/local/lib/perl5:$PERL5LIB; export PERL5LIB
 
-# Setup GOPATH 
+# Setup GOPATH
 GOPATH="/opt/traffic_ops/go"; export GOPATH
 GOBIN=$GOPATH/bin
 

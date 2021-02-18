@@ -14,32 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-# This compose file runs the traffic ops integration tests assuming
-# there is already a trafficops docker instance. When using docker,
-# make sure any container rpms you need are updated. Below is an
-# example of how to run the main compose with this file:
-#
-# docker-compose up --build db trafficops
-# docker-compose -f docker-compose.traffic-ops-test.yml up --build integration
 
----
-version: '2.1'
+# The following environment variables are required, see 'variables.env':
+# TV_ADMIN_USER
+# TV_ADMIN_PASSWORD
+# TV_FQDN
+# TV_HTTPS_PORT
 
-services:
-  integration:
-    build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
-    env_file:
-      - variables.env
-    hostname: integration
-    domainname: infra.ciab.test
-    volumes:
-      - shared:/shared
-      - ../../junit:/junit
+curl -kvs -XPUT -H 'Content-Type:application/xml' "https://$TV_ADMIN_USER:$TV_ADMIN_PASSWORD@$TV_FQDN:$TV_HTTPS_PORT/search/schema/sslkeys" -d @/sslkeys.xml 
 
-volumes:
-  junit:
-  shared:
-    external: false
+curl -kvs -XPUT -H 'Content-Type:application/json' "https://$TV_ADMIN_USER:$TV_ADMIN_PASSWORD@$TV_FQDN:$TV_HTTPS_PORT/search/index/sslkeys" -d '{"schema":"sslkeys"}'
+
+curl -kvs -XPUT -H 'Content-Type:application/json' "https://$TV_ADMIN_USER:$TV_ADMIN_PASSWORD@$TV_FQDN:$TV_HTTPS_PORT/buckets/ssl/props" -d'{"props":{"search_index":"sslkeys"}}'
+

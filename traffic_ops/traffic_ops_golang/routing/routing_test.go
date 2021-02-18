@@ -20,11 +20,12 @@ package routing
  */
 
 import (
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"fmt"
 
@@ -149,7 +150,7 @@ func TestCompileRoutes(t *testing.T) {
 	}
 
 	authBase := middleware.AuthBase{Secret: d.Secrets[0], Override: nil}
-	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, nil, authBase, 1)
+	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, authBase, 1)
 	if len(routes) == 0 {
 		t.Error("no routes handler defined")
 	}
@@ -240,18 +241,17 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{api.Version{1, 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0, false},
-		{api.Version{1, 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1, false},
-		{api.Version{1, 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2, false},
-		{api.Version{1, 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3, true},
-		{api.Version{1, 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4, false},
+		{api.Version{1, 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0},
+		{api.Version{1, 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1},
+		{api.Version{1, 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2},
+		{api.Version{1, 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3},
+		{api.Version{1, 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4},
 	}
 
-	perlRoutesIDs := []int{3}
 	disabledRoutesIDs := []int{4}
 
 	rawRoutes := []RawRoute{}
-	routeMap, _ := CreateRouteMap(routes, rawRoutes, perlRoutesIDs, disabledRoutesIDs, CatchallHandler, authBase, 60)
+	routeMap, _ := CreateRouteMap(routes, rawRoutes, disabledRoutesIDs, CatchallHandler, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 
@@ -295,8 +295,8 @@ func TestCreateRouteMap(t *testing.T) {
 	route4Handler := routeMap["GET"][3].Handler
 	w = httptest.NewRecorder()
 	route4Handler(w, r)
-	if bytes.Compare(w.Body.Bytes(), []byte("catchall")) != 0 {
-		t.Errorf("Expected: 'catchall', actual: %s", w.Body.Bytes())
+	if bytes.Compare(w.Body.Bytes(), []byte("path4")) != 0 {
+		t.Errorf("Expected: 'path4', actual: %s", w.Body.Bytes())
 	}
 
 	// request should be handled by DisabledRouteHandler

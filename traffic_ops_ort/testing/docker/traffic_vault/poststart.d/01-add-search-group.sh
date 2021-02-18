@@ -14,32 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-# This compose file runs the traffic ops integration tests assuming
-# there is already a trafficops docker instance. When using docker,
-# make sure any container rpms you need are updated. Below is an
-# example of how to run the main compose with this file:
-#
-# docker-compose up --build db trafficops
-# docker-compose -f docker-compose.traffic-ops-test.yml up --build integration
 
----
-version: '2.1'
+# The following environment variables are required, see 'riak-cluster.sh'
+# RIAK_ADMIN
 
-services:
-  integration:
-    build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
-    env_file:
-      - variables.env
-    hostname: integration
-    domainname: infra.ciab.test
-    volumes:
-      - shared:/shared
-      - ../../junit:/junit
-
-volumes:
-  junit:
-  shared:
-    external: false
+$RIAK_ADMIN security grant search.admin on schema to admin
+$RIAK_ADMIN security grant search.admin on index to admin
+$RIAK_ADMIN security grant search.query on index to admin
+$RIAK_ADMIN security grant search.query on index sslkeys to admin
+$RIAK_ADMIN security grant search.query on index to riakuser
+$RIAK_ADMIN security grant search.query on index sslkeys to riakuser
+$RIAK_ADMIN security grant riak_core.set_bucket on any to admin
