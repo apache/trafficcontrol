@@ -37,11 +37,13 @@ import (
 func getTestCDNs() []tc.CDN {
 	cdns := []tc.CDN{}
 	testCDN := tc.CDN{
-		DNSSECEnabled: false,
-		DomainName:    "domainName",
-		ID:            1,
-		Name:          "cdn1",
-		LastUpdated:   tc.TimeNoMod{Time: time.Now()},
+		DNSSECEnabled:         false,
+		DomainName:            "domainName",
+		ID:                    1,
+		Name:                  "cdn1",
+		LastUpdated:           tc.TimeNoMod{Time: time.Now()},
+		Notification:          "cdn notification",
+		NotificationCreatedBy: "user123",
 	}
 	cdns = append(cdns, testCDN)
 
@@ -75,6 +77,8 @@ func TestReadCDNs(t *testing.T) {
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
+			ts.Notification,
+			ts.NotificationCreatedBy,
 		)
 	}
 	mock.ExpectBegin()
