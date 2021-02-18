@@ -267,6 +267,7 @@ fi
 readonly USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
 
 /usr/bin/python3 <<EOF
+from __future__ import print_function
 import json
 import sys
 
@@ -334,6 +335,7 @@ if [[ "$DB_CONF_ACTUAL" != "$DB_CONF_EXPECTED" ]]; then
 fi
 
 /usr/bin/python3 <<EOF
+from __future__ import print_function
 import json
 import string
 import sys

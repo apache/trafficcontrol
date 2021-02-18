@@ -16,6 +16,7 @@
 # recognized for the dynamically generated class that it is. Should be fixed
 # with the next release, but 'til then...
 #pylint:disable=inherit-non-class
+from __future__ import print_function
 """
 This script is meant as a drop-in replacement for the old _postinstall Perl script.
 
@@ -43,7 +44,6 @@ testing.
 >>> [c for c in [[a for a in b if not a.config_var] for b in DEFAULTS.values()] if c]
 []
 """
-
 import argparse
 import base64
 import getpass
