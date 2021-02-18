@@ -58,7 +58,7 @@ import stat
 import string
 import subprocess
 import sys
-from typing import NamedTuple
+from collections import namedtuple
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
@@ -86,7 +86,7 @@ POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 # Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
 # OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
-class Question:
+class Question(object):
 	"""
 	Question represents a single question to be asked of the user, to determine a configuration
 	value.
@@ -150,13 +150,16 @@ class Question:
 		"""Returns a serializable dictionary, suitable for converting to JSON."""
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
-class User(NamedTuple):
-	"""Users represents a user that will be inserted into the Traffic Ops database."""
+class User(namedtuple('User', ['username', 'password'])):
+	"""Users represents a user that will be inserted into the Traffic Ops database.
 
-	#: The user's username.
-	username = None # type: str
-	#: The user's password - IN PLAINTEXT.
-	password = None # type: str
+	Attributes
+	----------
+	self.username: str
+		The user's username.
+	self.password: str
+		The user's password - IN PLAINTEXT.
+	"""
 
 class SSLConfig:
 	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
@@ -168,14 +171,8 @@ class SSLConfig:
 		self.params = "/C={country}/ST={state}/L={locality}/O={company}/OU={org_unit}/CN={common_name}/"
 		self.params = self.params.format(**cfg_map)
 
-class CDNConfig(NamedTuple):
+class CDNConfig(namedtuple('CDNConfig', ['gen_secret', 'num_secrets', 'port', 'num_workers', 'url', 'ldap_conf_location'])):
 	"""CDNConfig holds all of the options needed to format a cdn.conf file."""
-	gen_secret = None # type: bool
-	num_secrets = None # type: int
-	port = None # type: int
-	num_workers = None # type: int
-	url = None # type: str
-	ldap_conf_location = None # type: str
 
 	def generate_secret(self, conf):
 		"""
