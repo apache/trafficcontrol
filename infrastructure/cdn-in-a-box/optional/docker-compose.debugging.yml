@@ -68,6 +68,7 @@ services:
     image: trafficops
     build:
       context: ../../
+      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
     command: /usr/bin/true
   # The trafficstats-nondebug service exists to ensure that the trafficstats
   # base image exists before building trafficstats-debug.
