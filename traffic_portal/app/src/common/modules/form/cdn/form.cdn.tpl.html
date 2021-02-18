@@ -41,9 +41,6 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li ng-if="!cdn.notificationCreatedBy" role="menuitem"><a ng-click="toggleNotification(cdn)">Create CDN Notification</a></li>
-                    <li ng-if="cdn.notificationCreatedBy" role="menuitem"><a ng-click="toggleNotification(cdn)">Delete CDN Notification</a></li>
-                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
                     <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
                     <li class="divider"></li>
