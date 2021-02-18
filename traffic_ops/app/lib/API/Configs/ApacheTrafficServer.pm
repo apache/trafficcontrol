@@ -2526,7 +2526,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
 			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 'consistent_hash';
 			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'} || 'both';
-			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'} || '';
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'} || '"503"';
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
@@ -2617,13 +2617,8 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 				}
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
-				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
-					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
-						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
-					} else {
-						$text .= " parent_retry=$parent_retry";
-					}
-					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
+				if ( $ats_major_version >= 6 ) {
+					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
 				}
 				$text .= "\n";
 				push @text_array, $text;
@@ -2663,7 +2658,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			my %seen;
 			@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
 		}
-		#If the ats version supports it, put secondary parents into secondary parent group.
+		#If the ats version supports it, put secondary parents into secondary parent group
 		#This will ensure that secondary parents will be unused unless all hosts in the primary group are unavailable.
 		my $parents = '';
 		my $secparents = '';
