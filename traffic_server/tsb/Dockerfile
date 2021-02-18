@@ -63,7 +63,7 @@ RUN	yum clean all \
 
 COPY	jansson.pic.patch /opt/src/
 COPY	cjose.pic.patch /opt/src/
-ADD	https://bootstrap.pypa.io/get-pip.py /
+ADD	https://bootstrap.pypa.io/2.7/get-pip.py /
 RUN	python get-pip.py
 RUN	pip install --user Sphinx
 COPY	run.sh /
