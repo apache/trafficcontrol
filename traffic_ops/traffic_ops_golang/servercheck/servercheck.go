@@ -50,8 +50,6 @@ LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id
 LEFT JOIN cachegroup ON server.cachegroup = cachegroup.id
 LEFT JOIN type ON server.type = type.id
-WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'
-ORDER BY hostName ASC
 `
 
 const serverChecksQuery = `
@@ -240,19 +238,33 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
 	extensions := make(map[string]string)
 
+	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"servercheck.id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"servercheck.server", nil},
+		"id":   dbhelpers.WhereColumnInfo{"servercheck.server", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"server.host_name", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
-	fmt.Println("where", where, "order", orderBy, "page", pagination, "qval", queryValues, "err", errs)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := serverChecksQuery + where + orderBy + pagination
-	fmt.Println(query)
+	// where clause is different for servercheck and server table. Also, it differs for the query param.
+	var whereSC, whereSI string
+	if where != "" {
+		for k, _ := range inf.Params {
+			if k == "id" {
+				whereSC = where
+				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
+			} else {
+				whereSC = ""
+				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
+			}
+		}
+	} else {
+		whereSC = ""
+		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'"
+	}
 
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
@@ -269,29 +281,28 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		extensions[shortName] = checkName
 	}
 
-	colRows, err := inf.Tx.NamedQuery(query, queryValues)
+	querySC := serverChecksQuery + whereSC + orderBy + pagination
+	colRows, err := inf.Tx.NamedQuery(querySC, queryValues)
 	if err != nil {
 		sysErr := fmt.Errorf("querying serverchecks columns: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
 	}
-	defer colRows.Close()
 
 	columns := make(map[int]tc.ServerCheckColumns)
-	fmt.Println("len", *colRows.Rows)
 	for colRows.Next() {
 		var cols tc.ServerCheckColumns
 		if err = colRows.StructScan(&cols); err != nil {
 			sysErr := fmt.Errorf("scanning server checks columns: %v", err)
 			return nil, nil, sysErr, http.StatusInternalServerError
 		}
-		fmt.Println(cols.Server, cols.ID)
 		columns[cols.Server] = cols
 	}
-	fmt.Println("col", columns)
 
-	serverRows, err := tx.Query(serverInfoQuery)
+	orderBySI := orderBy + "ORDER BY hostName ASC"
+	querySI := serverInfoQuery + whereSI + orderBySI + pagination
+	serverRows, err := inf.Tx.NamedQuery(querySI, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("Querying server info for checks: %v", err)
+		sysErr := fmt.Errorf("querying server info for checks: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 
@@ -302,19 +313,16 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 			sysErr := fmt.Errorf("scanning server info for checks: %v", err)
 			return nil, nil, sysErr, http.StatusInternalServerError
 		}
-		fmt.Println("Here?")
+
 		serverCheckCols, ok := columns[serverInfo.ID]
 		if ok {
-			fmt.Println("in ok?")
 			serverInfo.Checks = make(map[string]*int)
 		} else {
-			fmt.Println("in else")
 			data = append(data, serverInfo)
 			continue
 		}
-		fmt.Println(extensions)
+
 		for colName, checkName := range extensions {
-			fmt.Println(colName, checkName)
 			switch colName {
 			case "aa":
 				serverInfo.Checks[checkName] = serverCheckCols.AA
