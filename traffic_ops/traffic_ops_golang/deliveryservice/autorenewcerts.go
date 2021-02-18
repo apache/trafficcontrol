@@ -151,7 +151,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
 		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 		}
 		return
 	}
@@ -159,7 +159,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	if err != nil {
 		log.Errorf("Error getting tx: %s", err.Error())
 		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 		}
 		return
 	}
@@ -168,7 +168,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	if err != nil {
 		log.Errorf("Error getting logTx: %s", err.Error())
 		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 		}
 		return
 	}
@@ -284,7 +284,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 
 		if err = api.UpdateAsyncStatus(db, api.AsyncPending, "ACME renewal in progress. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, false); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 		}
 
 	}
@@ -295,7 +295,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		asyncStatus = api.AsyncFailed
 	}
 	if err = api.UpdateAsyncStatus(db, asyncStatus, "ACME renewal complete. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, true); err != nil {
-		log.Errorf("updating async status for id %v: %v", asyncStatusId, err.Error())
+		log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 	}
 
 	if cfg.SMTP.Enabled && cfg.ConfigAcmeRenewal.SummaryEmail != "" {
