@@ -73,7 +73,7 @@ ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 
 COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
-RUN rpm --install --nodeps --verbose --hash /traffic_ops.rpm && \
+RUN rpm --install --verbose --hash /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
