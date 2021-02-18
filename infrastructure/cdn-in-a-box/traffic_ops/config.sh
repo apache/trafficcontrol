@@ -110,7 +110,6 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "oauth_client_secret": "",
         "routing_blacklist": {
             "ignore_unknown_routes": false,
-            "perl_routes": [],
             "disabled_routes": []
         },
         "supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
