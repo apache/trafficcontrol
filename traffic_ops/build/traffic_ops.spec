@@ -38,6 +38,7 @@ Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Di
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
+Requires:         python(abi)
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
