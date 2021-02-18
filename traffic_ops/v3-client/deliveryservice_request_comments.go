@@ -24,18 +24,21 @@ import (
 )
 
 const (
+	// API_DELIVERY_SERVICE_REQUEST_COMMENTS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_REQUEST_COMMENTS = apiBase + "/deliveryservice_request_comments"
+
+	APIDeliveryServiceRequestComments = "/deliveryservice_request_comments"
 )
 
 // Create a delivery service request comment
 func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_DELIVERY_SERVICE_REQUEST_COMMENTS, comment, nil, &alerts)
+	reqInf, err := to.post(APIDeliveryServiceRequestComments, comment, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateDeliveryServiceRequestCommentByIDWithHdr(id int, comment tc.DeliveryServiceRequestComment, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, comment, header, &alerts)
 	return alerts, reqInf, err
@@ -49,7 +52,7 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.De
 
 func (to *Session) GetDeliveryServiceRequestCommentsWithHdr(header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
 	var data tc.DeliveryServiceRequestCommentsResponse
-	reqInf, err := to.get(API_DELIVERY_SERVICE_REQUEST_COMMENTS, header, &data)
+	reqInf, err := to.get(APIDeliveryServiceRequestComments, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -60,7 +63,7 @@ func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequ
 }
 
 func (to *Session) GetDeliveryServiceRequestCommentByIDWithHdr(id int, header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
 	var data tc.DeliveryServiceRequestCommentsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -74,7 +77,7 @@ func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliverySe
 
 // DELETE a delivery service request comment by ID
 func (to *Session) DeleteDeliveryServiceRequestCommentByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
+	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

@@ -27,7 +27,6 @@ $TTL 30 ; 30 seconds
 1             IN PTR   gw.infra.ciab.test.
 10            IN PTR   db.infra.ciab.test.
 20            IN PTR   trafficops.infra.ciab.test.
-21            IN PTR   trafficops-perl.infra.ciab.test.
 30            IN PTR   trafficportal.infra.ciab.test.
 40            IN PTR   trafficmonitor.infra.ciab.test.
 50            IN PTR   trafficvault.infra.ciab.test.

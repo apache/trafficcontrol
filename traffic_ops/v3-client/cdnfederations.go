@@ -30,14 +30,14 @@ import (
 
 func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string) (*tc.CreateCDNFederationResponse, ReqInf, error) {
 	data := tc.CreateCDNFederationResponse{}
-	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
+	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	inf, err := to.post(route, f, nil, &data)
 	return &data, inf, err
 }
 
 func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
-	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
+	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	inf, err := to.get(route, header, &data)
 	return &data, inf, err
 }
@@ -48,7 +48,7 @@ func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationRes
 }
 
 func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, ReqInf, error) {
-	route := fmt.Sprintf("%s/cdns/%s/federations", apiBase, url.QueryEscape(CDNName))
+	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	resp := struct {
 		Response []tc.CDNFederation `json:"response"`
 	}{}
@@ -58,7 +58,7 @@ func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, head
 
 func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
-	route := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, url.QueryEscape(CDNName), ID)
+	route := fmt.Sprintf("/cdns/%s/federations?id=%v", url.QueryEscape(CDNName), ID)
 	inf, err := to.get(route, header, &data)
 	return &data, inf, err
 }
@@ -70,7 +70,7 @@ func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederat
 
 func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName string, ID int, h http.Header) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
 	data := tc.UpdateCDNFederationResponse{}
-	route := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, url.QueryEscape(CDNName), ID)
+	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
 	inf, err := to.put(route, f, h, &data)
 	return &data, inf, err
 }
@@ -82,7 +82,7 @@ func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, 
 
 func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, ReqInf, error) {
 	data := tc.DeleteCDNFederationResponse{}
-	route := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, url.QueryEscape(CDNName), ID)
+	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
 	inf, err := to.del(route, nil, &data)
 	return &data, inf, err
 }

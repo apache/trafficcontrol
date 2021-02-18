@@ -26,7 +26,7 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 
 .. envvar:: MOJO_MODE
 
-	This is a legacy environment variable only used for compatibility's sake - new tools should not need to use it for anything, in general. It refers to the environment or "mode" of the Traffic Ops :ref:`legacy-perl-script`. Effectively, this chooses the set of configuration files it will consult. The default value is "development", and the possible values are:
+	This is a legacy environment variable only used for compatibility's sake - new tools should not need to use it for anything, in general. It refers to the environment or "mode" of the Traffic Ops server from back in the old Perl days. Effectively, this chooses the set of configuration files it will consult. The default value is "development", and the possible values are:
 
 	- development
 	- integration

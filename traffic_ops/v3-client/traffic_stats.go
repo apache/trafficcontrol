@@ -21,6 +21,6 @@ import (
 // GetCurrentStats gets current stats for each CDNs and a total across them
 func (to *Session) GetCurrentStats() (tc.TrafficStatsCDNStatsResponse, ReqInf, error) {
 	resp := tc.TrafficStatsCDNStatsResponse{}
-	reqInf, err := to.get(apiBase+"/current_stats", nil, &resp)
+	reqInf, err := to.get("/current_stats", nil, &resp)
 	return resp, reqInf, err
 }

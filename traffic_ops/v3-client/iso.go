@@ -24,7 +24,10 @@ import (
 )
 
 const (
+	// API_OSVERSIONS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_OSVERSIONS = apiBase + "/osversions"
+
+	APIOSVersions = "/osversions"
 )
 
 // GetOSVersions GETs all available Operating System (OS) versions for ISO generation,
@@ -36,6 +39,6 @@ func (to *Session) GetOSVersions() (map[string]string, ReqInf, error) {
 	var data struct {
 		Versions tc.OSVersionsResponse `json:"response"`
 	}
-	reqInf, err := to.get(API_OSVERSIONS, nil, &data)
+	reqInf, err := to.get(APIOSVersions, nil, &data)
 	return data.Versions, reqInf, err
 }

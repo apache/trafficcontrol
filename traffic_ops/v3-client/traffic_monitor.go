@@ -29,7 +29,11 @@ import (
 // configuration information. It is meant to be used with fmt.Sprintf to insert the necessary
 // path parameters (namely the Name of the CDN of interest).
 // See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/cdns_name_configs_monitoring.html
+//
+// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_CDN_MONITORING_CONFIG = apiBase + "/cdns/%s/configs/monitoring"
+
+const APICDNMonitoringConfig = "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it
 // coerces the value returned by the API to the tc.TrafficMonitorConfigMap structure.
@@ -47,7 +51,7 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
-	route := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
+	route := fmt.Sprintf(APICDNMonitoringConfig, cdn)
 	var data tc.TMConfigResponse
 	reqInf, err := to.get(route, nil, &data)
 	return &data.Response, reqInf, err

@@ -24,18 +24,21 @@ import (
 )
 
 const (
+	// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_TYPES = apiBase + "/types"
+
+	APITypes = "/types"
 )
 
 // CreateType creates a Type. There should be a very good reason for doing this.
 func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_TYPES, typ, nil, &alerts)
+	reqInf, err := to.post(APITypes, typ, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateTypeByIDWithHdr(id int, typ tc.Type, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_TYPES, id)
+	route := fmt.Sprintf("%s/%d", APITypes, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, typ, header, &alerts)
 	return alerts, reqInf, err
@@ -56,7 +59,7 @@ func (to *Session) GetTypesWithHdr(header http.Header, useInTable ...string) ([]
 		return nil, ReqInf{}, errors.New("please pass in a single value for the 'useInTable' parameter")
 	}
 	var data tc.TypesResponse
-	reqInf, err := to.get(API_TYPES, header, &data)
+	reqInf, err := to.get(APITypes, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -85,7 +88,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 
 // GetTypeByID GETs a Type by the Type ID, and filters by http header params in the request.
 func (to *Session) GetTypeByIDWithHdr(id int, header http.Header) ([]tc.Type, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_TYPES, id)
+	route := fmt.Sprintf("%s?id=%d", APITypes, id)
 	var data tc.TypesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -98,7 +101,7 @@ func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
 }
 
 func (to *Session) GetTypeByNameWithHdr(name string, header http.Header) ([]tc.Type, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", API_TYPES, name)
+	route := fmt.Sprintf("%s?name=%s", APITypes, name)
 	var data tc.TypesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -112,7 +115,7 @@ func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 
 // DeleteTypeByID DELETEs a Type by ID.
 func (to *Session) DeleteTypeByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_TYPES, id)
+	route := fmt.Sprintf("%s/%d", APITypes, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

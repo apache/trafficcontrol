@@ -21,13 +21,15 @@ package client
 */
 
 const (
+	// API_ABOUT is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ABOUT = apiBase + "/about"
+
+	APIAbout = "/about"
 )
 
 // GetAbout gets data about the TO instance.
 func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
-	route := API_ABOUT
 	var data map[string]string
-	reqInf, err := to.get(route, nil, &data)
+	reqInf, err := to.get(APIAbout, nil, &data)
 	return data, reqInf, err
 }

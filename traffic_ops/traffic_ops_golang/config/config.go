@@ -48,6 +48,7 @@ type Config struct {
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
+	ConfigAcmeRenewal      `json:"acme_renewal"`
 	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
 	DB                     ConfigDatabase      `json:"db"`
 	Secrets                []string            `json:"secrets"`
@@ -117,11 +118,10 @@ type ConfigTrafficOpsGolang struct {
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
 }
 
-// RoutingBlacklist contains the list of route IDs that will be handled by TO-Perl, a list of route IDs that are disabled,
+// RoutingBlacklist contains a list of route IDs that are disabled,
 // and whether or not to ignore unknown routes.
 type RoutingBlacklist struct {
 	IgnoreUnknownRoutes bool  `json:"ignore_unknown_routes"`
-	PerlRoutes          []int `json:"perl_routes"`
 	DisabledRoutes      []int `json:"disabled_routes"`
 }
 
@@ -157,6 +157,12 @@ type ConfigLetsEncrypt struct {
 	ConvertSelfSigned         bool   `json:"convert_self_signed"`
 	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
 	Environment               string `json:"environment"`
+}
+
+// ConfigAcmeRenewal continas configuration information for automated ACME renewals.
+type ConfigAcmeRenewal struct {
+	SummaryEmail              string `json:"summary_email"`
+	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
 }
 
 // ConfigAcmeAccount contains all account information for a single ACME provider to be registered with External Account Binding
@@ -445,19 +451,9 @@ func ParseConfig(cfg Config) (Config, error) {
 }
 
 func ValidateRoutingBlacklist(blacklist RoutingBlacklist) error {
-	seenPerlIDs := make(map[int]struct{}, len(blacklist.PerlRoutes))
-	for _, id := range blacklist.PerlRoutes {
-		if _, found := seenPerlIDs[id]; !found {
-			seenPerlIDs[id] = struct{}{}
-		} else {
-			return fmt.Errorf("route ID %d is listed multiple times in perl_routes", id)
-		}
-	}
 	seenDisabledIDs := make(map[int]struct{}, len(blacklist.DisabledRoutes))
 	for _, id := range blacklist.DisabledRoutes {
-		if _, foundInPerl := seenPerlIDs[id]; foundInPerl {
-			return fmt.Errorf("route ID %d cannot be listed in both perl_routes and disabled_routes", id)
-		} else if _, found := seenDisabledIDs[id]; !found {
+		if _, found := seenDisabledIDs[id]; !found {
 			seenDisabledIDs[id] = struct{}{}
 		} else {
 			return fmt.Errorf("route ID %d is listed multiple times in disabled_routes", id)

@@ -1754,7 +1754,7 @@
             	      "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
             	      "name": "trafficserver",
             	      "secure": true,
-            	      "value": "8.0.8-19.77cb23a.el7.x86_64"
+            	      "value": "CHANGEME"
         	      },
                 {
                     "configFile": "remap.config",
@@ -2621,7 +2621,7 @@
             "domainName": "docker_default",
             "guid": null,
             "hostName": "traffic_vault",
-            "httpsPort": 8087,
+            "httpsPort": 8088,
             "iloIpAddress": "",
             "iloIpGateway": "",
             "iloIpNetmask": "",
@@ -2631,7 +2631,7 @@
                 {
                     "ipAddresses": [
                         {
-                            "address": "127.0.0.1/22",
+                            "address": "172.26.0.6/16",
                             "gateway": "127.0.0.1",
                             "serviceAddress": true
                         },

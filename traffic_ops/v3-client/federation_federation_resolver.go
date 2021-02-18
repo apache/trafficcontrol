@@ -21,7 +21,7 @@ import (
 
 // GetFederationFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
 func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
-	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
+	path := fmt.Sprintf("/federations/%d/federation_resolvers", id)
 	resp := tc.FederationFederationResolversResponse{}
 	reqInf, err := to.get(path, nil, &resp)
 	return resp, reqInf, err
@@ -29,7 +29,7 @@ func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFe
 
 // AssignFederationFederationResolver creates the Federation Resolver 'fr'.
 func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
-	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID)
+	path := fmt.Sprintf("/federations/%d/federation_resolvers", fedID)
 	req := tc.AssignFederationResolversRequest{
 		Replace:        replace,
 		FedResolverIDs: resolverIDs,

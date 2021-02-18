@@ -23,8 +23,11 @@ import (
 )
 
 const (
+	// API_DS_REGEXES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
 	API_DS_REGEXES = apiBase + "/deliveryservices/%d/regexes"
+
+	APIDSRegexes = "/deliveryservices/%d/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
@@ -33,7 +36,7 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
-	reqInf, err := to.get(fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), nil, &response)
+	reqInf, err := to.get(fmt.Sprintf(APIDSRegexes, dsID)+mapToQueryParameters(params), nil, &response)
 	return response.Response, reqInf, err
 }
 
@@ -46,13 +49,13 @@ func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, Req
 
 func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
 	var data tc.DeliveryServiceRegexResponse
-	reqInf, err := to.get(API_DELIVERY_SERVICES_REGEXES, header, &data)
+	reqInf, err := to.get(APIDeliveryServicesRegexes, header, &data)
 	return data.Response, reqInf, err
 }
 
 func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	route := fmt.Sprintf(API_DS_REGEXES, dsID)
+	route := fmt.Sprintf(APIDSRegexes, dsID)
 	reqInf, err := to.post(route, regex, nil, &alerts)
 	return alerts, reqInf, err
 }

@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS last_deleted (
 --
 -- Name: on_delete_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
 --
-CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated()
+CREATE OR REPLACE FUNCTION public.on_delete_current_timestamp_last_updated()
     RETURNS trigger
     AS $$
 BEGIN

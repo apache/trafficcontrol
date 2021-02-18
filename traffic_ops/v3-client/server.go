@@ -27,9 +27,16 @@ import (
 )
 
 const (
-	API_SERVERS                         = apiBase + "/servers"
-	API_SERVERS_DETAILS                 = apiBase + "/servers/details"
+	// API_SERVERS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
+	API_SERVERS = apiBase + "/servers"
+	// API_SERVERS_DETAILS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
+	API_SERVERS_DETAILS = apiBase + "/servers/details"
+	// API_SERVER_ASSIGN_DELIVERY_SERVICES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
+
+	APIServers                      = "/servers"
+	APIServersDetails               = "/servers/details"
+	APIServerAssignDeliveryServices = APIServerDeliveryServices + "?replace=%t"
 )
 
 func needAndCanFetch(id *int, name *string) bool {
@@ -118,13 +125,13 @@ func (to *Session) CreateServerWithHdr(server tc.ServerV30, hdr http.Header) (tc
 		server.TypeID = &ty[0].ID
 	}
 
-	reqInf, err := to.post(API_SERVERS, server, hdr, &alerts)
+	reqInf, err := to.post(APIServers, server, hdr, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerV30, header http.Header) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
+	route := fmt.Sprintf("%s/%d", APIServers, id)
 	reqInf, err := to.put(route, server, header, &alerts)
 	return alerts, reqInf, err
 }
@@ -142,7 +149,7 @@ func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf
 // GetServersWithHdr retrieves a list of servers using the given optional query
 // string parameters and HTTP headers.
 func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, ReqInf, error) {
-	route := API_SERVERS
+	route := APIServers
 	if params != nil {
 		route += "?" + params.Encode()
 	}
@@ -199,7 +206,7 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header http.Header) ([]tc.ServerDetailV30, ReqInf, error) {
 	v := url.Values{}
 	v.Add("hostName", hostName)
-	route := API_SERVERS_DETAILS + "?" + v.Encode()
+	route := APIServersDetails + "?" + v.Encode()
 	var data tc.ServersV3DetailResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
@@ -213,7 +220,7 @@ func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetai
 
 // DeleteServerByID DELETEs a Server by ID.
 func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
+	route := fmt.Sprintf("%s/%d", APIServers, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -284,14 +291,14 @@ func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Ale
 // assignments to the server will be replaced.
 func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
-	endpoint := fmt.Sprintf(API_SERVER_ASSIGN_DELIVERY_SERVICES, server, replace)
+	endpoint := fmt.Sprintf(APIServerAssignDeliveryServices, server, replace)
 	var alerts tc.Alerts
 	reqInf, err := to.post(endpoint, dsIDs, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 func (to *Session) GetServerIDDeliveryServicesWithHdr(server int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
-	endpoint := fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, server)
+	endpoint := fmt.Sprintf(APIServerDeliveryServices, server)
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := to.get(endpoint, header, &data)
 	return data.Response, reqInf, err
@@ -305,7 +312,7 @@ func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryService
 }
 
 func (to *Session) GetServerUpdateStatusWithHdr(hostName string, header http.Header) (tc.ServerUpdateStatus, ReqInf, error) {
-	path := API_SERVERS + `/` + hostName + `/update_status`
+	path := APIServers + `/` + hostName + `/update_status`
 	data := []tc.ServerUpdateStatus{}
 	reqInf, err := to.get(path, header, &data)
 	if err != nil {

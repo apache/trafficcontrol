@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal: [#5361](https://github.com/apache/trafficcontrol/issues/5361) - Added the ability to change the name of a topology.
 - Traffic Portal: [#5340](https://github.com/apache/trafficcontrol/issues/5340) - Added the ability to resend a user registration from user screen.
 - Traffic Portal: [#5394](https://github.com/apache/trafficcontrol/issues/5394) - Converts the tenant table to a tenant tree for usability
+- Traffic Portal: [#5317](https://github.com/apache/trafficcontrol/issues/5317) - Clicking IP addresses in the servers table no longer navigates to server details page.
 - Traffic Portal: upgraded delivery service UI tables to use more powerful/performant ag-grid component
 - Traffic Ops: added a feature so that the user can specify `maxRequestHeaderBytes` on a per delivery service basis
 - Traffic Router: log warnings when requests to Traffic Monitor return a 503 status code
@@ -18,8 +19,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added API endpoints for ACME accounts
 - Traffic Ops: Added validation to ensure that the cachegroups of a delivery services' assigned ORG servers are present in the topology
 - Traffic Ops: Added validation to ensure that the `weight` parameter of `parent.config` is a float
+- Traffic Ops Client: New Login function with more options, including falling back to previous minor versions. See traffic_ops/v3-client documentation for details.
 - Added license files to the RPMs
 - Added ACME certificate renewals and ACME account registration using external account binding
+- Added functionality to automatically renew ACME certificates.
 
 ### Fixed
 - [#5288](https://github.com/apache/trafficcontrol/issues/5288) - Fixed the ability to create and update a server with MTU value >= 1280.
@@ -34,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5396](https://github.com/apache/trafficcontrol/issues/5396) - Return the correct error type if user tries to update the root tenant
 - [#5378](https://github.com/apache/trafficcontrol/issues/5378) - Updating a non existent DS should return a 404, instead of a 500
 - Fixed a potential Traffic Router race condition that could cause erroneous 503s for CLIENT_STEERING delivery services when loading new steering changes
+- Fixed a logging bug in Traffic Monitor where it wouldn't log errors in certain cases where a backup file could be used instead. Also, Traffic Monitor now rejects monitoring snapshots that have no delivery services.
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
 - [#5438](https://github.com/apache/trafficcontrol/issues/5438) - Correctly specify nodejs version requirements in traffic_portal.spec
 - Fixed Traffic Router logging unnecessary warnings for IPv6-only caches
@@ -52,12 +56,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5461](https://github.com/apache/trafficcontrol/issues/5461) - Fixed steering endpoint to be ordered consistently
 - [#5395](https://github.com/apache/trafficcontrol/issues/5395) - Added validation to prevent changing the Type any Cache Group that is in use by a Topology
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
+- Fix for public schema in 2020062923101648_add_deleted_tables.sql
+- Fixed and issue with 2020082700000000_server_id_primary_key.sql trying to create multiple primary keys when there are multiple schemas.
+- Moved move_lets_encrypt_to_acme.sql, add_max_request_header_size_delivery_service.sql, and server_interface_ip_address_cascade.sql past last migration in 5.0.0
 
 ### Changed
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
+
+### Removed
+- The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
 
 ## [5.0.0] - 2020-10-20
 ### Added

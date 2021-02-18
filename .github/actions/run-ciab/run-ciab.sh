@@ -28,12 +28,10 @@ store_ciab_logs() {
 
 cd infrastructure/cdn-in-a-box;
 logged_services='trafficrouter readiness';
-other_services='dns edge enroller mid-01 mid-02 origin trafficmonitor trafficops trafficops-perl trafficstats trafficvault';
+other_services='dns edge enroller mid-01 mid-02 origin trafficmonitor trafficops trafficstats trafficvault';
 docker_compose='docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml';
 $docker_compose up -d $logged_services $other_services;
 $docker_compose logs -f $logged_services &
-# Copy built Perl modules for caching
-docker cp "$(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local" "${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box/traffic_ops/perl-cache/centos-${RHEL_VERSION%%.*}" &
 
 echo 'Waiting for the readiness container to exit...';
 if ! timeout 12m $docker_compose logs -f readiness >/dev/null; then

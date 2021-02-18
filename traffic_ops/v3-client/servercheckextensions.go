@@ -18,18 +18,21 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// API_TO_EXTENSION is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_TO_EXTENSION = apiBase + "/servercheck/extensions"
+
+const APITOExtension = "/servercheck/extensions"
 
 // CreateServerCheckExtension creates a servercheck extension.
 func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_TO_EXTENSION, ServerCheckExtension, nil, &alerts)
+	reqInf, err := to.post(APITOExtension, ServerCheckExtension, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteServerCheckExtension deletes a servercheck extension.
 func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
+	URI := fmt.Sprintf("%s/%d", APITOExtension, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(URI, nil, &alerts)
 	return alerts, reqInf, err
@@ -38,6 +41,6 @@ func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error)
 // GetServerCheckExtensions gets all servercheck extensions.
 func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
 	var toExtResp tc.ServerCheckExtensionResponse
-	reqInf, err := to.get(API_TO_EXTENSION, nil, &toExtResp)
+	reqInf, err := to.get(APITOExtension, nil, &toExtResp)
 	return toExtResp, reqInf, err
 }

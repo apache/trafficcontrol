@@ -18,9 +18,9 @@ DECLARE r record;
 BEGIN
   FOR r IN (SELECT indexname FROM pg_indexes WHERE tablename = 'server' AND indexname LIKE '%primary%')
   LOOP
-    EXECUTE 'ALTER TABLE server DROP CONSTRAINT '|| quote_ident(r.indexname) || ';';
-    EXECUTE 'ALTER TABLE ONLY server ADD CONSTRAINT '|| quote_ident(r.indexname) || ' PRIMARY KEY (id);';
+    EXECUTE 'ALTER TABLE server DROP CONSTRAINT IF EXISTS '|| quote_ident(r.indexname) || ';';
   END LOOP;
+  EXECUTE 'ALTER TABLE ONLY server ADD CONSTRAINT '|| quote_ident(r.indexname) || ' PRIMARY KEY (id);';
 END
 $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
@@ -33,9 +33,9 @@ DECLARE r record;
 BEGIN
   FOR r IN (SELECT indexname FROM pg_indexes WHERE tablename = 'server' AND indexname LIKE '%primary%')
   LOOP
-    EXECUTE 'ALTER TABLE server DROP CONSTRAINT '|| quote_ident(r.indexname) || ';';
-    EXECUTE 'ALTER TABLE ONLY server ADD CONSTRAINT '|| quote_ident(r.indexname) || ' PRIMARY KEY (id, cachegroup, type, status, profile);';
+    EXECUTE 'ALTER TABLE server DROP CONSTRAINT IF EXISTS '|| quote_ident(r.indexname) || ';';
   END LOOP;
+  EXECUTE 'ALTER TABLE ONLY server ADD CONSTRAINT '|| quote_ident(r.indexname) || ' PRIMARY KEY (id, cachegroup, type, status, profile);';
 END
 $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
