@@ -239,9 +239,20 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 
 func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
 	extensions := make(map[string]string)
-	api.DefaultSort(inf, "id")
-	serverID := inf.IntParams["id"]
-	fmt.Println(serverID)
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"servercheck.id", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"servercheck.server", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	fmt.Println("where", where, "order", orderBy, "page", pagination, "qval", queryValues, "err", errs)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	query := serverChecksQuery + where + orderBy + pagination
+	fmt.Println(query)
 
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
@@ -258,22 +269,25 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		extensions[shortName] = checkName
 	}
 
-	colRows, err := inf.Tx.Queryx(serverChecksQuery, serverID)
+	colRows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("Querying server checks columns: %v", err)
+		sysErr := fmt.Errorf("querying serverchecks columns: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
 	}
+	defer colRows.Close()
 
 	columns := make(map[int]tc.ServerCheckColumns)
+	fmt.Println("len", *colRows.Rows)
 	for colRows.Next() {
 		var cols tc.ServerCheckColumns
 		if err = colRows.StructScan(&cols); err != nil {
 			sysErr := fmt.Errorf("scanning server checks columns: %v", err)
 			return nil, nil, sysErr, http.StatusInternalServerError
 		}
-
+		fmt.Println(cols.Server, cols.ID)
 		columns[cols.Server] = cols
 	}
+	fmt.Println("col", columns)
 
 	serverRows, err := tx.Query(serverInfoQuery)
 	if err != nil {
@@ -288,16 +302,19 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 			sysErr := fmt.Errorf("scanning server info for checks: %v", err)
 			return nil, nil, sysErr, http.StatusInternalServerError
 		}
-
+		fmt.Println("Here?")
 		serverCheckCols, ok := columns[serverInfo.ID]
 		if ok {
+			fmt.Println("in ok?")
 			serverInfo.Checks = make(map[string]*int)
 		} else {
+			fmt.Println("in else")
 			data = append(data, serverInfo)
 			continue
 		}
-
+		fmt.Println(extensions)
 		for colName, checkName := range extensions {
+			fmt.Println(colName, checkName)
 			switch colName {
 			case "aa":
 				serverInfo.Checks[checkName] = serverCheckCols.AA

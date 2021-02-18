@@ -313,7 +313,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{4, 0}, http.MethodGet, `deliveryservices/{id}/capacity/?$`, deliveryservice.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 42314091103, noPerlBypass},
 		//Serverchecks
 		{api.Version{4, 0}, http.MethodGet, `servercheck/?$`, servercheck.ReadServerCheck, auth.PrivLevelReadOnly, Authenticated, nil, 47961129223, noPerlBypass},
-		{api.Version{4, 0}, http.MethodGet, `servercheck/{id}?$`, servercheck.ReadServerCheck, auth.PrivLevelReadOnly, Authenticated, nil, 47562928103, noPerlBypass},
 		{api.Version{4, 0}, http.MethodPost, `servercheck/?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 47642815683, noPerlBypass},
 
 		// Servercheck Extensions
