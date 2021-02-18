@@ -54,7 +54,7 @@ func CreateNotification(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN create notification: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+inf.Params["name"]+", ACTION: CDN notification created, Notification: " +reqObj.Notification, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+inf.Params["name"]+", ACTION: CDN notification created, Notification: "+reqObj.Notification, inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "CDN notification was created", tc.CDNNotificationResponse{Username: inf.User.UserName, Notification: reqObj.Notification})
 }
 
