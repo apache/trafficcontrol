@@ -19,10 +19,9 @@ set -o errexit -o nounset
 
 for arg in "$@"; do
 	case $arg in
-		-h*) action=bypass
-			;;
-		-defaults*) action=bypass
-			;;
+		-h*) action=bypass;;
+		-defaults*) action=bypass;;
+		-n*) action=bypass;;
 	esac
 done
 
