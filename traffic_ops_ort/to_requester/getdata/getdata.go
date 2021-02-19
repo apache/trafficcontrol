@@ -33,8 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/to_requester/config"
 )
 
@@ -97,11 +96,7 @@ func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
 // WriteUpdateStatus writes the Traffic Ops server update status to output.
 // Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
 func WriteServerUpdateStatus(cfg config.TCCfg, output io.Writer) error {
-	status, _, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
-	if err == nil && unsupported {
-		log.Warnln("ORT newer than Traffic Ops, falling back to previous API Delivery Services!")
-		status, _, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
-	}
+	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	if err != nil {
 		return errors.New("getting server update status: " + err.Error())
 	}
@@ -191,12 +186,9 @@ type ChkConfigEntry struct {
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
 func SetUpdateStatus(cfg config.TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
-	reqInf, err := cfg.TOClientNew.C.SetUpdateServerStatuses(string(serverName), &queue, &revalPending)
-	if err != nil && toreqnew.IsUnsupportedErr(err) {
-		err = setUpdateStatusLegacy(cfg, serverName, queue, revalPending)
-	}
+	reqInf, err := cfg.TOClient.C.SetUpdateServerStatuses(string(serverName), &queue, &revalPending)
 	if err != nil {
-		return errors.New("setting update statuses (Traffic Ops '" + toreq.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
+		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
 	return nil
 }

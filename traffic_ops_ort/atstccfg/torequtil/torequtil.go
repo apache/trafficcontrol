@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // GetRetry attempts to get the given object, retrying with exponential backoff up to cfg.NumRetries.
@@ -87,4 +88,28 @@ func CookiesToString(cookies []*http.Cookie) string {
 		strs = append(strs, cookie.String())
 	}
 	return strings.Join(strs, "; ")
+}
+
+func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
+	// TODO move somewhere generic
+	toToolName := ""
+	toURL := ""
+	for _, param := range globalParams {
+		if param.Name == "tm.toolname" {
+			toToolName = param.Value
+		} else if param.Name == "tm.url" {
+			toURL = param.Value
+		}
+		if toToolName != "" && toURL != "" {
+			break
+		}
+	}
+	// TODO error here? Perl doesn't.
+	if toToolName == "" {
+		log.Warnln("Global Parameter tm.toolname not found, config may not be constructed properly!")
+	}
+	if toURL == "" {
+		log.Warnln("Global Parameter tm.url not found, config may not be constructed properly!")
+	}
+	return toToolName, toURL
 }
