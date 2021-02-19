@@ -311,14 +311,13 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 
 	ds = tc.DeliveryServiceV4(*res)
 	if dsV31.CacheURL != nil {
-		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
+		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
 		}
-		rows.Close()
 	}
 
 	if err := EnsureCacheURLParams(tx, *ds.ID, *ds.XMLID, dsV31.CacheURL); err != nil {
@@ -548,10 +547,8 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 4 && version.Minor >= 0:
-			returnable = append(returnable, ds)
 		case version.Major > 3 && version.Minor >= 0:
-			returnable = append(returnable, ds.DowngradeToV3())
+			returnable = append(returnable, ds)
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
 		case version.Major > 2:
@@ -897,14 +894,13 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	}
 	ds = tc.DeliveryServiceV4(*res)
 	if dsV31.CacheURL != nil {
-		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
+		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
 			&ds.ID)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
 		}
-		rows.Close()
 	}
 
 	if err := EnsureCacheURLParams(tx, *ds.ID, *ds.XMLID, dsV31.CacheURL); err != nil {
