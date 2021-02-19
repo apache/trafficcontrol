@@ -240,7 +240,7 @@
 								<require>java &gt;= 1.8</require>
 								<require>tomcat = ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}-${env.BUILD_LOCK}</require>
 								<require>apr &gt;= 1.4.8</require>
-								<require>tomcat-native &gt;= 1.2.16</require>
+								<require>tomcat-native >= 1.2.23</require>
 							</requires>
 							<obsoletes>
 								<obsolete>traffic_router &lt; 3.0.0</obsolete>
