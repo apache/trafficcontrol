@@ -39,7 +39,7 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 * JDK >= 8.0 (OpenJDK suggested, but not required)
 * OpenSSL >= 1.0.2
 * :abbr:`APR (Apache Portable Runtime)` >= 1.4.8-3
-* Tomcat Native >= 1.2.16
+* Tomcat Native >= 1.2.23
 * Not Tomcat - You do not need a Tomcat installation for development. An embedded version is launched for development testing instead.
 
 .. _dev-tr-mac-jdk:
