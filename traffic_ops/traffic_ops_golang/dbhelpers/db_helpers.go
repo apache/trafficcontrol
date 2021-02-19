@@ -854,7 +854,7 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 
 // CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
 // empty with respect to the Delivery Service's CDN.
-func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceNullableV4) (int, error, error) {
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
 	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
 
 	if ds.Topology == nil {

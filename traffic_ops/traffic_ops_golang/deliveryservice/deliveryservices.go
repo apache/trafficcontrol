@@ -56,7 +56,7 @@ const (
 //we need a type alias to define functions on
 type TODeliveryService struct {
 	api.APIInfoImpl
-	tc.DeliveryServiceNullableV4
+	tc.DeliveryServiceV4
 }
 
 // TODeliveryServiceOldDetails is the struct to store the old details while updating a DS.
@@ -69,11 +69,11 @@ type TODeliveryServiceOldDetails struct {
 }
 
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullableV4)
+	return json.Marshal(ds.DeliveryServiceV4)
 }
 
 func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &ds.DeliveryServiceNullableV4)
+	return json.Unmarshal(data, &ds.DeliveryServiceV4)
 }
 
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
@@ -107,7 +107,7 @@ func (ds *TODeliveryService) GetType() string {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceNullableV4)
+	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceV4)
 }
 
 func CreateV12(w http.ResponseWriter, r *http.Request) {
@@ -309,7 +309,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 		return nil, status, userErr, sysErr
 	}
 
-	ds = tc.DeliveryServiceNullableV4(*res)
+	ds = tc.DeliveryServiceV4(*res)
 	if dsV31.CacheURL != nil {
 		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
@@ -334,7 +334,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	user := inf.User
 	tx := inf.Tx.Tx
 	cfg := inf.Config
-	ds := tc.DeliveryServiceNullableV4(dsV40)
+	ds := tc.DeliveryServiceV4(dsV40)
 	if err := Validate(tx, &ds); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -895,7 +895,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	if res == nil {
 		return nil, status, usrErr, sysErr
 	}
-	ds = tc.DeliveryServiceNullableV4(*res)
+	ds = tc.DeliveryServiceV4(*res)
 	if dsV31.CacheURL != nil {
 		rows, err := tx.Query("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			&dsV31.CacheURL,
@@ -917,7 +917,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40) (*tc.DeliveryServiceV40, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	ds := tc.DeliveryServiceNullableV4(*dsV40)
+	ds := tc.DeliveryServiceV4(*dsV40)
 	if err := Validate(tx, &ds); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -1201,7 +1201,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullableV4, error, error, int, *time.Time) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
@@ -1236,7 +1236,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []tc.DeliveryServiceNullableV4{}, nil, nil, http.StatusNotModified, &maxTime
+			return []tc.DeliveryServiceV4{}, nil, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -1308,7 +1308,7 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
-func Validate(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
+func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 	sanitize(ds)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -1343,7 +1343,7 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
 	return util.JoinErrs(errs)
 }
 
-func validateTopologyFields(ds *tc.DeliveryServiceNullableV4) error {
+func validateTopologyFields(ds *tc.DeliveryServiceV4) error {
 	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
 		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
 	}
@@ -1382,7 +1382,7 @@ func validateOrgServerFQDN(orgServerFQDN string) bool {
 	return true
 }
 
-func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
+func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 	// Validate the TypeName related fields below
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
@@ -1399,7 +1399,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
 	errs := validation.Errors{
 		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*tc.DeliveryServiceNullableV4)
+				ds := dsi.(*tc.DeliveryServiceV4)
 				if len(ds.ConsistentHashQueryParams) == 0 || tc.DSType(typeName).IsHTTP() {
 					return nil
 				}
@@ -1425,7 +1425,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
 			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
 		"rangeSliceBlockSize": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*tc.DeliveryServiceNullableV4)
+				ds := dsi.(*tc.DeliveryServiceV4)
 				if ds.RangeRequestHandling != nil {
 					if *ds.RangeRequestHandling == 3 {
 						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
@@ -1448,7 +1448,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"topology": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*tc.DeliveryServiceNullableV4)
+				ds := dsi.(*tc.DeliveryServiceV4)
 				if ds.Topology != nil && tc.DSType(typeName).IsSteering() {
 					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
 				}
@@ -1456,7 +1456,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) error {
 			})),
 		"maxRequestHeaderBytes": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*tc.DeliveryServiceNullableV4)
+				ds := dsi.(*tc.DeliveryServiceV4)
 				if ds.MaxRequestHeaderBytes == nil {
 					return errors.New("maxRequestHeaderBytes empty, must be a valid positive value")
 				}
@@ -1514,7 +1514,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	return tc.DSTypeFromString(name), nil
 }
 
-func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV4) error {
+func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceV4) error {
 	count := 0
 	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
 	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
@@ -1554,7 +1554,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV4) error {
+func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceV4) error {
 	if ds.OrgServerFQDN == nil {
 		return nil
 	}
@@ -1586,21 +1586,21 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullableV4, error, error, int) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceV4, error, error, int) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
-	dses := []tc.DeliveryServiceNullableV4{}
+	dses := []tc.DeliveryServiceV4{}
 	dsCDNDomains := map[string]string{}
 
 	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceNullableV4{}
+		ds := tc.DeliveryServiceV4{}
 		cdnDomain := ""
 		err := rows.Scan(&ds.Active,
 			&ds.AnonymousBlockingEnabled,
@@ -1983,7 +1983,7 @@ func GetDSSelectQuery() string {
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
-func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) (*int, error) {
+func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV4) (*int, error) {
 	if ds.ID == nil && ds.XMLID == nil {
 		return nil, errors.New("delivery service has no ID or XMLID")
 	}
@@ -1995,7 +1995,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV4) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullableV4) (bool, error) {
+func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceV4) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 
@@ -2079,7 +2079,7 @@ func setNilIfEmpty(ptrs ...**string) {
 	}
 }
 
-func sanitize(ds *tc.DeliveryServiceNullableV4) {
+func sanitize(ds *tc.DeliveryServiceV4) {
 	if ds.GeoLimitCountries != nil {
 		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}

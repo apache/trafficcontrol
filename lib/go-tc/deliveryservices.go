@@ -52,7 +52,7 @@ type DeliveryServicesResponseV30 struct {
 // DeliveryServicesResponseV4 is the type of a response from the
 // /api/4.0/deliveryservices Traffic Ops endpoint.
 type DeliveryServicesResponseV4 struct {
-	Response []DeliveryServiceNullableV4 `json:"response"`
+	Response []DeliveryServiceV4 `json:"response"`
 	Alerts
 }
 
@@ -212,8 +212,8 @@ type DeliveryServiceFieldsV30 struct {
 // DeliveryServiceV32 = DeliveryServiceV31 + the new fields
 type DeliveryServiceNullableV30 DeliveryServiceV31
 
-// DeliveryServiceNullableV4 is the aliased structure that we should be using for all api 4.x delivery structure operations
-type DeliveryServiceNullableV4 DeliveryServiceV40
+// DeliveryServiceV4 is the aliased structure that we should be using for all api 4.x delivery structure operations
+type DeliveryServiceV4 DeliveryServiceV40
 
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
@@ -331,7 +331,7 @@ type DeliveryServiceRemovedFieldsV11 struct {
 }
 
 // DowngradeToV3 converts the 4.x DS to a 3.x DS
-func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 {
+func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	return DeliveryServiceNullableV30{
 		DeliveryServiceV30: DeliveryServiceV30{
 			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
@@ -355,8 +355,8 @@ func (ds *DeliveryServiceNullableV4) DowngradeToV3() DeliveryServiceNullableV30 
 }
 
 // UpgradeToV4 converts the 3.x DS to a 4.x DS
-func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceNullableV4 {
-	return DeliveryServiceNullableV4{
+func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
+	return DeliveryServiceV4{
 		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
 		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
 		DeliveryServiceFieldsV15:         ds.DeliveryServiceFieldsV15,
@@ -397,13 +397,13 @@ func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
 
 // Value implements the driver.Valuer interface --
 // marshals struct to json to pass back as a json.RawMessage.
-func (ds *DeliveryServiceNullableV4) Value() (driver.Value, error) {
+func (ds *DeliveryServiceV4) Value() (driver.Value, error) {
 	return jsonValue(ds)
 }
 
 // Scan implements the sql.Scanner interface --
-// expects json.RawMessage and unmarshals to a DeliveryServiceNullableV4 struct.
-func (ds *DeliveryServiceNullableV4) Scan(src interface{}) error {
+// expects json.RawMessage and unmarshals to a DeliveryServiceV4 struct.
+func (ds *DeliveryServiceV4) Scan(src interface{}) error {
 	return jsonScan(src, ds)
 }
 

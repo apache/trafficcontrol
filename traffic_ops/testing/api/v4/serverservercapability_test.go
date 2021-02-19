@@ -234,7 +234,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot GET delivery services: %v", err)
 	}
-	dsIDtoDS := make(map[int]tc.DeliveryServiceNullableV4, len(dses))
+	dsIDtoDS := make(map[int]tc.DeliveryServiceV4, len(dses))
 	for _, ds := range dses {
 		dsIDtoDS[*ds.ID] = ds
 	}

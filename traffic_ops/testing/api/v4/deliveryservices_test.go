@@ -142,7 +142,7 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
-func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV4, oldCDNID int, newCDNID int) {
+func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int) {
 	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
 	if err != nil {
 		t.Error(err)
@@ -175,7 +175,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := tc.DeliveryServiceNullableV4{}
+	customDS := tc.DeliveryServiceV4{}
 	customDS.Active = util.BoolPtr(true)
 	customDS.CDNID = util.IntPtr(oldCdn.ID)
 	customDS.DSCP = util.IntPtr(0)
@@ -366,7 +366,7 @@ func GetTestDeliveryServices(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
-	actualDSMap := make(map[string]tc.DeliveryServiceNullableV4, len(actualDSes))
+	actualDSMap := make(map[string]tc.DeliveryServiceV4, len(actualDSes))
 	for _, ds := range actualDSes {
 		actualDSMap[*ds.XMLID] = ds
 	}
@@ -417,7 +417,7 @@ func GetTestDeliveryServicesCapacity(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
-	actualDSMap := map[string]tc.DeliveryServiceNullableV4{}
+	actualDSMap := map[string]tc.DeliveryServiceV4{}
 	for _, ds := range actualDSes {
 		actualDSMap[*ds.XMLID] = ds
 		capDS, _, err := TOSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(*ds.ID), nil)
@@ -436,7 +436,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
 
-	remoteDS := tc.DeliveryServiceNullableV4{}
+	remoteDS := tc.DeliveryServiceV4{}
 	found := false
 	for _, ds := range dses {
 		if *ds.XMLID == *firstDS.XMLID {
@@ -491,7 +491,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceNullableV4
+	var remoteDS tc.DeliveryServiceV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -548,7 +548,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 
 	found := false
-	var nonCSDS *tc.DeliveryServiceNullableV4
+	var nonCSDS *tc.DeliveryServiceV4
 	for _, ds := range dses {
 		if ds.Type == nil || ds.ID == nil {
 			continue
@@ -560,7 +560,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
 			}
 		} else if nonCSDS == nil {
-			nonCSDS = new(tc.DeliveryServiceNullableV4)
+			nonCSDS = new(tc.DeliveryServiceV4)
 			*nonCSDS = ds
 		}
 	}
@@ -777,7 +777,7 @@ func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceNullableV4
+	var remoteDS tc.DeliveryServiceV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -820,7 +820,7 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
 
-	var remoteDS tc.DeliveryServiceNullableV4
+	var remoteDS tc.DeliveryServiceV4
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.ID == nil {
@@ -993,7 +993,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			t.Errorf("testing Delivery Service has no XMLID")
 			continue
 		}
-		var ds tc.DeliveryServiceNullableV4
+		var ds tc.DeliveryServiceV4
 		found := false
 		for _, realDS := range dses {
 			if realDS.XMLID != nil && *realDS.XMLID == *testDS.XMLID {
@@ -1052,7 +1052,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	var ds tc.DeliveryServiceNullableV4
+	var ds tc.DeliveryServiceV4
 	found := false
 	for _, d := range dses {
 		if d.XMLID != nil && *d.XMLID == *testDS.XMLID {
@@ -1124,7 +1124,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
-	var tenant3DS tc.DeliveryServiceNullableV4
+	var tenant3DS tc.DeliveryServiceV4
 	foundTenant3DS := false
 	for _, d := range dses {
 		if *d.XMLID == "ds3" {

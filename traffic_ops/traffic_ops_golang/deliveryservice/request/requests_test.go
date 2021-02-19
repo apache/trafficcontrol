@@ -58,7 +58,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	b := true
 	u := "UPDATE"
 	st := tc.RequestStatusSubmitted
-	ds := tc.DeliveryServiceNullableV4{}
+	ds := tc.DeliveryServiceV4{}
 	ds.XMLID = &s
 	ds.CDNID = &i
 	ds.LogsEnabled = &b

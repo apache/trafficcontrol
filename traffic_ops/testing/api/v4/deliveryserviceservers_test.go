@@ -585,7 +585,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV4, tc.ServerV40) {
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV40) {
 	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
@@ -612,5 +612,5 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullableV4, tc.Ser
 	}
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
-	return tc.DeliveryServiceNullableV4{}, tc.ServerV40{}
+	return tc.DeliveryServiceV4{}, tc.ServerV40{}
 }
