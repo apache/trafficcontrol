@@ -44,7 +44,7 @@ func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqIn
 	return response.Response, response.Alerts, reqInf, err
 }
 
-// GetServerCheckNameIDWithHdr fetches the Delivery Service with the given ID.
+// GetServerCheckWithParamHdr fetches the Delivery Service with the given ID.
 func (to *Session) GetServerCheckWithParamHdr(params url.Values, header http.Header) (*tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
 	data := struct {
 		tc.Alerts
