@@ -192,7 +192,7 @@ func UpdateTestTopologies(t *testing.T) {
 	}
 	params := url.Values{}
 	params.Add("topology", "top-used-by-cdn1-and-cdn2")
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery services: %v", err)
 	}
@@ -247,7 +247,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	params.Set("xmlId", "ds-top")
 
 	//Get the correct DS
-	remoteDS, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	remoteDS, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}

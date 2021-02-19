@@ -23,7 +23,7 @@ func TestFederationUsers(t *testing.T) {
 	if Config.NoPerl {
 		t.Skip("No Perl instance for proxying")
 	}
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, UsersDeliveryServices, CDNFederations, FederationUsers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, CDNFederations, FederationUsers}, func() {
 		CreateTestInvalidFederationUsers(t)
 		GetTestInvalidFederationIDUsers(t)
 	})

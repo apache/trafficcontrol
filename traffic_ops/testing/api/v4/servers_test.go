@@ -508,7 +508,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds1"}})
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, url.Values{"xmlId": []string{"ds1"}})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -542,7 +542,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
-	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	dses, _, err = TOSession.GetDeliveryServicesV4(nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -578,7 +578,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
-	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	ds, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDsXmlId, err)
 	}
@@ -587,7 +587,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDsXmlId, err)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
-	ds, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(*ds.ID, ds, nil)
+	ds, _, err = TOSession.UpdateDeliveryServiceV4(*ds.ID, ds, nil)
 	if err != nil {
 		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDsXmlId, err)
 	}
@@ -647,7 +647,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	const topDsWithNoMids = "ds-based-top-with-no-mids"
-	dses, _, err = TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{topDsWithNoMids}})
+	dses, _, err = TOSession.GetDeliveryServicesV4(nil, url.Values{"xmlId": []string{topDsWithNoMids}})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}

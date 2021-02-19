@@ -89,7 +89,6 @@ func MakeRegexRemapDotConfig(
 type cdnDS struct {
 	OrgServerFQDN string
 	QStringIgnore int
-	CacheURL      string
 	RegexRemap    string
 }
 
@@ -109,9 +108,6 @@ func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceNa
 		sds := cdnDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
 		if ds.RegexRemap != nil {
 			sds.RegexRemap = *ds.RegexRemap
-		}
-		if ds.CacheURL != nil {
-			sds.CacheURL = *ds.CacheURL
 		}
 		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
 	}

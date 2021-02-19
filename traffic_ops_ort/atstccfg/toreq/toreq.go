@@ -190,7 +190,7 @@ func serverToLatest(sv *tc.ServerV1) (*atscfg.Server, error) {
 		IPIsService:       util.BoolPtr(true),
 		IP6IsService:      util.BoolPtr(svn.IP6Address != nil && *svn.IP6Address != ""),
 	}
-	svLatest, err := sv2.Upgrade()
+	svLatest, err := sv2.UpgradeToV40()
 	if err != nil {
 		return nil, errors.New("upgrading: " + err.Error())
 	}

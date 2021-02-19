@@ -708,34 +708,6 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.cacheurl), 'has-feedback': hasError(cacheConfig.cacheurl)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
-                            <div class="helptext">
-                                Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
-                                <br>
-                                <aside>
-                                    <h6>Note</h6>
-                                    <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
-                                    <br>
-                                    <br>
-                                    See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
-                                </aside>
-                                <aside class="warning">
-                                    <h6>Warning</h6>
-                                    <p>This field is deprecated, and is subject to removal in upcoming releases. It is recommended that this be left blank.</p>
-                                </aside>
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" maxlength="1024">
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.cacheurl, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.cacheurl}}</pre>
-                            </aside>
-                        </div>
-                    </div>
                 </ng-form>
             </fieldset>
             <fieldset>
