@@ -37,6 +37,7 @@ type topologyTestCase struct {
 
 func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+		GetTestTopologies(t)
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
 		UpdateValidateTopologyORGServerCacheGroup(t)
@@ -59,6 +60,19 @@ func CreateTestTopologies(t *testing.T) {
 			t.Fatalf("Topology in response should be the same as the one POSTed. expected: %v\nactual: %v", topology, postResponse.Response)
 		}
 		t.Log("Response: ", postResponse)
+	}
+}
+
+func GetTestTopologies(t *testing.T) {
+	if len(testData.Topologies) < 1 {
+		t.Fatalf("test data has no topologies, can't test")
+	}
+	topos, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("expected GET error to be nil, actual: %v", err)
+	}
+	if len(topos) != len(testData.Topologies) {
+		t.Errorf("expected topologies GET to return %v topologies, actual %v", len(testData.Topologies), len(topos))
 	}
 }
 
