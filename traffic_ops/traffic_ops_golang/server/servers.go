@@ -1243,24 +1243,44 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		"ds_id":          dsID,
 	}
 
+	midIDs := []int{}
 	query := ""
 	if includeCapabilities {
 		// Query to select the associated mids for this DS
 		q := selectIDQuery + midWhereClause
+		rows, err := tx.NamedQuery(q, filters)
+		if err != nil {
+			return nil, err, nil, http.StatusBadRequest
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var midID int
+			if err := rows.Scan(&midID); err != nil {
+				log.Errorf("could not scan mid server id: %s\n", err)
+				return nil, nil, err, http.StatusInternalServerError
+			}
+			midIDs = append(midIDs, midID)
+		}
+		filters["mid_ids"] = pq.Array(midIDs)
+
 		// Query to select only those mids that match the required capabilities of the DS
 		query = selectQuery + midWhereClause + `
-		AND (
-		SELECT ARRAY_AGG(ssc.server_capability) 
-		FROM server_server_capability ssc 
-		WHERE ssc."server" = ANY(
-		` + q + `)) 
-		@> (
+		AND s.id IN (
+		WITH capabilities AS (
+		SELECT ARRAY_AGG(ssc.server_capability), server
+		FROM server_server_capability ssc
+		WHERE ssc.server = ANY(:mid_ids)
+		GROUP BY server)
+		SELECT server
+		FROM capabilities WHERE
+		capabilities.array_agg
+		@>
+		(
 		SELECT ARRAY_AGG(drc.required_capability) 
 		FROM deliveryservices_required_capability drc 
-		WHERE drc.deliveryservice_id = :ds_id
-		)
-	`
-
+		WHERE drc.deliveryservice_id=:ds_id)
+		)`
 	} else {
 		// TODO: include secondary parent?
 		query = selectQuery + midWhereClause
