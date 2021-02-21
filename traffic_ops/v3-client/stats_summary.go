@@ -16,7 +16,8 @@ import (
 	"fmt"
 	"net/url"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 )
 
 // GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
-func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, ReqInf, error) {
+func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryResponse{}
 
 	param := url.Values{}
@@ -50,7 +51,7 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 }
 
 // GetSummaryStatsLastUpdated time of the last summary for a given stat
-func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, ReqInf, error) {
+func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryLastUpdatedResponse{}
 
 	param := url.Values{}
@@ -64,7 +65,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 }
 
 // CreateSummaryStats creates a stats summary
-func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIStatsSummary, statsSummary, nil, &alerts)
 	return alerts, reqInf, err

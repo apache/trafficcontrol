@@ -23,9 +23,10 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, ReqInf, error) {
+func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("%s/%s/queue_update", APITopologies, topologyName)
 	var resp tc.TopologiesQueueUpdateResponse
 	reqInf, err := to.post(path, req, nil, &resp)

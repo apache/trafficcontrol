@@ -21,39 +21,40 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	if st.DeliveryServiceID == nil {
-		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, errors.New("missing delivery service id")
+		return tc.Alerts{}, toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}, errors.New("missing delivery service id")
 	}
 	alerts := tc.Alerts{}
-	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, *st.DeliveryServiceID)
+	route := fmt.Sprintf("/steering/%d/targets", *st.DeliveryServiceID)
 	reqInf, err := to.post(route, st, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, header http.Header) (tc.Alerts, ReqInf, error) {
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+func (to *Session) UpdateSteeringTargetWithHdr(st tc.SteeringTargetNullable, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if st.DeliveryServiceID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing delivery service id")
 	}
 	if st.TargetID == nil {
 		return tc.Alerts{}, reqInf, errors.New("missing target id")
 	}
-	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, *st.DeliveryServiceID, *st.TargetID)
+	route := fmt.Sprintf("/steering/%d/targets/%d", *st.DeliveryServiceID, *st.TargetID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.put(route, st, header, &alerts)
 	return alerts, reqInf, err
 }
 
 // Deprecated: UpdateSteeringTarget will be removed in 6.0. Use UpdateSteeringTargetWithHdr.
-func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	return to.UpdateSteeringTargetWithHdr(st, nil)
 }
 
-func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/steering/%d/targets", apiBase, dsID)
+func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("/steering/%d/targets", dsID)
 	data := struct {
 		Response []tc.SteeringTargetNullable `json:"response"`
 	}{}
@@ -61,8 +62,8 @@ func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, Re
 	return data.Response, reqInf, err
 }
 
-func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/steering/%d/targets/%d", apiBase, dsID, targetID)
+func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("/steering/%d/targets/%d", dsID, targetID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

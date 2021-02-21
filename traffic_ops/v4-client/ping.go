@@ -15,13 +15,17 @@
 
 package client
 
+import (
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
+
 const (
-	API_PING = apiBase + "/ping"
+	APIPing = "/ping"
 )
 
 // Ping returns a static json object to show that traffic_ops is responsive
-func (to *Session) Ping() (map[string]string, ReqInf, error) {
+func (to *Session) Ping() (map[string]string, toclientlib.ReqInf, error) {
 	var data map[string]string
-	reqInf, err := to.get(API_PING, nil, &data)
+	reqInf, err := to.get(APIPing, nil, &data)
 	return data, reqInf, err
 }
