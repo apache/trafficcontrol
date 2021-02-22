@@ -369,7 +369,7 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 		return
 	use_ldap = use_ldap_question[0].default if automatic else use_ldap_question[0].ask()
 
-	if use_ldap.casefold() not in {'y', 'yes'}:
+	if use_ldap.lower() not in {'y', 'yes'}:
 		logging.info("Not setting up ldap")
 		return
 
@@ -451,7 +451,7 @@ def generate_openssl_conf(questions, fname, auto): # type: (list[Question], str,
 	if "genCert" not in cfg_map:
 		raise ValueError("missing 'genCert' key")
 
-	gen_cert = cfg_map["genCert"].casefold() in {"y", "yes"}
+	gen_cert = cfg_map["genCert"].lower() in {"y", "yes"}
 
 	return SSLConfig(gen_cert, cfg_map)
 
@@ -565,7 +565,7 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
 	database using `wget`.
 	"""
-	if maxmind_answer.casefold() not in {'y', 'yes'}:
+	if maxmind_answer.lower() not in {'y', 'yes'}:
 		logging.info("Not downloading Maxmind data")
 		return
 
@@ -626,9 +626,9 @@ def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 		logging.debug("openssl exec failed with code %s; stderr: %s", proc.returncode, proc.stderr)
 		while True:
 			ans = input("{description} failed. Try again (y/n) [y]: ".format(description=description))
-			if not ans or ans.casefold().startswith('n'):
+			if not ans or ans.lower().startswith('n'):
 				return False
-			if ans.casefold().startswith('y'):
+			if ans.lower().startswith('y'):
 				break
 
 def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str, str, str) -> int
@@ -806,7 +806,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	if "genSecret" not in cdn_conf:
 		raise ValueError("missing 'genSecret' config_var")
 
-	gen_secret = cdn_conf["genSecret"].casefold() in {'y', 'yes'}
+	gen_secret = cdn_conf["genSecret"].lower() in {'y', 'yes'}
 
 	try:
 		num_secrets = int(cdn_conf["keepSecrets"])
