@@ -87,6 +87,9 @@ POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 # Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
 # OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
+# Accepting a string for json.dump()'s `indent` keyword argument is a Python 3 feature
+indent = "\t" if sys.version_info.major >= 3 else 4 # type: int
+
 class Question(object):
 	"""
 	Question represents a single question to be asked of the user, to determine a configuration
@@ -318,7 +321,7 @@ def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, boo
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump(db_conf, conf_file, indent="\t")
+		json.dump(db_conf, conf_file, indent=indent)
 		print(file=conf_file)
 
 	logging.info("Database configuration has been saved")
@@ -391,7 +394,7 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 	path = os.path.join(root, fname.lstrip('/'))
 	os.makedirs(os.path.dirname(path), exist_ok=True)
 	with open(path, 'w+') as conf_file:
-		json.dump(ldap_conf, conf_file, indent="\t")
+		json.dump(ldap_conf, conf_file, indent=indent)
 		print(file=conf_file)
 
 def hash_pass(passwd): # type: (str) -> str
@@ -425,7 +428,7 @@ def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str,
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent="\t")
+		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent=indent)
 		print(file=conf_file)
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
@@ -463,7 +466,7 @@ def generate_param_conf(qstns, fname, auto, root): # type: (list[Question], str,
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump(conf, conf_file, indent="\t")
+		json.dump(conf, conf_file, indent=indent)
 		print(file=conf_file)
 
 	return conf
@@ -888,7 +891,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
 
 	with open(path, "w+") as conf_file:
-		json.dump(existing_conf, conf_file, indent="\t")
+		json.dump(existing_conf, conf_file, indent=indent)
 		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
 
@@ -1095,12 +1098,12 @@ no_database, # type: bool
 			if defaults:
 				try:
 					with open(defaults, "w") as dump_file:
-						json.dump(DEFAULTS, dump_file, indent="\t")
+						json.dump(DEFAULTS, dump_file, indent=indent)
 				except OSError as e:
 					logging.critical("Writing output: %s", e)
 					return 1
 			else:
-				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent="\t")
+				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent=indent)
 				print()
 		except ValueError as e:
 			logging.critical("Converting defaults to JSON: %s", e)
