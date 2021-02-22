@@ -46,7 +46,6 @@ checkEnvironment() {
 	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"  #defined in traffic_router
 	echo "TOMCAT_VERSION: $TOMCAT_VERSION"  #defined in traffic_router
 	echo "BUILD_NUMBER: $BUILD_NUMBER"      #defined in traffic_router
-	echo "BUILD_LOCK: $BUILD_LOCK"          #defined in traffic_router
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
 }
