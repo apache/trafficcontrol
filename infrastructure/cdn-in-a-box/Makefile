@@ -44,7 +44,7 @@ TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' ../../traffic_router/build/
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d= -f2)
 
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
-SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
+SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noarch.rpm
 
 TO_SOURCE := $(wildcard ../../traffic_ops/**/*)
 TO_SOURCE += $(wildcard ../../traffic_ops_db/**/*)
