@@ -35,7 +35,7 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServerCheckWithParamHdr fetches the Delivery Service with the given ID.
+// GetServersChecks fetches the Delivery Service with the given ID.
 func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
 	data := struct {
 		tc.Alerts
