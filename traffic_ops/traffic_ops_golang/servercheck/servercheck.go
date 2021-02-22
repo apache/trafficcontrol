@@ -248,22 +248,21 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-
 	// where clause is different for servercheck and server table. Also, it differs for the query param.
 	var whereSC, whereSI string
-	if where != "" {
+	if len(inf.Params) == 1 {
 		for k, _ := range inf.Params {
-			if k == "id" {
-				whereSC = where
-				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
-			} else {
-				whereSC = ""
+			if k == "name" {
 				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
+				whereSC = ""
+			} else if k == "id" {
+				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
+				whereSC = where
 			}
 		}
 	} else {
+		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
 		whereSC = ""
-		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'"
 	}
 
 	extRows, err := tx.Query(extensionsQuery)

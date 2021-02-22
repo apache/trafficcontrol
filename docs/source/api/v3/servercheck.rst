@@ -42,7 +42,7 @@ Request Structure
 	+-----------+------------------------------------------------------------------------------------+
 
 .. code-block:: http
-	:caption: Request Example
+	:caption: Request Example with ``name`` query param
 
 	GET /api/4.0/servercheck?name=edge HTTP/1.1
 	Host: trafficops.infra.ciab.test
@@ -51,6 +51,8 @@ Request Structure
 	Cookie: mojolicious=...
 
   OR
+.. code-block:: http
+	:caption: Request Example with ``id`` query param
 
   GET /api/4.0/servercheck?id=12 HTTP/1.1
 	Host: trafficops.infra.ciab.test

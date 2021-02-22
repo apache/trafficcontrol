@@ -16,9 +16,10 @@
 package client
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
 	"net/url"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const API_SERVERCHECK = apiBase + "/servercheck"
@@ -34,18 +35,8 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServersChecks fetches check and meta information about servers from /servercheck.
-func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
-	var response struct {
-		tc.Alerts
-		Response []tc.GenericServerCheck `json:"response"`
-	}
-	reqInf, err := to.get(API_SERVERCHECK, nil, &response)
-	return response.Response, response.Alerts, reqInf, err
-}
-
 // GetServerCheckWithParamHdr fetches the Delivery Service with the given ID.
-func (to *Session) GetServerCheckWithParamHdr(params url.Values, header http.Header) (*tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
 	data := struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
@@ -61,5 +52,5 @@ func (to *Session) GetServerCheckWithParamHdr(params url.Values, header http.Hea
 	if len(data.Response) == 0 {
 		return nil, data.Alerts, reqInf, nil
 	}
-	return &data.Response[0], data.Alerts, reqInf, nil
+	return data.Response, data.Alerts, reqInf, nil
 }
