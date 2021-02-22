@@ -22,6 +22,7 @@ package logs
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -52,6 +53,7 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 
 	limit := DefaultLogLimit
 	days := DefaultLogDays
+	var username string
 	if pDays, ok := inf.IntParams["days"]; ok {
 		days = pDays
 		limit = DefaultLogLimitForDays
@@ -59,9 +61,13 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
+	if _, ok := inf.Params["username"]; ok {
+		username = inf.Params["username"]
+	}
+	fmt.Println(days, limit, username)
 
 	setLastSeenCookie(w)
-	logs, err := getLog(inf.Tx.Tx, days, limit)
+	logs, err := getLog(inf.Tx.Tx, days, limit, username)
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -121,11 +127,11 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-func getLog(tx *sql.Tx, days int, limit int) ([]tc.Log, error) {
+func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, error) {
 	rows, err := tx.Query(`
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL
+WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND tm_user.username = $3
 ORDER BY l.last_updated DESC
 LIMIT $2
 `, days, limit)
