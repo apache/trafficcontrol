@@ -50,10 +50,12 @@ import argparse
 import base64
 import errno
 import getpass
+import grp
 import hashlib
 import json
 import logging
 import os
+import pwd
 import random
 import re
 import shutil
@@ -863,7 +865,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 	keypath = os.path.join(root, 'etc/pki/tls/private/localhost.key')
 	shutil.copy("server.key", keypath)
 	os.chmod(keypath, stat.S_IRUSR | stat.S_IWUSR)
-	shutil.chown(keypath, user=ops_user, group=ops_group)
+	os.chown(keypath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	logging.info("The private key has been installed")
 	logging.info("Installing self signed certificate")
@@ -871,14 +873,14 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 	certpath = os.path.join(root, 'etc/pki/tls/certs/localhost.crt')
 	shutil.copy("server.crt", certpath)
 	os.chmod(certpath, stat.S_IRUSR | stat.S_IWUSR)
-	shutil.chown(certpath, user=ops_user, group=ops_group)
+	os.chown(certpath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	logging.info("Saving the self signed csr")
 
 	csrpath = os.path.join(root, 'etc/pki/tls/certs/localhost.csr')
 	shutil.copy("server.csr", csrpath)
 	os.chmod(csrpath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
-	shutil.chown(csrpath, user=ops_user, group=ops_group)
+	os.chown(csrpath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	log_msg = """
         The self signed certificate has now been installed.
