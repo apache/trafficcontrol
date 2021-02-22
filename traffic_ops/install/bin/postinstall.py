@@ -18,6 +18,7 @@
 # with the next release, but 'til then...
 #pylint:disable=inherit-non-class
 from __future__ import print_function
+
 """
 This script is meant as a drop-in replacement for the old _postinstall Perl script.
 
@@ -47,6 +48,7 @@ testing.
 """
 import argparse
 import base64
+import errno
 import getpass
 import hashlib
 import json
@@ -392,7 +394,11 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 		raise ValueError("host in {fname} must be of form 'hostname:port'".format(fname=fname))
 
 	path = os.path.join(root, fname.lstrip('/'))
-	os.makedirs(os.path.dirname(path), exist_ok=True)
+	try:
+		os.makedirs(os.path.dirname(path))
+	except OSError as e:
+		if e.errno == errno.EEXIST:
+			pass
 	with open(path, 'w+') as conf_file:
 		json.dump(ldap_conf, conf_file, indent=indent)
 		print(file=conf_file)
