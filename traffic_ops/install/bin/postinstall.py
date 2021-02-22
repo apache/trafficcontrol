@@ -61,7 +61,9 @@ import stat
 import string
 import subprocess
 import sys
+
 from collections import namedtuple
+from struct import unpack, pack
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
@@ -409,16 +411,145 @@ def hash_pass(passwd): # type: (str) -> str
 	It's hard-coded - like the Perl - to use 64 random bytes for the salt, n=16384,
 	r=8, p=1 and dklen=64.
 	"""
-	salt = os.urandom(64)
-	n = 16384
+	n = 2 ** 14
 	r_val = 8
 	p_val = 1
-	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r_val, p=p_val, dklen=64)
-
+	dklen = 64
+	salt = os.urandom(dklen)
+	hashed = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val, parallelization_factor=p_val, key_length=dklen).derive()
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
 	salt_b64 = base64.standard_b64encode(salt).decode()
 
 	return "SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}".format(n=n, r_val=r_val, p_val=p_val, salt_b64=salt_b64, hashed_b64=hashed_b64)
+
+
+class Scrypt:
+	def __init__(self, password, salt, cost_factor, block_size_factor, parallelization_factor, key_length):  # type: (bytes, bytes, int, int, int, int) -> None
+		self.password = password  # type: bytes
+		self.salt = salt  # type: bytes
+		self.cost_factor = cost_factor  # type: int
+		self.block_size_factor = block_size_factor  # type: int
+		self.parallelization_factor = parallelization_factor  # type: int
+		self.key_length = key_length
+		self.block_unit = 32 * self.block_size_factor  # 1 block unit = 32 * block_size_factor 32-bit ints
+
+	def derive(self):  # type: () -> bytes
+		salt_length = 2 ** 7 * self.block_size_factor * self.parallelization_factor  # type: int
+		pack_format = '<' + 'L' * int(salt_length / 4)  # `<` means `little-endian` and `L` means `unsigned long`
+		salt = hashlib.pbkdf2_hmac('sha256', password=self.password, salt=self.salt, iterations=1, dklen=salt_length)  # type: bytes
+		block = list(unpack(pack_format, salt))  # type: list[int]
+		block = self.ROMix(block)
+		salt = pack(pack_format, *block)
+		key = hashlib.pbkdf2_hmac('sha256', password=self.password, salt=salt, iterations=1, dklen=self.key_length)  # type: bytes
+		return key
+
+	def ROMix(self, block):  # type: (list[int]) -> list[int]
+		xored_block = [0] * len(block)  # type: list[int]
+		variations = [list()] * self.cost_factor  # type: list[list[int]]
+		variations[0] = block
+		index = 1
+		while index < self.cost_factor:
+			variations[index] = self.block_mix(variations[index - 1])
+			index += 1
+		block = self.block_mix(variations[-1])
+		for unused in variations:
+			variation_index = block[self.block_unit - 16] % self.cost_factor  # type: int
+			variation = variations[variation_index]
+			for index, unused in enumerate(xored_block):
+				xored_block[index] = block[index] ^ variation[index]
+			block = self.block_mix(xored_block)
+		return block
+
+	def block_mix(self, previous_block):  # type: (list[int]) -> list[int]
+		block = previous_block[:]  # type: list[int]
+		X_length = 16  # X is the list of numbers within `block` that we mix
+		copy_index = self.block_unit - X_length
+		X = previous_block[copy_index:copy_index + X_length]  # type: list[int]
+		octet_index = 0  # type: int
+		block_xor_index = 0
+		while octet_index < 2 * self.block_size_factor:
+			for index, unused in enumerate(X):
+				X[index] ^= previous_block[block_xor_index + index]
+			block_xor_index += X_length
+			self.salsa20(X)
+			block_offset = (int(octet_index / 2) + octet_index % 2 * self.block_size_factor) * X_length
+			block[block_offset:block_offset + X_length] = X
+			octet_index += 1
+		return block
+
+	def salsa20(self, block):  # type: (list[int]) -> None
+		X = block[:]  # make a copy (list.copy() is Python 3-only)
+		for i in range(0, 4):
+			# These bit shifting operations could be condensed into a single line of list comprehensions,
+			# but there is a >3x performance benefit from writing it out explicitly.
+			bits = X[0] + X[12] & 0xffffffff
+			X[4] ^= bits << 7 | bits >> 32 - 7
+			bits = X[4] + X[0] & 0xffffffff
+			X[8] ^= bits << 9 | bits >> 32 - 9
+			bits = X[8] + X[4] & 0xffffffff
+			X[12] ^= bits << 13 | bits >> 32 - 13
+			bits = X[12] + X[8] & 0xffffffff
+			X[0] ^= bits << 18 | bits >> 32 - 18
+			bits = X[5] + X[1] & 0xffffffff
+			X[9] ^= bits << 7 | bits >> 32 - 7
+			bits = X[9] + X[5] & 0xffffffff
+			X[13] ^= bits << 9 | bits >> 32 - 9
+			bits = X[13] + X[9] & 0xffffffff
+			X[1] ^= bits << 13 | bits >> 32 - 13
+			bits = X[1] + X[13] & 0xffffffff
+			X[5] ^= bits << 18 | bits >> 32 - 18
+			bits = X[10] + X[6] & 0xffffffff
+			X[14] ^= bits << 7 | bits >> 32 - 7
+			bits = X[14] + X[10] & 0xffffffff
+			X[2] ^= bits << 9 | bits >> 32 - 9
+			bits = X[2] + X[14] & 0xffffffff
+			X[6] ^= bits << 13 | bits >> 32 - 13
+			bits = X[6] + X[2] & 0xffffffff
+			X[10] ^= bits << 18 | bits >> 32 - 18
+			bits = X[15] + X[11] & 0xffffffff
+			X[3] ^= bits << 7 | bits >> 32 - 7
+			bits = X[3] + X[15] & 0xffffffff
+			X[7] ^= bits << 9 | bits >> 32 - 9
+			bits = X[7] + X[3] & 0xffffffff
+			X[11] ^= bits << 13 | bits >> 32 - 13
+			bits = X[11] + X[7] & 0xffffffff
+			X[15] ^= bits << 18 | bits >> 32 - 18
+			bits = X[0] + X[3] & 0xffffffff
+			X[1] ^= bits << 7 | bits >> 32 - 7
+			bits = X[1] + X[0] & 0xffffffff
+			X[2] ^= bits << 9 | bits >> 32 - 9
+			bits = X[2] + X[1] & 0xffffffff
+			X[3] ^= bits << 13 | bits >> 32 - 13
+			bits = X[3] + X[2] & 0xffffffff
+			X[0] ^= bits << 18 | bits >> 32 - 18
+			bits = X[5] + X[4] & 0xffffffff
+			X[6] ^= bits << 7 | bits >> 32 - 7
+			bits = X[6] + X[5] & 0xffffffff
+			X[7] ^= bits << 9 | bits >> 32 - 9
+			bits = X[7] + X[6] & 0xffffffff
+			X[4] ^= bits << 13 | bits >> 32 - 13
+			bits = X[4] + X[7] & 0xffffffff
+			X[5] ^= bits << 18 | bits >> 32 - 18
+			bits = X[10] + X[9] & 0xffffffff
+			X[11] ^= bits << 7 | bits >> 32 - 7
+			bits = X[11] + X[10] & 0xffffffff
+			X[8] ^= bits << 9 | bits >> 32 - 9
+			bits = X[8] + X[11] & 0xffffffff
+			X[9] ^= bits << 13 | bits >> 32 - 13
+			bits = X[9] + X[8] & 0xffffffff
+			X[10] ^= bits << 18 | bits >> 32 - 18
+			bits = X[15] + X[14] & 0xffffffff
+			X[12] ^= bits << 7 | bits >> 32 - 7
+			bits = X[12] + X[15] & 0xffffffff
+			X[13] ^= bits << 9 | bits >> 32 - 9
+			bits = X[13] + X[12] & 0xffffffff
+			X[14] ^= bits << 13 | bits >> 32 - 13
+			bits = X[14] + X[13] & 0xffffffff
+			X[15] ^= bits << 18 | bits >> 32 - 18
+
+		for index in range(0, 16):
+			block[index] = block[index] + X[index] & 0xffffffff
+
 
 def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> User
 	"""

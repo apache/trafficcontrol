@@ -23,9 +23,47 @@ if [[ ! -x /usr/bin/python3 ]]; then
 	exit 1;
 fi
 
+readonly TO_PASSWORD=twelve
 readonly ROOT_DIR="$(mktemp -d)";
 
 trap 'rm -rf $ROOT_DIR' EXIT;
+
+(cd "$(dirname "$0")"
+/usr/bin/python3 <<EOF
+from __future__ import print_function
+import sys
+from postinstall import Scrypt
+
+passwd = '${TO_PASSWORD}'
+n = 2 ** 10
+r_val = 1
+p_val = 1
+dklen = 2 ** 4
+salt = bytearray([196, 187, 115, 30, 109, 244, 168, 124, 70, 67, 229, 123, 156, 3, 138, 243, 234, 79, 79, 31, 67, 239, 249, 177, 237, 240, 201, 216, 81, 116, 186, 172, 153, 99, 240, 184, 186, 0, 119, 34, 165, 220, 3, 201, 104, 13, 13, 189, 135, 76, 160, 6, 206, 154, 124, 78, 112, 243, 132, 30, 48, 223, 224, 28])
+scrypt = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val,
+				parallelization_factor=p_val, key_length=dklen)
+
+expected_block = [82000861, 2203666842, 4001293736, 627876473, 3101038348, 376175724, 2967675936, 3143524608, 1069098580, 1894075103, 3699786793, 3537442772, 3575269184, 2926196224, 913960627, 2079499993]
+actual_block = [2245251288, 1072667772, 4071019211, 2090053191, 2877361598, 1101440729, 1502049634, 3905719376, 3112080378, 1388114151, 3517514506, 1152690600, 2085938056, 2696735995, 3835186347, 283826820]
+scrypt.salsa20(actual_block)
+if expected_block != actual_block:
+	print('Expected {expected_block} for salsa20 result, got {actual_block}'.format(expected_block=expected_block, actual_block=actual_block), file=sys.stderr)
+	exit(1)
+
+input_block = [1923378, 729355550, 2408212191, 579221939, 681409774, 1765430015, 3846256959, 831940078, 1480976199, 2878095125, 4245323720, 2776886825, 3332759976, 3497079966, 3107631655, 3763839506, 1283955177, 2851514107, 1743501900, 1888209181, 3387403441, 2898469985, 3685946334, 2122268467, 2234902587, 2934192414, 2528543680, 3247696936, 4144265372, 1687923239, 1573958329, 422403479]
+expected_block = [54040099, 3246390556, 3905565410, 4170358448, 2569315507, 3679433373, 2964493607, 3621375783, 318358481, 2014381982, 3240374105, 3569092356, 3150068788, 569153936, 2099549087, 2807540417, 2384835523, 4053238240, 1126008925, 1477842924, 1740405559, 1762470512, 2159908599, 1049875013, 2630682622, 1368095319, 1753173294, 3987760372, 3175003396, 1324304335, 775131569, 2728051478]
+actual_block = scrypt.block_mix(input_block)
+if expected_block != actual_block:
+	print('Expected {expected_block} for block mix result, got {actual_block}'.format(expected_block=expected_block, actual_block=actual_block), file=sys.stderr)
+	exit(1)
+
+expected_digest = bytearray([86, 124, 148, 28, 117, 181, 239, 64, 228, 6, 247, 83, 210, 88, 43, 144])
+actual_digest = scrypt.derive()
+if expected_digest != actual_digest:
+	print('Expected {expected_digest} for scrypt, got {actual_digest}'.format(expected_digest=expected_digest, actual_digest=actual_digest), file=sys.stderr)
+	exit(1)
+EOF
+)
 
 mkdir -p "$ROOT_DIR/etc/pki/tls/certs";
 mkdir "$ROOT_DIR/etc/pki/tls/private";
@@ -78,7 +116,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 			"hidden": false
 		},
 		{
-			"Password for Traffic Ops database user": "twelve",
+			"Password for Traffic Ops database user": "${TO_PASSWORD}",
 			"config_var": "password",
 			"hidden": true
 		}
@@ -90,7 +128,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 			"hidden": false
 		},
 		{
-			"Password for database server admin": "twelve",
+			"Password for database server admin": "${TO_PASSWORD}",
 			"config_var": "pgPassword",
 			"hidden": true
 		},
