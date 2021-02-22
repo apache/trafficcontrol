@@ -39,7 +39,10 @@ checkEnvironment() {
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export RPM_TARGET_OS="${RPM_TARGET_OS:-linux}"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
+	# Forcing BUILD NUMBER to 1 since this is outside the tree and related to Tomcat Release
+	export BUILD_NUMBER=1
+	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.noarch.rpm"
+
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
