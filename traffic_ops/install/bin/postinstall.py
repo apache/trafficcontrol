@@ -749,7 +749,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 	try:
 		with open(cdn_conf_path) as conf_file:
 			cdn_conf = json.load(conf_file)
-	except (OSError, json.JSONDecodeError) as e:
+	except (OSError, ValueError) as e:
 		exception = OSError("reading {cdn_conf_path}: {e}".format(cdn_conf_path=cdn_conf_path, e=e))
 		exception.__cause__ = e
 		raise exception
@@ -863,7 +863,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		with open(path) as conf_file:
 			try:
 				existing_conf = json.load(conf_file)
-			except json.JSONDecodeError as e:
+			except ValueError as e:
 				exception = ValueError("invalid existing cdn.config at {path}: {e}".format(path=path, e=e))
 				exception.__cause__ = e
 				raise exception
@@ -1124,7 +1124,7 @@ no_database, # type: bool
 			diffs,
 			'' if diffs == 1 else 's'
 			)
-		except (OSError, ValueError, json.JSONDecodeError) as e:
+		except (OSError, ValueError) as e:
 			logging.critical("Reading in input file '%s': %s", cfile, e)
 			return 1
 
