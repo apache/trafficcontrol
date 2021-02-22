@@ -124,7 +124,7 @@ public class RouterNioEndpoint extends NioEndpoint {
 
 	@Override
 	protected SSLHostConfig getSSLHostConfig(final String sniHostName){
-		return super.getSSLHostConfig(sniHostName.toLowerCase());
+		return super.getSSLHostConfig(sniHostName == null ? null : sniHostName.toLowerCase());
 	}
 
 	@Override
