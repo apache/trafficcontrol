@@ -15,21 +15,38 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
 set -e;
 
-if [[ ! -x /usr/bin/python3 ]]; then
+cd "$(dirname "${BASH_SOURCE[0]}")";
+readonly MY_DIR="$(pwd)";
+
+while getopts :23sb: opt; do
+	case "$opt" in
+		2)	python_version=2;;
+		3)	python_version=3;;
+		s)	skip_python2=true;;
+		b)	python_bin="$OPTARG";;
+		*)	echo "Invalid flag received: ${OPTARG}" >&2
+			exit 1;;
+	esac;
+done;
+
+python_version="${python_version:-3}";
+python_bin="${python_bin:-/usr/bin/python${python_version}}";
+
+if [[ ! -x "$python_bin" && "$python_version" -ge 3 ]]; then
 	echo "Python 3.6+ is required to run - or test - postinstall.py" >&2;
 	exit 1;
+elif [[ ! -x "$python_bin" && "$python_version" == 2 ]]; then
+	echo "Python ${python_version} is required to run - or test - postinstall.py against Python 2" >&2;
 fi
 
-readonly TO_PASSWORD=twelve
+readonly TO_PASSWORD=twelve;
 readonly ROOT_DIR="$(mktemp -d)";
 
 trap 'rm -rf $ROOT_DIR' EXIT;
 
-(cd "$(dirname "$0")"
-/usr/bin/python3 <<EOF
+"$python_bin" <<EOF;
 from __future__ import print_function
 import sys
 from postinstall import Scrypt
@@ -63,7 +80,6 @@ if expected_digest != actual_digest:
 	print('Expected {expected_digest} for scrypt, got {actual_digest}'.format(expected_digest=expected_digest, actual_digest=actual_digest), file=sys.stderr)
 	exit(1)
 EOF
-)
 
 mkdir -p "$ROOT_DIR/etc/pki/tls/certs";
 mkdir "$ROOT_DIR/etc/pki/tls/private";
@@ -82,8 +98,6 @@ EOF
 
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
-
-readonly MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )";
 
 # defaults.json is used as input into the `--cfile` option of postinstall.py
 # for testing purposes
@@ -293,7 +307,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 }
 EOF
 
-"$MY_DIR/postinstall.py" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
+"$python_bin" "$MY_DIR/postinstall.py" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
 
 if grep -q 'ERROR' $ROOT_DIR/stderr; then
 	echo "Errors found in script logs" >&2;
@@ -304,7 +318,7 @@ fi
 
 readonly USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
 
-/usr/bin/python3 <<EOF
+"$python_bin" <<EOF
 from __future__ import print_function
 import json
 import sys
@@ -375,7 +389,7 @@ if [[ "$DB_CONF_ACTUAL" != "$DB_CONF_EXPECTED" ]]; then
 	exit 1;
 fi
 
-/usr/bin/python3 <<EOF
+"$python_bin" <<EOF
 from __future__ import print_function
 import json
 import string
@@ -475,3 +489,7 @@ if [[ "$KEY_FILE_TYPE" != "$KEY_FILE: PEM RSA private key" ]]; then
 	echo "Incorrect key file, expected PEM RSA private key, got: $KEY_FILE_TYPE" >&2;
 	exit 1;
 fi
+
+if [[ "$python_version" != 2 && -z "$skip_python2" ]]; then
+	exec "${MY_DIR}/$(basename "${BASH_SOURCE[0]}")" -2;
+fi;
