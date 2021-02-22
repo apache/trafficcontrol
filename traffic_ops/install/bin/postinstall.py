@@ -667,7 +667,7 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 			if not isinstance(qstn, dict):
 				raise ValueError("file '{file}' has a malformed question ({qstn})".format(file=file, qstn=qstn))
 			try:
-				question = next(key for key in qstn.keys() if qstn not in ("hidden", "config_var"))
+				question = next(key for key in qstn.keys() if key not in ("hidden", "config_var"))
 			except StopIteration:
 				raise ValueError("question in '{file}' has no question/answer properties ({qstn})".format(file=file, qstn=qstn))
 
