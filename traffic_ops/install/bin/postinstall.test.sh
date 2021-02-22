@@ -351,12 +351,12 @@ if [[ "$(cat $POST_INSTALL_JSON)" != "{}" ]]; then
 fi
 
 readonly PROFILES_JSON_EXPECTED="{
-	\"tm.url\": \"https://localhost\",
 	\"cdn_name\": \"kabletown_cdn\",
-	\"dns_subdomain\": \"cdn1.kabletown.net\"
+	\"dns_subdomain\": \"cdn1.kabletown.net\",
+	\"tm.url\": \"https://localhost\"
 }";
 
-readonly PROFILES_JSON_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/install/data/json/profiles.json)";
+readonly PROFILES_JSON_ACTUAL="$(<"$ROOT_DIR/opt/traffic_ops/install/data/json/profiles.json" jq -S --tab .)";
 if [[ "$PROFILES_JSON_ACTUAL" != "$PROFILES_JSON_EXPECTED" ]]; then
 	echo "Incorrect profiles.json, expected: $PROFILES_JSON_EXPECTED, got: $PROFILES_JSON_ACTUAL" >&2;
 	exit 1;
@@ -440,16 +440,16 @@ exit(0)
 EOF
 
 readonly DATABASE_CONF_EXPECTED='{
-	"type": "Pg",
 	"dbname": "traffic_ops",
+	"description": "Pg database on localhost:5432",
 	"hostname": "localhost",
-	"port": "5432",
-	"user": "traffic_ops",
 	"password": "twelve",
-	"description": "Pg database on localhost:5432"
+	"port": "5432",
+	"type": "Pg",
+	"user": "traffic_ops"
 }';
 
-readonly DATABASE_CONF_ACTUAL="$(cat $ROOT_DIR/opt/traffic_ops/app/conf/production/database.conf)";
+readonly DATABASE_CONF_ACTUAL="$(<"$ROOT_DIR/opt/traffic_ops/app/conf/production/database.conf" jq -S --tab .)";
 if [[ "$DATABASE_CONF_ACTUAL" != "$DATABASE_CONF_EXPECTED" ]]; then
 	echo "Incorrect database.conf, expected: $DATABASE_CONF_EXPECTED, got $DATABASE_CONF_ACTUAL" >&2;
 	exit 1;
