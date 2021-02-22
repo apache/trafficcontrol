@@ -21,7 +21,7 @@ package staticdnsentry
 
 import (
 	"fmt"
-  "net/http"
+	"net/http"
 	"regexp"
 	"strconv"
 	"time"
