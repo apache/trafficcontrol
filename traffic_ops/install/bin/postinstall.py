@@ -708,35 +708,39 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 
 	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
 
+	def failed_download(ip_version):  # type: (int) -> None
+		logging.error("Failed to download MaxMind data")
+		logging.debug("(ipv%d) Exception: %s", ip_version, e)
+
 	wget = "/usr/bin/wget"
 	cmd = [wget, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
-		subprocess.run(
+		subprocess.check_call(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
-			check=True,
 			universal_newlines=True
 		)
+	except subprocess.CalledProcessError as e:
+		failed_download(4)
 	except subprocess.SubprocessError as e:
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv4) Exception: %s", e)
+		failed_download(4)
 
 	cmd[1] = (
 		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
 	)
 	try:
-		subprocess.run(
+		subprocess.check_call(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
-			check=True,
 			universal_newlines=True
 		)
+	except subprocess.CalledProcessError as e:
+		failed_download(6)
 	except subprocess.SubprocessError as e:
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv6) Exception: %s", e)
+		failed_download(6)
 
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
@@ -750,13 +754,13 @@ def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	cmd = ("/usr/bin/openssl",) + cmd_args
 
 	while True:
-		proc = subprocess.run(
+		proc = subprocess.Popen(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
 			universal_newlines=True,
-			check=False
 		)
+		proc.wait()
 		if proc.returncode == 0:
 			return True
 
@@ -1053,13 +1057,13 @@ def exec_psql(conn_str, query): # type: (str, str) -> str
 	:returns: The comma-separated columns of each line-delimited row of the results of the query.
 	"""
 	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
-	proc = subprocess.run(
+	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE,
 		universal_newlines=True,
-		check=False
 	)
+	proc.wait()
 	if proc.returncode != 0:
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
@@ -1074,13 +1078,13 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	# should be fixed at some point, IMO, but for now this works.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
-	proc = subprocess.run(
+	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE,
 		universal_newlines=True,
-		check=False
 	)
+	proc.wait()
 	if proc.returncode != 0:
 		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("Database {action} failed".format(action=action))
@@ -1325,15 +1329,21 @@ no_database, # type: bool
 			logging.critical("psql is not installed, please install it to continue with database setup")
 			return 1
 
-		try:
-			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
-		except (OSError, subprocess.SubprocessError)as e:
+		def db_connect_failed():
 			logging.error("Failed to set up database: %s", e)
 			logging.error(
-				"Can't connect to the database.  " \
-				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
+				"Can't connect to the database.  "
+				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` "
 				"on the db server to create it and run `postinstall` again."
 			)
+
+		try:
+			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+		except (OSError, subprocess.CalledProcessError)as e:
+			db_connect_failed()
+			return -1
+		except subprocess.SubprocessError as e:
+			db_connect_failed()
 			return -1
 
 
@@ -1341,18 +1351,19 @@ no_database, # type: bool
 		logging.info("Starting Traffic Ops")
 		try:
 			cmd = ["/sbin/service", "traffic_ops", "restart"]
-			subprocess.run(
+			proc = subprocess.Popen(
 				cmd,
 				stderr=subprocess.PIPE,
 				stdout=subprocess.PIPE,
 				universal_newlines=True,
-				check=True
 			)
+			if proc.wait():
+				raise subprocess.CalledProcessError(proc.returncode, cmd)
 		except subprocess.CalledProcessError as e:
 			logging.critical("Failed to restart Traffic Ops, return code %s: %s", e.returncode, e)
-			logging.debug("stderr: %s\n\tstdout: %s", e.stderr, e.stdout)
+			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 			return 1
-		except (OSError, subprocess.SubprocessError) as e:
+		except OSError as e:
 			logging.critical("Failed to restart Traffic Ops: unknown error occurred: %s", e)
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so
