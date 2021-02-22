@@ -122,7 +122,7 @@ func TestReadOrigins(t *testing.T) {
 	v := map[string]string{}
 
 	testUser := auth.CurrentUser{TenantID: 1}
-	origins, userErr, sysErr, errCode := getOrigins(v, db.MustBegin(), &testUser)
+	origins, userErr, sysErr, errCode, _ := getOrigins(nil, v, db.MustBegin(), &testUser, false)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getOrigins expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}

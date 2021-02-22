@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const ChkconfigFileName = `chkconfig`
@@ -31,42 +31,47 @@ const ChkconfigParamConfigFile = `chkconfig`
 const ContentTypeChkconfig = ContentTypeTextASCII
 const LineCommentChkconfig = LineCommentHash
 
-type ChkConfigEntry struct {
-	Name string `json:"name"`
-	Val  string `json:"value"`
+// MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
+// This is a JSON object, and should be served with an 'application/json' Content-Type.
+func MakeChkconfig(
+	serverParams []tc.Parameter,
+) (Cfg, error) {
+	warnings := []string{}
+
+	serverParams = filterParams(serverParams, ChkconfigParamConfigFile, "", "", "")
+
+	chkconfig := []chkConfigEntry{}
+	for _, param := range serverParams {
+		chkconfig = append(chkconfig, chkConfigEntry{Name: param.Name, Val: param.Value})
+	}
+
+	sort.Sort(chkConfigEntries(chkconfig))
+
+	bts, err := json.Marshal(&chkconfig)
+	if err != nil {
+		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVals: "+err.Error())
+	}
+
+	return Cfg{
+		Text:        string(bts),
+		ContentType: ContentTypeChkconfig,
+		LineComment: LineCommentChkconfig,
+		Warnings:    warnings,
+	}, nil
 }
 
-type ChkConfigEntries []ChkConfigEntry
+type chkConfigEntry struct {
+	Name string
+	Val  string
+}
 
-func (e ChkConfigEntries) Len() int { return len(e) }
-func (e ChkConfigEntries) Less(i, j int) bool {
+type chkConfigEntries []chkConfigEntry
+
+func (e chkConfigEntries) Len() int { return len(e) }
+func (e chkConfigEntries) Less(i, j int) bool {
 	if e[i].Name != e[j].Name {
 		return e[i].Name < e[j].Name
 	}
 	return e[i].Val < e[j].Val
 }
-func (e ChkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
-
-// MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
-// This is a JSON object, and should be served with an 'application/json' Content-Type.
-func MakeChkconfig(
-	params map[string][]string, // map[name]value - config file should always be 'chkconfig'
-) string {
-
-	chkconfig := []ChkConfigEntry{}
-	for name, vals := range params {
-		for _, val := range vals {
-			chkconfig = append(chkconfig, ChkConfigEntry{Name: name, Val: val})
-		}
-	}
-
-	sort.Sort(ChkConfigEntries(chkconfig))
-
-	bts, err := json.Marshal(&chkconfig)
-	if err != nil {
-		// should never happen
-		log.Errorln("marshalling chkconfig NameVals: " + err.Error())
-		bts = []byte("error encoding params to json, see Traffic Ops log for details")
-	}
-	return string(bts)
-}
+func (e chkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }

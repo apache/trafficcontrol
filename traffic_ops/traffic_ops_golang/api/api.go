@@ -71,12 +71,29 @@ WHERE type in ( SELECT id
 AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
 
+type APIResponse struct {
+	Response interface{} `json:"response"`
+}
+
+type APIResponseWithSummary struct {
+	Response interface{} `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+}
+
+// GoneHandler is an http.Handler function that just writes a 410 Gone response
+// back to the client, along with an error-level alert stating that the endpoint
+// is no longer available.
+func GoneHandler(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("This endpoint is no longer available; please consult documentation")
+	HandleErr(w, r, nil, http.StatusGone, err, nil)
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
-	resp := struct {
-		Response interface{} `json:"response"`
-	}{v}
+	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
 }
 
@@ -96,6 +113,18 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(bts, '\n'))
+}
+
+// WriteRespWithSummary writes a JSON-encoded representation of an arbitrary
+// object to the provided writer, and cleans up the corresponding request
+// object. It also provides a "summary" section to the response object that
+// contains the given "count".
+func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{}, count uint64) {
+	var resp APIResponseWithSummary
+	resp.Response = v
+	resp.Summary.Count = count
+
+	WriteRespRaw(w, r, resp)
 }
 
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
@@ -398,6 +427,10 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	return params, intParams, nil, nil, 0
 }
 
+// ParseValidator objects can make use of api.Parse to handle parsing and
+// validating at the same time.
+//
+// TODO: Rework validation to be able to return system-level errors
 type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
@@ -712,6 +745,16 @@ func toCamelCase(str string) string {
 	return strings.Replace(string(mutable[:]), "_", "", -1)
 }
 
+// parses pq errors for any trigger based conflicts
+func parseTriggerConflicts(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`^(.*?)conflicts`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s", toCamelCase(match[0])), nil, http.StatusBadRequest
+}
+
 // parses pq errors for not null constraint
 func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
@@ -825,6 +868,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseTriggerConflicts(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
@@ -964,4 +1011,76 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	} else {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
+}
+
+// CheckIfUnModified checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
+// In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
+// error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
+func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
+	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
+	if err == nil && found == false {
+		return errors.New("no " + tableName + " found with this id"), nil, http.StatusNotFound
+	}
+	if err != nil {
+		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
+	return nil, nil, http.StatusOK
+}
+
+// GetLastUpdated checks for the resource by ID in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "id", ID, tableName)
+}
+
+// GetLastUpdatedByName checks for the resource by name in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdatedByName(tx *sqlx.Tx, name string, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "name", name, tableName)
+}
+
+func getLastUpdatedByIdentifier(tx *sqlx.Tx, IDColumn string, IDValue interface{}, tableName string) (*time.Time, bool, error) {
+	lastUpdated := time.Time{}
+	found := false
+	rows, err := tx.Query(fmt.Sprintf(`select last_updated from %s where %s = $1`, pq.QuoteIdentifier(tableName), pq.QuoteIdentifier(IDColumn)), IDValue)
+	if err != nil {
+		return nil, found, errors.New("querying last_updated: " + err.Error())
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, found, nil
+	}
+	found = true
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return nil, found, errors.New("scanning last_updated: " + err.Error())
+	}
+	return &lastUpdated, found, nil
+}
+
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
+func IsUnmodified(h http.Header, lastUpdated time.Time) bool {
+	unmodifiedTime, ok := rfc.GetUnmodifiedTime(h)
+	if !ok {
+		return true // no IUS/IM header: unmodified, proceed with normal update
+	}
+	return !lastUpdated.After(unmodifiedTime)
+}
+
+// FormatLastModified trims the time string and formats it according to RFC1123.
+func FormatLastModified(t time.Time) string {
+	return rfc.FormatHTTPDate(t.Truncate(time.Second).Add(time.Second))
+}
+
+// AddLastModifiedHdr adds the "last modified" header to the response.
+func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
+	w.Header().Add(rfc.LastModified, FormatLastModified(t))
+}
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
 }

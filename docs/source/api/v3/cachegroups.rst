@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups:
+.. _to-api-v3-cachegroups:
 
 ***************
 ``cachegroups``
@@ -35,6 +35,8 @@ Request Structure
 	| Name      | Required | Description                                                                                                              |
 	+===========+==========+==========================================================================================================================+
 	| id        | no       | Return the only :term:`Cache Group` that has this id                                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| name      | no       | Return only the :term:`Cache Group` identified by this :ref:`cache-group-name`                                           |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| type      | no       | Return only :term:`Cache Groups` that are of the :ref:`cache-group-type` identified by this integral, unique identifier  |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
@@ -146,7 +148,7 @@ Request Structure
 :shortName:                   An abbreviation of the ``name``
 :typeId:                      An integral, unique identifier for the :ref:`Cache Group's Type <cache-group-type>`
 
-	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-types`.
+	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-v3-types`.
 
 .. code-block:: http
 	:caption: Request Example

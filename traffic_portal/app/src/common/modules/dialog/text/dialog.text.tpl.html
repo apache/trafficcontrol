@@ -23,7 +23,7 @@ under the License.
 </div>
 <div class="modal-body">
     <p ng-bind-html="params.message"></p>
-    <pre>{{::text}}</pre>
+    <pre ng-if="text != null">{{::text}}</pre>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="cancel()">Close</button>

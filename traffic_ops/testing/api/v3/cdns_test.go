@@ -16,16 +16,96 @@ package v3
 */
 
 import (
+	"net/http"
+	"sort"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+		GetTestCDNsIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestCDNs(t)
 		UpdateTestCDNs(t)
+		UpdateTestCDNsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
+		GetTestCDNsIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
+	firstCDN := testData.CDNs[0]
+	// Retrieve the CDN by name so we can get the id for the Update
+	resp, _, err := TOSession.GetCDNByNameWithHdr(firstCDN.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
+	}
+	if len(resp) > 0 {
+		remoteCDN := resp[0]
+		remoteCDN.DomainName = "domain2"
+		_, reqInf, err := TOSession.UpdateCDNByIDWithHdr(remoteCDN.ID, remoteCDN, header)
+		if err == nil {
+			t.Errorf("Expected error about Precondition Failed, got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, cdn := range testData.CDNs {
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, cdn := range testData.CDNs {
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestCDNsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	for _, cdn := range testData.CDNs {
+		futureTime := time.Now().AddDate(0, 0, 1)
+		time := futureTime.Format(time.RFC1123)
+		header.Set(rfc.IfModifiedSince, time)
+		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestCDNs(t *testing.T) {
@@ -38,6 +118,25 @@ func CreateTestCDNs(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestCDNs(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetCDNsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestCDNs(t *testing.T) {

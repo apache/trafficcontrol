@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $controller, $scope) {
+var TableTypeServersController = function(type, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
-
-	let typeServersTable;
+	angular.extend(this, $controller('TableServersController', { tableName: 'typeServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.type = type;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = typeServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		typeServersTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		typeServersTable = $('#typeServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_typeServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_typeServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$controller', '$scope'];
+TableTypeServersController.$inject = ['type', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableTypeServersController;

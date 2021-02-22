@@ -16,6 +16,10 @@ package v3
 */
 
 import (
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -38,7 +42,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -58,14 +62,29 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 	cgID := *clientCG.ID
 
-	dsIDs := []int64{}
+	dsIDs := []int{}
+	topologyDsIDs := []int{}
 	for _, ds := range dses {
-		if *ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(*ds.ID))
+		if *ds.CDNName == "cdn1" && ds.Topology == nil {
+			dsIDs = append(dsIDs, *ds.ID)
+		} else if *ds.CDNName == "cdn1" && ds.Topology != nil {
+			topologyDsIDs = append(topologyDsIDs, *ds.ID)
 		}
 	}
 	if len(dsIDs) < 1 {
 		t.Fatal("No Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	if len(topologyDsIDs) < 1 {
+		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	_, reqInf, err := TOSession.SetCachegroupDeliveryServices(cgID, topologyDsIDs)
+	if err == nil {
+		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
 	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
@@ -87,11 +106,14 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("setting cachegroup delivery services returned success, but no servers set")
 	}
 
+	params := url.Values{}
 	for _, serverName := range resp.Response.ServerNames {
-		servers, _, err := TOSession.GetServerByHostName(string(serverName))
+		params.Set("hostName", string(serverName))
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}
+		servers := resp
 		if len(servers) != 1 {
 			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}
@@ -115,19 +137,54 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 }
 
+func setInactive(t *testing.T, dsID int) {
+	ds, _, err := TOSession.GetDeliveryServiceNullableWithHdr(strconv.Itoa(dsID), nil)
+	if err != nil {
+		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
+		return
+	}
+	if ds == nil {
+		t.Errorf("Got null or undefined Delivery Service for #%d", dsID)
+		return
+	}
+	if ds.Active == nil {
+		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
+		ds.Active = new(bool)
+	}
+	if *ds.Active {
+		*ds.Active = false
+		_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(dsID, *ds, nil)
+		if err != nil {
+			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
+		}
+	}
+}
+
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
+	dss, _, err := TOSession.GetDeliveryServiceServersNWithHdr(1000000, nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	for _, ds := range dss.Response {
-		_, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
+		if ds.DeliveryService == nil {
+			t.Error("Got deliveryserviceserver with no Delivery Service")
+			continue
+		}
+		if ds.Server == nil {
+			t.Error("Got deliveryserviceserver with no server")
+			continue
+		}
+
+		setInactive(t, *ds.DeliveryService)
+
+		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
+		t.Logf("Alerts from deleting deliveryserviceserver: %s", strings.Join(alerts.ToStrings(), ", "))
 		if err != nil {
-			t.Errorf("deleting delivery service servers: " + err.Error() + "\n")
+			t.Errorf("deleting delivery service servers: %v", err)
 		}
 	}
 
-	dss, _, err = TOSession.GetDeliveryServiceServers()
+	dss, _, err = TOSession.GetDeliveryServiceServersWithHdr(nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}

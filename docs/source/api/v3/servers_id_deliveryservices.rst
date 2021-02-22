@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-id-deliveryservices:
+.. _to-api-v3-servers-id-deliveryservices:
 
 ***********************************
 ``servers/{{ID}}/deliveryservices``
@@ -90,6 +90,7 @@ Response Structure
 :ecsEnabled:                A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite:         A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:               An array of :ref:`ds-example-urls`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
@@ -101,7 +102,9 @@ Response Structure
 :id:                        An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -172,6 +175,7 @@ Response Structure
 		"dnsBypassTtl": null,
 		"dscp": 0,
 		"edgeHeaderRewrite": null,
+		"firstHeaderRewrite": null,
 		"geoLimit": 0,
 		"geoLimitCountries": null,
 		"geoLimitRedirectURL": null,
@@ -182,7 +186,9 @@ Response Structure
 		"id": 1,
 		"infoUrl": null,
 		"initialDispersion": 1,
+		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": true,
+		"lastHeaderRewrite": null,
 		"lastUpdated": "2019-06-10 15:14:29+00",
 		"logsEnabled": true,
 		"longDesc": "Apachecon North America 2018",
@@ -243,3 +249,84 @@ Response Structure
 
 
 .. [#tenancy] Only the :term:`Delivery Services` visible to the requesting user's :term:`Tenant` will appear, regardless of their :term:`Role` or the :term:`Delivery Services`' actual 'server assignment' status.
+
+``POST``
+========
+Assign an arbitrary number of :term:`Delivery Services` to a single server.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+----------+---------------------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                                 |
+	+------+----------+---------------------------------------------------------------------------------------------+
+	| ID   | Yes      | The integral, unique identifier of the server that you want to assign delivery services to. |
+	+------+----------+---------------------------------------------------------------------------------------------+
+
+.. table:: Request Query Parameters
+
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name    | Required | Description                                                                                                                                                           |
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| replace | Yes      | Whether the list of :term:`Delivery Services` you provide should replace the existing list or be merged with the existing list. Must be a 1, or true, or 0, or false. |
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+The request body is an array of IDs of :term:`Delivery Services` that you want to assign to the server. The array can be empty, but it must be provided.
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/3.0/servers/6/deliveryservices?replace=1 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 3
+
+	[
+		1
+	]
+
+Response Structure
+------------------
+:dsIds:         An array of integral, unique identifiers for :term:`Delivery Services` which the request added to server. If ``:replace:`` is ``false``, :term:`Delivery Services` that are already assigned will remain, though they are not listed by ``:dsIds:``.
+:replace:       The ``:replace:`` value you provided in the body of the request, or ``null`` if none was provided.
+:serverId:      The server's integral, unique identifier
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 25 Feb 2020 09:08:32 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: iV+JzAZSsmlxRZsNtIRg3oA9470hAwrMpq5xhcYVi0Y831Trx2YRlsyhYpOPqHg5+QPoXHGF0nx8uso0fuNarw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 25 Feb 2020 08:08:32 GMT
+	Content-Length: 129
+
+	{
+		"alerts": [
+			{
+				"text": "successfully assigned dses to server",
+				"level": "success"
+			}
+		],
+		"response": {
+			"serverId": 6,
+			"dsIds": [
+				1
+			],
+			"replace": true
+		}
+	}

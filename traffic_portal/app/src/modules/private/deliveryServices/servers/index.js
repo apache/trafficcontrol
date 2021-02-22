@@ -31,11 +31,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.servers'
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							servers: function(deliveryService, $stateParams, serverService) {
-								if (deliveryService.topology) {
-									return serverService.getServers({ topology: deliveryService.topology });
-								} else {
-									return serverService.getServers({ dsId: $stateParams.deliveryServiceId });
-								}
+								return serverService.getServers({ dsId: $stateParams.deliveryServiceId, orderby: 'hostName' });
+							},
+							filter: function() {
+								return null;
 							}
 						}
 					}

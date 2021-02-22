@@ -17,39 +17,13 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $controller, $scope) {
+var TableProfileServersController = function(profile, servers, filter, $controller, $scope) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
-
-	let profileServersTable;
+	angular.extend(this, $controller('TableServersController', { tableName: 'profileServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.profile = profile;
-
-	$scope.toggleVisibility = function(colName) {
-		const col = profileServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		profileServersTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		profileServersTable = $('#profileServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_profileServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_profileServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$controller', '$scope'];
+TableProfileServersController.$inject = ['profile', 'servers', 'filter', '$controller', '$scope'];
 module.exports = TableProfileServersController;

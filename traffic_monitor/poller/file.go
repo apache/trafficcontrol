@@ -21,7 +21,7 @@ package poller
 
 import (
 	"fmt"
-	"gopkg.in/fsnotify.v1"
+	"github.com/fsnotify/fsnotify"
 	"io/ioutil"
 )
 

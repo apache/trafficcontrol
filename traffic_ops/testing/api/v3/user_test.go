@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -26,12 +27,20 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants, Parameters, Users}, func() {
+		GetTestUsersIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		SortTestUsers(t)
 		UpdateTestUsers(t)
+		GetTestUsersIMSAfterChange(t, header)
 		RolenameCapitalizationTest(t)
 		OpsUpdateAdminTest(t)
 		UserSelfUpdateTest(t)
@@ -46,7 +55,43 @@ func TestUsers(t *testing.T) {
 	})
 }
 
+func GetTestUsersIMSAfterChange(t *testing.T, header http.Header) {
+	_, reqInf, err := TOSession.GetUsersWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, err = TOSession.GetUsersWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 const SessionUserName = "admin" // TODO make dynamic?
+
+func GetTestUsersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetUsersWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
 
 func CreateTestUsers(t *testing.T) {
 	for _, user := range testData.Users {
@@ -139,6 +184,25 @@ func OpsUpdateAdminTest(t *testing.T) {
 	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err == nil {
 		t.Error("ops user incorrectly updated an admin")
+	}
+}
+
+func SortTestUsers(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetUsersWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].Username)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
@@ -314,6 +378,10 @@ func UpdateTestUsers(t *testing.T) {
 	if *updatedUser.City != newCity {
 		t.Errorf("results do not match actual: %s, expected: %s", *updatedUser.City, newCity)
 	}
+	if resp[0].RegistrationSent != resp2[0].RegistrationSent {
+		t.Errorf("registration_sent value shouldn't have been updated, expectd: %s, got: %s", resp[0].RegistrationSent, resp2[0].RegistrationSent)
+	}
+
 }
 
 func GetTestUsers(t *testing.T) {

@@ -19,13 +19,15 @@ package trafficstats
  * under the License.
  */
 
-import "net/http"
-import "testing"
-import "time"
+import (
+	"net/http"
+	"testing"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+)
 
 func TestTSConfigFromRequest(t *testing.T) {
 	start := "2019-09-30T00:00:00Z"

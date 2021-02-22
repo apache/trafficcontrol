@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -34,36 +33,11 @@ const IPAllowConfigFileName = `ip_allow.config`
 const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
 const LineCommentIPAllowDotConfig = LineCommentHash
 
-type IPAllowData struct {
-	Src    string
-	Action string
-	Method string
-}
-
-type IPAllowDatas []IPAllowData
-
-func (is IPAllowDatas) Len() int      { return len(is) }
-func (is IPAllowDatas) Swap(i, j int) { is[i], is[j] = is[j], is[i] }
-func (is IPAllowDatas) Less(i, j int) bool {
-	if is[i].Src != is[j].Src {
-		return is[i].Src < is[j].Src
-	}
-	if is[i].Action != is[j].Action {
-		return is[i].Action < is[j].Action
-	}
-	return is[i].Method < is[j].Method
-}
-
 const ParamPurgeAllowIP = "purge_allow_ip"
 const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
 const ParamCoalesceNumberV4 = "coalesce_number_v4"
 const ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
 const ParamCoalesceNumberV6 = "coalesce_number_v6"
-
-type IPAllowServer struct {
-	IPAddress  string
-	IP6Address string
-}
 
 const DefaultCoalesceMaskLenV4 = 24
 const DefaultCoalesceNumberV4 = 5
@@ -74,25 +48,36 @@ const DefaultCoalesceNumberV6 = 5
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	serverName tc.CacheName,
-	serverType tc.CacheType,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	params map[string][]string, // map[name]value - config file should always be ip_allow.config
-	childServers map[tc.CacheName]IPAllowServer,
-) string {
-	ipAllowData := []IPAllowData{}
+	serverParams []tc.Parameter,
+	server *Server,
+	servers []Server,
+	cacheGroups []tc.CacheGroupNullable,
+	topologies []tc.Topology,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Cachegroup == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Cachegroup")
+	}
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing HostName")
+	}
+
+	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
+
+	ipAllowDat := []ipAllowData{}
 	const ActionAllow = "ip_allow"
 	const ActionDeny = "ip_deny"
 	const MethodAll = "ALL"
 
 	// localhost is trusted.
-	ipAllowData = append(ipAllowData, IPAllowData{
+	ipAllowDat = append(ipAllowDat, ipAllowData{
 		Src:    `127.0.0.1`,
 		Action: ActionAllow,
 		Method: MethodAll,
 	})
-	ipAllowData = append(ipAllowData, IPAllowData{
+	ipAllowDat = append(ipAllowDat, ipAllowData{
 		Src:    `::1`,
 		Action: ActionAllow,
 		Method: MethodAll,
@@ -108,40 +93,40 @@ func MakeIPAllowDotConfig(
 		for _, val := range vals {
 			switch name {
 			case "purge_allow_ip":
-				ipAllowData = append(ipAllowData, IPAllowData{
+				ipAllowDat = append(ipAllowDat, ipAllowData{
 					Src:    val,
 					Action: ActionAllow,
 					Method: MethodAll,
 				})
 			case ParamCoalesceMaskLenV4:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceMaskLenV4 != DefaultCoalesceMaskLenV4 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceMaskLenV4 = vi
 				}
 			case ParamCoalesceNumberV4:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceNumberV4 != DefaultCoalesceNumberV4 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceNumberV4 = vi
 				}
 			case ParamCoalesceMaskLenV6:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceMaskLenV6 != DefaultCoalesceMaskLenV6 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceMaskLenV6 = vi
 				}
 			case ParamCoalesceNumberV6:
 				if vi, err := strconv.Atoi(val); err != nil {
-					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
+					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
 				} else if coalesceNumberV6 != DefaultCoalesceNumberV6 {
-					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
+					warnings = append(warnings, "got multiple param '"+name+"' - ignoring  val '"+val+"'!")
 				} else {
 					coalesceNumberV6 = vi
 				}
@@ -150,14 +135,14 @@ func MakeIPAllowDotConfig(
 	}
 
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
-	isMid := strings.HasPrefix(string(serverType), tc.MidTypePrefix)
+	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 	if !isMid {
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
 			Action: ActionDeny,
 			Method: `PUSH|PURGE|DELETE`,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
 			Action: ActionDeny,
 			Method: `PUSH|PURGE|DELETE`,
@@ -166,48 +151,81 @@ func MakeIPAllowDotConfig(
 
 		ips := []*net.IPNet{}
 		ip6s := []*net.IPNet{}
-		for serverName, server := range childServers {
 
-			if ip := net.ParseIP(server.IPAddress).To4(); ip != nil {
-				// got an IP - convert it to a CIDR and add it to the list
-				ips = append(ips, util.IPToCIDR(ip))
-			} else {
-				// not an IP, try a CIDR
-				if ip, cidr, err := net.ParseCIDR(server.IPAddress); err != nil {
-					// not a CIDR or IP - error out
-					log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP '" + server.IPAddress + " is not an IPv4 address or CIDR - skipping!")
-				} else {
-					// got a valid CIDR - now make sure it's v4
-					ip = ip.To4()
-					if ip == nil {
-						// valid CIDR, but not v4
-						log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP '" + server.IPAddress + " is a CIDR, but not v4 - skipping!")
-					} else {
-						// got a valid IPv4 CIDR - add it to the list
-						ips = append(ips, cidr)
-					}
-				}
+		cgMap := map[string]tc.CacheGroupNullable{}
+		for _, cg := range cacheGroups {
+			if cg.Name == nil {
+				return Cfg{}, makeErr(warnings, "got cachegroup with nil name!")
+			}
+			cgMap[*cg.Name] = cg
+		}
+
+		if server.Cachegroup == nil {
+			return Cfg{}, makeErr(warnings, "server had nil Cachegroup!")
+		}
+
+		serverCG, ok := cgMap[*server.Cachegroup]
+		if !ok {
+			return Cfg{}, makeErr(warnings, "server cachegroup not in cachegroups!")
+		}
+
+		childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
+
+		childCGs := map[string]tc.CacheGroupNullable{}
+		for cgName, _ := range childCGNames {
+			childCGs[string(cgName)] = cgMap[string(cgName)]
+		}
+
+		for cgName, cg := range cgMap {
+			if (cg.ParentName != nil && *cg.ParentName == *serverCG.Name) || (cg.SecondaryParentName != nil && *cg.SecondaryParentName == *serverCG.Name) {
+				childCGs[cgName] = cg
+			}
+		}
+
+		// sort servers, to guarantee things like IP coalescing are deterministic
+		sort.Sort(serversSortByName(servers))
+		for _, childServer := range servers {
+			if childServer.Cachegroup == nil {
+				warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
+				continue
+			} else if childServer.HostName == nil {
+				warnings = append(warnings, "Servers had server with nil HostName, skipping!")
+				continue
 			}
 
-			if server.IP6Address != "" {
-				ip6 := net.ParseIP(server.IP6Address)
-				if ip6 != nil && ip6.To4() == nil {
-					// got a valid IPv6 - add it to the list
-					ip6s = append(ip6s, util.IPToCIDR(ip6))
-				} else {
-					// not a v6 IP, try a CIDR
-					if ip, cidr, err := net.ParseCIDR(server.IP6Address); err != nil {
-						// not a CIDR or IP - error out
-						log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP6 '" + server.IP6Address + " is not an IPv6 address or CIDR - skipping!")
-					} else {
-						// got a valid CIDR - now make sure it's v6
-						ip = ip.To4()
-						if ip != nil {
-							// valid CIDR, but not v6
-							log.Errorln("MakeIPAllowDotConfig server '" + string(serverName) + "' IP6 '" + server.IPAddress + " is a CIDR, but not v6 - skipping!")
+			// We need to add IPs to the allow of
+			// - all children of this server
+			// - all monitors, if this server is a Mid
+			//
+			_, isChild := childCGs[*childServer.Cachegroup]
+			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {
+				continue
+			}
+
+			for _, svInterface := range childServer.Interfaces {
+				for _, svAddr := range svInterface.IPAddresses {
+					if ip := net.ParseIP(svAddr.Address); ip != nil {
+						// got an IP - convert it to a CIDR and add it to the list
+						if ip4 := ip.To4(); ip4 != nil {
+							ips = append(ips, util.IPToCIDR(ip4))
 						} else {
-							// got a valid IPv6 CIDR - add it to the list
-							ip6s = append(ip6s, cidr)
+							ip6s = append(ip6s, util.IPToCIDR(ip))
+						}
+					} else {
+						// not an IP, try a CIDR
+						if ip, cidr, err := net.ParseCIDR(svAddr.Address); err != nil {
+							// not a CIDR or IP - error out
+							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
+						} else if ip == nil {
+							// not a CIDR or IP - error out
+							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
+						} else {
+							// got a valid CIDR - add it to the list
+							if ip4 := ip.To4(); ip4 != nil {
+								ips = append(ips, cidr)
+							} else {
+								ip6s = append(ip6s, cidr)
+							}
 						}
 					}
 				}
@@ -218,14 +236,14 @@ func MakeIPAllowDotConfig(
 		cidr6s := util.CoalesceCIDRs(ip6s, coalesceNumberV6, coalesceMaskLenV6)
 
 		for _, cidr := range cidrs {
-			ipAllowData = append(ipAllowData, IPAllowData{
+			ipAllowDat = append(ipAllowDat, ipAllowData{
 				Src:    util.RangeStr(cidr),
 				Action: ActionAllow,
 				Method: MethodAll,
 			})
 		}
 		for _, cidr := range cidr6s {
-			ipAllowData = append(ipAllowData, IPAllowData{
+			ipAllowDat = append(ipAllowDat, ipAllowData{
 				Src:    util.RangeStr(cidr),
 				Action: ActionAllow,
 				Method: MethodAll,
@@ -233,41 +251,101 @@ func MakeIPAllowDotConfig(
 		}
 
 		// allow RFC 1918 server space - TODO JvD: parameterize
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `10.0.0.0-10.255.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `172.16.0.0-172.31.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `192.168.0.0-192.168.255.255`,
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
 
 		// order matters, so sort before adding the denys
-		sort.Sort(IPAllowDatas(ipAllowData))
+		sort.Sort(ipAllowDatas(ipAllowDat))
+
+		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
+		if isMid { // Edges already deny PUSH and PURGE
+			ipAllowDat = append([]ipAllowData{
+				{
+					Src:    `0.0.0.0-255.255.255.255`,
+					Action: ActionDeny,
+					Method: `PUSH|PURGE`,
+				},
+				{
+					Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
+					Action: ActionDeny,
+					Method: `PUSH|PURGE`,
+				},
+			}, ipAllowDat...)
+		}
 
 		// end with a deny
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,
 			Action: ActionDeny,
 			Method: MethodAll,
 		})
-		ipAllowData = append(ipAllowData, IPAllowData{
+		ipAllowDat = append(ipAllowDat, ipAllowData{
 			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
 			Action: ActionDeny,
 			Method: MethodAll,
 		})
 	}
 
-	text := GenericHeaderComment(string(serverName), toToolName, toURL)
-	for _, al := range ipAllowData {
+	text := makeHdrComment(hdrComment)
+	for _, al := range ipAllowDat {
 		text += `src_ip=` + al.Src + ` action=` + al.Action + ` method=` + al.Method + "\n"
 	}
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeHostingDotConfig,
+		LineComment: LineCommentHostingDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type ipAllowData struct {
+	Src    string
+	Action string
+	Method string
+}
+
+type ipAllowDatas []ipAllowData
+
+func (is ipAllowDatas) Len() int      { return len(is) }
+func (is ipAllowDatas) Swap(i, j int) { is[i], is[j] = is[j], is[i] }
+func (is ipAllowDatas) Less(i, j int) bool {
+	if is[i].Src != is[j].Src {
+		return is[i].Src < is[j].Src
+	}
+	if is[i].Action != is[j].Action {
+		return is[i].Action < is[j].Action
+	}
+	return is[i].Method < is[j].Method
+}
+
+type ipAllowServer struct {
+	IPAddress  string
+	IP6Address string
+}
+
+type serversSortByName []Server
+
+func (ss serversSortByName) Len() int      { return len(ss) }
+func (ss serversSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss serversSortByName) Less(i, j int) bool {
+	if ss[j].HostName == nil {
+		return false
+	} else if ss[i].HostName == nil {
+		return true
+	}
+	return *ss[i].HostName < *ss[j].HostName
 }

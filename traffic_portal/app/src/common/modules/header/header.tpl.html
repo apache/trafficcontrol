@@ -17,10 +17,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="header" class="nav_menu">
+<div id="header" class="nav_menu" ng-class="{ 'prod': isProd }">
     <nav role="navigation">
         <div class="nav toggle">
-            <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+            <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
+        </div>
+        <div class="navbar enviro-banner" ng-class="{ 'prod': isProd }">
+            <span class="enviro_name" ng-class="{ 'prod': isProd }">{{enviroName}}</span>
         </div>
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>
@@ -38,7 +41,7 @@ under the License.
                 <div class="btn-group" title="Change Logs" uib-dropdown is-open="alerts.isopen">
                     <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
                         <i class="fa fa-comment-o"></i>
-                        <span class="badge bg-green">{{newLogCount()}}</span>
+                        <span class="badge bg-blue">{{newLogCount()}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
                         <li ng-show="loadingChangeLogs" style="text-align: center"><i class="fa fa-refresh fa-spin fa-1x fa-fw"></i></li>

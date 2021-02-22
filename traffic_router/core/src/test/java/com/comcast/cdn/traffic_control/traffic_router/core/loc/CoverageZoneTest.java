@@ -15,10 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
@@ -95,24 +96,24 @@ public class CoverageZoneTest {
 
 		when(cacheRegister.getCacheLocationById("east-cache-group")).thenReturn(eastCacheGroup);
 
-		when(cacheRegister.filterAvailableLocations("delivery-service-1")).thenReturn(cacheGroups);
+		when(cacheRegister.filterAvailableCacheLocations("delivery-service-1")).thenReturn(cacheGroups);
 		when(cacheRegister.getDeliveryService("delivery-service-1")).thenReturn(deliveryService);
 
 		trafficRouter = PowerMockito.mock(TrafficRouter.class);
 		Whitebox.setInternalState(trafficRouter, "cacheRegister", cacheRegister);
-		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1")).thenCallRealMethod();
-		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", false, null)).thenCallRealMethod();
+		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", IPVersions.IPV4ONLY)).thenCallRealMethod();
+		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", false, null, IPVersions.IPV4ONLY)).thenCallRealMethod();
 		when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
-		when(trafficRouter.orderCacheLocations(anyListOf(CacheLocation.class),any(Geolocation.class))).thenCallRealMethod();
-		when(trafficRouter.getSupportingCaches(anyListOf(Cache.class), eq(deliveryService))).thenCallRealMethod();
+		when(trafficRouter.orderLocations(anyListOf(CacheLocation.class),any(Geolocation.class))).thenCallRealMethod();
+		when(trafficRouter.getSupportingCaches(anyListOf(Cache.class), eq(deliveryService), any(IPVersions.class))).thenCallRealMethod();
 		when(trafficRouter.filterEnabledLocations(anyListOf(CacheLocation.class), any(CacheLocation.LocalizationMethod.class))).thenCallRealMethod();
 		PowerMockito.when(trafficRouter, "getNetworkNode", "12.23.34.45").thenReturn(eastNetworkNode);
-		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyListOf(CacheLocation.class), any(CacheLocation.class), any(DeliveryService.class)).thenCallRealMethod();
+		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyListOf(CacheLocation.class), any(CacheLocation.class), any(DeliveryService.class), any(IPVersions.class)).thenCallRealMethod();
 	}
 
 	@Test
 	public void trafficRouterReturnsNearestCacheGroupForDeliveryService() throws Exception {
-		CacheLocation cacheLocation = trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1");
+		CacheLocation cacheLocation = trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", IPVersions.IPV4ONLY);
 		assertThat(cacheLocation.getId(), equalTo("west-cache-group"));
 		// NOTE: far-east-cache-group is actually closer to the client but isn't enabled for CZ-localization and must be filtered out
 	}

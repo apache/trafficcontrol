@@ -24,6 +24,5 @@
 # - https://docs.docker.com/develop/develop-images/build_enhancements/
 *
 !infrastructure/cdn-in-a-box/
-!traffic_ops/app/cpanfile
 !traffic_ops/install/bin/install_goose.sh
 !traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz

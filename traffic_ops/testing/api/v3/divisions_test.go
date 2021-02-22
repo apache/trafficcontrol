@@ -16,18 +16,100 @@ package v3
 */
 
 import (
+	"net/http"
+	"sort"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestDivisions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		GetTestDivisionsIMS(t)
 		TryToDeleteDivision(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestDivisions(t)
 		UpdateTestDivisions(t)
+		UpdateTestDivisionsWithHeaders(t, header)
+		GetTestDivisionsIMSAfterChange(t, header)
 		GetTestDivisions(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDivisionsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
+	firstDivision := testData.Divisions[0]
+	// Retrieve the Division by division so we can get the id for the Update
+	resp, _, err := TOSession.GetDivisionByNameWithHdr(firstDivision.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
+	}
+	if len(resp) > 0 {
+		remoteDivision := resp[0]
+		expectedDivision := "division-test"
+		remoteDivision.Name = expectedDivision
+
+		_, reqInf, err := TOSession.UpdateDivisionByIDWithHdr(remoteDivision.ID, remoteDivision, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestDivisionsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func TryToDeleteDivision(t *testing.T) {
@@ -67,6 +149,25 @@ func CreateTestDivisions(t *testing.T) {
 	}
 }
 
+func SortTestDivisions(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetDivisionsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
 func UpdateTestDivisions(t *testing.T) {
 
 	firstDivision := testData.Divisions[0]
@@ -89,18 +190,19 @@ func UpdateTestDivisions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
-	respDivision := resp[0]
-	if respDivision.Name != expectedDivision {
-		t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
-	}
+	if len(resp) > 0 {
+		respDivision := resp[0]
+		if respDivision.Name != expectedDivision {
+			t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
+		}
 
-	// Set the name back to the fixture value so we can delete it after
-	remoteDivision.Name = firstDivision.Name
-	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
-	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		// Set the name back to the fixture value so we can delete it after
+		remoteDivision.Name = firstDivision.Name
+		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
+		if err != nil {
+			t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
+		}
 	}
-
 }
 
 func GetTestDivisions(t *testing.T) {

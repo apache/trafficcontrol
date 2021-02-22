@@ -20,277 +20,178 @@ package atscfg
  */
 
 import (
-	"encoding/json"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeMetaConfig(t *testing.T) {
-	serverHostName := tc.CacheName("myServer")
-	server := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "myserverdomain.invalid",
-		HostName:                      "myserver",
-		HTTPSPort:                     443,
-		ID:                            44,
-		IP:                            "192.168.2.9",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "MID_LOC",
-		ProfileID:                     46,
-		ProfileName:                   "myserverprofile",
-		Port:                          80,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MID_LOC",
-		Type:                          "EDGE",
+	server := &Server{}
+	server.CachegroupID = util.IntPtr(42)
+	server.Cachegroup = util.StrPtr("cg0")
+	server.CDNName = util.StrPtr("mycdn")
+	server.CDNID = util.IntPtr(43)
+	server.DomainName = util.StrPtr("myserverdomain.invalid")
+	server.HostName = util.StrPtr("myserver")
+	server.HTTPSPort = util.IntPtr(443)
+	server.ID = util.IntPtr(44)
+	ip := "192.168.2.9"
+	setIP(server, ip)
+	// server.ParentCacheGroupID=            45
+	// server.ParentCacheGroupType=          "MID_LOC"
+	server.ProfileID = util.IntPtr(46)
+	server.Profile = util.StrPtr("myserverprofile")
+	server.TCPPort = util.IntPtr(80)
+	// server.SecondaryParentCacheGroupID=   47
+	// server.SecondaryParentCacheGroupType= "MID_LOC"
+	server.Type = "EDGE"
+
+	// uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
+	// dses := map[tc.DeliveryServiceName]DeliveryService{"mydsname": {}}
+
+	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.Topology{}
+
+	cfgPath := "/etc/foo/trafficserver"
+
+	deliveryServices := []DeliveryService{}
+	dss := []tc.DeliveryServiceServer{}
+	globalParams := []tc.Parameter{}
+
+	makeLocationParam := func(name string) tc.Parameter {
+		return tc.Parameter{
+			Name:       "location",
+			ConfigFile: name,
+			Value:      "/my/location/",
+			Profiles:   []byte(`["` + *server.Profile + `"]`),
+		}
 	}
 
-	tmURL := "https://myto.invalid"
-	tmReverseProxyURL := "https://myrp.myto.invalid"
-	locationParams := map[string]ConfigProfileParams{
-		"remap.config": ConfigProfileParams{
-			FileNameOnDisk: "remap.config",
-			Location:       "/my/location/",
-		},
-		"regex_revalidate.config": ConfigProfileParams{
-			FileNameOnDisk: "regex_revalidate.config",
-			Location:       "/my/location/",
-			URL:            "http://myurl/remap.config", // cdn-scoped endpoint
-			APIURI:         "http://myapi/remap.config",
-		},
-		"cache.config": ConfigProfileParams{
-			FileNameOnDisk: "cache.config", // cache.config on mids is server-scoped
-			Location:       "/my/location/",
-		},
-		"ip_allow.config": ConfigProfileParams{
-			FileNameOnDisk: "ip_allow.config",
-			Location:       "/my/location/",
-		},
-		"volume.config": ConfigProfileParams{
-			FileNameOnDisk: "volume.config",
-			Location:       "/my/location/",
-		},
-		"ssl_multicert.config": ConfigProfileParams{
-			FileNameOnDisk: "ssl_multicert.config",
-			Location:       "/my/location/",
-		},
-		"uri_signing_mydsname.config": ConfigProfileParams{
-			FileNameOnDisk: "uri_signing_mydsname.config",
-			Location:       "/my/location/",
-		},
-		"uri_signing_nonexistentds.config": ConfigProfileParams{
-			FileNameOnDisk: "uri_signing_nonexistentds.config",
-			Location:       "/my/location/",
-		},
-		"regex_remap_nonexistentds.config": ConfigProfileParams{
-			FileNameOnDisk: "regex_remap_nonexistentds.config",
-			Location:       "/my/location/",
-		},
-		"url_sig_nonexistentds.config": ConfigProfileParams{
-			FileNameOnDisk: "url_sig_nonexistentds.config",
-			Location:       "/my/location/",
-		},
-		"hdr_rw_nonexistentds.config": ConfigProfileParams{
-			FileNameOnDisk: "hdr_rw_nonexistentds.config",
-			Location:       "/my/location/",
-		},
-		"hdr_rw_mid_nonexistentds.config": ConfigProfileParams{
-			FileNameOnDisk: "hdr_rw_mid_nonexistentds.config",
-			Location:       "/my/location/",
-		},
-		"unknown.config": ConfigProfileParams{
-			FileNameOnDisk: "unknown.config",
-			Location:       "/my/location/",
-		},
-		"custom.config": ConfigProfileParams{
-			FileNameOnDisk: "custom.config",
-			Location:       "/my/location/",
-		},
-		"external.config": ConfigProfileParams{
-			FileNameOnDisk: "external.config",
-			Location:       "/my/location/",
-			URL:            "http://myurl/remap.config",
-		},
-	}
-	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
-	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
-
-	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
-
-	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
-
-	cfg := tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	serverParams := []tc.Parameter{
+		makeLocationParam("ssl_multicert.config"),
+		makeLocationParam("volume.config"),
+		makeLocationParam("ip_allow.config"),
+		makeLocationParam("cache.config"),
+		makeLocationParam("regex_revalidate.config"),
+		makeLocationParam("uri_signing_mydsname.config"),
+		makeLocationParam("uri_signing_nonexistentds.config"),
+		makeLocationParam("regex_remap_nonexistentds.config"),
+		makeLocationParam("url_sig_nonexistentds.config"),
+		makeLocationParam("hdr_rw_nonexistentds.config"),
+		makeLocationParam("hdr_rw_mid_nonexistentds.config"),
+		makeLocationParam("unknown.config"),
+		makeLocationParam("custom.config"),
+		makeLocationParam("external.config"),
 	}
 
-	if cfg.Info.ProfileID != int(server.ProfileID) {
-		t.Errorf("expected Info.ProfileID %v actual %v", server.ProfileID, cfg.Info.ProfileID)
+	cfg, _, err := MakeConfigFilesList(cfgPath, server, serverParams, deliveryServices, dss, globalParams, cgs, topologies)
+	if err != nil {
+		t.Fatalf("MakeConfigFilesList: " + err.Error())
 	}
 
-	if cfg.Info.TOReverseProxyURL != tmReverseProxyURL {
-		t.Errorf("expected Info.TOReverseProxyURL %v actual %v", tmReverseProxyURL, cfg.Info.TOReverseProxyURL)
-	}
-
-	if cfg.Info.TOURL != tmURL {
-		t.Errorf("expected Info.TOURL %v actual %v", tmURL, cfg.Info.TOURL)
-	}
-
-	if server.IP != cfg.Info.ServerIPv4 {
-		t.Errorf("expected Info.ServerIP %v actual %v", server.IP, cfg.Info.ServerIPv4)
-	}
-
-	if server.Port != cfg.Info.ServerPort {
-		t.Errorf("expected Info.ServerPort %v actual %v", server.Port, cfg.Info.ServerPort)
-	}
-
-	if server.HostName != cfg.Info.ServerName {
-		t.Errorf("expected Info.ServerName %v actual %v", server.HostName, cfg.Info.ServerName)
-	}
-
-	if cfg.Info.CDNID != server.CDNID {
-		t.Errorf("expected Info.CDNID %v actual %v", server.CDNID, cfg.Info.CDNID)
-	}
-
-	if cfg.Info.CDNName != string(server.CDN) {
-		t.Errorf("expected Info.CDNName %v actual %v", server.CDN, cfg.Info.CDNName)
-	}
-	if cfg.Info.ServerID != server.ID {
-		t.Errorf("expected Info.ServerID %v actual %v", server.ID, cfg.Info.ServerID)
-	}
-	if cfg.Info.ProfileName != server.ProfileName {
-		t.Errorf("expected Info.ProfileName %v actual %v", server.ProfileName, cfg.Info.ProfileName)
-	}
-
-	expectedConfigs := map[string]func(cf tc.ATSConfigMetaDataConfigFile){
-		"cache.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+	expectedConfigs := map[string]func(cf CfgMeta){
+		"cache.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"ip_allow.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"ip_allow.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"volume.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"volume.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"ssl_multicert.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeCDNs); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"ssl_multicert.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"uri_signing_mydsname.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"uri_signing_mydsname.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"unknown.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"unknown.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"custom.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"custom.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"remap.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"remap.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"regex_revalidate.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
-			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeCDNs); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		"regex_revalidate.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
-		"external.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
-				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+		"external.config": func(cf CfgMeta) {
+			if expected := "/my/location/"; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
-			if expected := string(tc.ATSConfigMetaDataConfigFileScopeCDNs); cf.Scope != expected {
-				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+		},
+		"hosting.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
+		"parent.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
+		"plugin.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
+		"records.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
+		"storage.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
 	}
 
-	for _, cfgFile := range cfg.ConfigFiles {
-		if testF, ok := expectedConfigs[cfgFile.FileNameOnDisk]; !ok {
-			t.Errorf("unexpected config '" + cfgFile.FileNameOnDisk + "'")
+	for _, cfgFile := range cfg {
+		if testF, ok := expectedConfigs[cfgFile.Name]; !ok {
+			t.Errorf("unexpected config '" + cfgFile.Name + "'")
 		} else {
 			testF(cfgFile)
-			delete(expectedConfigs, cfgFile.FileNameOnDisk)
+			delete(expectedConfigs, cfgFile.Name)
 		}
 	}
 
 	server.Type = "MID"
-	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
-	cfg = tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	cfg, _, err = MakeConfigFilesList(cfgPath, server, serverParams, deliveryServices, dss, globalParams, cgs, topologies)
+	if err != nil {
+		t.Fatalf("MakeConfigFilesList: " + err.Error())
 	}
-	for _, cfgFile := range cfg.ConfigFiles {
-		if cfgFile.FileNameOnDisk != "cache.config" {
+	for _, cfgFile := range cfg {
+		if cfgFile.Name != "cache.config" {
 			continue
-		}
-		if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cfgFile.Scope != expected {
-			t.Errorf("expected cache.config on a Mid to be scope '%v', actual '%v'", expected, cfgFile.Scope)
 		}
 		break
 	}
-	if strings.Contains(txt, "nonexistentds") {
-		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
-	}
-
-	// check for expected apiUri vs url keys (if values are empty strings, they should be omitted from the json)
-	m := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(txt), &m); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
-	}
-	cfl := m["configFiles"].([]interface{})
-	for _, cf := range cfl {
-		c := cf.(map[string]interface{})
-		if c["fnameOnDisk"] == "external.config" {
-			if _, exists := c["apiUri"]; exists {
-				t.Errorf("expected: apiUri field to be omitted for external.config, actual: present")
-			}
-			if _, exists := c["url"]; !exists {
-				t.Errorf("expected: url field to be present for external.config, actual: omitted")
-			}
+	for _, fi := range cfg {
+		if strings.Contains(fi.Name, "nonexistentds") {
+			t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", fi.Name)
 		}
 	}
 }

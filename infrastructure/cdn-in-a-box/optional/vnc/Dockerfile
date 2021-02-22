@@ -14,15 +14,22 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-FROM docker.io/centos:7
+
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 ARG VNC_BUILD_USER
 ENV VNC_USER=$VNC_BUILD_USER
 
-RUN yum -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm epel-release && \
-    yum -y install xterm firefox git tigervnc-server sudo bind-utils net-tools which passwd which \
+RUN dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm epel-release && \
+    dnf -y install xterm firefox git tigervnc-server sudo bind-utils net-tools which passwd which \
                    fluxbox webcore-fonts terminus-fonts vnc mplayer wget openssl curl nc && \
-    yum -y clean all && rm -rf /var/cache/yum
+    dnf -y clean all && rm -rf /var/cache/dnf
 
 RUN useradd -m $VNC_USER && \
     echo "$VNC_USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -46,6 +53,10 @@ RUN systemd-machine-id-setup && \
     chmod +x /home/$VNC_USER/.vnc/xstartup
 
 ADD optional/vnc/run.sh /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 EXPOSE 5909/tcp
 

@@ -17,12 +17,18 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
+ARG CENTOS_VERSION=8
+FROM centos:${CENTOS_VERSION} as get-delve
 
-FROM trafficops-perl
+RUN if [[ "${CENTOS_VERSION%%.*}" -eq 7 ]]; then \
+		yum -y install dnf || exit 1; \
+	fi
 
-RUN cpanm \
-        Test::More \
-        Devel::Camelcadedb && \
-    rm -r /root/.cpanm
+RUN dnf -y install epel-release && \
+    dnf -y install golang git && \
+    go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM trafficops
+COPY --from=get-delve /root/go/bin /usr/bin

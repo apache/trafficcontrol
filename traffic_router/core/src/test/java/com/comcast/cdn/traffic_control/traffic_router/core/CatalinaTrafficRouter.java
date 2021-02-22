@@ -74,6 +74,9 @@ public class CatalinaTrafficRouter {
 
 		}
 
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on DNS port " + System.getProperty("dns.udp.port") + " udp");
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on DNS port " + System.getProperty("dns.tcp.port") + " tcp");
+
 		StandardHost standardHost = (StandardHost) trafficRouterService.getContainer().findChild("localhost");
 		standardHost.setAppBase(appBase);
 

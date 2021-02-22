@@ -22,22 +22,51 @@ package atscfg
 import (
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeATSDotRules(t *testing.T) {
-	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
-		"Drive_Prefix":      "/dev/sd",
-		"Drive_Letters":     "a,b,c,d,e",
-		"RAM_Drive_Prefix":  "/dev/ra",
-		"RAM_Drive_Letters": "f,g,h",
+	server := makeGenericServer()
+	serverProfile := "myProfile"
+	server.Profile = &serverProfile
+
+	hdr := "myHeaderComment"
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "Drive_Prefix",
+			ConfigFile: ATSDotRulesFileName,
+			Value:      "/dev/sd",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
+		{
+			Name:       "Drive_Letters",
+			ConfigFile: ATSDotRulesFileName,
+			Value:      "a,b,c,d,e",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
+		{
+			Name:       "RAM_Drive_Prefix",
+			ConfigFile: ATSDotRulesFileName,
+			Value:      "/dev/ra",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
+		{
+			Name:       "RAM_Drive_Letters",
+			ConfigFile: ATSDotRulesFileName,
+			Value:      "f,g,h",
+			Profiles:   []byte(`["` + serverProfile + `"]`),
+		},
 	}
 
-	txt := MakeATSDotRules(profileName, paramData, toolName, toURL)
+	cfg, err := MakeATSDotRules(server, serverParams, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if count := strings.Count(txt, "\n"); count != 9 { // one line for each drive letter, plus 1 comment
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)

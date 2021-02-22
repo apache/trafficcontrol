@@ -38,6 +38,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
+import org.xbill.DNS.*;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SNIHostName;
@@ -49,8 +50,10 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -96,6 +99,8 @@ public class RouterTest {
 	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
 	private String testHttpPort = System.getProperty("testHttpServerPort", "8889");
 	private KeyStore trustStore;
+
+	private int routerDnsPort = Integer.valueOf(System.getProperty("dns.udp.port", "1053"));
 
 	@Before
 	public void before() throws Exception {
@@ -230,6 +235,37 @@ public class RouterTest {
 	public void after() throws IOException {
 		if (httpClient != null) {
 			httpClient.close();
+		}
+	}
+
+	@Test
+	public void itAUsesEdgeTrafficRoutersForHttpRouting() throws TextParseException, UnknownHostException {
+		Set<String> edgeIpAddresses = new HashSet<>();
+		// this will actually be the "miss" scenario since the resolver is localhost, which will be a CZF miss
+		// in the miss case, we serve one TR from each location, and these are what we'd serve with our test CrConfig.json
+		edgeIpAddresses.add("12.34.21.2");
+		edgeIpAddresses.add("12.34.21.3");
+		edgeIpAddresses.add("12.34.21.7");
+		edgeIpAddresses.add("12.34.21.8");
+		edgeIpAddresses.add("2001:dead:beef:124:1:0:0:2");
+		edgeIpAddresses.add("2001:dead:beef:124:1:0:0:3");
+		edgeIpAddresses.add("2001:dead:beef:124:1:0:0:7");
+		edgeIpAddresses.add("2001:dead:beef:124:1:0:0:8");
+
+		SimpleResolver resolver = new SimpleResolver("localhost");
+		resolver.setPort(routerDnsPort);
+
+		for (int type : Arrays.asList(Type.A, Type.AAAA)) {
+			Lookup lookup = new Lookup(new Name("tr.http-only-test.thecdn.example.com."), type);
+			lookup.setResolver(resolver);
+			lookup.run();
+
+			assertThat(lookup.getResult(), equalTo(Lookup.SUCCESSFUL));
+			assertThat(lookup.getAnswers().length, equalTo(4));
+
+			for (Record record : lookup.getAnswers()) {
+				assertThat(record.rdataToString(), isIn(edgeIpAddresses));
+			}
 		}
 	}
 
@@ -468,7 +504,6 @@ public class RouterTest {
 
 		// verify that if we get a new cr-config that turns off https for the problematic delivery service
 		// that it's able to get through while TR is still concurrently trying to get certs
-
 		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/crconfig-3");
 		httpClient.execute(httpPost).close();
@@ -551,6 +586,8 @@ public class RouterTest {
 
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+		System.out.println(httpGet.toString());
+		System.out.println(Arrays.toString(httpGet.getAllHeaders()));
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
@@ -577,10 +614,8 @@ public class RouterTest {
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
 			assertThat(entity.getContent(), not(nullValue()));
-			System.out.println(entity.getContent());
 
 			JsonNode json = objectMapper.readTree(entity.getContent());
-			System.out.println(json);
 
 			assertThat(json.has("location"), equalTo(true));
 			assertThat(json.get("location").asText(), isIn(validLocations));

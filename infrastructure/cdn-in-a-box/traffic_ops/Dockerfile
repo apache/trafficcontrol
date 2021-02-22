@@ -17,92 +17,84 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION=$RHEL_VERSION
 
-FROM centos:7
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+		yum -y install dnf || exit 1; \
+	fi
+
+RUN set -o nounset -o errexit && \
+	mkdir -p /etc/cron.d; \
+	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+		use_repo=''; \
+		enable_repo=''; \
+	else \
+		use_repo='--repo=pgdg96'; \
+		enable_repo='--enablerepo=powertools'; \
+	fi; \
+	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+	dnf -y $use_repo -- install postgresql96; \
+	dnf -y install epel-release; \
+	dnf -y $enable_repo install      \
+		jq              \
+		bind-utils      \
+		net-tools       \
+		gettext         \
+		perl-JSON-PP    \
+		perl-Crypt-ScryptKDF  \
+		mkisofs         \
+		isomd5sum       \
+		nmap-ncat       \
+		openssl         \
+		python3         \
+		golang          \
+		git             \
+		libidn-devel    \
+		libpcap-devel   \
+		perl-Digest-SHA1\
+		# Used to copy certs in "Shared SSL certificate generation" step
+		rsync;          \
+	dnf clean all
 
 EXPOSE 443
-ENV MOJO_MODE production
-
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
-    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum -y update ca-certificates && \
-    yum install -y \
-        epel-release \
-        pgdg-redhat-latest && \
-    yum install -y \
-        bind-utils \
-        cpanminus \
-        expat-devel \
-        gcc-c++ \
-        gettext \
-        git \
-        golang \
-        iproute \
-        jq \
-        libcurl \
-        libcurl-devel \
-        libidn-devel \
-        libpcap-devel \
-        mkisofs \
-        net-tools \
-        nmap-ncat \
-        openssl \
-        openssl-devel \
-        perl \
-        perl-core \
-        perl-Crypt-ScryptKDF \
-        perl-DBD-Pg \
-        perl-DBI \
-        perl-DBIx-Connector \
-        perl-Digest-SHA1 \
-        perl-JSON \
-        perl-JSON-PP \
-        perl-libwww-perl \
-        perl-TermReadKey \
-        perl-Test-CPAN-Meta \
-        perl-WWW-Curl \
-        postgresql96 \
-        postgresql96-devel \
-        postgresql96-libs \
-        tar &&\
-    yum -y clean all && mkdir -p /opt/traffic_ops/app/public
 
 ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
-RUN cpanm -l ./local Carton && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
-    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
-RUN ./install_goose.sh
-
-# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
-ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
-ADD $TRAFFIC_OPS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_OPS_RPM) && \
-    rm /$(basename $TRAFFIC_OPS_RPM) && \
-    yum -y clean all && \
-    rm /opt/traffic_ops/app/bin/traffic_ops_golang
-
-# Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
-# build (should never happen - Perl is supposed to be going away)
-RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
-    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
-
-ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
-    infrastructure/cdn-in-a-box/traffic_ops/run.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/config.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
-    infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
-    infrastructure/cdn-in-a-box/variables.env \
-    /
+ADD traffic_ops/install/bin/install_goose.sh ./
+RUN ./install_goose.sh && rm ./install_goose.sh && dnf -y remove git && dnf clean all
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
-CMD /run.sh
+# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
+#
+ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+
+COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
+RUN yum -y install /traffic_ops.rpm && \
+	rm /traffic_ops.rpm
+
+COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
+	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+	infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+	infrastructure/cdn-in-a-box/dns/set-dns.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
+	infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
+	infrastructure/cdn-in-a-box/variables.env \
+	/
+
+EXPOSE 443
+CMD /run-go.sh
+HEALTHCHECK --interval=10s --timeout=1s \
+	CMD bash -c 'source /to-access.sh && [[ "$(curl -sk "https://${TO_FQDN}/api/${TO_API_VERSION}/ping" | jq .ping)" == \"pong\" ]]'

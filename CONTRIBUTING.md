@@ -57,7 +57,7 @@ If you've never made a pull request, it's super-easy. Github has a great tutoria
 
 Guidelines
 ----------
-Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
+Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://traffic-control-cdn.readthedocs.io/en/latest/development/api_guidelines.html).
 
 #### Create an issue or feature blueprint
 

@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormCloneDeliveryServiceController = function(deliveryService, origin, type, types, $scope, $controller) {
+var FormCloneDeliveryServiceController = function(deliveryService, origin, topologies, type, types, $scope, $controller) {
 
 	// extends the FormNewDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormNewDeliveryServiceController', { deliveryService: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormNewDeliveryServiceController', { deliveryService: deliveryService, origin: origin, type: type, topologies: topologies, types: types, $scope: $scope }));
 
 	$scope.deliveryServiceName = deliveryService.xmlId + ' clone';
 
@@ -40,5 +40,5 @@ var FormCloneDeliveryServiceController = function(deliveryService, origin, type,
 
 };
 
-FormCloneDeliveryServiceController.$inject = ['deliveryService', 'origin', 'type', 'types', '$scope', '$controller'];
+FormCloneDeliveryServiceController.$inject = ['deliveryService', 'origin', 'topologies', 'type', 'types', '$scope', '$controller'];
 module.exports = FormCloneDeliveryServiceController;

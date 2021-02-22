@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id:
+.. _to-api-v3-deliveryservices-id:
 
 ***************************
 ``deliveryservices/{{ID}}``
@@ -38,6 +38,9 @@ Request Structure
 
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+
+		.. note:: If the Delivery Service has SSL Keys, then cdnId is not allowed to change as that would invalidate the SSL Key
+
 :checkPath:                 A :ref:`ds-check-path`
 :consistentHashRegex:       A :ref:`ds-consistent-hashing-regex`
 :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
@@ -50,6 +53,7 @@ Request Structure
 :dscp:                      A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 :ecsEnabled:                A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite:         A set of :ref:`ds-edge-header-rw-rules`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -60,7 +64,9 @@ Request Structure
 :httpBypassFqdn:            A :ref:`ds-http-bypass-fqdn`
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
 :longDesc1:                 An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
@@ -81,6 +87,9 @@ Request Structure
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
 :routingName:               The :ref:`ds-routing-name` of this :term:`Delivery Service`
+
+		.. note:: If the Delivery Service has SSL Keys, then routingName is not allowed to change as that would invalidate the SSL Key
+
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).

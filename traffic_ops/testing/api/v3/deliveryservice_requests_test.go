@@ -16,9 +16,12 @@ package v3
 */
 
 import (
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
@@ -32,9 +35,66 @@ const (
 
 func TestDeliveryServiceRequests(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
+		GetTestDeliveryServiceRequestsIMS(t)
 		GetTestDeliveryServiceRequests(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestDeliveryServiceRequests(t)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
+		GetTestDeliveryServiceRequestsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
+	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", dsr.DeliveryService.XMLID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("Length of GET DeliveryServiceRequest is 0")
+	}
+	respDSR := resp[0]
+	respDSR.DeliveryService.DisplayName = "new display name"
+
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(respDSR.ID, respDSR, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, err = TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
@@ -52,13 +112,9 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
-		}
-
-		if len(alerts.Alerts) == 0 {
-			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err == nil {
+			t.Error("expected: validation error, actual: nil")
 		}
 	})
 }
@@ -75,12 +131,9 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 		dsr.DeliveryService.RoutingName = routingName
 		dsr.DeliveryService.XMLID = XMLID
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		if err != nil {
-			t.Errorf("Error occurred %v", err)
-		}
-		if len(alerts.Alerts) == 0 {
-			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err == nil {
+			t.Error("expected: validation error, actual: nil")
 		}
 	})
 }
@@ -122,14 +175,14 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		}
 		src.Status = s
 
-		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		_, _, err = TOSession.CreateDeliveryServiceRequest(src)
+		if err == nil {
+			t.Fatal("expected: validation error, actual: nil")
 		}
-		expected := []string{
-			`'status' invalid transition from draft to pending`,
+		expected := `'status' invalid transition from draft to pending`
+		if !strings.Contains(err.Error(), expected) {
+			t.Fatalf("expected: error message to contain %s, actual: %s", expected, err.Error())
 		}
-		utils.Compare(t, expected, alerts.ToStrings())
 	})
 }
 
@@ -161,11 +214,14 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
-		if err != nil {
-			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		if err == nil {
+			t.Fatal("expected: validation error, actual: nil")
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
+		expectedStr := `An active request exists for delivery service 'test-transitions'`
+		if !strings.Contains(err.Error(), expectedStr) {
+			t.Errorf("expected: error message containing %s, actual: %v", expectedStr, err)
+		}
 		utils.Compare(t, expected, alerts.ToStrings())
 
 		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
@@ -176,7 +232,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			}
 		}
 
-		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted", nil)
 
 		expected = []string{
 			"deliveryservice_request was updated.",
@@ -189,11 +245,11 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	})
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string, header http.Header) (tc.Alerts, tc.DeliveryServiceRequest) {
 	ID := dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
-	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr)
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByIDWithHdr(ID, dsr, header)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request: %v", err)
 		return alerts, dsr
@@ -209,6 +265,22 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 		t.Errorf("Expected 1 deliveryservice_request, got %d", len(d))
 	}
 	return alerts, d[0]
+}
+
+func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestByXMLIDWithHdr(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestDeliveryServiceRequests(t *testing.T) {

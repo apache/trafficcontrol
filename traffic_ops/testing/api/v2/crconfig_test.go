@@ -17,7 +17,6 @@ package v2
 
 import (
 	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -113,9 +112,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	if crc.Stats.TMPath == nil {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot', actual: %+v", crc.Stats.TMPath)
-	} else if !strings.HasSuffix(*crc.Stats.TMPath, "snapshot") {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot', actual: %+v", *crc.Stats.TMPath)
+		t.Error("GetCRConfig crc.Stats.Path expected: some non-null string (but we don't check contents because it's deprecated), actual: null")
 	}
 
 	if crc.Stats.TMHost == nil {
@@ -136,6 +133,23 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
+	}
+
+	crcBtsNew, _, err := TOSession.GetCRConfigNew(cdn)
+	if err != nil {
+		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
+	}
+	crcNew := tc.CRConfig{}
+	if err := json.Unmarshal(crcBtsNew, &crcNew); err != nil {
+		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
+	}
+
+	if len(crcNew.DeliveryServices) != len(crc.DeliveryServices) {
+		t.Errorf("/new endpoint returned a different snapshot. DeliveryServices length expected %v, was %v", len(crc.DeliveryServices), len(crcNew.DeliveryServices))
+	}
+
+	if *crcNew.Stats.TMHost != "" {
+		t.Errorf("update to snapshot not captured in /new endpoint")
 	}
 }
 

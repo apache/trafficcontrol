@@ -16,9 +16,14 @@ package v3
 */
 
 import (
+	"net/http"
 	"reflect"
+	"sort"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -31,14 +36,94 @@ const (
 
 func TestRoles(t *testing.T) {
 	WithObjs(t, []TCObj{Roles}, func() {
+		GetTestRolesIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestRoles(t)
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		UpdateTestRolesWithHeaders(t, header)
+		GetTestRolesIMSAfterChange(t, header)
 		VerifyGetRolesOrder(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestRolesWithHeaders(t, header)
 	})
 }
 
+func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Roles) > 0 {
+		t.Logf("testData.Roles contains: %+v\n", testData.Roles)
+		firstRole := testData.Roles[0]
+		// Retrieve the Role by role so we can get the id for the Update
+		resp, _, status, err := TOSession.GetRoleByNameWithHdr(*firstRole.Name, header)
+		t.Log("Status Code: ", status)
+		if err != nil {
+			t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
+		}
+		t.Logf("got response: %+v\n", resp)
+		if len(resp) > 0 {
+			remoteRole := resp[0]
+			expectedRole := "new admin2"
+			remoteRole.Name = &expectedRole
+			_, reqInf, status, _ := TOSession.UpdateRoleByIDWithHdr(*remoteRole.ID, remoteRole, header)
+			if status != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
+func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
+	role := testData.Roles[roleGood]
+	_, reqInf, _, err := TOSession.GetRoleByNameWithHdr(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, _, err = TOSession.GetRoleByNameWithHdr(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestRolesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	role := testData.Roles[roleGood]
+	_, reqInf, _, err := TOSession.GetRoleByNameWithHdr(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+
+}
+
 func CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}}
+	expectedAlerts := []string{
+		"",
+		"can not add non-existent capabilities: [invalid-capability]",
+		"",
+	}
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
@@ -46,11 +131,33 @@ func CreateTestRoles(t *testing.T) {
 		t.Log("Response: ", alerts)
 		if err != nil {
 			t.Logf("error: %v", err)
-			//t.Errorf("could not CREATE role: %v", err)
 		}
-		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
-			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
+		if expectedAlerts[i] == "" && err != nil {
+			t.Errorf("expected: no error, actual: %v", err)
+		} else if len(expectedAlerts[i]) > 0 && err == nil {
+			t.Errorf("expected: error containing '%s', actual: nil", expectedAlerts[i])
+		} else if err != nil && !strings.Contains(err.Error(), expectedAlerts[i]) {
+			t.Errorf("expected: error containing '%s', actual: %v", expectedAlerts[i], err)
 		}
+	}
+}
+
+func SortTestRoles(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, _, err := TOSession.GetRolesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
@@ -63,7 +170,10 @@ func UpdateTestRoles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
-	t.Logf("got response: %+v\n", resp)
+	t.Logf("got response: %+v", resp)
+	if len(resp) < 1 {
+		t.Fatal("got empty response if GET role by name")
+	}
 	remoteRole := resp[0]
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole

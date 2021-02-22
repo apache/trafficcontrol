@@ -17,14 +17,12 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService, serverUtils) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, filter, $controller, $scope, $uibModal, deliveryServiceService) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	angular.extend(this, $controller('TableServersController', { tableName: 'deliveryServiceServers', servers: servers, filter: filter, $scope: $scope }));
 
-	let dsServersTable;
-
-	var removeServer = function(serverId) {
+	let removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
 			.then(
 				function() {
@@ -34,23 +32,6 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	};
 
 	$scope.deliveryService = deliveryService;
-
-	$scope.isEdge = serverUtils.isEdge;
-
-	$scope.isOrigin = serverUtils.isOrigin;
-
-	// adds some items to the base servers context menu
-	$scope.contextMenuItems.splice(2, 0,
-		{
-			text: 'Unlink Server from Delivery Service',
-			hasBottomDivider: function() {
-				return true;
-			},
-			click: function ($itemScope, evt) {
-				$scope.confirmRemoveServer($itemScope.s, evt);
-			}
-		}
-	);
 
 	$scope.selectServers = function() {
 		var modalInstance = $uibModal.open({
@@ -62,7 +43,12 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 					return deliveryService;
 				},
 				servers: function(serverService) {
-					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+					if (deliveryService.topology) {
+						// topology-based ds's can only have ORG servers from the same CDN directly assigned
+						return serverService.getServers({ type: 'ORG', cdn: deliveryService.cdnId });
+					} else {
+						return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+					}
 				},
 				assignedServers: function() {
 					return servers;
@@ -86,11 +72,11 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
 
-		var params = {
+		const params = {
 			title: 'Remove Server from Delivery Service?',
 			message: 'Are you sure you want to remove ' + server.hostName + ' from this delivery service?'
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
 			size: 'md',
@@ -107,40 +93,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
-	$scope.toggleVisibility = function(colName) {
-		const col = dsServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		dsServersTable.rows().invalidate().draw();
-	};
-
-	$scope.columnFilterFn = function(column) {
-		if (column.name === 'Action') {
-			return false;
-		}
-		return true;
-	};
-
-	angular.element(document).ready(function () {
-		dsServersTable = $('#dsServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 32 }
-			],
-			"columns": $scope.columns.concat([{ "name": "Action", "visible": true, "searchable": false }]),
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_dsServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_dsServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$controller', '$scope', '$uibModal', 'deliveryServiceService', 'serverUtils'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', 'filter', '$controller', '$scope', '$uibModal', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;

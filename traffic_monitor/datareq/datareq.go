@@ -30,6 +30,7 @@ import (
 	"unicode"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
@@ -41,7 +42,7 @@ import (
 // MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.
 func MakeDispatchMap(
 	opsConfig threadsafe.OpsConfig,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
@@ -72,62 +73,65 @@ func MakeDispatchMap(
 	dispatchMap := map[string]http.HandlerFunc{
 		"/publish/CrConfig": wrap(WrapAgeErr(errorCount, func() ([]byte, time.Time, error) {
 			return srvTRConfig(opsConfig, toSession)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
-		}, ContentTypeJSON)),
-		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+		}, rfc.ApplicationJSON)),
+		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
+		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvLegacyCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
+		}, rfc.ApplicationJSON)),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/EventLog": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvEventLog(events)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, peerStates)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/ConfigDoc": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvConfigDoc(opsConfig)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvStatSummary(params, errorCount, path, toData, statResultHistory)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/cache-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheCount(localStates)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/cache-available-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheAvailableCount(localStates)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/cache-down-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheDownCount(localStates, monitorConfig)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/version": wrap(WrapBytes(func() []byte {
 			return srvAPIVersion(staticAppData)
-		}, ContentTypeJSON)),
+		}, rfc.ContentTypeTextPlain)),
 		"/api/traffic-ops-uri": wrap(WrapBytes(func() []byte {
 			return srvAPITrafficOpsURI(opsConfig)
-		}, ContentTypeJSON)),
+		}, rfc.ContentTypeURIList)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus, statMaxKbpses, monitorConfig)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/bandwidth-capacity-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthCapacityKbps(statMaxKbpses)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/monitor-config": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvMonitorConfig(monitorConfig)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 		"/api/crconfig-history": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvAPICRConfigHist(toSession)
-		}, ContentTypeJSON)),
+		}, rfc.ApplicationJSON)),
 	}
 	return addTrailingSlashEndpoints(dispatchMap)
 }
@@ -285,8 +289,6 @@ func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount thre
 		f(w, r)
 	}
 }
-
-const ContentTypeJSON = "application/json"
 
 func stripAllWhitespace(s string) string {
 	return strings.Map(func(r rune) rune {

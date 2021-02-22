@@ -22,22 +22,33 @@ package atscfg
 import (
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeRecordsDotConfig(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
+	hdr := "myHeaderComment"
+
+	paramData := makeParamsFromMap("serverProfile", RecordsFileName, map[string]string{
 		"param0":                    "val0",
 		"param1":                    "val1",
 		"param2":                    "val2",
 		"test-hostname-replacement": "fooSTRING __HOSTNAME__",
+	})
+
+	server := makeTestRemapServer()
+	ipStr := "192.168.2.99"
+	setIP(server, ipStr)
+	server.Profile = util.StrPtr(profileName)
+	opt := RecordsConfigOpts{}
+	cfg, err := MakeRecordsDotConfig(server, paramData, hdr, opt)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakeRecordsDotConfig(profileName, paramData, toolName, toURL)
-
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "param0 val0") {
 		t.Errorf("expected config to contain paramData 'param0 val0', actual: '%v'", txt)
@@ -50,6 +61,9 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	}
 	if !strings.Contains(txt, "test-hostname-replacement fooSTRING __FULL_HOSTNAME__") {
 		t.Errorf("expected config to replace 'STRING __HOSTNAME__' with 'STRING __FULL_HOSTNAME__', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "LOCAL proxy.local.outgoing_ip_to_bind STRING "+ipStr) {
+		t.Errorf("expected config to contain outgoing_ip_to_bind from server, actual: '%v'", txt)
 	}
 }
 

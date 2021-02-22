@@ -1,0 +1,29 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+galaxy_info:
+  author: Jonathan Gray
+  description: A role to assist with deploying the influxdb-relay project
+  company: Apache Traffic Control
+  issue_tracker_url: https://github.com/apache/trafficcontrol/issues
+  license: Apache 2.0
+  min_ansible_version: 2.8
+  platforms:
+  - name: CentOS
+    versions:
+    - 7
+  galaxy_tags:
+  - influxdb-relay
+  - influx
+  - influxdb
+dependencies: []

@@ -1,0 +1,14 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "CreateServiceCategories",
+            "Route": "/service_categories",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "TPTest2"
+                }
+            ]
+        }
+    ]
+}

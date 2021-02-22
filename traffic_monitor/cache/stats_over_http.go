@@ -19,17 +19,21 @@ package cache
  * under the License.
  */
 
-import "errors"
-import "fmt"
-import "io"
-import "math"
-import "strings"
-import "strconv"
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"strconv"
+	"strings"
 
-import "github.com/apache/trafficcontrol/lib/go-log"
-import "github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
-import "github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
+)
 
 // LOADAVG_SHIFT is the amount by which "loadavg" values returned by
 // stats_over_http need to be divided to obtain the values with which ATC
@@ -56,7 +60,7 @@ type stats_over_httpData struct {
 	Global map[string]interface{} `json:"global"`
 }
 
-func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
+func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if data == nil {
 		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
@@ -64,10 +68,25 @@ func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[strin
 	}
 
 	var sohData stats_over_httpData
-	json := jsoniter.ConfigFastest
-	err := json.NewDecoder(data).Decode(&sohData)
-	if err != nil {
-		return stats, nil, err
+	var err error
+
+	ctx := pollCTX.(*poller.HTTPPollCtx)
+
+	ctype := ctx.HTTPHeader.Get("Content-Type")
+
+	if ctype == "text/json" || ctype == "text/javascript" || ctype == "application/json" || ctype == "" {
+		json := jsoniter.ConfigFastest
+		err := json.NewDecoder(data).Decode(&sohData)
+		if err != nil {
+			return stats, nil, err
+		}
+	} else if ctype == "text/csv" {
+		sohData.Global, err = statsOverHTTPParseCSV(cacheName, data)
+		if err != nil {
+			return stats, nil, err
+		}
+	} else {
+		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by statsOverHTTP", ctype)
 	}
 
 	if len(sohData.Global) < 1 {
@@ -86,6 +105,45 @@ func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[strin
 	}
 
 	return stats, statMap, nil
+}
+
+func statsOverHTTPParseCSV(cacheName string, data io.Reader) (map[string]interface{}, error) {
+
+	if data == nil {
+		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
+		return nil, errors.New("handler got nil reader")
+	}
+
+	var allData []string
+	scanner := bufio.NewScanner(data)
+	for scanner.Scan() {
+		allData = append(allData, scanner.Text())
+	}
+
+	globalData := make(map[string]interface{}, len(allData))
+
+	for _, line := range allData {
+		delim := strings.IndexByte(line, ',')
+
+		// No delimiter found, skip this line as invalid
+		if delim < 0 {
+			continue
+		}
+
+		value, err := strconv.ParseFloat(line[delim+1:], 64)
+
+		// Skip values that dont parse
+		if err != nil {
+			continue
+		}
+		globalData[line[0:delim]] = value
+	}
+
+	if len(globalData) < 1 {
+		return nil, errors.New("no valid data found in stats_over_http payload with csv format")
+	}
+
+	return globalData, nil
 }
 
 func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
@@ -324,7 +382,6 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 	for stat, value := range miscStats {
 		if strings.HasPrefix(stat, "plugin.remap_stats.") {
 			trimmedStat := strings.TrimPrefix(stat, "plugin.remap_stats.")
-
 			statParts := strings.Split(trimmedStat, ".")
 			if len(statParts) < 3 {
 				err := errors.New("stat has no remap_stats deliveryservice and name parts")
@@ -332,11 +389,9 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				precomputed.Errors = append(precomputed.Errors, err)
 				continue
 			}
-
 			subsubdomain := statParts[0]
 			subdomain := statParts[1]
 			domain := strings.Join(statParts[2:len(statParts)-1], ".")
-
 			ds, ok := data.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 			if !ok {
 				err := errors.New("No Delivery Service match for stat")
@@ -350,9 +405,11 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 				precomputed.Errors = append(precomputed.Errors, err)
 				continue
 			}
-
 			dsName := string(ds)
-			dsStat := precomputed.DeliveryServiceStats[dsName]
+			dsStat, ok := precomputed.DeliveryServiceStats[dsName]
+			if !ok || dsStat == nil {
+				dsStat = new(DSStat)
+			}
 
 			parsedStat, err := parseNumericStat(value)
 			if err != nil {
@@ -384,6 +441,5 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 			precomputed.DeliveryServiceStats[dsName] = dsStat
 		}
 	}
-
 	return precomputed
 }

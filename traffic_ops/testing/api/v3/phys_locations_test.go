@@ -16,19 +16,102 @@ package v3
 */
 
 import (
+	"net/http"
 	"sort"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestPhysLocations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
+		GetTestPhysLocationsIMS(t)
 		GetDefaultSortPhysLocationsTest(t)
 		GetSortPhysLocationsTest(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestPhysLocations(t)
 		UpdateTestPhysLocations(t)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 		GetTestPhysLocations(t)
+		GetTestPhysLocationsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.PhysLocations) > 0 {
+		firstPhysLocation := testData.PhysLocations[0]
+		// Retrieve the PhysLocation by name so we can get the id for the Update
+		resp, _, err := TOSession.GetPhysLocationByNameWithHdr(firstPhysLocation.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
+		}
+		if len(resp) > 0 {
+			remotePhysLocation := resp[0]
+			expectedPhysLocationCity := "city1"
+			remotePhysLocation.City = expectedPhysLocationCity
+			_, reqInf, err := TOSession.UpdatePhysLocationByIDWithHdr(remotePhysLocation.ID, remotePhysLocation, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
+func GetTestPhysLocationsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+
+}
+
+func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByNameWithHdr(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestPhysLocations(t *testing.T) {
@@ -40,6 +123,25 @@ func CreateTestPhysLocations(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestPhysLocations(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetPhysLocationsWithHdr(nil, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestPhysLocations(t *testing.T) {

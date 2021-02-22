@@ -15,7 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.api.controllers;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,8 @@ public class DeepCoverageZoneController {
     public @ResponseBody
     ResponseEntity<CacheLocation> getCacheLocationForIp(@RequestParam(name = "ip") final String ip,
                                                         @RequestParam(name = "deliveryServiceId") final String deliveryServiceId) {
-        final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId, true, null);
+        final IPVersions requestVersion = ip.contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
+        final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId, true, null, requestVersion);
         if (cacheLocation == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }

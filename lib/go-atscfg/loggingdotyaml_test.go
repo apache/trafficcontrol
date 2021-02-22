@@ -29,20 +29,27 @@ import (
 
 func TestMakeLoggingDotYAML(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
+	hdr := "myHeaderComment"
+
+	server := makeGenericServer()
+	server.Profile = &profileName
+
+	params := makeParamsFromMap("serverProfile", LoggingYAMLFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",
 		"LogFormat.Format":         "myFormat",
 		"LogObject.Filename":       "myFilename",
 		"LogObject.RollingEnabled": "myRollingEnabled",
 		"LogFormat.Invalid":        "ShouldNotBeHere",
 		"LogObject.Invalid":        "ShouldNotBeHere",
+	})
+
+	cfg, err := MakeLoggingDotYAML(server, params, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakeLoggingDotYAML(profileName, paramData, toolName, toURL)
-
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "myFormatName") {
 		t.Errorf("expected config to contain LogFormat.Name 'myFormatName', actual: '%v'", txt)
@@ -63,13 +70,13 @@ func TestMakeLoggingDotYAML(t *testing.T) {
 
 func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
+	hdr := "myHeaderComment"
+	paramData := makeParamsFromMap("serverProfile", LoggingYAMLFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName0",
 		"LogFormat.Format":         "myFormat0",
 		"LogFormat1.Name":          "myFormatName1",
 		"LogFormat1.Format":        "myFormat1",
+		"LogFormat1.Filters":       "myFilter",
 		"LogFormat9.Name":          "myFormatName9",
 		"LogFormat9.Format":        "myFormat9",
 		"LogFormat2.Name":          "myFormatName2",
@@ -89,11 +96,20 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 		"LogObject9.Format":        "myFormatName9",
 		"LogObject1.Filename":      "myFilename1",
 		"LogObject1.Format":        "myFormatName1",
+		"LogFilter.Name":           "myFilterName",
+		"LogFilter.Filter":         "myFilter",
+	})
+
+	server := makeGenericServer()
+	server.Profile = &profileName
+
+	cfg, err := MakeLoggingDotYAML(server, paramData, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakeLoggingDotYAML(profileName, paramData, toolName, toURL)
-
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "myFormatName") {
 		t.Errorf("expected config to contain LogFormat.Name 'myFormatName', actual: '%v'", txt)
@@ -126,7 +142,7 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 			Rolling_size_mb      int
 		}
 	}
-	err := yaml.Unmarshal([]byte(txt), &v)
+	err = yaml.Unmarshal([]byte(txt), &v)
 	if err != nil {
 		t.Errorf("expected config to parse as yaml document '%v', actual: '%v'", err, txt)
 	}

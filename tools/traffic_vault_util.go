@@ -24,10 +24,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	riak "github.com/basho/riak-go-client"
 	"log"
 	"os"
 	"strings"
+
+	riak "github.com/basho/riak-go-client"
 )
 
 var vault_ip string

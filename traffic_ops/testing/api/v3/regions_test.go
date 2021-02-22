@@ -16,18 +16,100 @@ package v3
 */
 
 import (
+	"net/http"
+	"sort"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		GetTestRegionsIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		SortTestRegions(t)
 		UpdateTestRegions(t)
+		UpdateTestRegionsWithHeaders(t, header)
 		GetTestRegions(t)
+		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestRegionsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Regions) > 0 {
+		firstRegion := testData.Regions[0]
+		// Retrieve the Region by region so we can get the id for the Update
+		resp, _, err := TOSession.GetRegionByNameWithHdr(firstRegion.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteRegion := resp[0]
+			remoteRegion.Name = "OFFLINE-TEST"
+			_, reqInf, err := TOSession.UpdateRegionByIDWithHdr(remoteRegion.ID, remoteRegion, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
+func GetTestRegionsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestRegions(t *testing.T) {
@@ -38,6 +120,25 @@ func CreateTestRegions(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE region: %v", err)
 		}
+	}
+}
+
+func SortTestRegions(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetRegionsWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

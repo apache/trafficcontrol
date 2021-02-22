@@ -15,7 +15,7 @@
 Name:       tomcat
 Version:    %{tomcat_version}
 Release:    %{build_number}
-Summary:    Apache Tomcat Servlet/JSP Engine 8.5+, RI for Servlet 3.1/JSP 2.3 API
+Summary:    Apache Tomcat Servlet/JSP Engine 9.0+, RI for Servlet 3.1/JSP 2.3 API
 License:    Apache Software License
 URL:        https://github.com/apache/trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
@@ -24,7 +24,7 @@ Requires:   java >= 1.8
 %define tomcat_home /opt/tomcat
 
 %description
-This rpm is a minimal install of the Tomcat servlet container version 8.5.
+This rpm is a minimal install of the Tomcat servlet container version 9.0.
 It gets installed to /opt/tomcat and contains no webapps of its own.
 To use it create your own CATALINA_BASE directory and place your application
 specific webapps and server.xml there.
@@ -54,20 +54,21 @@ rm -rf ${RPM_BUILD_ROOT}
 # This here takes care of stopping and removing tomcat before installing new files
 %pretrans
 if [[ -e "/etc/init.d/tomcat" ]]; then
-  echo "Disabling and stopping SysV tomcat service..."
-  chkconfig tomcat off
-  service stop tomcat
+	echo "Disabling and stopping SysV tomcat service..."
+	chkconfig tomcat off
+	service stop tomcat
 fi
 
 if [ -d /opt/apache-tomcat-* ]; then
-  echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
-  rm -rf /opt/apache-tomcat-*
-  rm -rf /opt/tomcat
+	echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
+	rm -rf /opt/apache-tomcat-*
+	rm -rf /opt/tomcat
 fi
 
 %pre
 
 %files
+%license LICENSE
 %defattr(-,root,root)
 %{tomcat_home}
 

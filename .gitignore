@@ -20,6 +20,8 @@ cpanfile.snapshot
 rpm/build.number
 rpmbuild/
 docs/build/*
+/grove/grove
+/grove/grovetccfg/grovetccfg
 local
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*
@@ -36,17 +38,28 @@ traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
+vendor/**/appveyor.yml
+vendor/**/.gitattributes
+vendor/**/.gitignore
+vendor/**/.gitmodules
+vendor/golang.org/
+vendor/**/*.sh
+vendor/**/.travis.yml
 .dbInfo
 /dist
 *.pyc
 bin/docker-compose
-/.m2
+/.m2/
+/.npm/
+/.github/actions/**/node_modules/
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz
 # Editor/IDE configuration files
 *.sublime-project
 *.sublime-workspace
 .vscode/
+__debug_bin
+*.code-workspace
 *.pydevproject
 .idea/
 .project
@@ -58,8 +71,11 @@ local.tar.gz
 .projectile
 *.bak
 *.iml
+.anjuta/
+.anjuta_sym_db.db
+*.anjuta
+*.kateproject
 # built local binaries
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
 junit/
-

@@ -172,3 +172,123 @@ Response Structure
 		"lastUpdated": "2019-12-02 21:49:08+00"
 	}}
 
+``PUT``
+=======
+Updates an existing :abbr:`ASN (Autonomous System Number)`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type: Object
+
+Request Structure
+-----------------
+:asn:           The value of the new :abbr:`ASN (Autonomous System Number)`.
+:cachegroup:    A string that specifies the :ref:`cache-group-name` of a :term:`Cache Group` to which this :abbr:`ASN (Autonomous System Number)` will be assigned. If you do not pass this field, the cachegroup will be ``null``.
+:cachegroupId:  The integral, unique identifier of the status of the :term:`Cache Group`.
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/2.0/asns?id=1 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 53
+
+	{
+		"asn": 1,
+		"cachegroup": "TRAFFIC_OPS",
+		"cachegroupId": 2
+	}
+
+Response Structure
+------------------
+:asn:          An :abbr:`ASN (Autonomous System Number)` as specified by IANA for identifying a service provider
+:cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
+:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 25 Feb 2020 07:21:10 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: MjvwJg6AFbdqGPlAhK+2pfiN+VFjzgeNnhXoMVbh6+fRQYKeej6CCj3x09hwOl4uhp9d9RySrE/CQ3+L1b2VGQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 25 Feb 2020 06:21:10 GMT
+	Content-Length: 164
+
+	{
+		"alerts": [
+			{
+				"text": "asn was updated.",
+				"level": "success"
+			}
+		],
+		"response": {
+			"asn": 1,
+			"cachegroup": "TRAFFIC_OPS",
+			"cachegroupId": 2,
+			"id": 1,
+			"lastUpdated": "2020-02-25 06:21:10+00"
+		}
+	}
+
+``DELETE``
+----------
+Deletes an existing :abbr:`ASN (Autonomous System Number)`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type: ``undefined``
+
+Request Structure
+-----------------
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/2.0/asns?id=1 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 0
+
+Response Structure
+------------------
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 25 Feb 2020 08:27:33 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: Woz8NSHIYVpX4V5X4xZWZIX1hvGL2uian7nUhjZ8F23Nb9RWQRMIg/cc+1vXEzkT/ehKV9t11FKRLX+avSae0g==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 25 Feb 2020 07:27:33 GMT
+	Content-Length: 83
+
+	{
+		"alerts": [
+			{
+				"text": "asn was deleted.",
+				"level": "success"
+			}
+		]
+	}

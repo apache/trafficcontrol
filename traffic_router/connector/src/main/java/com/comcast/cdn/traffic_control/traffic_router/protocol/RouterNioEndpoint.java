@@ -68,9 +68,8 @@ public class RouterNioEndpoint extends NioEndpoint {
 			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
 			cert.setCertificateKeyAlias(alias);
 			sslHostConfig.addCertificate(cert);
-			sslHostConfig.setCertificateKeyAlias(alias);
 			sslHostConfig.setProtocols(protocols != null ? protocols : "all");
-			sslHostConfig.setConfigType(getSslConfigType());
+			sslHostConfig.setSslProtocol(sslHostConfig.getSslProtocol());
 			sslHostConfig.setCertificateVerification("none");
 			LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
 
@@ -106,7 +105,7 @@ public class RouterNioEndpoint extends NioEndpoint {
 			try{
 				final HandshakeData data = cr.get(alias);
 				final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
-				sslHostConfig.setConfigType(getSslConfigType());
+				sslHostConfig.setSslProtocol(sslHostConfig.getSslProtocol());
 				createSSLContext(sslHostConfig);
 			}
 			catch (Exception rfubar) {
@@ -125,7 +124,7 @@ public class RouterNioEndpoint extends NioEndpoint {
 
 	@Override
 	protected SSLHostConfig getSSLHostConfig(final String sniHostName){
-		return super.getSSLHostConfig(sniHostName.toLowerCase());
+		return super.getSSLHostConfig(sniHostName == null ? null : sniHostName.toLowerCase());
 	}
 
 	@Override

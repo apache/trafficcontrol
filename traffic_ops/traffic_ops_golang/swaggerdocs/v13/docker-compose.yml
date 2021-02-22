@@ -21,8 +21,8 @@ version: '3.6'
 services:
    swagger-spec-server:
      build:
-       context: .
-       dockerfile: ./Dockerfile
+       context: ../../../..
+       dockerfile: traffic_ops/traffic_ops_golang/swaggerdocs/v13/Dockerfile
      ports:
        - 8000:8000
      volumes:

@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -45,7 +45,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	fedID := inf.IntParams["id"]
 	fedName, ok, err := getFedNameByID(inf.Tx.Tx, fedID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting federation cname from ID '%v': %v", fedID, err))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("federation %v not found", fedID), nil)
@@ -122,6 +122,15 @@ type TOFedDSes struct {
 	tc.FederationDeliveryServiceNullable
 }
 
+func (v *TOFedDSes) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(fds.last_updated) as t FROM federation_deliveryservice fds
+RIGHT JOIN deliveryservice ds ON fds.deliveryservice = ds.id
+JOIN cdn c ON ds.cdn_id = c.id
+JOIN type t ON ds.type = t.id ` + where + orderBy + pagination +
+		` UNION ALL
+select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+}
 func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServiceNullable{} }
 func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -159,7 +168,10 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(v.APIInfo(), "xmlId")
+	return api.GenericRead(h, v, useIMS)
+}
 
 func (v *TOFedDSes) Delete() (error, error, int) {
 	dsIDStr, ok := v.APIInfo().Params["dsID"]

@@ -21,18 +21,28 @@ package atscfg
 
 import (
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ATSDotRulesFileName = StorageFileName
 const ContentTypeATSDotRules = ContentTypeTextASCII
 const LineCommentATSDotRules = LineCommentHash
 
 func MakeATSDotRules(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	text := GenericHeaderComment(profileName, toToolName, toURL)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	serverParams = filterParams(serverParams, ATSDotRulesFileName, "", "", "location")
+	paramData, paramWarns := paramsToMap(serverParams)
+	warnings = append(warnings, paramWarns...)
+	text := makeHdrComment(hdrComment)
 
 	drivePrefix := strings.TrimPrefix(paramData["Drive_Prefix"], `/dev/`)
 	drivePostfix := strings.Split(paramData["Drive_Letters"], ",")
@@ -52,5 +62,10 @@ func MakeATSDotRules(
 		}
 	}
 
-	return text
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeATSDotRules,
+		LineComment: LineCommentATSDotRules,
+		Warnings:    warnings,
+	}, nil
 }

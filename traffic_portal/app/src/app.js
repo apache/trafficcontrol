@@ -24,7 +24,10 @@ var App = function($urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
 };
 
+
 App.$inject = ['$urlRouterProvider'];
+
+agGrid.initialiseAgGridWithAngular1(angular);
 
 var trafficPortal = angular.module('trafficPortal', [
         'config',
@@ -42,6 +45,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'angular-loading-bar',
         'moment-picker',
         'jsonFormatter',
+        'agGrid',
 
         // public modules
         require('./modules/public').name,
@@ -185,11 +189,15 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/serverCapabilities/view').name,
         require('./modules/private/servers').name,
         require('./modules/private/servers/capabilities').name,
-        require('./modules/private/servers/configFiles').name,
         require('./modules/private/servers/deliveryServices').name,
         require('./modules/private/servers/edit').name,
         require('./modules/private/servers/new').name,
         require('./modules/private/servers/list').name,
+        require('./modules/private/serviceCategories').name,
+        require('./modules/private/serviceCategories/deliveryServices').name,
+        require('./modules/private/serviceCategories/edit').name,
+        require('./modules/private/serviceCategories/list').name,
+        require('./modules/private/serviceCategories/new').name,
         require('./modules/private/statuses').name,
         require('./modules/private/statuses/edit').name,
         require('./modules/private/statuses/list').name,
@@ -203,9 +211,13 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/tenants/users').name,
         require('./modules/private/types').name,
         require('./modules/private/topologies').name,
+        require('./modules/private/topologies/cacheGroups').name,
+        require('./modules/private/topologies/clone').name,
+        require('./modules/private/topologies/deliveryServices').name,
         require('./modules/private/topologies/edit').name,
         require('./modules/private/topologies/list').name,
         require('./modules/private/topologies/new').name,
+        require('./modules/private/topologies/servers').name,
         require('./modules/private/types/edit').name,
         require('./modules/private/types/list').name,
         require('./modules/private/types/new').name,
@@ -316,6 +328,9 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/server').name,
         require('./common/modules/form/server/edit').name,
         require('./common/modules/form/server/new').name,
+        require('./common/modules/form/serviceCategory').name,
+        require('./common/modules/form/serviceCategory/edit').name,
+        require('./common/modules/form/serviceCategory/new').name,
         require('./common/modules/form/status').name,
         require('./common/modules/form/status/edit').name,
         require('./common/modules/form/status/new').name,
@@ -323,6 +338,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/tenant/edit').name,
         require('./common/modules/form/tenant/new').name,
         require('./common/modules/form/topology').name,
+        require('./common/modules/form/topology/clone').name,
         require('./common/modules/form/topology/edit').name,
         require('./common/modules/form/topology/new').name,
         require('./common/modules/form/type').name,
@@ -388,16 +404,19 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/serverCapabilityDeliveryServices').name,
         require('./common/modules/table/serverServerCapabilities').name,
         require('./common/modules/table/servers').name,
-        require('./common/modules/table/serverConfigFiles').name,
         require('./common/modules/table/serverDeliveryServices').name,
+        require('./common/modules/table/serviceCategories').name,
+        require('./common/modules/table/serviceCategoryDeliveryServices').name,
         require('./common/modules/table/statuses').name,
         require('./common/modules/table/statusServers').name,
         require('./common/modules/table/tenants').name,
         require('./common/modules/table/tenantDeliveryServices').name,
         require('./common/modules/table/tenantUsers').name,
         require('./common/modules/table/topologies').name,
+        require('./common/modules/table/topologyDeliveryServices').name,
         require('./common/modules/table/topologyCacheGroups').name,
         require('./common/modules/table/topologyCacheGroupServers').name,
+        require('./common/modules/table/topologyServers').name,
         require('./common/modules/table/types').name,
         require('./common/modules/table/typeCacheGroups').name,
         require('./common/modules/table/typeDeliveryServices').name,
@@ -504,7 +523,13 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
 });
 
 trafficPortal.config(function ($httpProvider) {
-    $httpProvider.interceptors.push('authInterceptor');
+        $httpProvider.interceptors.push('authInterceptor');
+
+        // disabling caching for TP until it utilizes If-Modified-Since
+        if (!$httpProvider.defaults.headers.get) {
+                $httpProvider.defaults.headers.get = {};
+        }
+        $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+        $httpProvider.defaults.headers.get['Expires'] = 0;
 });
-
-

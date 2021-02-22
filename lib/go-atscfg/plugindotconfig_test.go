@@ -26,17 +26,24 @@ import (
 
 func TestMakePluginDotConfig(t *testing.T) {
 	profileName := "myProfile"
-	toolName := "myToolName"
-	toURL := "https://myto.example.net"
-	paramData := map[string]string{
+	hdr := "myHeaderComment"
+
+	paramData := makeParamsFromMap("serverProfile", PluginFileName, map[string]string{
 		"param0": "val0",
 		"param1": "val1",
 		"param2": "val2",
+	})
+
+	server := makeGenericServer()
+	server.Profile = &profileName
+
+	cfg, err := MakePluginDotConfig(server, paramData, hdr)
+	if err != nil {
+		t.Fatal(err)
 	}
+	txt := cfg.Text
 
-	txt := MakePluginDotConfig(profileName, paramData, toolName, toURL)
-
-	testComment(t, txt, profileName, toolName, toURL)
+	testComment(t, txt, hdr)
 
 	if !strings.Contains(txt, "param0 val0") {
 		t.Errorf("expected config to contain paramData 'param0 val0', actual: '%v'", txt)

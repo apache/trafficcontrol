@@ -16,13 +16,27 @@
 # specific language governing permissions and limitations
 # under the License.
  
-FROM golang:1.14.2 AS go-swagger
-
 #  Swagger Spec Server
-FROM golang:1.14.2 AS swagger-server
+FROM debian:buster AS swagger-server
 
-ADD /swaggerspec .
-ADD ./swaggerspec-server /usr/src/swaggerspec-server
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        wget && \
+    apt-get clean
+
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go.tar.gz
+ENV GOPATH=/go
+
+
+COPY traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec .
+COPY traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec-server /usr/src/swaggerspec-server
 WORKDIR /usr/src/swaggerspec-server
 
 RUN go build 

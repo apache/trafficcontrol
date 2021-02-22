@@ -17,14 +17,18 @@ package v3
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
 		GetTestCacheGroupParameters(t)
+		GetTestCacheGroupParametersIMS(t)
 	})
 }
 
@@ -70,6 +74,23 @@ func GetTestCacheGroupParameters(t *testing.T) {
 		}
 		if resp == nil {
 			t.Fatal("Cache Group Parameters response should not be nil")
+		}
+	}
+}
+
+func GetTestCacheGroupParametersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, cgp := range testData.CacheGroupParameterRequests {
+		_, reqInf, err := TOSession.GetCacheGroupParametersWithHdr(cgp.CacheGroupID, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }

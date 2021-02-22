@@ -23,11 +23,11 @@ import (
 	"github.com/apache/trafficcontrol/grove/cacheobj"
 	"github.com/apache/trafficcontrol/grove/icache"
 	"github.com/apache/trafficcontrol/grove/remap"
-	"github.com/apache/trafficcontrol/grove/rfc"
 	"github.com/apache/trafficcontrol/grove/thread"
 	"github.com/apache/trafficcontrol/grove/web"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 const CodeConnectFailure = http.StatusBadGateway
@@ -36,12 +36,12 @@ type Retrier struct {
 	H                 *Handler
 	ReqHdr            http.Header
 	ReqTime           time.Time
-	ReqCacheControl   web.CacheControl
+	ReqCacheControl   rfc.CacheControlMap
 	RemappingProducer *remap.RemappingProducer
 	ReqID             uint64
 }
 
-func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, remappingProducer *remap.RemappingProducer, reqID uint64) *Retrier {
+func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl rfc.CacheControlMap, remappingProducer *remap.RemappingProducer, reqID uint64) *Retrier {
 	return &Retrier{
 		H:                 h,
 		ReqHdr:            reqHdr,
@@ -57,7 +57,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 	retryGetFunc := func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
 		canReuse := func(cacheObj *cacheobj.CacheObj) bool {
-			return rfc.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
+			return cacheobj.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
 			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport, r.ReqID)
@@ -150,13 +150,13 @@ func GetAndCache(
 		}
 
 		log.Debugf("GetAndCache request returned %v headers %+v (reqid %v)\n", respCode, respHeader, reqID)
-		respRespTime, ok := web.GetHTTPDate(respHeader, "Date")
+		respRespTime, ok := rfc.GetHTTPDate(respHeader, "Date")
 		if !ok {
 			log.Errorf("request %v returned no Date header - RFC Violation! Using local response timestamp (reqid %v)\n", req.RequestURI, reqID)
 			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
 		}
 
-		lastModified, ok := web.GetHTTPDate(respHeader, "Last-Modified")
+		lastModified, ok := rfc.GetHTTPDate(respHeader, "Last-Modified")
 		if !ok {
 			lastModified = respRespTime
 		}

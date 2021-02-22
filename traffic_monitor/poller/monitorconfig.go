@@ -35,8 +35,8 @@ type MonitorCfg struct {
 }
 
 type MonitorConfigPoller struct {
-	Session          towrap.ITrafficOpsSession
-	SessionChannel   chan towrap.ITrafficOpsSession
+	Session          towrap.TrafficOpsSessionThreadsafe
+	SessionChannel   chan towrap.TrafficOpsSessionThreadsafe
 	ConfigChannel    chan MonitorCfg
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration
@@ -49,7 +49,7 @@ type MonitorConfigPoller struct {
 func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 	return MonitorConfigPoller{
 		Interval:       interval,
-		SessionChannel: make(chan towrap.ITrafficOpsSession),
+		SessionChannel: make(chan towrap.TrafficOpsSessionThreadsafe),
 		// ConfigChannel MUST have a buffer size 1, to make the nonblocking writeConfig work
 		ConfigChannel:    make(chan MonitorCfg, 1),
 		OpsConfigChannel: make(chan handler.OpsConfig),
@@ -104,7 +104,7 @@ func (p MonitorConfigPoller) Poll() {
 			tick.Stop()
 			tick = time.NewTicker(p.Interval)
 		case <-tick.C:
-			if p.Session == nil || p.OpsConfig.CdnName == "" {
+			if !p.Session.Initialized() || p.OpsConfig.CdnName == "" {
 				log.Warnln("MonitorConfigPoller: skipping this iteration, Session is nil")
 				continue
 			}

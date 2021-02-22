@@ -191,7 +191,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions. Delivery Services can also be grouped by :term:`Service Category`.
 
 
 .. figure:: ./images/tp_menu_services.png
@@ -230,6 +230,7 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-dscp` (visible by default)
 - :ref:`ds-edge-header-rw-rules`
 - :ref:`ds-fqpr`
+- :ref:`ds-first-header-rw-rules`
 - :ref:`ds-geo-limit`
 - :ref:`ds-geo-limit-countries`
 - :ref:`ds-geo-limit-redirect-url`
@@ -241,7 +242,9 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-http-bypass-fqdn`
 - :ref:`ds-info-url`
 - :ref:`ds-initial-dispersion`
+- :ref:`ds-inner-header-rw-rules`
 - :ref:`ds-ipv6-routing` (visible by default)
+- :ref:`ds-last-header-rw-rules`
 - :ref:`ds-longdesc`
 - :ref:`ds-longdesc2`
 - :ref:`ds-longdesc3`
@@ -254,12 +257,14 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-protocol` (visible by default)
 - :ref:`ds-qstring-handling` (visible by default)
 - :ref:`ds-range-request-handling`
+- :ref:`ds-slice-block-size`
 - :ref:`ds-raw-remap`
 - :ref:`ds-regex-remap`
 - :ref:`ds-regionalgeo`
 - :ref:`ds-routing-name`
 - :ref:`ds-signing-algorithm` (visible by default)
 - :ref:`ds-tenant` (visible by default)
+- :ref:`ds-topology`
 - :ref:`ds-tr-resp-headers`
 - :ref:`ds-tr-req-headers`
 - :ref:`ds-types` (visible by default)
@@ -360,15 +365,16 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 	Table of Servers
 
-Use the `Select Columns` menu to select the server columns to view and search. Columns can also be rearranged using drag-and-drop. Available server columns include:
+Use the `Quick Search` to search across all table columns or the column filter to apply a more powerful filter to individual columns. Use the `Select Columns` menu to select the server columns to view. Columns can also be rearranged using drag-and-drop. Available server columns include:
 
 :Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:Hash ID:			The identifier of the server used in Traffic Router's consistent hashing algorithm.
 :Host:              [Visible by default] The (short) hostname of the server
 :HTTPS Port:        The port on which the server listens for incoming HTTPS connections/requests
 :ID:                An integral, unique identifier for this server
-:ILO IP Address:    [Visible by default] The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service
+:ILO IP Address:    The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
 
@@ -382,17 +388,17 @@ Use the `Select Columns` menu to select the server columns to view and search. C
 :Mgmt IP Address:   The IPv4 address of some network interface on the server used for 'management'
 :Mgmt IP Gateway:   The IPv4 address of a gateway used by some network interface on the server used for 'management'
 :Mgmt IP Netmask:   The IPv4 subnet mask used by some network interface on the server used for 'management'
-:Network Gateway:   The IPv4 address of the gateway used by ``interfaceName``
-:Network IP:        [Visible by default] The IPv4 address of ``interfaceName``
+:IPv4 Gateway:      The IPv4 address of the gateway used by ``interfaceName``
+:IPv4 Address:      [Visible by default] The IPv4 address of ``interfaceName``
 :Network MTU:       The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
-:Network Subnet:    The IPv4 subnet mask used by ``interfaceName``
+:IPv4 Subnet:       The IPv4 subnet mask used by ``interfaceName``
 :Offline Reason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:Phys Location:     [Visible by default] The name of the physical location where the server resides
+:Phys Location:     The name of the physical location where the server resides
 :Profile:           [Visible by default] The :ref:`profile-name` of the :term:`Profile` used by this server
 :Rack:              A string indicating "server rack" location
 :Reval Pending:     [Visible by default] A boolean value represented as a clock (content invalidation/revalidation is pending) or green check mark (content invalidation/revalidation is not pending)
-:Router Hostname:   The human-readable name of the router responsible for reaching this server
-:Router Port Name:  The human-readable name of the port used by the router responsible for reaching this server
+:Router Hostname:   The human-readable name of the router responsible for reaching this server's interface
+:Router Port:       The human-readable name of the port used by the router responsible for reaching this server's interface
 :Status:            [Visible by default] The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
@@ -409,7 +415,6 @@ Server management includes the ability to (where applicable):
 - :term:`Queue Updates` on a server, or clear such updates
 - Update server status
 - View server :term:`Delivery Services`
-- View server configuration files
 - Clone :term:`Delivery Service` assignments
 - Assign :term:`Delivery Services` to server(s)
 - :ref:`server_server_capabilities`
@@ -418,33 +423,33 @@ Server management includes the ability to (where applicable):
 
 Origins
 -------
-A table of all :term:`origins`. These are automatically created for the :term:`origins` served by :term:`Delivery Services` throughout all CDNs, but additional ones can be created at will. The table has the following columns:
+A table of all :term:`Origins`. These are automatically created for the :term:`Origins` served by :term:`Delivery Services` throughout all CDNs, but additional ones can be created at will. The table has the following columns:
 
-:Name:             The name of the :term:`origin`. If this :term:`origin` was created automatically for a :term:`Delivery Service`, this will be the :ref:`ds-xmlid` of that :term:`Delivery Service`.
-:Tenant:           The name of the :term:`Tenant` that owns this :term:`origin` - this is not necessarily the same as the :term:`Tenant` that owns the :term:`Delivery Service` to which this :term:`origin` belongs.
-:Primary:          Either ``true`` to indicate that this is the "primary" :term:`origin` for the :term:`Delivery Service` to which it is assigned, or ``false`` otherwise.
-:Delivery Service: The :ref:`ds-xmlid` of the :term:`Delivery Service` to which this :term:`origin` is assigned.
-:FQDN:             The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin server`.
-:IPv4 Address:     The :term:`origin`'s IPv4 address, if configured.
-:IPv6 Address:     The :term:`origin`'s IPv6 address, if configured.
-:Protocol:         The protocol this :term:`origin` uses to serve content. One of
+:Name:             The name of the :term:`Origin`. If this :term:`Origin` was created automatically for a :term:`Delivery Service`, this will be the :ref:`ds-xmlid` of that :term:`Delivery Service`.
+:Tenant:           The name of the :term:`Tenant` that owns this :term:`Origin` - this is not necessarily the same as the :term:`Tenant` that owns the :term:`Delivery Service` to which this :term:`Origin` belongs.
+:Primary:          Either ``true`` to indicate that this is the "primary" :term:`Origin` for the :term:`Delivery Service` to which it is assigned, or ``false`` otherwise.
+:Delivery Service: The :ref:`ds-xmlid` of the :term:`Delivery Service` to which this :term:`Origin` is assigned.
+:FQDN:             The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`.
+:IPv4 Address:     The :term:`Origin`'s IPv4 address, if configured.
+:IPv6 Address:     The :term:`Origin`'s IPv6 address, if configured.
+:Protocol:         The protocol this :term:`Origin` uses to serve content. One of
 
 	- http
 	- https
 
-:Port: The port on which the :term:`origin server` listens for incoming HTTP(S) requests.
+:Port: The port on which the :term:`Origin` listens for incoming HTTP(S) requests.
 
-	.. note:: If this field appears blank in the table, it means that a default was chosen for the :term:`origin` based on its Protocol - ``80`` for "http", ``443`` for "https".
+	.. note:: If this field appears blank in the table, it means that a default was chosen for the :term:`Origin` based on its Protocol - ``80`` for "http", ``443`` for "https".
 
-:Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`origin server`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`origins`
-:Cachegroup: The :ref:`Name of the Cache Group <cache-group-name>` to which this :term:`origin` belongs, if any.
-:Profile:    The :ref:`profile-name` of a :term:`Profile` used by this :term:`origin`.
+:Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`Origin`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`Origins`
+:Cachegroup: The :ref:`Name of the Cache Group <cache-group-name>` to which this :term:`Origin` belongs, if any.
+:Profile:    The :ref:`profile-name` of a :term:`Profile` used by this :term:`Origin`.
 
 :term:`Origin` management includes the ability to (where applicable):
 
-- create a new :term:`origin`
-- update an existing :term:`origin`
-- delete an existing :term:`origin`
+- create a new :term:`Origin`
+- update an existing :term:`Origin`
+- delete an existing :term:`Origin`
 
 .. _tp-configure-profiles:
 
@@ -740,7 +745,7 @@ User management includes the ability to (where applicable):
 - update an existing user
 - view :term:`Delivery Services` visible to a user
 
-.. Note:: If OAuth is enabled, the username must exist both here as well as with the OAuth provider. A user's rights are defined by the :term:`role` assigned to the user in Traffic Ops. Creating/deleting a user here will update the user's :term:`role` but the user needs to be created/deleted with the OAuth provider as well.
+.. Note:: If OAuth is enabled, the username must exist both here as well as with the OAuth provider. A user's rights are defined by the :term:`Role` assigned to the user in Traffic Ops. Creating/deleting a user here will update the user's :term:`Role` but the user needs to be created/deleted with the OAuth provider as well.
 
 Tenants
 -------

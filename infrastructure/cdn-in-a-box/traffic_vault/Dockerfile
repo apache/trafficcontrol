@@ -22,6 +22,7 @@ RUN rm -rfv /etc/riak/prestart.d/* /etc/riak/poststart.d/*
 
 RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
  && echo 'APT::Install-Suggests 0;' >> /etc/apt/apt.conf.d/01norecommends \
+ && rm /etc/apt/sources.list.d/basho_riak.list \
  && apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y net-tools ca-certificates dnsutils gettext-base \
  && rm -rf /var/lib/apt/lists/* && rm -rf /etc/apt/apt.conf.d/docker-gzip-indexes
@@ -33,5 +34,9 @@ ADD enroller/server_template.json \
     traffic_vault/sslkeys.xml \
     traffic_ops/to-access.sh \
     /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 CMD /run.sh

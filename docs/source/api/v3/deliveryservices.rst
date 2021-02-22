@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices:
+.. _to-api-v3-deliveryservices:
 
 ********************
 ``deliveryservices``
@@ -31,39 +31,43 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| Name         | Required | Description                                                                                                                             |
-	+==============+==========+=========================================================================================================================================+
-	| cdn          | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                   |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| id           | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                        |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled  | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                               |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| profile      | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                         |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant       | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                  |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| topology     | no       | Show only the :term:`Delivery Services` assigned to the :term:`Topology` identified by this unique name                                 |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| type         | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier    |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| accessibleTo | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| xmlId        | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby      | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
-	|              |          | array                                                                                                                                   |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| sortOrder    | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| limit        | no       | Choose the maximum number of results to return                                                                                          |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| offset       | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                    |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| page         | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
-	|              |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+    +-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                                             |
+	+===================+==========+=========================================================================================================================================+
+	| cdn               | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                   |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| id                | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                        |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled       | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                               |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| profile           | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                         |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant            | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                  |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+    | topology          | no       | Show only the :term:`Delivery Services` assigned to the :term:`Topology` identified by this unique name                                 |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| type              | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier    |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| accessibleTo      | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| serviceCategory   | no       | Show only the :term:`Delivery Services` belonging to the :term:`Service Category` that has this name                                    |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| xmlId             | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby           | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
+	|                   |          | array                                                                                                                                   |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder         | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| limit             | no       | Choose the maximum number of results to return                                                                                          |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| offset            | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                    |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| page              | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
+	|                   |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+    | active            | no       | Show only the :term:`Delivery Services` that have :ref:`ds-active` set or not based on this boolean (whether or not they are active)    |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -90,6 +94,7 @@ Response Structure
 :ecsEnabled:                A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite:         A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:               An array of :ref:`ds-example-urls`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
@@ -101,7 +106,9 @@ Response Structure
 :id:                        An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -113,34 +120,36 @@ Response Structure
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
 	:type:      The type of match performed using ``pattern``.
 
-:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
-:maxOriginConnections: The :ref:`ds-max-origin-connections`
-:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
-:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
-:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
-:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
-:orgServerFqdn:        The :ref:`ds-origin-url`
-:originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
-:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
-:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
-:regexRemap:           A :ref:`ds-regex-remap`
-:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
-:remapText:            :ref:`ds-raw-remap`
-:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
-:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
-:sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:topology:             The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
-:trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-:trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-:type:                 The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId:               The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:                This :term:`Delivery Service`'s :ref:`ds-xmlid`
+:maxDnsAnswers:         The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections:  The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes: The :ref:`ds-max-request-header-bytes`
+:midHeaderRewrite:      A set of :ref:`ds-mid-header-rw-rules`
+:missLat:               The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:              The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:       A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:         The :ref:`ds-origin-url`
+:originShield:          A :ref:`ds-origin-shield` string
+:profileDescription:    The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:             The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:           The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:              An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:         An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling:  An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:            A :ref:`ds-regex-remap`
+:regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:             :ref:`ds-raw-remap`
+:serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize:   An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:sslKeyVersion:         This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+:trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+:type:                  The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId:                The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:                 This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -172,6 +181,7 @@ Response Structure
 		"dnsBypassTtl": null,
 		"dscp": 0,
 		"edgeHeaderRewrite": null,
+		"firstHeaderRewrite": null,
 		"geoLimit": 0,
 		"geoLimitCountries": null,
 		"geoLimitRedirectURL": null,
@@ -182,7 +192,9 @@ Response Structure
 		"id": 1,
 		"infoUrl": null,
 		"initialDispersion": 1,
+		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": true,
+		"lastHeaderRewrite": null,
 		"lastUpdated": "2019-05-15 14:32:05+00",
 		"logsEnabled": true,
 		"longDesc": "Apachecon North America 2018",
@@ -236,9 +248,11 @@ Response Structure
 			"zyx"
 		],
 		"maxOriginConnections": 0,
+		"maxRequestHeaderBytes": 131072,
 		"ecsEnabled": false,
 		"rangeSliceBlockSize": null,
 		"topology": null
+		"serviceCategory": null
 	}]}
 
 
@@ -273,6 +287,7 @@ Request Structure
 :dscp:                      A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 :ecsEnabled:                A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite:         A set of :ref:`ds-edge-header-rw-rules`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -283,13 +298,16 @@ Request Structure
 :httpBypassFqdn:            A :ref:`ds-http-bypass-fqdn`
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
 :longDesc1:                 An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
 :longDesc2:                 An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :maxDnsAnswers:             The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections:      The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes:     The :ref:`ds-max-request-header-bytes`
 :midHeaderRewrite:          A set of :ref:`ds-mid-header-rw-rules`
 :missLat:                   The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:                  The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -303,6 +321,7 @@ Request Structure
 :regexRemap:                A :ref:`ds-regex-remap`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
+:serviceCategory:           The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated - or ``null`` if there is to be no such category
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
@@ -343,6 +362,7 @@ Request Structure
 		"missLat": 0,
 		"missLong": 0,
 		"maxOriginConnections": 0,
+		"maxRequestHeaderBytes": 131072,
 		"multiSiteOrigin": false,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
 		"protocol": 0,
@@ -350,6 +370,7 @@ Request Structure
 		"rangeRequestHandling": 0,
 		"regionalGeoBlocking": false,
 		"routingName": "test",
+		"serviceCategory": null,
 		"signed": false,
 		"tenant": "root",
 		"tenantId": 1,
@@ -383,6 +404,7 @@ Response Structure
 :ecsEnabled:        		A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite: 		A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       		An array of :ref:`ds-example-urls`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:      		The :ref:`ds-fqpr`
 :geoLimit:            		An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:  		A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
@@ -394,7 +416,9 @@ Response Structure
 :id:                  		An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:             		An :ref:`ds-info-url`
 :initialDispersion:   		The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:  		A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :lastUpdated:        		The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 :logsEnabled:         		A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:            		The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -406,34 +430,36 @@ Response Structure
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
 	:type:      The type of match performed using ``pattern``.
 
-:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
-:maxOriginConnections: The :ref:`ds-max-origin-connections`
-:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
-:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
-:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
-:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
-:orgServerFqdn:        The :ref:`ds-origin-url`
-:originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
-:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
-:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
-:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
-:regexRemap:           A :ref:`ds-regex-remap`
-:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
-:remapText:            :ref:`ds-raw-remap`
-:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
-:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
-:sslKeyVersion: 	   This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:topology:             The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
-:trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-:trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-:type:                 The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId:               The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:                This :term:`Delivery Service`'s :ref:`ds-xmlid`
+:maxDnsAnswers:         The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections:  The :ref:`ds-max-origin-connections`
+:maxRequestHeaderBytes: The :ref:`ds-max-request-header-bytes`
+:midHeaderRewrite:      A set of :ref:`ds-mid-header-rw-rules`
+:missLat:               The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:              The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:       A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:         The :ref:`ds-origin-url`
+:originShield:          A :ref:`ds-origin-shield` string
+:profileDescription:    The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:             The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:           The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:              An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:         An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling:  An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:            A :ref:`ds-regex-remap`
+:regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:             :ref:`ds-raw-remap`
+:serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize:   An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:sslKeyVersion: 	    This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+:trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+:type:                  The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId:                The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:                 This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -472,6 +498,7 @@ Response Structure
 			"dnsBypassTtl": null,
 			"dscp": 0,
 			"edgeHeaderRewrite": null,
+			"firstHeaderRewrite": null,
 			"geoLimit": 0,
 			"geoLimitCountries": null,
 			"geoLimitRedirectURL": null,
@@ -482,7 +509,9 @@ Response Structure
 			"id": 2,
 			"infoUrl": null,
 			"initialDispersion": 1,
+			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": false,
+			"lastHeaderRewrite": null,
 			"lastUpdated": "2018-11-19 19:45:49+00",
 			"logsEnabled": true,
 			"longDesc": "A Delivery Service created expressly for API documentation examples",
@@ -497,6 +526,7 @@ Response Structure
 			],
 			"maxDnsAnswers": null,
 			"maxOriginConnections": 0,
+			"maxRequestHeaderBytes": 131072,
 			"midHeaderRewrite": null,
 			"missLat": -1,
 			"missLong": -1,
@@ -513,6 +543,7 @@ Response Structure
 			"regionalGeoBlocking": false,
 			"remapText": null,
 			"routingName": "test",
+			"serviceCategory": null,
 			"signed": false,
 			"sslKeyVersion": null,
 			"tenantId": 1,

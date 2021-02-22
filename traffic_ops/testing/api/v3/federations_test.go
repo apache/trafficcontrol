@@ -18,18 +18,41 @@ package v3
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, CDNFederations}, func() {
 		PostDeleteTestFederationsDeliveryServices(t)
 		GetTestFederations(t)
+		GetTestFederationsIMS(t)
 		AddFederationResolversForCurrentUserTest(t)
 		RemoveFederationResolversForCurrentUserTest(t)
 	})
+}
+
+func GetTestFederationsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	if len(testData.Federations) == 0 {
+		t.Error("no federations test data")
+	}
+
+	_, reqInf, err := TOSession.AllFederationsWithHdr(header)
+	if err != nil {
+		t.Fatalf("No error expected, but got: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestFederations(t *testing.T) {

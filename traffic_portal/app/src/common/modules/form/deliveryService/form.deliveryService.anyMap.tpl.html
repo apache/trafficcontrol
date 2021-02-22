@@ -51,7 +51,7 @@ under the License.
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
                     <hr class="divider"/>
-                    <li ng-if="::(!deliveryService.topology)" role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
+                    <li name="manageServersMenuItem" role="menuitem"><button class="menu-item-button" type="button" ng-click="viewServers()">Manage Servers</button></li>
                 </ul>
             </div>
         </div>
@@ -183,6 +183,22 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
+                                <div class="helptext">The type of content being delivered. Some examples are linear and vod.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="serviceCategory" name="serviceCategory" class="form-control" ng-model="deliveryService.serviceCategory" ng-options="serviceCategory.name as serviceCategory.name for serviceCategory in serviceCategories">
+                                <option value="">Select...</option>
+                            </select>
+                            <small ng-show="deliveryService.serviceCategory"><a href="/#!/service-categories/edit?name={{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.serviceCategory != dsCurrent.serviceCategory">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.serviceCategory}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc), 'has-feedback': hasError(generalConfig.longDesc)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description 1<div class="helptooltip">
                             <div class="helptext">Free text field not currently used in configuration.</div>
@@ -283,34 +299,6 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.remapText}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.cacheurl), 'has-feedback': hasError(cacheConfig.cacheurl)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
-                            <div class="helptext">
-                                Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
-                                <br>
-                                <aside>
-                                    <h6>Note</h6>
-                                    <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
-                                    <br>
-                                    <br>
-                                    See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
-                                </aside>
-                                <aside class="warning">
-                                    <h6>Warning</h6>
-                                    <p>This field is deprecated, and is subject to removal in upcoming releases. It is recommended that this be left blank.</p>
-                                </aside>
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" maxlength="1024">
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.cacheurl, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.cacheurl}}</pre>
                             </aside>
                         </div>
                     </div>

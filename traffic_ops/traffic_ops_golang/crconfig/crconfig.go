@@ -30,7 +30,7 @@ import (
 )
 
 // Make creates and returns the CRConfig from the database.
-func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool) (*tc.CRConfig, error) {
+func Make(tx *sql.Tx, cdn, user, toHost, toVersion string, useClientReqHost bool, emulateOldPath bool) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)
 
@@ -52,6 +52,9 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
+	if crc.Topologies, err = makeTopologies(tx); err != nil {
+		return nil, errors.New("Error getting Topologies: " + err.Error())
+	}
 
 	if !useClientReqHost {
 		paramTMURL, ok, err := getGlobalParam(tx, "tm.url")
@@ -64,11 +67,11 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 		toHost = getTMURLHost(paramTMURL)
 	}
 
+	crc.Stats = makeStats(cdn, user, toHost, toVersion)
 	if emulateOldPath {
-		reqPath = "/tools/write_crconfig/" + cdn
+		crc.Stats.TMPath = new(string)
+		*crc.Stats.TMPath = "/tools/write_crconfig/" + cdn
 	}
-
-	crc.Stats = makeStats(cdn, user, toHost, reqPath, toVersion)
 	return &crc, nil
 }
 

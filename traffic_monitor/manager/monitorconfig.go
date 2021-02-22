@@ -129,7 +129,7 @@ func StartMonitorConfigManager(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) threadsafe.TrafficMonitorConfigMap {
 	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
@@ -199,7 +199,7 @@ func monitorConfigListen(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) {
 	defer func() {
@@ -334,15 +334,29 @@ func monitorConfigListen(
 	}
 }
 
-// createServerHealthPollURLs takes the template pollingURLStr, and replaces variables with data from srv, and returns the polling URL for srv.
+// createServerHealthPollURLs takes the template pollingURLStr, and replaces
+// variables with data from srv, and returns the polling URL for srv.
+//
+// Note: `${hostname}` is replaced with the server's service IPv4 address (when
+// possible) for IPv4 polls, and its IPv6 service address (when possible) for
+// IPv6 polls - NOT the servers hostname!
 func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (string, string) {
-	pollingURL4Str := ""
-	pollingURL6Str := ""
+	lid, err := tc.InterfaceInfoToLegacyInterfaces(srv.Interfaces)
+	if err != nil {
+		log.Errorf("Failed to parse polling strings for cache server '%s': %v", srv.HostName, err)
+		return "", ""
+	}
 
-	if srv.IP != "" {
+	var infName string
+	if lid.InterfaceName != nil {
+		infName = *lid.InterfaceName
+	}
+
+	var pollingURL4Str string
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
 		pollingURL4Str = strings.NewReplacer(
-			"${hostname}", srv.IP,
-			"${interface_name}", srv.InterfaceName,
+			"${hostname}", *lid.IPAddress,
+			"${interface_name}", infName,
 			"application=plugin.remap", "application=system",
 			"application=", "application=system",
 		).Replace(pollingURLStr)
@@ -350,10 +364,11 @@ func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (str
 		pollingURL4Str = insertPorts(pollingURL4Str, srv)
 	}
 
-	if srv.IP6 != "" {
+	var pollingURL6Str string
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
 		r := strings.NewReplacer(
-			"${hostname}", "["+ipv6CIDRStrToAddr(srv.IP6)+"]",
-			"${interface_name}", srv.InterfaceName,
+			"${hostname}", "["+ipv6CIDRStrToAddr(*lid.IP6Address)+"]",
+			"${interface_name}", infName,
 			"application=plugin.remap", "application=system",
 			"application=", "application=system",
 		)
@@ -369,7 +384,7 @@ func insertPorts(pollingURLStr string, srv tc.TrafficServer) string {
 		if srv.HTTPSPort != 0 {
 			pollURL, err := url.Parse(pollingURLStr)
 			if err != nil {
-				log.Warnln("profile " + srv.Profile + " cache '" + srv.FQDN + "' polling URL '" + pollingURLStr + "' failed to parse, may not be a valid URL! Using anyway, not using custom HTTPS Port " + strconv.Itoa(srv.HTTPSPort) + "!")
+				log.Warnf("profile '%s' cache server '%s' polling URL '%s' failed to parse, may not be a valid URL! Using anyway, not using custom HTTPS Port %d!", srv.Profile, srv.FQDN, pollingURLStr, srv.HTTPSPort)
 			} else if pollURL.Port() == "" { // if there's both an HTTPS Port and a port in the polling URL, the polling URL takes precedence
 				pollURL.Host += ":" + strconv.Itoa(srv.HTTPSPort)
 				pollingURLStr = pollURL.String()
@@ -379,7 +394,7 @@ func insertPorts(pollingURLStr string, srv tc.TrafficServer) string {
 		if srv.Port != 0 {
 			pollURL, err := url.Parse(pollingURLStr)
 			if err != nil {
-				log.Warnln("profile " + srv.Profile + " cache '" + srv.FQDN + "' polling URL '" + pollingURLStr + "' failed to parse, may not be a valid URL! Using anyway, not using custom TCP Port " + strconv.Itoa(srv.Port) + "!")
+				log.Warnf("profile '%s' cache server '%s' polling URL '%s' failed to parse, may not be a valid URL! Using anyway, not using custom TCP Port %d!", srv.Profile, srv.FQDN, pollingURLStr, srv.Port)
 			} else if pollURL.Port() == "" { // if there's both a TCP Port and a port in the polling URL, the polling URL takes precedence
 				pollURL.Host += ":" + strconv.Itoa(srv.Port)
 				pollingURLStr = pollURL.String()

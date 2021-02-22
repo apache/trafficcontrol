@@ -17,30 +17,399 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, $scope, $state, $location, $uibModal, $window, deliveryServiceService, deliveryServiceRequestService, dateUtils, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
+var TableDeliveryServicesController = function(tableName, deliveryServices, filter, $anchorScroll, $document, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, dateUtils, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
 
-    let deliveryServicesTable;
+    /**
+     * Gets value to display a default tooltip.
+     */
+    function defaultTooltip(params) {
+        return params.value;
+    }
 
-    var protocols = deliveryServiceUtils.protocols;
+    /**
+     * Formats the contents of a 'lastUpdated' column cell as "relative to now".
+     */
+    function dateCellFormatter(params) {
+        return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
+    }
 
-    var qstrings = deliveryServiceUtils.qstrings;
+    /** The columns of the ag-grid table */
+    const columns = [
+        {
+            headerName: "Active",
+            field: "active",
+            hide: false
+        },
+        {
+            headerName: "Anonymous Blocking",
+            field: "anonymousBlockingEnabled",
+            hide: true
+        },
+        {
+            headerName: "CDN",
+            field: "cdnName",
+            hide: false
+        },
+        {
+            headerName: "Check Path",
+            field: "checkPath",
+            hide: true
+        },
+        {
+            headerName: "Consistent Hash Query Params",
+            field: "consistentHashQueryParams",
+            hide: true,
+            valueFormatter: function(params) {
+                return params.data.consistentHashQueryParams.join(', ');
+            },
+            tooltipValueGetter: function(params) {
+                return params.data.consistentHashQueryParams.join(', ');
+            }
+        },
+        {
+            headerName: "Consistent Hash Regex",
+            field: "consistentHashRegex",
+            hide: true
+        },
+        {
+            headerName: "Deep Caching Type",
+            field: "deepCachingType",
+            hide: true
+        },
+        {
+            headerName: "Display Name",
+            field: "displayName",
+            hide: false
+        },
+        {
+            headerName: "DNS Bypass CNAME",
+            field: "dnsBypassCname",
+            hide: true
+        },
+        {
+            headerName: "DNS Bypass IP",
+            field: "dnsBypassIp",
+            hide: true
+        },
+        {
+            headerName: "DNS Bypass IPv6",
+            field: "dnsBypassIp6",
+            hide: true
+        },
+        {
+            headerName: "DNS Bypass TTL",
+            field: "dnsBypassTtl",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "DNS TTL",
+            field: "ccrDnsTtl",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "DSCP",
+            field: "dscp",
+            hide: false,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "ECS Enabled",
+            field: "ecsEnabled",
+            hide: true
+        },
+        {
+            headerName: "Edge Header Rewrite Rules",
+            field: "edgeHeaderRewrite",
+            hide: true
+        },
+        {
+            headerName: "First Header Rewrite Rules",
+            field: "firstHeaderRewrite",
+            hide: true
+        },
+        {
+            headerName: "FQ Pacing Rate",
+            field: "fqPacingRate",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Geo Limit",
+            field: "geoLimit",
+            hide: true,
+            valueFormatter: function(params) {
+                return deliveryServiceUtils.geoLimits[params.data.geoLimit];
+            },
+            tooltipValueGetter: function(params) {
+                return deliveryServiceUtils.geoLimits[params.data.geoLimit];
+            }
+        },
+        {
+            headerName: "Geo Limit Countries",
+            field: "geoLimitCountries",
+            hide: true
+        },
+        {
+            headerName: "Geo Limit Redirect URL",
+            field: "geoLimitRedirectURL",
+            hide: true
+        },
+        {
+            headerName: "Geolocation Provider",
+            field: "geoProvider",
+            hide: true,
+            valueFormatter: function(params) {
+                return deliveryServiceUtils.geoProviders[params.data.geoProvider];
+            },
+            tooltipValueGetter: function(params) {
+                return deliveryServiceUtils.geoProviders[params.data.geoProvider];
+            }
+        },
+        {
+            headerName: "Geo Miss Latitude",
+            field: "missLat",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Geo Miss Longitude",
+            field: "missLong",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Global Max Mbps",
+            field: "globalMaxMbps",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Global Max TPS",
+            field: "globalMaxTps",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "HTTP Bypass FQDN",
+            field: "httpBypassFqdn",
+            hide: true
+        },
+        {
+            headerName: "ID",
+            field: "id",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Info URL",
+            field: "infoUrl",
+            hide: true
+        },
+        {
+            headerName: "Initial Dispersion",
+            field: "initialDispersion",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Inner Header Rewrite Rules",
+            field: "innerHeaderRewrite",
+            hide: true
+        },
+        {
+            headerName: "IPv6 Routing",
+            field: "ipv6RoutingEnabled",
+            hide: true
+        },
+        {
+            headerName: "Last Header Rewrite Rules",
+            field: "lastHeaderRewrite",
+            hide: true
+        },
+        {
+            headerName: "Last Updated",
+            field: "lastUpdated",
+            hide: true,
+            filter: "agDateColumnFilter",
+            valueFormatter: dateCellFormatter
+        },
+        {
+            headerName: "Long Desc 1",
+            field: "longDesc",
+            hide: true
+        },
+        {
+            headerName: "Long Desc 2",
+            field: "longDesc1",
+            hide: true
+        },
+        {
+            headerName: "Long Desc 3",
+            field: "longDesc2",
+            hide: true
+        },
+        {
+            headerName: "Max DNS Answers",
+            field: "maxDnsAnswers",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Max Origin Connections",
+            field: "maxOriginConnections",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Max Request Header Bytes",
+            field: "maxRequestHeaderBytes",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Mid Header Rewrite Rules",
+            field: "midHeaderRewrite",
+            hide: true
+        },
+        {
+            headerName: "Multi-Site Origin",
+            field: "multiSiteOrigin",
+            hide: true
+        },
+        {
+            headerName: "Origin Shield",
+            field: "originShield",
+            hide: true
+        },
+        {
+            headerName: "Origin FQDN",
+            field: "orgServerFqdn",
+            hide: false
+        },
+        {
+            headerName: "Profile",
+            field: "profileName",
+            hide: true
+        },
+        {
+            headerName: "Protocol",
+            field: "protocol",
+            hide: false,
+            valueFormatter: function(params) {
+                return deliveryServiceUtils.protocols[params.data.protocol];
+            },
+            tooltipValueGetter: function(params) {
+                return deliveryServiceUtils.protocols[params.data.protocol];
+            }
+        },
+        {
+            headerName: "Qstring Handling",
+            field: "qstringIgnore",
+            hide: true,
+            valueFormatter: function(params) {
+                return deliveryServiceUtils.qstrings[params.data.qstringIgnore];
+            },
+            tooltipValueGetter: function(params) {
+                return deliveryServiceUtils.qstrings[params.data.qstringIgnore];
+            }
+        },
+        {
+            headerName: "Range Request Handling",
+            field: "rangeRequestHandling",
+            hide: true,
+            valueFormatter: function(params) {
+                return deliveryServiceUtils.rrhs[params.data.rangeRequestHandling];
+            },
+            tooltipValueGetter: function(params) {
+                return deliveryServiceUtils.rrhs[params.data.rangeRequestHandling];
+            }
+        },
+        {
+            headerName: "Regex Remap Expression",
+            field: "regexRemap",
+            hide: true
+        },
+        {
+            headerName: "Regional Geoblocking",
+            field: "regionalGeoBlocking",
+            hide: true
+        },
+        {
+            headerName: "Raw Remap Text",
+            field: "remapText",
+            hide: true
+        },
+        {
+            headerName: "Routing Name",
+            field: "routingName",
+            hide: true
+        },
+        {
+            headerName: "Service Category",
+            field: "serviceCategory",
+            hide: true
+        },
+        {
+            headerName: "Signed",
+            field: "signed",
+            hide: true
+        },
+        {
+            headerName: "Signing Algorithm",
+            field: "signingAlgorithm",
+            hide: true
+        },
+        {
+            headerName: "Range Slice Block Size",
+            field: "rangeSliceBlockSize",
+            hide: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Tenant",
+            field: "tenant",
+            hide: false
+        },
+        {
+            headerName: "Topology",
+            field: "topology",
+            hide: false
+        },
+        {
+            headerName: "TR Request Headers",
+            field: "trRequestHeaders",
+            hide: true
+        },
+        {
+            headerName: "TR Response Headers",
+            field: "trResponseHeaders",
+            hide: true
+        },
+        {
+            headerName: "Type",
+            field: "type",
+            hide: false
+        },
+        {
+            headerName: "XML ID (Key)",
+            field: "xmlId",
+            hide: false
+        }
+    ];
 
-    var geoProviders = deliveryServiceUtils.geoProviders;
+    let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-    var geoLimits = deliveryServiceUtils.geoLimits;
-
-    var rrhs = deliveryServiceUtils.rrhs;
-
-    var dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
-
-    var showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+    let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
     var createDeliveryService = function(typeName) {
         var path = '/delivery-services/new?type=' + typeName;
         locationUtils.navigateToPath(path);
     };
 
-    var clone = function(ds) {
+    $scope.clone = function(ds, event) {
+        event.stopPropagation();
         var params = {
             title: 'Clone Delivery Service: ' + ds.xmlId,
             message: "Please select a content routing category for the clone"
@@ -70,7 +439,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         });
     };
 
-    var confirmDelete = function(deliveryService) {
+    $scope.confirmDelete = function(deliveryService, event) {
+        event.stopPropagation();
         var params = {
             title: 'Delete Delivery Service: ' + deliveryService.xmlId,
             key: deliveryService.xmlId
@@ -200,9 +570,23 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         });
     };
 
-    $scope.deliveryServices = deliveryServices;
+    /** All of the delivery services - lastUpdated fields converted to actual Dates */
+    $scope.deliveryServices = deliveryServices.map(
+        function(x) {
+            x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
+        });
 
-    $scope.getRelativeTime = dateUtils.getRelativeTime;
+    /** The currently selected server - at the moment only used by the context menu */
+    $scope.deliveryService = {
+        xmlId: "",
+        id: -1
+    };
+
+    $scope.quickSearch = '';
+
+    $scope.pageSize = 100;
+
+    $scope.mouseDownSelectionText = "";
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -212,185 +596,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
     $scope.PENDING = 3;
     $scope.COMPLETE = 4;
 
-    $scope.columns = [
-        { "name": "Active", "visible": true, "searchable": true },
-        { "name": "Anonymous Blocking", "visible": false, "searchable": false },
-        { "name": "CDN", "visible": true, "searchable": true },
-        { "name": "Check Path", "visible": false, "searchable": false },
-        { "name": "Consistent Hash Query Params", "visible": false, "searchable": false },
-        { "name": "Consistent Hash Regex", "visible": false, "searchable": false },
-        { "name": "Deep Caching Type", "visible": false, "searchable": false },
-        { "name": "Display Name", "visible": true, "searchable": true },
-        { "name": "DNS Bypass CNAME", "visible": false, "searchable": false },
-        { "name": "DNS Bypass IP", "visible": false, "searchable": false },
-        { "name": "DNS Bypass IPv6", "visible": false, "searchable": false },
-        { "name": "DNS Bypass TTL", "visible": false, "searchable": false },
-        { "name": "DNS TTL", "visible": false, "searchable": false },
-        { "name": "DSCP", "visible": true, "searchable": true },
-        { "name": "ECS Enabled", "visible": false, "searchable": false },
-        { "name": "Edge Header Rewrite Rules", "visible": false, "searchable": false },
-        { "name": "FQ Pacing Rate", "visible": false, "searchable": false },
-        { "name": "Geo Limit", "visible": false, "searchable": false },
-        { "name": "Geo Limit Countries", "visible": false, "searchable": false },
-        { "name": "Geo Limit Redirect URL", "visible": false, "searchable": false },
-        { "name": "Geolocation Provider", "visible": false, "searchable": false },
-        { "name": "Geo Miss Latitude", "visible": false, "searchable": false },
-        { "name": "Geo Miss Longitude", "visible": false, "searchable": false },
-        { "name": "Global Max Mbps", "visible": false, "searchable": false },
-        { "name": "Global Max TPS", "visible": false, "searchable": false },
-        { "name": "HTTP Bypass FQDN", "visible": false, "searchable": false },
-        { "name": "ID", "visible": false, "searchable": false },
-        { "name": "Info URL", "visible": true, "searchable": true },
-        { "name": "Initial Dispersion", "visible": false, "searchable": false },
-        { "name": "IPv6 Routing", "visible": false, "searchable": false },
-        { "name": "Last Updated", "visible": false, "searchable": false },
-        { "name": "Long Desc 1", "visible": false, "searchable": false },
-        { "name": "Long Desc 2", "visible": false, "searchable": false },
-        { "name": "Long Desc 3", "visible": false, "searchable": false },
-        { "name": "Max DNS Answers", "visible": false, "searchable": false },
-        { "name": "Max Origin Connections", "visible": false, "searchable": false },
-        { "name": "Mid Header Rewrite Rules", "visible": false, "searchable": false },
-        { "name": "Multi-Site Origin", "visible": false, "searchable": false },
-        { "name": "Origin Shield", "visible": false, "searchable": false },
-        { "name": "Origin FQDN", "visible": true, "searchable": true },
-        { "name": "Profile", "visible": true, "searchable": true },
-        { "name": "Protocol", "visible": true, "searchable": true },
-        { "name": "Qstring Handling", "visible": false, "searchable": false },
-        { "name": "Range Request Handling", "visible": false, "searchable": false },
-        { "name": "Regex Remap Expression", "visible": false, "searchable": false },
-        { "name": "Regional Geoblocking", "visible": false, "searchable": false },
-        { "name": "Raw Remap Text", "visible": false, "searchable": false },
-        { "name": "Routing Name", "visible": false, "searchable": false },
-        { "name": "Signed", "visible": false, "searchable": false },
-        { "name": "Signing Algorithm", "visible": false, "searchable": false },
-        { "name": "Range Slice Block Size", "visible": false, "searchable": false },
-        { "name": "Tenant", "visible": true, "searchable": true },
-        { "name": "Topology", "visible": true, "searchable": true },
-        { "name": "TR Request Headers", "visible": false, "searchable": false },
-        { "name": "TR Response Headers", "visible": false, "searchable": false },
-        { "name": "Type", "visible": true, "searchable": true },
-        { "name": "XML ID (Key)", "visible": true, "searchable": true }
-    ];
-
-    $scope.contextMenuItems = [
-        {
-            text: 'Open in New Tab',
-            click: function ($itemScope) {
-                $window.open('/#!/delivery-services/' + $itemScope.ds.id + '?type=' + $itemScope.ds.type, '_blank');
-            }
-        },
-        null, // Divider
-        {
-            text: 'Edit',
-            click: function ($itemScope) {
-                $scope.editDeliveryService($itemScope.ds);
-            }
-        },
-        {
-            text: 'Clone',
-            click: function ($itemScope) {
-                clone($itemScope.ds);
-            }
-        },
-        {
-            text: 'Delete',
-            click: function ($itemScope) {
-                confirmDelete($itemScope.ds);
-            }
-        },
-        null, // Divider
-        {
-            text: 'View Charts',
-            click: function ($itemScope, evt) {
-                $scope.viewCharts($itemScope.ds, evt);
-            }
-        },
-        null, // Divider
-        {
-            text: 'Manage SSL Keys',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/ssl-keys?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage URL Sig Keys',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/url-sig-keys?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage URI Signing Keys',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/uri-signing-keys?type=' + $itemScope.ds.type);
-            }
-        },
-        null, // Divider
-        {
-            text: 'Manage Invalidation Requests',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/jobs?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Origins',
-            displayed: function ($itemScope) {
-                // only show for non-steering* delivery services
-                return $itemScope.ds.type.indexOf('STEERING') == -1;
-            },
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/origins?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Regexes',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/regexes?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Required Server Capabilities',
-            displayed: function ($itemScope) {
-                // only show for DNS* or HTTP* delivery services
-                return ($itemScope.ds.type.indexOf('DNS') != -1 || $itemScope.ds.type.indexOf('HTTP') != -1);
-            },
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Targets',
-            displayed: function ($itemScope) {
-                // only show for steering* delivery services
-                return $itemScope.ds.type.indexOf('STEERING') != -1;
-            },
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/targets?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'Manage Static DNS Entries',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/static-dns-entries?type=' + $itemScope.ds.type);
-            }
-        }
-    ];
-
-    $scope.editDeliveryService = function(ds) {
-        var path = '/delivery-services/' + ds.id + '?type=' + ds.type;
-        locationUtils.navigateToPath(path);
-    };
-
     $scope.viewCharts = function(ds, $event) {
-        if ($event) {
-            $event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-        }
-
+        $event.stopPropagation();
         if (showCustomCharts) {
             deliveryServiceUtils.openCharts(ds);
         } else {
@@ -400,26 +607,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
 
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
-    };
-
-    $scope.protocol = function(ds) {
-        return protocols[ds.protocol];
-    };
-
-    $scope.qstring = function(ds) {
-        return qstrings[ds.qstringIgnore];
-    };
-
-    $scope.geoProvider = function(ds) {
-        return geoProviders[ds.geoProvider];
-    };
-
-    $scope.geoLimit = function(ds) {
-        return geoLimits[ds.geoLimit];
-    };
-
-    $scope.rrh = function(ds) {
-        return rrhs[ds.rangeRequestHandling];
     };
 
     $scope.selectDSType = function() {
@@ -480,30 +667,215 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         });
     };
 
-    $scope.toggleVisibility = function(colName) {
-        const col = deliveryServicesTable.column(colName + ':name');
-        col.visible(!col.visible());
-        deliveryServicesTable.rows().invalidate().draw();
+    /** Toggles the visibility of a column that has the ID provided as 'col'. */
+    $scope.toggleVisibility = function(col) {
+        const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
+        $scope.gridOptions.columnApi.setColumnVisible(col, !visible);
+    };
+
+    /** Options, configuration, data and callbacks for the ag-grid table. */
+    $scope.gridOptions = {
+        columnDefs: columns,
+        enableCellTextSelection:true,
+        suppressMenuHide: true,
+        multiSortKey: 'ctrl',
+        alwaysShowVerticalScroll: true,
+        defaultColDef: {
+            filter: true,
+            sortable: true,
+            resizable: true,
+            tooltipValueGetter: defaultTooltip
+        },
+        rowData: deliveryServices,
+        pagination: true,
+        paginationPageSize: $scope.pageSize,
+        rowBuffer: 0,
+        tooltipShowDelay: 500,
+        allowContextMenuWithControlKey: true,
+        preventDefaultOnContextMenu: true,
+        colResizeDefault: "shift",
+        onColumnVisible: function(params) {
+            if (params.visible){
+                return;
+            }
+            const filterModel = $scope.gridOptions.api.getFilterModel();
+            for (let column of params.columns) {
+                if (column.filterActive) {
+                    if (column.colId in filterModel) {
+                        delete filterModel[column.colId];
+                        $scope.gridOptions.api.setFilterModel(filterModel);
+                    }
+                }
+            }
+        },
+        onCellContextMenu: function(params) {
+            $scope.showMenu = true;
+            $scope.menuStyle.left = String(params.event.clientX) + "px";
+            $scope.menuStyle.top = String(params.event.clientY) + "px";
+            $scope.menuStyle.bottom = "unset";
+            $scope.menuStyle.right = "unset";
+            $scope.$apply();
+            const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+
+            if (boundingRect.bottom > window.innerHeight){
+                $scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
+                $scope.menuStyle.top = "unset";
+            }
+            if (boundingRect.right > window.innerWidth) {
+                $scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
+                $scope.menuStyle.left = "unset";
+            }
+            $scope.deliveryService = params.data;
+            $scope.$apply();
+        },
+        onCellMouseDown: function() {
+            $scope.mouseDownSelectionText = window.getSelection().toString();
+        },
+        onRowClicked: function(params) {
+            const selection = window.getSelection().toString();
+            if(selection === "" || selection === $scope.mouseDownSelectionText) {
+                locationUtils.navigateToPath('/delivery-services/' + params.data.id + '?type=' + params.data.type);
+                // Event is outside the digest cycle, so we need to trigger one.
+                $scope.$apply();
+            }
+            $scope.mouseDownSelectionText = "";
+        },
+        onColumnResized: function(params) {
+            localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+        },
+        onFirstDataRendered: function(event) {
+            try {
+                const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+                // apply any filter provided to the controller
+                Object.assign(filterState, filter);
+                $scope.gridOptions.api.setFilterModel(filterState);
+            } catch (e) {
+                console.error("Failure to load stored filter state:", e);
+            }
+
+            $scope.gridOptions.api.addEventListener("filterChanged", function() {
+                localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
+            });
+        },
+        onGridReady: function() {
+            try { // need to create the show/hide column checkboxes and bind to the current visibility
+                const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
+                if (colstates) {
+                    if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
+                        console.error("Failed to load stored column state: one or more columns not found");
+                    }
+                } else {
+                    $scope.gridOptions.api.sizeColumnsToFit();
+                }
+            } catch (e) {
+                console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
+            }
+
+            try {
+                const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
+                $scope.gridOptions.api.setSortModel(sortState);
+            } catch (e) {
+                console.error("Failure to load stored sort state:", e);
+            }
+
+            try {
+                $scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
+                $scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+            } catch (e) {
+                console.error("Failure to load stored quick search:", e);
+            }
+
+            try {
+                const ps = localStorage.getItem(tableName + "_page_size");
+                if (ps && ps > 0) {
+                    $scope.pageSize = Number(ps);
+                    $scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
+                }
+            } catch (e) {
+                console.error("Failure to load stored page size:", e);
+            }
+            
+            try {
+                const page = parseInt(localStorage.getItem(tableName + "_table_page"));
+                const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
+                if (page !== undefined && page > 0 && page <= totalPages-1) {
+                    $scope.gridOptions.api.paginationGoToPage(page);
+                }
+            } catch (e) {
+                console.error("Failed to load stored page number:", e);
+            }
+
+            $scope.gridOptions.api.addEventListener("paginationChanged", function() {
+                localStorage.setItem(tableName + "_table_page", $scope.gridOptions.api.paginationGetCurrentPage());
+            });
+
+            $scope.gridOptions.api.addEventListener("sortChanged", function() {
+                localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
+            });
+
+            $scope.gridOptions.api.addEventListener("columnMoved", function() {
+                localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+            });
+
+            $scope.gridOptions.api.addEventListener("columnVisible", function() {
+                $scope.gridOptions.api.sizeColumnsToFit();
+                try {
+                    const colStates = $scope.gridOptions.columnApi.getColumnState();
+                    localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
+                } catch (e) {
+                    console.error("Failed to store column defs to local storage:", e);
+                }
+            });
+        }
+    };
+
+    /** This is used to position the context menu under the cursor. */
+    $scope.menuStyle = {
+        left: 0,
+        top: 0,
+    };
+
+    /** Controls whether or not the context menu is visible. */
+    $scope.showMenu = false;
+
+    /** Downloads the table as a CSV */
+    $scope.exportCSV = function() {
+        const params = {
+            allColumns: true,
+            fileName: "delivery-services.csv",
+        };
+        $scope.gridOptions.api.exportDataAsCsv(params);
+    };
+
+    $scope.onQuickSearchChanged = function() {
+        $scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+        localStorage.setItem(tableName + "_quick_search", $scope.quickSearch);
+    };
+
+    $scope.onPageSizeChanged = function() {
+        const value = Number($scope.pageSize);
+        $scope.gridOptions.api.paginationSetPageSize(value);
+        localStorage.setItem(tableName + "_page_size", value);
+    };
+
+    $scope.clearTableFilters = function() {
+        // clear the quick search
+        $scope.quickSearch = '';
+        $scope.onQuickSearchChanged();
+        // clear any column filters
+        $scope.gridOptions.api.setFilterModel(null);
     };
 
     angular.element(document).ready(function () {
-        deliveryServicesTable = $('#deliveryServicesTable').DataTable({
-            "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": [],
-            "columns": $scope.columns,
-            "initComplete": function(settings, json) {
-                try {
-                    // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_deliveryServicesTable_/')).columns;
-                } catch (e) {
-                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_deliveryServicesTable_/):", e);
-                }
-            }
+        // clicks outside the context menu will hide it
+        $document.bind("click", function(e) {
+            $scope.showMenu = false;
+            e.stopPropagation();
+            $scope.$apply();
         });
     });
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$anchorScroll', '$scope', '$state', '$location', '$uibModal', '$window', 'deliveryServiceService', 'deliveryServiceRequestService', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'messageModel', 'propertiesModel', 'userModel'];
+TableDeliveryServicesController.$inject = ['tableName', 'deliveryServices', 'filter', '$anchorScroll', '$document', '$scope', '$state', '$location', '$uibModal', 'deliveryServiceService', 'deliveryServiceRequestService', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = TableDeliveryServicesController;

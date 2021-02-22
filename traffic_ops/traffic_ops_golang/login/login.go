@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,7 +58,7 @@ const instanceNameQuery = `
 SELECT value
 FROM parameter
 WHERE name='tm.instance_name' AND
-      config_file='global'
+      config_file=$1
 `
 const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
@@ -239,12 +240,14 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		data := url.Values{}
 		data.Add("code", parameters.Code)
 		data.Add("client_id", parameters.ClientId)
-		data.Add("client_secret", cfg.ConfigTrafficOpsGolang.OAuthClientSecret)
 		data.Add("grant_type", "authorization_code") // Required by RFC6749 section 4.1.3
 		data.Add("redirect_uri", parameters.RedirectUri)
 
 		req, err := http.NewRequest(http.MethodPost, parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		if cfg.OAuthClientSecret != "" {
+			req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(parameters.ClientId+":"+cfg.OAuthClientSecret))) // per RFC6749 section 2.3.1
+		}
 		if err != nil {
 			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
 			return
@@ -419,7 +422,7 @@ func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
 
 func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPortal) ([]byte, error) {
 	var instanceName string
-	row := db.QueryRow(instanceNameQuery)
+	row := db.QueryRow(instanceNameQuery, tc.GlobalConfigFileName)
 	if err := row.Scan(&instanceName); err != nil {
 		return nil, err
 	}

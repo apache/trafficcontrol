@@ -16,6 +16,7 @@ package v2
 */
 
 import (
+	"sort"
 	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -23,6 +24,7 @@ import (
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+		SortTestCDNs(t)
 		UpdateTestCDNs(t)
 		GetTestCDNs(t)
 	})
@@ -38,6 +40,21 @@ func CreateTestCDNs(t *testing.T) {
 		}
 	}
 
+}
+
+func SortTestCDNs(t *testing.T) {
+	var sortedList []string
+	resp, _, _ := TOSession.GetCDNs()
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
 }
 
 func UpdateTestCDNs(t *testing.T) {

@@ -1,0 +1,14 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "DeleteServiceCategories",
+            "Route": "/service_categories",
+            "Method": "delete",
+            "Data": [
+                {
+                    "route": "/service_categories/TPTest2"
+                }
+            ]
+        }
+    ]
+}

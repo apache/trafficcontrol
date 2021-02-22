@@ -29,10 +29,15 @@ func TestMakePackages(t *testing.T) {
 		"p0": []string{"p0v0", "p0v1"},
 		"1":  []string{"p1v0"},
 	}
+	paramData := makeParamsFromMapArr("serverProfile", LogsXMLFileName, params)
 
-	txt := MakePackages(params)
+	cfg, err := MakePackages(paramData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
 
-	packages := []Package{}
+	packages := []pkg{}
 	if err := json.Unmarshal([]byte(txt), &packages); err != nil {
 		t.Fatalf("MakePackages expected a JSON array of objects, actual: " + err.Error())
 	}

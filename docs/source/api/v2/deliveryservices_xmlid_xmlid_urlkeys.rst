@@ -21,6 +21,8 @@
 
 ``GET``
 =======
+.. seealso:: :ref:`to-api-v2-deliveryservices-id-urlkeys`
+
 Retrieves URL signing keys for a :term:`Delivery Service`.
 
 .. caution:: This method will return the :term:`Delivery Service`'s **PRIVATE** URL signing keys! Be wary of using this endpoint and **NEVER** share the output with anyone who would be unable to see it on their own.
@@ -41,7 +43,7 @@ Request Structure
 
 Response Structure
 ------------------
-:key<N>: The private URL signing key for this :term:`Delivery Service` as a base-64-encoded string, where ``<N>`` is the "generation" of the key e.g. the first key will always be named ``"key0"``. Up to 16 concurrent generations are retained at any time (``<N>`` is always on the interval [0,16])
+:key<N>: The private URL signing key for this :term:`Delivery Service` as a base-64-encoded string, where ``<N>`` is the "generation" of the key e.g. the first key will always be named ``"key0"``. Up to 16 concurrent generations are retained at any time (``<N>`` is always on the interval [0,15])
 
 .. code-block:: json
 	:caption: Response Example

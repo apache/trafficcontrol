@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-parameters:
+.. _to-api-v3-parameters:
 
 **************
 ``parameters``
@@ -40,6 +40,8 @@ Request Structure
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| name        | no       | Filter :term:`Parameters` by :ref:`parameter-name`                                                            |
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| value       | no       | Filter :term:`Parameters` by :ref:`parameter-value`                                                           |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|             |          | array                                                                                                         |
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -53,6 +55,9 @@ Request Structure
 	|             |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
 	|             |          | defined to make use of ``page``.                                                                              |
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``value`` query parameter was added to all API versions in ATC version 6.0.
 
 .. code-block:: http
 	:caption: Request Example

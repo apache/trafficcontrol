@@ -20,6 +20,7 @@ package config
  */
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,8 +48,10 @@ type Config struct {
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
-	DB                     ConfigDatabase `json:"db"`
-	Secrets                []string       `json:"secrets"`
+	ConfigAcmeRenewal      `json:"acme_renewal"`
+	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
+	DB                     ConfigDatabase      `json:"db"`
+	Secrets                []string            `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions  *riak.AuthOptions
 	RiakEnabled      bool
@@ -59,6 +62,7 @@ type Config struct {
 	InfluxEnabled    bool
 	InfluxDBConfPath string `json:"influxdb_conf_path"`
 	Version          string
+	UseIMS           bool `json:"use_ims"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -69,6 +73,9 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
+	// Deprecated in 5.0
+	Insecure bool `json:"insecure"`
+	// end deprecated
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
 	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
@@ -84,7 +91,6 @@ type ConfigTrafficOpsGolang struct {
 	LogLocationInfo          string                     `json:"log_location_info"`
 	LogLocationDebug         string                     `json:"log_location_debug"`
 	LogLocationEvent         string                     `json:"log_location_event"`
-	Insecure                 bool                       `json:"insecure"`
 	MaxDBConnections         int                        `json:"max_db_connections"`
 	DBMaxIdleConnections     int                        `json:"db_max_idle_connections"`
 	DBConnMaxLifetimeSeconds int                        `json:"db_conn_max_lifetime_seconds"`
@@ -99,6 +105,8 @@ type ConfigTrafficOpsGolang struct {
 	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
 	OAuthClientSecret        string                     `json:"oauth_client_secret"`
 	RoutingBlacklist         `json:"routing_blacklist"`
+	SupportedDSMetrics       []string    `json:"supported_ds_metrics"`
+	TLSConfig                *tls.Config `json:"tls_config"`
 
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
@@ -110,11 +118,10 @@ type ConfigTrafficOpsGolang struct {
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
 }
 
-// RoutingBlacklist contains the list of route IDs that will be handled by TO-Perl, a list of route IDs that are disabled,
+// RoutingBlacklist contains a list of route IDs that are disabled,
 // and whether or not to ignore unknown routes.
 type RoutingBlacklist struct {
 	IgnoreUnknownRoutes bool  `json:"ignore_unknown_routes"`
-	PerlRoutes          []int `json:"perl_routes"`
 	DisabledRoutes      []int `json:"disabled_routes"`
 }
 
@@ -150,6 +157,21 @@ type ConfigLetsEncrypt struct {
 	ConvertSelfSigned         bool   `json:"convert_self_signed"`
 	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
 	Environment               string `json:"environment"`
+}
+
+// ConfigAcmeRenewal continas configuration information for automated ACME renewals.
+type ConfigAcmeRenewal struct {
+	SummaryEmail              string `json:"summary_email"`
+	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
+}
+
+// ConfigAcmeAccount contains all account information for a single ACME provider to be registered with External Account Binding
+type ConfigAcmeAccount struct {
+	AcmeProvider string `json:"acme_provider"`
+	UserEmail    string `json:"user_email"`
+	AcmeUrl      string `json:"acme_url"`
+	Kid          string `json:"kid"`
+	HmacEncoded  string `json:"hmac_encoded"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -292,7 +314,13 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 
 	idbPath := cfg.InfluxDBConfPath
 	if idbPath == "" {
-		idbPath = filepath.Join(filepath.Dir(cdnConfPath), "influxdb.conf")
+		mojoMode := os.Getenv("MOJO_MODE")
+
+		if cwd, err := os.Getwd(); mojoMode != "" && err != nil {
+			idbPath = filepath.Join(cwd, "conf", mojoMode, "influxdb.conf")
+		} else {
+			idbPath = filepath.Join(filepath.Dir(cdnConfPath), "influxdb.conf")
+		}
 	}
 
 	if _, err = os.Stat(idbPath); err != nil {
@@ -423,19 +451,9 @@ func ParseConfig(cfg Config) (Config, error) {
 }
 
 func ValidateRoutingBlacklist(blacklist RoutingBlacklist) error {
-	seenPerlIDs := make(map[int]struct{}, len(blacklist.PerlRoutes))
-	for _, id := range blacklist.PerlRoutes {
-		if _, found := seenPerlIDs[id]; !found {
-			seenPerlIDs[id] = struct{}{}
-		} else {
-			return fmt.Errorf("route ID %d is listed multiple times in perl_routes", id)
-		}
-	}
 	seenDisabledIDs := make(map[int]struct{}, len(blacklist.DisabledRoutes))
 	for _, id := range blacklist.DisabledRoutes {
-		if _, foundInPerl := seenPerlIDs[id]; foundInPerl {
-			return fmt.Errorf("route ID %d cannot be listed in both perl_routes and disabled_routes", id)
-		} else if _, found := seenDisabledIDs[id]; !found {
+		if _, found := seenDisabledIDs[id]; !found {
 			seenDisabledIDs[id] = struct{}{}
 		} else {
 			return fmt.Errorf("route ID %d is listed multiple times in disabled_routes", id)

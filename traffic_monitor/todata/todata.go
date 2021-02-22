@@ -127,6 +127,7 @@ type CRConfig struct {
 		Type             string                              `json:"type"`
 	} `json:"contentServers"`
 	DeliveryServices map[tc.DeliveryServiceName]struct {
+		Topology  tc.TopologyName `json:"topology"`
 		Matchsets []struct {
 			Protocol  string `json:"protocol"`
 			MatchList []struct {
@@ -134,11 +135,14 @@ type CRConfig struct {
 			} `json:"matchlist"`
 		} `json:"matchsets"`
 	} `json:"deliveryServices"`
+	Topologies map[tc.TopologyName]struct {
+		Nodes []string `json:"nodes"`
+	}
 }
 
 // Fetch gets the CRConfig from Traffic Ops, creates the TOData maps, and atomically sets the TOData.
 // TODO since the session is threadsafe, each TOData get func below could be put in a goroutine, if performance mattered
-func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error {
+func (d TODataThreadsafe) Fetch(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
 	if _, err := to.CRConfigRaw(cdn); err != nil {
 		return fmt.Errorf("Error getting CRconfig from Traffic Ops: %v", err)
 	}
@@ -146,7 +150,7 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 }
 
 // Update updates the TOData data with the last fetched CDN
-func (d TODataThreadsafe) Update(to towrap.ITrafficOpsSession, cdn string) error {
+func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
 	crConfigBytes, _, err := to.LastCRConfig(cdn)
 	if err != nil {
 		return fmt.Errorf("Error getting last CRConfig: %v", err)
@@ -195,11 +199,28 @@ func getDeliveryServiceServers(crc CRConfig) (map[tc.DeliveryServiceName][]tc.Ca
 	dsServers := map[tc.DeliveryServiceName][]tc.CacheName{}
 	serverDses := map[tc.CacheName][]tc.DeliveryServiceName{}
 
+	topologyCacheGroupDses := map[string][]tc.DeliveryServiceName{}
+	for deliveryServiceName, deliveryService := range crc.DeliveryServices {
+		if deliveryService.Topology == "" {
+			continue
+		}
+		for _, cacheGroup := range crc.Topologies[deliveryService.Topology].Nodes {
+			topologyCacheGroupDses[cacheGroup] = append(topologyCacheGroupDses[cacheGroup], deliveryServiceName)
+		}
+	}
+
 	for serverName, serverData := range crc.ContentServers {
+		if cacheGroupDses, inTopology := topologyCacheGroupDses[serverData.CacheGroup]; inTopology {
+			for _, deliveryServiceName := range cacheGroupDses {
+				dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
+			}
+			serverDses[serverName] = append(serverDses[serverName], cacheGroupDses...)
+		}
 		for deliveryServiceName := range serverData.DeliveryServices {
 			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
 			serverDses[serverName] = append(serverDses[serverName], deliveryServiceName)
 		}
+
 	}
 	return dsServers, serverDses, nil
 }

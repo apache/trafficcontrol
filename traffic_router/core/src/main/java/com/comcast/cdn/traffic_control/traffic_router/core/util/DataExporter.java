@@ -27,13 +27,15 @@ import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
+
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Resolver;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.PropertiesAndCaches;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -90,7 +92,7 @@ public class DataExporter {
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
 
-		final CacheLocation cl = getLocationFromCzm(ip);
+		final Location cl = getLocationFromCzm(ip);
 
 		if (cl != null) {
 			map.put("locationByCoverageZone", cl.getProperties());
@@ -116,7 +118,7 @@ public class DataExporter {
 			final List<Object> federationsList = federationExporter.getMatchingFederations(cidrAddress);
 
 			if (federationsList.isEmpty()) {
-				map.put("locationByFederation", "not found");
+				map.put("locationByFederation", NOT_FOUND_MESSAGE);
 			} else {
 				map.put("locationByFederation", federationsList);
 			}
@@ -124,10 +126,17 @@ public class DataExporter {
 			map.put("locationByFederation", NOT_FOUND_MESSAGE);
 		}
 
+		final CacheLocation clFromDCZ = trafficRouterManager.getTrafficRouter().getDeepCoverageZoneLocationByIP(ip);
+		if (clFromDCZ != null) {
+			map.put("locationByDeepCoverageZone", new PropertiesAndCaches(clFromDCZ));
+		} else {
+			map.put("locationByDeepCoverageZone", NOT_FOUND_MESSAGE);
+		}
+
 		return map;
 	}
 
-	private CacheLocation getLocationFromCzm(final String ip) {
+	private Location getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;
 
 		try {
@@ -139,7 +148,7 @@ public class DataExporter {
 		if (nn == null) { return null; }
 
 		final String locId = nn.getLoc();
-		final CacheLocation cl = nn.getCacheLocation();
+		final Location cl = nn.getLocation();
 
 		if (cl != null) {
 			return cl;
@@ -175,7 +184,7 @@ public class DataExporter {
 	public List<CacheModel> getCaches(final String locationId) {
 		final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 		final CacheLocation location = trafficRouter.getCacheRegister().getCacheLocation(locationId);
-		return getCaches(location, trafficRouter.getZoneManager());
+		return getCaches(location);
 	}
 
 	public Map<String, Object> getCaches() {
@@ -189,13 +198,13 @@ public class DataExporter {
 		return models;
 	}
 
-	private List<CacheModel> getCaches(final CacheLocation location, final Resolver resolver) {
+	private List<CacheModel> getCaches(final CacheLocation location) {
 		final List<CacheModel> models = new ArrayList<CacheModel>();
 
 		for (final Cache cache : location.getCaches()) {
 			final CacheModel model = new CacheModel();
 			final List<String> ipAddresses = new ArrayList<String>();
-			final List<InetRecord> ips = cache.getIpAddresses(null, resolver);
+			final List<InetRecord> ips = cache.getIpAddresses(null);
 
 			if (ips != null) {
 				for (final InetRecord address : ips) {

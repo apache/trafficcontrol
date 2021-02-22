@@ -25,6 +25,10 @@ RUN apk add --no-cache \
 COPY traffic_ops/to-access.sh /
 COPY smtp/run.sh /usr/bin/
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 # Unset entrypoint
 ENTRYPOINT []
 CMD ["/usr/bin/env", "run.sh"]

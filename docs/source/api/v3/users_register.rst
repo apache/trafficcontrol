@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-users-register:
+.. _to-api-v3-users-register:
 
 ******************
 ``users/register``

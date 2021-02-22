@@ -78,16 +78,14 @@ func main() {
 				fmt.Printf("Loading cdn config from '%s': %v", *configFileName, err)
 				os.Exit(1)
 			}
-			perlRoutes := routing.GetRouteIDMap(cfg.PerlRoutes)
 			disabledRoutes := routing.GetRouteIDMap(cfg.DisabledRoutes)
 			for _, r := range routes {
-				_, isBypassedToPerl := perlRoutes[r.ID]
 				_, isDisabled := disabledRoutes[r.ID]
-				fmt.Printf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s\tcan_bypass_to_perl=%t\tis_bypassed_to_perl=%t\tis_disabled=%t\n", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl, isBypassedToPerl, isDisabled)
+				fmt.Printf("%s\tis_disabled=%t\n", r, isDisabled)
 			}
 		} else {
 			for _, r := range routes {
-				fmt.Printf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s\tcan_bypass_to_perl=%t\n", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
+				fmt.Printf("%s\n", r)
 			}
 		}
 		os.Exit(0)
@@ -168,13 +166,19 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		TLSConfig:         &tls.Config{InsecureSkipVerify: cfg.Insecure},
+		TLSConfig:         cfg.TLSConfig,
 		ReadTimeout:       time.Duration(cfg.ReadTimeout) * time.Second,
 		ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeout) * time.Second,
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 		ErrorLog:          log.Error,
 	}
+	if server.TLSConfig == nil {
+		server.TLSConfig = &tls.Config{}
+	}
+	// Deprecated in 5.0
+	server.TLSConfig.InsecureSkipVerify = cfg.Insecure
+	// end deprecated block
 
 	go func() {
 		if cfg.KeyPath == "" {

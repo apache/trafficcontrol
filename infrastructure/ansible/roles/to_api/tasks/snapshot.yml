@@ -1,0 +1,130 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Ensure you're logged into TrafficOps
+  import_tasks: login.yml
+
+- name: Generate temp file for raw pre-commit snapshot
+  delegate_to: localhost
+  tempfile:
+    state: file
+    prefix: 'ansible.to_api.snapshot.rawprecommit.'
+    suffix: '.tmp.json'
+  register: raw_precommit_snapshot_file
+
+- name: Generate temp file for pre-commit snapshot
+  delegate_to: localhost
+  tempfile:
+    state: file
+    prefix: 'ansible.to_api.snapshot.precommit.'
+    suffix: '.tmp.json'
+  register: precommit_snapshot_file
+
+- name: Generate temp file for pending snapshot
+  delegate_to: localhost
+  tempfile:
+    state: file
+    prefix: 'ansible.to_api.snapshot.pending.'
+    suffix: '.tmp.json'
+  register: pending_snapshot_file
+
+- name: Generate temp file for raw pending snapshot
+  delegate_to: localhost
+  tempfile:
+    state: file
+    prefix: 'ansible.to_api.snapshot.rawpending.'
+    suffix: '.tmp.json'
+  register: raw_pending_snapshot_file
+
+- name: "Take pre-install snapshot of CRConfig.json ({{ to_api_target_cdn }})"
+  delegate_to: localhost
+  uri:
+    url: "{{ to_api_base_url }}/CRConfig-Snapshots/{{ to_api_target_cdn }}/CRConfig.json"
+    method: GET
+    follow_redirects: all
+    return_content: yes
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+    dest: "{{ raw_precommit_snapshot_file.path }}"
+    timeout: 2880
+  become: False
+
+- name: "Retrieves PENDING snapshot ({{ to_api_target_cdn }})"
+  delegate_to: localhost
+  uri:
+    url: "{{ to_api_base_url }}/api/1.2/cdns/{{ to_api_target_cdn }}/snapshot/new"
+    method: GET
+    follow_redirects: all
+    return_content: yes
+    headers:
+      Cookie: "{{ login.set_cookie }}"
+    validate_certs: no
+    dest: "{{ raw_pending_snapshot_file.path }}"
+    timeout: 2880
+  become: False
+
+- name: Fix/scrub json output format of the pre-commit snapshot output
+  shell: "jq -r '. | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_precommit_snapshot_file.path }} > {{ precommit_snapshot_file.path }}"
+  delegate_to: localhost
+
+- name: Fix/scrub json output format of the pending snapshot output
+  shell: "jq -r '.response | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_pending_snapshot_file.path }} > {{ pending_snapshot_file.path }}"
+  delegate_to: localhost
+
+- name: "Perform diff of {{ to_api_target_cdn }} crconfig"
+  delegate_to: localhost
+  shell: "json_diff -u {{ precommit_snapshot_file.path }} {{ pending_snapshot_file.path }}"
+  register: diff_output
+  ignore_errors: True
+
+- name: Show {{ to_api_target_cdn }} config diff
+  debug:
+    msg: "{{ diff_output.stdout_lines }}"
+    verbosity: 1
+  delegate_to: localhost
+
+- name: Cleanup temp files from diff
+  delegate_to: localhost
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{raw_precommit_snapshot_file.path}}"
+    - "{{precommit_snapshot_file.path}}"
+    - "{{raw_pending_snapshot_file.path}}"
+    - "{{pending_snapshot_file.path}}"
+
+- name: Assert the crconfig is clean
+  delegate_to: localhost
+  assert:
+    that:
+      - "{{ diff_output.stdout_lines | count }} == 3"
+    msg: "There are pending changes to the {{to_api_target_cdn}} crconfig when we expect there to be none.  Please rerun with -v or manually review the diff.  Aborting."
+  when: to_api_assert_clean_snapshot
+
+- name: "Writing snapshot ({{ to_api_target_cdn }})"
+  delegate_to: localhost
+  uri:
+    url: "{{ to_api_base_url }}/tools/write_crconfig/{{ to_api_target_cdn }}"
+    method: GET
+    follow_redirects: all
+    return_content: yes
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+    timeout: 2880
+  register: detail
+  become: False
+  when: to_api_commit_snapshot

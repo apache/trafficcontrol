@@ -17,16 +17,72 @@ package v3
 
 import (
 	"fmt"
+	"net/http"
+	"sort"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestTypes(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Types}, func() {
+		GetTestTypesIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		SortTestTypes(t)
 		UpdateTestTypes(t)
 		GetTestTypes(t)
+		GetTestTypesIMSAfterChange(t, header)
 	})
+}
+
+func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
+	for _, typ := range testData.Types {
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, typ := range testData.Types {
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestTypesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	t.Log("---- GetTestTypes ----")
+
+	for _, typ := range testData.Types {
+		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestTypes(t *testing.T) {
@@ -60,6 +116,25 @@ func CreateTestTypes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not CREATE types: %v", err)
 		}
+	}
+}
+
+func SortTestTypes(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetTypesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, resp[i].Name)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 

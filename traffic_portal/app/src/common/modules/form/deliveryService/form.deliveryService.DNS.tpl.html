@@ -59,7 +59,7 @@ under the License.
                     <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
-                    <li ng-if="::(!deliveryService.topology)" role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
+                    <li name="manageServersMenuItem" role="menuitem"><button class="menu-item-button" type="button" ng-click="viewServers()">Manage Servers</button></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
@@ -171,7 +171,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                            <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required ng-disabled="(!settings.isNew && deliveryService.sslKeyVersion)">
                                 <option hidden disabled selected value="">Select...</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.cdnId, 'required')">Required</small>
@@ -241,6 +241,22 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.topology !== dsCurrent.topology">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.topology}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
+                                <div class="helptext">The type of content being delivered. Some examples are linear and vod.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="serviceCategory" name="serviceCategory" class="form-control" ng-model="deliveryService.serviceCategory" ng-options="serviceCategory.name as serviceCategory.name for serviceCategory in serviceCategories">
+                                <option value="">Select...</option>
+                            </select>
+                            <small ng-show="deliveryService.serviceCategory"><a href="/#!/service-categories/edit?name={{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.serviceCategory != dsCurrent.serviceCategory">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.serviceCategory}}</pre>
                             </aside>
                         </div>
                     </div>
@@ -384,6 +400,25 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.maxRequestHeaderBytes), 'has-feedback': hasError(cacheConfig.maxRequestHeaderBytes)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxRequestHeaderBytes">Max Request Header Bytes<div class="helptooltip">
+                                <div class="helptext">
+                                    The maximum size (in bytes) of the request headers for this particular delivery service. The default value is <code>0</code> which will limit the request headers size (in bytes) to the value defined by the
+                                    <a href="https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/records.config.en.html#proxy-config-http-request-header-max-size" target="_blank">proxy.config.http.request_header_max_size</a>
+                                    parameter.
+                                </div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="maxRequestHeaderBytes" name="maxRequestHeaderBytes" type="number" class="form-control" ng-model="deliveryService.maxRequestHeaderBytes" step="1" min="0" max="2147483647">
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.maxRequestHeaderBytes, 'min')">Too Small (must be greater than or equal to 0)</small>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.maxRequestHeaderBytes, 'max')">Too Big (must be lesser than or equal to 2147483647)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.maxRequestHeaderBytes != dsCurrent.maxRequestHeaderBytes">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.maxRequestHeaderBytes}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.signingAlgorithm), 'has-feedback': hasError(cacheConfig.signingAlgorithm)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="signingAlgorithm">Signing Algorithm<div class="helptooltip">
                             <div class="helptext">
@@ -396,7 +431,7 @@ under the License.
                                 </dl>
                                 <br>
                                 <br>
-                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#signed-urls" target="_blank">See Token Based Authentication</a>
+                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#signing-algorithm" target="_blank">See Token Based Authentication</a>
                             </div>
                         </div>
                         </label>
@@ -473,9 +508,9 @@ under the License.
                                 </ul>
                                 <aside>
                                     <h6>Note:</h6>
-                                    <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
+                                    <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
                                         <br>
-                                        To set the qstring without the use of regex remap, or for further options, <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#qstring-handling" target="_blank">See Qstring Handling</a></p>
+                                        To set the qstring without the use of regex remap, or for further options, <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#query-string-handling" target="_blank">See Qstring Handling</a></p>
                                 </aside>
                             </div>
                         </div>
@@ -496,22 +531,22 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.edgeHeaderRewrite), 'has-feedback': hasError(cacheConfig.edgeHeaderRewrite)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="edgeHeaderRewrite">Edge Header Rewrite Rules<div class="helptooltip">
                             <div class="helptext">
-                                Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
+                                For non topology-based delivery services, headers can be added or altered at the edge layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Edge header rewrite values will be added before we respond to a request from a client. Examples include:
                                 <br>
                                 <br>
                                 <ul>
                                     <li>Action: Set</li>
                                     <li>Header Name: X-CDN</li>
                                     <li>Header Value: Foo</li>
-                                    <li>Direction: Edge Response to Client</li>
                                 </ul>
                                 <br>
-                                <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#edge-header-rewrite-rules" target="_blank">Edge Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" rows="3"></textarea>
+                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.edgeHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.edgeHeaderRewrite}}</pre>
@@ -521,24 +556,96 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.midHeaderRewrite), 'has-feedback': hasError(cacheConfig.midHeaderRewrite)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="midHeaderRewrite">Mid Header Rewrite Rules<div class="helptooltip">
                             <div class="helptext">
-                                Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
+                                For non topology-based delivery services, headers can be added or altered at the mid layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Mid header rewrite values will be added before we make a request further up the chain in the server hierarchy (ie. to the origin). Examples include:
                                 <ul>
                                     <li>Action: Set</li>
                                     <li>Header Name: Host</li>
                                     <li>Header Value: code_abc123</li>
-                                    <li>Direction: Mid Request to Origin</li>
                                 </ul>
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#mid-header-rewrite-rules" target="_blank">Mid Header Rewrite Rules.</a>
                             </div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control" ng-model="deliveryService.midHeaderRewrite" rows="3"></textarea>
+                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.midHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.midHeaderRewrite != dsCurrent.midHeaderRewrite">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.midHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.firstHeaderRewrite), 'has-feedback': hasError(cacheConfig.firstHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="firstHeaderRewrite">First Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the first layer (aka edge layer) of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. First header rewrite values will be added before we respond to a request from a client. Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#first-header-rewrite-rules" target="_blank">First Header Rewrite Rules.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control" ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.firstHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.firstHeaderRewrite != dsCurrent.firstHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.firstHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.innerHeaderRewrite), 'has-feedback': hasError(cacheConfig.innerHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="innerHeaderRewrite">Inner Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the inner layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Inner header rewrite values will be added before we make a request further up the chain in the server hierarchy. Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#inner-header-rewrite-rules" target="_blank">Inner Header Rewrite Rules.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control" ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.innerHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.innerHeaderRewrite != dsCurrent.innerHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.innerHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.lastHeaderRewrite), 'has-feedback': hasError(cacheConfig.lastHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="lastHeaderRewrite">Last Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the last layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Last header rewrite values will be added before we make a request further up the chain in the server hierarchy (ie. to the origin). Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#last-header-rewrite-rules" target="_blank">Last Header Rewrite Rules.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.lastHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.lastHeaderRewrite != dsCurrent.lastHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.lastHeaderRewrite}}</pre>
                             </aside>
                         </div>
                     </div>
@@ -552,7 +659,7 @@ under the License.
                                 <br>
                                 <aside>
                                     <h6>Note</h6>
-                                    <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
+                                    <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
                                 </aside>
                             </div>
                         </div>
@@ -601,34 +708,6 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.cacheurl), 'has-feedback': hasError(cacheConfig.cacheurl)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
-                            <div class="helptext">
-                                Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
-                                <br>
-                                <aside>
-                                    <h6>Note</h6>
-                                    <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
-                                    <br>
-                                    <br>
-                                    See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
-                                </aside>
-                                <aside class="warning">
-                                    <h6>Warning</h6>
-                                    <p>This field is deprecated, and is subject to removal in upcoming releases. It is recommended that this be left blank.</p>
-                                </aside>
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" maxlength="1024">
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.cacheurl, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.cacheurl}}</pre>
-                            </aside>
-                        </div>
-                    </div>
                 </ng-form>
             </fieldset>
             <fieldset>
@@ -640,8 +719,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <small class="input-warning" ng-show="!settings.isNew && routingConfig.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
-                            <input id="routingName" name="routingName" type="text" class="form-control" placeholder="Routing name used for the delivery service resulting in FQDN = <routing name>.<key>.<CDN domain>" ng-model="deliveryService.routingName" maxlength="48" pattern="[a-z0-9]([a-z\-0-9]*[a-z0-9])?" required>
+                            <input id="routingName" name="routingName" type="text" class="form-control" placeholder="Routing name used for the delivery service resulting in FQDN = <routing name>.<key>.<CDN domain>" ng-model="deliveryService.routingName" maxlength="48" pattern="[a-z0-9]([a-z\-0-9]*[a-z0-9])?" required ng-disabled="(!settings.isNew && deliveryService.sslKeyVersion)">
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'required')">Required</small>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'maxlength')">Too Long</small>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
@@ -781,7 +859,7 @@ under the License.
                                 Traffic Router will redirect to this URL when Geo Limit check fails.
                                 <br>
                                 <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html?highlight=Geo%20Limit#geo-limit-redirect-url" target="_blank">GeoLimit Failure Redirect</a> feature...
                             </div>
                         </div>
                         </label>
@@ -860,7 +938,7 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.maxDnsAnswers), 'has-feedback': hasError(routingConfig.maxDnsAnswers)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxDnsAnswers">Max DNS Answers<div class="helptooltip">
                             <div class="helptext">
-                                This is used to restrict the number of cache IP addresses that the Traffic Router will hand back to clients. A numeric value from 1 to 15 which determines how many caches your content will be spread across in a particular site. When a customer requests your content they will get 1 to 15 IP addresses back they can use. These are rotated in each response. Ideally the number will reflect the amount of traffic. 1 = trial account with very little traffic, 2 = small production service. Add 1 more server for every 20 Gbps of traffic you expect at peak. So 20 Gbps = 3, 40 Gbps = 4, 60 Gbps = 5
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#max-dns-answers"> ATS documentation on Max DNS Answers: DNS-routed Delivery Service</a>
                             </div>
                         </div>
                         </label>

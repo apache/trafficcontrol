@@ -16,6 +16,7 @@ package v1
 */
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -58,10 +59,10 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 	cgID := *clientCG.ID
 
-	dsIDs := []int64{}
+	dsIDs := []int{}
 	for _, ds := range dses {
 		if ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(ds.ID))
+			dsIDs = append(dsIDs, ds.ID)
 		}
 	}
 	if len(dsIDs) < 1 {
@@ -115,12 +116,45 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 }
 
+func setInactive(t *testing.T, dsID int) {
+	strID := strconv.Itoa(dsID)
+	ds, _, err := TOSession.GetDeliveryServiceNullable(strID)
+	if err != nil {
+		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
+		return
+	}
+	if ds == nil {
+		t.Errorf("Got null or undefined Delivery Service for #%d", dsID)
+		return
+	}
+	if ds.Active == nil {
+		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
+		ds.Active = new(bool)
+	}
+	if *ds.Active {
+		*ds.Active = false
+		_, err = TOSession.UpdateDeliveryServiceNullable(strID, ds)
+		if err != nil {
+			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
+		}
+	}
+}
+
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	for _, ds := range dss.Response {
+		if ds.DeliveryService == nil {
+			t.Error("nil DeliveryService property")
+			continue
+		}
+		if ds.Server == nil {
+			t.Error("nil Server property")
+			continue
+		}
+		setInactive(t, *ds.DeliveryService)
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
 		if err != nil {
 			t.Errorf("deleting delivery service servers: " + err.Error() + "\n")

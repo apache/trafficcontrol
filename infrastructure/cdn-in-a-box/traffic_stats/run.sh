@@ -34,7 +34,7 @@ set -m
 envvars=( TO_HOST TO_PORT INFLUXDB_HOST)
 for v in $envvars
 do
-  if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+  if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh
@@ -115,7 +115,13 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
   sleep 3
 done
 
-/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF &
+traffic_stats_command=(/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF);
+if [[ "$TS_DEBUG_ENABLE" == true ]]; then
+  dlv '--continue' '--listen=:2346' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
+    "${traffic_stats_command[0]}" -- "${traffic_stats_command[@]:1}" &
+else
+  "${traffic_stats_command[@]}" &
+fi;
 
 exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 

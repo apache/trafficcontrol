@@ -112,6 +112,8 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
 
     $scope.cacheGroups = cacheGroups;
 
+    $scope.navigateToPath = locationUtils.navigateToPath;
+
     $scope.columns = [
         { "name": "Name", "visible": true, "searchable": true },
         { "name": "Short Name", "visible": true, "searchable": true },

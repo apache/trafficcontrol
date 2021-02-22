@@ -358,7 +358,7 @@ class RestApiSession(object):
 
 	def _do_operation(self,
 	                  operation, api_path, query_params=None, munchify=True, debug_response=False,
-	                  expected_status_codes=(200, 204,), *unused_args, **kwargs):
+	                  expected_status_codes=range(200, 300), *unused_args, **kwargs):
 		"""
 		Helper method to perform HTTP operation requests - This is a boilerplate process for HTTP
 		operations.

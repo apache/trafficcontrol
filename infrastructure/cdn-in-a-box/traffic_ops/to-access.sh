@@ -25,11 +25,11 @@ export INFRA_FQDN="$INFRA_SUBDOMAIN.$TLD_DOMAIN"
 export DB_FQDN="$DB_SERVER.$INFRA_FQDN"
 export DNS_FQDN="$DNS_SERVER.$INFRA_FQDN"
 export EDGE_FQDN="$EDGE_HOST.$INFRA_FQDN"
-export MID_FQDN="$MID_HOST.$INFRA_FQDN"
+export MID_01_FQDN="$MID_01_HOST.$INFRA_FQDN"
+export MID_02_FQDN="$MID_02_HOST.$INFRA_FQDN"
 export ORIGIN_FQDN="$ORIGIN_HOST.$INFRA_FQDN"
 export SMTP_FQDN="$SMTP_HOST.$INFRA_FQDN"
 export TO_FQDN="$TO_HOST.$INFRA_FQDN"
-export TO_PERL_FQDN="$TO_PERL_HOST.$INFRA_FQDN"
 export TM_FQDN="$TM_HOST.$INFRA_FQDN"
 export TP_FQDN="$TP_HOST.$INFRA_FQDN"
 export TR_FQDN="$TR_HOST.$INFRA_FQDN"
@@ -40,7 +40,7 @@ export TO_URL=${TO_URL:-https://$TO_FQDN:$TO_PORT}
 export TO_USER=${TO_USER:-$TO_ADMIN_USER}
 export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
 
-export TO_API_VERSION=${TO_API_VERSION:-"2.0"}
+export TO_API_VERSION=${TO_API_VERSION:-"3.0"}
 
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
@@ -118,7 +118,7 @@ to-post() {
 }
 
 to-put() {
-	if [[ -z "$2" ]]; then
+	if [[ $# -lt 2 || -z "$2" ]]; then
 		data=""
 	elif [[ -f "$2" ]]; then
 		data="--data @$2"
@@ -170,26 +170,10 @@ to-enroll() {
 
 	local serverType="$1"
 
-	if [[ ! -z "$2" ]]; then
-		export MY_CDN="$2"
-	else
-		export MY_CDN="$CDN_NAME"
-	fi
-	if [[ ! -z "$3" ]]; then
-		export MY_CACHE_GROUP="$3"
-	else
-		export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-	fi
-	if [[ ! -z "$4" ]]; then
-		export MY_TCP_PORT="$4"
-	else
-		export MY_TCP_PORT="80"
-	fi
-	if [[ ! -z "$5" ]]; then
-		export MY_HTTPS_PORT="$5"
-	else
-		export MY_HTTPS_PORT="443"
-	fi
+	export MY_CDN="${2:-$CDN_NAME}"
+	export MY_CACHE_GROUP="${3:-CDN_in_a_Box_Edge}"
+	export MY_TCP_PORT="${4:-80}"
+	export MY_HTTPS_PORT="${5:-443}"
 
 	export MY_NET_INTERFACE='eth0'
 	export MY_DOMAINNAME="$(dnsdomainname)"
@@ -198,11 +182,25 @@ to-enroll() {
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
 	MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
 	export MY_NETMASK=${MY_NETMASK#"Mask:"}
-	MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
-	export MY_IP6_ADDRESS=${MY_IP6_ADDRESS%%/*}
+	export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
+		"db" )
+			export MY_TYPE="TRAFFIC_OPS_DB"
+			export MY_PROFILE="TRAFFIC_OPS_DB"
+			export MY_STATUS="ONLINE"
+			;;
+		"dns" )
+			export MY_TYPE="BIND"
+			export MY_PROFILE="BIND_ALL"
+			export MY_STATUS="ONLINE"
+			;;
+		"enroller" )
+			export MY_TYPE="ENROLLER"
+			export MY_PROFILE="ENROLLER_ALL"
+			export MY_STATUS="ONLINE"
+			;;
 		"edge" )
 			export MY_TYPE="EDGE"
 			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
@@ -211,6 +209,11 @@ to-enroll() {
 		"mid" )
 			export MY_TYPE="MID"
 			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_STATUS="REPORTED"
+			;;
+		"origin" )
+			export MY_TYPE="ORG"
+			export MY_PROFILE="ORG_MSO"
 			export MY_STATUS="REPORTED"
 			;;
 		"tm" )
@@ -261,7 +264,19 @@ to-enroll() {
 	esac
 
 	# replace env references in the file
-	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
+	<"/server_template.json" envsubst | #first envsubst expands $MY_TCP_PORT and $MY_HTTPS_PORT so they are valid JSON
+		jq '.cdnName = "$MY_CDN"' |
+		if [[ -n "$MY_IP" && -n "$MY_GATEWAY" ]]; then
+			jq '.interfaces[0].ipAddresses += [({} | .address = "$MY_IP" | .gateway = "$MY_GATEWAY" | .serviceAddress = true)]'
+		else
+			cat
+		fi |
+		if [[ -n "$MY_IP6_ADDRESS" && -n "$MY_IP6_GATEWAY" ]]; then
+			jq '.interfaces[0].ipAddresses += [({} | .address = "$MY_IP6_ADDRESS" | .gateway = "$MY_IP6_GATEWAY" | .serviceAddress = true)]'
+		else
+			cat
+		fi |
+		envsubst >"${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 	sleep 3
 }
@@ -332,7 +347,7 @@ to-auto-snapqueue() {
 		expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
 		expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
 
-		current_servers_json=$(to-get 'api/'$TO_API_VERSION'/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
+		current_servers_json=$(to-get 'api/'$TO_API_VERSION'/servers' 2>/dev/null | jq -c -e '[.response[] | .hostName] | sort')
 		[ -z "$current_servers_json" ] && current_servers_json='[]'
 		current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
 		current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')

@@ -19,14 +19,19 @@
 # Based on CentOS
 ############################################################
 
-FROM centos/systemd
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG RPM=traffic_monitor/traffic_monitor.rpm
-ADD $RPM /
 
-RUN yum install -y epel-release && \
-    yum install -y \
+RUN dnf install -y epel-release && \
+    dnf install -y \
         jq \
         nmap-ncat \
         iproute \
@@ -35,9 +40,11 @@ RUN yum install -y epel-release && \
         bind-utils \
         openssl \
         initscripts && \
-    yum install -y  /$(basename $RPM) && \
-    rm /$(basename $RPM) && \
-    yum clean all
+    dnf clean all
+
+ADD $RPM /
+RUN rpm -Uvh  /$(basename $RPM) && \
+    rm /$(basename $RPM)
 
 RUN mkdir -p /opt/traffic_monitor/conf
 ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/traffic_monitor.cfg.template
@@ -46,6 +53,12 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 80
 ADD traffic_monitor/run.sh /
 CMD /run.sh
+HEALTHCHECK --interval=10s --timeout=1s \
+    CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "$TO_URL" ]]'

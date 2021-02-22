@@ -276,10 +276,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.Customer, validation.Required),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
-				if t == (*DeepCachingType)(nil) {
-					return errors.New("deepCachingType: required")
-				}
-				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
+				if t != (*DeepCachingType)(nil) && *t.(*DeepCachingType) == DeepCachingTypeInvalid {
 					return errors.New("deepCachingType: invalid Deep Caching Type")
 				}
 				return nil
@@ -339,7 +336,6 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.PeakTPSEstimate, validation.Required),
 		validation.Field(&details.QueryStringHandling, validation.Required),
 		validation.Field(&details.RangeRequestHandling, validation.Required),
-		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
 			func(t interface{}) error {
 				if t == (*DSType)(nil) || *(t.(*DSType)) == "" {
@@ -410,19 +406,19 @@ type DeliveryServiceRequest struct {
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequestNullable struct {
-	AssigneeID      *int                     `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee        *string                  `json:"assignee,omitempty"`
-	AuthorID        *IDNoMod                 `json:"authorId" db:"author_id"`
-	Author          *string                  `json:"author"`
-	ChangeType      *string                  `json:"changeType" db:"change_type"`
-	CreatedAt       *TimeNoMod               `json:"createdAt" db:"created_at"`
-	ID              *int                     `json:"id" db:"id"`
-	LastEditedBy    *string                  `json:"lastEditedBy"`
-	LastEditedByID  *IDNoMod                 `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
-	DeliveryService *DeliveryServiceNullable `json:"deliveryService" db:"deliveryservice"` // TODO version DeliveryServiceRequest
-	Status          *RequestStatus           `json:"status" db:"status"`
-	XMLID           *string                  `json:"-" db:"xml_id"`
+	AssigneeID      *int               `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee        *string            `json:"assignee,omitempty"`
+	AuthorID        *IDNoMod           `json:"authorId" db:"author_id"`
+	Author          *string            `json:"author"`
+	ChangeType      *string            `json:"changeType" db:"change_type"`
+	CreatedAt       *TimeNoMod         `json:"createdAt" db:"created_at"`
+	ID              *int               `json:"id" db:"id"`
+	LastEditedBy    *string            `json:"lastEditedBy"`
+	LastEditedByID  *IDNoMod           `json:"lastEditedById" db:"last_edited_by_id"`
+	LastUpdated     *TimeNoMod         `json:"lastUpdated" db:"last_updated"`
+	DeliveryService *DeliveryServiceV4 `json:"deliveryService" db:"deliveryservice"`
+	Status          *RequestStatus     `json:"status" db:"status"`
+	XMLID           *string            `json:"-" db:"xml_id"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.11
+FROM alpine:3.13
 
 RUN apk add --no-cache --update \
   curl \
@@ -27,7 +27,10 @@ RUN apk add --no-cache --update \
 # MANIFEST
 # to-access.sh (sourced, get to-get and env vars)
 # run.sh       (wait on TO, then to-get deliveryservices, then curl the exampleURLs)
-COPY ./infrastructure/cdn-in-a-box/readiness/run.sh ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/readiness/
+COPY readiness/run.sh traffic_ops/to-access.sh /opt/readiness/
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 WORKDIR /opt/readiness
 CMD ./run.sh

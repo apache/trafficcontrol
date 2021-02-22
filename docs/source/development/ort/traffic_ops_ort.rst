@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _ort.py:
+
 *************************
 traffic\_ops\_ort package
 *************************

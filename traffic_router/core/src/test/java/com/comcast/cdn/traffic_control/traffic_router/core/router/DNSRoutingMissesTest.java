@@ -15,8 +15,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
@@ -51,11 +52,11 @@ public class DNSRoutingMissesTest {
 
     @Before
     public void before() throws Exception {
-        request = new DNSRequest();
+        Name name = Name.fromString("edge.foo-img.kabletown.com");
+        request = new DNSRequest("foo-img.kabletown.com", name, Type.A);
 
         request.setClientIP("192.168.34.56");
-        request.setHostname(Name.fromString("edge.foo-img.kabletown.com").relativize(Name.root).toString());
-        request.setQtype(Type.A);
+        request.setHostname(name.relativize(Name.root).toString());
 
         FederationRegistry federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
@@ -63,7 +64,7 @@ public class DNSRoutingMissesTest {
         trafficRouter = mock(TrafficRouter.class);
         when(trafficRouter.getCacheRegister()).thenReturn(mock(CacheRegister.class));
         Whitebox.setInternalState(trafficRouter, "federationRegistry", federationRegistry);
-        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class))).thenCallRealMethod();
 
         track = spy(StatTracker.getTrack());
         doCallRealMethod().when(trafficRouter).route(request, track);
@@ -73,8 +74,8 @@ public class DNSRoutingMissesTest {
     public void itSetsDetailsWhenNoDeliveryService() throws Exception {
         trafficRouter.route(request, track);
 
-        verify(track).setResult(ResultType.STATIC_ROUTE);
-        verify(track).setResultDetails(ResultDetails.DS_NOT_FOUND);
+        verify(track).setResult(ResultType.MISS);
+        verify(track).setResultDetails(ResultDetails.LOCALIZED_DNS);
     }
 
     // When the delivery service is unavailable ...
@@ -84,8 +85,9 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isAvailable()).thenReturn(false);
         when(deliveryService.getFailureDnsResponse(request, track)).thenCallRealMethod();
         when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request);
 
         trafficRouter.route(request, track);
 
@@ -99,8 +101,9 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isAvailable()).thenReturn(false);
         when(deliveryService.getFailureDnsResponse(request, track)).thenCallRealMethod();
         when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request);
 
         JsonNode bypassDestination = mock(JsonNode.class);
         when(bypassDestination.get("DNS")).thenReturn(null);
@@ -121,10 +124,10 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
         when(deliveryService.getRoutingName()).thenReturn("edge");
-
+        when(deliveryService.isDns()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(true);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(any(Request.class), anyBoolean());
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(any(Request.class));
         trafficRouter.route(request, track);
 
         verify(track).setResult(ResultType.MISS);
@@ -139,10 +142,11 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
         when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request);
 
         trafficRouter.route(request, track);
 
@@ -153,7 +157,7 @@ public class DNSRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenCacheNotFoundByGeolocation() throws Exception {
-        doCallRealMethod().when(trafficRouter).selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class));
+        doCallRealMethod().when(trafficRouter).selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class), any(IPVersions.class));
         CacheLocation cacheLocation = mock(CacheLocation.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
 
@@ -162,9 +166,10 @@ public class DNSRoutingMissesTest {
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(false);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
         when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
-        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
-        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService);
+        doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request);
+        doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService, IPVersions.IPV4ONLY);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
 
         trafficRouter.route(request, track);

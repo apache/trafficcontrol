@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -46,8 +47,16 @@ type TOUsers struct {
 	tc.FederationUser
 }
 
-func (v *TOUsers) NewReadObj() interface{} { return &tc.FederationUser{} }
+func (v *TOUsers) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(fedu.last_updated) as t FROM federation_tmuser fedu
+RIGHT JOIN tm_user u ON fedu.tm_user = u.id
+JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_tmuser') as res`
+}
 
+func (v *TOUsers) NewReadObj() interface{} { return &tc.FederationUser{} }
 func (v *TOUsers) DeleteQuery() string {
 	return `
 DELETE FROM federation_tmuser
@@ -117,19 +126,19 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read() ([]interface{}, error, error, int) {
+func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {
-		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest
+		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest, nil
 	}
 	_, exists, err := getFedNameByID(v.APIInfo().Tx.Tx, fedID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError, nil
 	} else if !exists {
-		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound
+		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound, nil
 	}
-	return api.GenericRead(v)
+	return api.GenericRead(h, v, useIMS)
 }
 
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }

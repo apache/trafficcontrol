@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>4.1.0</version>
+		<version>5.0.0</version>
 	</parent>
 
 	<scm>
@@ -92,6 +92,7 @@
 									<variableName>TOMCAT_VERSION</variableName>
 									<variableName>TOMCAT_RELEASE</variableName>
 									<variableName>RHEL_VERSION</variableName>
+									<variableName>RPM_TARGET_OS</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
@@ -132,7 +133,13 @@
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
+							<license>Apache License, Version 2.0</license>
 							<needarch>x86_64</needarch>
+							<targetOS>${env.RPM_TARGET_OS}</targetOS>
+							<defineStatements>
+								<defineStatement>_source_payload w2.xzdio</defineStatement>
+								<defineStatement>_binary_payload w2.xzdio</defineStatement>
+							</defineStatements>
 							<mappings>
 								<mapping>
 									<directory>${deploy.dir}</directory>
@@ -216,12 +223,24 @@
 										</includes>
 									</dependency>
 								</mapping>
+								<mapping>
+									<directory>/usr/share/licenses/traffic_router-${project.parent.version}</directory>
+									<documentation>true</documentation>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<source>
+											<location>../../LICENSE</location>
+										</source>
+									</sources>
+								</mapping>
 							</mappings>
 							<requires>
 								<require>java &gt;= 1.8</require>
 								<require>tomcat = ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}-${env.BUILD_LOCK}</require>
 								<require>apr &gt;= 1.4.8</require>
-								<require>tomcat-native &gt;= 1.2.16</require>
+								<require>tomcat-native >= 1.2.23</require>
 							</requires>
 							<obsoletes>
 								<obsolete>traffic_router &lt; 3.0.0</obsolete>
@@ -230,9 +249,9 @@
 							<pretransScriptlet>
 								 <scriptFile>../core/src/main/scripts/pretrans.sh</scriptFile>
 							</pretransScriptlet>
-							<preScriptlet>
+							<preinstallScriptlet>
 								 <scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>
-							</preScriptlet>
+							</preinstallScriptlet>
 							<postinstallScriptlet>
 								<scriptFile>../core/src/main/scripts/postinstall.sh</scriptFile>
 							</postinstallScriptlet>

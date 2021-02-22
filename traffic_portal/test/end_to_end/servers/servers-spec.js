@@ -25,30 +25,26 @@ describe('Traffic Portal Servers Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
 	const mockVals = {
-		status: "OFFLINE",
+		status: "ONLINE",
 		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
-		ipNetmask: "255.255.255.252",
-		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
+		routerHostName: "testInterfaceRouterHostName",
+		routerPortName: "testInterfaceRouterPort",
 	};
 
 	it('should go to the Servers page', function() {
-		console.log('Looading Configure/Servers');
+		console.log('Loading Configure/Servers');
 		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should verify CSV link exists ', function() {
-		console.log("Verify CSV button exists");
-		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
-	});
-
 	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		browser.driver.findElement(by.name('createServersButton')).click();
+		pageData.moreBtn.click();
+		pageData.createServerMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 
@@ -60,41 +56,63 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
-		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
+		// Assign this server to a created cache-group, needed for Topologies tests
+		pageData.cachegroup.all(by.tagName("option")).then(function(options) {
+		    options[options.length-1].click();
+		});
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
+		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		pageData.interfaceName.sendKeys(mockVals.interfaceName);
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
-		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
-		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.ipIsService.click();
-		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
-		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
 	it('should toggle the visibility of the first table column ', function() {
+		console.log("Toggling visiblity of column");
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
-		expect(tableColumns.count()).toBe(11);
+		let tableColumns = element.all(by.css('.ag-header-cell'));
+		expect(tableColumns.count()).toBe(9);
+	});
+
+	it('should clear column filter when column is hidden', function() {
+		console.log("Clear filters when column is hidden");
+		// Confirm we have rows
+		let rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
+
+		// Filter one of our columns
+		let firstHeaderCell = element.all(by.css('.ag-header-cell')).first();
+		firstHeaderCell.all(by.css('span.ag-header-cell-menu-button')).first().click();
+		let filterContainer = element(by.css("div.ag-filter"));
+		let filterCell = filterContainer.all(by.css('.ag-input-field-input')).first();
+		filterCell.sendKeys("nothingshouldmatchthis", protractor.Key.ENTER);
+
+		// Wait for ag-grid to process changes
+		browser.sleep(1000);
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).toBe(0);
+
+		// Hide filtered column
+		let columnToggle = element(by.id('toggleColumns')).click();
+		columnToggle.all(by.css('input[type=checkbox]:checked')).first().click();
+
+		// Wait for ag-grid again
+		rows = element.all(by.css("div.ag-row"));
+		expect(rows.count()).not.toBe(0);
 	});
 
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		pageData.searchFilter.sendKeys(mockVals.hostName);
-		browser.sleep(250);
-		element.all(by.repeater('s in ::servers')).filter(function(row){
-			return row.element(by.name('hostName')).getText().then(function(val){
-				return val === mockVals.hostName;
-			});
-		}).get(0).click();
+		let row = element(by.cssContainingText('.ag-cell', mockVals.hostName));
+		browser.actions().click(row).perform();
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');
@@ -112,9 +130,10 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(pageData.submitButton.isEnabled()).toBe(false);
 		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
 		expect(pageData.submitButton.isEnabled()).toBe(true);
-		pageData.submitButton.click();
-		element.all(by.css('tbody tr')).then(function(totalRows) {
-			expect(totalRows.length).toBe(1);
+		pageData.submitButton.click().then(function() {
+			element.all(by.css('tbody tr')).then(function(totalRows) {
+				expect(totalRows.length).toBe(1);
+			});
 		});
 	});
 
@@ -125,11 +144,4 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.viewDeliveryServicesMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/[0-9]+/delivery-services");
 	});
-
-	it('should ensure you cannot clone delivery service assignments because there are no delivery services assigned to the server', function() {
-		console.log('Ensure you cannot clone delivery service assignments for ' + mockVals.hostName);
-		pageData.moreBtn.click();
-		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
-	});
-
 });

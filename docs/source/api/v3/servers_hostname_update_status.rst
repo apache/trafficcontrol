@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-hostname-update_status:
+.. _to-api-v3-servers-hostname-update_status:
 
 **************************************
 ``servers/{{hostname}}/update_status``
@@ -54,12 +54,12 @@ Each object in the returned array\ [1]_ will contain the following fields:
 
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
-:parent_pending:       A boolean telling whether or not the :term:`parents` of this server have pending updates
-:parent_reval_pending: A boolean telling whether or not the :term:`parents` of this server have pending revalidation jobs
+:parent_pending:       A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending updates
+:parent_reval_pending: A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending revalidation jobs
 :reval_pending:        ``true`` if the server has pending revalidation jobs, ``false`` otherwise
 :status:               The name of the status of this server
 
-	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
+	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-v3-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
 
 :upd_pending:       ``true`` if the server has pending updates, ``false`` otherwise
 :use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending revalidation jobs
@@ -92,4 +92,4 @@ Each object in the returned array\ [1]_ will contain the following fields:
 		"parent_reval_pending": false
 	}]
 
-.. [1] Despite that the returned object is an array, exactly one server's information is requested and thus returned. That is to say, the array should always have a length of exactly one.
+.. [1] The returned object is an array, and there is no guarantee that one server exists for a given hostname. However, for each server in the array, that server's update status will be accurate for the server with that particular server ID.

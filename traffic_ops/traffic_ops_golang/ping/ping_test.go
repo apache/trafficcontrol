@@ -33,7 +33,7 @@ func TestPingHandler(t *testing.T) {
 		t.Error("Error creating new request")
 	}
 
-	PingHandler()(w, r)
+	Handler(w, r)
 
 	// note the newline...
 	expected := `{"ping":"pong"}

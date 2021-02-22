@@ -52,7 +52,7 @@ type StatOld struct {
 // StatsOld is the old JSON representation of stats, from Traffic Monitor 1.0. It is designed to be serialized and returns from an API, and includes stat history for each delivery service, as well as data common to most endpoints.
 type StatsOld struct {
 	DeliveryService map[tc.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
-	srvhttp.CommonAPIData
+	tc.CommonAPIData
 }
 
 // StatsReadonly is a read-only interface for delivery service Stats, designed to be passed to multiple goroutine readers.

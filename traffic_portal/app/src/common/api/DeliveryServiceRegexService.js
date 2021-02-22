@@ -75,7 +75,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 				return result;
 			},
 			function(err) {
-				messageModel.setMessages(err.data.alerts, true);
+				messageModel.setMessages(err.data.alerts, false);
 				throw err;
 			}
 		);

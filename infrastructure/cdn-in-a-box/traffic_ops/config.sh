@@ -36,21 +36,20 @@
 # TP_HOST
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_PERL_SCHEME TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
-until [[ -f "$X509_CA_ENV_FILE" ]]
-do
+until [[ -f "$X509_CA_ENV_FILE" ]]; do
   echo "Waiting on SSL certificate generation."
   sleep 2
 done
 
 # these expected to be stored in $X509_CA_ENV_FILE, but a race condition could render the contents
 # blank until it gets sync'd.  Ensure vars defined before writing cdn.conf.
-until [[ -n "$X509_GENERATION_COMPLETE" ]]
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
 do
   echo "Waiting on X509 vars to be defined"
   sleep 1
@@ -75,7 +74,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "$TO_PERL_SCHEME://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://[::]?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -83,6 +82,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "pid_file" : "/var/run/traffic_ops.pid",
         "workers" : 12
     },
+    "use_ims": true,
     "traffic_ops_golang" : {
         "insecure": true,
         "port" : "$TO_PORT",
@@ -110,9 +110,9 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "oauth_client_secret": "",
         "routing_blacklist": {
             "ignore_unknown_routes": false,
-            "perl_routes": [],
             "disabled_routes": []
-        }
+        },
+        "supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
     },
     "cors" : {
         "access_control_allow_origin" : "*"
@@ -149,7 +149,20 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "convert_self_signed": false,
         "renew_days_before_expiration": 30,
         "environment": "staging"
-    }
+    },
+    "acme_renewal": {
+        "summary_email": "",
+        "renew_days_before_expiration": 30
+    },
+    "acme_accounts": [
+        {
+            "acme_provider" : "",
+            "user_email" : "",
+            "acme_url" : "",
+            "kid" : "",
+            "hmac_encoded" : ""
+        }
+    ]
 }
 EOF
 

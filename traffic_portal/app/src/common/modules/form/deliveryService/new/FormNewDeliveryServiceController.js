@@ -20,7 +20,8 @@
 var FormNewDeliveryServiceController = function(deliveryService, origin, topologies, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService,
+		dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
 
 	$scope.deliveryServiceName = 'New';
 

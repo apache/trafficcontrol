@@ -24,7 +24,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -172,24 +175,36 @@ func (user *TOUser) Create() (error, error, int) {
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
-func (this *TOUser) Read() ([]interface{}, error, error, int) {
-
+func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	inf := this.APIInfo()
+	api.DefaultSort(inf, "username")
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting tenant list for user: %v\n", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("getting tenant list for user: %v\n", err), http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
 	query := this.SelectQuery() + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -202,12 +217,21 @@ func (this *TOUser) Read() ([]interface{}, error, error, int) {
 	users := []interface{}{}
 	for rows.Next() {
 		if err = rows.StructScan(user); err != nil {
-			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
 		}
 		users = append(users, *user)
 	}
 
-	return users, nil, nil, http.StatusOK
+	return users, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(u.last_updated) as t FROM tm_user u
+		LEFT JOIN tenant t ON u.tenant_id = t.id
+		LEFT JOIN role r ON u.role = r.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='tm_user') as res`
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
@@ -223,7 +247,7 @@ func (user *TOUser) privCheck() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (user *TOUser) Update() (error, error, int) {
+func (user *TOUser) Update(h http.Header) (error, error, int) {
 
 	// make sure current user cannot update their own role to a new value
 	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
@@ -241,6 +265,10 @@ func (user *TOUser) Update() (error, error, int) {
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
+	}
+	userErr, sysErr, errCode := api.CheckIfUnModified(h, user.ReqInfo.Tx, *user.ID, "tm_user")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
@@ -370,7 +398,6 @@ func (user *TOUser) UpdateQuery() string {
 	phone_number=:phone_number,
 	postal_code=:postal_code,
 	country=:country,
-	registration_sent=:registration_sent,
 	tenant_id=:tenant_id,
 	local_passwd=COALESCE(:local_passwd, local_passwd)
 	WHERE id=:id

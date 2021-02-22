@@ -32,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -129,6 +130,18 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 	return false, errors.New("Refusing to delete all resources of type " + name), nil, http.StatusBadRequest
 }
 
+// SetLastModifiedHeader sets the Last-Modified header in case the "useIMS" is set to true in the config,
+// and if there is an "If-Modified-Since" header in the incoming request
+func SetLastModifiedHeader(r *http.Request, useIMS bool) bool {
+	if r == nil {
+		return false
+	}
+	if r.Header.Get(rfc.IfModifiedSince) != "" && useIMS {
+		return true
+	}
+	return false
+}
+
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
@@ -136,6 +149,7 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 //      marshals the structs returned into the proper response json
 func ReadHandler(reader Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		useIMS := false
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -152,11 +166,24 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		cfg, err := GetConfig(r.Context())
+		if err != nil {
+			log.Warnf("Couldnt get the config %v", err)
+		}
+		if cfg != nil {
+			useIMS = cfg.UseIMS
+		}
+		results, userErr, sysErr, errCode, maxTime := obj.Read(r.Header, useIMS)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
+		}
+		w.WriteHeader(errCode)
 		WriteResp(w, r, results)
 	}
 }
@@ -187,7 +214,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode, _ := obj.Read(r.Header, false)
 		if userErr != nil || sysErr != nil {
 			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
@@ -272,7 +299,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = obj.Update()
+		userErr, sysErr, errCode = obj.Update(r.Header)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -282,7 +309,11 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was updated.", obj)
+		alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was updated.")
+		if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+			alerts.AddAlerts(alertsObj.GetAlerts())
+		}
+		WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 	}
 }
 
@@ -573,11 +604,25 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 			}
 			if len(objSlice) == 0 {
 				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
-			} else if len(objSlice) == 1 {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
-			} else {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)
+				return
 			}
+			var (
+				responseObj interface{}
+				message     string
+			)
+			if len(objSlice) == 1 {
+				responseObj = objSlice[0]
+				message = objSlice[0].GetType() + " was created."
+			} else {
+				message = objSlice[0].GetType() + "s were created."
+			}
+			alerts := tc.CreateAlerts(tc.SuccessLevel, message)
+			if _, hasAlerts := objSlice[0].(AlertsResponse); hasAlerts {
+				for _, objElem := range objSlice {
+					alerts.AddAlerts(objElem.(AlertsResponse).GetAlerts())
+				}
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
 			err := decodeAndValidateRequestBody(r, obj)
@@ -608,7 +653,11 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 				return
 			}
-			WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
+			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")
+			if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+				alerts.AddAlerts(alertsObj.GetAlerts())
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 		}
 	}
 }

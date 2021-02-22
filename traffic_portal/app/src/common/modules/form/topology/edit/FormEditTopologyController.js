@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, topologyService, messageModel, topologyUtils) {
+var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cdnService, topologyService, messageModel, topologyUtils) {
 
 	// extends the FormTopologyController to inherit common methods
 	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], cacheGroups: cacheGroups, $scope: $scope }));
@@ -37,11 +37,12 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		saveLabel: 'Update'
 	};
 
-	$scope.save = function(name, description, topologyTree) {
-		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
-		topologyService.updateTopology(normalizedTopology).
-			then(function() {
-				messageModel.setMessages([ { level: 'success', text: 'Topology updated' } ], false);
+	$scope.save = function(currentName, newName, description, topologyTree) {
+		let normalizedTopology = topologyUtils.getNormalizedTopology(newName, description, topologyTree);
+		topologyService.updateTopology(normalizedTopology, currentName).
+			then(function(result) {
+				messageModel.setMessages(result.data.alerts, currentName !== newName);
+				locationUtils.navigateToPath('/topologies/edit?name=' + result.data.response.name);
 			});
 	};
 
@@ -65,7 +66,57 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		});
 	};
 
+	$scope.confirmTopologyQueueServerUpdates = function(topology) {
+		const params = {
+			title: 'Queue Server Updates: ' + topology.name,
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			topologyService.queueServerUpdates(topology.name, cdn.id);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.confirmTopologyClearServerUpdates = function(topology) {
+		const params = {
+			title: 'Clear Server Updates: ' + topology.name,
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			topologyService.clearServerUpdates(topology.name, cdn.id);
+		}, function () {
+			// do nothing
+		});
+	};
+
 };
 
-FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'topologyService', 'messageModel', 'topologyUtils'];
+FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cdnService', 'topologyService', 'messageModel', 'topologyUtils'];
 module.exports = FormEditTopologyController;

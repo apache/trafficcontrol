@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-router:
+
 **************
 Traffic Router
 **************
@@ -37,8 +39,32 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 * JDK >= 8.0 (OpenJDK suggested, but not required)
 * OpenSSL >= 1.0.2
 * :abbr:`APR (Apache Portable Runtime)` >= 1.4.8-3
-* Tomcat Native >= 1.2.16
+* Tomcat Native >= 1.2.23
 * Not Tomcat - You do not need a Tomcat installation for development. An embedded version is launched for development testing instead.
+
+.. _dev-tr-mac-jdk:
+
+Get OpenJDK 8 on macOS
+--------------------------
+If you are on macOS, OpenJDK 8 is not available from Homebrew by default, but it can still be installed using Homebrew with little effort.
+
+Using Homebrew, |AdoptOpenJDK instructions|_
+
+.. code-block:: shell
+	:caption: Install OpenJDK 8 on macOS
+
+        brew tap AdoptOpenJDK/openjdk
+        brew cask install adoptopenjdk8
+
+Next, set the JAVA_HOME environment variable. Add this line to your ``~/.bash_profile``:
+
+.. code-block:: shell
+        :caption: Set JAVA_HOME environment variable
+
+        export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+
+.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
+.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
 
 Traffic Router Project Tree Overview
 ====================================
@@ -237,6 +263,41 @@ Test Cases
 ==========
 * Unit tests can be executed using Maven by running ``mvn test`` at the root of the ``traffic_router`` project.
 * Unit and Integration tests can be executed using Maven by running ``mvn verify`` at the root of the ``traffic_router`` project.
+
+.. _dev-debugging-unit-tests:
+
+Debugging Unit Tests
+--------------------
+In order to write tests or understand why a test is failing, a developer may want to debug the unit tests. In order to stop at breakpoints, you should run the tests without forking processes. Even once you have specified for Surefire not to fork tests, the debugging connection will disconnect several times while the tests are running, so you should
+- Have JVM act as the debugging client and have your IDE act as the debugging server, even if you are remote debugging
+- In your IDE's debugging configuration for the Traffic Router unit tests, enable "auto restart", meaning that, once the debugging client running on JVM has disconnected because a particular test is over, your IDE's debugging server will exit (unavoidable) but will immediately restart in time for the next test.
+
+.. note:: If you run the tests with debugging enabled and with JVM acting as the debugging client but your IDE is not actively listening for debugging connections, the unit tests *will* fail.
+
+Command for running the tests with debugging enabled:
+
+.. code-block:: shell
+	:caption: Run the Traffic Router unit tests with debugging enabled
+
+	mvn '-Dmaven.surefire.debug=-agentlib:jdwp=transport=dt_socket,server=n,suspend=n,address=localhost:8000 -DforkCount=0 -DreuseForks=false' test -Djava.library.path=/usr/share/java
+
+Debugging Unit Tests in Docker
+------------------------------
+In order to run the unit tests in a controlled, well-defined environment, you may prefer to run them from within Docker. A Docker environment for running the Traffic Router unit tests exists in the repository at `/traffic_router/tests <https://github.com/apache/trafficcontrol/tree/master/traffic_router/tests>`_, and it supports debugging. In order to enable debugging, set ``DEBUG_ENABLE`` to ``'true'`` in `docker-compose.yml <https://github.com/apache/trafficcontrol/blob/master/traffic_router/tests/docker-compose.yml>`_. As mentioned in :ref:`dev-debugging-unit-tests`,
+- Have your IDE act as the debugging server. In Intellij, this debug mode is called *Listen to remote JVM*.
+- Enable *auto-restart* in your IDE's debugging configuration for the Traffic Router unit tests so your IDE doesn't stop listening for connections after the first test ends
+- Set the port to 8000 (debugging port is specified in the Dockerfile)
+
+Additionally, you will need to make sure that host.docker.internal resolves to `the Docker host <https://docs.docker.com/docker-for-mac/networking#i-want-to-connect-from-a-container-to-a-service-on-the-host>`_'s IP address (NOT the Docker container's IP address). If you are using Docker Desktop for Mac or Docker Desktop for Windows, this is already set up for you. If you are on Linux, you will need to either figure out how to make host.docker.internal resolve to the ``docker0`` network interface's IP address, or, in ``docker-compose.yml``, change the value of the ``DEBUG_HOST`` environment variable to the IP address of the ``docker0`` interface.
+
+.. note:: If you run the tests with debugging enabled and with JVM (in Docker) acting as the debugging client but your IDE is not actively listening for debugging connections, the unit tests *will* fail.
+
+Once your IDE is listening for debugging connections, start the unit tests:
+
+.. code-block:: shell
+	:caption: Run the Traffic Router unit tests in Docker, with or without debugging enabled
+
+	docker-compose up
 
 RPM Packaging
 =============

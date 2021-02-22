@@ -20,7 +20,7 @@ Delivery Services
 *****************
 "Delivery Services" are a very important construct in :abbr:`ATC (Apache Traffic Control)`. At their most basic, they are a source of content and a set of :term:`cache servers` and configuration options used to distribute that content.
 
-Delivery Services are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, in the legacy Perl Traffic Ops codebase, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#DeliveryServiceNullableV11>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Delivery Service objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
+Delivery Services are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#DeliveryServiceNullableV11>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Delivery Service objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
 
 .. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservices` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
 
@@ -54,9 +54,9 @@ Enables/Disables blocking of anonymized IP address - proxies, :abbr:`TOR (The On
 Cache URL Expression
 --------------------
 .. deprecated:: 3.0
-	This feature is no longer supported by :abbr:`ATS (Apache Traffic Server)` and consequently it will be removed from Traffic Control in the future.
+	This feature is no longer supported by :abbr:`ATS (Apache Traffic Server)` and consequently it will be removed from Traffic Control in the future. Current plans are to remove after ATC 5.X is no longer supported.
 
-Manipulates the cache key of the incoming requests. Normally, the cache key is the :term:`origin` domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
+Manipulates the cache key of the incoming requests. Normally, the cache key is the :term:`Origin` domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
 
 .. warning:: This field provides access to a feature that was only present in :abbr:`ATS (Apache Traffic Server)` 6.X and earlier. As :term:`cache servers` must now use :abbr:`ATS (Apache Traffic Server)` 7.1.X, this field **must** be blank unless all :term:`cache servers` can be guaranteed to use that older :abbr:`ATS (Apache Traffic Server)` version (**NOT** recommended).
 
@@ -70,7 +70,7 @@ A CDN to which this Delivery Service belongs. Only :term:`cache servers` within 
 
 Check Path
 ----------
-A request path on the :term:`origin server` which is used to by certain :ref:`Traffic Ops Extensions <admin-to-ext-script>` to indicate the "health" of the :term:`origin`.
+A request path on the :term:`origin server` which is used to by certain :ref:`Traffic Ops Extensions <admin-to-ext-script>` to indicate the "health" of the :term:`Origin`.
 
 .. _ds-consistent-hashing-regex:
 
@@ -189,6 +189,8 @@ This field in general contains the contents of the a configuration file used by 
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-ecs:
 
 EDNS0 Client Subnet Enabled
@@ -233,6 +235,16 @@ The maximum bytes per second a :term:`cache server` will deliver on any single T
 	+==============+=================================================================================+=======================================+
 	| FQPacingRate | Traffic Ops source code, Delivery Service objects returned by the :ref:`to-api` | unchanged (``int``, ``integer`` etc.) |
 	+--------------+---------------------------------------------------------------------------------+---------------------------------------+
+
+.. _ds-first-header-rw-rules:
+
+First Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`First-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-geo-limit:
 
@@ -405,6 +417,26 @@ Initial Dispersion
 ------------------
 The number of :term:`Edge-tier cache servers` across which a particular asset will be distributed within each :term:`Cache Group`. For most use-cases, this should be 1, meaning that all clients requesting a particular asset will be directed to 1 :term:`cache server` per :term:`Cache Group`. Depending on the popularity and size of assets, consider increasing this number in order to spread the request load across more than 1 :term:`cache server`. The larger this number, the more copies of a particular asset are stored in a :term:`Cache Group`, which can "pollute" caches (if load distribution is unnecessary) and decreases caching efficiency (due to cache misses if the asset is not requested enough to stay "fresh" in all the caches).
 
+.. _ds-inner-header-rw-rules:
+
+Inner Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Inner-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
+.. _ds-last-header-rw-rules:
+
+Last Header Rewrite Rules
+-------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Last-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-logs-enabled:
 
 Logs Enabled
@@ -467,6 +499,9 @@ HOST_REGEXP
 	This Delivery Service will be used if the requested host matches this regular expression. The host can be found using the ``Host`` HTTP Header, or as the requested name in a DNS request, depending on the `Type`_ of the Delivery Service.
 PATH_REGEXP
 	This Delivery Service will be used if the request path matches this regular expression.\ [#httpOnlyRegex]_
+
+.. _ds-steering-regexp:
+
 STEERING_REGEXP
 	This Delivery Service will be used if this regular expression matches the xml_id_ of one of this Delivery Service's "targets"
 
@@ -484,13 +519,24 @@ STEERING_REGEXP
 
 Max DNS Answers
 ---------------
-The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests for DNS-:ref:`Routed <ds-types>` Delivery Services. The :ref:`to-api` restricts this value to the range [1, 15], but no matching restraints are placed on the actual data as stored in the Traffic Ops Database. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
+
+DNS-routed Delivery Service
+  The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
+
+HTTP-routed Delivery Service
+  If the Traffic Router profile parameter "edge.http.limit" is set, setting this to a non-zero value will override that parameter for this delivery service, limiting the number of Traffic Router IP addresses (A records) that are included in responses to DNS requests for this delivery service.
 
 .. _ds-max-origin-connections:
 
 Max Origin Connections
 ----------------------
 The maximum number of TCP connections individual :term:`Mid-tier cache servers` are allowed to make to the `Origin Server Base URL`. A value of ``0`` in this field indicates that there is no maximum.
+
+.. _ds-max-request-header-bytes:
+
+Max Request Header Bytes
+------------------------
+The maximum size(in bytes) of the request header that is allowed for this Delivery Service.
 
 .. _ds-mid-header-rw-rules:
 
@@ -499,6 +545,8 @@ Mid Header Rewrite Rules
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-origin-url:
 
@@ -518,7 +566,7 @@ The Origin Server’s base URL which includes the protocol (http or https). Exam
 
 Origin Shield
 -------------
-An experimental feature that allows administrators to list additional forward proxies that sit between the :term:`Mid-tier` and the :term:`origin`. In most scenarios, this is represented (and required to be input) as a pipe (``|``)-delimited string.
+An experimental feature that allows administrators to list additional forward proxies that sit between the :term:`Mid-tier` and the :term:`Origin`. In most scenarios, this is represented (and required to be input) as a pipe (``|``)-delimited string.
 
 .. _ds-profile:
 
@@ -574,9 +622,9 @@ Query String Handling
 Describes how query strings should be handled by the :term:`Edge-tier cache servers` when serving content for this Delivery Service. This is nearly always expressed as an integral, unique identifier for each behavior, though in Traffic Portal a more descriptive value is typically used, or at least provided in addition to the integral, unique identifier. The allowed values and their meanings are:
 
 0
-	For the purposes of caching, :term:`Edge-tier cache servers` will consider URLs unique if and only if they are unique up to and including any and all query parameters. They will also pass the query parameters in their own requests to :term:`Mid-tier cache servers` (which in turn will exhibit the same caching behavior and pass the query parameters in requests to the :term:`origin`). (Aliased as "USE" in Traffic Portal tables, and "0 - use qstring in cache key, and pass up" in Traffic Portal forms)
+	For the purposes of caching, :term:`Edge-tier cache servers` will consider URLs unique if and only if they are unique up to and including any and all query parameters. They will also pass the query parameters in their own requests to :term:`Mid-tier cache servers` (which in turn will exhibit the same caching behavior and pass the query parameters in requests to the :term:`Origin`). (Aliased as "USE" in Traffic Portal tables, and "0 - use qstring in cache key, and pass up" in Traffic Portal forms)
 1
-	For the purposes of caching, neither :term:`Edge-tier` nor :term:`Mid-tier cache servers` will consider the query parameter string when determining if a URL is stored in cache. However, the query string will still be passed in upstream requests to :term:`Mid-tier cache servers` and in turn the :term:`origin`. (Aliased as "IGNORE" in Traffic Portal tables and "1 - ignore in cache key, and pass up" in Traffic Portal forms)
+	For the purposes of caching, neither :term:`Edge-tier` nor :term:`Mid-tier cache servers` will consider the query parameter string when determining if a URL is stored in cache. However, the query string will still be passed in upstream requests to :term:`Mid-tier cache servers` and in turn the :term:`Origin`. (Aliased as "IGNORE" in Traffic Portal tables and "1 - ignore in cache key, and pass up" in Traffic Portal forms)
 2
 	The query parameter string will be stripped from URLs immediately when the request is received by an :term:`Edge-tier cache server`. This means it is never considered for the purposes of caching unique URLs and will not be passed in upstream requests. (Aliased as "DROP" in Traffic Portal tables and "2 - drop at edge" in Traffic Portal forms)
 
@@ -589,7 +637,7 @@ Describes how query strings should be handled by the :term:`Edge-tier cache serv
 	+==================+============================================================+=========================================================================================+
 	| Qstring Handling | Traffic Portal tables                                      | One of the Traffic Portal value aliases "USE" (``0``), "IGNORE" (``1``), "DROP" (``2``) |
 	+------------------+------------------------------------------------------------+-----------------------------------------------------------------------------------------+
-	| qstringIgnore    | Traffic Ops Go/Perl code, :ref:`to-api` requests/responses | unchanged (integral, unique identifier)                                                 |
+	| qstringIgnore    | Traffic Ops code, :ref:`to-api` requests/responses         | unchanged (integral, unique identifier)                                                 |
 	+------------------+------------------------------------------------------------+-----------------------------------------------------------------------------------------+
 
 The Delivery Service's Query String Handling can be set directly as a field on the Delivery Service object itself, or it can be overridden by a :term:`Parameter` on a Profile_ used by this Delivery Service. The special :term:`Parameter` named ``psel.qstring_handling`` and configuration file ``parent.config`` will have it's contents directly inserted into the ``parent.config`` file on all :term:`cache servers` assigned to this Delivery Service.
@@ -623,6 +671,14 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 
 .. warning:: The definitions of each integral, unique identifier are hidden in implementations in each :abbr:`ATC (Apache Traffic Control)` component. Different components will handle invalid values differently, and there's no actual enforcement that the stored integral, unique identifier actually be within the representable range.
 
+.. _ds-slice-block-size:
+
+Range Slice Request Block Size
+-------------------------------------
+The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
+
+This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
+
 .. _ds-raw-remap:
 
 Raw Remap Text
@@ -643,11 +699,18 @@ For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added 
 	| remapText | In Traffic Ops source code and :ref:`to-api` requests/responses | unchanged (``text``, ``string`` etc.) |
 	+-----------+-----------------------------------------------------------------+---------------------------------------+
 
+Directives
+"""
+
+The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
+
+For example, if you have an Apache Traffic Server lua plugin which manipulates the range, and are using Slice Range Request Handling which needs to run after your plugin, you can set a Raw Remap, ``@plugin=tslua.so @pparam=range.lua __RANGE_DIRECTIVE__``, and the ``@plugin=slice.so`` range directive will be inserted after your plugin.
+
 .. _ds-regex-remap:
 
 Regex Remap Expression
 ----------------------
-Allows remapping of incoming requests URL using regular expressions to search and replace text. In a more literal sense, this is the raw contents of a configuration file used by the `ATS regex_remap plugin  <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/regex_remap.en.html>`_. At its most basic, the contents of this field should consist of ``map`` followed by a regular expression and then a "template URL" - all space-separated. The regular expression matches a client's request *path* (i.e. not a full URL - ``/path/to/content`` **not** ``https://origin.example.com/path/to/content``) and when such a match occurs, the request is transformed into a request for the template URL. The most basic usage of the template URL is to use ``$1``-``$9`` to insert the corresponding regular expression capture group. For example, a regular expression of :regexp:`^/a/(.*)` and a template URL of ``https://origin.example.com/b/$1`` maps requests for :term:`origin` content under path ``/a/`` to the same sub-paths under path ``b``. Note that since it's a full URL, this mapping can be made to another server entirely.
+Allows remapping of incoming requests URL using regular expressions to search and replace text. In a more literal sense, this is the raw contents of a configuration file used by the `ATS regex_remap plugin  <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/regex_remap.en.html>`_. At its most basic, the contents of this field should consist of ``map`` followed by a regular expression and then a "template URL" - all space-separated. The regular expression matches a client's request *path* (i.e. not a full URL - ``/path/to/content`` **not** ``https://origin.example.com/path/to/content``) and when such a match occurs, the request is transformed into a request for the template URL. The most basic usage of the template URL is to use ``$1``-``$9`` to insert the corresponding regular expression capture group. For example, a regular expression of :regexp:`^/a/(.*)` and a template URL of ``https://origin.example.com/b/$1`` maps requests for :term:`Origin` content under path ``/a/`` to the same sub-paths under path ``b``. Note that since it's a full URL, this mapping can be made to another server entirely.
 
 .. seealso:: The `documentation for the regex_remap plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/regex_remap.en.html>`_ for :abbr:`ATS (Apache Traffic Server)`
 
@@ -681,7 +744,7 @@ Required Capabilities
 ---------------------
 .. versionadded:: ATCv4
 
-A Delivery Service can be associated with :term:`Server Capabilities` that it requires :term:`cache servers` serving its content to have. When one or more :term:`Server Capability` is required by a Delivery Service, it will block the assignment of :term:`cache servers` to it that do not have those :term:`Server Capabilities`. Additionally, the :term:`Edge-tier Cache Servers` assigned to a Delivery Service that requires a :term:`Server Capability` will only request content they do not have cached from :term:`Mid-tier Cache Servers` which also have this :term:`Server Capability`.
+A Delivery Service can be associated with :term:`Server Capabilities` that it requires :term:`cache servers` serving its content to have. When one or more :term:`Server Capability` is required by a Delivery Service, it will block the assignment of :term:`cache servers` to it that do not have those :term:`Server Capabilities`. Additionally, the :term:`Edge-tier cache servers` assigned to a Delivery Service that requires a :term:`Server Capability` will only request content they do not have cached from :term:`Mid-tier cache servers` which also have this :term:`Server Capability`.
 
 Typically, a required :term:`Server Capability` is represented merely by the name of said :term:`Server Capability`. In fact, there's nothing more to a :term:`Server Capability` than its name; it's the responsibility of CDN operators to ensure that they are assigned and required properly. There is no mechanism to detect whether or not a :term:`cache server` has a given :term:`Server Capability`, it must be assigned manually.
 
@@ -697,11 +760,17 @@ Servers
 -------
 Servers can be assigned to Delivery Services using the :ref:`tp-configure-servers` and :ref:`tp-services-delivery-service` Traffic Portal sections, or by directly using the :ref:`to-api-deliveryserviceserver` endpoint. Only :term:`Edge-tier cache servers` can be assigned to a Delivery Service, and once they are so assigned they will begin to serve content for the Delivery Service (after updates are queued and then applied). Any servers assigned to a Delivery Service must also belong to the same CDN_ as the Delivery Service itself. At least one server must be assigned to a Delivery Service in order for it to serve any content.
 
+.. _ds-service-category:
+
+Service Category
+----------------
+A service category is a tag that describes the type of content being delivered by the Delivery Service. Some example values are: "Linear" and "VOD"
+
 .. _ds-signing-algorithm:
 
 Signing Algorithm
 -----------------
-URLs/URIs may be signed using one of two algorithms before a request for the content to which they refer is sent to the :term:`origin` (which in practice can be any upstream network). At the time of this writing, this field is restricted within the Traffic Ops Database to one of two values (or ``NULL``/"None", to indicate no signing should be done).
+URLs/URIs may be signed using one of two algorithms before a request for the content to which they refer is sent to the :term:`Origin` (which in practice can be any upstream network). At the time of this writing, this field is restricted within the Traffic Ops Database to one of two values (or ``NULL``/"None", to indicate no signing should be done).
 
 .. seealso:: The url_sig `README <https://github.com/apache/trafficserver/blob/master/plugins/experimental/url_sig/README>`_.
 
@@ -724,14 +793,6 @@ uri_signing
 Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-services-delivery-service>`.
 
 .. _ds-ssl-key-version:
-
-Range Slice Request Block Size
--------------------------------------
-The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
-
-This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
-
-.. _ds-slice-block-size:
 
 SSL Key Version
 ---------------
@@ -760,6 +821,12 @@ The :term:`Tenant` who owns this Delivery Service. They (and their parents, if a
 	+==========+==============================================+========================================================+
 	| TenantID | Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.) |
 	+----------+----------------------------------------------+--------------------------------------------------------+
+
+.. _ds-topology:
+
+Topology
+--------
+A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
 
 .. _ds-tr-resp-headers:
 
@@ -829,11 +896,18 @@ HTTP_LIVE_NATNL
 HTTP_NO_CACHE\ [#dupOrigin]_
 	Uses HTTP Content Routing, but :term:`cache servers` will not actually cache the delivered content - they act as just proxies. This will bypass any existing :term:`Mid-tier` entirely (as it's totally useless when content is not being cached).
 
+.. _ds-steering:
+
 STEERING
 	This is a sort of "meta" Delivery Service. It is used for directing clients to one of a set of Delivery Services, rather than delivering content directly itself. The Delivery Services to which a STEERING Delivery Service routes clients are referred to as "targets". Targets in general have an associated "value" and can be of several :term:`Types` that define the meaning of the value - these being:
 
+.. _ds-steering-order:
+
 	STEERING_ORDER
 		The value of a STEERING_ORDER target sets a strict order of preference. In cases where a response to a client contains multiple Delivery Services, those targets with a lower "value" appear earlier than those with a higher "value". In cases where two or more targets share the same value, they each have an equal chance of being presented to the client - effectively spreading traffic evenly across them.
+
+.. _ds-steering-weight:
+
 	STEERING_WEIGHT
 		The values of STEERING_WEIGHT targets are interpreted as "weights", which define how likely it is that any given client will be routed to a specific Delivery Service - effectively this determines the spread of traffic across each target.
 
@@ -843,15 +917,17 @@ STEERING
 
 	.. seealso:: For implementation details about how Traffic Router routes STEERING (and CLIENT_STEERING) Delivery Services, see :ref:`tr-steering`.
 
+.. _ds-client-steering:
+
 CLIENT_STEERING
 	A CLIENT_STEERING Delivery Service is exactly like STEERING except that it provides clients with methods of bypassing the weights, orders, and localizations of targets in order to choose any arbitrary target at will. When utilizing these methods, the client will either directly choose a target immediately or request a list of all available targets from Traffic Router and then choose one to which to send a subsequent request for actual content. CLIENT_STEERING also supports two additional target types:
 
 	STEERING_GEO_ORDER
-		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices according to these groupings, and order them by physical distance from the client (closest to farthest). Within these subsets, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
+		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`Origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices according to these groupings, and order them by physical distance from the client (closest to farthest). Within these subsets, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
 	STEERING_GEO_WEIGHT
-		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices according to these groupings, and order them by physical distance from the client (closest to farthest). Within these subsets, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
+		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`Origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices according to these groupings, and order them by physical distance from the client (closest to farthest). Within these subsets, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
 
-	.. important:: To make use of the STEERING_GEO_ORDER and/or STEERING_GEO_WEIGHT target types, it is first necessary to ensure that at least the "primary" :term:`origin` of the :term:`Delivery Service` has an associated geographic coordinate pair. This can be done either from the :ref:`tp-configure-origins` page in Traffic Portal, or using the :ref:`to-api-origins` :ref:`to-api` endpoint.
+	.. important:: To make use of the STEERING_GEO_ORDER and/or STEERING_GEO_WEIGHT target types, it is first necessary to ensure that at least the "primary" :term:`Origin` of the :term:`Delivery Service` has an associated geographic coordinate pair. This can be done either from the :ref:`tp-configure-origins` page in Traffic Portal, or using the :ref:`to-api-origins` :ref:`to-api` endpoint.
 
 .. note:: "Steering" is also commonly used to collectively refer to either of the kinds of Delivery Services that can participate in steering behavior (STEERING and CLIENT_STEERING).
 
@@ -869,7 +945,7 @@ CLIENT_STEERING
 
 Use Multi-Site Origin Feature
 -----------------------------
-A boolean value that indicates whether or not this Delivery Service serves content for an :term:`origin` that provides content from two or more redundant servers. There are very few good reasons for this to not be ``false``. When ``true``, Traffic Ops will configure :term:`Mid-tier cache servers` to perform load-balancing and other optimizations for redundant :term:`origin servers`.
+A boolean value that indicates whether or not this Delivery Service serves content for an :term:`Origin` that provides content from two or more redundant servers. There are very few good reasons for this to not be ``false``. When ``true``, Traffic Ops will configure :term:`Mid-tier cache servers` to perform load-balancing and other optimizations for redundant :term:`origin servers`.
 
 Naturally, this assumes that each redundant server is exactly identical, from request paths to actual content. If Multi-Site Origin is configured for servers that are *not* identical, the client's experience is undefined. Furthermore, the :term:`origin servers` may have differing IP addresses, but **must** serve content for a single :abbr:`FQDN (Fully Qualified Domain Name)` - as defined by the Delivery Service's `Origin Server Base URL`_. These redundant servers **must** be configured as servers (server :term:`Type` ``ORG``) in Traffic Ops - either using the :ref:`appropriate section of Traffic Portal <tp-configure-servers>` or the :ref:`to-api-servers` endpoint.
 

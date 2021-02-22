@@ -16,9 +16,12 @@
 package v3
 
 import (
+	"net/http"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -28,9 +31,70 @@ func TestParameters(t *testing.T) {
 	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
 
 	WithObjs(t, []TCObj{Parameters}, func() {
+		GetTestParametersIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestParameters(t)
+		UpdateTestParametersWithHeaders(t, header)
 		GetTestParameters(t)
+		GetTestParametersIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestParametersWithHeaders(t, header)
 	})
+}
+
+func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		resp, _, err := TOSession.GetParametersByProfileNameWithHdr(firstParameter.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteParameter := resp[0]
+			expectedParameterValue := "UPDATED"
+			remoteParameter.Value = expectedParameterValue
+			_, reqInf, err := TOSession.UpdateParameterByIDWithHdr(remoteParameter.ID, remoteParameter, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
+func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestParameters(t *testing.T) {
@@ -40,6 +104,35 @@ func CreateTestParameters(t *testing.T) {
 		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE parameters: %v", err)
+		}
+	}
+
+}
+
+func CreateNegativeTestParameters(t *testing.T) {
+	invalidParameters := []struct {
+		Reason string       `json:"reason"`
+		Entity tc.Parameter `json:"entity"`
+	}{{
+		Reason: "the weight value does not parse to a float",
+		Entity: tc.Parameter{
+			ConfigFile: "parent.config",
+			Name:       "weight",
+			Secure:     false,
+		}}, {
+		Reason: "NaN is not a valid float",
+		Entity: tc.Parameter{
+			ConfigFile: "parent.config",
+			Name:       "weight",
+			Secure:     false,
+		}}}
+
+	for _, negativeTest := range invalidParameters {
+		pl := negativeTest.Entity
+		resp, _, err := TOSession.CreateParameter(pl)
+		t.Log("Response: ", resp)
+		if err == nil {
+			t.Fatalf("Expected an error because %s but received no error, invalid parameter was created", negativeTest.Reason)
 		}
 	}
 
@@ -72,6 +165,23 @@ func UpdateTestParameters(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
 	}
 
+}
+
+func GetTestParametersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func GetTestParameters(t *testing.T) {

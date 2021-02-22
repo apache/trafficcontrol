@@ -317,10 +317,10 @@ func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServ
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
 // Service identified by the integral, unique identifier 'dsID'.
-func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServerV11, ReqInf, error) {
 	resp := struct {
-		Response []tc.DSServer `json:"response"`
-	}{Response: []tc.DSServer{}}
+		Response []tc.DSServerV11 `json:"response"`
+	}{Response: []tc.DSServerV11{}}
 
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_ELIGIBLE_SERVERS, dsID), &resp)
 	if err != nil {

@@ -34,7 +34,6 @@ type ATSConfigMetaDataInfo struct {
 	CDNID             int    `json:"cdnId"`
 	CDNName           string `json:"cdnName"`
 	ServerID          int    `json:"serverId"`
-	ServerIPv4        string `json:"serverIpv4"`
 	ServerName        string `json:"serverName"`
 	ServerPort        int    `json:"serverTcpPort"`
 	ProfileID         int    `json:"profileId"`
@@ -46,8 +45,8 @@ type ATSConfigMetaDataInfo struct {
 type ATSConfigMetaDataConfigFile struct {
 	FileNameOnDisk string `json:"fnameOnDisk"`
 	Location       string `json:"location"`
-	APIURI         string `json:"apiUri,omitempty"`
-	URL            string `json:"url,omitempty"`
+	APIURI         string `json:"apiUri,omitempty"` // APIURI is deprecated, do not use.
+	URL            string `json:"url,omitempty"`    // URL is deprecated, do not use.
 	Scope          string `json:"scope"`
 }
 

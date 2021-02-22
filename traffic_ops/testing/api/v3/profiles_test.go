@@ -16,9 +16,12 @@
 package v3
 
 import (
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -27,11 +30,67 @@ func TestProfiles(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
 		CreateBadProfiles(t)
 		UpdateTestProfiles(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestProfilesWithHeaders(t, header)
+		GetTestProfilesIMS(t)
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
 		ImportProfile(t)
 		CopyProfile(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestProfilesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Profiles) > 0 {
+		firstProfile := testData.Profiles[0]
+		// Retrieve the Profile by name so we can get the id for the Update
+		resp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteProfile := resp[0]
+			_, reqInf, err := TOSession.UpdateProfileByIDWithHdr(remoteProfile.ID, remoteProfile, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
+	}
+}
+
+func GetTestProfilesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, pr := range testData.Profiles {
+		_, reqInf, err := TOSession.GetProfileByNameWithHdr(pr.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+		_, reqInf, err = TOSession.GetProfileByParameterWithHdr(pr.Parameter, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 // CreateBadProfiles ensures that profiles can't be created with bad values
@@ -365,9 +424,9 @@ func DeleteTestProfiles(t *testing.T) {
 		}
 
 		// Attempt to export Profile
-		profile, _, err := TOSession.ExportProfile(profileID)
-		if profile != nil {
-			t.Errorf("expected Profile: %s to be nil on export", pr.Name)
+		_, _, err = TOSession.ExportProfile(profileID)
+		if err == nil {
+			t.Errorf("export deleted profile %s - expected: error, actual: nil", pr.Name)
 		}
 	}
 }

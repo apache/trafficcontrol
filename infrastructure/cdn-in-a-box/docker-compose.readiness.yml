@@ -35,16 +35,14 @@ version: '2.1'
 services:
   readiness:
     build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/readiness/Dockerfile
+      context: .
+      dockerfile: readiness/Dockerfile
     env_file:
       - variables.env
     hostname: readiness
     domainname: infra.ciab.test
     volumes:
       - shared:/shared
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
 
 volumes:
   shared:

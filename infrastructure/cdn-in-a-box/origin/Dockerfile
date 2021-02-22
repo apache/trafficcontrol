@@ -18,19 +18,36 @@
 ############################################################
 # Dockerfile to build Mid-Tier Cache container images for
 # Apache Traffic Control
-# Based on CentOS 7.2
 ############################################################
 
-FROM alpine:latest
+FROM alpine:3.13
 
-RUN apk add --no-cache lighttpd bash curl bind-tools
+RUN apk add --no-cache \
+    net-tools \
+    lighttpd \
+    bash \
+    curl \
+    bind-tools \
+    # contains envsubst for to-enroll
+    gettext \
+    jq
+
+RUN rm /sbin/route
 
 RUN rm /etc/lighttpd/lighttpd.conf
 RUN rm -rf /var/www/localhost/
-RUN mkdir -p /var/www/html/
+
+ADD origin/content /var/www/html/
 
 ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD origin/run.sh traffic_ops/to-access.sh /
+ADD origin/run.sh \
+    traffic_ops/to-access.sh \
+    enroller/server_template.json \
+    /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 EXPOSE 80
 

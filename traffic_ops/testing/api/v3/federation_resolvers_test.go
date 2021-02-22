@@ -15,15 +15,39 @@ package v3
    limitations under the License.
 */
 
-import "testing"
+import (
+	"net/http"
+	"testing"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
+		GetTestFederationResolversIMS(t)
 		GetTestFederationResolvers(t)
 	})
+}
+func GetTestFederationResolversIMS(t *testing.T) {
+	var tdlen = len(testData.FederationResolvers)
+	if tdlen < 1 {
+		t.Fatal("no federation resolvers test data")
+	}
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0, 0, 1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetFederationResolversWithHdr(header)
+	if err != nil {
+		t.Fatalf("could not GET Federation resolvers: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestFederationResolvers(t *testing.T) {
@@ -135,7 +159,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid))
 		}
 
-		fr.TypeID = util.UintPtr(uint(tid[0].ID))
+		fr.TypeID = util.UIntPtr(uint(tid[0].ID))
 
 		alerts, _, err := TOSession.CreateFederationResolver(fr)
 		if err != nil {
@@ -163,7 +187,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 		}
 	}
 
-	invalidFR.TypeID = util.UintPtr(1)
+	invalidFR.TypeID = util.UIntPtr(1)
 	invalidFR.IPAddress = util.StrPtr("not a valid IP address")
 	alerts, _, err = TOSession.CreateFederationResolver(invalidFR)
 	if err == nil {

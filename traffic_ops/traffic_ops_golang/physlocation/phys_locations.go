@@ -20,7 +20,9 @@ package physlocation
  */
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -35,6 +37,10 @@ import (
 type TOPhysLocation struct {
 	api.APIInfoImpl `json:"-"`
 	tc.PhysLocationNullable
+}
+
+func (v *TOPhysLocation) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "phys_location")
 }
 
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -98,15 +104,21 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) {
-	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
-		pl.APIInfo().Params["orderby"] = "name"
-	}
-	return api.GenericRead(pl)
+func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(pl.APIInfo(), "name")
+	return api.GenericRead(h, pl, useIMS)
 }
-func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
-func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
+func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(pl.last_updated) as t FROM phys_location pl
+JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='phys_location') as res`
+}
+
+func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pl) }
+func (pl *TOPhysLocation) Create() (error, error, int)              { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int)              { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

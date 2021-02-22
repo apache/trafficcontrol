@@ -22,7 +22,7 @@ base_data_dir="/traffic_ops_data"
 servers_dir="${base_data_dir}/servers"
 profiles_dir="${base_data_dir}/profiles"
 
-service_names='db trafficops trafficops-perl trafficportal trafficmonitor trafficvault trafficrouter enroller dns'
+service_names='db trafficops trafficportal trafficmonitor trafficvault trafficrouter enroller dns'
 
 service_domain='infra.ciab.test'
 
@@ -40,7 +40,6 @@ service_ips="${gateway_ip}"
 service_ip6s="${gateway_ip6}"
 INTERFACE=$(ip link | awk '/\<UP\>/ && !/LOOPBACK/ {sub(/@.*/, "", $2); print $2}')
 NETMASK=$(route | awk -v INTERFACE=$INTERFACE '$8 ~ INTERFACE && $1 !~ "default"  {print $3}')
-DIG_IP_RETRY=10
 
 for service_name in $service_names; do
 	service_fqdn="${service_name}.${service_domain}"

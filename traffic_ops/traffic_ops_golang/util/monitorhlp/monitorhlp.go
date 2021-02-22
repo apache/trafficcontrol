@@ -31,13 +31,17 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	tmcache "github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
-const MonitorRequestTimeout = time.Second * 10
-const MonitorOnlineStatus = "ONLINE"
+const (
+	MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
+	MonitorRequestTimeout = time.Second * 10
+	MonitorOnlineStatus   = "ONLINE"
+
+	TrafficMonitorCacheStatsPath       = "/publish/CacheStatsNew"
+	TrafficMonitorLegacyCacheStatsPath = "/publish/CacheStats"
+)
 
 // GetClient returns the http.Client for making requests to the Traffic Monitor. This should always be used, rather than creating a default http.Client, to ensure any monitor forward proxy parameter is used correctly.
 func GetClient(tx *sql.Tx) (*http.Client, error) {
@@ -123,20 +127,63 @@ func GetCRConfig(monitorFQDN string, client *http.Client) (tc.CRConfig, error) {
 	return crs, nil
 }
 
-// GetCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get; if stats is empty or nil, all stats are fetched.
-func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tmcache.Stats, error) {
-	path := `/publish/CacheStats?hc=1`
+// GetCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get;
+// if stats is empty or nil, all stats are fetched.
+func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.Stats, string, error) {
+	path := TrafficMonitorCacheStatsPath + "?hc=1"
 	if len(stats) > 0 {
 		path += `&stats=` + strings.Join(stats, `,`)
 	}
-	resp, err := client.Get("http://" + monitorFQDN + path)
+	path = "http://" + monitorFQDN + path
+	resp, err := client.Get(path)
 	if err != nil {
-		return tmcache.Stats{}, errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
+		return tc.Stats{}, path, errors.New("getting CacheStatsNew from Monitor '" + monitorFQDN + "': " + err.Error())
 	}
 	defer resp.Body.Close()
-	cacheStats := tmcache.Stats{}
+	cacheStats := tc.Stats{}
 	if err := json.NewDecoder(resp.Body).Decode(&cacheStats); err != nil {
-		return tmcache.Stats{}, errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
+		return tc.Stats{}, path, errors.New("decoding CacheStatsNew from monitor '" + monitorFQDN + "': " + err.Error())
 	}
-	return cacheStats, nil
+	return cacheStats, path, nil
+}
+
+// GetLegacyCacheStats gets the pre ATCv5.0 cache stats from the given monitor. The stats parameters is which stats to
+// get; if stats is empty or nil, all stats are fetched.
+func GetLegacyCacheStats(monitorFQDN string, client *http.Client, stats []string) (tc.LegacyStats, string, error) {
+	path := TrafficMonitorLegacyCacheStatsPath + "?hc=1"
+	if len(stats) > 0 {
+		path += `&stats=` + strings.Join(stats, `,`)
+	}
+	path = "http://" + monitorFQDN + path
+	resp, err := client.Get(path)
+	if err != nil {
+		return tc.LegacyStats{}, path, errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
+	}
+	defer resp.Body.Close()
+	cacheStats := tc.LegacyStats{}
+	if err := json.NewDecoder(resp.Body).Decode(&cacheStats); err != nil {
+		return tc.LegacyStats{}, path, errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
+	}
+	return cacheStats, path, nil
+}
+
+// UpgradeLegacyStats will take LegacyStats and transform them to Stats. It assumes all stats that go in
+// Stats.Caches[cacheName] exist in Stats and not Interfaces
+func UpgradeLegacyStats(legacyStats tc.LegacyStats) tc.Stats {
+	stats := tc.Stats{
+		CommonAPIData: legacyStats.CommonAPIData,
+		Caches:        make(map[string]tc.ServerStats, len(legacyStats.Caches)),
+	}
+
+	for cacheName, cache := range legacyStats.Caches {
+		stats.Caches[string(cacheName)] = tc.ServerStats{
+			Interfaces: nil,
+			Stats:      make(map[string][]tc.ResultStatVal, len(cache)),
+		}
+		for statName, stat := range cache {
+			stats.Caches[string(cacheName)].Stats[statName] = stat
+		}
+	}
+
+	return stats
 }

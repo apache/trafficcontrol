@@ -31,7 +31,6 @@ func ExpectedMakeStats() tc.CRConfigStats {
 	return tc.CRConfigStats{
 		CDNName:   randStr(),
 		TMHost:    randStr(),
-		TMPath:    randStr(),
 		TMUser:    randStr(),
 		TMVersion: randStr(),
 	}
@@ -40,7 +39,7 @@ func ExpectedMakeStats() tc.CRConfigStats {
 func TestMakeStats(t *testing.T) {
 	expected := ExpectedMakeStats()
 	start := time.Now()
-	actual := makeStats(*expected.CDNName, *expected.TMUser, *expected.TMHost, *expected.TMPath, *expected.TMVersion)
+	actual := makeStats(*expected.CDNName, *expected.TMUser, *expected.TMHost, *expected.TMVersion)
 	end := time.Now()
 	expected.DateUnixSeconds = actual.DateUnixSeconds
 	if !reflect.DeepEqual(expected, actual) {

@@ -3,6 +3,7 @@
     "displayName": "Demo 1",
     "tenant": "root",
     "protocol": 2,
+    "topology": "demo1-top",
     "orgServerFqdn": "http://origin.infra.ciab.test",
     "cdnName": "$CDN_NAME",
     "type": "HTTP",
@@ -14,7 +15,7 @@
     "ipv6RoutingEnabled": true,
     "logsEnabled": true,
     "longDesc": "Apachecon North America 2018",
-    "multiSiteOrigin": false,
+    "multiSiteOrigin": true,
     "missLat": 42.0,
     "missLong": -88.0,
     "qstringIgnore": 0,
@@ -28,5 +29,6 @@
         "xxx",
         "pdq",
         "abc"
-    ]
+    ],
+    "maxRequestHeaderBytes": 0
 }

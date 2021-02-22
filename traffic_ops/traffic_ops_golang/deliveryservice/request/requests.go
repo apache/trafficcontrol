@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -32,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -40,6 +42,10 @@ import (
 type TODeliveryServiceRequest struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceRequestNullable
+}
+
+func (v *TODeliveryServiceRequest) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "deliveryservice_request")
 }
 
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -76,13 +82,17 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
+func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	deliveryServiceRequests := []interface{}{}
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
 		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
 		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
 		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
+		"createdAt":  dbhelpers.WhereColumnInfo{Column: "r.created_at"},
 		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
 		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
 		"xmlId":      dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"},
@@ -100,11 +110,21 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(p, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return deliveryServiceRequests, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
@@ -113,20 +133,29 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 
 	rows, err := req.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("dsr querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("dsr querying: " + err.Error()), http.StatusInternalServerError, &maxTime
 	}
 	defer rows.Close()
 
-	deliveryServiceRequests := []interface{}{}
 	for rows.Next() {
 		var s TODeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("dsr scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("dsr scanning: " + err.Error()), http.StatusInternalServerError, &maxTime
 		}
 		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
 
-	return deliveryServiceRequests, nil, nil, http.StatusOK
+	return deliveryServiceRequests, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM deliveryservice_request r
+	JOIN tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
 }
 
 func selectDeliveryServiceRequestsQuery() string {
@@ -174,7 +203,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (req *TODeliveryServiceRequest) Update() (error, error, int) {
+func (req *TODeliveryServiceRequest) Update(h http.Header) (error, error, int) {
 	if req.ID == nil {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
@@ -202,7 +231,7 @@ func (req *TODeliveryServiceRequest) Update() (error, error, int) {
 	userID := tc.IDNoMod(req.APIInfo().User.ID)
 	req.LastEditedByID = &userID
 
-	return api.GenericUpdate(req)
+	return api.GenericUpdate(h, req)
 }
 
 // Creator implements the tc.Creator interface
@@ -250,7 +279,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, error, int) {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 
-	st := tc.RequestStatus(0)
+	st := tc.RequestStatusInvalid
 	if err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *req.ID).Scan(&st); err != nil {
 		return nil, errors.New("dsr delete querying status: " + err.Error()), http.StatusBadRequest
 	}
@@ -335,7 +364,7 @@ type deliveryServiceRequestAssignment struct {
 }
 
 // Update assignee only
-func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
+func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 	if req.ID == nil {
@@ -358,6 +387,11 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 	assigneeID := req.AssigneeID
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
+
+	userErr, sysErr, statusCode := api.CheckIfUnModified(h, req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 
 	// LastEditedBy field should not change with status update
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
@@ -398,7 +432,7 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
+func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition
@@ -422,6 +456,10 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
+	existingLastUpdated := current.LastUpdated
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		return api.ParseDBError(err)
