@@ -91,8 +91,12 @@ POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 # Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
 # OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
-# Accepting a string for json.dump()'s `indent` keyword argument is a Python 3 feature
-indent = "\t" if sys.version_info.major >= 3 else 4 # type: int
+if sys.version_info.major >= 3:
+	# Accepting a string for json.dump()'s `indent` keyword argument is a Python 3 feature
+	indent = "\t"  # type: str
+else:
+	indent = 4 #  type: int
+	str = unicode  # type: type[unicode]
 
 class Question(object):
 	"""

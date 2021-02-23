@@ -309,6 +309,9 @@ from __future__ import print_function
 import json
 import sys
 
+if sys.version_info.major < 3:
+	str = unicode
+
 try:
 	with open('$USERS_JSON_FILE') as fd:
 		users_json = json.load(fd)
@@ -377,6 +380,9 @@ from __future__ import print_function
 import json
 import string
 import sys
+
+if sys.version_info.major < 3:
+	str = unicode
 
 try:
 	with(open('$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf')) as fd:
