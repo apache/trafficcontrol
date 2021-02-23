@@ -43,24 +43,24 @@ RUN set -o nounset -o errexit && \
 	dnf -y $use_repo -- install postgresql96; \
 	dnf -y install epel-release; \
 	dnf -y $enable_repo install      \
-		jq              \
-		bind-utils      \
-		net-tools       \
-		gettext         \
-		perl-JSON-PP    \
-		perl-Crypt-ScryptKDF  \
-		mkisofs         \
-		isomd5sum       \
-		nmap-ncat       \
-		openssl         \
-		python3         \
-		golang          \
-		git             \
-		libidn-devel    \
-		libpcap-devel   \
-		perl-Digest-SHA1\
-		# Used to copy certs in "Shared SSL certificate generation" step
-		rsync;          \
+		bind-utils           \
+		gettext              \
+		git                  \
+		golang               \
+		isomd5sum            \
+		jq                   \
+		libidn-devel         \
+		libpcap-devel        \
+		mkisofs              \
+		net-tools            \
+		nmap-ncat            \
+		openssl              \
+		perl-Crypt-ScryptKDF \
+		perl-Digest-SHA1     \
+		perl-JSON-PP         \
+		python3              \
+		# rsync is used to copy certs in "Shared SSL certificate generation" step
+		rsync;               \
 	dnf clean all
 
 EXPOSE 443
