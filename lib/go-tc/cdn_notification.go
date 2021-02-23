@@ -30,10 +30,10 @@ import (
 
 // CDNNotification is a notification created for a specific CDN
 type CDNNotification struct {
-	CDN      *string `json:"cdn" db:"cdn"`
-	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
-	Notification        *string `json:"notification" db:"notification"`
-	Username *string `json:"username" db:"username"`
+	CDN          *string    `json:"cdn" db:"cdn"`
+	LastUpdated  *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
+	Notification *string    `json:"notification" db:"notification"`
+	User         *string    `json:"user" db:"user"`
 }
 
 // Validate validates the CDNNotification request is valid for creation.

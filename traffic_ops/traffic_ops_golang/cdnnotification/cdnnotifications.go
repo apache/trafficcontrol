@@ -33,18 +33,18 @@ import (
 
 const readQuery = `
 SELECT cn.cdn, 
-	cn.username, 
+	cn.user, 
 	cn.notification 
 FROM cdn_notification as cn
-FULL JOIN cdn ON cdn.name = cn.cdn
-FULL JOIN tm_user ON tm_user.username = cn.username
+INNER JOIN cdn ON cdn.name = cn.cdn
+INNER JOIN tm_user ON tm_user.username = cn.user
 `
 
 const insertQuery = `
-INSERT INTO cdn_notification (cdn, username, notification)
+INSERT INTO cdn_notification (cdn, "user", notification)
 VALUES ($1, $2, $3)
 RETURNING cdn_notification.cdn,
-          cdn_notification.username,
+          cdn_notification.user,
           cdn_notification.notification
 `
 
@@ -52,7 +52,7 @@ const deleteQuery = `
 DELETE FROM cdn_notification
 WHERE cdn_notification.cdn = $1
 RETURNING cdn_notification.cdn,
-          cdn_notification.username,
+          cdn_notification.user,
           cdn_notification.notification
 `
 
@@ -70,7 +70,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"cdn":      dbhelpers.WhereColumnInfo{"cdn.name", nil},
-		"username": dbhelpers.WhereColumnInfo{"tm_user.username", nil},
+		"user": dbhelpers.WhereColumnInfo{"tm_user.username", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
@@ -96,7 +96,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var n tc.CDNNotification
-		if err = rows.Scan(&n.CDN, &n.Username, &n.Notification); err != nil {
+		if err = rows.Scan(&n.CDN, &n.User, &n.Notification); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn notifications: "+err.Error()))
 			return
 		}
@@ -122,17 +122,17 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := tx.QueryRow(insertQuery, n.CDN, inf.User.UserName, n.Notification).Scan(&n.CDN, &n.Username, &n.Notification)
+	err := tx.QueryRow(insertQuery, n.CDN, inf.User.UserName, n.Notification).Scan(&n.CDN, &n.User, &n.Notification)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Created", *n.CDN, *n.Username, *n.Notification)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Created", *n.CDN, *n.User, *n.Notification)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
-	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", *n.Username, *n.CDN)
+	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", *n.User, *n.CDN)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, n)
 }
 
@@ -162,7 +162,7 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 	var alert tc.Alert
 	var result tc.CDNNotification
 
-	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["cdn"]).Scan(&result.CDN, &result.Username, &result.Notification)
+	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["cdn"]).Scan(&result.CDN, &result.User, &result.Notification)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			userErr = fmt.Errorf("No CDN Notification for %s", inf.Params["cdn"])
@@ -174,10 +174,10 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 		return alert, result, userErr, sysErr, statusCode
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Deleted", *result.CDN, *result.Username, *result.Notification)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Deleted", *result.CDN, *result.User, *result.Notification)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
-	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", *result.Username, *result.CDN)
+	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", *result.User, *result.CDN)
 	alert = tc.Alert{
 		Level: tc.SuccessLevel.String(),
 		Text:  alertMsg,
