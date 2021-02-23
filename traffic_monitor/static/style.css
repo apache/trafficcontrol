@@ -31,7 +31,6 @@ table {
 	border-collapse: separate;
 	border-spacing: 0 0;
 	width: 100%;
-	table-layout: fixed;
 }
 
 th, td {
@@ -242,11 +241,32 @@ label:hover {
 	background-color: #f1f1f1;
 	position: relative;
 }
+
+@media(max-width: 1279) {
+	.tabcontent {
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	table {
+		table-layout: auto;
+	}
+}
+
+@media(min-width: 1280) {
+	.tabcontent {
+		overflow: hidden;
+	}
+
+	table {
+		table-layout: fixed;
+	}
+}
+
 .tabcontent {
 	z-index: 2;
 	display: none;
 	visibility: hidden;
-	overflow: hidden;
 	width: 100%;
 	position: absolute;
 	top: 53px;
