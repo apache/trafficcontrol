@@ -47,6 +47,8 @@ RUN set -o nounset -o errexit && \
 		gettext              \
 		git                  \
 		golang               \
+		# ip commands is used in set-to-ips-from-dns.sh
+		iproute              \
 		isomd5sum            \
 		jq                   \
 		libidn-devel         \
