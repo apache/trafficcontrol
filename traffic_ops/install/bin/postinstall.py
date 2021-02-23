@@ -749,7 +749,9 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 		with open(cdn_conf_path) as conf_file:
 			cdn_conf = json.load(conf_file)
 	except (OSError, json.JSONDecodeError) as e:
-		raise OSError("reading {cdn_conf_path}: {e}".format(cdn_conf_path=cdn_conf_path, e=e)) from e
+		exception = OSError("reading {cdn_conf_path}: {e}".format(cdn_conf_path=cdn_conf_path, e=e))
+		exception.__cause__ = e
+		raise exception
 
 	if (
 		not isinstance(cdn_conf, dict) or
@@ -808,33 +810,49 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	try:
 		num_secrets = int(cdn_conf["keepSecrets"])
 	except KeyError as e:
-		raise ValueError("missing 'keepSecrets' config_var") from e
+		exception = ValueError("missing 'keepSecrets' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError("invalid 'keepSecrets' config_var value: {e}".format(e=e)) from e
+		exception = ValueError("invalid 'keepSecrets' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		port = int(cdn_conf["port"])
 	except KeyError as e:
-		raise ValueError("missing 'port' config_var") from e
+		exception = ValueError("missing 'port' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError("invalid 'port' config_var value: {e}".format(e=e)) from e
+		exception = ValueError("invalid 'port' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		workers = int(cdn_conf["workers"])
 	except KeyError as e:
-		raise ValueError("missing 'workers' config_var") from e
+		exception = ValueError("missing 'workers' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError("invalid 'workers' config_var value: {e}".format(e=e)) from e
+		exception = ValueError("invalid 'workers' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		url = cdn_conf["base_url"]
 	except KeyError as e:
-		raise ValueError("missing 'base_url' config_var") from e
+		exception = ValueError("missing 'base_url' config_var")
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		ldap_loc = cdn_conf["ldap_conf_location"]
 	except KeyError as e:
-		raise ValueError("missing 'ldap_conf_location' config_var") from e
+		exception = ValueError("missing 'ldap_conf_location' config_var")
+		exception.__cause__ = e
+		raise exception
 
 	conf = CDNConfig(gen_secret, num_secrets, port, workers, url, ldap_loc)
 
@@ -845,7 +863,9 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 			try:
 				existing_conf = json.load(conf_file)
 			except json.JSONDecodeError as e:
-				raise ValueError("invalid existing cdn.config at {path}: {e}".format(path=path, e=e)) from e
+				exception = ValueError("invalid existing cdn.config at {path}: {e}".format(path=path, e=e))
+				exception.__cause__ = e
+				raise exception
 
 	if not isinstance(existing_conf, dict):
 		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
