@@ -31,10 +31,15 @@ table {
 	border-collapse: separate;
 	border-spacing: 0 0;
 	width: 100%;
+	table-layout: fixed;
 }
 
 th, td {
-	padding:5px 20px 5px 5px;
+	padding: 5px 20px 5px 5px;
+}
+
+td, th.button-cell {
+	width: min-content;
 }
 
 tbody#cache-states tr.server-status:nth-child(4n+3) {
@@ -90,10 +95,10 @@ div.sub-table-indicator.down {
 	background-color: #f80!important;
 }
 
-#cache-states .text-entry {
+#cache-states-content .text-entry {
 	text-align: left;
 }
-#cache-states .number-entry {
+#cache-states-content .number-entry {
 	text-align: right;
 }
 
