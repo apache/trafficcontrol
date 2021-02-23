@@ -66,14 +66,6 @@ type CDN struct {
 	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	// CDN notification
-	//
-	Notification string `json:"notification" db:"notification"`
-
-	// Username that created the CDN notification
-	//
-	NotificationCreatedBy string `json:"notificationCreatedBy" db:"notification_created_by"`
-
 	// Name of the CDN
 	//
 	// required: true
@@ -103,14 +95,6 @@ type CDNNullable struct {
 	// LastUpdated
 	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-
-	// CDN notification
-	//
-	Notification *string `json:"notification" db:"notification"`
-
-	// Username that created the CDN notification
-	//
-	NotificationCreatedBy *string `json:"notificationCreatedBy" db:"notification_created_by"`
 
 	// Name of the CDN
 	//
@@ -164,12 +148,14 @@ type CDNQueueUpdateResponse struct {
 // CDNNotificationRequest encodes the request data for the POST
 // cdns/{{ID}}/notification endpoint.
 type CDNNotificationRequest struct {
+	CDN     string `json:"cdn"`
 	Notification string `json:"notification"`
 }
 
 // CDNNotificationResponse encodes the response data for the POST
 // cdns/{{ID}}/notification endpoint.
 type CDNNotificationResponse struct {
+	CDN     string `json:"cdn"`
 	Username     string `json:"username"`
 	Notification string `json:"notification"`
 }

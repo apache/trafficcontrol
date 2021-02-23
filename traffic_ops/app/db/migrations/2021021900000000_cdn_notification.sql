@@ -17,16 +17,19 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-
-ALTER TABLE cdn
-    ADD COLUMN notification_created_by text,
-    ADD COLUMN notification text,
-    ADD CONSTRAINT cdn_notification_created_by_fkey FOREIGN KEY (notification_created_by) REFERENCES tm_user (username) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE cdn_notification (
+    cdn text NOT NULL,
+    username text NOT NULL,
+    notification text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pk_cdn_notification PRIMARY KEY (cdn),
+    CONSTRAINT fk_notification_cdn FOREIGN KEY (cdn) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_notification_user FOREIGN KEY (username) REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE
+);
+DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_notification;
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn_notification FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-
-ALTER TABLE cdn
-    DROP COLUMN notification_created_by,
-    DROP COLUMN notification;
+DROP TABLE IF EXISTS cdn_notification;
