@@ -271,7 +271,7 @@ def parse_arguments(program):
 	                    help="Request exactly PATH; it won't be prefaced with '/api/{{api-version}}/")
 	parser.add_argument("-a", "--api-version",
 	                    type=float,
-	                    default=2.0,
+	                    default=3.0,
 	                    help="Specify the API version to request against")
 	parser.add_argument("-p", "--pretty",
 	                    action="store_true",
