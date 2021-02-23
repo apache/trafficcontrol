@@ -37,7 +37,7 @@ th, td {
 	padding: 5px 20px 5px 5px;
 }
 
-td, th.button-cell {
+td {
 	width: min-content;
 }
 
