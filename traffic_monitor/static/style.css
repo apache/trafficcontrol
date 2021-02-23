@@ -242,22 +242,13 @@ label:hover {
 	position: relative;
 }
 
-@media(max-width: 1279) {
-	.tabcontent {
-		overflow-x: auto;
-		overflow-y: hidden;
-	}
-
+@media(max-width: 1499) {
 	table {
 		table-layout: auto;
 	}
 }
 
-@media(min-width: 1280) {
-	.tabcontent {
-		overflow: hidden;
-	}
-
+@media(min-width: 1500) {
 	table {
 		table-layout: fixed;
 	}
