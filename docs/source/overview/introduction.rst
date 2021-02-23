@@ -23,8 +23,11 @@ Traffic Control was first developed at Comcast for internal use and released to 
 Traffic Control implements the elements illustrated in green in the diagram below.
 
 
-.. image:: images/traffic_control_overview_3.png
+.. figure:: images/traffic.control.overview.*
 	:align: center
+	:width: 100%
+
+	Apache Traffic Control Hierarchical Diagram
 
 
 :ref:`to-overview`
