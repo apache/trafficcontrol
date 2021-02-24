@@ -21,7 +21,6 @@ body {
 	font-family: "Lato", sans-serif;
 	font-size: 14px;
 	margin: 0;
-	max-width: 100vw;
 }
 
 /*****************/
@@ -38,7 +37,7 @@ th, td {
 }
 
 td {
-	width: min-content;
+	white-space: normal;
 }
 
 tbody#cache-states tr.server-status:nth-child(4n+3) {
