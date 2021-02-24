@@ -106,7 +106,6 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 then(
                     function(result) {
                         $rootScope.$broadcast('notificationsController::notificationCreated');
-                        messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
                 );
@@ -135,7 +134,6 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 then(
                     function(result) {
                         $rootScope.$broadcast('notificationsController::notificationDeleted');
-                        messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
                 );
