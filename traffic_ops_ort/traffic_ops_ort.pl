@@ -1453,6 +1453,10 @@ sub process_reload_restarts {
 		( $log_level >> $DEBUG ) && print "DEBUG New/changed header rewrite rule, installed in: $cfg_file. Later I will attempt to touch remap.config.\n";
 		$traffic_ctl_needed++;
 	}
+	elsif ( $cfg_file =~ m/(.*)\.lua/ ) {
+		( $log_level >> $DEBUG ) && print "DEBUG New/changed lua script, installed in: $cfg_file. touch remap.config, and traffic_ctl config reload needed.\n";
+		$traffic_ctl_needed++;
+	}
 	elsif ( $cfg_file eq "plugin.config" || $cfg_file eq "50-ats.rules" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, trafficserver restart needed.\n";
 		$trafficserver_restart_needed++;
