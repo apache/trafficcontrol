@@ -20,12 +20,23 @@ set -e;
 cd "$(dirname "${BASH_SOURCE[0]}")";
 readonly MY_DIR="$(pwd)";
 
+help_string="$(<<-'HELP_STRING' cat
+	Usage: ./postinstall.test.h [
+	    -2        Set Python version to 2
+	    -3        Set Python version to 3
+	    -b <path> Explicitly set the path to the Python binary as this value
+	    -s        Do not test Python 2 after testing Python 3
+HELP_STRING
+)"
+
 while getopts :23sb: opt; do
 	case "$opt" in
 		2) python_version=2;;
 		3) python_version=3;;
 		b) python_bin="$OPTARG";;
 		s) skip_python2=true;;
+		h) echo "$help_string" && exit;;
+		?) echo "$help_string" && exit;;
 		*) echo "Invalid flag received: ${OPTARG}" >&2 && exit 1;;
 	esac;
 done;
