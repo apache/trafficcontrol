@@ -33,6 +33,7 @@ import (
 
 const readQuery = `
 SELECT cn.cdn, 
+	cn.last_updated,
 	cn.user, 
 	cn.notification 
 FROM cdn_notification as cn
@@ -44,6 +45,7 @@ const insertQuery = `
 INSERT INTO cdn_notification (cdn, "user", notification)
 VALUES ($1, $2, $3)
 RETURNING cdn_notification.cdn,
+          cdn_notification.last_updated,
           cdn_notification.user,
           cdn_notification.notification
 `
@@ -52,6 +54,7 @@ const deleteQuery = `
 DELETE FROM cdn_notification
 WHERE cdn_notification.cdn = $1
 RETURNING cdn_notification.cdn,
+          cdn_notification.last_updated,
           cdn_notification.user,
           cdn_notification.notification
 `
@@ -96,7 +99,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var n tc.CDNNotification
-		if err = rows.Scan(&n.CDN, &n.User, &n.Notification); err != nil {
+		if err = rows.Scan(&n.CDN, &n.LastUpdated, &n.User, &n.Notification); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn notifications: "+err.Error()))
 			return
 		}
@@ -122,7 +125,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := tx.QueryRow(insertQuery, n.CDN, inf.User.UserName, n.Notification).Scan(&n.CDN, &n.User, &n.Notification)
+	err := tx.QueryRow(insertQuery, n.CDN, inf.User.UserName, n.Notification).Scan(&n.CDN, &n.LastUpdated, &n.User, &n.Notification)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -162,7 +165,7 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 	var alert tc.Alert
 	var result tc.CDNNotification
 
-	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["cdn"]).Scan(&result.CDN, &result.User, &result.Notification)
+	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["cdn"]).Scan(&result.CDN, &result.LastUpdated, &result.User, &result.Notification)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			userErr = fmt.Errorf("No CDN Notification for %s", inf.Params["cdn"])
