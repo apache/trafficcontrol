@@ -328,7 +328,9 @@ export class ServersTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
+	/** The list of servers to pass into the 'update status' component. Decided by selection. */
 	public changeStatusServers = new Array<Server>();
+	/** Controls whether or not the "update status" dialog box is open. */
 	public changeStatusOpen = false;
 
 	/**
@@ -357,6 +359,7 @@ export class ServersTableComponent implements OnInit {
 		);
 	}
 
+	/** Reloads the servers table data. */
 	private reloadServers(): void {
 		this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
 	}
@@ -404,6 +407,12 @@ export class ServersTableComponent implements OnInit {
 		console.log(action.action, "triggered with data:", action.data);
 	}
 
+	/**
+	 * Handler for when the "update status" dialog is closed.
+	 *
+	 * @param reload If one or more servers' status(es) has/have been updated,
+	 * this should be `true`, and that will trigger reloading the table data.
+	 */
 	public statusUpdated(reload: boolean): void {
 		this.changeStatusOpen = false;
 		this.changeStatusServers = [];

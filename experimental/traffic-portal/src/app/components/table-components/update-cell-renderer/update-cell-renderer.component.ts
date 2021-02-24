@@ -17,6 +17,10 @@ import { faCheck, faClock } from "@fortawesome/free-solid-svg-icons";
 import { ICellRendererAngularComp } from "ag-grid-angular";
 import { ICellRendererParams } from "ag-grid-community";
 
+/**
+ * UpdateCellRendererComponent is an AG-Grid Cell Renderer that renders cells
+ * for columns that describe whether an object has pending updates.
+ */
 @Component({
 	selector: "tp-update-cell-renderer",
 	styleUrls: ["./update-cell-renderer.component.scss"],

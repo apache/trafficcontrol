@@ -5,6 +5,9 @@ import { mergeAll } from "rxjs/operators";
 import { Server, Status } from "src/app/models";
 import { ServerService } from "src/app/services/api";
 
+/**
+ * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
+ */
 @Component({
 	selector: "tp-update-status[servers]",
 	styleUrls: ["./update-status.component.scss"],

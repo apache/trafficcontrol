@@ -21,6 +21,9 @@ import { CacheGroupService, CDNService, ProfileService, ServerService, TypeServi
 import { IP, IP_WITH_CIDR } from "src/app/utils";
 import { PhysicalLocationService } from "src/app/services/api/PhysicalLocationService";
 
+/**
+ * ServerDetailsComponent is the controller for a server's "details" page.
+ */
 @Component({
 	selector: "tp-server-details",
 	styleUrls: ["./server-details.component.scss"],

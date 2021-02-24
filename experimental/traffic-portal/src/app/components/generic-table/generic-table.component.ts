@@ -110,6 +110,9 @@ export interface ContextMenuActionEvent<T> {
 	data: T | Array<T>;
 }
 
+/**
+ * GenericTableComponent is the controller for generic tables.
+ */
 @Component({
 	selector: "tp-generic-table[data][cols]",
 	styleUrls: ["./generic-table.component.scss"],

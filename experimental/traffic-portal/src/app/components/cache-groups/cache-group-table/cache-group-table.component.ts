@@ -20,6 +20,9 @@ import { CacheGroup } from "src/app/models/cache-groups";
 import { CacheGroupService } from "src/app/services/api";
 import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/generic-table.component";
 
+/**
+ * CacheGroupTableComponent is the controller for the "Cache Groups" table.
+ */
 @Component({
 	selector: "tp-cache-group-table",
 	styleUrls: ["./cache-group-table.component.scss"],

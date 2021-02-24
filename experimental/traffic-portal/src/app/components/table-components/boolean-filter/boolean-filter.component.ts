@@ -24,6 +24,9 @@ interface BooleanFilterModel {
 	value: boolean;
 }
 
+/**
+ * BooleanFilterComponent is an AG-Grid component that provides a filter for boolean columns.
+ */
 @Component({
 	selector: "tp-boolean-filter",
 	styleUrls: ["./boolean-filter.component.scss"],
