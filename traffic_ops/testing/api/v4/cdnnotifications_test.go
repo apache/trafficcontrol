@@ -28,15 +28,15 @@ func TestCDNNotifications(t *testing.T) {
 
 func GetTestCDNotifications(t *testing.T) {
 	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		resp, _, err := TOSession.GetCDNNotificationsWithHdr(cdn.Name, nil)
 		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", err, resp)
+			t.Errorf("cannot GET cdn notification for cdn: %v - %v", err, resp)
 		}
 		if len(resp) > 0 {
-			respCDN := resp[0]
-			expectedNotification := "test notification: " + respCDN.Name
-			if respCDN.Notification != expectedNotification {
-				t.Errorf("expected notification does not match actual: %s, expected: %s", respCDN.Notification, expectedNotification)
+			respNotification := resp[0]
+			expectedNotification := "test notification: " + cdn.Name
+			if *respNotification.Notification != expectedNotification {
+				t.Errorf("expected notification does not match actual: %s, expected: %s", *respNotification.Notification, expectedNotification)
 			}
 		}
 	}
@@ -44,34 +44,18 @@ func GetTestCDNotifications(t *testing.T) {
 
 func CreateTestCDNNotifications(t *testing.T) {
 	for _, cdn := range testData.CDNs {
-		// Retrieve the CDN by name so we can get the CDN ID to create the notification
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		_, _, err := TOSession.CreateCDNNotification(tc.CDNNotificationRequest{CDN: cdn.Name, Notification: "test notification: " + cdn.Name})
 		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
-		}
-		if len(resp) > 0 {
-			respCDN := resp[0]
-			_, _, err := TOSession.CreateCDNNotification(respCDN, tc.CDNNotificationRequest{Notification: "test notification: " + respCDN.Name})
-			if err != nil {
-				t.Errorf("cannot CREATE CDN notification: '%s' %v", respCDN.Name, err)
-			}
+			t.Errorf("cannot CREATE CDN notification: '%s' %v", cdn.Name, err)
 		}
 	}
 }
 
 func DeleteTestCDNNotifications(t *testing.T) {
 	for _, cdn := range testData.CDNs {
-		// Retrieve the CDN by name so we can get the CDN ID to delete the notification
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		_, _, err := TOSession.DeleteCDNNotification(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
-		}
-		if len(resp) > 0 {
-			respCDN := resp[0]
-			_, _, err := TOSession.DeleteCDNNotification(respCDN)
-			if err != nil {
-				t.Errorf("cannot DELETE CDN notification: '%s' %v", respCDN.Name, err)
-			}
+			t.Errorf("cannot DELETE CDN notification: '%s' %v", cdn.Name, err)
 		}
 	}
 }

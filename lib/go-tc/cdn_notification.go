@@ -28,10 +28,23 @@ import (
 	"github.com/go-ozzo/ozzo-validation"
 )
 
+// CDNNotificationsResponse is a list of CDN notifications as a response.
+type CDNNotificationsResponse struct {
+	Response []CDNNotification `json:"response"`
+	Alerts
+}
+
+// CDNNotificationRequest encodes the request data for the POST
+// cdn_notifications endpoint.
+type CDNNotificationRequest struct {
+	CDN          string `json:"cdn"`
+	Notification string `json:"notification"`
+}
+
 // CDNNotification is a notification created for a specific CDN
 type CDNNotification struct {
 	CDN          *string    `json:"cdn" db:"cdn"`
-	LastUpdated  *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
+	LastUpdated  *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Notification *string    `json:"notification" db:"notification"`
 	User         *string    `json:"user" db:"user"`
 }
@@ -39,7 +52,7 @@ type CDNNotification struct {
 // Validate validates the CDNNotification request is valid for creation.
 func (n *CDNNotification) Validate(tx *sql.Tx) error {
 	errs := validation.Errors{
-		"cdn":       validation.Validate(n.CDN, validation.Required),
+		"cdn": validation.Validate(n.CDN, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }

@@ -37,11 +37,11 @@ import (
 func getTestCDNs() []tc.CDN {
 	cdns := []tc.CDN{}
 	testCDN := tc.CDN{
-		DNSSECEnabled:         false,
-		DomainName:            "domainName",
-		ID:                    1,
-		Name:                  "cdn1",
-		LastUpdated:           tc.TimeNoMod{Time: time.Now()},
+		DNSSECEnabled: false,
+		DomainName:    "domainName",
+		ID:            1,
+		Name:          "cdn1",
+		LastUpdated:   tc.TimeNoMod{Time: time.Now()},
 	}
 	cdns = append(cdns, testCDN)
 

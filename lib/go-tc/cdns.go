@@ -144,10 +144,3 @@ type CDNQueueUpdateResponse struct {
 	Action string `json:"action"`
 	CDNID  int64  `json:"cdnId"`
 }
-
-// CDNNotificationRequest encodes the request data for the POST
-// cdns/{{ID}}/notification endpoint.
-type CDNNotificationRequest struct {
-	CDN     string `json:"cdn"`
-	Notification string `json:"notification"`
-}
