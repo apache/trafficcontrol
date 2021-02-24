@@ -90,7 +90,7 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 		}
 	}
 
-	err := validation.ValidateStruct(dsr,
+	err := validation.ValidateStruct(&dsr,
 		validation.Field(&dsr.ChangeType, validation.Required),
 		validation.Field(&dsr.DeliveryService, validation.Required),
 		validation.Field(&dsr.Status, validation.By(
