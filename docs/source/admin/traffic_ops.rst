@@ -214,6 +214,8 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
+.. note:: A Python postinstall script also exists, and, unlike the Perl postinstall script, has no dependencies besides the interpreter itself. To use it, run ``/opt/traffic_ops/install/bin/postinstall.py`` with the same arguments you would have passed to ``/opt/traffic_ops/install/bin/postinstall`` (runs under either Python 3 or Python 2).
+
 .. _to-upgrading:
 
 Upgrading
