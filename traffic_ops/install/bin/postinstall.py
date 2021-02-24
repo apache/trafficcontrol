@@ -744,9 +744,9 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 			universal_newlines=True
 		)
 	except subprocess.CalledProcessError as e:
-		failed_download(6)
+		failed_download(e, 6)
 	except subprocess.SubprocessError as e:
-		failed_download(6)
+		failed_download(e, 6)
 
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
