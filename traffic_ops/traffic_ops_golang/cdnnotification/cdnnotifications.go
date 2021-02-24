@@ -129,7 +129,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Created", *n.CDN, *n.User, *n.Notification)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Created", *n.Notification, *n.CDN, *n.User)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
 	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", *n.User, *n.CDN)
@@ -174,7 +174,7 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 		return alert, result, userErr, sysErr, statusCode
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Deleted", *result.CDN, *result.User, *result.Notification)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, USER: %s, ACTION: Deleted", *result.Notification, *result.CDN, *result.User)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
 	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", *result.User, *result.CDN)
