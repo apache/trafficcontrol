@@ -177,9 +177,7 @@ func createCacheStatuses(
 				infStatus.Status, infStatus.Available = interfaceStatus(inf, health[0])
 				if infVit, ok := health[0].InterfaceVitals[inf.Name]; ok {
 					infStatus.BandwidthKbps = float64(infVit.KbpsOut)
-					if inf.Monitor {
-						totalKbps += infStatus.BandwidthKbps
-					}
+					totalKbps += infStatus.BandwidthKbps
 				} else {
 					log.Infof("Cache server '%s' interface '%s' not in last health measurement.", cacheName, inf.Name)
 				}
