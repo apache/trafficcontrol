@@ -41,6 +41,13 @@
         {
             "latitude": 0,
             "longitude": 0,
+            "name": "parentCachegroup3",
+            "shortName": "pg3",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
             "name": "secondaryCachegroup",
             "shortName": "sg1",
             "typeName": "MID_LOC"
@@ -114,6 +121,19 @@
                 "fallback2",
                 "fallback3"
             ]
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "cachegroup4",
+            "parentCachegroupName": "parentCachegroup3",
+            "shortName": "cg4",
+            "localizationMethods": [
+                "CZ",
+                "DEEP_CZ",
+                "GEO"
+            ],
+            "typeName": "EDGE_LOC"
         },
         {
             "latitude": 0,
@@ -1436,6 +1456,75 @@
             "tenant": "tenant1",
             "type": "HTTP",
             "xmlId": "test-ds-server-assignments",
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": false,
+            "cdnName": "cdn1",
+            "cacheurl": "cacheUrl3",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": null,
+            "deepCachingType": "NEVER",
+            "displayName": "d s 4",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": "edgeRewrite1\nedgeHeader2",
+            "exampleURLs": [
+                "http://ccr.ds4.example.net",
+                "https://ccr.ds4x.example.net"
+            ],
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2018-04-06 16:48:51+00",
+            "logsEnabled": false,
+            "longDesc": "d s 4",
+            "longDesc1": "ds4",
+            "longDesc2": "ds4",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds4\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "maxOriginConnections": 0,
+            "midHeaderRewrite": "midHeader1\nmidHeader2",
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.ds4.example.net",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 2,
+            "qstringIgnore": 1,
+            "rangeRequestHandling": 0,
+            "regexRemap": "rr1\nrr2",
+            "regionalGeoBlocking": false,
+            "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/ds4plugin.lua",
+            "routingName": "ccr-ds4",
+            "signed": false,
+            "signingAlgorithm": "url_sig",
+            "sslKeyVersion": 2,
+            "tenant": "tenant3",
+            "tenantName": "tenant3",
+            "type": "HTTP_LIVE",
+            "xmlId": "ds4",
+            "anonymousBlockingEnabled": true,
             "maxRequestHeaderBytes": 131072
         }
     ],
@@ -4420,6 +4509,102 @@
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": false
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "atlanta-edge-16",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.1.0.21/30",
+                            "gateway": "127.1.0.21",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2346:1234:12:8::1/64",
+                            "gateway": "2346:1234:12:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "atlanta-edge-16\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "parentCachegroup3",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "atlanta-mid-02",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.1.0.2/30",
+                            "gateway": "127.1.0.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2346:1234:12:9::10/64",
+                            "gateway": "2346:1234:12:9::10",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false,
+            "xmppId": "atlanta-mid-02\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
         }
     ],
     "serverCapabilities": [
@@ -4437,6 +4622,9 @@
         },
         {
             "name": "asdf"
+        },
+        {
+            "name": "blah"
         }
     ],
     "serverServerCapabilities": [
@@ -4511,6 +4699,10 @@
         {
             "serverHostName": "dtrc-mid-04",
             "serverCapability": "asdf"
+        },
+        {
+            "serverHostName": "atlanta-edge-16",
+            "serverCapability": "blah"
         }
     ],
     "serviceCategories": [
