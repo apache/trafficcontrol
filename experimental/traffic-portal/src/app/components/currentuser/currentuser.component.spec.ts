@@ -68,6 +68,10 @@ describe("CurrentuserComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in CurrentUserComponent afterAll:", e);
+		}
 	});
 });

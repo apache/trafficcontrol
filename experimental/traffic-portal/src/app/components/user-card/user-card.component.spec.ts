@@ -44,6 +44,10 @@ describe("UserCardComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in UserCardComponent afterAll:", e);
+		}
 	});
 });

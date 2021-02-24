@@ -12,7 +12,10 @@
 * limitations under the License.
 */
 
+import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { ServerDetailsComponent } from "./server-details.component";
 
@@ -22,9 +25,9 @@ describe("ServerDetailsComponent", () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ ServerDetailsComponent ]
-		})
-			.compileComponents();
+			declarations: [ ServerDetailsComponent ],
+			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule ]
+		}).compileComponents();
 	});
 
 	beforeEach(() => {

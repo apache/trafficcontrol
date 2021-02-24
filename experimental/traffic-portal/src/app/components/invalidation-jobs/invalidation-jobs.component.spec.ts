@@ -87,6 +87,10 @@ describe("InvalidationJobsComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in InvalidationJobsComponent afterAll:", e);
+		}
 	});
 });

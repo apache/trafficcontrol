@@ -145,6 +145,10 @@ describe("DeliveryserviceComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in DeliveryServiceComponent afterAll:", e);
+		}
 	});
 });
