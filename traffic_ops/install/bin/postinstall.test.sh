@@ -22,12 +22,11 @@ readonly MY_DIR="$(pwd)";
 
 while getopts :23sb: opt; do
 	case "$opt" in
-		2)	python_version=2;;
-		3)	python_version=3;;
-		s)	skip_python2=true;;
-		b)	python_bin="$OPTARG";;
-		*)	echo "Invalid flag received: ${OPTARG}" >&2
-			exit 1;;
+		2) python_version=2;;
+		3) python_version=3;;
+		b) python_bin="$OPTARG";;
+		s) skip_python2=true;;
+		*) echo "Invalid flag received: ${OPTARG}" >&2 && exit 1;;
 	esac;
 done;
 
