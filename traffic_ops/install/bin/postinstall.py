@@ -714,7 +714,7 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 
 	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
 
-	def failed_download(ip_version):  # type: (int) -> None
+	def failed_download(e, ip_version):  # type: (Exception, int) -> None
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv%d) Exception: %s", ip_version, e)
 
@@ -729,9 +729,9 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 			universal_newlines=True
 		)
 	except subprocess.CalledProcessError as e:
-		failed_download(4)
+		failed_download(e, 4)
 	except subprocess.SubprocessError as e:
-		failed_download(4)
+		failed_download(e, 4)
 
 	cmd[1] = (
 		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
