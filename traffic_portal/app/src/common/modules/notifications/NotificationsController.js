@@ -44,11 +44,11 @@ var NotificationsController = function($scope, $rootScope, $interval, cdnService
 		killInterval();
 	});
 
-	$rootScope.$on('notificationsController::notificationCreated', function() {
+	$rootScope.$on('headerController::notificationCreated', function() {
 		getNotifications();
 	});
 
-	$rootScope.$on('notificationsController::notificationDeleted', function() {
+	$rootScope.$on('headerController::notificationDeleted', function() {
 		getNotifications();
 	});
 

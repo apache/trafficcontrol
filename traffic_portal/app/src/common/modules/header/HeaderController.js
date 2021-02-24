@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel, messageModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     let getCDNs = function(notifications) {
         cdnService.getCDNs()
@@ -104,9 +104,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         modalInstance.result.then(function(notification) {
             cdnService.createNotification(cdn, notification).
                 then(
-                    function(result) {
-                        $rootScope.$broadcast('notificationsController::notificationCreated');
-                        $state.reload(); // reloads all the resolves for the view
+                    function() {
+                        $rootScope.$broadcast('headerController::notificationCreated');
                     }
                 );
         }, function () {
@@ -132,9 +131,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         modalInstance.result.then(function() {
             cdnService.deleteNotification(cdn).
                 then(
-                    function(result) {
-                        $rootScope.$broadcast('notificationsController::notificationDeleted');
-                        $state.reload(); // reloads all the resolves for the view
+                    function() {
+                        $rootScope.$broadcast('headerController::notificationDeleted');
                     }
                 );
         }, function () {
@@ -248,5 +246,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel', 'messageModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel'];
 module.exports = HeaderController;
