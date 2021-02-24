@@ -1332,7 +1332,7 @@ no_database, # type: bool
 				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
 				"on the db server to create it and run `postinstall` again."
 			)
-			return -1
+			return 1
 
 		if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
 			logging.critical("psql is not installed, please install it to continue with database setup")
@@ -1350,10 +1350,10 @@ no_database, # type: bool
 			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
 		except (OSError, subprocess.CalledProcessError)as e:
 			db_connect_failed()
-			return -1
+			return 1
 		except subprocess.SubprocessError as e:
 			db_connect_failed()
-			return -1
+			return 1
 
 
 	if not no_restart_to:
