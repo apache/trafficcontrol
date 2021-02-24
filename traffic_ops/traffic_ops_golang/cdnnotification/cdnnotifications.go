@@ -69,7 +69,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	cdnNotifications := []tc.CDNNotification{}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"cdn":      dbhelpers.WhereColumnInfo{"cdn.name", nil},
+		"cdn":  dbhelpers.WhereColumnInfo{"cdn.name", nil},
 		"user": dbhelpers.WhereColumnInfo{"tm_user.username", nil},
 	}
 
