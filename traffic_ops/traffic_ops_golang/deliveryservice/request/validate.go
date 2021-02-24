@@ -68,9 +68,76 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	e := deliveryservice.Validate(tx, dsr.DeliveryService)
+	upgraded := dsr.DeliveryService.UpgradeToV4()
+	e := deliveryservice.Validate(tx, &upgraded)
 
 	errs = append(errs, e)
 
 	return util.JoinErrs(errs)
+}
+
+// validateV4 validates a DSR, returning - in order - a user-facing error that
+// should be shown to the client, and a system error.
+func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
+	if tx == nil {
+		return nil, errors.New("nil transaction")
+	}
+
+	fromStatus := tc.RequestStatusDraft
+	if dsr.ID != nil && *dsr.ID > 0 {
+		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
+			return nil, err
+		}
+	}
+
+	err := validation.ValidateStruct(dsr,
+		validation.Field(&dsr.ChangeType, validation.Required),
+		validation.Field(&dsr.DeliveryService, validation.Required),
+		validation.Field(&dsr.Status, validation.By(
+			func(s interface{}) error {
+				if s == nil {
+					return errors.New("required")
+				}
+				toStatus, ok := s.(tc.RequestStatus)
+				if !ok {
+					return fmt.Errorf("expected RequestStatus type, got %T", s)
+				}
+				return fromStatus.ValidTransition(toStatus)
+			},
+		)),
+		validation.Field(&dsr.Assignee, validation.By(
+			func(a interface{}) error {
+				if a == nil {
+					return nil
+				}
+				assignee, ok := a.(*string)
+				if !ok {
+					return fmt.Errorf("expected string, got %T", a)
+				}
+				if assignee == nil {
+					return nil
+				}
+				var id int
+				if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *assignee).Scan(&id); err != nil {
+					if err == sql.ErrNoRows {
+						return fmt.Errorf("no such user '%s'", *assignee)
+					}
+					// TODO: allow ParseValidators to return system errors?
+					return errors.New("unknown error")
+				}
+				dsr.AssigneeID = new(int)
+				*dsr.AssigneeID = id
+				return nil
+			},
+		)),
+	)
+	if err != nil {
+		return err, nil
+	}
+
+	if err = deliveryservice.Validate(tx, dsr.DeliveryService); err != nil {
+		err = fmt.Errorf("deliveryService: %v", err)
+	}
+
+	return err, nil
 }

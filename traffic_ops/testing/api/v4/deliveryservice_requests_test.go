@@ -42,7 +42,7 @@ const (
 // A better solution _might_ be to reload all the test fixtures every time
 // to wipe any and all referential modifications made to any test data, but
 // for now that's overkill.
-func resetDS(ds *tc.DeliveryServiceNullableV30) {
+func resetDS(ds *tc.DeliveryServiceV4) {
 	if ds == nil {
 		return
 	}

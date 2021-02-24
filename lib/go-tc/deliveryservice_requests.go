@@ -408,19 +408,19 @@ type DeliveryServiceRequest struct {
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequestNullable struct {
-	AssigneeID      *int               `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee        *string            `json:"assignee,omitempty"`
-	AuthorID        *IDNoMod           `json:"authorId" db:"author_id"`
-	Author          *string            `json:"author"`
-	ChangeType      *string            `json:"changeType" db:"change_type"`
-	CreatedAt       *TimeNoMod         `json:"createdAt" db:"created_at"`
-	ID              *int               `json:"id" db:"id"`
-	LastEditedBy    *string            `json:"lastEditedBy"`
-	LastEditedByID  *IDNoMod           `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *TimeNoMod         `json:"lastUpdated" db:"last_updated"`
-	DeliveryService *DeliveryServiceV4 `json:"deliveryService" db:"deliveryservice"`
-	Status          *RequestStatus     `json:"status" db:"status"`
-	XMLID           *string            `json:"-" db:"xml_id"`
+	AssigneeID      *int                        `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee        *string                     `json:"assignee,omitempty"`
+	AuthorID        *IDNoMod                    `json:"authorId" db:"author_id"`
+	Author          *string                     `json:"author"`
+	ChangeType      *string                     `json:"changeType" db:"change_type"`
+	CreatedAt       *TimeNoMod                  `json:"createdAt" db:"created_at"`
+	ID              *int                        `json:"id" db:"id"`
+	LastEditedBy    *string                     `json:"lastEditedBy"`
+	LastEditedByID  *IDNoMod                    `json:"lastEditedById" db:"last_edited_by_id"`
+	LastUpdated     *TimeNoMod                  `json:"lastUpdated" db:"last_updated"`
+	DeliveryService *DeliveryServiceNullableV30 `json:"deliveryService" db:"deliveryservice"`
+	Status          *RequestStatus              `json:"status" db:"status"`
+	XMLID           *string                     `json:"-" db:"xml_id"`
 }
 
 // Upgrade coerces the DeliveryServiceRequestNullable to the newer
@@ -455,8 +455,8 @@ func (dsr DeliveryServiceRequestNullable) Upgrade() DeliveryServiceRequestV40 {
 		upgraded.CreatedAt = dsr.CreatedAt.Time
 	}
 	if dsr.DeliveryService != nil {
-		upgraded.DeliveryService = new(DeliveryServiceNullableV30)
-		*upgraded.DeliveryService = *dsr.DeliveryService
+		upgraded.DeliveryService = new(DeliveryServiceV4)
+		*upgraded.DeliveryService = dsr.DeliveryService.UpgradeToV4()
 	}
 	if dsr.ID != nil {
 		upgraded.ID = new(int)
@@ -711,7 +711,7 @@ type DeliveryServiceRequestV40 struct {
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 	// DeliveryService is the requested Delivery Service; its exact meaning is
 	// dependent on 'ChangeType'.
-	DeliveryService *DeliveryServiceNullableV30 `json:"deliveryService" db:"deliveryservice"`
+	DeliveryService *DeliveryServiceV4 `json:"deliveryService" db:"deliveryservice"`
 	// Status is the status of the Delivery Service Request.
 	Status RequestStatus `json:"status" db:"status"`
 	// Used internally to define the affected Delivery Service.
@@ -765,7 +765,7 @@ func (dsr DeliveryServiceRequestV40) Downgrade() DeliveryServiceRequestNullable 
 	downgraded.CreatedAt = TimeNoModFromTime(dsr.CreatedAt)
 	if dsr.DeliveryService != nil {
 		downgraded.DeliveryService = new(DeliveryServiceNullableV30)
-		*downgraded.DeliveryService = *dsr.DeliveryService
+		*downgraded.DeliveryService = dsr.DeliveryService.DowngradeToV3()
 	}
 	if dsr.ID != nil {
 		downgraded.ID = new(int)
@@ -842,72 +842,6 @@ func (dsr DeliveryServiceRequestV40) String() string {
 	builder.WriteString(dsr.Status.String())
 	builder.Write([]byte(`")`))
 	return builder.String()
-}
-
-// Validate validates a DSR, returning - in order - a user-facing error that
-// should be shown to the client, and a system error.
-func (dsr *DeliveryServiceRequestV40) Validate(tx *sql.Tx) (error, error) {
-	if tx == nil {
-		return nil, errors.New("nil transaction")
-	}
-
-	fromStatus := RequestStatusDraft
-	if dsr.ID != nil && *dsr.ID > 0 {
-		if err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *dsr.ID).Scan(&fromStatus); err != nil {
-			return nil, err
-		}
-	}
-
-	err := validation.ValidateStruct(dsr,
-		validation.Field(&dsr.ChangeType, validation.Required),
-		validation.Field(&dsr.DeliveryService, validation.Required),
-		validation.Field(&dsr.Status, validation.By(
-			func(s interface{}) error {
-				if s == nil {
-					return errors.New("required")
-				}
-				toStatus, ok := s.(RequestStatus)
-				if !ok {
-					return fmt.Errorf("expected RequestStatus type, got %T", s)
-				}
-				return fromStatus.ValidTransition(toStatus)
-			},
-		)),
-		validation.Field(&dsr.Assignee, validation.By(
-			func(a interface{}) error {
-				if a == nil {
-					return nil
-				}
-				assignee, ok := a.(*string)
-				if !ok {
-					return fmt.Errorf("expected string, got %T", a)
-				}
-				if assignee == nil {
-					return nil
-				}
-				var id int
-				if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *assignee).Scan(&id); err != nil {
-					if err == sql.ErrNoRows {
-						return fmt.Errorf("no such user '%s'", *assignee)
-					}
-					// TODO: allow ParseValidators to return system errors?
-					return errors.New("unknown error")
-				}
-				dsr.AssigneeID = new(int)
-				*dsr.AssigneeID = id
-				return nil
-			},
-		)),
-	)
-	if err != nil {
-		return err, nil
-	}
-
-	if err = dsr.DeliveryService.Validate(tx); err != nil {
-		err = fmt.Errorf("deliveryService: %v", err)
-	}
-
-	return err, nil
 }
 
 // SetXMLID sets the DeliveryServiceRequestV40's XMLID based on its DeliveryService.

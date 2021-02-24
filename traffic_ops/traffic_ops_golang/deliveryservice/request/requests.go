@@ -309,7 +309,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
 		return
 	}
-	if userErr, sysErr := dsr.Validate(tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr := validateV4(dsr, tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
 	}
@@ -553,7 +553,7 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
 		return
 	}
-	if userErr, sysErr := dsr.Validate(tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr := validateV4(dsr, tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
 	}
