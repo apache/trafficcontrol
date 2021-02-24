@@ -47,8 +47,8 @@ using(testData.Types, async function(typesData){
         describe('Traffic Portal - Types - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open types page', async function(){
                 await typesPage.OpenConfigureMenu();

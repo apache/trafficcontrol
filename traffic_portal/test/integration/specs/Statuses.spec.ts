@@ -47,8 +47,8 @@ using(testData.Statuses, async function(statusesData){
         describe('Traffic Portal - Statuses - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open statuses page', async function(){
                 await statusesPage.OpenConfigureMenu();

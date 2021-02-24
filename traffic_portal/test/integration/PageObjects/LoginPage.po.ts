@@ -29,24 +29,38 @@ export class LoginPage extends BasePage{
     private config = require('../config');
     private randomize = this.config.randomize;
 
-    async Login(userName: string, password: string ){
-        if(userName == 'admin'){
-            await this.txtUserName.sendKeys(userName)
-            await this.txtPassword.sendKeys(password)
+    async Login(login){
+        let result = false;
+        let basePage = new BasePage();
+        if(login.username == 'admin'){
+            await this.txtUserName.sendKeys(login.username)
+            await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();    
         }else{
-            await this.txtUserName.sendKeys(userName+this.randomize)
-            await this.txtPassword.sendKeys(password)
+            await this.txtUserName.sendKeys(login.username+this.randomize)
+            await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();    
         }
+        if(await browser.getCurrentUrl() == 'https://localhost/#!/login'){
+            result = await basePage.GetOutputMessage().then(function (value) {
+                if (login.validationMessage == value) {
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+        }else{
+            result = true;
+        }
+        return result;
     }
     ClickResetPassword(){
         this.lnkResetPassword.click()
     }
-    async CheckUserName(userName: string) {
-        if(await this.lblUserName.getText() == 'admin' || await this.lblUserName.getText() == userName+this.randomize){
+    async CheckUserName(login) {
+        if(await this.lblUserName.getText() == 'admin' || await this.lblUserName.getText() == login.username+this.randomize){
             return true;
         }else{
             return false;   

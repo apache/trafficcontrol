@@ -45,10 +45,10 @@ describe('Setup Origin Delivery Service', function () {
 using(testData.Origins, async function (originsData) {
     using(originsData.Login, function (login) {
         describe('Traffic Portal - Origins - ' + login.description, function () {
-            it('can login', async function () {
+            it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open origins page', async function () {
                 await originsPage.OpenConfigureMenu();
