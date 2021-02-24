@@ -19,10 +19,17 @@
 
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel, messageModel) {
 
-    let getCDNs = function() {
+    let getCDNs = function(notifications) {
         cdnService.getCDNs()
-            .then(function(result) {
-                $scope.cdns = result;
+            .then(function(cdns) {
+                cdns.forEach(function(cdn) {
+                    const cdnNotification = notifications.find(function(notification){ return cdn.name === notification.cdn });
+                    if (cdnNotification) {
+                        cdn.notificationCreatedBy = cdnNotification.user;
+                        cdn.notification = cdnNotification.notification;
+                    }
+                });
+                $scope.cdns = cdns;
             });
     };
 
@@ -98,6 +105,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             cdnService.createNotification(cdn, notification).
                 then(
                     function(result) {
+                        $rootScope.$broadcast('notificationsController::notificationCreated');
                         messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
@@ -126,6 +134,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             cdnService.deleteNotification(cdn).
                 then(
                     function(result) {
+                        $rootScope.$broadcast('notificationsController::notificationDeleted');
                         messageModel.setMessages(result.data.alerts, false);
                         $state.reload(); // reloads all the resolves for the view
                     }
@@ -230,14 +239,13 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         $scope.user = angular.copy(userModel.user);
     });
 
-    $rootScope.$on('notificationsController::updateNotifications', function() {
-        getCDNs();
+    $rootScope.$on('notificationsController::refreshNotifications', function(event, options) {
+        getCDNs(options.notifications);
     });
 
     var init = function () {
         scrollToTop();
         initToggleMenu();
-        getCDNs();
     };
     init();
 };

@@ -21,19 +21,16 @@ var NotificationsController = function($scope, $rootScope, $interval, cdnService
 
 	let interval;
 
-	let getCDNs = function() {
-		cdnService.getCDNs()
+	let getNotifications = function() {
+		cdnService.getNotifications()
 			.then(function(result) {
-				$scope.cdns = result;
+				$scope.notifications = result;
+				$rootScope.$broadcast('notificationsController::refreshNotifications', { notifications: result });
 			});
 	};
 
-	let updateNotifications = function() {
-		$rootScope.$broadcast('notificationsController::updateNotifications');
-	}
-
 	let createInterval = function() {
-		interval = $interval(function() { updateNotifications() }, 30000 );
+		interval = $interval(function() { getNotifications() }, 30000 );
 	};
 
 	let killInterval = function() {
@@ -47,12 +44,16 @@ var NotificationsController = function($scope, $rootScope, $interval, cdnService
 		killInterval();
 	});
 
-	$rootScope.$on('notificationsController::updateNotifications', function() {
-		getCDNs();
+	$rootScope.$on('notificationsController::notificationCreated', function() {
+		getNotifications();
+	});
+
+	$rootScope.$on('notificationsController::notificationDeleted', function() {
+		getNotifications();
 	});
 
 	let init = function () {
-		getCDNs();
+		getNotifications();
 		createInterval();
 	};
 	init();

@@ -246,7 +246,18 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 throw err;
 			}
 		);
-	};
+	}
+
+    this.getNotifications = function(queryParams) {
+        return $http.get(ENV.api['root'] + 'cdn_notifications', { params: queryParams }).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
+    };
 
 };
 
