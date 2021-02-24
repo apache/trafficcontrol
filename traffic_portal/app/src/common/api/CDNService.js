@@ -91,30 +91,6 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.createNotification = function(cdn, notification) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdn.name + '/notification', { notification: notification}).then(
-            function(result) {
-                return result;
-            },
-            function(err) {
-                messageModel.setMessages(err.data.alerts, false);
-                throw err;
-            }
-        );
-    };
-
-    this.deleteNotification = function(cdn) {
-        return $http.delete(ENV.api['root'] + 'cdns/' + cdn.name + '/notification').then(
-            function(result) {
-                return result;
-            },
-            function(err) {
-                messageModel.setMessages(err.data.alerts, false);
-                throw err;
-            }
-        );
-    };
-
     this.queueServerUpdates = function(id) {
         return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "queue"}).then(
             function(result) {
@@ -254,6 +230,30 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
+                throw err;
+            }
+        );
+    };
+
+    this.createNotification = function(cdn, notification) {
+        return $http.post(ENV.api['root'] + 'cdn_notifications', { cdn: cdn.name, notification: notification}).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.deleteNotification = function(cdn) {
+        return $http.delete(ENV.api['root'] + 'cdn_notifications?cdn=' + cdn.name).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
