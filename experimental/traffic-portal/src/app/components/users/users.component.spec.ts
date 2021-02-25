@@ -17,13 +17,13 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 
 import { of } from "rxjs";
 
-import { UsersComponent } from "./users.component";
 
 import { User } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { LoadingComponent } from "../loading/loading.component";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { UserCardComponent } from "../user-card/user-card.component";
+import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
 	let component: UsersComponent;
@@ -51,7 +51,7 @@ describe("UsersComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule
-			]
+			],
 		});
 		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
 		TestBed.compileComponents();
@@ -68,6 +68,10 @@ describe("UsersComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in UsersComponent afterAll:", e);
+		}
 	});
 });

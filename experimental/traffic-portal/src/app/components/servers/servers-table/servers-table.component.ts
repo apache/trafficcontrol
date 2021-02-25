@@ -12,23 +12,75 @@
 * limitations under the License.
 */
 
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+import { ITooltipParams } from "ag-grid-community";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { BehaviorSubject, Observable } from "rxjs";
+import { merge } from "rxjs/index";
+import { map, mergeAll } from "rxjs/operators";
 
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
 import { IPV4, serviceInterface } from "../../../utils";
-import { SSHCellRendererComponent } from "../../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
+import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/generic-table.component";
 
+/**
+ * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
+ */
 interface AugmentedServer extends Server {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
 	/** The server's IPv6 service address */
 	ipv6Address: string;
+}
+
+/**
+ * Converts a server to an "augmented" server.
+ *
+ * @param s The server to convert.
+ * @returns The converted server.
+ */
+function augment(s: Server): AugmentedServer {
+	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
+	let inf: Interface;
+	try {
+		inf = serviceInterface(aug.interfaces);
+	} catch (e) {
+		console.error(`server #${s.id}:`, e);
+		return aug;
+	}
+	for (const ip of inf.ipAddresses) {
+		if (!ip.serviceAddress) {
+			continue;
+		}
+		if (IPV4.test(ip.address)) {
+			if (aug.ipv4Address !== "") {
+				console.warn("found more than one IPv4 service address for server:", s.id);
+			}
+			aug.ipv4Address = ip.address;
+		} else {
+			if (aug.ipv6Address !== "") {
+				console.warn("found more than one IPv6 service address for server:", s.id);
+			}
+			aug.ipv6Address = ip.address;
+		}
+	}
+	return aug;
+}
+
+/**
+ * Checks if a server is a Cache Server.
+ *
+ * @param data The server to check.
+ * @returns Whether or not 'data' is a Cache Server.
+ */
+function serverIsCache(data: AugmentedServer): boolean {
+	if (!data || !data.type) {
+		return false;
+	}
+	return data.type.startsWith("EDGE") || data.type.startsWith("MID");
 }
 
 /**
@@ -40,10 +92,10 @@ interface AugmentedServer extends Server {
 	styleUrls: ["./servers-table.component.scss"],
 	templateUrl: "./servers-table.component.html"
 })
-export class ServersTableComponent implements OnInit, OnDestroy {
+export class ServersTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
-	public servers: Observable<Array<AugmentedServer>>;
+	public servers: Observable<Array<AugmentedServer>> | null = null;
 	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -201,7 +253,7 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		{
 			cellRenderer: "updateCellRenderer",
 			field: "revalPending",
-			filter: true,
+			filter: "tpBooleanFilter",
 			headerName: "Reval Pending",
 			hide: true,
 		},
@@ -218,7 +270,13 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		{
 			field: "status",
 			headerName: "Status",
-			hide: false
+			hide: false,
+			tooltipValueGetter(params: ITooltipParams): string | undefined {
+				if (!params.value || params.value === "ONLINE" || params.value === "REPORTED") {
+					return;
+				}
+				return `${params.value}: ${params.data.offlineReason}`;
+			}
 		},
 		{
 			field: "tcpPort",
@@ -233,92 +291,133 @@ export class ServersTableComponent implements OnInit, OnDestroy {
 		{
 			cellRenderer: "updateCellRenderer",
 			field: "updPending",
-			filter: true,
+			filter: "tpBooleanFilter",
 			headerName: "Update Pending",
 			hide: false,
 		}
 	];
 
-	/** Passed as components to the ag-grid API */
-	public components = {
-		sshCellRenderer: SSHCellRendererComponent,
-		// updateCellRenderer: new UpdateCellRenderer()
-	};
+	/** Definitions for the context menu items (which act on augmented server data). */
+	public contextMenuItems: Array<ContextMenuItem<AugmentedServer>> = [
+		{
+			action: "viewDetails",
+			name: "View Server Details"
+		},
+		{
+			action: "updateStatus",
+			multiRow: true,
+			name: "Update Status"
+		},
+		{
+			action: "queue",
+			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
+			multiRow: true,
+			name: "Queue Server Updates"
+		},
+		{
+			action: "dequeue",
+			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
+			multiRow:true,
+			name: "Clear Queued Updates"
+		}
+	];
 
-	/** a list of all servers that match the current filter */
-	// public get filteredServers(): Array<Server> {
-	// 	return this.servers.filter(x=>this.fuzzControl.value === "" || x.hostName.includes(this.fuzzControl.value));
-	// }
+	/** A subject that child components can subscribe to for access to the fuzzy search query text */
+	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl;
+	public fuzzControl: FormControl = new FormControl("");
 
-	// private userSubscription: Subscription;
+	/** The list of servers to pass into the 'update status' component. Decided by selection. */
+	public changeStatusServers = new Array<Server>();
+	/** Controls whether or not the "update status" dialog box is open. */
+	public changeStatusOpen = false;
 
-	constructor (private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
-		// this.servers = [];
-		this.fuzzControl = new FormControl("");
+	/**
+	 * Constructs the component with its required injections.
+	 *
+	 * @param api The Servers API which is used to provide row data.
+	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
+	 */
+	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
+		this.fuzzySubject = new BehaviorSubject<string>("");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.servers = this.api.getServers().pipe(map(
-			x => {
-				return x.map(
-					s => {
-						const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
-						let inf: Interface;
-						try {
-							inf = serviceInterface(aug.interfaces);
-						} catch (e) {
-							console.error(`server #${s.id}:`, e);
-							return aug;
-						}
-						for (const ip of inf.ipAddresses) {
-							if (!ip.serviceAddress) {
-								continue;
-							}
-							if (IPV4.test(ip.address)) {
-								if (aug.ipv4Address !== "") {
-									console.warn("found more than one IPv4 service address for server:", s.id);
-								}
-								aug.ipv4Address = ip.address;
-							} else {
-								if (aug.ipv6Address !== "") {
-									console.warn("found more than one IPv6 service address for server:", s.id);
-								}
-								aug.ipv6Address = ip.address;
-							}
-						}
-						return aug;
-					}
-				);
-			}
-		));
+		this.reloadServers();
 
 		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");
 				if (search) {
 					this.fuzzControl.setValue(decodeURIComponent(search));
+					this.fuzzySubject.next(search);
+					this.fuzzySubject.next(this.fuzzControl.value);
 				}
 			}
 		);
-
 	}
 
-	/** Cleans up resources on destruction. */
-	public ngOnDestroy(): void {
-		// this.userSubscription.unsubscribe();
+	/** Reloads the servers table data. */
+	private reloadServers(): void {
+		this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		if (this.fuzzControl.value === "") {
-			this.router.navigate([], {replaceUrl: true, queryParams: null});
-		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
-		}
+		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
+	/**
+	 * Handles user selection of a context menu action item.
+	 *
+	 * @param action The emitted context menu action event.
+	 */
+	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
+		let observables;
+		switch (action.action) {
+			case "viewDetails":
+				this.router.navigate(["/server", (action.data as AugmentedServer).id]);
+				break;
+			case "updateStatus":
+				console.log("'Update Status' clicked - not yet implemented");
+				this.changeStatusServers = action.data instanceof Array ? action.data : [action.data];
+				this.changeStatusOpen = true;
+				break;
+			case "queue":
+				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.queueUpdates(s));
+				merge(observables).pipe(mergeAll()).subscribe(
+					() => {
+						this.reloadServers();
+					}
+				);
+				break;
+			case "dequeue":
+				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.clearUpdates(s));
+				merge(observables).pipe(mergeAll()).subscribe(
+					() => {
+						this.reloadServers();
+					}
+				);
+				break;
+			default:
+				console.error("unknown context menu item clicked:", action.action);
+		}
+		console.log(action.action, "triggered with data:", action.data);
+	}
+
+	/**
+	 * Handler for when the "update status" dialog is closed.
+	 *
+	 * @param reload If one or more servers' status(es) has/have been updated,
+	 * this should be `true`, and that will trigger reloading the table data.
+	 */
+	public statusUpdated(reload: boolean): void {
+		this.changeStatusOpen = false;
+		this.changeStatusServers = [];
+		if (reload) {
+			this.reloadServers();
+		}
+	}
 }

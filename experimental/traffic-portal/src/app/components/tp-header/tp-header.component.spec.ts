@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { TpHeaderComponent } from "./tp-header.component";
@@ -21,9 +22,10 @@ describe("TpHeaderComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ TpHeaderComponent ]
+			declarations: [ TpHeaderComponent ],
+			imports: [ HttpClientModule ]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {
@@ -37,6 +39,10 @@ describe("TpHeaderComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in TpHeaderComponent afterAll:", e);
+		}
 	});
 });

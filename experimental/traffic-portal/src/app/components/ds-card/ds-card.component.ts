@@ -16,7 +16,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { Subject } from "rxjs";
 import { first } from "rxjs/operators";
 
-import { DataPoint, DataSet, DeliveryService, Protocol } from "../../models";
+import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "../../models";
 import { DeliveryServiceService } from "../../services/api";
 
 
@@ -25,7 +25,7 @@ import { DeliveryServiceService } from "../../services/api";
  * Service in an expand-able card.
  */
 @Component({
-	selector: "ds-card",
+	selector: "ds-card[deliveryService]",
 	styleUrls: ["./ds-card.component.scss"],
 	templateUrl: "./ds-card.component.html"
 })
@@ -37,14 +37,19 @@ export class DsCardComponent implements OnInit {
 	/**
 	 * The date to use as the 'current' date/time - the end of the date/time
 	 * range for the chart data.
+	 *
+	 * The default is the time of the component's creation.
 	 */
-	@Input() public now: Date;
+	@Input() public now: Date = new Date();
 
 	/**
 	 * The date to use as the 'beginning of the current day' - the start of the
 	 * date/time range for the chart data.
+	 *
+	 * The default is the time of the component's creation (which is the same
+	 * as'now', so you really ought to specify!)
 	 */
-	@Input() public today: Date;
+	@Input() public today: Date = new Date();
 
 	/**
 	 * The number of cache servers available to serve traffic in this Delivery
@@ -63,15 +68,18 @@ export class DsCardComponent implements OnInit {
 	public utilized: number;
 
 	/** Health measured as a percent of Cache Groups that are healthy */
-	public healthy: number;
+	public healthy = 0;
 
 	/** Bandwidth chart data. */
 	public chartData: Subject<Array<DataSet | null>>;
+
+	/** Bandwidth data at the Mid-tier level. */
 	private readonly midBandwidthData: DataSet;
+	/** Bandwidth data at the Edge-tier level. */
 	private readonly edgeBandwidthData: DataSet;
 
-	/** Need this to access merged namespace for string conversions. */
-	public Protocol = Protocol;
+	/** This must be a member to have access in the template. */
+	public protocolToString = protocolToString;
 
 	/** Describes whether or not the card is expanded. */
 	public open: boolean;
@@ -85,13 +93,36 @@ export class DsCardComponent implements OnInit {
 	 */
 	public graphDataLoaded: boolean;
 
-	constructor (private readonly dsAPI: DeliveryServiceService) {
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly dsAPI: DeliveryServiceService) {
+		this.deliveryService = {
+			active: true,
+			anonymousBlockingEnabled: false,
+			cdnId: -1,
+			displayName: "",
+			dscp: -1,
+			geoLimit: 0,
+			geoProvider: GeoProvider.MAX_MIND,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "",
+			typeId: -1,
+			xmlId: "-1"
+		};
+
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
 		this.loaded = false;
 		this.open = false;
-		this.chartData = new Subject<Array<DataSet>>();
+		this.chartData = new Subject<Array<DataSet | null>>();
 
 		this.edgeBandwidthData = {
 			borderColor: "#3CBA9F",
@@ -137,8 +168,7 @@ export class DsCardComponent implements OnInit {
 	 */
 	public toggle(e: Event): void {
 		if (!this.deliveryService.id) {
-			console.error("Toggling DS card for DS with no ID");
-			console.debug(this.deliveryService);
+			console.error("Toggling DS card for DS with no ID:", this.deliveryService);
 			return;
 		}
 		if ((e.target as HTMLDetailsElement).open) {
@@ -174,9 +204,13 @@ export class DsCardComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Requests new data for the charts from the API and loads it.
+	 */
 	private loadChart(): void {
-		this.dsAPI.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, "1m", false, true).pipe(first()).subscribe(
-			(data: Array<DataPoint>) => {
+		const xmlID = this.deliveryService.xmlId;
+		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true).pipe(first()).subscribe(
+			data => {
 				for (const d of data) {
 					if (d.y === null) {
 						continue;
@@ -189,11 +223,11 @@ export class DsCardComponent implements OnInit {
 			(e: Error) => {
 				this.graphDataLoaded = true;
 				this.chartData.next([null, this.midBandwidthData]);
-				console.debug(e);
+				console.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
 			}
 		);
 
-		this.dsAPI.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, "1m", true, true).pipe(first()).subscribe(
+		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", true, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {
@@ -207,7 +241,7 @@ export class DsCardComponent implements OnInit {
 			(e: Error) => {
 				this.chartData.next([this.edgeBandwidthData, null]);
 				this.graphDataLoaded = true;
-				console.debug(e);
+				console.error(`Failed getting mid KBPS for DS '${xmlID}':`, e);
 			}
 		);
 	}

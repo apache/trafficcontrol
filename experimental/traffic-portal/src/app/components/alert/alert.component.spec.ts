@@ -23,7 +23,7 @@ describe("AlertComponent", () => {
 		TestBed.configureTestingModule({
 			declarations: [ AlertComponent ]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {
