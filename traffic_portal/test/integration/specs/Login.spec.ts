@@ -18,18 +18,12 @@
  */
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
-import { isMainThread } from 'worker_threads';
+import  * as using  from "jasmine-data-provider";
+import { readFileSync } from "fs"
 
-let fs = require('fs')
-let using = require('jasmine-data-provider');
-let filename = 'Data/Login/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
-
-let api = new API();
-let topNavigation = new TopNavigationPage();
-let loginPage = new LoginPage();
+const filename = 'Data/Login/TestCases.json';
+const testData = JSON.parse(readFileSync(filename,'utf-8'));
+const loginPage = new LoginPage();
 
 using(testData.LoginTest, async function(loginData){
     using(loginData.Login, function(login){
