@@ -15,9 +15,9 @@
 
 .. _to-api-async_status:
 
-****************
-``async_status``
-****************
+***********************
+``async_status/{{id}}``
+***********************
 
 ``GET``
 =======
@@ -29,11 +29,22 @@ Returns a status update for an asynchronous task.
 
 Request Structure
 -----------------
-No parameters available
+.. table:: Request Path Parameters
+
+	+------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                                                                          |
+	+======+==========+======================================================================================================================================+
+	| id   | yes      | The integral, unique identifier for the desired asynchronous job status. This will be provided when the asynchronous job is started. |
+	+------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 
 Response Structure
 ------------------
+:id:         The integral, unique identifier for the asynchronous job status.
+:status:     The status of the asynchronous job. This will be `PENDING`, `SUCCEEDED`, or `FAILED`.
+:start_time: The time the asynchronous job was started.
+:end_time:   The time the asynchronous job completed. This will be `null` if it has not completed yet.
+:message:    A message about the job status.
 
 .. code-block:: http
 	:caption: Response Example

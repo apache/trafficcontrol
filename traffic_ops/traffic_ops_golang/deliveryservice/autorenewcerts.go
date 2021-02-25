@@ -23,7 +23,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -105,29 +104,9 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout*time.Duration(len(existingCerts)))
 
-	resultRows, err := inf.Tx.Query(api.InsertAsyncStatusQuery, api.AsyncPending, "ACME async job has started.")
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer resultRows.Close()
-
-	var asyncStatusId int
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&asyncStatusId); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("async status create scanning: %v", err))
-			return
-		}
-	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("async status create: no status was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from async status insert"))
 	}
 
 	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId)

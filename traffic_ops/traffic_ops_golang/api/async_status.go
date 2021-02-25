@@ -20,6 +20,7 @@ package api
  */
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"time"
@@ -43,11 +44,12 @@ type AsyncStatus struct {
 	Message   *string    `json:"message, omitempty" db:"message"`
 }
 
-const SelectAsyncStatusQuery = `SELECT id, status, message, start_time, end_time from async_status WHERE id = $1`
-const InsertAsyncStatusQuery = `INSERT INTO async_status (status, message) VALUES ($1, $2) RETURNING id`
-const UpdateAsyncStatusEndTimeQuery = `UPDATE async_status SET status = $1, message = $2, end_time = now() WHERE id = $3`
-const UpdateAsyncStatusQuery = `UPDATE async_status SET status = $1, message = $2 WHERE id = $3`
+const selectAsyncStatusQuery = `SELECT id, status, message, start_time, end_time from async_status WHERE id = $1`
+const insertAsyncStatusQuery = `INSERT INTO async_status (status, message) VALUES ($1, $2) RETURNING id`
+const updateAsyncStatusEndTimeQuery = `UPDATE async_status SET status = $1, message = $2, end_time = now() WHERE id = $3`
+const updateAsyncStatusQuery = `UPDATE async_status SET status = $1, message = $2 WHERE id = $3`
 
+// GetAsyncStatus returns the status of an asynchronous job.
 func GetAsyncStatus(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := NewInfo(r, []string{"id"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -58,7 +60,7 @@ func GetAsyncStatus(w http.ResponseWriter, r *http.Request) {
 
 	asyncStatusId := inf.Params["id"]
 
-	rows, err := inf.Tx.Tx.Query(SelectAsyncStatusQuery, asyncStatusId)
+	rows, err := inf.Tx.Tx.Query(selectAsyncStatusQuery, asyncStatusId)
 	if err != nil {
 		HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -84,6 +86,36 @@ func GetAsyncStatus(w http.ResponseWriter, r *http.Request) {
 	WriteResp(w, r, asyncStatus)
 }
 
+// InsertAsyncStatus inserts a new status for an asynchronous job.
+func InsertAsyncStatus(tx *sql.Tx, message string) (int, int, error, error) {
+	defer tx.Commit()
+
+	resultRows, err := tx.Query(insertAsyncStatusQuery, AsyncPending, message)
+	if err != nil {
+		userErr, sysErr, errCode := ParseDBError(err)
+		return 0, errCode, userErr, sysErr
+	}
+	defer resultRows.Close()
+
+	var asyncStatusId int
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&asyncStatusId); err != nil {
+			return 0, http.StatusInternalServerError, nil, err
+		}
+	}
+	if rowsAffected == 0 {
+		return 0, http.StatusInternalServerError, nil, errors.New("async status create: no status was inserted, no id was returned")
+	} else if rowsAffected > 1 {
+		return 0, http.StatusInternalServerError, nil, errors.New("too many ids returned from async status insert")
+	}
+
+	return asyncStatusId, http.StatusOK, nil, nil
+}
+
+// UpdateAsyncStatus updates the status table for an asynchronous job.
 func UpdateAsyncStatus(db *sqlx.DB, newStatus string, newMessage string, asyncStatusId int, finished bool) error {
 	tx, err := db.Begin()
 	if err != nil {
@@ -91,9 +123,9 @@ func UpdateAsyncStatus(db *sqlx.DB, newStatus string, newMessage string, asyncSt
 	}
 	defer tx.Commit()
 
-	q := UpdateAsyncStatusQuery
+	q := updateAsyncStatusQuery
 	if finished {
-		q = UpdateAsyncStatusEndTimeQuery
+		q = updateAsyncStatusEndTimeQuery
 	}
 	_, err = tx.Exec(q, newStatus, newMessage, asyncStatusId)
 	if err != nil {
