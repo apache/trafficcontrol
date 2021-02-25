@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 /*
@@ -21,13 +22,13 @@ import (
    limitations under the License.
 */
 
-func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, ReqInf, error) {
+func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, toclientlib.ReqInf, error) {
 	var data tc.DomainsResponse
-	inf, err := to.get(apiBase+"/cdns/domains", header, &data)
+	inf, err := to.get("/cdns/domains", header, &data)
 	return data.Response, inf, err
 }
 
 // Deprecated: GetDomains will be removed in 6.0. Use GetDomainsWithHdr.
-func (to *Session) GetDomains() ([]tc.Domain, ReqInf, error) {
+func (to *Session) GetDomains() ([]tc.Domain, toclientlib.ReqInf, error) {
 	return to.GetDomainsWithHdr(nil)
 }

@@ -16,7 +16,6 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -25,12 +24,13 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
-	API_SERVERS                         = apiBase + "/servers"
-	API_SERVERS_DETAILS                 = apiBase + "/servers/details"
-	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
+	APIServers                      = "/servers"
+	APIServersDetails               = "/servers/details"
+	APIServerAssignDeliveryServices = APIServerDeliveryServices + "?replace=%t"
 )
 
 func needAndCanFetch(id *int, name *string) bool {
@@ -38,10 +38,10 @@ func needAndCanFetch(id *int, name *string) bool {
 }
 
 // CreateServer creates a Server.
-func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
 		cg, _, err := to.GetCacheGroupNullableByNameWithHdr(*server.Cachegroup, nil)
@@ -107,41 +107,21 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 		server.TypeID = &ty[0].ID
 	}
 
-	reqInf, err := to.post(API_SERVERS, server, hdr, &alerts)
+	reqInf, err := to.post(APIServers, server, hdr, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateServerByID updates a Server by ID.
-func (to *Session) UpdateServerByID(id int, server tc.ServerV40, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByID(id int, server tc.ServerV40, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	reqBody, err := json.Marshal(server)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-
-	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
-	if resp != nil {
-		reqInf.StatusCode = resp.StatusCode
-	}
-	reqInf.RemoteAddr = remoteAddr
-	reqInf.StatusCode = resp.StatusCode
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	route := fmt.Sprintf("%s/%d", APIServers, id)
+	reqInf, err := to.put(route, server, header, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetServersWithHdr retrieves a list of servers using the given optional query
 // string parameters and HTTP headers.
-func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV4Response, ReqInf, error) {
-	route := API_SERVERS
+func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV4Response, toclientlib.ReqInf, error) {
+	route := APIServers
 	if params != nil {
 		route += "?" + params.Encode()
 	}
@@ -153,7 +133,7 @@ func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc
 
 // GetServers retrieves a list of servers using the given optional query
 // string parameters and HTTP headers.
-func (to *Session) GetServers(params *url.Values, header http.Header) ([]tc.ServerV40, ReqInf, error) {
+func (to *Session) GetServers(params *url.Values, header http.Header) ([]tc.ServerV40, toclientlib.ReqInf, error) {
 	srvs, inf, err := to.GetServersWithHdr(params, nil)
 	if err != nil {
 		return []tc.ServerV40{}, inf, err
@@ -172,7 +152,7 @@ func (to *Session) GetServers(params *url.Values, header http.Header) ([]tc.Serv
 // parameters" in the request.
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
-func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerV40, ReqInf, error) {
+func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerV40, toclientlib.ReqInf, error) {
 	serversResponse, reqInf, err := to.GetServersWithHdr(params, header)
 	var firstServer tc.ServerV40
 	if err != nil || reqInf.StatusCode == http.StatusNotModified {
@@ -187,18 +167,18 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 }
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
-func (to *Session) GetServerDetailsByHostName(hostName string, header http.Header) ([]tc.ServerDetailV40, ReqInf, error) {
+func (to *Session) GetServerDetailsByHostName(hostName string, header http.Header) ([]tc.ServerDetailV40, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	v.Add("hostName", hostName)
-	route := API_SERVERS_DETAILS + "?" + v.Encode()
+	route := APIServersDetails + "?" + v.Encode()
 	var data tc.ServersV4DetailResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
 // DeleteServerByID DELETEs a Server by ID.
-func (to *Session) DeleteServerByID(id int, header http.Header) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
+func (to *Session) DeleteServerByID(id int, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", APIServers, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -206,7 +186,7 @@ func (to *Session) DeleteServerByID(id int, header http.Header) (tc.Alerts, ReqI
 
 // GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first
 // server found to have the Host Name 'n'.
-func (to *Session) GetServerFQDN(n string, header http.Header) (string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServerFQDN(n string, header http.Header) (string, tc.Alerts, toclientlib.ReqInf, error) {
 	// TODO fix to only request one server
 	params := url.Values{}
 	params.Add("hostName", n)
@@ -232,7 +212,7 @@ func (to *Session) GetServerFQDN(n string, header http.Header) (string, tc.Alert
 
 // GetServersShortNameSearch returns all of the Host Names of servers that
 // contain 'shortname'.
-func (to *Session) GetServersShortNameSearch(shortname string, header http.Header) ([]string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServersShortNameSearch(shortname string, header http.Header) ([]string, tc.Alerts, toclientlib.ReqInf, error) {
 	var serverlst []string
 	resp, reqInf, err := to.GetServersWithHdr(nil, header)
 	if err != nil {
@@ -257,9 +237,9 @@ func (to *Session) GetServersShortNameSearch(shortname string, header http.Heade
 // 'server' should be the requested server's ID, 'dsIDs' should be a slice of
 // the requested Delivery Services' IDs. If 'replace' is 'true', existing
 // assignments to the server will be replaced.
-func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
-	endpoint := fmt.Sprintf(API_SERVER_ASSIGN_DELIVERY_SERVICES, server, replace)
+	endpoint := fmt.Sprintf(APIServerAssignDeliveryServices, server, replace)
 	var alerts tc.Alerts
 	reqInf, err := to.post(endpoint, dsIDs, nil, &alerts)
 	return alerts, reqInf, err
@@ -267,16 +247,16 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 
 // GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
 // by the integral, unique identifier 'server'.
-func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
-	endpoint := fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, server)
+func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
+	endpoint := fmt.Sprintf(APIServerDeliveryServices, server)
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := to.get(endpoint, header, &data)
 	return data.Response, reqInf, err
 }
 
 // GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
-func (to *Session) GetServerUpdateStatus(hostName string, header http.Header) (tc.ServerUpdateStatus, ReqInf, error) {
-	path := API_SERVERS + `/` + hostName + `/update_status`
+func (to *Session) GetServerUpdateStatus(hostName string, header http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
+	path := APIServers + `/` + hostName + `/update_status`
 	data := []tc.ServerUpdateStatus{}
 	reqInf, err := to.get(path, header, &data)
 	if err != nil {

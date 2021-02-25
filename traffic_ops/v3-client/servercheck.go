@@ -17,6 +17,7 @@ package client
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // API_SERVERCHECK is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
@@ -25,7 +26,7 @@ const API_SERVERCHECK = apiBase + "/servercheck"
 const APIServercheck = "/servercheck"
 
 // InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not.
-func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
+func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, toclientlib.ReqInf, error) {
 	resp := tc.ServercheckPostResponse{}
 	reqInf, err := to.post(APIServercheck, status, nil, &resp)
 	if err != nil {
@@ -35,7 +36,7 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 }
 
 // GetServersChecks fetches check and meta information about servers from /servercheck.
-func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, toclientlib.ReqInf, error) {
 	var response struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
