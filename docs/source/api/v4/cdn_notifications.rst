@@ -22,11 +22,11 @@
 
 ``GET``
 =======
-List all CDN notifications.
+List CDN notifications.
 
 :Auth. Required: Yes
 :Roles Required: Read-Only
-:Response Type:  Array
+:Response Type: Array
 
 Request Structure
 -----------------
@@ -88,9 +88,9 @@ Creates a notification for a specific CDN.
 
 .. note:: Currently only one notification per CDN is supported.
 
-:Auth. Required:	Yes
-:Roles Required:	"admin" or "operations"
-:Response Type:		Object
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type: Object
 
 Request Structure
 -----------------
@@ -118,7 +118,6 @@ Response Structure
 :notification:	The content of the notification
 :user:			The user responsible for creating the notification
 
-
 .. code-block:: http
 	:caption: Response Example
 
@@ -135,20 +134,22 @@ Response Structure
 	Date: Mon, 02 Dec 2019 21:49:08 GMT
 	Content-Length: 150
 
-	{ "alerts": [
+	{
+	"alerts":
+		[
+			{
+				"text": "notification was created.",
+				"level": "success"
+			}
+		],
+	"response":
 		{
-			"text": "notification was created.",
-			"level": "success"
+			"cdn": "cdn1",
+			"lastUpdated": "2019-12-02 21:49:08+00",
+			"notification": "the content of the notification",
+			"user": "username123",
 		}
-	],
-	"response": {
-		"cdn": "cdn1",
-		"lastUpdated": "2019-12-02 21:49:08+00",
-		"notification": "the content of the notification",
-		"user": "username123",
 	}
-}
-
 
 ``DELETE``
 ----------
@@ -160,6 +161,13 @@ Deletes an existing CDN notification.
 
 Request Structure
 -----------------
+.. table:: Request Query Parameters
+
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| Parameter  | Required | Description                                                                                         |
+	+============+==========+=====================================================================================================+
+	| cdn        | yes      | The CDN name of the notification you wish to delete.                                                |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
