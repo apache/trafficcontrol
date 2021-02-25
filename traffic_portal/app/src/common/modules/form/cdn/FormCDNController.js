@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, $state, $uibModal, formUtils, stringUtils, locationUtils, cdnService, messageModel) {
+var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, stringUtils, locationUtils, cdnService, messageModel) {
 
     var queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
@@ -110,5 +110,5 @@ var FormCDNController = function(cdn, $scope, $location, $state, $uibModal, form
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'messageModel'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = FormCDNController;
