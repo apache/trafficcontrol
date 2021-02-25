@@ -26,7 +26,7 @@ const (
 	API_CDN_NOTIFICATIONS = apiBase + "/cdn_notifications"
 )
 
-// Returns a list of CDN Notifications.
+// GetCDNNotificationsWithHdr returns a list of CDN Notifications.
 func (to *Session) GetCDNNotificationsWithHdr(cdnName string, header http.Header) ([]tc.CDNNotification, ReqInf, error) {
 	var data tc.CDNNotificationsResponse
 	route := fmt.Sprintf("%s?cdn=%s", API_CDN_NOTIFICATIONS, cdnName)
