@@ -656,7 +656,9 @@ You will need to update `cdn.conf`_ with any necessary changes.
 
 Managing Traffic Ops Extensions
 ===============================
-Traffic Ops supports two types of extensions. `Check Extensions`_ are analytics scripts that collect and display information as columns in the table under :menuselection:`Monitor --> Cache Checks` in Traffic Portal. `Data Source Extensions`_ provide ways to add data to the graph views and usage APIs.
+Traffic Ops supports "`Check Extensions`_", which are analytics scripts that collect and display information as columns in the table under :menuselection:`Monitor --> Cache Checks` in Traffic Portal.
+
+.. seealso:: Traffic Ops also supports a more involved type of extension in the form of :ref:`to_go_plugins`.
 
 .. |checkmark| image:: images/good.png
 .. |X| image:: images/bad.png
