@@ -17,8 +17,9 @@ package client
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const (
