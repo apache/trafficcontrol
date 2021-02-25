@@ -50,8 +50,8 @@ type CDNNotification struct {
 	User         string    `json:"user" db:"user"`
 }
 
-// Validate validates the CDNNotification request is valid for creation.
-func (n *CDNNotification) Validate(tx *sql.Tx) error {
+// Validate validates the CDNNotificationRequest request is valid for creation.
+func (n *CDNNotificationRequest) Validate(tx *sql.Tx) error {
 	errs := validation.Errors{
 		"cdn": validation.Validate(n.CDN, validation.Required),
 	}

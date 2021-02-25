@@ -119,24 +119,25 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var n tc.CDNNotification
-	if userErr = api.Parse(r.Body, tx, &n); userErr != nil {
+	var req tc.CDNNotificationRequest
+	if userErr = api.Parse(r.Body, tx, &req); userErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
-	err := tx.QueryRow(insertQuery, n.CDN, inf.User.UserName, n.Notification).Scan(&n.CDN, &n.LastUpdated, &n.User, &n.Notification)
+	var resp tc.CDNNotification
+	err := tx.QueryRow(insertQuery, req.CDN, inf.User.UserName, req.Notification).Scan(&resp.CDN, &resp.LastUpdated, &resp.User, &resp.Notification)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Created", n.Notification, n.CDN)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Created", *resp.Notification, resp.CDN)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
-	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", n.User, n.CDN)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, n)
+	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", resp.User, resp.CDN)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, resp)
 }
 
 // Delete is the handler for DELETE requests to /cdn_notifications.
@@ -177,7 +178,7 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 		return alert, result, userErr, sysErr, statusCode
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", result.Notification, result.CDN)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", *result.Notification, result.CDN)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
 	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", result.User, result.CDN)
