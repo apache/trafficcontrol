@@ -17,6 +17,7 @@ package orttest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/util"
 	"os"
@@ -42,7 +43,7 @@ var (
 )
 
 func TestT3cBadassAndSyncDs(t *testing.T) {
-	t.Logf("------------- Starting TestT3cBadassAndSyncDs ---------------")
+	fmt.Println("------------- Starting TestT3cBadassAndSyncDs ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -77,7 +78,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 
 		time.Sleep(time.Second * 5)
 
-		t.Logf("------------------------ running SYNCDS Test ------------------")
+		fmt.Println("------------------------ running SYNCDS Test ------------------")
 		// remove the remap.config in preparation for running syncds
 		remap := test_config_dir + "/remap.config"
 		err = os.Remove(remap)
@@ -100,10 +101,10 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		if !util.FileExists(remap) {
 			t.Fatalf("ERROR: syncds failed to pull down %s\n", remap)
 		}
-		t.Logf("------------------------ end SYNCDS Test ------------------")
+		fmt.Println("------------------------ end SYNCDS Test ------------------")
 
 	})
-	t.Logf("------------- End of TestT3cBadassAndSyncDs ---------------")
+	fmt.Println("------------- End of TestT3cBadassAndSyncDs ---------------")
 }
 
 func setQueueUpdateStatus(host_name string, update string) error {

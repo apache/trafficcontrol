@@ -21,7 +21,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"time"
@@ -31,16 +30,21 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
-const AppName = "to_requester"
+const AppName = "to_updater"
 const Version = "0.1"
 const UserAgent = AppName + "/" + Version
 
 type Cfg struct {
+	Debug            bool
 	CommandArgs      []string
 	LogLocationDebug string
 	LogLocationError string
 	LogLocationInfo  string
 	LoginDispersion  time.Duration
+	CacheHostName    string
+	GetData          string
+	UpdatePending    bool
+	RevalPending     bool
 	t3clib.TCCfg
 }
 
@@ -58,13 +62,15 @@ func Usage() {
 
 // InitConfig() intializes the configuration variables and loggers.
 func InitConfig() (Cfg, error) {
-
 	logLocationDebugPtr := getopt.StringLong("log-location-debug", 'd', "", "Where to log debugs. May be a file path, stdout, stderr")
 	logLocationErrorPtr := getopt.StringLong("log-location-error", 'e', "stderr", "Where to log errors. May be a file path, stdout, stderr")
 	logLocationInfoPtr := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log infos. May be a file path, stdout, stderr")
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	getDataPtr := getopt.StringLong("get-data", 'D', "system-info", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
+	var updatePendingPtr bool
+	var revalPendingPtr bool
+	getopt.FlagLong(&updatePendingPtr, "set-update-status", 'q', "[true | false] sets the servers update status").Mandatory()
+	getopt.FlagLong(&revalPendingPtr, "set-reval-status", 'a', "[true | false] sets the servers revalidate status").Mandatory()
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with     the environment variable TO_URL")
@@ -119,9 +125,11 @@ func InitConfig() (Cfg, error) {
 		LogLocationError: *logLocationErrorPtr,
 		LogLocationInfo:  *logLocationInfoPtr,
 		LoginDispersion:  dispersion,
+		UpdatePending:    updatePendingPtr,
+		RevalPending:     revalPendingPtr,
 		TCCfg: t3clib.TCCfg{
 			CacheHostName: cacheHostName,
-			GetData:       *getDataPtr,
+			GetData:       "update-status",
 			TOInsecure:    *toInsecurePtr,
 			TOTimeoutMS:   toTimeoutMS,
 			TOUser:        toUser,
@@ -135,18 +143,4 @@ func InitConfig() (Cfg, error) {
 	}
 
 	return cfg, nil
-}
-
-func (cfg Cfg) PrintConfig() {
-	fmt.Printf("CommandArgs: %s\n", cfg.CommandArgs)
-	fmt.Printf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
-	fmt.Printf("LogLocationError: %s\n", cfg.LogLocationError)
-	fmt.Printf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
-	fmt.Printf("LoginDispersion : %s\n", cfg.LoginDispersion)
-	fmt.Printf("CacheHostName: %s\n", cfg.CacheHostName)
-	fmt.Printf("TOInsecure: %s\n", cfg.TOInsecure)
-	fmt.Printf("TOTimeoutMS: %s\n", cfg.TOTimeoutMS)
-	fmt.Printf("TOUser: %s\n", cfg.TOUser)
-	fmt.Printf("TOPass: xxxxxx\n")
-	fmt.Printf("TOURL: %s\n", cfg.TOURL)
 }
