@@ -250,19 +250,30 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 	}
 	// where clause is different for servercheck and server table. Also, it differs for the query param.
 	var whereSC, whereSI string
-	if len(inf.Params) == 1 {
-		for k, _ := range inf.Params {
-			if k == "name" {
-				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
-				whereSC = ""
-			} else if k == "id" {
-				whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
-				whereSC = where
-			}
-		}
-	} else {
+	if len(inf.Params) < 1 {
 		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
 		whereSC = ""
+	} else if len(inf.Params) == 1 {
+		if _, ok := inf.Params["name"]; ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
+			whereSC = ""
+		} else if _, ok = inf.Params["id"]; ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
+			whereSC = where
+		} else {
+			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
+			whereSC = ""
+		}
+	} else if len(inf.Params) > 1 {
+		_, ok := inf.Params["id"]
+		_, ok1 := inf.Params["name"]
+		if ok && ok1 {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND (server.host_name=:name AND server.id=:id)"
+			whereSC = "WHERE servercheck.server=:id"
+		} else {
+			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
+			whereSC = ""
+		}
 	}
 
 	extRows, err := tx.Query(extensionsQuery)
