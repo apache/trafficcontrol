@@ -129,7 +129,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function() {
-            cdnService.deleteNotification(cdn).
+            cdnService.deleteNotification({ cdn: cdn.name }).
                 then(
                     function() {
                         $rootScope.$broadcast('headerController::notificationDeleted');

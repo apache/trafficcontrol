@@ -247,8 +247,8 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.deleteNotification = function(cdn) {
-        return $http.delete(ENV.api['root'] + 'cdn_notifications?cdn=' + cdn.name).then(
+    this.deleteNotification = function(queryParams) {
+        return $http.delete(ENV.api['root'] + 'cdn_notifications', { params: queryParams }).then(
             function(result) {
                 return result;
             },
