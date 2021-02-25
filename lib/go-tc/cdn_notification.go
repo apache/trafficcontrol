@@ -46,7 +46,7 @@ type CDNNotificationRequest struct {
 type CDNNotification struct {
 	CDN          string    `json:"cdn" db:"cdn"`
 	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
-	Notification *string    `json:"notification" db:"notification"`
+	Notification *string   `json:"notification" db:"notification"`
 	User         string    `json:"user" db:"user"`
 }
 
