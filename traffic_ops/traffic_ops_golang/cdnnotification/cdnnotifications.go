@@ -132,10 +132,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Created", *n.Notification, *n.CDN)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Created", n.Notification, n.CDN)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
-	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", *n.User, *n.CDN)
+	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", n.User, n.CDN)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, n)
 }
 
@@ -177,10 +177,10 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 		return alert, result, userErr, sysErr, statusCode
 	}
 
-	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", *result.Notification, *result.CDN)
+	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", result.Notification, result.CDN)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
-	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", *result.User, *result.CDN)
+	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", result.User, result.CDN)
 	alert = tc.Alert{
 		Level: tc.SuccessLevel.String(),
 		Text:  alertMsg,

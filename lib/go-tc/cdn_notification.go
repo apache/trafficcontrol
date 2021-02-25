@@ -21,6 +21,7 @@ package tc
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -43,10 +44,10 @@ type CDNNotificationRequest struct {
 
 // CDNNotification is a notification created for a specific CDN
 type CDNNotification struct {
-	CDN          *string    `json:"cdn" db:"cdn"`
-	LastUpdated  *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	CDN          string    `json:"cdn" db:"cdn"`
+	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
 	Notification *string    `json:"notification" db:"notification"`
-	User         *string    `json:"user" db:"user"`
+	User         string    `json:"user" db:"user"`
 }
 
 // Validate validates the CDNNotification request is valid for creation.
