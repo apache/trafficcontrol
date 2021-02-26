@@ -285,7 +285,7 @@ func TestServerQueueUpdate(t *testing.T) {
 
 			// TODO: don't construct URLs like this, nor use "RawRequest"
 			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", *s.ID)
-			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req, nil)
+			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
 			if err != nil {
 				t.Fatalf("POST request failed: %v", err)
 			}

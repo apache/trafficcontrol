@@ -51,7 +51,7 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 
 // GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
 // Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
-func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, ReqInf, error) {
+func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
 	param := url.Values{}
 	if deliveryServiceID != nil {
 		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
