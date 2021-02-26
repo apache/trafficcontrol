@@ -50,8 +50,6 @@ LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id
 LEFT JOIN cachegroup ON server.cachegroup = cachegroup.id
 LEFT JOIN type ON server.type = type.id
-WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'
-ORDER BY hostName ASC
 `
 
 const serverChecksQuery = `
@@ -239,6 +237,45 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 
 func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
 	extensions := make(map[string]string)
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"servercheck.server", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"server.host_name", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+	// where clause is different for servercheck and server table. Also, it differs for the query param.
+	var whereSC, whereSI string
+	if len(inf.Params) < 1 {
+		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
+		whereSC = ""
+	} else if len(inf.Params) == 1 {
+		if _, ok := inf.Params["name"]; ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
+			whereSC = ""
+		} else if _, ok = inf.Params["id"]; ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
+			whereSC = where
+		} else {
+			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
+			whereSC = ""
+		}
+	} else if len(inf.Params) > 1 {
+		_, ok := inf.Params["id"]
+		_, ok1 := inf.Params["name"]
+		if ok && ok1 {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND (server.host_name=:name AND server.id=:id)"
+			whereSC = "WHERE servercheck.server=:id"
+		} else {
+			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
+			whereSC = ""
+		}
+	}
+
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
 		sysErr := fmt.Errorf("querying for extensions: %v", err)
@@ -254,9 +291,10 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		extensions[shortName] = checkName
 	}
 
-	colRows, err := inf.Tx.Queryx(serverChecksQuery)
+	querySC := serverChecksQuery + whereSC + orderBy + pagination
+	colRows, err := inf.Tx.NamedQuery(querySC, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("Querying server checks columns: %v", err)
+		sysErr := fmt.Errorf("querying serverchecks columns: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 
@@ -267,13 +305,14 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 			sysErr := fmt.Errorf("scanning server checks columns: %v", err)
 			return nil, nil, sysErr, http.StatusInternalServerError
 		}
-
 		columns[cols.Server] = cols
 	}
 
-	serverRows, err := tx.Query(serverInfoQuery)
+	orderBySI := orderBy + "ORDER BY hostName ASC"
+	querySI := serverInfoQuery + whereSI + orderBySI + pagination
+	serverRows, err := inf.Tx.NamedQuery(querySI, queryValues)
 	if err != nil {
-		sysErr := fmt.Errorf("Querying server info for checks: %v", err)
+		sysErr := fmt.Errorf("querying server info for checks: %v", err)
 		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 
