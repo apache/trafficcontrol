@@ -36,8 +36,8 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServersChecks fetches Server Checks from Traffic Ops.
-func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+// GetServersChecks fetches check and meta information about servers from /servercheck.
+func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, toclientlib.ReqInf, error) {
 	data := struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
