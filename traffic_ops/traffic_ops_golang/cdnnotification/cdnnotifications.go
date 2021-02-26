@@ -137,7 +137,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
 	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", resp.User, resp.CDN)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, resp)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMsg)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, resp)
 }
 
 // Delete is the handler for DELETE requests to /cdn_notifications.
