@@ -42,7 +42,7 @@ type CDNNotificationRequest struct {
 	Notification string `json:"notification"`
 }
 
-// CDNNotification is a notification created for a specific CDN
+// CDNNotification is a notification created for a specific CDN.
 type CDNNotification struct {
 	CDN          string    `json:"cdn" db:"cdn"`
 	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
