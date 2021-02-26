@@ -597,11 +597,7 @@ func DSTypeFromString(s string) DSType {
 
 //IsAnyMap returns weather the DSType is an ANY_MAP category.
 func (t DSType) IsAnyMap() bool {
-	switch t {
-	case DSTypeAnyMap:
-		return true
-	}
-	return false
+	return t == DSTypeAnyMap
 }
 
 // IsHTTP returns whether the DSType is an HTTP category.
