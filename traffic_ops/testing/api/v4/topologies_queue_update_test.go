@@ -48,7 +48,7 @@ func getCdnIdAndDsId(t *testing.T) (int64, int) {
 	xmlId := "ds-top"
 	params := url.Values{}
 	params.Set("xmlId", xmlId)
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, params)
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		t.Fatalf("unable to get deliveryservice %s: %s", xmlId, err)
 	}

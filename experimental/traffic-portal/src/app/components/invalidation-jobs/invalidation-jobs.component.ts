@@ -38,13 +38,13 @@ export class InvalidationJobsComponent implements OnInit {
 	public jobs: Array<InvalidationJob>;
 
 	/** The current date/time when the page loads */
-	public now: Date;
+	public now: Date = new Date();
 
 	/** Whether or not to show the dialog for creating a new job. */
 	public showDialog: Subject<boolean>;
 
-	private dsId: number;
-
+	/** The ID of the Delivery Service to which the displayed Jobs belong. */
+	private dsId = -1;
 
 	/** Control for users to enter new content invalidation jobs. */
 	public regexp = new FormControl("/");
@@ -61,7 +61,10 @@ export class InvalidationJobsComponent implements OnInit {
 	public regexpIsValid: Subject<string>;
 
 
-	constructor (
+	/**
+	 * Constructor.
+	 */
+	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly jobAPI: InvalidationJobService,
 		private readonly dsAPI: DeliveryServiceService
@@ -103,7 +106,12 @@ export class InvalidationJobsComponent implements OnInit {
 		);
 	}
 
-	/** Gets the ending date and time for a content invalidation job. */
+	/**
+	 * Gets the ending date and time for a content invalidation job.
+	 *
+	 * @param j The job from which to extract an end date.
+	 * @returns The date at which the Job will stop being in effect.
+	 */
 	public endDate(j: InvalidationJob): Date {
 		if (!j.parameters) {
 			throw new Error("cannot get end date for job with no parameters");
@@ -116,7 +124,7 @@ export class InvalidationJobsComponent implements OnInit {
 		if (isNaN(ttl)) {
 			throw new Error(`Invalid TTL: "${tmp[1]}" (job id: ${j.id})`);
 		}
-		return new Date(new Date(j.startTime.getTime() + ttl * 60 * 60 * 1000));
+		return new Date(j.startTime.getTime() + ttl * 60 * 60 * 1000);
 	}
 
 	/**
@@ -147,6 +155,8 @@ export class InvalidationJobsComponent implements OnInit {
 
 	/**
 	 * Closes the "new content invalidation job" dialog, canceling the creation.
+	 *
+	 * @param e The DOM event that triggered closing - default behavior is prevented and its propagation is stopped.
 	 */
 	public closeDialog(e: Event): void {
 		e.preventDefault();
@@ -156,6 +166,8 @@ export class InvalidationJobsComponent implements OnInit {
 
 	/**
 	 * Closes the "new content invalidation job" dialog, creating the new job.
+	 *
+	 * @param e The DOM event that triggered submission - default behavior is prevented and its propagation is stopped.
 	 */
 	public submitDialog(e: Event): void {
 		e.preventDefault();

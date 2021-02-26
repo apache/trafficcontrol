@@ -12,10 +12,13 @@
 * limitations under the License.
 */
 export * from "./alert";
+export * from "./cache-groups";
 export * from "./cdn";
 export * from "./data";
 export * from "./deliveryservice";
 export * from "./invalidation";
+export * from "./physical.location";
+export * from "./profile";
 export * from "./server";
 export * from "./type";
 export * from "./user";

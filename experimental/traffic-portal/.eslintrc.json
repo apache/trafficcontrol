@@ -1,0 +1,280 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership.  The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+{
+	"root": true,
+	"ignorePatterns": [
+		"projects/**/*"
+	],
+	"overrides": [
+		{
+			"files": [
+				"*.ts"
+			],
+			"parserOptions": {
+				"project": [
+					"tsconfig.json",
+					"e2e/tsconfig.json"
+				],
+				"createDefaultProgram": true
+			},
+			"extends": [
+				"plugin:@angular-eslint/ng-cli-compat",
+				"plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
+				"plugin:@angular-eslint/template/process-inline-templates"
+			],
+			"rules": {
+				"@angular-eslint/component-selector": [
+					"error",
+					{
+						"type": "element",
+						"prefix": "",
+						"style": "kebab-case"
+					}
+				],
+				"@angular-eslint/directive-selector": [
+					"error",
+					{
+						"type": "attribute",
+						"prefix": "",
+						"style": "camelCase"
+					}
+				],
+				"@typescript-eslint/array-type": "off",
+				"@typescript-eslint/await-thenable": "error",
+				"@typescript-eslint/ban-types": [
+					"error",
+					{
+						"extendDefaults": false,
+						"types": {
+							"Object": {
+								"message": "Avoid using the `Object` type. Did you mean `object`?"
+							},
+							"Function": {
+								"message": "Avoid using the `Function` type. Prefer a specific function type, like `() => void`."
+							},
+							"Boolean": {
+								"message": "Avoid using the `Boolean` type. Did you mean `boolean`?"
+							},
+							"Number": {
+								"message": "Avoid using the `Number` type. Did you mean `number`?"
+							},
+							"String": {
+								"message": "Avoid using the `String` type. Did you mean `string`?"
+							},
+							"Symbol": {
+								"message": "Avoid using the `Symbol` type. Did you mean `symbol`?"
+							}
+						}
+					}
+				],
+				"@typescript-eslint/consistent-type-assertions": "error",
+				"@typescript-eslint/consistent-type-definitions": "error",
+				"@typescript-eslint/dot-notation": "error",
+				"@typescript-eslint/explicit-function-return-type": "error",
+				"@typescript-eslint/explicit-member-accessibility": [
+					"error",
+					{
+						"accessibility": "explicit",
+						"overrides": {
+							"constructors": "no-public"
+						}
+					}
+				],
+				"@typescript-eslint/explicit-module-boundary-types": "error",
+				"@typescript-eslint/indent": [
+					"error",
+					"tab"
+				],
+				"@typescript-eslint/member-delimiter-style": [
+					"error",
+					{
+						"multiline": {
+							"delimiter": "semi",
+							"requireLast": true
+						},
+						"singleline": {
+							"delimiter": "semi",
+							"requireLast": false
+						}
+					}
+				],
+				"@typescript-eslint/member-ordering": "off",
+				"@typescript-eslint/naming-convention": [
+					"error",
+					{
+						"selector": "enumMember",
+						"format": ["UPPER_CASE"]
+					},
+
+					{
+						"selector": "property",
+						"modifiers": ["static", "readonly"],
+						"format": ["UPPER_CASE"]
+					},
+
+					{
+						"selector": "default",
+						"format": ["camelCase"],
+						"leadingUnderscore": "allow",
+						"trailingUnderscore": "allow"
+					},
+
+					{
+						"selector": "variable",
+						"format": ["camelCase", "UPPER_CASE"],
+						"leadingUnderscore": "allow",
+						"trailingUnderscore": "allow"
+					},
+
+					{
+						"selector": "typeLike",
+						"format": ["PascalCase"]
+					}
+				],
+				"@typescript-eslint/no-empty-function": "error",
+				"@typescript-eslint/no-empty-interface": "error",
+				"@typescript-eslint/no-explicit-any": "error",
+				"@typescript-eslint/no-extraneous-class": "error",
+				"@typescript-eslint/no-dynamic-delete": "error",
+				"@typescript-eslint/no-floating-promises": "off",
+				"@typescript-eslint/no-inferrable-types": [
+					"error",
+					{
+						"ignoreParameters": true
+					}
+				],
+				"@typescript-eslint/no-invalid-void-type": "error",
+				"@typescript-eslint/no-misused-new": "error",
+				"@typescript-eslint/no-misused-promises": "error",
+				"@typescript-eslint/no-non-null-assertion": "error",
+				"@typescript-eslint/no-redeclare": "error",
+				"@typescript-eslint/no-require-imports": "error",
+				"@typescript-eslint/no-shadow": "error",
+				"@typescript-eslint/no-this-alias": "error",
+				"@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
+				"@typescript-eslint/no-unnecessary-qualifier": "error",
+				"@typescript-eslint/no-unnecessary-type-arguments": "error",
+				"@typescript-eslint/no-unnecessary-type-assertion": "error",
+				"@typescript-eslint/no-unused-expressions": "error",
+				"@typescript-eslint/no-unused-vars": "error",
+				"@typescript-eslint/no-use-before-define": "error",
+				"@typescript-eslint/no-var-requires": "off",
+				"@typescript-eslint/prefer-for-of": "error",
+				"@typescript-eslint/prefer-function-type": "error",
+				"@typescript-eslint/prefer-readonly": "error",
+				"@typescript-eslint/promise-function-async": "error",
+				"@typescript-eslint/quotes": [
+					"error",
+					"double",
+					{
+						"avoidEscape": true
+					}
+				],
+				"@typescript-eslint/semi": [
+					"error"
+				],
+				"@typescript-eslint/typedef": "off",
+				"jsdoc/require-jsdoc": [
+					"error",
+					{
+						"contexts": [
+							"ClassProperty",
+							"TSInterfaceDeclaration",
+							"TSTypeAliasDeclaration",
+							"TSEnumDeclaration",
+							"TSEnumMember",
+							"TSAbstractClassProperty"
+						],
+						"require": {
+							"ClassDeclaration": true,
+							"MethodDefinition": true
+						},
+						"checkConstructors": false,
+						"checkGetters": true,
+						"checkSetters": true
+					}
+				],
+				"@typescript-eslint/unbound-method": "error",
+				"@typescript-eslint/restrict-plus-operands": "error",
+				"@typescript-eslint/triple-slash-reference": "error",
+				"arrow-parens": [
+					"off",
+					"always"
+				],
+				"brace-style": [
+					"error",
+					"1tbs"
+				],
+				"class-methods-use-this": "off",
+				"import/order": "error",
+				"linebreak-style": [
+					"error",
+					"unix"
+				],
+				"no-bitwise": "off",
+				"no-duplicate-case": "error",
+				"no-duplicate-imports": "error",
+				"no-else-return": "error",
+				"no-empty": "error",
+				"no-extra-bind": "error",
+				"no-invalid-this": [
+					"error",
+					{
+						"capIsConstructor": false
+					}
+				],
+				"no-new-func": "error",
+				"no-redeclare": "off",
+				"no-return-await": "error",
+				"no-sparse-arrays": "error",
+				"no-template-curly-in-string": "error",
+				"no-shadow": "off",
+				"prefer-arrow/prefer-arrow-functions": "off",
+				"prefer-object-spread": "error",
+				"prefer-template": "error",
+				"sort-keys": [
+					"error",
+					"asc",
+					{
+						"natural": true
+					}
+				],
+				"valid-jsdoc": [
+					"error",
+					{
+						"matchDescription": ".+",
+						"requireReturn": false,
+						"requireReturnType": false,
+						"requireParamType": false,
+						"prefer": {
+							"return": "returns"
+						}
+					}
+				]
+			}
+		},
+		{
+			"files": [
+				"*.html"
+			],
+			"extends": [
+				"plugin:@angular-eslint/template/recommended"
+			],
+			"rules": {}
+		}
+	]
+}

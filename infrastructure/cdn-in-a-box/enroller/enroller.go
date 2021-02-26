@@ -270,7 +270,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 
 	params := url.Values{"xmlId": []string{dss.XmlId}}
-	dses, _, err := toSession.GetDeliveryServicesV30WithHdr(nil, params)
+	dses, _, err := toSession.GetDeliveryServicesV4(nil, params)
 	if err != nil {
 		return err
 	}

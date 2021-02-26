@@ -42,7 +42,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -156,7 +156,7 @@ func setInactive(t *testing.T, dsID int) {
 	}
 	if *ds.Active {
 		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryServiceV30WithHdr(dsID, *ds, nil)
+		_, _, err = TOSession.UpdateDeliveryServiceV4(dsID, *ds, nil)
 		if err != nil {
 			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 		}

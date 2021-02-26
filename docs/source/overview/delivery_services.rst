@@ -54,7 +54,7 @@ Enables/Disables blocking of anonymized IP address - proxies, :abbr:`TOR (The On
 Cache URL Expression
 --------------------
 .. deprecated:: 3.0
-	This feature is no longer supported by :abbr:`ATS (Apache Traffic Server)` and consequently it will be removed from Traffic Control in the future.
+	This feature is no longer supported by :abbr:`ATS (Apache Traffic Server)` and consequently it will be removed from Traffic Control in the future. Current plans are to remove after ATC 5.X is no longer supported.
 
 Manipulates the cache key of the incoming requests. Normally, the cache key is the :term:`Origin` domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
 

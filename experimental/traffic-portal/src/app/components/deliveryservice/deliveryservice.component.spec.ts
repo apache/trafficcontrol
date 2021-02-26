@@ -18,12 +18,12 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
 
-import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 import { LinechartDirective } from "../../directives/linechart.directive";
 import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 
 describe("DeliveryserviceComponent", () => {
@@ -39,8 +39,8 @@ describe("DeliveryserviceComponent", () => {
 			cdnId: 0,
 			displayName: "test DS",
 			dscp: 0,
-			geoLimit: GeoLimit.None,
-			geoProvider: GeoProvider.MaxMind,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
 			ipv6RoutingEnabled: true,
 			lastUpdated: new Date(),
 			logsEnabled: true,
@@ -57,7 +57,8 @@ describe("DeliveryserviceComponent", () => {
 		mockAPIService.getAllDSTPSData.and.returnValue(of({
 			clientError: {
 				dataSet: {
-					data: []
+					data: [],
+					label: ""
 				},
 				fifthPercentile: 0,
 				max: 0,
@@ -68,7 +69,8 @@ describe("DeliveryserviceComponent", () => {
 			},
 			redirection: {
 				dataSet: {
-					data: []
+					data: [],
+					label: ""
 				},
 				fifthPercentile: 0,
 				max: 0,
@@ -79,7 +81,8 @@ describe("DeliveryserviceComponent", () => {
 			},
 			serverError: {
 				dataSet: {
-					data: []
+					data: [],
+					label: ""
 				},
 				fifthPercentile: 0,
 				max: 0,
@@ -90,7 +93,8 @@ describe("DeliveryserviceComponent", () => {
 			},
 			success: {
 				dataSet: {
-					data: []
+					data: [],
+					label: ""
 				},
 				fifthPercentile: 0,
 				max: 0,
@@ -101,7 +105,8 @@ describe("DeliveryserviceComponent", () => {
 			},
 			total: {
 				dataSet: {
-					data: []
+					data: [],
+					label: ""
 				},
 				fifthPercentile: 0,
 				max: 0,
@@ -139,23 +144,11 @@ describe("DeliveryserviceComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it('sets the "to" and "from" values to "so far today"', () => {
-		const now = new Date();
-		now.setUTCMilliseconds(0);
-		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-		expect(component.to).toEqual(now);
-		expect(component.from).toEqual(today);
-
-		const nowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-		const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-		expect(nowDate).toEqual(component.toDate.value);
-		expect(nowTime).toEqual(component.toTime.value);
-		expect(nowDate).toEqual(component.fromDate.value);
-		expect("00:00").toEqual(component.fromTime.value);
-	});
-
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in DeliveryServiceComponent afterAll:", e);
+		}
 	});
 });

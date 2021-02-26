@@ -17,10 +17,11 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // GetFederationFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
+func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("/federations/%d/federation_resolvers", id)
 	resp := tc.FederationFederationResolversResponse{}
 	reqInf, err := to.get(path, nil, &resp)
@@ -28,7 +29,7 @@ func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFe
 }
 
 // AssignFederationFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
+func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("/federations/%d/federation_resolvers", fedID)
 	req := tc.AssignFederationResolversRequest{
 		Replace:        replace,

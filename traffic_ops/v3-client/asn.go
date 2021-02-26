@@ -21,6 +21,7 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -31,14 +32,14 @@ const (
 )
 
 // CreateASN creates a ASN
-func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIASNs, entity, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateASNByID updates a ASN by ID
-func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIASNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, entity, nil, &alerts)
@@ -46,7 +47,7 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 }
 
 // GetASNsWithHeader Returns a list of ASNs matching query params
-func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, ReqInf, error) {
+func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?%s", APIASNs, params.Encode())
 	var data tc.ASNsResponse
 	reqInf, err := to.get(route, header, &data)
@@ -54,7 +55,7 @@ func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]
 }
 
 // DeleteASNByASN deletes an ASN by asn number
-func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIASNs, asn)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

@@ -20,13 +20,14 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const API_SERVERCHECK = apiBase + "/servercheck"
+const APIServercheck = "/servercheck"
 
 // InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not.
-func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
-	uri := API_SERVERCHECK
+func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, toclientlib.ReqInf, error) {
+	uri := APIServercheck
 	resp := tc.ServercheckPostResponse{}
 	reqInf, err := to.post(uri, status, nil, &resp)
 	if err != nil {
@@ -41,7 +42,7 @@ func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
 	}{}
-	route := API_SERVERCHECK
+	route := APIServercheck
 	if params != nil {
 		route += "?" + params.Encode()
 	}

@@ -18,8 +18,10 @@
 export type DataPoint = {
 	/**
 	 * The y-axis value of the data point.
+	 *
+	 * Sometimes it's been set to a fixed precision.
 	 */
-	y: number;
+	y: number | string;
 } & ({
 	/**
 	 * Defines a time position for time-series data points.

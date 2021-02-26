@@ -22,11 +22,12 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // UpdateServerStatus updates a server's status and returns the response.
-func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, ReqInf, error) {
-	path := fmt.Sprintf("%s/servers/%d/status", apiBase, serverID)
+func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, toclientlib.ReqInf, error) {
+	path := fmt.Sprintf("/servers/%d/status", serverID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.put(path, req, nil, &alerts)
 	if err != nil {
@@ -41,23 +42,23 @@ var queueUpdateActions = map[bool]string{
 }
 
 // SetServerQueueUpdate updates a server's status and returns the response.
-func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.ServerQueueUpdateResponse, ReqInf, error) {
+func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.ServerQueueUpdateResponse, toclientlib.ReqInf, error) {
 	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
 	resp := tc.ServerQueueUpdateResponse{}
-	path := fmt.Sprintf("%s/servers/%d/queue_update", apiBase, serverID)
+	path := fmt.Sprintf("/servers/%d/queue_update", serverID)
 	reqInf, err := to.post(path, req, nil, &resp)
 	return resp, reqInf, err
 }
 
 // UpdateServerStatus updates a server's queue status and/or reval status.
 // Either updateStatus or revalStatus may be nil, in which case that status isn't updated (but not both, because that wouldn't do anything).
-func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (ReqInf, error) {
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if updateStatus == nil && revalStatus == nil {
 		return reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
 	}
 
-	path := apiBase + `/servers/` + serverName + `/update?`
+	path := `/servers/` + serverName + `/update?`
 	queryParams := []string{}
 	if updateStatus != nil {
 		queryParams = append(queryParams, `updated=`+strconv.FormatBool(*updateStatus))

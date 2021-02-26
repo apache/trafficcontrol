@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -32,14 +33,14 @@ const (
 )
 
 // CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
-func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIDeliveryServicesRequiredCapabilities, capability, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service
-func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	param := url.Values{}
 	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
@@ -49,7 +50,7 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, ReqInf, error) {
+func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
 	param := url.Values{}
 	if deliveryServiceID != nil {
 		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
@@ -76,6 +77,6 @@ func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServic
 // GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
 // Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
 // Deprecated: GetDeliveryServicesRequiredCapabilities will be removed in 6.0. Use GetDeliveryServicesRequiredCapabilitiesWithHdr.
-func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServicesRequiredCapability, ReqInf, error) {
+func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID, xmlID, capability, nil)
 }

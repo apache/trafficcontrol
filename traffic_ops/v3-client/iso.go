@@ -21,6 +21,7 @@ package client
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -35,7 +36,7 @@ const (
 // Structure of returned map:
 //  key:   Name of OS
 //  value: Directory where the ISO source can be found
-func (to *Session) GetOSVersions() (map[string]string, ReqInf, error) {
+func (to *Session) GetOSVersions() (map[string]string, toclientlib.ReqInf, error) {
 	var data struct {
 		Versions tc.OSVersionsResponse `json:"response"`
 	}

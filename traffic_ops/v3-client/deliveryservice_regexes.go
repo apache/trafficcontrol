@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
 // also accepts an optional map of query parameters
-func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]string) ([]tc.DeliveryServiceIDRegex, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]string) ([]tc.DeliveryServiceIDRegex, toclientlib.ReqInf, error) {
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
@@ -43,17 +44,17 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 // GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
 // Delivery Services.
 // Deprecated: GetDeliveryServiceRegexes will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
-func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceRegexesWithHdr(nil)
 }
 
-func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceRegexResponse
 	reqInf, err := to.get(APIDeliveryServicesRegexes, header, &data)
 	return data.Response, reqInf, err
 }
 
-func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, ReqInf, error) {
+func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	route := fmt.Sprintf(APIDSRegexes, dsID)
 	reqInf, err := to.post(route, regex, nil, &alerts)

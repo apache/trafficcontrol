@@ -28,24 +28,27 @@ import { AlertService } from "../../services";
 export class AlertComponent implements OnInit {
 
 	/** The raw HTML element that serves as the base of the component. */
-	public dialogElement: HTMLDialogElement;
+	public dialogElement: HTMLDialogElement | null = null;
 
 	/** The Alert being displayed. */
-	public alert: Alert | null;
+	public alert: Alert | null = null;
 
-	constructor (private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly PLATFORM: Object) { }
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly platform: object) { }
 
 	/**
 	 * Runs initialization code, setting up the current alert from the alerts
 	 * service.
 	 */
 	public ngOnInit(): void {
-		if (!isPlatformBrowser(this.PLATFORM)) {
+		if (!isPlatformBrowser(this.platform)) {
 			return;
 		}
 		this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
-			(a: Alert) => {
+			a => {
 				if (a) {
 					this.alert = a;
 					if (a.text === "") {
@@ -56,7 +59,7 @@ export class AlertComponent implements OnInit {
 							console.log("alert: ", a.text);
 							break;
 						case "info":
-							console.debug("alert: ", a.text);
+							console.log("alert: ", a.text);
 							break;
 						case "warning":
 							console.warn("alert: ", a.text);
@@ -68,7 +71,10 @@ export class AlertComponent implements OnInit {
 							console.log("unknown alert: ", a.text);
 							break;
 					}
-					this.dialogElement.showModal();
+					// This shouldn't be possibly false, but Typescript disagrees.
+					if (this.dialogElement) {
+						this.dialogElement.showModal();
+					}
 				}
 			}
 		);
@@ -78,7 +84,9 @@ export class AlertComponent implements OnInit {
 	 * Closes the dialog.
 	 */
 	public close(): void {
-		this.dialogElement.close();
+		if (this.dialogElement) {
+			this.dialogElement.close();
+		}
 		this.alert = null;
 	}
 }

@@ -22,6 +22,7 @@ package request
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -60,7 +61,7 @@ func (req *TODeliveryServiceRequest) Validate() error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	e := req.DeliveryService.Validate(req.APIInfo().Tx.Tx)
+	e := deliveryservice.Validate(req.APIInfo().Tx.Tx, req.DeliveryService)
 
 	errs = append(errs, e)
 

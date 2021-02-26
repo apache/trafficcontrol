@@ -21,6 +21,7 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 /* Internally, the CDNName is only used in the GET method. The CDNName
@@ -28,14 +29,14 @@ import (
  * `/cdns/:name/federations`. Although the behavior is odd, it is kept to
  * keep the same behavior from perl. */
 
-func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string) (*tc.CreateCDNFederationResponse, ReqInf, error) {
+func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string) (*tc.CreateCDNFederationResponse, toclientlib.ReqInf, error) {
 	data := tc.CreateCDNFederationResponse{}
 	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	inf, err := to.post(route, f, nil, &data)
 	return &data, inf, err
 }
 
-func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.Header) (*tc.CDNFederationResponse, toclientlib.ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	inf, err := to.get(route, header, &data)
@@ -43,11 +44,11 @@ func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.He
 }
 
 // Deprecated: GetCDNFederationsByName will be removed in 6.0. Use GetCDNFederationsByNameWithHdr.
-func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationResponse, toclientlib.ReqInf, error) {
 	return to.GetCDNFederationsByNameWithHdr(CDNName, nil)
 }
 
-func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, ReqInf, error) {
+func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, header http.Header) ([]tc.CDNFederation, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("/cdns/%s/federations", url.QueryEscape(CDNName))
 	resp := struct {
 		Response []tc.CDNFederation `json:"response"`
@@ -56,7 +57,7 @@ func (to *Session) GetCDNFederationsByNameWithHdrReturnList(CDNName string, head
 	return resp.Response, inf, err
 }
 
-func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, toclientlib.ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	route := fmt.Sprintf("/cdns/%s/federations?id=%v", url.QueryEscape(CDNName), ID)
 	inf, err := to.get(route, header, &data)
@@ -64,11 +65,11 @@ func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header h
 }
 
 // Deprecated: GetCDNFederationsByID will be removed in 6.0. Use GetCDNFederationsByIDWithHdr.
-func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, toclientlib.ReqInf, error) {
 	return to.GetCDNFederationsByIDWithHdr(CDNName, ID, nil)
 }
 
-func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName string, ID int, h http.Header) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
+func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName string, ID int, h http.Header) (*tc.UpdateCDNFederationResponse, toclientlib.ReqInf, error) {
 	data := tc.UpdateCDNFederationResponse{}
 	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
 	inf, err := to.put(route, f, h, &data)
@@ -76,11 +77,11 @@ func (to *Session) UpdateCDNFederationsByIDWithHdr(f tc.CDNFederation, CDNName s
 }
 
 // Deprecated: UpdateCDNFederationsByID will be removed in 6.0. Use UpdateCDNFederationsByIDWithHdr.
-func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, ReqInf, error) {
+func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, toclientlib.ReqInf, error) {
 	return to.UpdateCDNFederationsByIDWithHdr(f, CDNName, ID, nil)
 }
 
-func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, ReqInf, error) {
+func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, toclientlib.ReqInf, error) {
 	data := tc.DeleteCDNFederationResponse{}
 	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
 	inf, err := to.del(route, nil, &data)

@@ -16,37 +16,51 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions } from 'protractor'
+import { browser, by, element} from 'protractor'
 import { BasePage } from './BasePage.po'
-import { timeout } from 'q'
+
+interface LoginData {
+    password: string;
+    username: string;
+    validationMessage: string;
+}
+
 export class LoginPage extends BasePage{
     private txtUserName = element(by.id("loginUsername"))
     private txtPassword = element(by.id("loginPass"))
     private btnLogin = element(by.name("loginSubmit"))
     private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
     private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
-
     private config = require('../config');
     private randomize = this.config.randomize;
-
-    async Login(userName: string, password: string ){
-        if(userName == 'admin'){
-            await this.txtUserName.sendKeys(userName)
-            await this.txtPassword.sendKeys(password)
+    
+    
+    async Login(login:LoginData){
+        let result = false;
+        const basePage = new BasePage();
+        if(login.username === 'admin'){
+            await this.txtUserName.sendKeys(login.username)
+            await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();    
         }else{
-            await this.txtUserName.sendKeys(userName+this.randomize)
-            await this.txtPassword.sendKeys(password)
+            await this.txtUserName.sendKeys(login.username+this.randomize)
+            await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();    
         }
+        if(await browser.getCurrentUrl() === browser.params.baseUrl + "#!/login"){
+            result = await basePage.GetOutputMessage().then(value => value === login.validationMessage);
+        }else{
+            result = true;
+        }
+        return result;
     }
     ClickResetPassword(){
         this.lnkResetPassword.click()
     }
-    async CheckUserName(userName: string) {
-        if(await this.lblUserName.getText() == 'admin' || await this.lblUserName.getText() == userName+this.randomize){
+    async CheckUserName(login) {
+        if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
             return true;
         }else{
             return false;   

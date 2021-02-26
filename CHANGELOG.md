@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added functionality to automatically renew ACME certificates.
 
 ### Fixed
+- [#5558](https://github.com/apache/trafficcontrol/issues/5558) - Fixed `TM UI` and `/api/cache-statuses` to report aggregate `bandwidth_kbps` correctly.
 - [#5288](https://github.com/apache/trafficcontrol/issues/5288) - Fixed the ability to create and update a server with MTU value >= 1280.
 - [#5445](https://github.com/apache/trafficcontrol/issues/5445) - When updating a registered user, ignore updates on registration_sent field.
 - [#5335](https://github.com/apache/trafficcontrol/issues/5335) - Don't create a change log entry if the delivery service primary origin hasn't changed
@@ -37,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5382](https://github.com/apache/trafficcontrol/issues/5382) - Fixed API documentation and TP helptext for "Max DNS Answers" field with respect to DNS, HTTP, Steering Delivery Service
 - [#5396](https://github.com/apache/trafficcontrol/issues/5396) - Return the correct error type if user tries to update the root tenant
 - [#5378](https://github.com/apache/trafficcontrol/issues/5378) - Updating a non existent DS should return a 404, instead of a 500
+- Fixed a NullPointerException in TR when a client passes a null SNI hostname in a TLS request
 - Fixed a potential Traffic Router race condition that could cause erroneous 503s for CLIENT_STEERING delivery services when loading new steering changes
 - Fixed a logging bug in Traffic Monitor where it wouldn't log errors in certain cases where a backup file could be used instead. Also, Traffic Monitor now rejects monitoring snapshots that have no delivery services.
 - [#5195](https://github.com/apache/trafficcontrol/issues/5195) - Correctly show CDN ID in Changelog during Snap
@@ -64,8 +66,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
+- Updated the Traffic Ops Python client to 3.0
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
+- Set Traffic Router to only accept TLSv1.1, TLSv1.2, and TLSv1.3 protocols by default in server.xml
+- Updated Apache Tomcat from 8.5.57 to 9.0.43
+- Updated Apache Tomcat Native from 1.2.16 to 1.2.23
 
 ### Removed
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.

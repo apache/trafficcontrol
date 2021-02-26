@@ -44,12 +44,16 @@ export class UsersComponent implements OnInit {
 	/** The ID of the currently logged-in user. */
 	public myId: number;
 
+	/** An observation subject for the map of a user's Roles. */
 	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
 
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
-	constructor (private readonly api: UserService, private readonly auth: AuthenticationService) {
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly api: UserService, private readonly auth: AuthenticationService) {
 		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();
@@ -75,8 +79,8 @@ export class UsersComponent implements OnInit {
 		}
 
 		this.api.getUsers().pipe(first()).subscribe(
-			(r: Array<User>) => {
-				this.users = orderBy(r, "fullName") as Array<User>;
+			r => {
+				this.users = orderBy(r, "fullName");
 				this.loading = false;
 			}
 		);
@@ -94,19 +98,20 @@ export class UsersComponent implements OnInit {
 
 	/**
 	 * Implements a fuzzy search over usernames
+	 *
 	 * @param u The user being checked for a fuzzy match (currently uses the username)
 	 * @returns `true` if `u` is a fuzzy match for the `fuzzControl` value, `false` otherwise
 	 */
-	public fuzzy (u: User): boolean {
+	public fuzzy(u: User): boolean {
 		if (!this.fuzzControl.value) {
 			return true;
 		}
 		const testVal = u.username.toLocaleLowerCase();
 		let n = -1;
 		for (const l of this.fuzzControl.value.toLocaleLowerCase()) {
-			/* tslint:disable */
+			/* eslint-disable */
 			if (!~(n = testVal.indexOf(l, n + 1))) {
-			/* tslint:enable */
+			/* eslint-enable */
 				return false;
 			}
 		}
