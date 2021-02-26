@@ -16,8 +16,9 @@ package v4
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCDNNotifications(t *testing.T) {
@@ -35,7 +36,7 @@ func GetTestCDNotifications(t *testing.T) {
 		if len(resp) > 0 {
 			respNotification := resp[0]
 			expectedNotification := "test notification: " + cdn.Name
-			if *respNotification.Notification != expectedNotification {
+			if respNotification.Notification != nil && *respNotification.Notification != expectedNotification {
 				t.Errorf("expected notification does not match actual: %s, expected: %s", *respNotification.Notification, expectedNotification)
 			}
 		}
