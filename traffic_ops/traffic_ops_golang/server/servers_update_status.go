@@ -108,12 +108,16 @@ SELECT
 	status.name AS status,
 	/* True if the cachegroup parent or any ancestor topology node has pending updates. */
 	TRUE IN (
-		SELECT sta.upd_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
+		SELECT sta.upd_pending FROM server_topology_ancestors sta
+		WHERE sta.base_server_id = s.id
+		AND sta.cdn_id = s.cdn_id
 		UNION SELECT COALESCE(BOOL_OR(ps.upd_pending), FALSE)
 	) AS parent_upd_pending,
 	/* True if the cachegroup parent or any ancestor topology node has pending revalidation. */
 	TRUE IN (
-		SELECT sta.reval_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
+		SELECT sta.reval_pending FROM server_topology_ancestors sta
+		WHERE sta.base_server_id = s.id
+		AND sta.cdn_id = s.cdn_id
 		UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
 	) AS parent_reval_pending
 	FROM use_reval_pending,
