@@ -357,8 +357,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{4, 0}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 43038498893},
 
 		//CDN notification
-		{api.Version{4, 0}, http.MethodPost, `cdns/{id}/notification`, cdn.CreateNotification, auth.PrivLevelOperations, Authenticated, nil, 2766228513, noPerlBypass},
-		{api.Version{4, 0}, http.MethodDelete, `cdns/{id}/notification`, cdn.DeleteNotification, auth.PrivLevelOperations, Authenticated, nil, 2732428513, noPerlBypass},
+		{api.Version{4, 0}, http.MethodGet, `cdn_notifications/?$`, cdnnotification.Read, auth.PrivLevelReadOnly, Authenticated, nil, 2221224514},
+		{api.Version{4, 0}, http.MethodPost, `cdn_notifications/?$`, cdnnotification.Create, auth.PrivLevelOperations, Authenticated, nil, 2765223513},
+		{api.Version{4, 0}, http.MethodDelete, `cdn_notifications/?$`, cdnnotification.Delete, auth.PrivLevelOperations, Authenticated, nil, 2722411851},
 
 		//CDN generic handlers:
 		{api.Version{4, 0}, http.MethodGet, `cdns/?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 42303186213},
