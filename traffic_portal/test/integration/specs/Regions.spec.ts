@@ -48,8 +48,8 @@ using(testData.Regions, async function(regionsData){
         describe('Traffic Portal - Regions - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open regions page', async function(){
                 await regionsPage.OpenTopologyMenu();

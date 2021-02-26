@@ -38,8 +38,8 @@ using(testData.CDN, async function(cdnsData){
         describe('Traffic Portal - CDN - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open CDN page', async function(){
                 await cdnsPage.OpenCDNsPage();
