@@ -30,7 +30,7 @@ import (
 //
 // See ClientOpts for details about options, which options are required, and how they behave.
 //
-func Login(url, user, pass string, opts ClientOpts) (*Session, toclientlib.ReqInf, error) {
+func Login(url, user, pass string, opts Options) (*Session, toclientlib.ReqInf, error) {
 	cl, ip, err := toclientlib.Login(url, user, pass, opts.ClientOpts, apiVersions())
 	if err != nil {
 		return nil, toclientlib.ReqInf{}, err
@@ -38,14 +38,14 @@ func Login(url, user, pass string, opts ClientOpts) (*Session, toclientlib.ReqIn
 	return &Session{TOClient: *cl}, ip, err
 }
 
-// ClientOpts is the options to configure the creation of the Client.
+// Options is the options to configure the creation of the Client.
 //
 // This exists to allow adding new features without a breaking change to the
 // Login function. Users should understand this, and understand that upgrading
 // their library may result in new options that their application doesn't know
 // to use. New fields should always behave as-before if their value is the
 // default.
-type ClientOpts struct {
+type Options struct {
 	toclientlib.ClientOpts
 }
 
