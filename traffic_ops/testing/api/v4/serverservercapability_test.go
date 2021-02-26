@@ -473,5 +473,11 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, edgeID)
+	if err != nil {
+		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+	}
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID)
+	if err != nil {
+		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+	}
 }
