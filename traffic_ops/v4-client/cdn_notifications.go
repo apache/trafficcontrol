@@ -17,20 +17,22 @@ package client
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"net/http"
+	"net/url"
 )
 
 const (
 	APICDNNotifications = "/cdn_notifications"
 )
 
-// GetCDNNotificationsWithHdr returns a list of CDN Notifications.
-func (to *Session) GetCDNNotificationsWithHdr(cdnName string, header http.Header) ([]tc.CDNNotification, toclientlib.ReqInf, error) {
+// GetCDNNotifications returns a list of CDN Notifications.
+func (to *Session) GetCDNNotifications(cdnName string, header http.Header) ([]tc.CDNNotification, toclientlib.ReqInf, error) {
 	var data tc.CDNNotificationsResponse
-	route := fmt.Sprintf("%s?cdn=%s", APICDNNotifications, cdnName)
+	params := url.Values{}
+	params.Add("cdn", cdnName)
+	route := fmt.Sprintf("%s?%s", APICDNNotifications, params.Encode())
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
@@ -44,8 +46,10 @@ func (to *Session) CreateCDNNotification(notification tc.CDNNotificationRequest)
 
 // DeleteCDNNotification deletes a CDN Notification by CDN name.
 func (to *Session) DeleteCDNNotification(cdnName string) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?cdn=%s", APICDNNotifications, cdnName)
 	var alerts tc.Alerts
+	params := url.Values{}
+	params.Add("cdn", cdnName)
+	route := fmt.Sprintf("%s?%s", APICDNNotifications, params.Encode())
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }

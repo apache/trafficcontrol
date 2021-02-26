@@ -28,7 +28,7 @@ func TestCDNNotifications(t *testing.T) {
 
 func GetTestCDNotifications(t *testing.T) {
 	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.GetCDNNotificationsWithHdr(cdn.Name, nil)
+		resp, _, err := TOSession.GetCDNNotifications(cdn.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET cdn notification for cdn: %v - %v", err, resp)
 		}
