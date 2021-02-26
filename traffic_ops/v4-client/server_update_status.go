@@ -28,7 +28,7 @@ import (
 // UpdateServerStatus updates the Status of the server identified by
 // 'serverID'.
 func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf("%s/servers/%d/status", serverID)
+	path := fmt.Sprintf("servers/%d/status", serverID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.put(path, req, nil, &alerts)
 	if err != nil {
