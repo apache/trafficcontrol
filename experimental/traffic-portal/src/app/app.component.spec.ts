@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { HttpClientModule } from "@angular/common/http";
 import { TestBed, waitForAsync } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
@@ -26,6 +27,7 @@ describe("AppComponent", () => {
 				AppComponent
 			],
 			imports: [
+				HttpClientModule,
 				RouterTestingModule
 			],
 		}).compileComponents();
@@ -37,7 +39,7 @@ describe("AppComponent", () => {
 		expect(app).toBeTruthy();
 	});
 
-	it(`should have as title 'Traffic Portal'`, () => {
+	it("should have as title 'Traffic Portal'", () => {
 		const fixture = TestBed.createComponent(AppComponent);
 		const app = fixture.componentInstance;
 		expect(app.title).toEqual("Traffic Portal");

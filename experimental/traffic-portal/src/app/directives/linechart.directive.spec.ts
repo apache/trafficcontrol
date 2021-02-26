@@ -11,11 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { ElementRef } from "@angular/core";
 import { LinechartDirective } from "./linechart.directive";
 
 describe("LinechartDirective", () => {
 	it("should create an instance", () => {
-		const directive = new LinechartDirective(null);
+		const directive = new LinechartDirective(new ElementRef(null));
 		expect(directive).toBeTruthy();
 	});
 });

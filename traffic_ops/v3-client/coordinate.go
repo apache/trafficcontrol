@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -30,13 +31,13 @@ const (
 )
 
 // Create a Coordinate
-func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APICoordinates, coordinate, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, coordinate, header, &alerts)
@@ -45,11 +46,11 @@ func (to *Session) UpdateCoordinateByIDWithHdr(id int, coordinate tc.Coordinate,
 
 // Update a Coordinate by ID
 // Deprecated: UpdateCoordinateByID will be removed in 6.0. Use UpdateCoordinateByIDWithHdr.
-func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, toclientlib.ReqInf, error) {
 	return to.UpdateCoordinateByIDWithHdr(id, coordinate, nil)
 }
 
-func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	var data tc.CoordinatesResponse
 	reqInf, err := to.get(APICoordinates, header, &data)
 	return data.Response, reqInf, err
@@ -57,11 +58,11 @@ func (to *Session) GetCoordinatesWithHdr(header http.Header) ([]tc.Coordinate, R
 
 // Returns a list of Coordinates
 // Deprecated: GetCoordinates will be removed in 6.0. Use GetCoordinatesWithHdr.
-func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinates() ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	return to.GetCoordinatesWithHdr(nil)
 }
 
-func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var data tc.CoordinatesResponse
 	reqInf, err := to.get(route, header, &data)
@@ -70,17 +71,17 @@ func (to *Session) GetCoordinateByIDWithHdr(id int, header http.Header) ([]tc.Co
 
 // GET a Coordinate by the Coordinate id
 // Deprecated: GetCoordinateByID will be removed in 6.0. Use GetCoordinateByIDWithHdr.
-func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	return to.GetCoordinateByIDWithHdr(id, nil)
 }
 
 // GET a Coordinate by the Coordinate name
 // Deprecated: GetCoordinateByName will be removed in 6.0. Use GetCoordinateByNameWithHdr.
-func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	return to.GetCoordinateByNameWithHdr(name, nil)
 }
 
-func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) ([]tc.Coordinate, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APICoordinates, name)
 	var data tc.CoordinatesResponse
 	reqInf, err := to.get(route, header, &data)
@@ -88,7 +89,7 @@ func (to *Session) GetCoordinateByNameWithHdr(name string, header http.Header) (
 }
 
 // DELETE a Coordinate by ID
-func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

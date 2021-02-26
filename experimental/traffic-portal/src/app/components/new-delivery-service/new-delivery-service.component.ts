@@ -24,6 +24,7 @@ import {
 	GeoLimit,
 	GeoProvider,
 	Protocol,
+	protocolToString,
 	QStringHandling,
 	RangeRequestHandling,
 	Type
@@ -42,7 +43,7 @@ const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
  */
 const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 
-// tslint:disable
+/* eslint-disable */
 /**
  * A regular expression that matches IPv4 addresses
  */
@@ -52,7 +53,7 @@ const VALID_IPV4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d
  * This is huge and ugly, but there's no JS built-in for address parsing afaik.
  */
 const VALID_IPV6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/;
-// tslint:enable
+/* eslint-enable */
 /**
  * A regular expression that matches a valid hostname
  */
@@ -77,8 +78,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 		deepCachingType: "NEVER",
 		displayName: "",
 		dscp: 0,
-		geoLimit: GeoLimit.None,
-		geoProvider: GeoProvider.MaxMind,
+		geoLimit: GeoLimit.NONE,
+		geoProvider: GeoProvider.MAX_MIND,
 		initialDispersion: 1,
 		ipv6RoutingEnabled: true,
 		logsEnabled: true,
@@ -115,24 +116,27 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/** Allows the user to set 'protocol' */
 	public protocol = new FormControl();
 
-	/** Need public access to the merged namespace for toString methods. */
-	public Protocol = Protocol;
+	/** Need This to be a property for template access. */
+	public protocolToString = protocolToString;
 
 	/** The available CDNs from which for the user to choose. */
-	public cdns: Array<CDN>;
+	public cdns: Array<CDN> = [];
 
 	/**
 	 * The available useInTable=delivery_service Types from which for the user
 	 * to choose.
 	 */
-	public dsTypes: Array<Type>;
+	public dsTypes: Array<Type> = [];
 
 	/** Controls what "step" the user is on; controls which fields are shown. */
 	public step = 0;
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
 
-	constructor (
+	/**
+	 * Constructor.
+	 */
+	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly cdnAPI: CDNService,
 		private readonly auth: AuthenticationService,
@@ -168,12 +172,11 @@ export class NewDeliveryServiceComponent implements OnInit {
 				return;
 			}
 			this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
-				(d: Array<DeliveryService>) => {
+				d => {
 					const cdnsInUse = new Map<number, number>();
 					for (const ds of d) {
 						if (ds.tenantId === undefined) {
-							console.warn("Delivery Service has no tenant");
-							console.debug(ds);
+							console.warn("Delivery Service has no tenant:", ds);
 							continue;
 						}
 						if (ds.tenantId === (this.auth.currentUserValue as User).tenantId) {
@@ -204,6 +207,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	/**
 	 * Sets the default CDN based on the passed integral, unique identifier.
+	 *
 	 * @param id The integral, unique identifier of the CDN which is assumed to
 	 * be the CDN which contains more of the current user's tenant's Delivery
 	 * Services than any other - unless said tenant has no Delivery Services, in
@@ -212,10 +216,14 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 */
 	private setDefaultCDN(id: number): void {
 		this.cdnAPI.getCDNs().pipe(first()).subscribe(
-			(cdns: Map<string, CDN>) => {
+			cdns => {
+				if (!cdns) {
+					console.warn("No CDNs found in the API");
+					return;
+				}
 				this.cdns = new Array<CDN>();
 				let def: CDN | null = null;
-				cdns.forEach( (c: CDN, name: string) => {
+				cdns.forEach( (c: CDN) => {
 
 					// this is a special, magic-value CDN that can't have any DSes
 					if (c.name !== "ALL") {
@@ -367,6 +375,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/**
 	 * Sets the appropriate bypass location for the new Delivery Service,
 	 * assuming it is DNS-routed.
+	 *
 	 * @param v Represents a Bypass value - either an IP(v4/v6) address or a hostname.
 	 * @throws {Error} if `v` is not a valid Bypass value
 	 */

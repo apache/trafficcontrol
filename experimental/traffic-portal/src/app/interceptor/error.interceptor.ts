@@ -28,7 +28,10 @@ import { AlertService, AuthenticationService } from "../services";
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
-	constructor (
+	/**
+	 * Constructor.
+	 */
+	constructor(
 		private readonly authenticationService: AuthenticationService,
 		private readonly router: Router,
 		private readonly alerts: AlertService
@@ -38,16 +41,18 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 * Intercepts HTTP responses and checks for erroneous responses, displaying
 	 * appropriate error Alerts and redirecting unauthenticated users to the
 	 * login form.
+	 *
+	 * @param request The client request.
+	 * @param next The next handler for HTTP requests in the pipeline.
+	 * @returns An Observable that will emit an event if the request fails.
 	 */
-	public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(catchError(err => {
 			console.error("HTTP Error: ", err);
 
-			/* tslint:disable */
-			if (err.hasOwnProperty('error') && err['error'].hasOwnProperty('alerts')) {
-				for (const a of err['error']['alerts']) {
-					/* tslint:enable */
-					this.alerts.alertsSubject.next(a as Alert);
+			if (err.hasOwnProperty("error") && (err as {error: object}).error.hasOwnProperty("alerts")) {
+				for (const a of (err as {error: {alerts: Alert[]}}).error.alerts) {
+					this.alerts.alertsSubject.next(a);
 				}
 			}
 			if (err.status === 401 || err.status === 403) {

@@ -26,18 +26,24 @@ import { AlertService } from "../services";
  */
 @Injectable()
 export class AlertInterceptor implements HttpInterceptor {
-	constructor (private readonly alertService: AlertService) {}
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly alertService: AlertService) {}
 
 	/**
 	 * Intercepts HTTP responses and checks for any alerts.
+	 *
+	 * @param request The client request.
+	 * @param next The next handler for HTTP requests in the pipeline.
+	 * @returns An Observable that will not emit anything.
 	 */
-	public intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(tap(
 			r => {
-				/* tslint:disable */
-				if (r.hasOwnProperty('body') && r['body'].hasOwnProperty('alerts')) {
-					for (const a of r['body']['alerts']) {
-						/* tslint:enable */
+				if (Object.prototype.hasOwnProperty.call(r, "body") &&
+				    Object.prototype.hasOwnProperty.call((r as {body: unknown}).body, "alerts")) {
+					for (const a of (r as {body: {alerts: Array<unknown>}}).body.alerts) {
 						this.alertService.alertsSubject.next(a as Alert);
 					}
 				}

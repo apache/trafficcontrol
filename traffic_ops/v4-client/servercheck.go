@@ -16,14 +16,18 @@
 package client
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const API_SERVERCHECK = apiBase + "/servercheck"
+const APIServercheck = "/servercheck"
 
 // InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not.
-func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
-	uri := API_SERVERCHECK
+func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, toclientlib.ReqInf, error) {
+	uri := APIServercheck
 	resp := tc.ServercheckPostResponse{}
 	reqInf, err := to.post(uri, status, nil, &resp)
 	if err != nil {
@@ -33,11 +37,21 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 }
 
 // GetServersChecks fetches check and meta information about servers from /servercheck.
-func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
-	var response struct {
+func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, toclientlib.ReqInf, error) {
+	data := struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
+	}{}
+	route := APIServercheck
+	if params != nil {
+		route += "?" + params.Encode()
 	}
-	reqInf, err := to.get(API_SERVERCHECK, nil, &response)
-	return response.Response, response.Alerts, reqInf, err
+	reqInf, err := to.get(route, header, &data)
+	if err != nil {
+		return nil, data.Alerts, reqInf, err
+	}
+	if len(data.Response) == 0 {
+		return nil, data.Alerts, reqInf, nil
+	}
+	return data.Response, data.Alerts, reqInf, nil
 }

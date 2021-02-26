@@ -21,7 +21,8 @@ import (
 	"net/http"
 	"net/url"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // API_TENANTS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
@@ -34,7 +35,7 @@ const APITenants = "/tenants"
 
 const APITenantID = APITenants + "/%v"
 
-func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, error) {
+func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := to.get(APITenants, header, &data)
 	return data.Response, reqInf, err
@@ -42,11 +43,11 @@ func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, ReqInf, erro
 
 // Tenants gets an array of Tenants.
 // Deprecated: Tenants will be removed in 6.0. Use TenantsWithHdr.
-func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
+func (to *Session) Tenants() ([]tc.Tenant, toclientlib.ReqInf, error) {
 	return to.TenantsWithHdr(nil)
 }
 
-func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
+func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", APITenants, id), header, &data)
 	if err != nil {
@@ -61,11 +62,11 @@ func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, Req
 // Tenant gets the Tenant identified by the passed integral, unique identifer - which
 // must be passed as a string.
 // Deprecated: Tenant will be removed in 6.0. Use TenantWithHdr.
-func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
+func (to *Session) Tenant(id string) (*tc.Tenant, toclientlib.ReqInf, error) {
 	return to.TenantWithHdr(id, nil)
 }
 
-func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
+func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := APITenants + "?name=" + url.QueryEscape(name)
 	reqInf, err := to.get(query, header, &data)
@@ -84,7 +85,7 @@ func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Ten
 
 // TenantByName gets the Tenant with the name it's passed.
 // Deprecated: TenantByName will be removed in 6.0. Use TenantByNameWithHdr.
-func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
+func (to *Session) TenantByName(name string) (*tc.Tenant, toclientlib.ReqInf, error) {
 	return to.TenantByNameWithHdr(name, nil)
 }
 
@@ -109,7 +110,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	return &data, nil
 }
 
-func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, ReqInf, error) {
+func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, toclientlib.ReqInf, error) {
 	var data tc.TenantResponse
 	reqInf, err := to.put(fmt.Sprintf(APITenantID, id), t, header, &data)
 	if err != nil {

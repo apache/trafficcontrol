@@ -36,7 +36,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * The set of all Delivery Services (visible to the Tenant).
 	 */
-	public deliveryServices: DeliveryService[];
+	public deliveryServices: DeliveryService[] = [];
 
 	/**
 	 * The set of Delivery Services filtered according to the search box text.
@@ -61,7 +61,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Whether or not the page is still loading. */
 	public loading = true;
 
-	private capabilitiesSubscription: Subscription;
+	/** A subscription for the Capabilities of the user. */
+	private capabilitiesSubscription: Subscription | null = null;
 
 	/**
 	 * Whether or not the currently logged-in user has permission to create
@@ -80,7 +81,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/** Fuzzy search control */
 	public fuzzControl = new FormControl("", {updateOn: "change"});
 
-	constructor (
+	/**
+	 * Constructor.
+	 */
+	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
@@ -97,8 +101,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnInit(): void {
 		this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
-			(r: DeliveryService[]) => {
-				this.deliveryServices = orderBy(r, "displayName") as DeliveryService[];
+			r => {
+				// these annoying typecasts are necessary because of how object property indexing works.
+				// look at 'orderBy' to understand.
+				this.deliveryServices = (
+					orderBy((r as unknown[]) as Record<string, unknown>[], "displayName") as unknown[]
+				) as DeliveryService[];
 				this.loading = false;
 			}
 		);
@@ -122,18 +130,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * Updates the page's URL to show the current search term in its 'search'
 	 * query parameter.
+	 *
+	 * @param e The Event that triggered updating the URL.
 	 */
 	public updateURL(e: Event): void {
 		e.preventDefault();
 		if (this.fuzzControl.value === "") {
-			this.router.navigate([], {replaceUrl: true, queryParams: null});
+			this.router.navigate([], {queryParams: null, replaceUrl: true});
 		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
+			this.router.navigate([], {queryParams: {search: this.fuzzControl.value}, replaceUrl: true});
 		}
 	}
 
 	/**
 	 * Provides a tracking identifier for each Delivery Service.
+	 *
+	 * @param _ unused, but specified by the Angular API.
+	 * @param d The Delivery Service to identify.
+	 * @returns A unique identifier for 'd' to facilitate tracking.
 	 */
 	public tracker(_: number, d: DeliveryService): number {
 		return d.id || 0;
@@ -143,7 +157,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 * Cleans up subscriptions when the component is destroyed.
 	 */
 	public ngOnDestroy(): void {
-		this.capabilitiesSubscription.unsubscribe();
+		if (this.capabilitiesSubscription) {
+			this.capabilitiesSubscription.unsubscribe();
+		}
 	}
 
 }

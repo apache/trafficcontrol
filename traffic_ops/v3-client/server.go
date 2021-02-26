@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -45,21 +46,21 @@ func needAndCanFetch(id *int, name *string) bool {
 
 // CreateServer creates a Server.
 // Deprecated: CreateServer will be removed in 6.0. Use CreateServerWithHdr.
-func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServer(server tc.Server) (tc.Alerts, toclientlib.ReqInf, error) {
 	upgraded, err := server.ToNullable().Upgrade()
 	if err != nil {
-		return tc.Alerts{}, ReqInf{}, fmt.Errorf("upgrading server: %v", err)
+		return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("upgrading server: %v", err)
 	}
 	return to.CreateServerWithHdr(upgraded, nil)
 }
 
 // CreateServerWithHdr creates the given server, with whatever headers are
 // passed added to the request.
-func (to *Session) CreateServerWithHdr(server tc.ServerV30, hdr http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServerWithHdr(server tc.ServerV30, hdr http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
 		cg, _, err := to.GetCacheGroupNullableByNameWithHdr(*server.Cachegroup, nil)
@@ -129,7 +130,7 @@ func (to *Session) CreateServerWithHdr(server tc.ServerV30, hdr http.Header) (tc
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerV30, header http.Header) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerV30, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	route := fmt.Sprintf("%s/%d", APIServers, id)
 	reqInf, err := to.put(route, server, header, &alerts)
@@ -138,17 +139,17 @@ func (to *Session) UpdateServerByIDWithHdr(id int, server tc.ServerV30, header h
 
 // UpdateServerByID updates a Server by ID.
 // Deprecated: UpdateServerByID will be removed in 6.0. Use UpdateServerByIDWithHdr.
-func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, toclientlib.ReqInf, error) {
 	upgraded, err := server.ToNullable().Upgrade()
 	if err != nil {
-		return tc.Alerts{}, ReqInf{}, fmt.Errorf("upgrading server: %v", err)
+		return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("upgrading server: %v", err)
 	}
 	return to.UpdateServerByIDWithHdr(id, upgraded, nil)
 }
 
 // GetServersWithHdr retrieves a list of servers using the given optional query
 // string parameters and HTTP headers.
-func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, ReqInf, error) {
+func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc.ServersV3Response, toclientlib.ReqInf, error) {
 	route := APIServers
 	if params != nil {
 		route += "?" + params.Encode()
@@ -165,7 +166,7 @@ func (to *Session) GetServersWithHdr(params *url.Values, header http.Header) (tc
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
 // Deprecated: GetServers will be removed in 6.0. Use GetServersWithHdr.
-func (to *Session) GetServers(params *url.Values) ([]tc.Server, ReqInf, error) {
+func (to *Session) GetServers(params *url.Values) ([]tc.Server, toclientlib.ReqInf, error) {
 	srvs, inf, err := to.GetServersWithHdr(params, nil)
 	if err != nil {
 		return []tc.Server{}, inf, err
@@ -189,7 +190,7 @@ func (to *Session) GetServers(params *url.Values) ([]tc.Server, ReqInf, error) {
 // parameters" in the request.
 // It returns, in order, the API response that Traffic Ops returned, a request
 // info object, and any error that occurred.
-func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerV30, ReqInf, error) {
+func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerV30, toclientlib.ReqInf, error) {
 	serversResponse, reqInf, err := to.GetServersWithHdr(params, header)
 	var firstServer tc.ServerV30
 	if err != nil || reqInf.StatusCode == http.StatusNotModified {
@@ -203,7 +204,7 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 	return firstServer, reqInf, err
 }
 
-func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header http.Header) ([]tc.ServerDetailV30, ReqInf, error) {
+func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header http.Header) ([]tc.ServerDetailV30, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	v.Add("hostName", hostName)
 	route := APIServersDetails + "?" + v.Encode()
@@ -214,19 +215,19 @@ func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header htt
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
 // Deprecated: GetServerDetailsByHostName will be removed in 6.0. Use GetServerDetailsByHostNameWithHdr.
-func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV30, ReqInf, error) {
+func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV30, toclientlib.ReqInf, error) {
 	return to.GetServerDetailsByHostNameWithHdr(hostName, nil)
 }
 
 // DeleteServerByID DELETEs a Server by ID.
-func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteServerByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIServers, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, tc.Alerts, toclientlib.ReqInf, error) {
 	// TODO fix to only request one server
 	params := url.Values{}
 	params.Add("hostName", n)
@@ -253,11 +254,11 @@ func (to *Session) GetServerFQDNWithHdr(n string, header http.Header) (string, t
 // GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first
 // server found to have the Host Name 'n'.
 // Deprecated: GetServerFQDN will be removed in 6.0. Use GetServerFQDNWithHdr.
-func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, toclientlib.ReqInf, error) {
 	return to.GetServerFQDNWithHdr(n, nil)
 }
 
-func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header http.Header) ([]string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header http.Header) ([]string, tc.Alerts, toclientlib.ReqInf, error) {
 	var serverlst []string
 	resp, reqInf, err := to.GetServersWithHdr(nil, header)
 	if err != nil {
@@ -280,7 +281,7 @@ func (to *Session) GetServersShortNameSearchWithHdr(shortname string, header htt
 // GetServersShortNameSearch returns all of the Host Names of servers that
 // contain 'shortname'.
 // Deprecated: GetServersShortNameSearch will be removed in 6.0. Use GetServersShortNameSearchWithHdr.
-func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Alerts, ReqInf, error) {
+func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Alerts, toclientlib.ReqInf, error) {
 	return to.GetServersShortNameSearchWithHdr(shortname, nil)
 }
 
@@ -289,7 +290,7 @@ func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Ale
 // 'server' should be the requested server's ID, 'dsIDs' should be a slice of
 // the requested Delivery Services' IDs. If 'replace' is 'true', existing
 // assignments to the server will be replaced.
-func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
+func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, toclientlib.ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
 	endpoint := fmt.Sprintf(APIServerAssignDeliveryServices, server, replace)
 	var alerts tc.Alerts
@@ -297,7 +298,7 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetServerIDDeliveryServicesWithHdr(server int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetServerIDDeliveryServicesWithHdr(server int, header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	endpoint := fmt.Sprintf(APIServerDeliveryServices, server)
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := to.get(endpoint, header, &data)
@@ -307,11 +308,11 @@ func (to *Session) GetServerIDDeliveryServicesWithHdr(server int, header http.He
 // GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
 // by the integral, unique identifier 'server'.
 // Deprecated: GetServerIDDeliveryServices will be removed in 6.0. Use GetServerIDDeliveryServicesWithHdr.
-func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	return to.GetServerIDDeliveryServicesWithHdr(server, nil)
 }
 
-func (to *Session) GetServerUpdateStatusWithHdr(hostName string, header http.Header) (tc.ServerUpdateStatus, ReqInf, error) {
+func (to *Session) GetServerUpdateStatusWithHdr(hostName string, header http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	path := APIServers + `/` + hostName + `/update_status`
 	data := []tc.ServerUpdateStatus{}
 	reqInf, err := to.get(path, header, &data)
@@ -326,6 +327,6 @@ func (to *Session) GetServerUpdateStatusWithHdr(hostName string, header http.Hea
 
 // GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
 // Deprecated: GetServerUpdateStatus will be removed in 6.0. Use GetServerUpdateStatusWithHdr.
-func (to *Session) GetServerUpdateStatus(hostName string) (tc.ServerUpdateStatus, ReqInf, error) {
+func (to *Session) GetServerUpdateStatus(hostName string) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	return to.GetServerUpdateStatusWithHdr(hostName, nil)
 }

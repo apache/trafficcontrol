@@ -17,14 +17,14 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
+import { InvalidationJobService } from "src/app/services/api";
 
-import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 import { CustomvalidityDirective } from "../../directives/customvalidity.directive";
 import { OpenableDirective } from "../../directives/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
-import { APIService } from "../../services/api.service";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;
@@ -42,8 +42,8 @@ describe("InvalidationJobsComponent", () => {
 			cdnId: 0,
 			displayName: "test DS",
 			dscp: 0,
-			geoLimit: GeoLimit.None,
-			geoProvider: GeoProvider.MaxMind,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
 			ipv6RoutingEnabled: true,
 			lastUpdated: new Date(),
 			logsEnabled: true,
@@ -72,7 +72,7 @@ describe("InvalidationJobsComponent", () => {
 			]
 		});
 
-		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
+		TestBed.overrideProvider(InvalidationJobService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 
@@ -87,6 +87,10 @@ describe("InvalidationJobsComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in InvalidationJobsComponent afterAll:", e);
+		}
 	});
 });

@@ -19,6 +19,25 @@ ALTER TABLE interface
   DROP CONSTRAINT interface_server_fkey,
   ADD CONSTRAINT interface_server_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- +goose StatementBegin
+DO $$
+BEGIN
+  IF EXISTS(
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = (
+      SELECT oid
+      FROM pg_class
+      WHERE relname LIKE 'ip_address'
+    ) AND conname = 'ip_address_interface_server_fkey'
+  ) THEN
+    ALTER TABLE ip_address
+      RENAME CONSTRAINT ip_address_interface_server_fkey TO ip_address_interface_fkey;
+  END IF;
+END
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
 ALTER TABLE ip_address
   DROP CONSTRAINT ip_address_interface_fkey,
   ADD CONSTRAINT ip_address_interface_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE,

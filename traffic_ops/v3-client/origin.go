@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
@@ -89,9 +90,9 @@ func originIDs(to *Session, origin *tc.Origin) error {
 }
 
 // Create an Origin
-func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	err := originIDs(to, &origin)
 	if err != nil {
@@ -102,9 +103,9 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 	return &originResp, reqInf, err
 }
 
-func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	err := originIDs(to, &origin)
 	if err != nil {
@@ -118,12 +119,12 @@ func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http
 
 // Update an Origin by ID
 // Deprecated: UpdateOriginByID will be removed in 6.0. Use UpdateOriginByIDWithHdr.
-func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	return to.UpdateOriginByIDWithHdr(id, origin, nil)
 }
 
 // GET a list of Origins by a query parameter string
-func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, toclientlib.ReqInf, error) {
 	uri := APIOrigins + queryParams
 	var data tc.OriginsResponse
 	reqInf, err := to.get(uri, nil, &data)
@@ -131,27 +132,27 @@ func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, Req
 }
 
 // Returns a list of Origins
-func (to *Session) GetOrigins() ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOrigins() ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams("")
 }
 
 // GET an Origin by the Origin ID
-func (to *Session) GetOriginByID(id int) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginByID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?id=%d", id))
 }
 
 // GET an Origin by the Origin name
-func (to *Session) GetOriginByName(name string) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginByName(name string) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", url.QueryEscape(name)))
 }
 
 // GET a list of Origins by Delivery Service ID
-func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?deliveryservice=%d", id))
 }
 
 // DELETE an Origin by ID
-func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteOriginByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

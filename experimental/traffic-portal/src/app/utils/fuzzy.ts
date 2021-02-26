@@ -26,7 +26,7 @@
  * could be found within it (or if it exceeds the optional threshold), this will
  * be Infinity.
  */
-export function fuzzyScore (text: string, pattern: string, threshold: number = 0): number {
+export function fuzzyScore(text: string, pattern: string, threshold: number = 0): number {
 	if (pattern.length < 1) {
 		return 0;
 	}

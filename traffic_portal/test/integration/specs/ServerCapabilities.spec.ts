@@ -36,8 +36,8 @@ using(testData.ServerCapabilities, function(serverCapabilitiesData) {
         using(serverCapabilitiesData.Login, function(login) {
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open server capability page', async function() {
                 await serverCapabilitiesPage.OpenConfigureMenu();

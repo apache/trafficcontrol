@@ -15,4 +15,15 @@
 
 package client
 
-const apiBase = "/api/4.0"
+const apiBaseStr = "/api/"
+
+// apiVersions is the list of minor API versions in this client's major version.
+// This should be all minor versions from 0 up to the latest minor in Traffic Control
+// as of this client code.
+//
+// Versions are ordered latest-first.
+func apiVersions() []string {
+	return []string{
+		"4.0",
+	}
+}

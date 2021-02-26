@@ -20,13 +20,17 @@ package client
    limitations under the License.
 */
 
+import (
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
+
 const (
-	API_ABOUT = apiBase + "/about"
+	APIAbout = "/about"
 )
 
 // GetAbout gets data about the TO instance.
-func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
-	route := API_ABOUT
+func (to *Session) GetAbout() (map[string]string, toclientlib.ReqInf, error) {
+	route := APIAbout
 	var data map[string]string
 	reqInf, err := to.get(route, nil, &data)
 	return data, reqInf, err

@@ -46,10 +46,10 @@ describe('Setup API for Profiles', function () {
 using(testData.Profiles, async function(profilesData){
     using(profilesData.Login, function(login){
         describe('Traffic Portal - Profiles - ' + login.description, function(){
-            it('can login', async function () {
+            it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open profiles page', async function () {
                 await profilesPage.OpenConfigureMenu();

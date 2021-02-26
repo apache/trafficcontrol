@@ -48,8 +48,8 @@ using(testData.ASNs, async function(asnsData){
         describe('Traffic Portal - ASNs - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open asns page', async function(){
                 await asnsPage.OpenTopologyMenu();

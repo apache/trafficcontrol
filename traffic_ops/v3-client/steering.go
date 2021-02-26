@@ -19,9 +19,10 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, error) {
+func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.Steering `json:"response"`
 	}{}
@@ -30,6 +31,6 @@ func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, e
 }
 
 // Deprecated: Steering will be removed in 6.0. Use SteeringWithHdr.
-func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
+func (to *Session) Steering() ([]tc.Steering, toclientlib.ReqInf, error) {
 	return to.SteeringWithHdr(nil)
 }

@@ -13,22 +13,26 @@
 */
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
-import { Observable, Subscription } from "rxjs";
+import { Observable, of, Subscription } from "rxjs";
 
 /**
  * OpenableDirective allows or toggle-able dialogs. This is essentially a
  * polyfill for browsers that don't support true dialog elements.
  */
 @Directive({
-	selector: "dialog[openable]"
+	selector: "dialog[openable][toggle]"
 })
 export class OpenableDirective implements AfterViewInit, OnDestroy {
 	/** An Observable that emits toggle states for the dialog. */
-	@Input() public toggle: Observable<boolean>;
+	@Input() public toggle: Observable<boolean> = of(true);
 
-	private subscription: Subscription;
+	/** A subscription for the toggle input. */
+	private subscription: Subscription | null = null;
 
-	constructor (private readonly element: ElementRef) { }
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly element: ElementRef) { }
 
 	/** Initializes toggle listening. */
 	public ngAfterViewInit(): void {
@@ -59,6 +63,8 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 
 	/** cleans up subscriptions on element destruction. */
 	public ngOnDestroy(): void {
-		this.subscription.unsubscribe();
+		if (this.subscription) {
+			this.subscription.unsubscribe();
+		}
 	}
 }

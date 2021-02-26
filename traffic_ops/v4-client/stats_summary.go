@@ -16,15 +16,16 @@ import (
 	"fmt"
 	"net/url"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
-	API_STATS_SUMMARY = apiBase + "/stats_summary"
+	APIStatsSummary = "/stats_summary"
 )
 
 // GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
-func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, ReqInf, error) {
+func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryResponse{}
 
 	param := url.Values{}
@@ -38,16 +39,16 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 		param.Add("statName", *statName)
 	}
 
-	route := API_STATS_SUMMARY
+	route := APIStatsSummary
 	if len(param) > 0 {
-		route = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
+		route = fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
 	}
 	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
 }
 
 // GetSummaryStatsLastUpdated time of the last summary for a given stat
-func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, ReqInf, error) {
+func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryLastUpdatedResponse{}
 
 	param := url.Values{}
@@ -55,15 +56,15 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	if statName != nil {
 		param.Add("statName", *statName)
 	}
-	route := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
+	route := fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
 
 	reqInf, err := to.get(route, nil, &resp)
 	return resp, reqInf, err
 }
 
 // CreateSummaryStats creates a stats summary
-func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_STATS_SUMMARY, statsSummary, nil, &alerts)
+	reqInf, err := to.post(APIStatsSummary, statsSummary, nil, &alerts)
 	return alerts, reqInf, err
 }

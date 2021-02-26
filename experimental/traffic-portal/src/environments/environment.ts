@@ -21,7 +21,7 @@
  * environment contains information about the running environment.
  */
 export const environment = {
-	APIVersion: "3.0",
+	apiVersion: "3.0",
 	production: false
 };
 

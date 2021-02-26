@@ -20,6 +20,10 @@ package client
    limitations under the License.
 */
 
+import (
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
+
 const (
 	// API_ABOUT is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ABOUT = apiBase + "/about"
@@ -28,7 +32,7 @@ const (
 )
 
 // GetAbout gets data about the TO instance.
-func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
+func (to *Session) GetAbout() (map[string]string, toclientlib.ReqInf, error) {
 	var data map[string]string
 	reqInf, err := to.get(APIAbout, nil, &data)
 	return data, reqInf, err
