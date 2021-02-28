@@ -22,6 +22,7 @@ package staticdnsentry
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -128,7 +129,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	}
 
 	errs := validation.Errors{
-		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
+		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, validation.Match(regexp.MustCompile(`^(@|((\*|([a-zA-Z0-9_][a-zA-Z0-9_-]{0,62}))(\.[a-zA-Z0-9_][a-zA-Z0-9_-]{0,62})*[._]?))$`))),
 		"address":           addressErr,
 		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
 		"ttl":               ttlErr,

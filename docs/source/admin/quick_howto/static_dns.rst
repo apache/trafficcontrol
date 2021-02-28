@@ -42,7 +42,10 @@ To set up the aforementioned rule, follow these steps.
 #. Fill in all of the fields.
 
 	Host
-		This is the lowest-level DNS label that will be used in the DNS record. In the :ref:`ciab` scenario, for example, entering ``foo`` here will result in a full DNS name of ``foo.demo1.mycdn.ciab.test``.
+		This is the lowest-level DNS label that will be used in the DNS record.
+
+			* In the :ref:`ciab` scenario, for example, entering ``foo`` here will result in a full DNS name of ``foo.demo1.mycdn.ciab.test``.
+			* Using ``@`` will result in adding a record to ``demo1.mycdn.ciab.test``.
 	Type
 		Indicates the type of DNS record that will be created. The available types are
 

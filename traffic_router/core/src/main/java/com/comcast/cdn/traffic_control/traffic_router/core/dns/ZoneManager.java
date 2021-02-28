@@ -694,10 +694,10 @@ public class ZoneManager extends Resolver {
 						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
 					}
 					switch(type) {
-						case "A": 
+						case "A":
 							list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
 							break;
-						case "AAAA": 
+						case "AAAA":
 							list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
 							break;
 						case "CNAME":
@@ -734,7 +734,7 @@ public class ZoneManager extends Resolver {
 			// NSRecords will be replaced later if tr.isEdgeDNSRouting() is true; we need these to allow stub zones to be signed, etc
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
-					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
+					DClass.IN, ZoneUtils.getLong(ttl, "A", 60),
 					InetAddress.getByName(JsonUtils.optString(trJo, IP))));
 
 			String ip6 = trJo.get("ip6").asText();
@@ -772,7 +772,11 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name newName(final String hostname, final String domain) throws TextParseException {
-		return newName(hostname + "." + domain);
+		if ("@".equals(hostname)) {
+			return newName(domain);
+		} else {
+			return newName(hostname + "." + domain);
+		}
 	}
 
 	private static Name newName(final String fqdn) throws TextParseException {
@@ -859,7 +863,7 @@ public class ZoneManager extends Resolver {
 
 	/**
 	 * Gets trafficRouter.
-	 * 
+	 *
 	 * @return the trafficRouter
 	 */
 	public TrafficRouter getTrafficRouter() {
@@ -868,7 +872,7 @@ public class ZoneManager extends Resolver {
 
 	/**
 	 * Attempts to find a {@link Zone} that would contain the specified {@link Name}.
-	 * 
+	 *
 	 * @param name
 	 *            the Name to use to attempt to find the Zone
 	 * @return the Zone to use to resolve the specified Name
@@ -915,7 +919,7 @@ public class ZoneManager extends Resolver {
 	/**
 	 * Creates a dynamic zone that serves a set of A and AAAA records for the specified {@link Name}
 	 * .
-	 * 
+	 *
 	 * @param staticZone
 	 *            The Zone that would normally serve this request
 	 * @param builder
