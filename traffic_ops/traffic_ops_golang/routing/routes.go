@@ -324,6 +324,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Server Capability
 		{api.Version{4, 0}, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 4104073913},
 		{api.Version{4, 0}, http.MethodPost, `server_capabilities$`, api.CreateHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 40744707083},
+		{api.Version{4, 0}, http.MethodPut, `server_capabilities$`, api.UpdateHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 42543770109},
 		{api.Version{4, 0}, http.MethodDelete, `server_capabilities$`, api.DeleteHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 4364150383},
 
 		//Server Server Capabilities: CRUD

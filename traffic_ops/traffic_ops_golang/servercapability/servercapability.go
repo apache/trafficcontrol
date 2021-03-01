@@ -20,6 +20,9 @@ package servercapability
  */
 
 import (
+	"fmt"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -33,6 +36,7 @@ import (
 
 type TOServerCapability struct {
 	api.APIInfoImpl `json:"-"`
+	RequestedName   string
 	tc.ServerCapability
 }
 
@@ -60,6 +64,15 @@ FROM
 `
 }
 
+func (v *TOServerCapability) updateQuery() string {
+	return `
+UPDATE server_capability sc SET
+	name = $1
+WHERE sc.name = $2
+RETURNING sc.name, sc.last_updated
+`
+}
+
 func (v *TOServerCapability) DeleteQuery() string {
 	return `
 DELETE FROM server_capability WHERE name=:name
@@ -82,6 +95,7 @@ func (v TOServerCapability) GetKeys() (map[string]interface{}, bool) {
 }
 
 func (v *TOServerCapability) SetKeys(keys map[string]interface{}) {
+	v.RequestedName = v.Name
 	v.Name, _ = keys["name"].(string)
 }
 
@@ -105,6 +119,29 @@ func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, er
 	api.DefaultSort(v.APIInfo(), "name")
 	return api.GenericRead(h, v, useIMS)
 }
+
+func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
+	sc, userErr, sysErr, errCode, _ := v.Read(h, false)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if len(sc) != 1 {
+		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
+	}
+	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
+	if err != nil {
+		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	for rows.Next() {
+		err = rows.Scan(&v.Name, &v.LastUpdated)
+		if err != nil {
+			return api.ParseDBError(err)
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(sc.last_updated) as t from server_capability sc ` + where + orderBy + pagination +
