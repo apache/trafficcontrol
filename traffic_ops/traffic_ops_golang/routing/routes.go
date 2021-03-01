@@ -44,6 +44,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/capabilities"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnnotification"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crstats"
@@ -354,6 +355,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{4, 0}, http.MethodPut, `coordinates/?$`, api.UpdateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 4689261743},
 		{api.Version{4, 0}, http.MethodPost, `coordinates/?$`, api.CreateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 44281121573},
 		{api.Version{4, 0}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 43038498893},
+
+		//CDN notification
+		{api.Version{4, 0}, http.MethodGet, `cdn_notifications/?$`, cdnnotification.Read, auth.PrivLevelReadOnly, Authenticated, nil, 2221224514},
+		{api.Version{4, 0}, http.MethodPost, `cdn_notifications/?$`, cdnnotification.Create, auth.PrivLevelOperations, Authenticated, nil, 2765223513},
+		{api.Version{4, 0}, http.MethodDelete, `cdn_notifications/?$`, cdnnotification.Delete, auth.PrivLevelOperations, Authenticated, nil, 2722411851},
 
 		//CDN generic handlers:
 		{api.Version{4, 0}, http.MethodGet, `cdns/?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 42303186213},
