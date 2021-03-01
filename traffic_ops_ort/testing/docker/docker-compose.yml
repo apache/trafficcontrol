@@ -56,10 +56,8 @@ services:
     ports: 
       - "443:443"
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile
-      args:
-        RPM: traffic_ops.rpm 
+      context: ../../..
+      dockerfile: traffic_ops_ort/testing/docker/traffic_ops/Dockerfile
     volumes:
       - ../../../GO_VERSION:/GO_VERSION
     depends_on:
