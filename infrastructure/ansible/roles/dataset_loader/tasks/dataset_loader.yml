@@ -368,22 +368,21 @@
 
 - name: Assemble assignments of region to division
   set_fact:
-    region_assignments: "{
-                        {%- for d in dl_ds_merged_divisions -%}
-                        {%- set outer_loop = loop -%}
-                        {%- for r in d.regions -%}
-                        '{{ r.region_name }}': '{{ d.division_name }}'
-                        {%- if not loop.last %},{% endif -%}
-                        {%- endfor %}
-                        {%- if not outer_loop.last %},{% endif -%}
-                        {%- endfor %}
-                        }"
+    region_assignments: "{{ (region_assignments | default({})) | combine(regions) }}"
+  with_items: "{{ get_all_divisions.json.response }}"
+  vars:
+    region_query: "[?division_name == `{{ item.name }}`].regions[].{region_name: region_name, division_id: `{{ item.id }}`}"
+    regions: "{{ dl_ds_merged_divisions | to_json | from_json | json_query(region_query) | items2dict(key_name='region_name',value_name='division_id') }}"
+
 - name: Create Regions
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/divisions/{{ item.value }}/regions"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/regions"
     method: POST
-    body:
-      name: "{{ item.key }}"
+    body: >
+      {
+      "name": "{{ item.key }}",
+      "division": {{ item.value | int}}
+      }
   with_dict: "{{ region_assignments }}"
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
@@ -398,47 +397,30 @@
 
 - name: Constuct physLocation payload
   set_fact:
-    physlocation_list: "[
-                        {% for d in dl_ds_merged_divisions -%}
-                        {%- set d_loop = loop -%}
-                        {%- for r in d.regions -%}
-                        {%- set r_loop = loop -%}
-                        {%- for p in r.phys_locations -%}
-                        { 'region_name': '{{ r.region_name }}',
-                          'address': '{{ p.address }}',
-                          'city': '{{ p.city }}',
-                          'comments': '{{ p.comments }}',
-                          'email': '{{ p.email }}',
-                          'name': '{{ p.name }}',
-                          'phone': '{{ p.phone }}',
-                          'poc': '{{ p.poc }}',
-                          'shortname': '{{ p.shortname }}',
-                          'state': '{{ p.state }}',
-                          'zip': '{{ p.zip }}'
-                       }
-                        {%- if not loop.last %},{% endif -%}
-                        {%- endfor %}
-                        {%- if not r_loop.last %},{% endif -%}
-                        {%- endfor %}
-                        {%- if not d_loop.last %},{% endif -%}
-                        {%- endfor %}
-                        ]"
+    physlocation_list: "{{ physlocation_list | default([]) + [ physlocations ] }}"
+  with_items: "{{ get_all_regions.json.response  }}"
+  vars:
+    physloc_query: "[].regions[?region_name==`{{ item.name }}`][].phys_locations[].{value: {name: name, shortname: shortname, address: address, city: city, state: state, zip: zip, phone: phone, poc: poc, email: email, comments: comments, cachegroups: cachegroups, regionId: `{{ item.id }}`}}"
+    physlocations: "{{ dl_ds_merged_divisions | to_json | from_json | json_query(physloc_query)  }}"
 
 - name: Create Physical Locations
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/regions/{{ item.region_name }}/phys_locations"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/phys_locations"
     method: POST
-    body:
-      address: "{{ item.address }}"
-      city: "{{ item.city }}"
-      comments: "{{ item.comments | default(omit) }}"
-      email: "{{ item.email | default(omit) }}"
-      name: "{{ item.name }}"
-      phone: "{{ item.phone | default(omit) }}"
-      poc: "{{ item.poc | default(omit) }}"
-      shortName: "{{ item.shortname }}"
-      state: "{{ item.state }}"
-      zip: "{{ item.zip }}"
+    body: >
+        {
+        "address": "{{ item.value.address }}",
+        "city": "{{ item.value.city }}",
+        "comments": "{{ item.value.comments | default(omit) }}",
+        "email": "{{ item.value.email | default(omit) }}",
+        "name": "{{ item.value.name }}",
+        "phone": "{{ item.value.phone | default(omit) }}",
+        "poc": "{{ item.value.poc | default(omit) }}",
+        "shortName": "{{ item.value.shortname }}",
+        "state": "{{ item.value.state }}",
+        "zip": "{{ item.value.zip }}",
+        "regionId": {{ item.value.regionId | int }}
+        }
   with_items: "{{ physlocation_list }}"
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
