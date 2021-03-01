@@ -404,28 +404,28 @@
     physlocations: "{{ dl_ds_merged_divisions | to_json | from_json | json_query(physloc_query)  }}"
 
 - name: Create Physical Locations
-uri:
-  url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/phys_locations"
-  method: POST
-  body: >
-      {
-      "address": "{{ item.value.address }}",
-      "city": "{{ item.value.city }}",
-      "comments": "{{ item.value.comments | default(omit) }}",
-      "email": "{{ item.value.email | default(omit) }}",
-      "name": "{{ item.value.name }}",
-      "phone": "{{ item.value.phone | default(omit) }}",
-      "poc": "{{ item.value.poc | default(omit) }}",
-      "shortName": "{{ item.value.shortname }}",
-      "state": "{{ item.value.state }}",
-      "zip": "{{ item.value.zip }}",
-      "regionId": {{ item.value.regionId | int }}
-      }
-with_items: "{{ physlocation_list }}"
-vars:
-  error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
-register: create_physlocation_out
-failed_when: (create_physlocation_out.status == 400 and create_physlocation_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_physlocation_out.status > 400 and create_physlocation_out.status < 600)
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/phys_locations"
+    method: POST
+    body: >
+        {
+        "address": "{{ item.value.address }}",
+        "city": "{{ item.value.city }}",
+        "comments": "{{ item.value.comments | default(omit) }}",
+        "email": "{{ item.value.email | default(omit) }}",
+        "name": "{{ item.value.name }}",
+        "phone": "{{ item.value.phone | default(omit) }}",
+        "poc": "{{ item.value.poc | default(omit) }}",
+        "shortName": "{{ item.value.shortname }}",
+        "state": "{{ item.value.state }}",
+        "zip": "{{ item.value.zip }}",
+        "regionId": {{ item.value.regionId | int }}
+        }
+  with_items: "{{ physlocation_list }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+  register: create_physlocation_out
+  failed_when: (create_physlocation_out.status == 400 and create_physlocation_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_physlocation_out.status > 400 and create_physlocation_out.status < 600)
 
 - name: Get All Physical Locations
   uri:
