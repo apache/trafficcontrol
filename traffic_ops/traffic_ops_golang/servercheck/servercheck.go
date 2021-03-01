@@ -240,8 +240,8 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"servercheck.server", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"server.host_name", nil},
+		"id":       dbhelpers.WhereColumnInfo{"servercheck.server", api.IsInt},
+		"hostName": dbhelpers.WhereColumnInfo{"server.host_name", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
@@ -254,8 +254,8 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
 		whereSC = ""
 	} else if len(inf.Params) == 1 {
-		if _, ok := inf.Params["name"]; ok {
-			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:name "
+		if _, ok := inf.Params["hostName"]; ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:hostName "
 			whereSC = ""
 		} else if _, ok = inf.Params["id"]; ok {
 			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
@@ -266,9 +266,9 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		}
 	} else if len(inf.Params) > 1 {
 		_, ok := inf.Params["id"]
-		_, ok1 := inf.Params["name"]
+		_, ok1 := inf.Params["hostName"]
 		if ok && ok1 {
-			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND (server.host_name=:name AND server.id=:id)"
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND (server.host_name=:hostName AND server.id=:id)"
 			whereSC = "WHERE servercheck.server=:id"
 		} else {
 			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
