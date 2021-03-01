@@ -595,7 +595,7 @@ func DSTypeFromString(s string) DSType {
 	}
 }
 
-//IsAnyMap returns weather the DSType is an ANY_MAP category.
+//IsAnyMap returns weather the DSType is an ANY_MAP service.
 func (t DSType) IsAnyMap() bool {
 	return t == DSTypeAnyMap
 }
