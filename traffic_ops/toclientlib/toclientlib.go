@@ -465,7 +465,7 @@ func (to *TOClient) errUnlessOKOrNotModified(resp *http.Response, remoteAddr net
 // getURL constructs a full URL from the given path, relative to the
 // TOClient's URL.
 func (to *TOClient) getURL(path string) string {
-	return strings.TrimSuffix(to.URL, "/") + "/" + strings.TrimPrefix("/", path)
+	return strings.TrimSuffix(to.URL, "/") + "/" + strings.TrimPrefix(path, "/")
 }
 
 type ReqF func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error)
