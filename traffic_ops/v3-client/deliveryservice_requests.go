@@ -89,7 +89,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 		dsr.DeliveryService.TenantID = ten.ID
 	}
 
-	reqInf, err := to.postWithAlerts(APIDSRequests, dsr, nil, &alerts)
+	reqInf, err := to.post(APIDSRequests, dsr, nil, &alerts)
 	return alerts, reqInf, err
 }
 
