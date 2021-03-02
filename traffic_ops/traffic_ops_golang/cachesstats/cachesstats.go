@@ -146,11 +146,19 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		}
 		bandwidth, ok := stat.Stats[tc.StatNameBandwidth]
 		if ok && len(bandwidth) > 0 {
-			cache.KBPS = bandwidth[0].Val.(uint64)
+			cache.KBPS, ok = bandwidth[0].Val.(uint64)
+			if !ok {
+				log.Warnf("couldn't convert %v into uint64", bandwidth[0].Val)
+				continue
+			}
 		}
 		connections, ok := stat.Stats[ATSCurrentConnectionsStat]
 		if ok && len(connections) > 0 {
-			cache.Connections = connections[0].Val.(uint64)
+			cache.Connections, ok = connections[0].Val.(uint64)
+			if !ok {
+				log.Warnf("couldn't convert %v into uint64", connections[0].Val)
+				continue
+			}
 		}
 		cacheData[i] = cache
 	}
