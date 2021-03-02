@@ -17,27 +17,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="main_container">
-
-    <!-- navigation -->
-    <div class="main-nav col-md-3" ui-view="navigation"></div>
-
-    <!-- header -->
-    <div class="top_nav" ui-view="header"></div>
-
-    <!-- page content -->
-    <div class="main-content" role="main">
-
-        <!-- notifications -->
-        <div ui-view="notifications"></div>
-
-        <!-- messages -->
-        <div ui-view="message"></div>
-
-        <!-- the content -->
-        <div ui-view="content"></div>
-
+<div id="notificationsContainer">
+    <div class="alert alert-info" ng-repeat="n in notifications">
+        <div ng-bind-html="n.cdn + ': ' + n.notification + ' (' + n.user + ')' | linky:'_blank'"></div>
     </div>
-
 </div>
-

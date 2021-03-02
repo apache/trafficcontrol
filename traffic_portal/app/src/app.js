@@ -259,6 +259,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
+        require('./common/modules/notifications').name,
         require('./common/modules/release').name,
 
         // forms

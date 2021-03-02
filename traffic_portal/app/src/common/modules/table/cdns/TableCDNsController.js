@@ -19,15 +19,15 @@
 
 var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $window, locationUtils, cdnService, messageModel) {
 
-    var queueServerUpdates = function(cdn) {
+    let queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
     };
 
-    var clearServerUpdates = function(cdn) {
+    let clearServerUpdates = function(cdn) {
         cdnService.clearServerUpdates(cdn.id);
     };
 
-    var deleteCDN = function(cdn) {
+    let deleteCDN = function(cdn) {
         cdnService.deleteCDN(cdn.id)
             .then(function(result) {
                 messageModel.setMessages(result.alerts, false);
@@ -35,7 +35,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             });
     };
 
-    var confirmQueueServerUpdates = function(cdn) {
+    let confirmQueueServerUpdates = function(cdn) {
         var params = {
             title: 'Queue Server Updates: ' + cdn.name,
             message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
@@ -57,7 +57,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    var confirmClearServerUpdates = function(cdn) {
+    let confirmClearServerUpdates = function(cdn) {
         var params = {
             title: 'Clear Server Updates: ' + cdn.name,
             message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
@@ -79,7 +79,7 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
         });
     };
 
-    var confirmDelete = function(cdn) {
+    let confirmDelete = function(cdn) {
         var params = {
             title: 'Delete CDN: ' + cdn.name,
             key: cdn.name
