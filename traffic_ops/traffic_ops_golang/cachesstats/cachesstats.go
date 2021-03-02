@@ -136,6 +136,7 @@ func addTotals(data []CacheData) []CacheData {
 }
 
 func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
+	var err error
 	if stats.Caches == nil {
 		return cacheData // TODO warn?
 	}
@@ -146,18 +147,28 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		}
 		bandwidth, ok := stat.Stats[tc.StatNameBandwidth]
 		if ok && len(bandwidth) > 0 {
-			cache.KBPS, ok = bandwidth[0].Val.(uint64)
-			if !ok {
-				log.Warnf("couldn't convert %v into uint64", bandwidth[0].Val)
+			if kbps, ok := bandwidth[0].Val.(string); !ok {
+				log.Warnf("couldn't convert %v into string", bandwidth[0].Val)
 				continue
+			} else {
+				cache.KBPS, err = strconv.ParseUint(kbps, 10, 64)
+				if err != nil {
+					log.Warnf("couldn't convert %v to uint64", kbps)
+					continue
+				}
 			}
 		}
 		connections, ok := stat.Stats[ATSCurrentConnectionsStat]
 		if ok && len(connections) > 0 {
-			cache.Connections, ok = connections[0].Val.(uint64)
-			if !ok {
-				log.Warnf("couldn't convert %v into uint64", connections[0].Val)
+			if conn, ok := connections[0].Val.(string); !ok {
+				log.Warnf("couldn't convert %v into string", connections[0].Val)
 				continue
+			} else {
+				cache.Connections, err = strconv.ParseUint(conn, 10, 64)
+				if err != nil {
+					log.Warnf("couldn't convert %v to uint64", conn)
+					continue
+				}
 			}
 		}
 		cacheData[i] = cache

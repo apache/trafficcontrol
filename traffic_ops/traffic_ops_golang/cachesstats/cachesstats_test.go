@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-func TestAddStats(t *testing.T) {
+func TestAddStatsInvalidString(t *testing.T) {
 	cacheData := make([]CacheData, 0)
 	cacheServerStats := make(map[string]tc.ServerStats, 0)
 	stats := make(map[string][]tc.ResultStatVal, 0)
@@ -39,13 +39,16 @@ func TestAddStats(t *testing.T) {
 	}
 	resultStatVals = append(resultStatVals, resultStatVal)
 	stats[tc.StatNameBandwidth] = resultStatVals
+
 	resultStatVal = tc.ResultStatVal{
 		Span: 0,
 		Time: time.Now(),
 		Val:  "invalid ats current connection stat",
 	}
-	resultStatVals[0] = resultStatVal
+	resultStatVals = make([]tc.ResultStatVal, 0)
+	resultStatVals = append(resultStatVals, resultStatVal)
 	stats[ATSCurrentConnectionsStat] = resultStatVals
+
 	cacheServerStats["hostName"] = tc.ServerStats{
 		Interfaces: nil,
 		Stats:      stats,
@@ -68,5 +71,58 @@ func TestAddStats(t *testing.T) {
 	result := addStats(cacheData, cacheStats)
 	if len(result) != 1 {
 		t.Fatalf("expected a cache stat in the response, but got nothing")
+	}
+	if result[0].KBPS != 0 || result[0].Connections != 0 {
+		t.Errorf("expected 0 KBPS and 0 connections, but got %v and %v respectively", result[0].KBPS, result[0].Connections)
+	}
+}
+
+func TestAddStatsValidString(t *testing.T) {
+	cacheData := make([]CacheData, 0)
+	cacheServerStats := make(map[string]tc.ServerStats, 0)
+	stats := make(map[string][]tc.ResultStatVal, 0)
+	resultStatVals := make([]tc.ResultStatVal, 0)
+	resultStatVal := tc.ResultStatVal{
+		Span: 0,
+		Time: time.Now(),
+		Val:  "200",
+	}
+	resultStatVals = append(resultStatVals, resultStatVal)
+	stats[tc.StatNameBandwidth] = resultStatVals
+
+	resultStatVal = tc.ResultStatVal{
+		Span: 0,
+		Time: time.Now(),
+		Val:  "100",
+	}
+	resultStatVals = make([]tc.ResultStatVal, 0)
+	resultStatVals = append(resultStatVals, resultStatVal)
+	stats[ATSCurrentConnectionsStat] = resultStatVals
+
+	cacheServerStats["hostName"] = tc.ServerStats{
+		Interfaces: nil,
+		Stats:      stats,
+	}
+	cacheStats := tc.Stats{
+		CommonAPIData: tc.CommonAPIData{},
+		Caches:        cacheServerStats,
+	}
+	data := CacheData{
+		HostName:    "hostName",
+		CacheGroup:  "cacheGroup",
+		Status:      "ONLINE",
+		Profile:     "profile",
+		IP:          util.StrPtr("127.30.30.30"),
+		Healthy:     true,
+		KBPS:        0,
+		Connections: 0,
+	}
+	cacheData = append(cacheData, data)
+	result := addStats(cacheData, cacheStats)
+	if len(result) != 1 {
+		t.Fatalf("expected a cache stat in the response, but got nothing")
+	}
+	if result[0].KBPS != 200 || result[0].Connections != 100 {
+		t.Errorf("expected 200 KBPS and 100 connections, but got %v and %v respectively", result[0].KBPS, result[0].Connections)
 	}
 }
