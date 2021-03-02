@@ -453,7 +453,7 @@ func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 }
 
 func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds4"}})
+	dses, _, err := TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{"ds4"}})
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -469,7 +469,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	// Get an edge
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-16")
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -480,7 +480,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	// Get a MID
 	params = url.Values{}
 	params.Add("hostName", "atlanta-mid-02")
-	rs, _, err = TOSession.GetServersWithHdr(&params, nil)
+	rs, _, err = TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -494,7 +494,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	}
 	params = url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
@@ -529,7 +529,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 
 	params = url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err = TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err = TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
