@@ -117,7 +117,7 @@
 - name: "Writing snapshot ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/tools/write_crconfig/{{ to_api_target_cdn }}"
+    url: "{{ to_api_base_url }}/cdns/{{ to_api_target_cdn }}/snapshot"
     method: GET
     follow_redirects: all
     return_content: yes

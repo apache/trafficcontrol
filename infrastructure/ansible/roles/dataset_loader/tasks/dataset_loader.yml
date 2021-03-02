@@ -949,7 +949,7 @@
 
 - name: Snapshot all CDNs
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/tools/write_crconfig/{{ item.name }}"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ item.name }}/snapshot"
     method: GET
   with_items: "{{ get_all_cdns.json.response[1:] }}"
   register: snapshot_out
