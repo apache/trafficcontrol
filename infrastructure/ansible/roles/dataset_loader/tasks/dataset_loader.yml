@@ -950,7 +950,7 @@
 - name: Snapshot all CDNs
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot?cdn={{ item.name }}"
-    method: GET
+    method: PUT
   with_items: "{{ get_all_cdns.json.response[1:] }}"
   register: snapshot_out
   failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
