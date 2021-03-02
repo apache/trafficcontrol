@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 const TOURL = "http://localhost"
@@ -41,7 +41,7 @@ func main() {
 	}
 	fmt.Println("Connected to: " + remoteaddr.String())
 	var cdns []tc.CDN
-	cdns, _, err = session.GetCDNsWithHdr(nil)
+	cdns, _, err = session.GetCDNs(nil)
 	if err != nil {
 		fmt.Printf("An error occurred while getting cdns:\n\t%v\n", err)
 		os.Exit(1)
