@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -57,20 +59,52 @@ public class ZoneSignerImpl implements ZoneSigner {
 		return StreamSupport.stream(iterable.spliterator(), false);
 	}
 
-	private RRset signRRset(final RRset rrSet, final List<DnsSecKeyPair> kskPairs, final List<DnsSecKeyPair> zskPairs, final Date inception, final Date expiration) {
+	private RRSIGRecord sign(final RRset rrset, final DNSKEYRecord dnskeyRecord, final PrivateKey privateKey, final Date inception, final Date expiration) {
+		try {
+			return DNSSEC.sign(rrset, dnskeyRecord, privateKey, inception, expiration);
+		} catch (DNSSEC.DNSSECException e) {
+			final String message = String.format("Failed to sign Resource Record Set for %s %d %d %d : %s",
+					dnskeyRecord.getName(), dnskeyRecord.getDClass(), dnskeyRecord.getType(), dnskeyRecord.getTTL(), e.getMessage());
+			LOGGER.error(message, e);
+			return null;
+		}
+	}
+
+	private boolean isSignatureAlmostExpired(final Date inception, final Date expiration, final Date now) {
+		// now is over halfway through validity period
+		return now.getTime() > inception.getTime() + ((expiration.getTime() - inception.getTime())/2);
+	}
+
+	private RRset signRRset(final RRset rrSet, final List<DnsSecKeyPair> kskPairs, final List<DnsSecKeyPair> zskPairs,
+							final Date inception, final Date expiration,
+							final ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> RRSIGCache) {
 		final List<RRSIGRecord> signatures = new ArrayList<>();
 		final List<DnsSecKeyPair> pairs = rrSet.getType() == Type.DNSKEY ? kskPairs : zskPairs;
+		final Date now = new Date();
 
 		pairs.forEach(pair -> {
 			final DNSKEYRecord dnskeyRecord = pair.getDNSKEYRecord();
 			final PrivateKey privateKey = pair.getPrivate();
+			RRSIGRecord signature = null;
 			try {
-				signatures.add(DNSSEC.sign(rrSet, dnskeyRecord, privateKey, inception, expiration));
+				if (RRSIGCache == null) {
+					signature = sign(rrSet, dnskeyRecord, privateKey, inception, expiration);
+				} else {
+					final ConcurrentMap<RRsetKey, RRSIGRecord> sigMap = RRSIGCache.computeIfAbsent(new RRSIGCacheKey(privateKey.getEncoded(), dnskeyRecord.getAlgorithm()), rrsigCacheKey -> new ConcurrentHashMap<>());
+					signature = sigMap.computeIfAbsent(new RRsetKey(rrSet), k -> sign(rrSet, dnskeyRecord, privateKey, inception, expiration));
+
+					if (signature != null && isSignatureAlmostExpired(signature.getTimeSigned(), signature.getExpire(), now)) {
+						signature = sigMap.compute(new RRsetKey(rrSet), (k, v) -> sign(rrSet, dnskeyRecord, privateKey, inception, expiration));
+					}
+				}
 			} catch (Exception e) {
 				final String message = String.format("Failed to sign Resource Record Set for %s %d %d %d : %s",
 					dnskeyRecord.getName(), dnskeyRecord.getDClass(), dnskeyRecord.getType(), dnskeyRecord.getTTL(), e.getMessage());
 
 				LOGGER.error(message, e);
+			}
+			if (signature != null) {
+				signatures.add(signature);
 			}
 		});
 
@@ -124,9 +158,9 @@ public class ZoneSignerImpl implements ZoneSigner {
 
 
 	@Override
-	public List<Record> signZone(final Name name, final List<Record> records, final List<DnsSecKeyPair> kskPairs, final List<DnsSecKeyPair> zskPairs,
-		final Date inception, final Date expiration, final boolean fullySignKeySet, final int digestId) throws IOException, GeneralSecurityException {
-		LOGGER.info("Signing records, name for first record is " + records.get(0).getName());
+	public List<Record> signZone(final List<Record> records, final List<DnsSecKeyPair> kskPairs,
+								 final List<DnsSecKeyPair> zskPairs, final Date inception, final Date expiration,
+								 final ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> RRSIGCache) throws IOException, GeneralSecurityException {
 
 		final List<NSECRecord> nsecRecords = createNsecRecords(records);
 		records.addAll(nsecRecords);
@@ -158,7 +192,7 @@ public class ZoneSignerImpl implements ZoneSigner {
 		final List<RRset> rrSets = new RRSetsBuilder().build(records);
 
 		final List<RRset> signedRrSets = rrSets.stream()
-			.map(rRset -> signRRset(rRset, kskPairs, zskPairs, inception, expiration))
+			.map(rRset -> signRRset(rRset, kskPairs, zskPairs, inception, expiration, RRSIGCache))
 			.sorted((rRset1, rRset2) -> rRset1.getName().compareTo(rRset2.getName()))
 			.collect(toList());
 
