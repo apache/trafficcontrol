@@ -809,7 +809,7 @@ dl_ds_default_profile_layers:
       v7:
         - name: LogFormat.Format
           configFile: logging.config
-          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
         - name: remap_stats.so
           configFile: plugin.config
           value: ''
@@ -862,7 +862,7 @@ dl_ds_default_profile_layers:
           value: ramdisk_size=16777216
         - name: LogFormat.Format
           configFile: logging.config
-          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
         - name: CONFIG proxy.config.cop.active_health_checks
           configFile: records.config
           value: INT 0
@@ -1227,13 +1227,13 @@ dl_ds_default_profile_layers:
       v8:
         - name: LogFormat.Format
           configFile: logging.yaml
-          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh>'
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
         - name: LogFormat.Name
           configFile: logging.yaml
           value: custom_ats_2
         - name: LogFormat1.Format
           configFile: logging.yaml
-          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas="%<{User-Agent}cqh>" xmt="%<{X-MoneyTrace}cqh>" svc=%<{X-CDN-SVC}cqh> rr="""%<{Range}cqh>""" cl="""%<{Content-Length}psh>""" cqhl=%<cqhl> csscl=%<csscl> cqssc=%<cqssc> cqssv=%<cqssv> ccc="""%<{Cache-Control}cqh>""" occ="""%<{Cache-Control}ssh>""" cocc="""%<{Cache-Control}cssh>""" odate="""%<{Date}ssh>""" cdate="""%<{Date}cssh>""" olm="""%<{Last-Modified}ssh>""" clm="""%<{Last-Modified}cssh>""" oet="""%<{Etag}ssh>""" cet="""%<{Etag}cssh>""" opm="""%<{Pragma}ssh>""" cpm="""%<{Pragma}cssh>""" oex="""%<{Expires}ssh>""" cex="""%<{Expires}cssh>""" oce="""%<{Content-Encoding}ssh>""" cce="""%<{Content-Encoding}cssh>""" oct="""%<{Content-Type}ssh>""" cct="""%<{Content-Type}cssh>""" acc="""%<{Accept}cqh>""" ace="""%<{Accept-Encoding}cqh>""" auth="""%<{Authorization}cqh>""" ovar="""%<{Vary}ssh>""" cvar="""%<{Vary}cssh>""" ccvar="""%<{Vary}cqh>"""  nhi=%<nhi> nhp=%<nhp> pcr="""%<{Content-Range}psh>""" xrsn="""%<{X-Reason}psh>""" stms=%<stms>'
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh> rr=\"\"\"%<{Range}cqh>\"\"\" cl=\"\"\"%<{Content-Length}psh>\"\"\" cqhl=%<cqhl> csscl=%<csscl> cqssc=%<cqssc> cqssv=%<cqssv> ccc=\"\"\"%<{Cache-Control}cqh>\"\"\" occ=\"\"\"%<{Cache-Control}ssh>\"\"\" cocc=\"\"\"%<{Cache-Control}cssh>\"\"\" odate=\"\"\"%<{Date}ssh>\"\"\" cdate=\"\"\"%<{Date}cssh>\"\"\" olm=\"\"\"%<{Last-Modified}ssh>\"\"\" clm=\"\"\"%<{Last-Modified}cssh>\"\"\" oet=\"\"\"%<{Etag}ssh>\"\"\" cet=\"\"\"%<{Etag}cssh>\"\"\" opm=\"\"\"%<{Pragma}ssh>\"\"\" cpm=\"\"\"%<{Pragma}cssh>\"\"\" oex=\"\"\"%<{Expires}ssh>\"\"\" cex=\"\"\"%<{Expires}cssh>\"\"\" oce=\"\"\"%<{Content-Encoding}ssh>\"\"\" cce=\"\"\"%<{Content-Encoding}cssh>\"\"\" oct=\"\"\"%<{Content-Type}ssh>\"\"\" cct=\"\"\"%<{Content-Type}cssh>\"\"\" acc=\"\"\"%<{Accept}cqh>\"\"\" ace=\"\"\"%<{Accept-Encoding}cqh>\"\"\" auth=\"\"\"%<{Authorization}cqh>\"\"\" ovar=\"\"\"%<{Vary}ssh>\"\"\" cvar=\"\"\"%<{Vary}cssh>\"\"\" ccvar=\"\"\"%<{Vary}cqh>\"\"\"  nhi=%<nhi> nhp=%<nhp> pcr=\"\"\"%<{Content-Range}psh>\"\"\" xrsn=\"\"\"%<{X-Reason}psh>\"\"\" stms=%<stms>'
         - name: LogFormat1.Name
           configFile: logging.yaml
           value: custom_ats_3
