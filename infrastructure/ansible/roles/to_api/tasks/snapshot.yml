@@ -117,8 +117,8 @@
 - name: "Writing snapshot ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/cdns/{{ to_api_target_cdn }}/snapshot"
-    method: GET
+    url: "{{ to_api_base_url }}/snapshot?cdn={{ to_api_target_cdn }}"
+    method: PUT
     follow_redirects: all
     return_content: yes
     headers:
