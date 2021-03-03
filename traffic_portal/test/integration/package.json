@@ -4,7 +4,7 @@
   "description": "Traffic Portal Testing",
   "main": "config.ts",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "chromedriver": "^78.0.1",
     "constants": "0.0.2",
     "download-file": "^0.1.5",
