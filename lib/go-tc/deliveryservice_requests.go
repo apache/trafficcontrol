@@ -718,6 +718,8 @@ type DeliveryServiceRequestV40 struct {
 	XMLID string `json:"-"`
 }
 
+type DeliveryServiceRequestV4 = DeliveryServiceRequestV40
+
 // IsOpen returns whether or not the Delivery Service Request is still "open" -
 // i.e. has not been rejected or completed.
 func (dsr DeliveryServiceRequestV40) IsOpen() bool {

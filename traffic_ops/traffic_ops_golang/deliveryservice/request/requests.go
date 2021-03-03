@@ -587,7 +587,15 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		inf.IntParams["id"],
 	}
 	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+		var userErr, sysErr error
+		var errCode int
+		if err == sql.ErrNoRows {
+			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
+			errCode = http.StatusNotFound
+			sysErr = fmt.Errorf("running update query for Delivery Service Requests: %v", err)
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
