@@ -568,7 +568,7 @@ func reqFallback(reqF ReqF) ReqF {
 //
 func reqAPI(reqF ReqF) ReqF {
 	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
-		path = to.APIBase() + path
+		path = strings.TrimSuffix(to.APIBase(), "/") + "/" + strings.TrimPrefix(path, "/")
 		return reqF(to, method, path, body, header, response)
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -49,7 +48,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 // DeleteDeliveryServiceServer removes the association between the Delivery
 // Service identified by dsID and the server identified by serverID.
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := APIDeliveryServiceServer + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
+	route := fmt.Sprintf("%s/%d/%d", APIDeliveryServiceServer, dsID, serverID)
 	resp := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &resp)
 	return resp, reqInf, err

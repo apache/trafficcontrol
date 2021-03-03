@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -127,7 +126,7 @@ func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, toclientlib.ReqInf, 
 // SetCacheGroupDeliveryServices assigns all of the assignable Cache Servers in
 // the identified Cache Group to all of the identified the Delivery Services.
 func (to *Session) SetCacheGroupDeliveryServices(cgID int, dsIDs []int) (tc.CacheGroupPostDSRespResponse, toclientlib.ReqInf, error) {
-	uri := APICachegroups + strconv.Itoa(cgID) + `/deliveryservices`
+	uri := fmt.Sprintf("%s/%d/deliveryservices", APICachegroups, cgID)
 	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
 	resp := tc.CacheGroupPostDSRespResponse{}
 	reqInf, err := to.post(uri, req, nil, &resp)
