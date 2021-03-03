@@ -653,8 +653,16 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		upgraded.Status,
 		inf.IntParams["id"],
 	}
-	if err := tx.QueryRow(updateQuery, args...).Scan(dsr.CreatedAt, dsr.LastUpdated); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
+		var errCode int
+		var userErr, sysErr error
+		if err == sql.ErrNoRows {
+			errCode = http.StatusNotFound
+			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -700,7 +708,13 @@ func Put(w http.ResponseWriter, r *http.Request) {
 
 	var current tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", id).StructScan(&current); err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
+		if err == sql.ErrNoRows {
+			errCode = http.StatusNotFound
+			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
