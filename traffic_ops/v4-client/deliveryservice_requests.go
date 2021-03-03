@@ -16,10 +16,8 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 
@@ -152,22 +150,15 @@ func (to *Session) DeleteDeliveryServiceRequest(id int) (tc.Alerts, toclientlib.
 
 // UpdateDeliveryServiceRequest replaces the existing DSR that has the given
 // ID with the DSR passed.
-func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV40, header http.Header) (tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, header http.Header) (tc.DeliveryServiceRequestV4, tc.Alerts, toclientlib.ReqInf, error) {
 
 	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
 
-	var remoteAddr net.Addr
 	var payload struct {
 		tc.Alerts
-		Response tc.DeliveryServiceRequestV40 `json:"response"`
+		Response tc.DeliveryServiceRequestV4 `json:"response"`
 	}
-	reqBody, err := json.Marshal(dsr)
-	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return payload.Response, payload.Alerts, reqInf, err
-	}
-	var resp tc.DeliveryServiceRequestV40
-	reqInf, err = to.put(route, reqBody, header, &resp)
+	reqInf, err := to.put(route, dsr, header, &payload)
 
 	return payload.Response, payload.Alerts, reqInf, err
 }
