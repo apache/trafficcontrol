@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -259,7 +258,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, _ := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()), userErr)
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()), userErr, 0)
 		return
 	}
 	defer inf.Close()
@@ -271,11 +270,19 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cdn := inf.Params["cdn"]
-
+	cdnID, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("couldn't find CDN ID with name %s", cdn), nil)
+		return
+	}
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err, cdnID)
 		return
 	}
 
@@ -286,7 +293,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err, cdnID)
 		return
 	}
 
@@ -296,11 +303,11 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
-	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
+	http.Redirect(w, r, "/api/1.1/cdns/"+strconv.Itoa(cdnID)+"/snapshot", http.StatusFound)
 }
 
-func writePerlHTMLErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, logErr error, err error) {
+func writePerlHTMLErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, logErr error, err error, cdnId int) {
 	log.Errorln(logErr.Error())
 	tx.Rollback()
-	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Error: "+err.Error()), http.StatusFound)
+	http.Redirect(w, r, "/api/1.1/cdns/"+strconv.Itoa(cdnId)+"/snapshot", http.StatusFound)
 }
