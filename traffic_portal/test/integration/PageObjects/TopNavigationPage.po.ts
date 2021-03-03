@@ -16,15 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions, protractor } from 'protractor';
-import { async, delay } from 'q';
+import { browser, by, element, ExpectedConditions } from 'protractor';
 import { BasePage } from './BasePage.po';
-import { fstatSync } from 'fs';
-
-
 
 export class TopNavigationPage extends BasePage{
-    
+
     private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
     private btnShot = element(by.css('div[title="Diff CDN Config Snapshot"]'));
     private selectCDN = element(by.name('selectFormDropdown'));
@@ -97,7 +93,7 @@ export class TopNavigationPage extends BasePage{
             //delete the file
             fs.unlink(`Downloads/${filename}`, (err) => {
                 if (err) throw err;
-            });   
+            });
         }
         });
         return result;
