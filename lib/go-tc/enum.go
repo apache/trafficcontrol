@@ -595,9 +595,9 @@ func DSTypeFromString(s string) DSType {
 	}
 }
 
-// IsAnyMap returns whether the DSType is an ANY_MAP service.
-func (t DSType) IsAnyMap() bool {
-	return t == DSTypeAnyMap
+// UsesDNSSECKeys returns whether the DSType uses or needs DNSSEC keys.
+func (t DSType) UsesDNSSECKeys() bool {
+	return t.IsDNS() || t.IsHTTP() || t.IsSteering()
 }
 
 // IsHTTP returns whether the DSType is an HTTP category.
