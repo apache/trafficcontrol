@@ -479,7 +479,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
-	if dnssecEnabled && !ds.Type.IsAnyMap() {
+	if dnssecEnabled && ds.Type.UsesDNSSECKeys() {
 		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); userErr != nil || sysErr != nil {
 			return nil, statusCode, userErr, sysErr
 		}
