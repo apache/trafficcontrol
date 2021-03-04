@@ -22,6 +22,8 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { MatToolbarModule } from "@angular/material/toolbar";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -55,7 +57,6 @@ import { BooleanFilterComponent } from "./components/table-components/boolean-fi
 import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { UpdateCellRendererComponent } from "./components/table-components/update-cell-renderer/update-cell-renderer.component";
 import { UpdateStatusComponent } from "./components/servers/update-status/update-status.component";
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -118,7 +119,8 @@ Chart.plugins.register({
 		FormsModule,
 		FontAwesomeModule,
 		AgGridModule.withComponents([]),
-		BrowserAnimationsModule
+		BrowserAnimationsModule,
+		MatToolbarModule
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
