@@ -22,11 +22,11 @@ var FormServerCapabilityController = function(serverCapability, $scope, $locatio
 	$scope.serverCapability = serverCapability;
 
 	$scope.viewServers = function() {
-		$location.path($location.path() + '/servers');
+		$location.path('/server-capabilities/servers');
 	};
 
 	$scope.viewDeliveryServices = function() {
-		$location.path($location.path() + '/delivery-services');
+		$location.path('/server-capabilities/delivery-services');
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
