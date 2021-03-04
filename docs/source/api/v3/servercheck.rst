@@ -38,13 +38,13 @@ Request Structure
 	+===========+==========+====================================================================================+
 	| id        | no       | Return only :term:`cache servers` with this integral, unique identifier (id)       |
 	+-----------+----------+------------------------------------------------------------------------------------+
-	| name      | no       | Return only :term:`cache servers` with this host_name                              |
+	| hostName  | no       | Return only :term:`cache servers` with this host_name                              |
 	+-----------+----------+------------------------------------------------------------------------------------+
 
 .. code-block:: http
-	:caption: Request Example with ``name`` query param
+	:caption: Request Example with ``hostName`` query param
 
-	GET /api/4.0/servercheck?name=edge HTTP/1.1
+	GET /api/4.0/servercheck?hostName=edge HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

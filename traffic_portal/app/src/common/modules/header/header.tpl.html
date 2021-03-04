@@ -40,7 +40,7 @@ under the License.
             <li role="presentation" class="dropdown" ng-if="hasCapability('change-logs-read')">
                 <div class="btn-group" title="Change Logs" uib-dropdown is-open="alerts.isopen">
                     <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
-                        <i class="fa fa-comment-o"></i>
+                        <i class="fa" ng-class="{ 'fa-comment': newLogCount() > 0, 'fa-comment-o': newLogCount() == 0 }"></i>
                         <span class="badge bg-blue">{{newLogCount()}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
@@ -78,6 +78,11 @@ under the License.
             <li>
                 <div class="btn-group" title="Diff CDN Config Snapshot">
                     <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
+                </div>
+            </li>
+            <li ng-repeat="cdn in cdns">
+                <div class="btn-group" title="{{(cdn.notificationCreatedBy) ? 'Delete Global ' + cdn.name + ' Notification' : 'Create Global ' + cdn.name + ' Notification'}}">
+                    <button type="button" class="notification btn btn-link" ng-click="toggleNotification(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.notificationCreatedBy, 'fa-bell-o': !cdn.notificationCreatedBy }"></i> <i ng-show="cdn.notificationCreatedBy" class="fa fa-times"></i></button>
                 </div>
             </li>
         </ul>

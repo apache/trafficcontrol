@@ -144,7 +144,7 @@ func GetTestServerChecks(t *testing.T) {
 
 func GetTestServerChecksWithName(t *testing.T) {
 	params := url.Values{}
-	params.Set("name", "atlanta-edge-01")
+	params.Set("hostName", "atlanta-edge-01")
 
 	// Get server checks
 	scResp, alerts, _, err := TOSession.GetServersChecks(params, nil)
