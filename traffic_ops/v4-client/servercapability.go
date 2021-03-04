@@ -70,7 +70,7 @@ func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, tocli
 }
 
 // UpdateServerCapabilityByName updates a Server Capability by name.
-func (to *Session) UpdateServerCapabilityByName(name string, sc tc.ServerCapability) (*tc.ServerCapability, toclientlib.ReqInf, error) {
+func (to *Session) UpdateServerCapabilityByName(name string, sc *tc.ServerCapability) (*tc.ServerCapability, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
 	var data tc.ServerCapability
 	reqInf, err := to.put(route, sc, nil, &data)

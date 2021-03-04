@@ -103,7 +103,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	resp[0].Name = newSCName
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, resp[0])
+	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, &resp[0])
 	if err != nil {
 		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
 	}
@@ -117,19 +117,9 @@ func UpdateTestServerCapabilities(t *testing.T) {
 		t.Errorf("failed to update server capability name, expected: %v but got:%v", newSCName, updateResponse.Name)
 	}
 
-	//To check whether the primary key change trickled down to server table
-	//resp1, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
-	//fmt.Println(resp1[0].ServerCapability)
-	//if err != nil {
-	//	t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", *resp1[0].ServerCapability, err)
-	//}
-	//if len(resp1) != 1 {
-	//	t.Errorf("server capability name change failed to trickle to server table, expected: %v but got:%v", newSCName, *resp1[0].ServerCapability)
-	//}
-
 	// Set everything back as it was for further testing.
 	resp[0].Name = origName
-	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, resp[0])
+	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, &resp[0])
 	if err != nil {
 		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}

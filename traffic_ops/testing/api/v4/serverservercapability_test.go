@@ -34,6 +34,7 @@ func TestServerServerCapabilities(t *testing.T) {
 		GetTestServerServerCapabilitiesIMS(t)
 		GetTestServerServerCapabilities(t)
 		GetDeliveryServiceServersWithCapabilities(t)
+		UpdateTestServerServerCapabilities(t)
 	})
 }
 
@@ -219,6 +220,43 @@ func GetTestServerServerCapabilities(t *testing.T) {
 				t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
 			}
 		}
+	}
+}
+
+func UpdateTestServerServerCapabilities(t *testing.T) {
+	var header http.Header
+
+	// Get server capability name and edit it to a new name
+	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	origName := resp[0].Name
+	newSCName := "sc-test"
+	resp[0].Name = newSCName
+
+	// Update server capability with new name
+	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, &resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+	}
+
+	//To check whether the primary key change trickled down to server table
+	ssc, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
+	if err != nil {
+		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
+	}
+	for i, s := range ssc {
+		if *s.ServerCapability != *ssc[i].ServerCapability {
+			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
+		}
+	}
+
+	// Set everything back as it was for further testing.
+	resp[0].Name = origName
+	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, &resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}
 }
 
