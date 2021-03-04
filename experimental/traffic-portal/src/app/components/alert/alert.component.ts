@@ -11,10 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { isPlatformBrowser } from "@angular/common";
-import { Component, Inject, OnInit, PLATFORM_ID } from "@angular/core";
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { Component, OnInit } from "@angular/core";
 
-import { Alert } from "../../models";
 import { AlertService } from "../../services";
 
 /**
@@ -27,30 +26,27 @@ import { AlertService } from "../../services";
 })
 export class AlertComponent implements OnInit {
 
-	/** The raw HTML element that serves as the base of the component. */
-	public dialogElement: HTMLDialogElement | null = null;
-
-	/** The Alert being displayed. */
-	public alert: Alert | null = null;
-
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly platform: object) { }
+	constructor(
+		private readonly alerts: AlertService,
+		// @Inject(PLATFORM_ID) private readonly platform: object,
+		private readonly snackBar: MatSnackBar
+	) { }
 
 	/**
 	 * Runs initialization code, setting up the current alert from the alerts
 	 * service.
 	 */
 	public ngOnInit(): void {
-		if (!isPlatformBrowser(this.platform)) {
-			return;
-		}
-		this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
+		// if (!isPlatformBrowser(this.platform)) {
+		// 	return;
+		// }
+		// this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
 			a => {
 				if (a) {
-					this.alert = a;
 					if (a.text === "") {
 						a.text = "Unknown";
 					}
@@ -71,22 +67,9 @@ export class AlertComponent implements OnInit {
 							console.log("unknown alert: ", a.text);
 							break;
 					}
-					// This shouldn't be possibly false, but Typescript disagrees.
-					if (this.dialogElement) {
-						this.dialogElement.showModal();
-					}
+					this.snackBar.open(a.text, "dismiss", {duration: 10000, verticalPosition: "top"});
 				}
 			}
 		);
-	}
-
-	/**
-	 * Closes the dialog.
-	 */
-	public close(): void {
-		if (this.dialogElement) {
-			this.dialogElement.close();
-		}
-		this.alert = null;
 	}
 }

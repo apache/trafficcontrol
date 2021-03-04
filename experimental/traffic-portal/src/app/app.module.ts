@@ -24,6 +24,7 @@ import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -120,7 +121,8 @@ Chart.plugins.register({
 		FontAwesomeModule,
 		AgGridModule.withComponents([]),
 		BrowserAnimationsModule,
-		MatToolbarModule
+		MatToolbarModule,
+		MatSnackBarModule
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
