@@ -209,16 +209,14 @@ public final class SignatureManager {
 			final int oldRRSIGSize = RRSIGCache.values().stream().map(Map::size).reduce(0, Integer::sum);
 			final long now = new Date().getTime();
 			final ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> newRRSIGCache = new ConcurrentHashMap<>();
-			newKeyMap.forEach((name, keyPairs) -> {
-				keyPairs.forEach(keypair -> {
-					final RRSIGCacheKey cacheKey = new RRSIGCacheKey(keypair.getPrivate().getEncoded(), keypair.getDNSKEYRecord().getAlgorithm());
-					final ConcurrentMap<RRsetKey, RRSIGRecord> cacheValue = RRSIGCache.get(cacheKey);
-					if (cacheValue != null) {
-						cacheValue.entrySet().removeIf(e -> e.getValue().getExpire().getTime() <= now);
-						newRRSIGCache.put(cacheKey, cacheValue);
-					}
-				});
-			});
+			newKeyMap.forEach((name, keyPairs) -> keyPairs.forEach(keypair -> {
+				final RRSIGCacheKey cacheKey = new RRSIGCacheKey(keypair.getPrivate().getEncoded(), keypair.getDNSKEYRecord().getAlgorithm());
+				final ConcurrentMap<RRsetKey, RRSIGRecord> cacheValue = RRSIGCache.get(cacheKey);
+				if (cacheValue != null) {
+					cacheValue.entrySet().removeIf(e -> e.getValue().getExpire().getTime() <= now);
+					newRRSIGCache.put(cacheKey, cacheValue);
+				}
+			}));
 			RRSIGCache = newRRSIGCache;
 			final int keySize = RRSIGCache.size();
 			final int RRSIGSize = RRSIGCache.values().stream().map(Map::size).reduce(0, Integer::sum);
@@ -258,9 +256,7 @@ public final class SignatureManager {
 	private boolean hasNewKeys(final Map<String, List<DnsSecKeyPair>> oldKeyMap, final Map<String, List<DnsSecKeyPair>> newKeyMap) {
 		final Set<String> newOrChangedKeyNames = getKeyDifferences(newKeyMap, oldKeyMap);
 		if (!newOrChangedKeyNames.isEmpty()) {
-			newOrChangedKeyNames.forEach(name -> {
-				LOGGER.info("Found new or changed key for " + name);
-			});
+			newOrChangedKeyNames.forEach(name -> LOGGER.info("Found new or changed key for " + name));
 			return true;
 		}
 		return false;

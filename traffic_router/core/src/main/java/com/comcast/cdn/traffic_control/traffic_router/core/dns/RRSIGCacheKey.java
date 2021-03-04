@@ -26,14 +26,6 @@ public class RRSIGCacheKey {
         this.algorithm = algorithm;
     }
 
-    public byte[] getPrivateKeyBytes() {
-        return privateKeyBytes;
-    }
-
-    public int getAlgorithm() {
-        return algorithm;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
