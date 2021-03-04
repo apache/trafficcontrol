@@ -327,7 +327,7 @@ verify_and_set_go_version() {
 
 		version_pattern='.*go([1-9]+)\.([1-9]+).*'
 		if echo "$go_version" | grep -E "$version_pattern"; then
-			group_1="$(echo "$go_version" | sed -E "s/.*${version_pattern}/\1/")"
+			group_1="$(echo "$go_version" | sed -E "s/${version_pattern}/\1/")"
 			group_2="$(echo "$go_version" | sed -E "s/${version_pattern}/\2/")"
 			if [ ! "$group_1" -ge "$major_version" ] || [ ! "$group_2" -ge "$minor_version" ]; then
 				GO_VERSION="${group_1}.${group_2}"; export GO_VERSION
