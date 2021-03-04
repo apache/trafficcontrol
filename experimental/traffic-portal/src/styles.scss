@@ -48,6 +48,7 @@ $traffic-portal-theme: mat-light-theme((
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include angular-material-theme($traffic-portal-theme);
+@include theme($traffic-portal-theme);
 
 @font-face {
 	font-family: 'Roboto';

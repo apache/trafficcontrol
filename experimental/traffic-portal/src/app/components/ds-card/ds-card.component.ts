@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Component, Input, OnInit } from "@angular/core";
+import { faClipboardList, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 import { first } from "rxjs/operators";
@@ -87,11 +88,21 @@ export class DsCardComponent implements OnInit {
 	/** Describes whether or not the card's data has been loaded. */
 	private loaded: boolean;
 
+	public readonly detailsIcon = faClipboardList;
+	public readonly infoIcon = faInfoCircle;
+
 	/**
 	 * Describes whether or not the card's data specific to charts has been
 	 * loaded.
 	 */
 	public graphDataLoaded: boolean;
+
+	public get protocolString(): string {
+		if (this.deliveryService.protocol) {
+			return protocolToString(this.deliveryService.protocol);
+		}
+		return "";
+	}
 
 	/**
 	 * Constructor.
@@ -143,6 +154,8 @@ export class DsCardComponent implements OnInit {
 		this.graphDataLoaded = false;
 	}
 
+	public log(){console.log(this);}
+
 	/**
 	 * Runs initialization, setting 'now' and 'today' if they weren't given as
 	 * input.
@@ -159,19 +172,18 @@ export class DsCardComponent implements OnInit {
 	 * Triggered when the details element is opened or closed, and fetches the
 	 * latest stats.
 	 *
-	 * @param e A DOM Event caused then the open/close state of a `<details>` element changes.
-	 *
 	 * this will only fetch health and capacity information once per page load,
 	 * but will update the Bandwidth graph every time the details panel is
 	 * opened. Bandwidth data is calculated using 60s intervals starting at
 	 * 00:00 UTC the current day and ending at the current date/time.
 	 */
-	public toggle(e: Event): void {
+	public toggle(): void {
 		if (!this.deliveryService.id) {
 			console.error("Toggling DS card for DS with no ID:", this.deliveryService);
 			return;
 		}
-		if ((e.target as HTMLDetailsElement).open) {
+		console.log("toggle:", !this.open);
+		if (!this.open) {
 			if (!this.loaded) {
 				this.loaded = true;
 				this.dsAPI.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(

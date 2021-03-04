@@ -14,30 +14,14 @@
 
 @import '../../../theme.scss';
 
-details {
+mat-card {
 	border: 2px solid gray;
+	padding: 0;
 
-	& > summary {
-		background-color: $theme_main;
-		color: white;
-		padding: 10px;
+	& > mat-card-title-group {
+		background-color: $theme_secondary;
+		padding: 16px;
 		cursor: pointer;
-
-		span:first-child {
-			display: inline-block;
-			max-width: 45%;
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
-		span:last-child {
-			float: right;
-			display: inline-block;
-			max-width: 30%;
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
 
 		svg {
 			height: 1.5em;
@@ -45,15 +29,18 @@ details {
 		}
 	}
 
-	&.inactive > summary {
+	&.inactive > mat-card-title-group {
 		background-color: gray;
 		color: #d3d3d3;
 	}
 
-	&[open] {
+	&.open {
 		border-radius: 12px;
-		& > summary {
+		& > mat-card-title-group {
 			border-radius: 10px 10px 0 0;
+		}
+		mat-card-actions {
+			padding-bottom: 16px;
 		}
 	}
 }
@@ -64,17 +51,13 @@ a.info {
 	margin-left: 8px;
 }
 
-div.card-content {
-	display: grid;
-	grid-column-gap: 10px;
-	grid-row-gap: 10px;
-	padding: 10px;
-	position: relative;
+mat-card-content {
+	margin: 16px;
 
 	div.canvas-container {
 		width: 100%;
 		position: relative;
-		z-index: -1;
+		z-index: 0;
 	}
 
 	div.loading {
@@ -111,34 +94,27 @@ div.card-content {
 	meter {
 		width: 100%;
 	}
+
 }
 
-@media (min-width: 768px) {
-	div.card-content {
-		grid-template-columns: 1fr 1fr;
-	}
+mat-card-actions {
+	margin: 16px;
 }
 
-@media (max-width: 767px) {
-	div.card-content {
-		grid-template-columns: 1fr;
-	}
-}
+// a.view-details {
+// 	background-color: $theme_tertiary;
+// 	color: white;
+// 	height: 2em;
+// 	width: 2em;
+// 	display: block;
+// 	padding: 5px;
+// 	text-align: center;
+// 	border-radius: calc(1em + 5px);
+// 	position: absolute;
+// 	bottom: 5px;
 
-a.view-details {
-	background-color: $theme_tertiary;
-	color: white;
-	height: 2em;
-	width: 2em;
-	display: block;
-	padding: 5px;
-	text-align: center;
-	border-radius: calc(1em + 5px);
-	position: absolute;
-	bottom: 5px;
-
-	img {
-		margin-top: 3px;
-		height: 1.5em;
-	}
-}
+// 	img {
+// 		margin-top: 3px;
+// 		height: 1.5em;
+// 	}
+// }

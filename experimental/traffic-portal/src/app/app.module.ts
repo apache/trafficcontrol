@@ -23,6 +23,9 @@ import { NgModule } from "@angular/core";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { MatCardModule } from "@angular/material/card";
+import { MatExpansionModule } from "@angular/material/expansion";
+import { MatListModule } from "@angular/material/list";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 
@@ -121,6 +124,9 @@ Chart.plugins.register({
 		FontAwesomeModule,
 		AgGridModule.withComponents([]),
 		BrowserAnimationsModule,
+		MatCardModule,
+		MatExpansionModule,
+		MatListModule,
 		MatToolbarModule,
 		MatSnackBarModule
 	],
