@@ -29,14 +29,6 @@ var FormEditServerCapabilityController = function(serverCapability, $scope, $con
 			});
 	};
 
-	// var updateServerCapability = function(currentName, newName) {
-	// 	serverCapabilityService.updateServerCapability(newName, currentName)
-	// 		.then(function(result) {
-	// 			messageModel.setMessages(result.data.alerts, currentName !== newName);
-	// 			locationUtils.navigateToPath('/server_capabilities/edit?name=' + result.data.response.name);
-	// 	});
-	// };
-
 	$scope.serverCapabilityName = serverCapability.name;
 
 	$scope.settings = {
@@ -65,12 +57,10 @@ var FormEditServerCapabilityController = function(serverCapability, $scope, $con
 	};
 
 	$scope.save = function(currentName, serverCapability) {
-		// updateServerCapability(currentName, newName);
 		serverCapabilityService.updateServerCapability(currentName, serverCapability).
 			then(function(result) {
 				messageModel.setMessages(result.data.alerts, currentName !== serverCapability.name);
-				// locationUtils.navigateToPath('/server_capabilities/edit?name=' + result.data.response.name);
-				locationUtils.navigateToPath('/server-capabilities');
+				locationUtils.navigateToPath('/server-capabilities/edit?name=' + result.data.response.name);
 			});
 	};
 
