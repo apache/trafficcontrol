@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"testing"
@@ -28,6 +29,7 @@ func TestServerCapabilities(t *testing.T) {
 		SortTestServerCapabilities(t)
 		GetTestServerCapabilities(t)
 		ValidationTestServerCapabilities(t)
+		//UpdateTestServerCapabilities(t)
 	})
 }
 
@@ -86,6 +88,46 @@ func ValidationTestServerCapabilities(t *testing.T) {
 	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"})
 	if err == nil {
 		t.Error("expected POST with invalid name to return an error, actual: nil")
+	}
+}
+
+func UpdateTestServerCapabilities(t *testing.T) {
+	var header http.Header
+
+	// Get server capability name and edit it to a new name
+	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	origName := resp[0].Name
+	newSCName := "sc-test"
+	resp[0].Name = newSCName
+
+	// Update server capability with new name
+	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+	}
+	fmt.Println(updateResponse)
+	if updateResponse.Name != newSCName {
+		t.Errorf("failed to update server capability name, expected: %v but got:%v", newSCName, updateResponse.Name)
+	}
+
+	//To check whether the primary key change trickled down to server table
+	resp1, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
+	fmt.Println(resp1[0])
+	if err != nil {
+		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", *resp1[0].ServerCapability, err)
+	}
+	if len(resp1) != 1 {
+		t.Errorf("server capability name change failed to trickle to server table, expected: %v but got:%v", newSCName, *resp1[0].ServerCapability)
+	}
+
+	// Set everything back as it was for further testing.
+	resp[0].Name = origName
+	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}
 }
 
