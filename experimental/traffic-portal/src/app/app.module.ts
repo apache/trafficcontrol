@@ -55,6 +55,7 @@ import { BooleanFilterComponent } from "./components/table-components/boolean-fi
 import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { UpdateCellRendererComponent } from "./components/table-components/update-cell-renderer/update-cell-renderer.component";
 import { UpdateStatusComponent } from "./components/servers/update-status/update-status.component";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -116,7 +117,8 @@ Chart.plugins.register({
 		ReactiveFormsModule,
 		FormsModule,
 		FontAwesomeModule,
-		AgGridModule.withComponents([])
+		AgGridModule.withComponents([]),
+		BrowserAnimationsModule
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
