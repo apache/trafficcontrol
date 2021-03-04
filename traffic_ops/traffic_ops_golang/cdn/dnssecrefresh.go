@@ -192,7 +192,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 			if ds.CDNName != cdnInf.CDNName {
 				continue
 			}
-			if t := ds.Type; !t.IsHTTP() && !t.IsSteering() && !t.IsDNS() {
+			if t := ds.Type; !t.UsesDNSSECKeys() {
 				continue
 			}
 
