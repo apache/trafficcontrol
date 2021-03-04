@@ -91,13 +91,6 @@ WHERE id = $3
 RETURNING last_updated
 `
 
-const updateStatusAndOriginalQuery = `
-UPDATE deliveryservice_request
-SET original=$1, status=$2, last_edited_by_id=$3
-WHERE id=$4
-RETURNING last_updated
-`
-
 // PutStatus is the handler for PUT requests to
 // /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
@@ -164,6 +157,12 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	dsr.LastEditedBy = inf.User.UserName
 	dsr.LastEditedByID = new(int)
 	*dsr.LastEditedByID = inf.User.ID
+
+	if err := tx.QueryRow(updateStatusQuery, req.Status, inf.User.ID, dsrID).Scan(&dsr.LastUpdated); err != nil {
+		sysErr = fmt.Errorf("updating DSR #%d status: %v", dsrID, err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
 
 	message := fmt.Sprintf("Changed status of '%s' Delivery Service Request from '%s' to '%s'", dsr.XMLID, dsr.Status, req.Status)
 	dsr.Status = req.Status
