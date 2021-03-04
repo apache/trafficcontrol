@@ -13,6 +13,7 @@
 */
 
 /* You can add global styles to this file, and also import other style files */
+@import './theme.scss';
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
@@ -27,11 +28,11 @@
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
-$traffic-portal-primary: mat-palette($mat-indigo);
-$traffic-portal-accent: mat-palette($mat-pink, A200, A100, A400);
+$traffic-portal-primary: mat-palette($mat-blue, 800);
+$traffic-portal-accent: mat-palette($mat-pink, 700, 600, 800);
 
 // The warn palette is optional (defaults to red).
-$traffic-portal-warn: mat-palette($mat-red);
+$traffic-portal-warn: mat-palette($mat-orange, 500);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
@@ -90,8 +91,6 @@ $traffic-portal-theme: mat-light-theme((
 	word-wrap: normal;
 	direction: ltr;
 }
-
-@import './theme.scss';
 
 body {
 	background-color: white;
