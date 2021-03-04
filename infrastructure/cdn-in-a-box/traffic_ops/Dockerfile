@@ -91,8 +91,6 @@ RUN set -o nounset -o errexit && \
 
 EXPOSE 443
 
-ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
-
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
 RUN ./install_goose.sh && rm ./install_goose.sh
