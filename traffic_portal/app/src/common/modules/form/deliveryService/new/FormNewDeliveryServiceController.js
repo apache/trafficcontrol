@@ -53,7 +53,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 
 					if (autoFulfilled) {
 						// assign the ds request
-						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
 						// set the status to 'complete'
 						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
 					}
