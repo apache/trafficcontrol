@@ -62,9 +62,10 @@ var ChartBPSController = function(deliveryService, $scope, $state, $timeout, $fi
 		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
-			_.each(series.values, function(seriesItem) {
+			series.values.forEach(function(seriesItem) {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
-					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize) ]); // converts data to appropriate unit
+					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), 
+						numberUtils.convertTo(seriesItem[1], $scope.unitSize) ]); // converts data to appropriate unit
 				}
 			});
 		}
@@ -78,7 +79,8 @@ var ChartBPSController = function(deliveryService, $scope, $state, $timeout, $fi
 			xaxis: {
 				mode: "time",
 				timezone: "utc",
-				twelveHourClock: false
+				twelveHourClock: false,
+				timeBase: "milliseconds"
 			},
 			yaxes: [
 				{
