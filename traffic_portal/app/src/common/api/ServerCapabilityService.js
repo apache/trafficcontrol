@@ -68,6 +68,19 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 		);
 	};
 
+	this.updateServerCapability = function(currentName, serverCapability) {
+		return $http.put(ENV.api['root'] + 'server_capabilities', serverCapability, {params: {"name": currentName}}).then(
+			function(result) {
+				// messageModel.setMessages(result.data.alerts, false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
+	};
+
 	this.getServerCapabilityServers = function(capabilityName) {
 		return $http.get(ENV.api['root'] + 'server_server_capabilities', { params: { serverCapability: capabilityName } }).then(
 			function (result) {
@@ -76,7 +89,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 			function (err) {
 				throw err;
 			}
-		)
+		);
 	};
 
 	this.getServerCapabilityDeliveryServices = function(capabilityName) {
@@ -87,7 +100,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 			function (err) {
 				throw err;
 			}
-		)
+		);
 	};
 
 };

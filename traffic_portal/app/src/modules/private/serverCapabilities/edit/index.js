@@ -17,5 +17,23 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.form.serverCapability.view', [])
-	.controller('FormViewServerCapabilityController', require('./FormViewServerCapabilityController'));
+module.exports = angular.module('trafficPortal.private.serverCapabilities.view', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.serverCapabilities.edit', {
+				url: '/edit?name',
+				views: {
+					serverCapabilitiesContent: {
+						templateUrl: 'common/modules/form/serverCapability/form.serverCapability.tpl.html',
+						controller: 'FormEditServerCapabilityController',
+						resolve: {
+							serverCapability: function($stateParams, serverCapabilityService) {
+								return serverCapabilityService.getServerCapability($stateParams.name);
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

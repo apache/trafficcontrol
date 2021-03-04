@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormViewServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, $anchorScroll, locationUtils, serverCapabilityService) {
+var FormEditServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, $anchorScroll, locationUtils, messageModel, serverCapabilityService) {
 
 	// extends the FormServerCapabilityController to inherit common methods
 	angular.extend(this, $controller('FormServerCapabilityController', { serverCapability: serverCapability, $scope: $scope }));
@@ -29,10 +29,19 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 			});
 	};
 
+	// var updateServerCapability = function(currentName, newName) {
+	// 	serverCapabilityService.updateServerCapability(newName, currentName)
+	// 		.then(function(result) {
+	// 			messageModel.setMessages(result.data.alerts, currentName !== newName);
+	// 			locationUtils.navigateToPath('/server_capabilities/edit?name=' + result.data.response.name);
+	// 	});
+	// };
+
 	$scope.serverCapabilityName = serverCapability.name;
 
 	$scope.settings = {
-		isNew: false
+		isNew: false,
+		saveLabel: 'Update'
 	};
 
 	$scope.confirmDelete = function(serverCapability) {
@@ -55,7 +64,17 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 		});
 	};
 
+	$scope.save = function(currentName, serverCapability) {
+		// updateServerCapability(currentName, newName);
+		serverCapabilityService.updateServerCapability(currentName, serverCapability).
+			then(function(result) {
+				messageModel.setMessages(result.data.alerts, currentName !== serverCapability.name);
+				// locationUtils.navigateToPath('/server_capabilities/edit?name=' + result.data.response.name);
+				locationUtils.navigateToPath('/server-capabilities');
+			});
+	};
+
 };
 
-FormViewServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'serverCapabilityService'];
-module.exports = FormViewServerCapabilityController;
+FormEditServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'messageModel', 'serverCapabilityService'];
+module.exports = FormEditServerCapabilityController;
