@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 	"net/http"
 	"strconv"
 	"time"
@@ -293,5 +294,5 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
-	http.Redirect(w, r, "client.API_v13_CDNs"+cdn+"/snapshot", http.StatusFound)
+	http.Redirect(w, r, client.API_v13_CDNs+"/"+cdn+"/snapshot", http.StatusFound)
 }
