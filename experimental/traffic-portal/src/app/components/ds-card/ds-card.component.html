@@ -11,33 +11,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card [ngClass]="{'inactive': !deliveryService.active, 'open': open}">
+<mat-card [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
 	<mat-card-title-group (click)="toggle()">
 		<mat-card-title>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}
-			<a mat-icon-button href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>
+			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>
 		</mat-card-title>
 		<mat-card-subtitle>{{deliveryService.type ? deliveryService.type : ''}}</mat-card-subtitle>
 	</mat-card-title-group>
-	<mat-card-content class="card-content" *ngIf="open">
+	<mat-card-content class="card-content" *ngIf="open" [@enterAnimation]>
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
 			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{protocolString}}</span>
-			<hr/>
+			<mat-divider></mat-divider>
 			<p>{{deliveryService.longDesc ? deliveryService.longDesc : 'NO DESCRIPTION'}}</p>
-			<hr *ngIf="deliveryService.longDesc1"/>
+			<mat-divider *ngIf="deliveryService.longDesc1"></mat-divider>
 			<p *ngIf="deliveryService.longDesc1">{{deliveryService.longDesc1}}</p>
-			<hr *ngIf="deliveryService.longDesc2"/>
+			<mat-divider *ngIf="deliveryService.longDesc2"></mat-divider>
 			<p *ngIf="deliveryService.longDesc2">{{deliveryService.longDesc2}}</p>
-			<hr/>
+			<mat-divider></mat-divider>
 			<h3 *ngIf="deliveryService.exampleURLs">URLs</h3>
-			<mat-list *ngIf="deliveryService.exampleURLs">
-				<mat-list-item *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></mat-list-item>
-			</mat-list>
+			<mat-nav-list *ngIf="deliveryService.exampleURLs">
+				<a mat-list-item *ngFor="let url of deliveryService.exampleURLs" href="{{url}}">{{url}}</a>
+			</mat-nav-list>
 			<span class="warning" *ngIf="!deliveryService.exampleURLs || deliveryService.exampleURLs.length < 1">No URLs configured!</span>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
-				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
+				<canvas *ngIf="open" linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
 					Your browser does not support canvases or Javascript. Normally, this would be a graph of the bandwidth data so far today.
 				</canvas>
 				<div class="loading" *ngIf="!graphDataLoaded"><tp-loading></tp-loading></div>
@@ -56,11 +56,9 @@ limitations under the License.
 			</fieldset>
 		</div>
 	</mat-card-content>
-	<mat-card-actions *ngIf="open" class="color-accent">
-		<a mat-button color="accent" class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
-			<!-- <fa-icon [icon]="detailsIcon"></fa-icon> -->
-			VIEW DETAILS
+	<mat-card-actions *ngIf="open">
+		<a mat-raised-button color="accent" class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
+			View Details
 		</a>
-		<mat-button (click)="log()">Log</mat-button>
 	</mat-card-actions>
 </mat-card>

@@ -110,8 +110,9 @@ span.warning {
 	}
 }
 
-button {
-	cursor: pointer;
+.mat-button-base {
+	// cursor: pointer;
+	text-transform: uppercase;
 }
 
 /* read-only pseudo-class always applies to checkbox inputs, because read-write never applies. Go figure. */

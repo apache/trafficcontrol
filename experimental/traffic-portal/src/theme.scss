@@ -31,17 +31,31 @@
 		border-color: mat-color($config, A400);
 	}
 
+	.color-primary-inverted {
+		background-color: transparent;
+		color: mat-color($config);
+	}
+
 	.color-accent {
-		// Use mat-color to extract individual colors from a palette.
 		background-color: mat-color($accent);
 		color: white;
 		border-color: mat-color($accent, A400);
 	}
 
+	.color-accent-inverted {
+		background-color: transparent;
+		color: mat-color($accent);
+	}
+
 	.color-warn {
-		// Use mat-color to extract individual colors from a palette.
 		background-color: mat-color($warn);
+		color: white;
 		border-color: mat-color($warn, A400);
+	}
+
+	.color-warn-inverted {
+		background-color: white;
+		color: mat-color($warn);
 	}
 }
 
@@ -49,7 +63,12 @@
 	// Extract the typography configuration in case a theme has been passed.
 	$config: mat-get-typography-config($config-or-theme);
 
-	.color-primary, .color-accent, .color-warn {
+	.color-primary,
+	.color-primary-inverted,
+	.color-accent,
+	.color-accent-inverted,
+	.color-warn,
+	.color-warn-inverted {
 		font: {
 			family: mat-font-family($config, body-1);
 			size: mat-font-size($config, body-1);

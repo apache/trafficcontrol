@@ -12,6 +12,8 @@
 * limitations under the License.
 */
 import { Component, Input, OnInit } from "@angular/core";
+import { trigger, style, animate, transition } from "@angular/animations";
+
 import { faClipboardList, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
@@ -26,6 +28,20 @@ import { DeliveryServiceService } from "../../services/api";
  * Service in an expand-able card.
  */
 @Component({
+	animations: [
+		trigger(
+			"enterAnimation", [
+				transition(":enter", [
+			  		style({opacity: 0, transform: "translateY(-100%)"}),
+					animate("200ms", style({opacity: 1, transform: "translateY(0)"}))
+				]),
+				transition(":leave", [
+					style({transform: "translateY(0)", opacity: 1}),
+					animate("200ms", style({transform: "translateY(-100%)", opacity: 0}))
+				])
+			]
+		)
+	],
 	selector: "ds-card[deliveryService]",
 	styleUrls: ["./ds-card.component.scss"],
 	templateUrl: "./ds-card.component.html"
@@ -34,6 +50,9 @@ export class DsCardComponent implements OnInit {
 
 	/** The Delivery Service being described by this component. */
 	@Input() public deliveryService: DeliveryService;
+
+	@Input() public first = false;
+	@Input() public last = false;
 
 	/**
 	 * The date to use as the 'current' date/time - the end of the date/time
@@ -154,8 +173,6 @@ export class DsCardComponent implements OnInit {
 		this.graphDataLoaded = false;
 	}
 
-	public log(){console.log(this);}
-
 	/**
 	 * Runs initialization, setting 'now' and 'today' if they weren't given as
 	 * input.
@@ -182,7 +199,6 @@ export class DsCardComponent implements OnInit {
 			console.error("Toggling DS card for DS with no ID:", this.deliveryService);
 			return;
 		}
-		console.log("toggle:", !this.open);
 		if (!this.open) {
 			if (!this.loaded) {
 				this.loaded = true;
@@ -212,6 +228,7 @@ export class DsCardComponent implements OnInit {
 		} else {
 			this.open = false;
 			this.graphDataLoaded = false;
+			this.loaded = false;
 			this.chartData.next([]);
 		}
 	}
