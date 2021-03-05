@@ -30,6 +30,8 @@ import { MatExpansionModule } from "@angular/material/expansion";
 import { MatListModule } from "@angular/material/list";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatStepperModule } from "@angular/material/stepper";
+import { MatRadioModule } from "@angular/material/radio";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -129,8 +131,10 @@ Chart.plugins.register({
 		MatDividerModule,
 		MatExpansionModule,
 		MatListModule,
-		MatToolbarModule,
+		MatRadioModule,
 		MatSnackBarModule,
+		MatStepperModule,
+		MatToolbarModule,
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},

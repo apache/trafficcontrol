@@ -13,6 +13,7 @@
 */
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
 import { first } from "rxjs/operators";
@@ -117,7 +118,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 	public protocol = new FormControl();
 
 	/** Need This to be a property for template access. */
-	public protocolToString = protocolToString;
+	public readonly protocolToString = protocolToString;
+
+	/** The available Delivery Service protocols. */
+	public readonly protocols = [
+		Protocol.HTTP,
+		Protocol.HTTPS,
+		Protocol.HTTP_AND_HTTPS,
+		Protocol.HTTP_TO_HTTPS
+	];
 
 	/** The available CDNs from which for the user to choose. */
 	public cdns: Array<CDN> = [];
@@ -128,8 +137,6 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 */
 	public dsTypes: Array<Type> = [];
 
-	/** Controls what "step" the user is on; controls which fields are shown. */
-	public step = 0;
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
 
@@ -249,9 +256,11 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	/**
 	 * When a user submits their origin URL, this parses that out into the
-	 * related DS fields
+	 * related DS fields.
+	 *
+	 * @param stepper The stepper controlling the form flow - used to advance to the next step.
 	 */
-	public setOriginURL(): void {
+	public setOriginURL(stepper: MatStepper): void {
 		const parser = document.createElement("a");
 		parser.href = this.originURL.value;
 		this.deliveryService.orgServerFqdn = parser.origin;
@@ -280,7 +289,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
-		++this.step;
+		stepper.next();
 	}
 
 	/**
@@ -291,7 +300,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * name value to a placeholder while making the actual value an empty
 	 * string.
 	 */
-	public setMetaInformation(): void {
+	public setMetaInformation(stepper: MatStepper): void {
 		this.deliveryService.displayName = this.displayName.value;
 		this.deliveryService.xmlId = this.deliveryService.displayName.toLocaleLowerCase().replace(XML_ID_SANITIZE, "-");
 		if (! VALID_XML_ID.test(this.deliveryService.xmlId)) {
@@ -312,7 +321,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (this.infoURL.value) {
 			this.deliveryService.infoUrl = this.infoURL.value;
 		}
-		++this.step;
+		stepper.next();
 	}
 
 	/**
@@ -394,7 +403,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/**
 	 * Allows a user to return to the previous step.
 	 */
-	public previous(): void {
-		--this.step;
+	public previous(stepper: MatStepper): void {
+		stepper.previous();
 	}
 }

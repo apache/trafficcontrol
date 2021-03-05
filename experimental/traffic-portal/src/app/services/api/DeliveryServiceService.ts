@@ -419,7 +419,7 @@ export class DeliveryServiceService extends APIService {
 	 * 	types.
 	 */
 	public getDSTypes(): Observable<Array<Type>> {
-		if (this.deliveryServiceTypes) {
+		if (this.deliveryServiceTypes.length > 0) {
 			return of(this.deliveryServiceTypes);
 		}
 		const path = "types";
