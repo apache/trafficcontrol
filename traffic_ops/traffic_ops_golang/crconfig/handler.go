@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
+	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 )
 
 // Handler creates and serves the CRConfig from the raw SQL data.
