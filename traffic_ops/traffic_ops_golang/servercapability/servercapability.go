@@ -20,6 +20,8 @@ package servercapability
  */
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -121,6 +123,7 @@ func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, er
 }
 
 func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
+	var existingLastUpdated *tc.TimeNoMod
 	sc, userErr, sysErr, errCode, _ := v.Read(h, false)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -128,11 +131,26 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 	if len(sc) != 1 {
 		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
 	}
+
+	// check if the name was being updated by someone else
+	q := `SELECT last_updated FROM server_capability WHERE id = $1`
+	if err := v.ReqInfo.Tx.QueryRow(q, v.Name).Scan(&existingLastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("server capability was not found"), nil, http.StatusNotFound
+		}
+		return nil, errors.New("server capability update: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
+
+	// udpate server capability name
 	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
 	if err != nil {
 		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
+
 	for rows.Next() {
 		err = rows.Scan(&v.Name, &v.LastUpdated)
 		if err != nil {
