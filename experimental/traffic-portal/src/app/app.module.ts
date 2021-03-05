@@ -50,7 +50,6 @@ import { NewDeliveryServiceComponent } from "./components/new-delivery-service/n
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
 import { SSHCellRendererComponent } from "./components/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TpHeaderComponent } from "./components/tp-header/tp-header.component";
-import { UserCardComponent } from "./components/user-card/user-card.component";
 import { UsersComponent } from "./components/users/users.component";
 import { CustomvalidityDirective } from "./directives/customvalidity.directive";
 import { LinechartDirective } from "./directives/linechart.directive";
@@ -99,7 +98,6 @@ Chart.plugins.register({
 		NewDeliveryServiceComponent,
 		TpHeaderComponent,
 		LoadingComponent,
-		UserCardComponent,
 		DeliveryserviceComponent,
 		LinechartDirective,
 		InvalidationJobsComponent,

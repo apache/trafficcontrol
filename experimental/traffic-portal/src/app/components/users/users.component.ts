@@ -118,4 +118,48 @@ export class UsersComponent implements OnInit {
 		return true;
 	}
 
+	/**
+	 * Checks if the user has any render-able address piece(s).
+	 *
+	 * @param user The user to check.
+	 * @returns 'true' if the user has at least one populated "location" field (city,
+	 * stateOrProvince etc.), 'false' otherwise.
+	 */
+	public userHasLocation(user: User): boolean {
+		return user.city !== null || user.stateOrProvince !== null || user.country !== null || user.postalCode !== null;
+	}
+
+	/**
+	 * Gets a string representing a user's address.
+	 *
+	 * @param user The user for whom to fetch a location string.
+	 * @returns The user's address, or 'null' if one cannot be
+	 * constructed because no relevant information exists.
+	 */
+	public userLocationString(user: User): string | null {
+		let ret = "";
+		if (user.city) {
+			ret += user.city;
+		}
+		if (user.stateOrProvince) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.stateOrProvince;
+		}
+		if (user.country) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.country;
+		}
+		if (user.postalCode) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.postalCode;
+		}
+
+		return ret.length === 0 ? null : ret;
+	}
 }
