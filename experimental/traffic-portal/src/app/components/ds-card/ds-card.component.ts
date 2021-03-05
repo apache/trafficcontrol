@@ -14,7 +14,7 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { trigger, style, animate, transition } from "@angular/animations";
 
-import { faClipboardList, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 import { first } from "rxjs/operators";
@@ -36,8 +36,8 @@ import { DeliveryServiceService } from "../../services/api";
 					animate("200ms", style({opacity: 1, transform: "translateY(0)"}))
 				]),
 				transition(":leave", [
-					style({transform: "translateY(0)", opacity: 1}),
-					animate("200ms", style({transform: "translateY(-100%)", opacity: 0}))
+					style({opacity: 1, transform: "translateY(0)"}),
+					animate("200ms", style({opacity: 0, transform: "translateY(-100%)"}))
 				])
 			]
 		)
@@ -51,7 +51,9 @@ export class DsCardComponent implements OnInit {
 	/** The Delivery Service being described by this component. */
 	@Input() public deliveryService: DeliveryService;
 
+	/** Whether or not this is the first DS Card in a list. Affects styling. */
 	@Input() public first = false;
+	/** Whether or not this is the last DS Card in a list. Affects styling. */
 	@Input() public last = false;
 
 	/**
@@ -107,7 +109,7 @@ export class DsCardComponent implements OnInit {
 	/** Describes whether or not the card's data has been loaded. */
 	private loaded: boolean;
 
-	public readonly detailsIcon = faClipboardList;
+	/** The icon for the Delivery Service InfoURL button. */
 	public readonly infoIcon = faInfoCircle;
 
 	/**
@@ -116,6 +118,7 @@ export class DsCardComponent implements OnInit {
 	 */
 	public graphDataLoaded: boolean;
 
+	/** The Protocol of the Delivery Service as a string. */
 	public get protocolString(): string {
 		if (this.deliveryService.protocol) {
 			return protocolToString(this.deliveryService.protocol);
