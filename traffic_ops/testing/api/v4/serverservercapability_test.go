@@ -231,6 +231,9 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
+	if len(resp) == 0 {
+		t.Fatal("no server capability in response, quitting")
+	}
 	origName := resp[0].Name
 	newSCName := "sc-test"
 	resp[0].Name = newSCName
@@ -245,6 +248,9 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	ssc, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
+	}
+	if ssc == nil {
+		t.Fatalf("no server with associated server capabolity name")
 	}
 	for i, s := range ssc {
 		if *s.ServerCapability != *ssc[i].ServerCapability {

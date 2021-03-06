@@ -98,6 +98,9 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
+	if len(resp) == 0 {
+		t.Fatalf("no server capability in response, quitting")
+	}
 	origName := resp[0].Name
 	newSCName := "sc-test"
 	resp[0].Name = newSCName
@@ -111,7 +114,10 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	// Get updated name
 	getResp, _, err := TOSession.GetServerCapabilityWithHdr(newSCName, header)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but %v", err.Error())
+	}
+	if getResp == nil {
+		t.Fatalf("no server capability in response, quitting")
 	}
 	if getResp.Name != newSCName {
 		t.Errorf("failed to update server capability name, expected: %v but got:%v", newSCName, updateResponse.Name)
