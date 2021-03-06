@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the Traffic Ops Python client to 3.0
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
+- Updated Traffic Ops supported database version from PostgreSQL 9.6 to 13.2
 - Set Traffic Router to also accept TLSv1.3 protocols by default in server.xml
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
 

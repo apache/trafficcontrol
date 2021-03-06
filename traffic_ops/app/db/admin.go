@@ -173,9 +173,11 @@ func parseDBConfig() error {
 
 func createDB() {
 	dbExistsCmd := exec.Command("psql", "-h", HostIP, "-U", DBSuperUser, "-p", HostPort, "-tAc", "SELECT 1 FROM pg_database WHERE datname='"+DBName+"'")
+	stderr := bytes.Buffer{}
+	dbExistsCmd.Stderr = &stderr
 	out, err := dbExistsCmd.Output()
 	if err != nil {
-		die("unable to check if DB already exists: " + err.Error())
+		die("unable to check if DB already exists: " + err.Error() + ", stderr: " + stderr.String())
 	}
 	if len(out) > 0 {
 		fmt.Println("Database " + DBName + " already exists")
@@ -202,9 +204,11 @@ func dropDB() {
 func createUser() {
 	fmt.Println("Creating user: " + DBUser)
 	userExistsCmd := exec.Command("psql", "-h", HostIP, "-U", DBSuperUser, "-p", HostPort, "-tAc", "SELECT 1 FROM pg_roles WHERE rolname='"+DBUser+"'")
+	stderr := bytes.Buffer{}
+	userExistsCmd.Stderr = &stderr
 	out, err := userExistsCmd.Output()
 	if err != nil {
-		die("unable to check if user already exists: " + err.Error())
+		die("unable to check if user already exists: " + err.Error() + ", stderr: " + stderr.String())
 	}
 	if len(out) > 0 {
 		fmt.Println("User " + DBUser + " already exists")

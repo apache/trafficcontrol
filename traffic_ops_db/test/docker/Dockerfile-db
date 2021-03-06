@@ -19,9 +19,9 @@
 # Dockerfile for trafficops db
 ############################################################
 
-FROM postgres:9.6.6
+FROM postgres:13.2
 
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+ENV POSTGRES_PASSWORD=twelve
 ENV POSTGRES_DB=traffic_ops
 ENV DB_NAME=traffic_ops
 ENV DB_USER=traffic_ops

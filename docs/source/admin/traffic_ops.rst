@@ -46,20 +46,20 @@ Guide
 
 		yum update -y
 		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-		yum install -y postgresql96-server
-		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
+		yum install -y postgresql13-server
+		su - postgres -c '/usr/pgsql-13/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
 
-#. Edit :file:`/var/lib/pgsql/9.6/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
+#. Edit :file:`/var/lib/pgsql/13/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
 
-#. Edit the :file:`/var/lib/pgsql/9.6/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
+#. Edit the :file:`/var/lib/pgsql/13/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
 
 	.. code-block:: shell
 		:caption: Starting PostgreSQL with :manpage:`systemd(1)`
 
-		systemctl enable postgresql-9.6
-		systemctl start postgresql-9.6
-		systemctl status postgresql-9.6 # Prints the status of the PostgreSQL service, to prove it's running
+		systemctl enable postgresql-13
+		systemctl start postgresql-13
+		systemctl status postgresql-13 # Prints the status of the PostgreSQL service, to prove it's running
 
 
 #. Build a :file:`traffic_ops-{version string}.rpm` file using the instructions under the :ref:`dev-building` page - or download a pre-built release from `the Apache Continuous Integration server <https://builds.apache.org/view/S-Z/view/TrafficControl/>`_.
@@ -87,7 +87,7 @@ Guide
 
 		to-# psql -h pg -U postgres
 		Password for user postgres:
-		psql (9.6.3)
+		psql (13.2)
 		Type "help" for help.
 
 		postgres=#
@@ -236,6 +236,11 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 	popd
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.
+
+Upgrading to 6.0
+----------------
+
+As of 6.0, Traffic Ops supports PostgreSQL version 13.2. In order to migrate from the prior PostgreSQL version 9.6, it is recommended to use the `pg_upgrade <https://www.postgresql.org/docs/13/pgupgrade.html>`_ tool.
 
 .. _to-running:
 

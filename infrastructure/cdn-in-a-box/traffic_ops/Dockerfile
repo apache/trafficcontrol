@@ -36,11 +36,13 @@ RUN set -o nounset -o errexit && \
 		use_repo=''; \
 		enable_repo=''; \
 	else \
-		use_repo='--repo=pgdg96'; \
+		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
 	fi; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y $use_repo -- install postgresql96; \
+	# libicu required by postgresql13
+	dnf -y install libicu; \
+	dnf -y $use_repo -- install postgresql13; \
 	dnf -y install epel-release; \
 	dnf -y $enable_repo install      \
 		bind-utils           \
