@@ -467,7 +467,7 @@ This product bundles ldap.v2 component, which is available under an MIT license.
 ./vendor/gopkg.in/ldap.v2/LICENSE
 Refer to the above license for the full text.
 
-This product bundles fakeOrigin example video, which is available under an CC-PDM-1.0 license.
+This product bundles an example video for fakeOrigin, which is available under an CC-PDM-1.0 license.
 @test/fakeOrigin/example/video/*
 ./test/fakeOrigin/example/video/LICENSE
 Refer to the above license for the full text.
