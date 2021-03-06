@@ -256,9 +256,9 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 
 // SnapshotOldGUIHandler creates the CRConfig JSON and writes it to the snapshot table in the database. The response emulates the old Perl UI function. This should go away when the old Perl UI ceases to exist.
 func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, code := api.NewInfo(r, []string{"cdn"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()))
 		return
 	}
 	defer inf.Close()
@@ -273,7 +273,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
@@ -284,7 +284,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
