@@ -149,12 +149,10 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		if ok && len(bandwidth) > 0 {
 			if kbps, ok := bandwidth[0].Val.(string); !ok {
 				log.Warnf("couldn't convert %v into string", bandwidth[0].Val)
-				continue
 			} else {
 				cache.KBPS, err = strconv.ParseUint(kbps, 10, 64)
 				if err != nil {
 					log.Warnf("couldn't convert %v to uint64", kbps)
-					continue
 				}
 			}
 		}
@@ -162,12 +160,10 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		if ok && len(connections) > 0 {
 			if conn, ok := connections[0].Val.(string); !ok {
 				log.Warnf("couldn't convert %v into string", connections[0].Val)
-				continue
 			} else {
 				cache.Connections, err = strconv.ParseUint(conn, 10, 64)
 				if err != nil {
 					log.Warnf("couldn't convert %v to uint64", conn)
-					continue
 				}
 			}
 		}
