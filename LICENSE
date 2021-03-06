@@ -547,7 +547,7 @@ This product bundles pborman/getopt/v2, which is available under a BSD-3-Clause 
 vendor/github.com/pborman/getopt/v2/LICENSE
 Refer to the above license for the full text.
 
-This product bundles gopkg.in/square/go-jose.v2/json, which is available under an Apache-2.0 license.
+This product bundles gopkg.in/square/go-jose.v2/json, which is available under a BSD-3-Clause license.
 @vendor/gopkg.in/square/go-jose.v2/json/*
 @vendor/gopkg.in/square/go-jose.v2/json/LICENSE
 Refer to the above license for the full text.
