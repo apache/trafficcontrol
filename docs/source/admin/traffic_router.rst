@@ -34,7 +34,7 @@ Installing Traffic Router
 =========================
 #. If no suitable :term:`Profile` exists, create a new :term:`Profile` for Traffic Router via the :guilabel:`+` button on the :ref:`tp-configure-profiles` page in Traffic Portal
 
-	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future as the old Perl parts of Traffic Ops are re-written in Go.
+	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future.
 
 #. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-configure-servers` page (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
 #. Ensure the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router is resolvable in DNS. This :abbr:`FQDN (Fully Qualified Domain Name)` must be resolvable by the clients expected to use this CDN.
@@ -168,7 +168,7 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            |                                           | `their site <http://logging.apache.org/log4j/2.x/index.html>`_; adjust as needed |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	| server.xml                 | various parameters                        | Traffic Router specific configuration for Apache Tomcat. See the Apache Tomcat   | N/A                                                |
-	|                            |                                           | `documentation <https://tomcat.apache.org/tomcat-8.5-doc/index.html>`_           |                                                    |
+	|                            |                                           | `documentation <https://tomcat.apache.org/tomcat-9.0-doc/index.html>`_           |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	| web.xml                    | various parameters                        | Default settings for all Web Applications running in the Traffic Router instance | N/A                                                |
 	|                            |                                           | of Tomcat                                                                        |                                                    |
@@ -256,6 +256,11 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| dnssec.zone.diffing.enabled             | CRConfig.json                | If DNSSEC is enabled, enabling this parameter allows Traffic Router to diff existing zones with newly generated zones. If the newly   |
 	|                                         |                              | generated zone is the same as the existing zone, Traffic Router will simply reuse the existing signed zone instead of signing the     |
 	|                                         |                              | same new zone. This reduces the CPU time taken to process new snapshots and new DNSSEC keys. Defaults to "false".                     |
+	|                                         |                              | NOTE: this may be removed in favor of the ``dnssec.rrsig.cache.enabled`` setting in a future release.                                 |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dnssec.rrsig.cache.enabled              | CRConfig.json                | If DNSSEC is enabled, enabling this parameter allows Traffic Router to cache RRSIG records for reuse during DNSSEC signing.           |
+	|                                         |                              | This greatly reduces the CPU time taken to sign DNS zones. Defaults to "false".                                                       |
+	|                                         |                              | NOTE: this may supersede the ``dnssec.zone.diffing.enabled`` setting in a future release.                                             |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dnssec.allow.expired.keys               | CRConfig.json                | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is "true". This helps prevent DNSSEC related outages due to    |
 	|                                         |                              | failed Traffic Control components or connectivity issues.                                                                             |
@@ -833,8 +838,26 @@ Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fi
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates                                                                                                            |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                     |
+	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'.                                                                    |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Automatic Certificate Renewal
+-----------------------------
+If desired, an automated certificate renewal script is located at :file:`/traffic_ops/etc/cron.d/autorenew_certs`. This job is setup to be run, but the file must be updated with the username and password for Traffic Ops in order to be run.  In :ref:`cdn.conf` the following fields can be defined in order to alter the number of days in advance to renew and send a summary email after renewal.
+
+.. note:: In order for this to work, the AuthType field for the certificate must match the ACME provider in the :ref:`cdn.conf`.
+
+.. important:: After the automatic renewal script has run, a queue and snapshot must be run manually in order for the certificates to be used.
+
+.. table:: Fields to update to run the automatic renewal script under `acme_renewal`:
+
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                |
+	+==============================+=========+==========+============================================================================================================================+
+	| summary_email                | boolean | No       | The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent. |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates. Default is 30 days.                                           |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 

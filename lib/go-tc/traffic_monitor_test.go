@@ -473,24 +473,23 @@ func TestTrafficMonitorConfigMap_Valid(t *testing.T) {
 	}
 
 	mc.Config["peers.polling.interval"] = 42.0
-	// TODO: uncomment these tests when #3528 is resolved
-	// mc.DeliveryService = nil
-	// err = mc.Valid()
-	// if err == nil {
-	// 	t.Error("Didn't get expected error checking validity of config map with nil DeliveryService")
-	// } else {
-	// 	t.Logf("Got expected error: checking validity of config map with nil DeliveryService: %v", err)
-	// }
+	mc.DeliveryService = nil
+	err = mc.Valid()
+	if err == nil {
+		t.Error("Didn't get expected error checking validity of config map with nil DeliveryService")
+	} else {
+		t.Logf("Got expected error: checking validity of config map with nil DeliveryService: %v", err)
+	}
 
-	// mc.DeliveryService = map[string]TMDeliveryService{}
-	// err = mc.Valid()
-	// if err == nil {
-	// 	t.Error("Didn't get expected error checking validity of config map with no DeliveryServices")
-	// } else {
-	// 	t.Logf("Got expected error: checking validity of config map with no DeliveryServices: %v", err)
-	// }
+	mc.DeliveryService = map[string]TMDeliveryService{}
+	err = mc.Valid()
+	if err == nil {
+		t.Error("Didn't get expected error checking validity of config map with no DeliveryServices")
+	} else {
+		t.Logf("Got expected error: checking validity of config map with no DeliveryServices: %v", err)
+	}
 
-	// mc.DeliveryService["a"] = TMDeliveryService{}
+	mc.DeliveryService["a"] = TMDeliveryService{}
 	mc.Profile = nil
 	err = mc.Valid()
 	if err == nil {
@@ -570,7 +569,7 @@ func TestTrafficMonitorTransformToMap(t *testing.T) {
 		TrafficMonitors: []TrafficMonitor{
 			TrafficMonitor{},
 		},
-		DeliveryServices: []TMDeliveryService{},
+		DeliveryServices: []TMDeliveryService{{XMLID: "foo"}},
 		Profiles: []TMProfile{
 			{
 				Name: "test",
@@ -596,6 +595,13 @@ func TestTrafficMonitorTransformToMap(t *testing.T) {
 
 	if len(converted.TrafficServer) != 1 {
 		t.Errorf("Incorrect number of traffic servers after conversion; expected: 1, got: %d", len(converted.TrafficServer))
+	}
+
+	if len(converted.DeliveryService) != 1 {
+		t.Errorf("Incorrect number of deliveryServices after conversion; expected: 1, got: %d", len(converted.DeliveryService))
+	}
+	if _, ok := converted.DeliveryService["foo"]; !ok {
+		t.Error("Expected delivery service 'foo' to exist in map after conversion, but it didn't")
 	}
 
 	if _, ok := converted.TrafficServer["testHostname"]; !ok {

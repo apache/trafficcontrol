@@ -303,11 +303,9 @@ func (cfg *TrafficMonitorConfigMap) Valid() error {
 	if len(cfg.TrafficMonitor) == 0 {
 		return errors.New("MonitorConfig.TrafficMonitor empty")
 	}
-	// TODO uncomment this, when TO is fixed to include DeliveryServices.
-	// See https://github.com/apache/trafficcontrol/issues/3528
-	// if len(cfg.DeliveryService) == 0 {
-	// 	return errors.New("MonitorConfig.DeliveryService empty")
-	// }
+	if len(cfg.DeliveryService) == 0 {
+		return errors.New("MonitorConfig.DeliveryService empty")
+	}
 	if len(cfg.Profile) == 0 {
 		return errors.New("MonitorConfig.Profile empty")
 	}

@@ -13,8 +13,17 @@ limitations under the License.
 -->
 <tp-header [title]="'Servers'"></tp-header>
 <main>
-	<!-- <div>
+	<div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-	</div> -->
-	<ag-grid-angular [rowData]="servers | async" [columnDefs]="columnDefs" class="ag-theme-alpine" [frameworkComponents]="components"></ag-grid-angular>
+	</div>
+	<tp-generic-table
+		[data]="servers | async"
+		[cols]="columnDefs"
+		[fuzzySearch]="fuzzySubject"
+		context="servers"
+		[contextMenuItems]="contextMenuItems"
+		(contextMenuAction)="handleContextMenu($event)">
+	</tp-generic-table>
 </main>
+
+<tp-update-status *ngIf="changeStatusOpen" [servers]="changeStatusServers" (done)="statusUpdated($event)"></tp-update-status>

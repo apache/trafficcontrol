@@ -11,7 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from "@angular/core";
+import { Component, Input, OnDestroy, OnInit } from "@angular/core";
+import { Subscription } from "rxjs";
+import { AuthenticationService } from "src/app/services";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -21,7 +23,17 @@ import { Component, Input } from "@angular/core";
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent {
+export class TpHeaderComponent implements OnInit, OnDestroy {
+
+	/**
+	 * The set of permissions available to the authenticated user.
+	 */
+	public permissions = new Set<string>();
+
+	/**
+	 * Holds a continuous subscription for the current user's permissions, in case they change.
+	 */
+	private permissionSubscription: Subscription | undefined;
 
 	/**
 	 * The title to be used in the header.
@@ -29,4 +41,24 @@ export class TpHeaderComponent {
 	 * If not given, defaults to "Traffic Portal".
 	 */
 	@Input() public title?: string;
+
+	/** Constructor */
+	constructor(private readonly auth: AuthenticationService) {
+	}
+
+	/** Sets up data dependencies. */
+	public ngOnInit(): void {
+		this.permissionSubscription = this.auth.currentUserCapabilities.subscribe(
+			x => {
+				this.permissions = x;
+			}
+		);
+	}
+
+	/** Cleans up data dependencies. */
+	public ngOnDestroy(): void {
+		if (this.permissionSubscription) {
+			this.permissionSubscription.unsubscribe();
+		}
+	}
 }

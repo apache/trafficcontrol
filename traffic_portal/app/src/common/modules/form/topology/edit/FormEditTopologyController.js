@@ -41,7 +41,7 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		let normalizedTopology = topologyUtils.getNormalizedTopology(newName, description, topologyTree);
 		topologyService.updateTopology(normalizedTopology, currentName).
 			then(function(result) {
-				messageModel.setMessages(result.data.alerts, true);
+				messageModel.setMessages(result.data.alerts, currentName !== newName);
 				locationUtils.navigateToPath('/topologies/edit?name=' + result.data.response.name);
 			});
 	};

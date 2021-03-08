@@ -25,8 +25,8 @@
 #
 #      docker-compose up -d
 #
-# The Traffic Ops Go API will then be available on https://localhost:6443,
-# the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
+# The Traffic Ops API will then be available on https://localhost:6443,
+# and the postgres database on localhost 5432.
 #
 # Note that this setup is intended for testing and not for production use.
 
@@ -34,7 +34,7 @@
 version: '2.1'
 
 services:
-  # db is the Traffic Ops database running in postgresql.  Only trafficops and trafficops-perl need to have access to it.
+  # db is the Traffic Ops database running in postgresql.  Only trafficops needs to have access to it.
   # All other components access the database thru the Traffic Ops API
   db:
     build:
@@ -51,34 +51,10 @@ services:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
 
-  # trafficops runs only the Go version of Traffic Ops in a container.  All Traffic Ops API endpoints that have
-  # been rewritten in Go will be handled here.  All that have not are passed to the trafficops-perl service
-  # defined below
+  # trafficops runs Traffic Ops in a container.
   trafficops:
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile-go
-      args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
-    depends_on:
-      - db
-      - enroller
-      - smtp
-      - trafficops-perl
-    domainname: infra.ciab.test
-    env_file:
-      - variables.env
-    hostname: trafficops
-    image: trafficops-go
-    volumes:
-      - shared:/shared
-
-  # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
-  # in place until all API endpoints have been rewritten in Go
-  trafficops-perl:
-    build:
-      context: ../..
+      context: ../../
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
@@ -86,15 +62,15 @@ services:
     depends_on:
       - db
       - enroller
+      - smtp
     domainname: infra.ciab.test
     env_file:
       - variables.env
     environment:
       DIG_IP_RETRY: ${DIG_IP_RETRY:-10}
       LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-true}
-    hostname: trafficops-perl
-    image: trafficops-perl
-    # TODO: change to expose: "60443" to limit to containers
+    hostname: trafficops
+    image: trafficops
     volumes:
       - ./traffic_ops/ca:/ca
       - shared:/shared

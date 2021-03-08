@@ -17,12 +17,12 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { of } from "rxjs";
 
-import { DsCardComponent } from "./ds-card.component";
 
 import { LinechartDirective } from "../../directives/linechart.directive";
 import { DeliveryService } from "../../models";
-import { APIService } from "../../services/api.service";
+import { APIService } from "../../services/api/apiservice";
 import { LoadingComponent } from "../loading/loading.component";
+import { DsCardComponent } from "./ds-card.component";
 
 describe("DsCardComponent", () => {
 	let component: DsCardComponent;
@@ -69,6 +69,10 @@ describe("DsCardComponent", () => {
 	});
 
 	afterAll(() => {
-		TestBed.resetTestingModule();
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in DSCardComponent afterAll:", e);
+		}
 	});
 });

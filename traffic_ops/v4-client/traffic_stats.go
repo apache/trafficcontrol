@@ -16,11 +16,12 @@ package client
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // GetCurrentStats gets current stats for each CDNs and a total across them
-func (to *Session) GetCurrentStats() (tc.TrafficStatsCDNStatsResponse, ReqInf, error) {
+func (to *Session) GetCurrentStats() (tc.TrafficStatsCDNStatsResponse, toclientlib.ReqInf, error) {
 	resp := tc.TrafficStatsCDNStatsResponse{}
-	reqInf, err := to.get(apiBase+"/current_stats", nil, &resp)
+	reqInf, err := to.get("/current_stats", nil, &resp)
 	return resp, reqInf, err
 }

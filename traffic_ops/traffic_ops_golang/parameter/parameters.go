@@ -77,10 +77,12 @@ func (v *TOParameter) NewReadObj() interface{} { return &tc.ParameterNullable{} 
 func (v *TOParameter) SelectQuery() string     { return selectQuery() }
 func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},
-		IDQueryParam:         dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
-		NameQueryParam:       dbhelpers.WhereColumnInfo{"p.name", nil},
-		SecureQueryParam:     dbhelpers.WhereColumnInfo{"p.secure", api.IsBool}}
+		ConfigFileQueryParam: {Column: "p.config_file"},
+		IDQueryParam:         {Column: "p.id", Checker: api.IsInt},
+		NameQueryParam:       {Column: "p.name"},
+		SecureQueryParam:     {Column: "p.secure", Checker: api.IsBool},
+		ValueQueryParam:      {Column: "p.value"},
+	}
 }
 func (v *TOParameter) UpdateQuery() string { return updateQuery() }
 func (v *TOParameter) DeleteQuery() string { return deleteQuery() }

@@ -44,9 +44,9 @@ class API(TOSession):
 	functionality for getting things needed by :term:`ORT`.
 	"""
 
-	#: This should always be the latest API version supported - note this breaks compatability with
+	#: This should always be the latest API version supported - note this breaks compatibility with
 	#: older ATC versions. Go figure.
-	VERSION = "2.0"
+	VERSION = "3.0"
 
 	def __init__(self, conf:Configuration):
 		"""

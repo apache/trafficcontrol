@@ -28,14 +28,18 @@ import { AuthenticationService } from "../../services";
 	templateUrl: "./login.component.html"
 })
 export class LoginComponent implements OnInit {
-	private returnURL: string;
+	/** The URL to which to redirect users after successful login. */
+	private returnURL = "";
 
 	/** The user-entered username. */
 	public u = new FormControl("");
 	/** The user-entered password. */
 	public p = new FormControl("");
 
-	constructor (
+	/**
+	 * Constructor.
+	 */
+	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly auth: AuthenticationService) { }
@@ -59,6 +63,9 @@ export class LoginComponent implements OnInit {
 				if (response) {
 					this.router.navigate([this.returnURL]);
 				}
+			},
+			(err: Error) => {
+				console.error("login failed:", err);
 			}
 		);
 	}

@@ -23,10 +23,14 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// API_ORIGINS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ORIGINS = apiBase + "/origins"
+
+	APIOrigins = "/origins"
 )
 
 func originIDs(to *Session, origin *tc.Origin) error {
@@ -86,28 +90,28 @@ func originIDs(to *Session, origin *tc.Origin) error {
 }
 
 // Create an Origin
-func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	err := originIDs(to, &origin)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	var originResp tc.OriginDetailResponse
-	reqInf, err = to.post(API_ORIGINS, origin, nil, &originResp)
+	reqInf, err = to.post(APIOrigins, origin, nil, &originResp)
 	return &originResp, reqInf, err
 }
 
-func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	err := originIDs(to, &origin)
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
+	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var originResp tc.OriginDetailResponse
 	reqInf, err = to.put(route, origin, header, &originResp)
 	return &originResp, reqInf, err
@@ -115,41 +119,41 @@ func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http
 
 // Update an Origin by ID
 // Deprecated: UpdateOriginByID will be removed in 6.0. Use UpdateOriginByIDWithHdr.
-func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	return to.UpdateOriginByIDWithHdr(id, origin, nil)
 }
 
 // GET a list of Origins by a query parameter string
-func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, ReqInf, error) {
-	URI := API_ORIGINS + queryParams
+func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, toclientlib.ReqInf, error) {
+	uri := APIOrigins + queryParams
 	var data tc.OriginsResponse
-	reqInf, err := to.get(URI, nil, &data)
+	reqInf, err := to.get(uri, nil, &data)
 	return data.Response, reqInf, err
 }
 
 // Returns a list of Origins
-func (to *Session) GetOrigins() ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOrigins() ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams("")
 }
 
 // GET an Origin by the Origin ID
-func (to *Session) GetOriginByID(id int) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginByID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?id=%d", id))
 }
 
 // GET an Origin by the Origin name
-func (to *Session) GetOriginByName(name string) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginByName(name string) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", url.QueryEscape(name)))
 }
 
 // GET a list of Origins by Delivery Service ID
-func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, ReqInf, error) {
+func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?deliveryservice=%d", id))
 }
 
 // DELETE an Origin by ID
-func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
+func (to *Session) DeleteOriginByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

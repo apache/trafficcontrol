@@ -33,21 +33,12 @@ services:
   trafficops:
     build:
       context: .
-      dockerfile: traffic_ops/Dockerfile-go-debug
-    image: trafficops-go-debug
+      dockerfile: traffic_ops/Dockerfile-debug
+    image: trafficops-debug
     ports:
       - "2345:2345" #Delve debugging port
     depends_on:
-      - trafficops-go-nondebug
-  trafficops-perl:
-    build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile-debug
-    image: trafficops-perl-debug
-    ports:
-      - "5000:5000" #Camelcade debugging port
-    depends_on:
-      - trafficops-perl-nondebug
+      - trafficops-nondebug
   trafficrouter:
     ports:
       - "5005:5005" # JPDA debugging port
@@ -71,25 +62,13 @@ services:
       args:
         TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
     command: /usr/bin/true
-  # The trafficops-go-nondebug service ensures that the trafficops-go base image
-  # exists before trying to build trafficops-go-debug.
-  trafficops-go-nondebug:
-    image: trafficops-go
+  # The trafficops-nondebug service ensures that the trafficops base image
+  # exists before trying to build trafficops-debug.
+  trafficops-nondebug:
+    image: trafficops
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile-go
-      args:
-        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
-    command: /usr/bin/true
-  # The trafficops-perl-nondebug service exists to ensure that the trafficops-perl
-  # base image exists before building trafficmonitor-debug.
-  trafficops-perl-nondebug:
-    image: trafficops-perl
-    build:
-      context: ../..
+      context: ../../
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
-      args:
-        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     command: /usr/bin/true
   # The trafficstats-nondebug service exists to ensure that the trafficstats
   # base image exists before building trafficstats-debug.

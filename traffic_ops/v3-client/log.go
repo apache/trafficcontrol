@@ -19,31 +19,35 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// DEPRECATED: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_LOGS = apiBase + "/logs"
+
+	APILogs = "/logs"
 )
 
 // GetLogsByQueryParams gets a list of logs filtered by query params.
-func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
-	URI := API_LOGS + queryParams
+func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, toclientlib.ReqInf, error) {
+	uri := APILogs + queryParams
 	var data tc.LogsResponse
-	reqInf, err := to.get(URI, nil, &data)
+	reqInf, err := to.get(uri, nil, &data)
 	return data.Response, reqInf, err
 }
 
 // GetLogs gets a list of logs.
-func (to *Session) GetLogs() ([]tc.Log, ReqInf, error) {
+func (to *Session) GetLogs() ([]tc.Log, toclientlib.ReqInf, error) {
 	return to.GetLogsByQueryParams("")
 }
 
 // GetLogsByLimit gets a list of logs limited to a certain number of logs.
-func (to *Session) GetLogsByLimit(limit int) ([]tc.Log, ReqInf, error) {
+func (to *Session) GetLogsByLimit(limit int) ([]tc.Log, toclientlib.ReqInf, error) {
 	return to.GetLogsByQueryParams(fmt.Sprintf("?limit=%d", limit))
 }
 
 // GetLogsByDays gets a list of logs limited to a certain number of days.
-func (to *Session) GetLogsByDays(days int) ([]tc.Log, ReqInf, error) {
+func (to *Session) GetLogsByDays(days int) ([]tc.Log, toclientlib.ReqInf, error) {
 	return to.GetLogsByQueryParams(fmt.Sprintf("?days=%d", days))
 }

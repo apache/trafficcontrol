@@ -12,11 +12,13 @@
 * limitations under the License.
 */
 
+import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
-
-import { ServersTableComponent } from "./servers-table.component";
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { TpHeaderComponent } from "../../tp-header/tp-header.component";
+import { ServersTableComponent } from "./servers-table.component";
+
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;
@@ -24,9 +26,10 @@ describe("ServersTableComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ServersTableComponent, TpHeaderComponent ]
+			declarations: [ ServersTableComponent, TpHeaderComponent ],
+			imports: [HttpClientModule, RouterTestingModule]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -16,7 +16,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { Observable } from "rxjs";
 import { first } from "rxjs/operators";
 
-import { Role, User } from "../../models";
+import { User } from "../../models";
 import { UserService } from "../../services/api";
 
 /**
@@ -41,20 +41,31 @@ export class UserCardComponent implements OnInit {
 	 */
 	@Input() public roleMap?: Observable<Map<number, string>>;
 
-	constructor (private readonly api: UserService) { }
+	/**
+	 * Constructor.
+	 */
+	constructor(private readonly api: UserService) {
+		this.user = {
+			id: -1,
+			newUser: false,
+			username: ""
+		};
+	}
 
 	/** Initializes data like mapping role IDs to role names. */
 	public ngOnInit(): void {
-		this.user = this.user;
 		if (this.user.role === undefined) {
-			console.error("User appears to have no role");
-			console.debug(this.user);
+			console.error("User appears to have no role:", this.user);
 			return;
 		}
 		if (!this.user.roleName) {
 			if (!this.roleMap) {
 				this.api.getRoles(this.user.role).pipe(first()).subscribe(
-					(role: Role) => {
+					role => {
+						if (!role) {
+							console.error(`Failed to get user role '${this.user.role}' from the API`);
+							return;
+						}
 						this.user.roleName = role.name;
 					}
 				);
@@ -81,15 +92,19 @@ export class UserCardComponent implements OnInit {
 	}
 
 	/**
-	 * Checks if the user has at least on populated "location" field (city,
-	 * stateOrProvince etc.).
+	 * Checks if the user has any render-able address piece(s).
+	 *
+	 * @returns 'true' if the user has at least one populated "location" field (city,
+	 * stateOrProvince etc.), 'false' otherwise.
 	 */
 	public userHasLocation(): boolean {
 		return this.user.city !== null || this.user.stateOrProvince !== null || this.user.country !== null || this.user.postalCode !== null;
 	}
 
 	/**
-	 * Gets a string representing a user's address, or 'null' if one cannot be
+	 * Gets a string representing a user's address.
+	 *
+	 * @returns The user's address, or 'null' if one cannot be
 	 * constructed because no relevant information exists.
 	 */
 	public userLocationString(): string | null {

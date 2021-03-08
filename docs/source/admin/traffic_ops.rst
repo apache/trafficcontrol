@@ -214,6 +214,8 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
+.. note:: A Python postinstall script also exists, and, unlike the Perl postinstall script, has no dependencies besides the interpreter itself. To use it, run ``/opt/traffic_ops/install/bin/postinstall.py`` with the same arguments you would have passed to ``/opt/traffic_ops/install/bin/postinstall`` (runs under either Python 3 or Python 2).
+
 .. _to-upgrading:
 
 Upgrading
@@ -239,23 +241,7 @@ After this completes, see Guide_ for instructions on running the :program:`posti
 
 Running
 =======
-Currently, Traffic Ops consists of two programs, as it is in the middle of a transition from one code-base to another. It is not recommended that either one be run on its own. Also, while this section contains instructions for running each piece manually, the only truly supported method is via :manpage:`systemd(8)`, e.g. :bash:`systemctl start traffic_ops` (this method also starts both programs properly and uses their default configuration file locations).
-
-.. _legacy-perl-script:
-
-.. program:: traffic_ops-perl
-
-Legacy Perl Script
-------------------
-The old code base was written in Perl, and is executed as a Perl script. When Installing_ Traffic Ops, the `Hypnotoad <https://mojolicious.org/perldoc/Mojo/Server/Hypnotoad>`_ program should be installed at :file:`/opt/traffic_ops/app/local/bin/hypnotoad`. To run Traffic Ops:
-
-#. Change directories to :file:`/opt/traffic_ops/app/` - it may not seem like it, but this step is important. *Do* **not** *skip it.*
-#. Set the ``PERL5LIB`` environment variable to **exactly** ``/opt/traffic_ops_extensions/private/lib:/opt/traffic_ops/app/lib:/opt/traffic_ops/app/lib/perl5:$PERL5LIB``. That last portion is especially important, to preserve the paths to system libraries - it should expand to whatever ``PERL5LIB`` was prior to this change.
-#. Run the command :bash:`/opt/traffic_ops/app/local/bin/hypnotoad script/cdn`
-
-The script takes no options other than the ones accepted by `Hypnotoad <https://mojolicious.org/perldoc/Mojo/Server/Hypnotoad>`_ itself, and it just expects to gets its configuration from the standard file locations (covered in Configuring_).
-
-The operating environment of the Legacy Perl Script can be chosen by setting the :envvar:`MOJO_MODE` environment variable.
+While this section contains instructions for running Traffic Ops manually, the only truly supported method is via :manpage:`systemd(8)`, e.g. :bash:`systemctl start traffic_ops` (this method starts the program properly and uses its default configuration file locations).
 
 .. program:: traffic_ops
 
@@ -275,13 +261,9 @@ traffic_ops_golang
 
 	List the installed plugins and exit.
 
-	.. note:: This only accounts for the plugins for the Go version, extensions to the `Legacy Perl Script`_ are not accounted for.
-
 .. option:: --api-routes
 
 	Print information about all API routes and exit. If also used with the :option:`--cfg` option, also print out the configured routing blacklist information from `cdn.conf`_.
-
-	.. note:: This only accounts for routes in the Go version, API routes in Perl but not in Go are not included.
 
 .. option:: --riakcfg TRAFFIC_VAULT_CONFIG_PATH
 
@@ -295,7 +277,7 @@ traffic_ops_golang
 
 Configuring
 ===========
-The main :program:`traffic_ops_golang` binary and the `Legacy Perl Script`_ use the same set of configuration files (mostly).
+:program:`traffic_ops_golang` uses several configuration files, but the most important of these is `cdn.conf`_.
 
 Configuration Files
 -------------------
@@ -304,7 +286,7 @@ Configuration Files
 
 cdn.conf
 """"""""
-This file deals with the configuration parameters of running Traffic Ops itself. It is a JSON-format set of options and their respective values. For the `Legacy Perl Script`_ to work with this file, it must be in its default location at :file:`/opt/traffic_ops/app/conf/cdn.conf`, but `traffic_ops_golang`_ will use whatever file is specified by its :option:`--cfg` option. The keys of the file are described below.
+This file deals with the configuration parameters of running Traffic Ops itself. It is a JSON-format set of options and their respective values. `traffic_ops_golang`_ will use whatever file is specified by its :option:`--cfg` option. The keys of the file are described below.
 
 :acme_accounts: This is an optional array of objects to define ref:`external_account_binding` information to an existing :abbr:`ACME (Automatic Certificate Management Environment)` account.  The `acme_provider` and `user_email` combination must be unique.
 
@@ -316,24 +298,29 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:kid:           The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`.
 	:hmac_encoded:  The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for ref:`external_account_binding`. This should be in Base64 URL encoded.
 
+:acme_renewal: This object contains the information for the automatic renewal script for certificates.
+
+	.. versionadded:: 5.1
+
+	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
+	:summary_email: The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent.
+
 :geniso: This object contains configuration options for system ISO generation.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.
 
 	.. seealso:: :ref:`tp-tools-generate-iso`
 
-:hypnotoad: This is a group of options used nearly exclusively by the `Legacy Perl Script`_ (as the name implies).
+:hypnotoad: This is a group of options that mainly no longer have any meaning..
 
-	.. seealso:: For a complete description of this section of the configuration, consult `The Mojolicious Cookbook's section on Hypnotoad <https://mojolicious.org/perldoc/Mojolicious/Guides/Cookbook#Hypnotoad>`_.
+	:group:             Serves no known purpose anymore.
+	:heartbeat_timeout: Serves no known purpose anymore.
+	:listen:            This must always be an array containing a single string. This very odd string is apparently a URL. The scheme of the URL doesn't matter, as `traffic_ops_golang`_ ignores that and always uses HTTPS. The host (and optionally port) of the URL used to have a purpose, but no longer does. The "cert" query parameter sets the location of the SSL certificate to use for encrypting connections, while the "key" query parameter is the certificate's corresponding private key. The default configuration file also has the "verify" query parameter which serves no known purpose anymore.
+	:pid_file:          Serves no known purpose anymore.
+	:user:              Serves no known purpose anymore.
+	:workers:           Serves no known purpose anymore.
 
-	:group:             Sets the UNIX group as which the `Legacy Perl Script`_ will run. By default this should be the ``trafops`` group which is created when the Traffic Ops RPM is installed.
-	:heartbeat_timeout: From the Hypnotoad documentation: "The maximum amount of time in seconds before a worker without a heartbeat will be stopped gracefully".
-	:listen:            This must always be an array containing a single string. This very odd string is apparently a URL. The scheme of the URL specifies the protocol Traffic Ops will use to listen for incoming connections (`traffic_ops_golang`_ ignores that and always uses HTTPS). The host of the URL tells Traffic Ops on what hostname to listen (`traffic_ops_golang`_ understands this as the hostname of the `Legacy Perl Script`_ server), and likewise the port sets the port on which it listens (the port is only used for the `Legacy Perl Script`_ - `traffic_ops_golang`_ uses the setting of ``traffic_ops_golang.port``). The "cert" query parameter sets the location of the SSL certificate to use for encrypting connections, while the "key" query parameter is the certificate's corresponding private key. The default configuration file also has the "verify" query parameter which sets the TLS verification mode - `0` for no verification of certificates, `1` to verify them (`traffic_ops_golang`_ ignores this and uses ``traffic_ops_golang.insecure`` instead). Finally, a list of TLS ciphers to offer to incoming clients of the `Legacy Perl Script`_ delimited by commas can be given in the "ciphers" query parameter.
-	:pid_file:          When the `Legacy Perl Script`_ starts as a daemon, it will write its :abbr:`PID (Process ID)` to this file - so be sure that ``user``/``group`` can properly access it! The default setting is :file:`/var/run/traffic_ops.pid`.
-	:user:              Sets the UNIX user as whom the `Legacy Perl Script`_ will run. By default this should be the ``trafops`` user who is created when the Traffic Ops RPM is installed.
-	:workers:           This is used only by the `Legacy Perl Script`_, and sets the number of concurrent HTTP server workers allowed.
-
-:inactivity_timeout: This was used by the `Legacy Perl Script`_ to set timeouts on idle client connections to Traffic Ops - the exact operation (and even units) of this configuration option is unknown. `traffic_ops_golang`_ ignores this field.
+:inactivity_timeout: Serves no known purpose anymore.
 :influxdb_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is to first check if the :envvar:`MOJO_MODE` environment variable is set. If it is, then Traffic Ops will look in the current working directory for a subdirectory named ``conf/``, then inside that for a subdirectory with the name that is the value of the :envvar:`MOJO_MODE` variable, and inside that directory for a file named ``influxdb.conf``. If :envvar:`MOJO_MODE` is *not* set, then Traffic Ops will look for a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
 
 	.. versionadded:: 4.0
@@ -350,8 +337,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:user_email: A required email address to create an account with Let's Encrypt or to receive expiration updates. If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.
 	:send_expiration_email: A boolean option to send email summarizing certificate expiration status
+
+		.. deprecated:: 5.1
+			Future versions of Traffic Ops will not support this legacy configuration option, see acme_renewal: { summary_email: <string> } instead.
+
 	:convert_self_signed: A boolean option to convert self signed to Let's Encrypt certificates as they expire. This only works for certificates labeled as Self Signed in the Certificate Source field.
 	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
+
+		.. deprecated:: 5.1
+			Future versions of Traffic Ops will not support this legacy configuration option, see acme_renewal: { renew_days_before_expiration: <int> } instead.
+
 	:environment: This specifies which Let's Encrypt environment to use: 'staging' or 'production'. It defaults to 'production'.
 
 :portal: This section provides information regarding a connected UI with which users interact, so that emails can include links to it.
@@ -388,7 +383,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :traffic_ops_golang: This group configuration options is used exclusively by `traffic_ops_golang`_.
 
-	:backend_max_connections: This optional object, if declared, is a map of back-end service names to the maximum number of allowed concurrent connections to them from the Traffic Ops server. Currently, the only used key is ``"mojolicious"``, which sets the maximum allowed connections to the server running the `Legacy Perl Script`_. If that key is missing - or if this entire optional object is missing - it will default to the value of `MojoliciousConcurrentConnectionsDefault <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
+	:backend_max_connections: This optional object, if declared, is a map of back-end service names to the maximum number of allowed concurrent connections to them from the Traffic Ops server. Currently, there are no supported keys.
 	:crconfig_emulate_old_path: An optional boolean that controls the value of a part of :term:`Snapshots` that report what :ref:`to-api` endpoint is used to generate :term:`Snapshots`. If this is ``true``, it forces Traffic Ops to report that a legacy, deprecated endpoint is used, whereas if it's ``false`` Traffic Ops will report the actual, current endpoint. Default if not specified is ``false``.
 
 		.. deprecated:: 3.0
@@ -424,10 +419,10 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:port: Sets the port on which Traffic Ops will listen for incoming connections.
 	:profiling_enabled: An optional boolean which, if ``true`` will enable the gathering of profiling statistics on the Traffic Ops server. Default if not specified is ``false``.
 	:profiling_location: An optional string which, if set, should be the absolute path (relative paths are allowed but not recommended) to a file where profiling statistics for the Traffic Ops server will be written. If ``profiling_enabled`` is ``true`` but this is not specified, or is an empty string (``""``) or ``null``, then a file named "profiling" will be created or overwritten in the same directory as the file specified in ``log_location_error``. If that file is not a regular file, then Traffic ops will instead create a temporary directory and write profiling statistics to a file named "profiling" within that directory.
-	:proxy_keep_alive: An optional field which specifies the keep-alive period in seconds for connections from Traffic Ops back to the `Legacy Perl Script`_. If set to a negative number, keep-alives will be disabled. Default if not specified is zero.
-	:proxy_read_handler_timeout: An optional timeout in seconds for Traffic Ops to wait for a request after writing a request to the `Legacy Perl Script`_. If set to zero, Traffic Ops will wait until it gets a response (i.e. no timeout - not recommended). Default if not specified is zero.
-	:proxy_timeout: An optional timeout in seconds for connections from Traffic Ops back to the `Legacy Perl Script`_. If set to zero, there is no timeout. Default if not specified is zero.
-	:proxy_tls_timeout: An optional field that sets the timeout in seconds for TLS handshakes from Traffic Ops to the `Legacy Perl Script`_. If set to zero, there is no timeout. The default if not specified is zero.
+	:proxy_keep_alive: Serves no known purpose anymore.
+	:proxy_read_handler_timeout: Serves no known purpose anymore.
+	:proxy_timeout: Serves no known purpose anymore.
+	:proxy_tls_timeout: Serves no known purpose anymore.
 	:read_header_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading the headers of an incoming request or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
 	:read_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading an entire incoming request (including body) or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
 	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
@@ -444,11 +439,15 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. _admin-routing-blacklist:
 
-	:routing_blacklist: Optional configuration for explicitly routing requests to TO-Perl via ``perl_routes`` (only routes that are hardcoded to be able to bypass to TO-Perl -- not all Go routes can be bypassed to Perl) or explicitly disabling any routes via ``disabled_routes``.
+	:routing_blacklist: Optional configuration for explicitly disabling any routes via ``disabled_routes``.
 
 		.. versionadded:: 4.0
 
-		:perl_routes: A list of API route IDs to be handled by TO-Perl (rather than by the matching routes in ``traffic_ops_golang``). This list can only contain IDs for routes that are on the hardcoded (within ``traffic_ops_golang``) whitelist of routes that can be bypassed to TO-Perl. This configuration is meant to allow falling back to TO-Perl for routes that have been rewritten to TO-Go but have been found to contain regressions. In order to find which routes can be bypassed to TO-Perl, run ``./traffic_ops_golang`` using the :option:`--api-routes` option. This will print out information about all API routes in ``traffic_ops_golang``, including route IDs, paths, and whether or not routes can be bypassed to Perl. In general, the whitelist will contain only routes that have recently been rewritten to Go but not yet included in a release, and only if the Go route has not deviated from its corresponding Perl route in a way that would make it dangerous to fall back to. This whitelist should be expected to change as Go routes become "vetted" in a release. Once TO-Perl is removed, this field will be removed/ignored.
+		:perl_routes: Serves no known purpose anymore.
+
+			.. deprecated:: 6.0
+				This was used back when Traffic Ops was still in the process of being rewritten from Perl. It serves no purpose anymore, and will be removed in the future.
+
 		:disabled_routes: A list of API route IDs to disable. Requests matching these routes will receive a 503 response. To find the route ID for a given path you would like to disable, run ``./traffic_ops_golang`` using the :option:`--api-routes` option to view all the route information, including route IDs and paths.
 		:ignore_unknown_routes: If ``false`` (default) return an error and prevent startup if unknown route IDs are found. Otherwise, log a warning and continue startup.
 
@@ -467,7 +466,7 @@ Example cdn.conf
 
 database.conf
 """""""""""""
-This file deals with configuration of the Traffic Ops Database; in particular it tells Traffic Ops how to connect with the database for its current environment. `traffic_ops_golang`_ will read this file in from the path pointed to by its :option:`--dbcfg` flag, but the `Legacy Perl Script`_ expects it to be at :file:`/{directory where cdn.conf is located}/{value of $MOJO_MODE}/database.conf` where the ``value of $MOJO_MODE`` part is literally the value of the :envvar:`MOJO_MODE` environment variable. ``database.conf`` is encoded as a JSON object, and its keys are described below.
+This file deals with configuration of the Traffic Ops Database; in particular it tells Traffic Ops how to connect with the database for its current environment. `traffic_ops_golang`_ will read this file in from the path pointed to by its :option:`--dbcfg` flag. ``database.conf`` is encoded as a JSON object, and its keys are described below.
 
 :dbname: The name of the PostgreSQL database used. Typically different databases are used for different environments, e.g. "trafficops_test", "trafficops", etc. Many environments choose to use ``traffic_ops``.
 :description: An optional, human friendly description of the database. Generally this should just describe the purpose of the database e.g. "This database is used for integration testing with our toolset".
@@ -486,20 +485,20 @@ Example database.conf
 
 influxdb.conf
 """""""""""""
-This file deals with configuration of the InfluxDB cluster that serves Traffic Stats; specifically it tells Traffic Ops how to authenticate with the InfluxDB cluster and which measurements to check. `traffic_ops_golang`_ will look for this file at the path given by the value of ``influx_db_conf_path`` in `cdn.conf`_, while the `Legacy Perl Script`_ always looks for it at :file:`/{directory where cdn.conf is located}/{value of $MOJO_MODE}/influxdb.conf` where the ``value of $MOJO_MODE`` part is literally the value of the :envvar:`MOJO_MODE` environment variable. This file is encoded as a JSON object, and its keys are described below.
+This file deals with configuration of the InfluxDB cluster that serves Traffic Stats; specifically it tells Traffic Ops how to authenticate with the InfluxDB cluster and which measurements to check. `traffic_ops_golang`_ will look for this file at the path given by the value of ``influx_db_conf_path`` in `cdn.conf`_. This file is encoded as a JSON object, and its keys are described below.
 
 .. seealso:: For more information about InfluxDB, see `the InfluxDB documentation <https://docs.influxdata.com/influxdb/v1.7/>`_.
 
-:cache_stats_db_name: This field sets the name of the "database" (measurement) used to query for :term:`Cache Group` statistics. The `Legacy Perl Script`_ demands that this be defined, but `traffic_ops_golang`_ will default to ``"cache_stats"`` if this field is not defined. For this reason, it is recommended that this field not be defined if and only if the Traffic Ops server is only running `traffic_ops_golang`_ (the `Legacy Perl Script`_ being run on a different server).
+:cache_stats_db_name: This field sets the name of the "database" (measurement) used to query for :term:`Cache Group` statistics. `traffic_ops_golang`_ will default to ``"cache_stats"`` if this field is not defined. It is recommended that this field not be defined.
 
 	.. danger:: The **only** valid value for this is ``"cache_stats"``, if it is anything else Traffic Stats data for :term:`Cache Group` statistics will be inaccessible through the :ref:`to-api`.
 
-:deliveryservice_stats_db_name: This field sets the name of the "database" (measurement) used to query for :term:`Delivery Service` statistics. The `Legacy Perl Script`_ demands that this be defined, but `traffic_ops_golang`_ will default to ``"deliveryservice_stats"`` if this field is not defined. For this reason, it is recommended that this field not be defined if and only if the Traffic Ops server is only running `traffic_ops_golang`_ (the `Legacy Perl Script`_ being run on a different server).
+:deliveryservice_stats_db_name: This field sets the name of the "database" (measurement) used to query for :term:`Delivery Service` statistics. `traffic_ops_golang`_ will default to ``"deliveryservice_stats"`` if this field is not defined. It is recommended that this field not be defined.
 
 	.. danger:: The **only** valid value for this is ``"deliveryservice_stats"``, if it is anything else Traffic Stats data for :term:`Delivery Service` statistics will be inaccessible through the :ref:`to-api`.
 
 :password: Sets the password to use when authenticating with InfluxDB clusters.
-:secure: An optional boolean that sets whether or not to use SSL encrypted connections to the InfluxDB cluster (the InfluxDB servers would need to be configured to use SSL). Default if not specified is ``false``. Only `traffic_ops_golang`_ supports SSL for these connections, the `Legacy Perl Script`_ will always use insecure connections.
+:secure: An optional boolean that sets whether or not to use SSL encrypted connections to the InfluxDB cluster (the InfluxDB servers would need to be configured to use SSL). Default if not specified is ``false``.
 :user: Sets the user name as whom to authenticate with InfluxDB clusters.
 
 Example influxdb.conf
@@ -510,7 +509,7 @@ Example influxdb.conf
 
 ldap.conf
 """""""""
-This file defines methods of connection to an :abbr:`LDAP (Lightweight Directory Access Protocol)` server and semantics for searching for users on it for the purpose of authentication. `traffic_ops_golang`_ will look for this file at the path given by the value of ``ldap_conf_location`` in `cdn.conf`_, while the `Legacy Perl Script`_ always looks for it at :file:`/{directory where cdn.conf is located}/ldap.conf`. ``ldap.conf``'s contents are a JSON-encoded object, the keys of which are detailed below.
+This file defines methods of connection to an :abbr:`LDAP (Lightweight Directory Access Protocol)` server and semantics for searching for users on it for the purpose of authentication. `traffic_ops_golang`_ will look for this file at the path given by the value of ``ldap_conf_location`` in `cdn.conf`_. ``ldap.conf``'s contents are a JSON-encoded object, the keys of which are detailed below.
 
 .. seealso:: For more information on :abbr:`LDAP (Lightweight Directory Access Protocol)` see `the LDAP Wikipedia page <https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol>`_ and :rfc:`4511`.
 
@@ -530,7 +529,7 @@ Example ldap.conf
 
 riak.conf
 """""""""
-This file sets authentication options for connections to Traffic Vault. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup, while the `Legacy Perl Script`_ always looks for it at :file:`/{directory where cdn.conf is located}/{value of $MOJO_MODE}/riak.conf` where the ``value of $MOJO_MODE`` part is literally the value of the :envvar:`MOJO_MODE` environment variable. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described below.
+This file sets authentication options for connections to Traffic Vault. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described below.
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
@@ -657,7 +656,9 @@ You will need to update `cdn.conf`_ with any necessary changes.
 
 Managing Traffic Ops Extensions
 ===============================
-Traffic Ops supports two types of extensions. `Check Extensions`_ are analytics scripts that collect and display information as columns in the table under :menuselection:`Monitor --> Cache Checks` in Traffic Portal. `Data Source Extensions`_ provide ways to add data to the graph views and usage APIs.
+Traffic Ops supports "`Check Extensions`_", which are analytics scripts that collect and display information as columns in the table under :menuselection:`Monitor --> Cache Checks` in Traffic Portal.
+
+.. seealso:: Traffic Ops also supports a more involved type of extension in the form of :ref:`to_go_plugins`.
 
 .. |checkmark| image:: images/good.png
 .. |X| image:: images/bad.png
@@ -704,12 +705,6 @@ Check Extensions Installed by Default
 	Checks the state of each :term:`cache server` as perceived by all Traffic Monitors (via Traffic Router). This extension asks each Traffic Router for the state of the :term:`cache server`. A check failure is indicated if one or more monitors report an error for a :term:`cache server`. A :term:`cache server` is only marked as good if all reports are positive.
 
 	.. note:: This is a pessimistic approach, opposite of how Traffic Monitor marks a :term:`cache server` as up, i.e. "the optimistic approach".
-
-.. _to-datasource-ext:
-
-Data Source Extensions
-----------------------
-Data Source Extensions work in much the same way as `Check Extensions`_, but are implemented differently. Rather than being a totally external executable, a Data Source Extension *must* be written in Perl 5, as they are injected via manipulation of the ``$PERL5LIB`` environment variable. These extensions are not very well-documented (as you may be able to tell), and support for extending them may be phased out in future releases.
 
 Example Cron File
 -----------------

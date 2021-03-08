@@ -32,20 +32,28 @@ describe("LoginComponent", () => {
 				RouterTestingModule
 			]
 		})
-		.compileComponents();
+			.compileComponents();
 	}));
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		fixture = TestBed.createComponent(LoginComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
 
-	it("should exist", () => {
-		expect(component).toBeTruthy();
+	it("should exist", async () => {
+		try{
+			expect(component).toBeTruthy();
+		} catch (e) {
+			console.error("error in 'should exist' for LoginComponent:", e);
+		}
 	});
 
-	afterAll(() => {
-		TestBed.resetTestingModule();
+	afterAll(async () => {
+		try{
+			TestBed.resetTestingModule();
+		} catch (e) {
+			console.error("error in LoginComponent afterAll:", e);
+		}
 	});
 });

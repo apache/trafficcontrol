@@ -22,10 +22,14 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// API_SNAPSHOT is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SNAPSHOT = apiBase + "/snapshot"
+
+	APISnapshot = "/snapshot"
 )
 
 type OuterResponse struct {
@@ -33,9 +37,10 @@ type OuterResponse struct {
 }
 
 // GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
-func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
-	uri := apiBase + `/cdns/` + cdn + `/snapshot`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+func (to *Session) GetCRConfig(cdn string) ([]byte, toclientlib.ReqInf, error) {
+	uri := `/cdns/` + cdn + `/snapshot`
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -47,17 +52,18 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	return resp.Response, reqInf, nil
 }
 
-func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (ReqInf, error) {
-	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
+func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (toclientlib.ReqInf, error) {
+	uri := fmt.Sprintf("%s?cdn=%s", APISnapshot, url.QueryEscape(cdn))
 	resp := OuterResponse{}
 	reqInf, err := to.put(uri, nil, header, &resp)
 	return reqInf, err
 }
 
 // GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
-func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
-	uri := apiBase + `/cdns/` + cdn + `/snapshot/new`
-	bts, reqInf, err := to.getBytesWithTTL(uri, tmPollingInterval)
+func (to *Session) GetCRConfigNew(cdn string) ([]byte, toclientlib.ReqInf, error) {
+	uri := `/cdns/` + cdn + `/snapshot/new`
+	bts := []byte{}
+	reqInf, err := to.get(uri, nil, &bts)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -71,13 +77,13 @@ func (to *Session) GetCRConfigNew(cdn string) ([]byte, ReqInf, error) {
 
 // SnapshotCRConfig snapshots a CDN by name.
 // Deprecated: SnapshotCRConfig will be removed in 6.0. Use SnapshotCRConfigWithHdr.
-func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
+func (to *Session) SnapshotCRConfig(cdn string) (toclientlib.ReqInf, error) {
 	return to.SnapshotCRConfigWithHdr(cdn, nil)
 }
 
 // SnapshotCDNByID snapshots a CDN by ID.
-func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, ReqInf, error) {
-	url := fmt.Sprintf("%s?cdnID=%d", API_SNAPSHOT, id)
+func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+	url := fmt.Sprintf("%s?cdnID=%d", APISnapshot, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(url, nil, nil, &alerts)
 	return alerts, reqInf, err

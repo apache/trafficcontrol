@@ -15,7 +15,7 @@
 Name:       tomcat
 Version:    %{tomcat_version}
 Release:    %{build_number}
-Summary:    Apache Tomcat Servlet/JSP Engine 8.5+, RI for Servlet 3.1/JSP 2.3 API
+Summary:    Apache Tomcat Servlet/JSP Engine 9.0+, RI for Servlet 3.1/JSP 2.3 API
 License:    Apache Software License
 URL:        https://github.com/apache/trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
@@ -24,7 +24,7 @@ Requires:   java >= 1.8
 %define tomcat_home /opt/tomcat
 
 %description
-This rpm is a minimal install of the Tomcat servlet container version 8.5.
+This rpm is a minimal install of the Tomcat servlet container version 9.0.
 It gets installed to /opt/tomcat and contains no webapps of its own.
 To use it create your own CATALINA_BASE directory and place your application
 specific webapps and server.xml there.

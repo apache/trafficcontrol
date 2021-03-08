@@ -53,13 +53,6 @@ By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on Cent
 	make # Builds RPMs for CentOS 7
 	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
-The image that takes the takes the longest to build is the ``trafficops-perl`` image. In order to avoid needing to download, build, and test 239 Perl CPAN modules each time you rebuild the image from scratch, you can run the following command while running CDN in a Box in order to skip building the Perl modules next time:
-
-.. code-block:: shell
-	:caption: Make a local copy of CPAN modules used by Traffic Ops Perl
-
-	docker cp $(docker-compose ps -q trafficops-perl):/opt/traffic_ops/app/local traffic_ops/perl-cache/centos-8
-
 Usage
 -----
 In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
@@ -86,8 +79,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Monitor                 | Web interface and API on port 80                               | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the    | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	|                                 | Perl API on port 60443\ [2]_                                   |                                       |                                           |
+	| Traffic Ops                     | API endpoints on port 6443                                     | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name:   | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
 	|                                 | ``DB_NAME`` in `variables.env`_)                               |                                       |                                           |
@@ -154,7 +146,6 @@ variables.env
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
 
 .. [1] It is perfectly possible to build and run all containers without Docker Compose, but it's not recommended and not covered in this guide.
-.. [2] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
 
 X.509 SSL/TLS Certificates
 ==========================

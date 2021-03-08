@@ -13,6 +13,7 @@
 */
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
+import { CacheGroupTableComponent } from "./components/cache-groups/cache-group-table/cache-group-table.component";
 
 import { CurrentuserComponent } from "./components/currentuser/currentuser.component";
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
@@ -20,18 +21,21 @@ import { DeliveryserviceComponent } from "./components/deliveryservice/deliverys
 import { InvalidationJobsComponent } from "./components/invalidation-jobs/invalidation-jobs.component";
 import { LoginComponent } from "./components/login/login.component";
 import { NewDeliveryServiceComponent } from "./components/new-delivery-service/new-delivery-service.component";
+import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
 import { UsersComponent } from "./components/users/users.component";
 
 const routes: Routes = [
-	{ path: "", component: DashboardComponent },
-	{ path: "login", component: LoginComponent },
-	{ path: "users", component: UsersComponent},
-	{ path: "me", component: CurrentuserComponent},
-	{ path: "new.Delivery.Service", component: NewDeliveryServiceComponent},
-	{ path: "deliveryservice/:id", component: DeliveryserviceComponent},
-	{ path: "deliveryservice/:id/invalidation-jobs", component: InvalidationJobsComponent},
-	{ path: "servers", component: ServersTableComponent},
+	{ component: DashboardComponent, path: "" },
+	{ component: LoginComponent, path: "login" },
+	{ component: UsersComponent, path: "users"},
+	{ component: CurrentuserComponent, path: "me"},
+	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service"},
+	{ component: DeliveryserviceComponent, path: "deliveryservice/:id"},
+	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs"},
+	{ component: ServersTableComponent, path: "servers"},
+	{ component: CacheGroupTableComponent, path: "cache-groups"},
+	{ component: ServerDetailsComponent, path: "server/:id"}
 ];
 
 /**
@@ -41,6 +45,8 @@ const routes: Routes = [
 	exports: [RouterModule],
 	imports: [RouterModule.forRoot(routes, {
 		initialNavigation: "enabled"
-})],
+	})],
 })
+// This is a necessary empty class. All of its data/logic come from the decorator.
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppRoutingModule { }

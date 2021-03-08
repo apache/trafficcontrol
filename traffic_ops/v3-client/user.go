@@ -24,60 +24,61 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users", apiBase)
+	route := "/users"
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
 // GetUsers returns all users accessible from current user
 // Deprecated: GetUsers will be removed in 6.0. Use GetUsersWithHdr.
-func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsers() ([]tc.User, toclientlib.ReqInf, error) {
 	return to.GetUsersWithHdr(nil)
 }
 
-func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
+	route := fmt.Sprintf("/users?role=%s", url.QueryEscape(roleName))
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
 // GetUsersByRole returns all users accessible from current user for a given role
 // Deprecated: GetUsersByRole will be removed in 6.0. Use GetUsersByRoleWithHdr.
-func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersByRole(roleName string) ([]tc.User, toclientlib.ReqInf, error) {
 	return to.GetUsersByRoleWithHdr(roleName, nil)
 }
 
-func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users/%d", apiBase, id)
+	route := fmt.Sprintf("/users/%d", id)
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
 // Deprecated: GetUserByID will be removed in 6.0. Use GetUserByIDWithHdr.
-func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByID(id int) ([]tc.User, toclientlib.ReqInf, error) {
 	return to.GetUserByIDWithHdr(id, nil)
 }
 
-func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
-	route := fmt.Sprintf("%s/users?username=%s", apiBase, url.QueryEscape(username))
+	route := fmt.Sprintf("/users?username=%s", url.QueryEscape(username))
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
 // Deprecated: GetUserByUsername will be removed in 6.0. Use GetUserByUsernameWithHdr.
-func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByUsername(username string) ([]tc.User, toclientlib.ReqInf, error) {
 	return to.GetUserByUsernameWithHdr(username, nil)
 }
 
-func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, ReqInf, error) {
-	route := apiBase + `/user/current`
+func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, toclientlib.ReqInf, error) {
+	route := `/user/current`
 	resp := tc.UserCurrentResponse{}
 	reqInf, err := to.get(route, header, &resp)
 	if err != nil {
@@ -88,29 +89,30 @@ func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, R
 
 // GetUserCurrent gets information about the current user
 // Deprecated: GetUserCurrent will be removed in 6.0. Use GetUserCurrentWithHdr.
-func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+func (to *Session) GetUserCurrent() (*tc.UserCurrent, toclientlib.ReqInf, error) {
 	return to.GetUserCurrentWithHdr(nil)
 }
 
 // UpdateCurrentUser replaces the current user data with the provided tc.User structure.
-func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
+func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, toclientlib.ReqInf, error) {
 	user := struct {
 		User tc.User `json:"user"`
 	}{u}
+
 	var clientResp tc.UpdateUserResponse
-	reqInf, err := to.put(apiBase+"/user/current", user, nil, &clientResp)
+	reqInf, err := to.put("/user/current", user, nil, &clientResp)
 	return &clientResp, reqInf, err
 }
 
 // CreateUser creates a user
-func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
+func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, toclientlib.ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
 		tenant, _, err := to.TenantByNameWithHdr(*user.Tenant, nil)
 		if err != nil {
-			return nil, ReqInf{}, err
+			return nil, toclientlib.ReqInf{}, err
 		}
 		if tenant == nil {
-			return nil, ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
+			return nil, toclientlib.ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
 		}
 		user.TenantID = &tenant.ID
 	}
@@ -118,31 +120,31 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 	if user.RoleName != nil && *user.RoleName != "" {
 		roles, _, _, err := to.GetRoleByNameWithHdr(*user.RoleName, nil)
 		if err != nil {
-			return nil, ReqInf{}, err
+			return nil, toclientlib.ReqInf{}, err
 		}
 		if len(roles) == 0 || roles[0].ID == nil {
-			return nil, ReqInf{}, errors.New("no role with name " + *user.RoleName)
+			return nil, toclientlib.ReqInf{}, errors.New("no role with name " + *user.RoleName)
 		}
 		user.Role = roles[0].ID
 	}
 
-	route := apiBase + "/users"
+	route := "/users"
 	var clientResp tc.CreateUserResponse
 	reqInf, err := to.post(route, user, nil, &clientResp)
 	return &clientResp, reqInf, err
 }
 
 // UpdateUserByID updates user with the given id
-func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
-	route := apiBase + "/users/" + strconv.Itoa(id)
+func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+	route := "/users/" + strconv.Itoa(id)
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put(route, u, nil, &clientResp)
 	return &clientResp, reqInf, err
 }
 
 // DeleteUserByID updates user with the given id
-func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
-	route := apiBase + "/users/" + strconv.Itoa(id)
+func (to *Session) DeleteUserByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := "/users/" + strconv.Itoa(id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
@@ -150,13 +152,13 @@ func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
 
 // RegisterNewUser requests the registration of a new user with the given tenant ID and role ID,
 // through their email.
-func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAddress) (tc.Alerts, ReqInf, error) {
+func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAddress) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqBody := tc.UserRegistrationRequest{
 		Email:    email,
 		TenantID: tenantID,
 		Role:     roleID,
 	}
-	reqInf, err := to.post(apiBase+"/users/register", reqBody, nil, &alerts)
+	reqInf, err := to.post("/users/register", reqBody, nil, &alerts)
 	return alerts, reqInf, err
 }

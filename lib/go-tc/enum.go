@@ -595,6 +595,11 @@ func DSTypeFromString(s string) DSType {
 	}
 }
 
+// UsesDNSSECKeys returns whether the DSType uses or needs DNSSEC keys.
+func (t DSType) UsesDNSSECKeys() bool {
+	return t.IsDNS() || t.IsHTTP() || t.IsSteering()
+}
+
 // IsHTTP returns whether the DSType is an HTTP category.
 func (t DSType) IsHTTP() bool {
 	switch t {

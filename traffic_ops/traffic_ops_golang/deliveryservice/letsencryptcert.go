@@ -121,8 +121,8 @@ func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error 
 			return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 		}
 		if rows == 0 {
-			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
+			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
 		}
 	}
 
@@ -179,7 +179,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User)
 
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+".  This may take a few minutes.")
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+". This may take a few minutes.")
 
 }
 

@@ -19,25 +19,26 @@ import "net/http"
 import "net/url"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 
-const API_CAPABILITIES = apiBase + "/capabilities"
+const APICapabilities = "/capabilities"
 
-func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, ReqInf, error) {
+func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, toclientlib.ReqInf, error) {
 	var data tc.CapabilitiesResponse
-	reqInf, err := to.get(API_CAPABILITIES, header, &data)
+	reqInf, err := to.get(APICapabilities, header, &data)
 	return data.Response, reqInf, err
 }
 
 // GetCapabilities retrieves all capabilities.
 // Deprecated: GetCapabilities will be removed in 6.0. Use GetCapabilitiesWithHdr.
-func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
+func (to *Session) GetCapabilities() ([]tc.Capability, toclientlib.ReqInf, error) {
 	return to.GetCapabilitiesWithHdr(nil)
 }
 
-func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capability, ReqInf, error) {
+func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capability, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
-	endpoint := API_CAPABILITIES + "?" + v.Encode()
+	endpoint := APICapabilities + "?" + v.Encode()
 	var data tc.CapabilitiesResponse
 	reqInf, err := to.get(endpoint, header, &data)
 	if err != nil {
@@ -51,6 +52,6 @@ func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capabi
 
 // GetCapability retrieves only the capability named 'c'.
 // Deprecated: GetCapability will be removed in 6.0. Use GetCapabilityWithHdr.
-func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
+func (to *Session) GetCapability(c string) (tc.Capability, toclientlib.ReqInf, error) {
 	return to.GetCapabilityWithHdr(c, nil)
 }

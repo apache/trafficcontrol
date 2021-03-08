@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // These are the API endpoints used by the various Delivery Service-related client methods.
@@ -32,6 +33,8 @@ const (
 	// API_DELIVERY_SERVICES is the API path on which Traffic Ops serves Delivery Service
 	// information. More specific information is typically found on sub-paths of this.
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES = apiBase + "/deliveryservices"
 
 	// API_DELIVERY_SERVICE_ID is the API path on which Traffic Ops serves information about
@@ -39,6 +42,8 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_ID = API_DELIVERY_SERVICES + "/%v"
 
 	// API_DELIVERY_SERVICE_HEALTH is the API path on which Traffic Ops serves information about
@@ -46,6 +51,8 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_health.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_HEALTH = API_DELIVERY_SERVICE_ID + "/health"
 
 	// API_DELIVERY_SERVICE_CAPACITY is the API path on which Traffic Ops serves information about
@@ -53,6 +60,8 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_capacity.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_CAPACITY = API_DELIVERY_SERVICE_ID + "/capacity"
 
 	// API_DELIVERY_SERVICE_ELIGIBLE_SERVERS is the API path on which Traffic Ops serves information about
@@ -60,6 +69,8 @@ const (
 	// unique identifier. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the ID of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_servers_eligible.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_ELIGIBLE_SERVERS = API_DELIVERY_SERVICE_ID + "/servers/eligible"
 
 	// API_DELIVERY_SERVICES_SAFE_UPDATE is the API path on which Traffic Ops provides the functionality to
@@ -67,6 +78,8 @@ const (
 	// identifer. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the ID of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_safe.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_SAFE_UPDATE = API_DELIVERY_SERVICE_ID + "/safe"
 
 	// API_DELIVERY_SERVICE_XMLID_SSL_KEYS is the API path on which Traffic Ops serves information about
@@ -74,10 +87,14 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the XMLID
 	// of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_sslkeys.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_XMLID_SSL_KEYS = API_DELIVERY_SERVICES + "/xmlId/%s/sslkeys"
 
 	// API_DELIVERY_SERVICE_GENERATE_SSL_KEYS is the API path on which Traffic Ops will generate new SSL keys
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_sslkeys_generate.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_GENERATE_SSL_KEYS = API_DELIVERY_SERVICES + "/sslkeys/generate"
 
 	// API_DELIVERY_SERVICE_URI_SIGNING_KEYS is the API path on which Traffic Ops serves information
@@ -85,6 +102,8 @@ const (
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the XMLID of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_urisignkeys.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_URI_SIGNING_KEYS = API_DELIVERY_SERVICES + "/%s/urisignkeys"
 
 	// API_DELIVERY_SERVICES_URL_SIGNING_KEYS is the API path on which Traffic Ops serves information
@@ -92,11 +111,15 @@ const (
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the XMLID of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_xmlid_urlkeys.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_URL_SIGNING_KEYS = API_DELIVERY_SERVICES + "/xmlid/%s/urlkeys"
 
 	// API_DELIVERY_SERVICES_REGEXES is the API path on which Traffic Ops serves Delivery Service
 	// 'regex' (Regular Expression) information.
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_regexes.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_REGEXES = apiBase + "/deliveryservices_regexes"
 
 	// API_SERVER_DELIVERY_SERVICES is the API path on which Traffic Ops serves functionality
@@ -104,22 +127,43 @@ const (
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
 	// of the server of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/servers_id_deliveryservices.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_SERVER_DELIVERY_SERVICES = apiBase + "/servers/%d/deliveryservices"
 
 	// API_DELIVERY_SERVICE_SERVER is the API path on which Traffic Ops serves functionality related
 	// to the associations between Delivery Services and their assigned Server(s).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryserviceserver.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICE_SERVER = apiBase + "/deliveryserviceserver"
 
 	// API_DELIVERY_SERVICES_SERVERS is the API path on which Traffic Ops serves functionality related
 	// to the associations between a Delivery Service and its assigned Server(s).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_servers.html
+	//
+	// Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_DELIVERY_SERVICES_SERVERS = apiBase + "/deliveryservices/%s/servers"
+
+	APIDeliveryServices               = "/deliveryservices"
+	APIDeliveryServiceId              = APIDeliveryServices + "/%v"
+	APIDeliveryServiceHealth          = APIDeliveryServiceId + "/health"
+	APIDeliveryServiceCapacity        = APIDeliveryServiceId + "/capacity"
+	APIDeliveryServiceEligibleServers = APIDeliveryServiceId + "/servers/eligible"
+	APIDeliveryServicesSafeUpdate     = APIDeliveryServiceId + "/safe"
+	APIDeliveryServiceXmlidSslKeys    = APIDeliveryServices + "/xmlId/%s/sslkeys"
+	APIDeliveryServiceGenerateSslKeys = APIDeliveryServices + "/sslkeys/generate"
+	APIDeliveryServicesUriSigningKeys = APIDeliveryServices + "/%s/urisignkeys"
+	APIDeliveryServicesUrlSigningKeys = APIDeliveryServices + "/xmlid/%s/urlkeys"
+	APIDeliveryServicesRegexes        = "/deliveryservices_regexes"
+	APIServerDeliveryServices         = "/servers/%d/deliveryservices"
+	APIDeliveryServiceServer          = "/deliveryserviceserver"
+	APIDeliveryServicesServers        = "/deliveryservices/%s/servers"
 )
 
-func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := to.get(fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIServerDeliveryServices, id), header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -131,22 +175,22 @@ func (to *Session) GetDeliveryServicesByServerV30WithHdr(id int, header http.Hea
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesByServerV30WithHdr.
-func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServicesByServerWithHdr(id, nil)
 }
 
-func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 
-	reqInf, err := to.get(fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIServerDeliveryServices, id), header, &data)
 	return data.Response, reqInf, err
 }
 
 // GetDeliveryServicesV30WithHdr returns all (tenant-visible) Delivery Services that
 // satisfy the passed query string parameters. See the API documentation for
 // information on the available parameters.
-func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
-	uri := API_DELIVERY_SERVICES
+func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.Values) ([]tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
+	uri := APIDeliveryServices
 	if params != nil {
 		uri += "?" + params.Encode()
 	}
@@ -155,11 +199,11 @@ func (to *Session) GetDeliveryServicesV30WithHdr(header http.Header, params url.
 	return data.Response, reqInf, err
 }
 
-func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := to.get(API_DELIVERY_SERVICES, header, &data)
+	reqInf, err := to.get(APIDeliveryServices, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -170,15 +214,15 @@ func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
-func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServicesNullableWithHdr(nil)
 }
 
-func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := to.get(API_DELIVERY_SERVICES+"?cdn="+strconv.Itoa(cdnID), header, &data)
+	reqInf, err := to.get(APIDeliveryServices+"?cdn="+strconv.Itoa(cdnID), header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -190,16 +234,16 @@ func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Head
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
-func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServicesByCDNIDWithHdr(cdnID, nil)
 }
 
 // GetDeliveryServiceNullableWithHdr fetches the Delivery Service with the given ID.
-func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullableV30 `json:"response"`
 	}{}
-	route := fmt.Sprintf("%s?id=%s", API_DELIVERY_SERVICES, id)
+	route := fmt.Sprintf("%s?id=%s", APIDeliveryServices, id)
 	reqInf, err := to.get(route, header, &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -218,11 +262,11 @@ func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Head
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
-func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := to.get(API_DELIVERY_SERVICES+"?id="+url.QueryEscape(id), nil, &data)
+	reqInf, err := to.get(APIDeliveryServices+"?id="+url.QueryEscape(id), nil, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -234,9 +278,9 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 
 // GetDeliveryServiceByXMLIDNullableWithHdr fetches all Delivery Services with
 // the given XMLID.
-func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := to.get(API_DELIVERY_SERVICES+"?xmlId="+url.QueryEscape(XMLID), header, &data)
+	reqInf, err := to.get(APIDeliveryServices+"?xmlId="+url.QueryEscape(XMLID), header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -249,7 +293,7 @@ func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
-func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	var ret []tc.DeliveryServiceNullable
 	resp, reqInf, err := to.GetDeliveryServiceByXMLIDNullableWithHdr(XMLID, nil)
 	if len(resp) > 0 {
@@ -262,8 +306,8 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.Deliver
 }
 
 // CreateDeliveryServiceV30 creates the Delivery Service it's passed.
-func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, ReqInf, error) {
-	var reqInf ReqInf
+func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
+	var reqInf toclientlib.ReqInf
 	if ds.TypeID == nil && ds.Type != nil {
 		ty, _, err := to.GetTypeByNameWithHdr(ds.Type.String(), nil)
 		if err != nil {
@@ -306,7 +350,7 @@ func (to *Session) CreateDeliveryServiceV30(ds tc.DeliveryServiceNullableV30) (t
 	}
 
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := to.post(API_DELIVERY_SERVICES, ds, nil, &data)
+	reqInf, err := to.post(APIDeliveryServices, ds, nil, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -368,7 +412,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	var data tc.CreateDeliveryServiceNullableResponse
-	_, err := to.post(API_DELIVERY_SERVICES, ds, nil, &data)
+	_, err := to.post(APIDeliveryServices, ds, nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -378,9 +422,9 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 
 // UpdateDeliveryServiceV30WithHdr replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceV30WithHdr(id int, ds tc.DeliveryServiceNullableV30, header http.Header) (tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServicesResponseV30
-	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
+	reqInf, err := to.put(fmt.Sprintf(APIDeliveryServiceId, id), ds, header, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -406,7 +450,7 @@ func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServi
 
 func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
-	_, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), ds, header, &data)
+	_, err := to.put(fmt.Sprintf(APIDeliveryServiceId, id), ds, header, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -416,16 +460,16 @@ func (to *Session) UpdateDeliveryServiceNullableWithHdr(id string, ds *tc.Delive
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed.
 func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceResponse, error) {
 	var data tc.DeleteDeliveryServiceResponse
-	_, err := to.del(fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), nil, &data)
+	_, err := to.del(fmt.Sprintf(APIDeliveryServiceId, id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
 	return &data, nil
 }
 
-func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header) (*tc.DeliveryServiceHealth, ReqInf, error) {
+func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header) (*tc.DeliveryServiceHealth, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceHealthResponse
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_HEALTH, id), nil, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServiceHealth, id), nil, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -436,13 +480,13 @@ func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header
 // GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
 // Deprecated: GetDeliveryServiceHealth will be removed in 6.0. Use GetDeliveryServiceHealthWithHdr.
-func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, ReqInf, error) {
+func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceHealthWithHdr(id, nil)
 }
 
-func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Header) (*tc.DeliveryServiceCapacity, ReqInf, error) {
+func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Header) (*tc.DeliveryServiceCapacity, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceCapacityResponse
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_CAPACITY, id), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServiceCapacity, id), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -452,12 +496,12 @@ func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Head
 // GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
 // Deprecated: GetDeliveryServiceCapacity will be removed in 6.0. Use GetDeliveryServiceCapacityWithHdr.
-func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
+func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceCapacityWithHdr(id, nil)
 }
 
 // GenerateSSLKeysForDS generates ssl keys for a given cdn
-func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields tc.SSLKeyRequestFields) (string, ReqInf, error) {
+func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields tc.SSLKeyRequestFields) (string, toclientlib.ReqInf, error) {
 	version := util.JSONIntStr(1)
 	request := tc.DeliveryServiceSSLKeysReq{
 		BusinessUnit:    sslFields.BusinessUnit,
@@ -474,66 +518,66 @@ func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields 
 	response := struct {
 		Response string `json:"response"`
 	}{}
-	reqInf, err := to.post(API_DELIVERY_SERVICE_GENERATE_SSL_KEYS, request, nil, &response)
+	reqInf, err := to.post(APIDeliveryServiceGenerateSslKeys, request, nil, &response)
 	if err != nil {
 		return "", reqInf, err
 	}
 	return response.Response, reqInf, nil
 }
 
-func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, toclientlib.ReqInf, error) {
 	resp := struct {
 		Response string `json:"response"`
 	}{}
-	reqInf, err := to.del(fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, url.QueryEscape(XMLID)), nil, &resp)
+	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServiceXmlidSslKeys, url.QueryEscape(XMLID)), nil, &resp)
 	return resp.Response, reqInf, err
 }
 
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
 // Deprecated: GetDeliveryServiceSSLKeysByID will be removed in 6.0. Use GetDeliveryServiceSSLKeysByIDWithHdr.
-func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServiceSSLKeys, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceSSLKeysByIDWithHdr(XMLID, nil)
 }
 
-func (to *Session) GetDeliveryServiceSSLKeysByIDWithHdr(XMLID string, header http.Header) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceSSLKeysByIDWithHdr(XMLID string, header http.Header) (*tc.DeliveryServiceSSLKeys, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, url.QueryEscape(XMLID)), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServiceXmlidSslKeys, url.QueryEscape(XMLID)), header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	return &data.Response, reqInf, nil
 }
 
-func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Header) ([]tc.DSServer, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Header) ([]tc.DSServer, toclientlib.ReqInf, error) {
 	resp := struct {
 		Response []tc.DSServer `json:"response"`
 	}{Response: []tc.DSServer{}}
 
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICE_ELIGIBLE_SERVERS, dsID), header, &resp)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServiceEligibleServers, dsID), header, &resp)
 	return resp.Response, reqInf, err
 }
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
 // Service identified by the integral, unique identifier 'dsID'.
 // Deprecated: GetDeliveryServicesEligible will be removed in 6.0. Use GetDeliveryServicesEligibleWithHdr.
-func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServicesEligibleWithHdr(dsID, nil)
 }
 
 // GetDeliveryServiceURLSigKeys returns the URL-signing keys used by the Delivery Service
 // identified by the XMLID 'dsName'.
 // Deprecated: GetDeliveryServiceURLSigKeys will be removed in 6.0. Use GetDeliveryServiceURLSigKeysWithHdr.
-func (to *Session) GetDeliveryServiceURLSigKeys(dsName string) (tc.URLSigKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURLSigKeys(dsName string) (tc.URLSigKeys, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceURLSigKeysWithHdr(dsName, nil)
 }
 
-func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header http.Header) (tc.URLSigKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header http.Header) (tc.URLSigKeys, toclientlib.ReqInf, error) {
 	data := struct {
 		Response tc.URLSigKeys `json:"response"`
 	}{}
 
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICES_URL_SIGNING_KEYS, dsName), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesUrlSigningKeys, dsName), header, &data)
 	if err != nil {
 		return tc.URLSigKeys{}, reqInf, err
 	}
@@ -541,15 +585,15 @@ func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header htt
 }
 
 // Deprecated: GetDeliveryServiceURISigningKeys will be removed in 6.0. Use GetDeliveryServiceURISigningKeysWithHdr.
-func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, toclientlib.ReqInf, error) {
 	return to.GetDeliveryServiceURISigningKeysWithHdr(dsName, nil)
 }
 
 // GetDeliveryServiceURISigningKeys returns the URI-signing keys used by the Delivery Service
 // identified by the XMLID 'dsName'. The result is not parsed.
-func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header http.Header) ([]byte, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header http.Header) ([]byte, toclientlib.ReqInf, error) {
 	data := json.RawMessage{}
-	reqInf, err := to.get(fmt.Sprintf(API_DELIVERY_SERVICES_URI_SIGNING_KEYS, url.QueryEscape(dsName)), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesUriSigningKeys, url.QueryEscape(dsName)), header, &data)
 	if err != nil {
 		return []byte{}, reqInf, err
 	}
@@ -558,9 +602,9 @@ func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header
 
 // SafeDeliveryServiceUpdateV30WithHdr updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
-func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, ReqInf, error) {
+func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceNullableV30, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceSafeUpdateResponseV30
-	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), r, header, &data)
+	reqInf, err := to.put(fmt.Sprintf(APIDeliveryServicesSafeUpdate, id), r, header, &data)
 	if err != nil {
 		return tc.DeliveryServiceNullableV30{}, reqInf, err
 	}
@@ -577,9 +621,9 @@ func (to *Session) SafeDeliveryServiceUpdateV30WithHdr(id int, r tc.DeliveryServ
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // SafeDeliveryServiceUpdateV30WithHdr.
-func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	var resp tc.DeliveryServiceSafeUpdateResponse
-	reqInf, err := to.put(fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), ds, nil, &resp)
+	reqInf, err := to.put(fmt.Sprintf(APIDeliveryServicesSafeUpdate, id), ds, nil, &resp)
 	if err != nil {
 		return resp.Response, reqInf, err
 	}
@@ -598,8 +642,8 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 // Deprecated: Please used versioned library imports in the future, and
 // versioned methods, specifically, for API v3.0 - in this case,
 // GetDeliveryServicesV30WithHdr.
-func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
 	data := tc.DeliveryServicesNullableResponse{}
-	reqInf, err := to.get(fmt.Sprintf("%s?accessibleTo=%d", API_DELIVERY_SERVICES, tenantId), nil, &data)
+	reqInf, err := to.get(fmt.Sprintf("%s?accessibleTo=%d", APIDeliveryServices, tenantId), nil, &data)
 	return data.Response, reqInf, err
 }

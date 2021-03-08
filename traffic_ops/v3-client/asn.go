@@ -21,38 +21,42 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// API_ASNS is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 	API_ASNS = apiBase + "/asns"
+
+	APIASNs = "/asns"
 )
 
 // CreateASN creates a ASN
-func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_ASNS, entity, nil, &alerts)
+	reqInf, err := to.post(APIASNs, entity, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateASNByID updates a ASN by ID
-func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
+func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", APIASNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, entity, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetASNsWithHeader Returns a list of ASNs matching query params
-func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, ReqInf, error) {
-	route := fmt.Sprintf("%s?%s", API_ASNS, params.Encode())
+func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?%s", APIASNs, params.Encode())
 	var data tc.ASNsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
 // DeleteASNByASN deletes an ASN by asn number
-func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_ASNS, asn)
+func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", APIASNs, asn)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err

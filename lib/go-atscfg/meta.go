@@ -262,12 +262,6 @@ func addMetaObjConfigDir(
 				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
 			}
 		}
-		if ds.CacheURL != nil {
-			configFile := "cacheurl_" + *ds.XMLID + ".config"
-			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
-				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
-			}
-		}
 		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
 			configFile := "url_sig_" + *ds.XMLID + ".config"
 			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {

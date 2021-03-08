@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"sort"
 	"strconv"
 	"strings"
@@ -150,9 +151,8 @@ func getServerConfigRemapDotConfigForMid(
 			continue // skip remap rules from extra HOST_REGEXP entries
 		}
 
-		// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+		// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
 		// So for now, keep track of it, so we can log an error when it happens.
-		hasCacheURL := false
 		hasCacheKey := false
 
 		midRemap := ""
@@ -168,20 +168,11 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, addedCacheURL, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-			if addedCacheURL {
-				hasCacheURL = true
-			}
+			qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 			if addedCacheKey {
 				hasCacheKey = true
 			}
 			midRemap += qstr
-		}
-		if ds.CacheURL != nil && *ds.CacheURL != "" {
-			if hasCacheURL {
-				warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
-			}
-			midRemap += ` @plugin=cacheurl.so @pparam=` + cacheURLConfigFileName(*ds.XMLID)
 		}
 
 		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
@@ -344,9 +335,8 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+	// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
 	// So for now, keep track of it, so we can log an error when it happens.
-	hasCacheURL := false
 	hasCacheKey := false
 
 	if ds.QStringIgnore != nil {
@@ -357,23 +347,13 @@ func buildEdgeRemapLine(
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
 				warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
-				qstr, addedCacheURL, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-				if addedCacheURL {
-					hasCacheURL = true
-				}
+				qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 				if addedCacheKey {
 					hasCacheKey = true
 				}
 				text += qstr
 			}
 		}
-	}
-
-	if ds.CacheURL != nil && *ds.CacheURL != "" {
-		if hasCacheURL {
-			warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
-		}
-		text += ` @plugin=cacheurl.so @pparam=` + cacheURLConfigFileName(*ds.XMLID)
 	}
 
 	if len(cacheKeyConfigParams) > 0 {
@@ -528,21 +508,13 @@ func midHeaderRewriteConfigFileName(dsName string) string {
 	return "hdr_rw_mid_" + dsName + ".config"
 }
 
-func cacheURLConfigFileName(dsName string) string {
-	return "cacheurl_" + dsName + ".config"
-}
-
-// getQStringIgnoreRemap returns the remap, whether cacheurl was added, and whether cachekey was added.
-func getQStringIgnoreRemap(atsMajorVersion int) (string, bool, bool) {
-	if atsMajorVersion >= 6 {
-		addingCacheURL := false
-		addingCacheKey := true
-		return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, addingCacheURL, addingCacheKey
-	} else {
-		addingCacheURL := true
-		addingCacheKey := false
-		return ` @plugin=cacheurl.so @pparam=cacheurl_qstring.config`, addingCacheURL, addingCacheKey
+// getQStringIgnoreRemap returns the remap, whether cachekey was added.
+func getQStringIgnoreRemap(atsMajorVersion int) (string, bool) {
+	if atsMajorVersion < 7 {
+		log.Errorf("Unsupport version of ats found %v", atsMajorVersion)
+		return "", false
 	}
+	return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, true
 }
 
 // makeServerPackageParamData returns a map[paramName]paramVal for this server, config file 'package'.

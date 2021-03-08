@@ -40,7 +40,6 @@ func TestMakeRegexRemapDotConfig(t *testing.T) {
 	ds := makeGenericDS()
 	ds.XMLID = &dsName
 	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
-	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
 	ds.RegexRemap = util.StrPtr("myregexremap")
 
 	dses := []DeliveryService{*ds}
@@ -84,14 +83,12 @@ func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
 	ds.XMLID = &dsName
 	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 	ds.QStringIgnore = util.IntPtr(0)
-	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
 	ds.RegexRemap = util.StrPtr("myregexremap")
 
 	ds1 := makeGenericDS()
 	ds1.XMLID = util.StrPtr("otherds")
 	ds1.OrgServerFQDN = util.StrPtr("https://otherorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 	ds1.QStringIgnore = util.IntPtr(0)
-	ds1.CacheURL = util.StrPtr("https://othercacheurl.net")
 	ds1.RegexRemap = util.StrPtr("otherregexremap")
 
 	dses := []DeliveryService{*ds, *ds1}
@@ -145,7 +142,6 @@ func TestMakeRegexRemapDotConfigReplaceReturns(t *testing.T) {
 	ds.XMLID = &dsName
 	ds.OrgServerFQDN = util.StrPtr("https://myorigin.example.net") // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 	ds.QStringIgnore = util.IntPtr(0)
-	ds.CacheURL = util.StrPtr("https://mycacheurl.net")
 	ds.RegexRemap = util.StrPtr("myregexremap__RETURN__mypostnewline")
 
 	dses := []DeliveryService{*ds}

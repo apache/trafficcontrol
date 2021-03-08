@@ -31,7 +31,33 @@ Fetches identifying and meta information as well as "check" values regarding all
 
 Request Structure
 -----------------
-No parameters available.
+.. table:: Request Query Parameters
+
+	+-----------+----------+------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                        |
+	+===========+==========+====================================================================================+
+	| id        | no       | Return only :term:`cache servers` with this integral, unique identifier (id)       |
+	+-----------+----------+------------------------------------------------------------------------------------+
+	| hostName  | no       | Return only :term:`cache servers` with this host_name                              |
+	+-----------+----------+------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example with ``hostName`` query param
+
+	GET /api/4.0/servercheck?hostName=edge HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+.. code-block:: http
+	:caption: Request Example with ``id`` query param
+
+	GET /api/4.0/servercheck?id=12 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -55,9 +81,9 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 23 Jan 2020 20:00:19 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 18 Feb 2021 20:00:19 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 23 Jan 2020 19:00:19 GMT
+	Date: Thu, 18 Feb 2021 19:00:19 GMT
 	Content-Length: 352
 
 	{ "response": [
@@ -69,16 +95,6 @@ Response Structure
 			"revalPending": false,
 			"profile": "ATS_EDGE_TIER_CACHE",
 			"type": "EDGE",
-			"updPending": false
-		},
-		{
-			"adminState": "REPORTED",
-			"cacheGroup": "CDN_in_a_Box_Mid",
-			"id": 11,
-			"hostName": "mid",
-			"revalPending": false,
-			"profile": "ATS_MID_TIER_CACHE",
-			"type": "MID",
 			"updPending": false
 		}
 	]}

@@ -21,31 +21,32 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const ApiTopologies = apiBase + "/topologies"
+const APITopologies = "/topologies"
 
 // CreateTopology creates a topology and returns the response.
-func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
+func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
 	resp := new(tc.TopologyResponse)
-	reqInf, err := to.post(ApiTopologies, top, nil, resp)
+	reqInf, err := to.post(APITopologies, top, nil, resp)
 	return resp, reqInf, err
 }
 
-func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, ReqInf, error) {
+func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, toclientlib.ReqInf, error) {
 	var data tc.TopologiesResponse
-	reqInf, err := to.get(ApiTopologies, header, &data)
+	reqInf, err := to.get(APITopologies, header, &data)
 	return data.Response, reqInf, err
 }
 
 // GetTopologies returns all topologies.
 // Deprecated: GetTopologies will be removed in 6.0. Use GetTopologiesWithHdr.
-func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
+func (to *Session) GetTopologies() ([]tc.Topology, toclientlib.ReqInf, error) {
 	return to.GetTopologiesWithHdr(nil)
 }
 
-func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topology, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
+func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topology, toclientlib.ReqInf, error) {
+	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var data tc.TopologiesResponse
 	reqInf, err := to.get(reqUrl, header, &data)
 	if err != nil {
@@ -59,21 +60,21 @@ func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topo
 
 // GetTopology returns the given topology by name.
 // Deprecated: GetTopology will be removed in 6.0. Use GetTopologyWithHdr.
-func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
+func (to *Session) GetTopology(name string) (*tc.Topology, toclientlib.ReqInf, error) {
 	return to.GetTopologyWithHdr(name, nil)
 }
 
 // UpdateTopology updates a Topology by name.
-func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
+func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?name=%s", APITopologies, name)
 	var response = new(tc.TopologyResponse)
 	reqInf, err := to.put(route, t, nil, &response)
 	return response, reqInf, err
 }
 
 // DeleteTopology deletes the given topology by name.
-func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
+func (to *Session) DeleteTopology(name string) (tc.Alerts, toclientlib.ReqInf, error) {
+	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var alerts tc.Alerts
 	reqInf, err := to.del(reqUrl, nil, &alerts)
 	return alerts, reqInf, err

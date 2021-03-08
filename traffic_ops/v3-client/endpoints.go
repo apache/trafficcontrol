@@ -15,4 +15,18 @@
 
 package client
 
+// DEPRECATED: All new code should us Session.APIBase().
+// This isn't public, but only exists for deprecated public constants. It should be removed when they are.
 const apiBase = "/api/3.1"
+
+// apiVersions is the list of minor API versions in this client's major version.
+// This should be all minor versions from 0 up to the latest minor in Traffic Control
+// as of this client code.
+//
+// Versions are ordered latest-first.
+func apiVersions() []string {
+	return []string{
+		"3.1",
+		"3.0",
+	}
+}

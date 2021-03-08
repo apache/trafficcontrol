@@ -16,28 +16,29 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const API_TO_EXTENSION = apiBase + "/servercheck/extensions"
+const APITOExtension = "/servercheck/extensions"
 
 // CreateServerCheckExtension creates a servercheck extension.
-func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(API_TO_EXTENSION, ServerCheckExtension, nil, &alerts)
+	reqInf, err := to.post(APITOExtension, ServerCheckExtension, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteServerCheckExtension deletes a servercheck extension.
-func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
+func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+	URI := fmt.Sprintf("%s/%d", APITOExtension, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(URI, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetServerCheckExtensions gets all servercheck extensions.
-func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
+func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, toclientlib.ReqInf, error) {
 	var toExtResp tc.ServerCheckExtensionResponse
-	reqInf, err := to.get(API_TO_EXTENSION, nil, &toExtResp)
+	reqInf, err := to.get(APITOExtension, nil, &toExtResp)
 	return toExtResp, reqInf, err
 }

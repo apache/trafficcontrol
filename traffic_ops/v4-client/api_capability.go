@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 /*
@@ -24,11 +25,11 @@ import (
 // GetAPICapabilities will retrieve API Capabilities. In the event that no capability parameter
 // is supplied, it will return all existing. If a capability is supplied, it will return only
 // those with an exact match. Order may be specified to change the default sort order.
-func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICapabilityResponse, ReqInf, error) {
+func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICapabilityResponse, toclientlib.ReqInf, error) {
 	var (
 		vals   = url.Values{}
-		path   = fmt.Sprintf("%s/api_capabilities", apiBase)
-		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+		path   = "/api_capabilities"
+		reqInf = toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 		resp   tc.APICapabilityResponse
 	)
 

@@ -24,10 +24,7 @@ import (
 )
 
 func TestFederations(t *testing.T) {
-	if Config.NoPerl {
-		t.Skip("No Perl instance for proxying")
-	}
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, UsersDeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, CDNFederations}, func() {
 		PostDeleteTestFederationsDeliveryServices(t)
 		GetTestFederations(t)
 		AddFederationResolversForCurrentUserTest(t)
