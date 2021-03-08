@@ -600,6 +600,20 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	if len(topologies) != 1 {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
+
+	// check if the name field was being updated by someone else
+	var existingLastUpdated *tc.TimeNoMod
+	q := `SELECT last_updated FROM topology WHERE name = $1`
+	if err := topology.ReqInfo.Tx.QueryRow(q, topology.Name).Scan(&existingLastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("topology was not found"), nil, http.StatusNotFound
+		}
+		return nil, errors.New("topology update: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+	}
+
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
 	if err := oldTopology.removeParents(); err != nil {
