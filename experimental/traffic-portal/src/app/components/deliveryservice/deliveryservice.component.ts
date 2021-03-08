@@ -14,6 +14,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
+import { faBroom } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 
@@ -48,6 +49,9 @@ export class DeliveryserviceComponent implements OnInit {
 	private readonly edgeBandwidth: DataSet;
 	/** Bandwidth data at the Mid-tier level. */
 	private readonly midBandwidth: DataSet;
+
+	/** Icon for the content invalidation FAB. */
+	public readonly invalidateIcon=faBroom;
 
 	/** End date for charts. */
 	private to: Date = new Date();

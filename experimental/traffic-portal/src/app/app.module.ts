@@ -27,6 +27,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatDividerModule } from "@angular/material/divider";
 import { MatExpansionModule } from "@angular/material/expansion";
+import { MatInputModule } from "@angular/material/input";
 import { MatListModule } from "@angular/material/list";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
@@ -130,6 +131,7 @@ Chart.plugins.register({
 		MatCardModule,
 		MatDividerModule,
 		MatExpansionModule,
+		MatInputModule,
 		MatListModule,
 		MatRadioModule,
 		MatSnackBarModule,
