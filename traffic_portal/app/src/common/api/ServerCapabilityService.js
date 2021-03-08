@@ -71,7 +71,6 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	this.updateServerCapability = function(currentName, serverCapability) {
 		return $http.put(ENV.api['root'] + 'server_capabilities', serverCapability, {params: {"name": currentName}}).then(
 			function(result) {
-				// messageModel.setMessages(result.data.alerts, false);
 				return result;
 			},
 			function(err) {
