@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn_lock"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -132,6 +133,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
+		// CDN lock
+		{api.Version{4, 0}, http.MethodGet, `cdn_lock/?$`, cdn_lock.Read, auth.PrivLevelAdmin, Authenticated, nil, 4134390561},
+		{api.Version{4, 0}, http.MethodPost, `cdn_lock/?$`, cdn_lock.Create, auth.PrivLevelAdmin, Authenticated, nil, 4134390562},
+		{api.Version{4, 0}, http.MethodDelete, `cdn_lock/?$`, cdn_lock.Delete, auth.PrivLevelAdmin, Authenticated, nil, 4134390564},
+
 		// ACME account information
 		{api.Version{4, 0}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 4034390561},
 		{api.Version{4, 0}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 4034390562},
