@@ -69,7 +69,7 @@ func TestAddStatsInvalidString(t *testing.T) {
 		Connections: 0,
 	}
 	cacheData = append(cacheData, data)
-	result := addStats(cacheData, cacheStats)
+	result := addStats(cacheData, cacheStats, "url")
 	if len(result) != 1 {
 		t.Fatalf("expected a cache stat in the response, but got nothing")
 	}
@@ -119,7 +119,7 @@ func TestAddStatsValidString(t *testing.T) {
 		Connections: 0,
 	}
 	cacheData = append(cacheData, data)
-	result := addStats(cacheData, cacheStats)
+	result := addStats(cacheData, cacheStats, "url")
 	if len(result) != 1 {
 		t.Fatalf("expected a cache stat in the response, but got nothing")
 	}
@@ -172,7 +172,7 @@ func TestAddStatsEmptyJsonObject(t *testing.T) {
 		Connections: 0,
 	}
 	cacheData = append(cacheData, data)
-	result := addStats(cacheData, cacheStats)
+	result := addStats(cacheData, cacheStats, "url")
 	if len(result) != 1 {
 		t.Fatalf("expected a cache stat in the response, but got nothing")
 	}
