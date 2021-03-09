@@ -12,6 +12,7 @@
 # limitations under the License.
 #
 galaxy_info:
+  role_name: traffic_opsdb
   author: Jonathan Gray
   description: A role to assist with deploying the traffic ops database component of Apache Traffic Control on Postgres
   company: Apache Traffic Control

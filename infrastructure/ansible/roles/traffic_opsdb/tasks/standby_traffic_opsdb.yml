@@ -45,13 +45,15 @@
 
 - name: Setup Secondary PostgreSQL Replication
   template:
-    src: "templates/{{ item }}.j2"
+    src: "templates/{{ _loop_ittr }}.j2"
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0700
     dest: "{{ postgresql_datadir }}/{{ item }}"
-  with_items:
+  loop:
     - recovery.conf
+  loop_control:
+    loop_var: _loop_ittr
   vars:
     postgresql_target_replication_parent: "{{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}"
 
