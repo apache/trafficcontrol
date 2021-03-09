@@ -270,10 +270,15 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cdn := inf.Params["cdn"]
+	_, exists, _ := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+	if !exists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to find the CDN: "+cdn), nil)
+		return
+	}
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
@@ -284,7 +289,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
