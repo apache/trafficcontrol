@@ -23,8 +23,9 @@ import "database/sql"
 
 // AcmeAccount is the information needed to access an account with an ACME provider.
 type CdnLock struct {
-	UserName string `json:"userName" db:"user_name"`
-	CdnName  string `json:"cdnName" db:"cdn_name"`
+	UserName    string    `json:"userName" db:"user_name"`
+	CdnName     string    `json:"cdnName" db:"cdn_name"`
+	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
 func (c CdnLock) Validate(tx *sql.Tx) error {

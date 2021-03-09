@@ -30,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-const readQuery = `SELECT user_name, cdn_name FROM cdn_lock`
+const readQuery = `SELECT user_name, cdn_name, last_updated FROM cdn_lock`
 const insertQuery = `INSERT INTO cdn_lock (user_name, cdn_name) VALUES (:user_name, :cdn_name) RETURNING user_name, cdn_name`
 const deleteQuery = `DELETE FROM cdn_lock WHERE cdn_name=$1`
 
@@ -53,7 +53,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var cLock tc.CdnLock
-		if err = rows.Scan(&cLock.UserName, &cLock.CdnName); err != nil {
+		if err = rows.Scan(&cLock.UserName, &cLock.CdnName, &cLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
