@@ -611,7 +611,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		return nil, errors.New("topology update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 	if !api.IsUnmodified(h, existingLastUpdated.Time) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return errors.New("the resource has been modified since the time specified by the request headers"), nil, http.StatusPreconditionFailed
 	}
 
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
