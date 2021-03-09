@@ -244,7 +244,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", origName, err)
 	}
 	if len(servResp) == 0 {
-		t.Fatalf("no servers with associate server capability name: %s", origName)
+		t.Fatalf("no servers associated with server capability name: %s", origName)
 	}
 
 	// Update server capability with new name
@@ -259,13 +259,13 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
 	}
 	if len(ssc) == 0 {
-		t.Fatalf("no server with associated server capability name:%s", newSCName)
+		t.Fatalf("no server associated with server capability name:%s", newSCName)
 	}
 	for i, s := range ssc {
-		if newSCName != *ssc[i].ServerCapability {
+		if newSCName != *s.ServerCapability {
 			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
 		}
-		if *servResp[i].Server != *s.Server {
+		if len(servResp) != len(ssc) && *servResp[i].Server != *s.Server {
 			t.Fatalf("server capability name change didn't trickle to server: %s", *s.Server)
 		}
 	}
