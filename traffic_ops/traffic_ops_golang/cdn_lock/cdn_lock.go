@@ -27,7 +27,9 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 const readQuery = `SELECT user_name, cdn_name, last_updated FROM cdn_lock`
@@ -43,8 +45,22 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	cols := map[string]dbhelpers.WhereColumnInfo{
+		"cdn":  {"cdn_lock.cdn_name", nil},
+		"user": {"cdn_lock.user_name", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		errCode = http.StatusBadRequest
+		userErr = util.JoinErrs(errs)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
 	cdnLock := []tc.CdnLock{}
-	rows, err := tx.Query(readQuery)
+	query := readQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("querying cdn locks: "+err.Error()))
 		return
