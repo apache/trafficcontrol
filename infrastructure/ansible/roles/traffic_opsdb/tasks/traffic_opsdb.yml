@@ -88,7 +88,7 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0700
-    dest: "{{ postgresql_datadir }}/{{ item }}"
+    dest: "{{ postgresql_datadir }}/{{ _loop_ittr }}"
   loop:
     - pg_hba.conf
     - postgresql.conf
