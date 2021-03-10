@@ -143,6 +143,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		"author":     {Column: "a.username"},
 		"authorId":   {Column: "r.author_id", Checker: api.IsInt},
 		"changeType": {Column: "r.change_type"},
+		"createdAt":  {Column: "r.created_at"},
 		"id":         {Column: "r.id", Checker: api.IsInt},
 		"status":     {Column: "r.status"},
 	}
