@@ -500,6 +500,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	dsr.SetXMLID()
 
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
@@ -599,6 +600,7 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	dsr.SetXMLID()
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
 	result.Successful = true
@@ -666,6 +668,7 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	upgraded.SetXMLID()
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
 	result.Action = api.Updated
