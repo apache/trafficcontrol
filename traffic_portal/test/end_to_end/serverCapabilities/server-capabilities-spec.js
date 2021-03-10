@@ -53,8 +53,8 @@ describe('Traffic Portal Server Capabilities Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/server-capabilities");
 	});
 
-	it('should view the new server capability', function() {
-		console.log('Viewing the new server capability: ' + myNewServerCap.name);
+	it('should edit an existing server capability', function() {
+		console.log('Editing an existing server capability: ' + myNewServerCap.name);
 		pageData.searchFilter.sendKeys(myNewServerCap.name);
 		element.all(by.repeater('sc in ::serverCapabilities')).filter(function(row){
 			return row.element(by.name('name')).getText().then(function(val){
@@ -62,6 +62,10 @@ describe('Traffic Portal Server Capabilities Test Suite', function() {
 			});
 		}).get(0).click();
 		expect(pageData.name.getText() === myNewServerCap.name);
+		expect(pageData.updateButton.isEnabled()).toBe(false);
+		pageData.name.sendKeys("-updated");
+		expect(pageData.updateButton.isEnabled()).toBe(true);
+		expect(pageData.name.getText() === myNewServerCap.name+"-updated");
 	});
 
 });
