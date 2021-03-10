@@ -79,19 +79,21 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 			}
 
 			var cacheStats tc.Stats
+			var url string
 			stats := []string{ATSCurrentConnectionsStat, tc.StatNameBandwidth}
-			cacheStats, _, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
+			cacheStats, url, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
 			if err != nil {
-				legacyCacheStats, _, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
+				legacyCacheStats, legacyUrl, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
 				if err != nil {
 					errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 					continue
 				}
+				url = legacyUrl
 				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 			}
 
 			cacheData = addHealth(cacheData, crStates)
-			cacheData = addStats(cacheData, cacheStats)
+			cacheData = addStats(cacheData, cacheStats, url)
 			success = true
 			break
 		}
@@ -135,7 +137,8 @@ func addTotals(data []CacheData) []CacheData {
 	return data
 }
 
-func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
+func addStats(cacheData []CacheData, stats tc.Stats, url string) []CacheData {
+	var err error
 	if stats.Caches == nil {
 		return cacheData // TODO warn?
 	}
@@ -146,11 +149,25 @@ func addStats(cacheData []CacheData, stats tc.Stats) []CacheData {
 		}
 		bandwidth, ok := stat.Stats[tc.StatNameBandwidth]
 		if ok && len(bandwidth) > 0 {
-			cache.KBPS = bandwidth[0].Val.(uint64)
+			if kbps, ok := bandwidth[0].Val.(string); !ok {
+				log.Warnf("bandwidth %v of cache %s from url %s couldn't be converted into string", bandwidth[0].Val, string(cache.HostName), url)
+			} else {
+				cache.KBPS, err = strconv.ParseUint(kbps, 10, 64)
+				if err != nil {
+					log.Warnf("'bandwidth' stat %v of cache %s from url %s couldn't be converted into uint64", kbps, string(cache.HostName), url)
+				}
+			}
 		}
 		connections, ok := stat.Stats[ATSCurrentConnectionsStat]
 		if ok && len(connections) > 0 {
-			cache.Connections = connections[0].Val.(uint64)
+			if conn, ok := connections[0].Val.(string); !ok {
+				log.Warnf("'connections' stat %v of cache %s from url %s couldn't be converted into string", connections[0].Val, string(cache.HostName), url)
+			} else {
+				cache.Connections, err = strconv.ParseUint(conn, 10, 64)
+				if err != nil {
+					log.Warnf("'connections' stat %v of cache %s from url %s couldn't be converted into uint64", conn, string(cache.HostName), url)
+				}
+			}
 		}
 		cacheData[i] = cache
 	}
