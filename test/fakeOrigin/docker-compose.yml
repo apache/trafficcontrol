@@ -24,13 +24,6 @@ services:
       dockerfile: test/fakeOrigin/Dockerfile
     volumes:
       - ../../test/fakeOrigin/docker_host:/host
-    environment:
-      - VER_MAJOR
-      - VER_MINOR
-      - VER_PATCH
-      - VER_DESC
-      - VER_COMMIT
-      - BUILD_NUMBER
     ports:
     - "8080:8080"
     - "8443:8443"
