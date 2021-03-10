@@ -198,7 +198,7 @@ golang.org/x/net/internal/socket
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
 golang.org/x/net/publicsuffix
-# golang.org/x/sys v0.0.0-20210227040730-b0d1d43c014d
+# golang.org/x/sys v0.0.0-20210309074719-68d13333faf2
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
