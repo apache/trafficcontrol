@@ -32,8 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-const readQuery = `SELECT user_name, cdn_name, last_updated FROM cdn_lock`
-const insertQuery = `INSERT INTO cdn_lock (user_name, cdn_name) VALUES (:user_name, :cdn_name) RETURNING user_name, cdn_name`
+const readQuery = `SELECT username, cdn_name, message, last_updated FROM cdn_lock`
+const insertQuery = `INSERT INTO cdn_lock (username, cdn_name, message) VALUES (:username, :cdn_name, :message) RETURNING username, cdn_name, message`
 const deleteQuery = `DELETE FROM cdn_lock WHERE cdn_name=$1`
 
 func Read(w http.ResponseWriter, r *http.Request) {
@@ -46,8 +46,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdn":  {"cdn_lock.cdn_name", nil},
-		"user": {"cdn_lock.user_name", nil},
+		"cdn":      {"cdn_lock.cdn_name", nil},
+		"username": {"cdn_lock.username", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
@@ -69,7 +69,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var cLock tc.CdnLock
-		if err = rows.Scan(&cLock.UserName, &cLock.CdnName, &cLock.LastUpdated); err != nil {
+		if err = rows.Scan(&cLock.Username, &cLock.CdnName, &cLock.Message, &cLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
@@ -90,7 +90,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var cdnLock tc.CdnLock
-	//var cdnName string
 	if err := json.NewDecoder(r.Body).Decode(&cdnLock); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
@@ -107,18 +106,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//cdn, _, err := dbhelpers.GetCDNNameFromID(tx, int64(cdnLock.CdnID))
-	//if err != nil {
-	//	api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-	//	return
-	//}
-	//if u.ID != cdnLock.UserID {
-	//	api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("cannot acquire lock for another user"), nil)
-	//	return
-	//}
-
-	cdnLock.UserName = u.UserName
-	//cdnLock.CdnName = cdnName
+	cdnLock.Username = u.UserName
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, cdnLock)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -170,7 +158,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if u.UserName == "admin" {
 		res, err = tx.Exec(query, cdn)
 	} else {
-		query = deleteQuery + `  and user_name=$2`
+		query = deleteQuery + `  and username=$2`
 		res, err = tx.Exec(query, cdn, u.UserName)
 	}
 

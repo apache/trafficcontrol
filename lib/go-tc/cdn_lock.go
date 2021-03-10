@@ -23,8 +23,9 @@ import "database/sql"
 
 // AcmeAccount is the information needed to access an account with an ACME provider.
 type CdnLock struct {
-	UserName    string    `json:"userName" db:"user_name"`
+	Username    string    `json:"userName" db:"username"`
 	CdnName     string    `json:"cdnName" db:"cdn_name"`
+	Message     string    `json:"message" db:"message"`
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 

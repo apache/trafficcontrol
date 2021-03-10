@@ -14,10 +14,13 @@
 
 -- +goose Up
 CREATE TABLE IF NOT EXISTS cdn_lock (
-user_name text NOT NULL,
+username text NOT NULL,
 cdn_name text NOT NULL,
+message text,
 last_updated timestamp with time zone DEFAULT now() NOT NULL,
-PRIMARY KEY (cdn_name)
+CONSTRAINT pk_cdn_lock PRIMARY KEY (cdn_name),
+CONSTRAINT fk_lock_cdn FOREIGN KEY (cdn_name) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE,
+CONSTRAINT fk_lock_username FOREIGN KEY ("username") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_lock;
