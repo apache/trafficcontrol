@@ -120,7 +120,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 		t.Fatalf("no server capability in response, quitting")
 	}
 	if getResp.Name != newSCName {
-		t.Errorf("failed to update server capability name, expected: %v but got:%v", newSCName, updateResponse.Name)
+		t.Errorf("failed to update server capability name, expected: %v but got: %v", newSCName, updateResponse.Name)
 	}
 
 	// Set everything back as it was for further testing.

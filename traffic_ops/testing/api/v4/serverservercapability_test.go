@@ -239,12 +239,16 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	resp[0].Name = newSCName
 
 	// Get all servers related to original sever capability name
-	servResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &origName, nil)
+	servOrigResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &origName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", origName, err)
 	}
-	if len(servResp) == 0 {
-		t.Fatalf("no servers associated with server capability name: %s", origName)
+	if len(servOrigResp) == 0 {
+		t.Fatalf("no servers associated with server capability name: %v", origName)
+	}
+	mapOrigServ := make(map[string]string)
+	for _, s := range servOrigResp {
+		mapOrigServ[*s.Server] = *s.ServerCapability
 	}
 
 	// Update server capability with new name
@@ -254,19 +258,23 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	//To check whether the primary key change trickled down to server table
-	ssc, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
+	servUpdatedResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
 	}
-	if len(ssc) == 0 {
-		t.Fatalf("no server associated with server capability name:%s", newSCName)
+	if len(servUpdatedResp) == 0 {
+		t.Fatalf("no server associated with server capability name:%v", newSCName)
 	}
-	for i, s := range ssc {
+	if len(servOrigResp) != len(servUpdatedResp) {
+		t.Fatalf("length of servers for a given server capability name is different, expected: %v-%v, got: %v-%v", origName, len(servOrigResp), newSCName, len(servUpdatedResp))
+	}
+	for _, s := range servUpdatedResp {
 		if newSCName != *s.ServerCapability {
-			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
+			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %v", *s.ServerCapability)
 		}
-		if len(servResp) != len(ssc) && *servResp[i].Server != *s.Server {
-			t.Fatalf("server capability name change didn't trickle to server: %s", *s.Server)
+		_, ok := mapOrigServ[*s.Server]
+		if !ok {
+			t.Fatalf("server capability name change didn't trickle to server: %v", *s.Server)
 		}
 	}
 
