@@ -25,7 +25,7 @@ import "database/sql"
 type CdnLock struct {
 	Username    string    `json:"userName" db:"username"`
 	CdnName     string    `json:"cdnName" db:"cdn_name"`
-	Message     string    `json:"message" db:"message"`
+	Message     *string   `json:"message" db:"message"`
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
