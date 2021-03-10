@@ -33,6 +33,7 @@ long option                             | short | default | description
 --traffic-ops-user=[username]           | -U    | ""      | TrafficOps username. Required if not set with the environment variable TO_USER
 --trafficserver-home=[directory]        | -R    | ""      | Used to specify an alternate install location for ATS, otherwise its set from the RPM.
 --wait-for-parents=['true' or 'false']  | -W    | true    | do not update if parent_pending = 1 in the update json.
+--git=['yes' or 'no' or 'auto']         | -g    | auto    | track changes in git. If yes, create and commit to a repo. If auto, commit if a repo exists.
 
 # Modes
 
