@@ -260,7 +260,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getLocks = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'cdn_lock', { params: queryParams }).then(
+        return $http.get(ENV.api['root'] + 'cdn_locks', { params: queryParams }).then(
             function(result) {
                 return result.data.response;
             },
@@ -271,7 +271,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteLock = function(queryParams) {
-        return $http.delete(ENV.api['root'] + 'cdn_lock', { params: queryParams }).then(
+        return $http.delete(ENV.api['root'] + 'cdn_locks', { params: queryParams }).then(
             function(result) {
                 return result;
             },
