@@ -17,30 +17,9 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="main_container">
-
-    <!-- navigation -->
-    <div class="main-nav col-md-3" ui-view="navigation"></div>
-
-    <!-- header -->
-    <div class="top_nav" ui-view="header"></div>
-
-    <!-- page content -->
-    <div class="main-content" role="main">
-
-        <!-- locks -->
-        <div ui-view="locks"></div>
-
-        <!-- notifications -->
-        <div ui-view="notifications"></div>
-
-        <!-- messages -->
-        <div ui-view="message"></div>
-
-        <!-- the content -->
-        <div ui-view="content"></div>
-
+<div id="locksContainer">
+    <div class="alert alert-danger" ng-repeat="l in locks">
+        <button ng-show="l.userName === loggedInUser" type="button" class="close" title="Unlock {{l.cdnName}}" aria-hidden="true" ng-click="confirmUnlock(l)"><i class="fa fa-unlock"></i></button>
+        <div ng-bind-html="l.cdnName + ' is LOCKED by ' + l.userName"></div>
     </div>
-
 </div>
-
