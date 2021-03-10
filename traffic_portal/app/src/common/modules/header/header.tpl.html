@@ -71,6 +71,11 @@ under the License.
                 </div>
             </li>
             <li>
+                <div class="btn-group" title="Lock CDN">
+                    <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-lock')" ng-click="lockCDN()"><i class="fa fa-lock"></i></button>
+                </div>
+            </li>
+            <li>
                 <div class="btn-group" title="Queue CDN Server Updates">
                     <button type="button" class="btn btn-link" ng-if="hasCapability('servers-write')" ng-click="confirmQueueServerUpdates()"><i class="fa fa-flag"></i></button>
                 </div>
