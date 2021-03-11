@@ -16,83 +16,87 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# shellcheck shell=ash
+trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}" >/dev/stderr; exit $exit_code' EXIT;
+set -o errexit -o nounset -o pipefail;
 
-set -ex
-env
+#----------------------------------------
+importFunctions() {
+	local script scriptdir
+	FO_DIR='' TC_DIR=''
+	script=$(realpath "$0")
+	scriptdir=$(dirname "$script")
+	FO_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname $(dirname "$FO_DIR"))"
+	export FO_DIR TC_DIR
+	functions_sh="$TC_DIR/build/functions.sh"
+	if [ ! -r "$functions_sh" ]; then
+		echo "error: can't find $functions_sh"
+		return 1
+	fi
+	. "$functions_sh"
+}
 
-BUILDDIR="$HOME/rpmbuild"
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export DIR
-pwd
-cd $DIR/..
-pwd
+#----------------------------------------
+initBuildArea() {
+	echo "Initializing the build area."
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
-if [ -z "${VER_MAJOR+set}" ]; then
-  VER_MAJOR=$(sed '1q;d' $DIR/../version/VERSION)
-fi
-if [ -z "${VER_MINOR+set}" ]; then
-  VER_MINOR=$(sed '2q;d' $DIR/../version/VERSION)
-fi
-if [ -z "${VER_PATCH+set}" ]; then
-  VER_PATCH=$(sed '3q;d' $DIR/../version/VERSION)
-fi
-if [ -z "${VER_DESC+set}" ]; then
-  VER_DESC=$(sed '4q;d' $DIR/../version/VERSION)
-fi
-if [ -z "${VER_COMMIT+set}" ]; then
-#  VER_COMMIT=$(sed '5q;d' $DIR/../version/VERSION)
-  VER_COMMIT=$(git -C ${DIR}/../../.. rev-list --all --count)
-fi
-if [ -z "${BUILD_NUMBER+set}" ]; then
-  BUILD_NUMBER=1
-fi
+	# tar/gzip the source
+	local fo_dest
+	fo_dest="$(createSourceDir fakeOrigin)"
+	cd "$FO_DIR" || \
+		 { echo "Could not cd to $FO_DIR: $?"; return 1; }
 
+	echo "PATH: $PATH"
+	echo "GOPATH: $GOPATH"
+	go version
+	go env
 
-VERSION="${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}_${VER_DESC}_${VER_COMMIT}"
+	# get x/* packages (everything else should be properly vendored)
+	#go mod vendor -v || \
+	#	{ echo "Could not vendor go module dependencies"; return 1; }
 
-# prep build environment
-mkdir -p $DIR/../dist
-rm -rf $BUILDDIR
-mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES}
-echo "$BUILDDIR" > ~/.rpmmacros
+	# compile fakeOrigin
+	gcflags=''
+	ldflags="-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}"
+	tags='osusergo netgo'
+	{ set +o nounset;
+	if [ "$DEBUG_BUILD" = true ]; then
+		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
+		gcflags="${gcflags} all=-N -l";
+	else
+		ldflags="${ldflags} -s -w"; #strip binary
+	fi;
+	set -o nounset; }
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+		{ echo "Could not build fakeOrigin binary"; return 1; }
 
-# build
-go build -v -ldflags "-X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerFull=${VERSION} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMajor=${VER_MAJOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMinor=${VER_MINOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerPatch=${VER_PATCH} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerDesc=${VER_DESC} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerCommit=${VER_COMMIT}"
+	cp -av ./ "$fo_dest"/ || \
+		 { echo "Could not copy to $fo_dest: $?"; return 1; }
+	cp -av "$FO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
+		 { echo "Could not copy spec files: $?"; return 1; }
 
-# tar
-tar -cvzf $BUILDDIR/SOURCES/fakeOrigin-${VERSION}-${BUILD_NUMBER}.tgz fakeOrigin build/config.json build/fakeOrigin.init build/fakeOrigin.logrotate example
+	# include LICENSE in the source RPM
+	cp "${TC_DIR}/LICENSE" "$fo_dest"
 
-# build RPM
-rpmbuild --define "_topdir ${BUILDDIR}" --define "_version ${VERSION}" --define "_release ${BUILD_NUMBER}" -ba build/fakeOrigin.spec
+	tar -czvf "$fo_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$fo_dest")" || { echo "Could not create tar archive $fo_dest.tgz: $?"; return 1; }
+	cp "$FO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
-# copy build RPM to ../dist
-cp $BUILDDIR/RPMS/x86_64/*.rpm ./dist/
+	echo "The build area has been initialized."
+}
 
-# Cross compile because we can
-GOBINEXT=""
-for GOOS in darwin linux windows; do
-  for GOARCH in 386 amd64; do
-    if [[ "$GOOS" == "windows" ]]
-    then
-      GOBINEXT=".exe"
-    elif [[ "$GOOS" == darwin && "$GOARCH" == 386 ]] ; then
-      # Go 1.15 and up does not support the darwin/386 GOOS/GOARCH pair (golang/go@65a4dc9c18)
-      continue;
-    else
-      GOBINEXT=""
-    fi
-    GOOS=$GOOS GOARCH=$GOARCH go build -v -ldflags "-X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerFull=${VERSION} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMajor=${VER_MAJOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMinor=${VER_MINOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerPatch=${VER_PATCH} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerDesc=${VER_DESC} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerCommit=${VER_COMMIT}" -v
-    zip -r $DIR/../dist/fakeOrigin-$VERSION-$GOOS-$GOARCH.zip fakeOrigin$GOBINEXT example
-  done
-done
-
-# ARM Cross compile because we can
-GOOS=linux
-GOARCH=arm
-for GOARM in 5 6 7; do
-  GOOS=$GOOS GOARCH=$GOARCH GOARM=$GOARM go build -v -ldflags "-X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerFull=${VERSION} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMajor=${VER_MAJOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMinor=${VER_MINOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerPatch=${VER_PATCH} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerDesc=${VER_DESC} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerCommit=${VER_COMMIT}" -v
-  zip -r $DIR/../dist/fakeOrigin-$VERSION-$GOOS-$GOARCH-ARM$GOARM.zip fakeOrigin example
-done
-GOARCH=arm64
-GOOS=$GOOS GOARCH=$GOARCH go build -v -ldflags "-X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerFull=${VERSION} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMajor=${VER_MAJOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerMinor=${VER_MINOR} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerPatch=${VER_PATCH} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerDesc=${VER_DESC} -X github.com/apache/trafficcontrol/test/fakeOrigin/version.VerCommit=${VER_COMMIT}" -v
-zip -r $DIR/../dist/fakeOrigin-$VERSION-$GOOS-$GOARCH-ARM8.zip fakeOrigin example
+preBuildChecks() {
+	if [ -e "$FO_DIR"/fakeOrigin ]; then
+		echo "Found $FO_DIR/fakeOrigin, please remove before retrying to build"
+		return 1
+	fi
+}
+# ---------------------------------------
+importFunctions
+preBuildChecks
+checkEnvironment -i go,rsync
+initBuildArea
+buildRpm fakeOrigin
