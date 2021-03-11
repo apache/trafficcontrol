@@ -58,6 +58,6 @@ RUN go_version=$(cat /GO_VERSION) && \
 
 ###
 
-CMD /trafficcontrol/build/clean_build.sh fakeOrigin
+CMD /trafficcontrol/build/clean_build.sh test/fakeOrigin
 
 # vi:syntax=Dockerfile
