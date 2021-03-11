@@ -48,7 +48,6 @@ cd src/github.com/apache/trafficcontrol/test/%{name}
 rm -rf %{buildroot}/opt/%{name}
 mkdir -p %{buildroot}/opt/%{name}/example
 cp -p %{name} %{buildroot}/opt/%{name}
-#cp -p LICENSE %{buildroot}/opt/LICENSE
 cp -rp example/* %{buildroot}/opt/%{name}/example/
 
 rm -rf %{buildroot}/etc/%{name}
