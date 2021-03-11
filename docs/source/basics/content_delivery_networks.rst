@@ -18,7 +18,7 @@ Content Delivery Networks
 *************************
 The vast majority of today's Internet traffic is media files (often video or audio) being sent from a single source (the *Content Provider*) to many thousands or even millions of destinations (the *Content Consumers*). :abbr:`CDN (Content Delivery Network)`\ s are the technology that make that one-to-many distribution efficient. A :abbr:`CDN (Content Delivery Network)` is a distributed system of servers for delivering content over HTTP(S). These servers are deployed in multiple locations with the goal of optimizing the delivery of content to the end users, while minimizing the traffic on the network. A :abbr:`CDN (Content Delivery Network)` typically consists of the following:
 
-:term:`Cache Servers`
+:term:`cache servers`
 	The :dfn:`cache server` is a server that both proxies the requests and caches the results for reuse. Traffic Control uses `Apache Traffic Server <http://trafficserver.apache.org/>`_ to provide :term:`cache servers`.
 
 Content Router

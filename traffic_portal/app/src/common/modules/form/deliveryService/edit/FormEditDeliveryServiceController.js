@@ -17,10 +17,15 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, origin, type, types, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
+var FormEditDeliveryServiceController = function(deliveryService, origin, topologies, type, types, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
+
+	this.$onInit = function() {
+		$scope.originalRoutingName = deliveryService.routingName;
+		$scope.originalCDN = deliveryService.cdnId;
+	};
 
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
@@ -75,7 +80,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 								function() {
 									var promises = [];
 									// assign the ds request
-									promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+									promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
 									// set the status to 'complete'
 									promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
 								}
@@ -143,9 +148,9 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 
 					if (autoFulfilled) {
 						// assign the ds request
-						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
-						// set the status to 'complete'
-						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
+						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
+						// set the status to 'submitted'
+						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'submitted'));
 					}
 				}
 			);
@@ -161,6 +166,30 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	};
 
 	$scope.save = function(deliveryService) {
+		if (deliveryService.sslKeyVersion !== null && deliveryService.sslKeyVersion !== 0 &&
+			($scope.originalRoutingName !== deliveryService.routingName || $scope.originalCDN !== deliveryService.cdnId) &&
+			type.indexOf("HTTP") !== -1) {
+
+			let params = {
+				title: "Cannot update Delivery Service",
+				message: "Delivery Service has SSL Keys that cannot be updated"
+			};
+
+			$uibModal.open({
+				templateUrl: "common/modules/dialog/text/dialog.text.tpl.html",
+				controller: "DialogTextController",
+				size: "md",
+				resolve: {
+					params: function() {
+						return params;
+					},
+					text: function() {
+						return null;
+					}
+				}
+			});
+			return;
+		}
 		// if ds requests are enabled in traffic_portal_properties.json, we'll create a ds request, else just update the ds
 		if ($scope.dsRequestsEnabled) {
 			var params = {
@@ -197,7 +226,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 					status: status,
 					deliveryService: deliveryService
 				};
-				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete, 
+				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete,
 				// then if that is successful, the DS will be updated
 				if (options.status.id == $scope.COMPLETE) {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(
@@ -205,10 +234,20 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 							deliveryServiceService.updateDeliveryService(deliveryService).
 								then(
 									function() {
+										// upon successful update of ds, set the dsr to 'complete'
+										deliveryServiceRequestService.getDeliveryServiceRequests({ xmlId: deliveryService.xmlId, status: 'submitted' }).then(
+											function(response) {
+												deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response[0].id, 'complete');
+											}
+										);
 										$state.reload(); // reloads all the resolves for the view
 										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
 									}
-								);
+								).catch(function(fault) {
+									// if the ds update fails, send to dsr view w/ error message
+									locationUtils.navigateToPath('/delivery-service-requests');
+									messageModel.setMessages(fault.data.alerts, true);
+							});
 						}).catch(function(fault) {
 							$anchorScroll(); // scrolls window to top
 							messageModel.setMessages(fault.data.alerts, false);
@@ -273,5 +312,5 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', 'origin', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'origin', 'topologies', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = FormEditDeliveryServiceController;

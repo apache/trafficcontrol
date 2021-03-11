@@ -22,13 +22,14 @@ package cdn
 import (
 	"crypto/tls"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -57,7 +58,9 @@ func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 	if err != nil {
 		return CapacityResp{}, errors.New("getting monitors: " + err.Error())
 	}
-
+	if len(monitors) == 0 {
+		return CapacityResp{}, errors.New("no monitors found")
+	}
 	return getMonitorsCapacity(tx, monitors)
 }
 
@@ -102,7 +105,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 		return CapacityResp{}, errors.New("getting profile thresholds: " + err.Error())
 	}
 
-	cap, err := getCapacityData(monitors, thresholds, client)
+	cap, err := getCapacityData(monitors, thresholds, client, tx, monitorForwardProxy)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting capacity from monitors: " + err.Error())
 	} else if cap.Capacity == 0 {
@@ -120,14 +123,14 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 // getCapacityData attempts to get the CDN capacity from each monitor. If one fails, it tries the next.
 // The first monitor for which all data requests succeed is used.
 // Only if all monitors for a CDN fail is an error returned, from the last monitor tried.
-func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client) (CapData, error) {
+func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client, tx *sql.Tx, forwardProxyURL string) (CapData, error) {
 	cap := CapData{}
 	for cdn, monitorFQDNs := range monitors {
 		err := error(nil)
 		for _, monitorFQDN := range monitorFQDNs {
 			crStates := tc.CRStates{}
 			crConfig := tc.CRConfig{}
-			cacheStats := CacheStats{}
+			cacheStats := tc.Stats{}
 			if crStates, err = monitorhlp.GetCRStates(monitorFQDN, client); err != nil {
 				err = errors.New("getting CRStates for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 				log.Warnln("getCapacity failed to get CRStates from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
@@ -138,12 +141,23 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 				log.Warnln("getCapacity failed to get CRConfig from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
 			}
-			if err := getCacheStats(monitorFQDN, client, []string{"kbps", "maxKbps"}, &cacheStats); err != nil {
-				err = errors.New("getting cache stats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
-				log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
-				continue
+			statsToFetch := []string{tc.StatNameKBPS, tc.StatNameMaxKBPS}
+			var monitorEndpoint string
+			if cacheStats, monitorEndpoint, err = monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch); err != nil {
+				proxyErr := ""
+				if forwardProxyURL != "" {
+					proxyErr = "using http proxy: " + forwardProxyURL + ", "
+				}
+				log.Warnln(proxyErr + "getCapacity failed to get '" + monitorEndpoint + "' from cdn '" + string(cdn) + "', Error: " + err.Error() + ", trying CacheStats")
+				legacyCacheStats, monitorEndpoint, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
+				if err != nil {
+					log.Warnln(proxyErr + "getCapacity failed to get '" + monitorEndpoint + "' from cdn '" + string(cdn) + "', Error: " + err.Error())
+					continue
+				}
+				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 			}
-			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds)
+
+			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds, tx)
 			break
 		}
 		if err != nil {
@@ -153,9 +167,9 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 	return cap, nil
 }
 
-func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
+func addCapacity(cap CapData, cacheStats tc.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64, tx *sql.Tx) CapData {
 	for cacheName, stats := range cacheStats.Caches {
-		cache, ok := crConfig.ContentServers[string(cacheName)]
+		cache, ok := crConfig.ContentServers[(cacheName)]
 		if !ok {
 			continue
 		}
@@ -166,23 +180,49 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		if len(stats.KBPS) < 1 || len(stats.MaxKBPS) < 1 {
+		kbps, maxKbps, err := getStats(stats)
+		if err != nil {
+			log.Errorf("couldn't get stats for %v. err: %v", cacheName, err.Error())
 			continue
 		}
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
-			if crStates.Caches[cacheName].IsAvailable {
-				cap.Available += float64(stats.KBPS[0].Value)
+			if crStates.Caches[tc.CacheName(cacheName)].IsAvailable {
+				cap.Available += kbps
 			} else {
-				cap.Unavailable += float64(stats.KBPS[0].Value)
+				cap.Unavailable += kbps
 			}
 		} else if string(*cache.ServerStatus) == string(tc.CacheStatusAdminDown) {
-			cap.Maintenance += float64(stats.KBPS[0].Value)
+			cap.Maintenance += kbps
 		} else {
 			continue // don't add capacity for OFFLINE or other statuses
 		}
-		cap.Capacity += float64(stats.MaxKBPS[0].Value) - thresholds[*cache.Profile]
+		cap.Capacity += maxKbps - thresholds[*cache.Profile]
 	}
 	return cap
+}
+
+func getStats(stats tc.ServerStats) (float64, float64, error) {
+	kbpsRaw, ok := stats.Stats[tc.StatNameKBPS]
+	if !ok {
+		return 0, 0, errors.New("no kbps stats")
+	}
+	maxKbpsRaw, ok := stats.Stats[tc.StatNameMaxKBPS]
+	if !ok {
+		return 0, 0, errors.New("no maxKbpsR stats")
+	}
+	if len(kbpsRaw) < 1 ||
+		len(maxKbpsRaw) < 1 {
+		return 0, 0, errors.New("no kbps/maxKbps stats to return")
+	}
+	kbps, ok := util.ToNumeric(kbpsRaw[0].Val)
+	if !ok {
+		return 0, 0, errors.New("unable to convert kbps to a float")
+	}
+	maxKbps, ok := util.ToNumeric(maxKbpsRaw[0].Val)
+	if !ok {
+		return 0, 0, errors.New("unable to convert maxKbps to a float")
+	}
+	return kbps, maxKbps, nil
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {
@@ -217,37 +257,6 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 		profileThresholds[profile] = thresh
 	}
 	return profileThresholds, nil
-}
-
-// CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
-}
-
-type CacheStat struct {
-	KBPS    []CacheStatData `json:"kbps"`
-	MaxKBPS []CacheStatData `json:"maxKbps"`
-}
-
-type CacheStatData struct {
-	Value float64 `json:"value,string"`
-}
-
-// getCacheStats gets the cache stats from the given monitor. It takes stats, a slice of stat names; and cacheStats, an object to deserialize stats into. The cacheStats type must be of the form struct {caches map[tc.CacheName]struct{statName []struct{value float64}}} with the desired stats, with appropriate member names or tags.
-func getCacheStats(monitorFQDN string, client *http.Client, stats []string, cacheStats interface{}) error {
-	path := `/publish/CacheStats`
-	if len(stats) > 0 {
-		path += `?stats=` + strings.Join(stats, `,`)
-	}
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(cacheStats); err != nil {
-		return errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return nil
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.

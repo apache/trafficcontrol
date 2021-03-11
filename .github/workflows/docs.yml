@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Documentation Build
+
+on:
+  create:
+  push:
+    paths:
+      - docs/source/**
+      - .github/workflows/docs.yml
+      - traffic_control/clients/python/**
+  pull_request:
+    types: [opened, reopened, read_for_review, synchronize]
+    paths:
+      - docs/source/**
+      - .github/workflows/docs.yml
+      - traffic_control/clients/python/**
+
+jobs:
+  documentation:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Checkout sphinx-action
+        uses: actions/checkout@v2
+        with:
+          repository: ammaraskar/sphinx-action
+          ref: 35082eb35b69713fe335801c4d5846a4cc3c91ff # Mon Apr 20 15:25:33 2020 -0700 Fix travis for docker image change
+          path: .github/actions/sphinx-action
+      - name: Build Documentation
+        uses: ./.github/actions/sphinx-action
+        with:
+          docs-folder: "docs/"
+          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
+      - uses: actions/upload-artifact@v1
+        with:
+          name: HTMLDocumentation
+          path: docs/build/html/

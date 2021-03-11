@@ -14,7 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as common-dependencies
+ARG RHEL_VERSION=8
 
 MAINTAINER dev@trafficcontrol.apache.org
 
@@ -23,30 +25,35 @@ MAINTAINER dev@trafficcontrol.apache.org
 VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
-RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
+RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
+		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
+	else \
+		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
+	fi && \
+	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
 	yum -y update ca-certificates && \
 	yum -y install \
+		git \
+		rpm-build \
+		rsync \
 		epel-release && \
 	yum -y clean all
 
 ### grovetccfg specific requirements
-RUN	yum -y install \
-		git \
-		rpm-build && \
-	yum -y clean all
+FROM common-dependencies AS grovetccfg
 
-RUN curl -LO https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xvzf go1.14.2.linux-amd64.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
-    rm go1.14.2.linux-amd64.tar.gz
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+	tar -C /usr/local -xvzf go.tar.gz && \
+	ln -s /usr/local/go/bin/go /usr/bin/go && \
+	rm go.tar.gz
 
 ###
 
-ADD infrastructure/docker/build/clean_build.sh /
-
 ENV GOPATH=/go
 RUN mkdir -p /go/src/github.com/apache && ln -s /tmp/trafficcontrol /go/src/github.com/apache/trafficcontrol
-CMD /clean_build.sh grove/grovetccfg
+CMD /trafficcontrol/build/clean_build.sh grove/grovetccfg
 
 # vi:syntax=Dockerfile

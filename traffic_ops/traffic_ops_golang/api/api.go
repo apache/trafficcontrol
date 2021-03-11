@@ -51,6 +51,24 @@ import (
 	"github.com/lib/pq"
 )
 
+type errorConstant string
+
+func (e errorConstant) Error() string {
+	return string(e)
+}
+
+// NilRequestError is returned by APIInfo methods when the request internally
+// referred to by the APIInfo cannot be found.
+const NilRequestError = errorConstant("method called on APIInfo with nil request")
+
+// NilTransactionError is returned by APIInfo methods when the transaction
+// internally referred to by the APIInfo cannot be found.
+const NilTransactionError = errorConstant("method called on APIInfo with nil transaction")
+
+// ResourceModifiedError is a user-safe error that indicates a precondition
+// failure.
+const ResourceModifiedError = errorConstant("resource was modified")
+
 // Common context.Context value keys.
 const (
 	DBContextKey      = "db"
@@ -71,12 +89,29 @@ WHERE type in ( SELECT id
 AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
 
+type APIResponse struct {
+	Response interface{} `json:"response"`
+}
+
+type APIResponseWithSummary struct {
+	Response interface{} `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+}
+
+// GoneHandler is an http.Handler function that just writes a 410 Gone response
+// back to the client, along with an error-level alert stating that the endpoint
+// is no longer available.
+func GoneHandler(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("This endpoint is no longer available; please consult documentation")
+	HandleErr(w, r, nil, http.StatusGone, err, nil)
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
-	resp := struct {
-		Response interface{} `json:"response"`
-	}{v}
+	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
 }
 
@@ -98,6 +133,18 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	w.Write(append(bts, '\n'))
 }
 
+// WriteRespWithSummary writes a JSON-encoded representation of an arbitrary
+// object to the provided writer, and cleans up the corresponding request
+// object. It also provides a "summary" section to the response object that
+// contains the given "count".
+func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{}, count uint64) {
+	var resp APIResponseWithSummary
+	resp.Response = v
+	resp.Summary.Count = count
+
+	WriteRespRaw(w, r, resp)
+}
+
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals map[string]interface{}) {
@@ -116,6 +163,19 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(append(respBts, '\n'))
+}
+
+// WriteIMSHitResp writes a response to 'w' for an IMS request "hit", using the
+// passed time as the Last-Modified date.
+func WriteIMSHitResp(w http.ResponseWriter, r *http.Request, t time.Time) {
+	if respWritten(r) {
+		log.Errorf("WriteIMSHitResp called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	w.Header().Add(rfc.LastModified, t.Format(rfc.LastModifiedFormat))
+	w.WriteHeader(http.StatusNotModified)
 }
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
@@ -398,6 +458,10 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	return params, intParams, nil, nil, 0
 }
 
+// ParseValidator objects can make use of api.Parse to handle parsing and
+// validating at the same time.
+//
+// TODO: Rework validation to be able to return system-level errors
 type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
@@ -425,6 +489,7 @@ type APIInfo struct {
 	Version   *Version
 	Tx        *sqlx.Tx
 	Config    *config.Config
+	request   *http.Request
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -492,7 +557,87 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		request:   r,
 	}, nil, nil, http.StatusOK
+}
+
+const createChangeLogQuery = `
+INSERT INTO log (
+	level,
+	message,
+	tm_user
+) VALUES (
+	$1,
+	$2,
+	$3
+)
+`
+
+// CreateChangeLog creates a new changelog message at the APICHANGE level for
+// the current user.
+func (inf APIInfo) CreateChangeLog(msg string) {
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
+	if err != nil {
+		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
+	}
+}
+
+// UseIMS returns whether or not If-Modified-Since constraints should be used to
+// service the given request.
+func (inf APIInfo) UseIMS() bool {
+	if inf.request == nil || inf.Config == nil {
+		return false
+	}
+	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
+}
+
+// CheckPrecondition checks a request's "preconditions" - its If-Match and
+// If-Unmodified-Since headers versus the last updated time of the requested
+// object(s), and returns (in order), an HTTP response code appropriate for the
+// precondition check results, a user-safe error that should be returned to
+// clients, and a server-side error that should be logged.
+// Callers must pass in a query that will return one row containing one column
+// that is the representative date/time of the last update of the requested
+// object(s), and optionally any values for placeholder arguments in the query.
+func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
+	if inf.request == nil {
+		return http.StatusInternalServerError, nil, NilRequestError
+	}
+
+	ius := inf.request.Header.Get(rfc.IfUnmodifiedSince)
+	etag := inf.request.Header.Get(rfc.IfMatch)
+	if ius == "" && etag == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if inf.Tx == nil || inf.Tx.Tx == nil {
+		return http.StatusInternalServerError, nil, NilTransactionError
+	}
+
+	var lastUpdated time.Time
+	if err := inf.Tx.Tx.QueryRow(query, args...).Scan(&lastUpdated); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %v", err)
+	}
+
+	if etag != "" {
+		if et, ok := rfc.ParseETags(strings.Split(etag, ",")); ok {
+			if lastUpdated.After(et) {
+				return http.StatusPreconditionFailed, ResourceModifiedError, nil
+			}
+		}
+	}
+
+	if ius == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if tm, ok := rfc.ParseHTTPDate(ius); ok {
+		if lastUpdated.After(tm) {
+			return http.StatusPreconditionFailed, ResourceModifiedError, nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
 }
 
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
@@ -712,6 +857,16 @@ func toCamelCase(str string) string {
 	return strings.Replace(string(mutable[:]), "_", "", -1)
 }
 
+// parses pq errors for any trigger based conflicts
+func parseTriggerConflicts(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`^(.*?)conflicts`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s", toCamelCase(match[0])), nil, http.StatusBadRequest
+}
+
 // parses pq errors for not null constraint
 func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
@@ -825,6 +980,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseTriggerConflicts(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
@@ -964,4 +1123,76 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	} else {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
+}
+
+// CheckIfUnModified checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
+// In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
+// error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
+func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
+	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
+	if err == nil && found == false {
+		return errors.New("no " + tableName + " found with this id"), nil, http.StatusNotFound
+	}
+	if err != nil {
+		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
+	}
+	return nil, nil, http.StatusOK
+}
+
+// GetLastUpdated checks for the resource by ID in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "id", ID, tableName)
+}
+
+// GetLastUpdatedByName checks for the resource by name in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdatedByName(tx *sqlx.Tx, name string, tableName string) (*time.Time, bool, error) {
+	return getLastUpdatedByIdentifier(tx, "name", name, tableName)
+}
+
+func getLastUpdatedByIdentifier(tx *sqlx.Tx, IDColumn string, IDValue interface{}, tableName string) (*time.Time, bool, error) {
+	lastUpdated := time.Time{}
+	found := false
+	rows, err := tx.Query(fmt.Sprintf(`select last_updated from %s where %s = $1`, pq.QuoteIdentifier(tableName), pq.QuoteIdentifier(IDColumn)), IDValue)
+	if err != nil {
+		return nil, found, errors.New("querying last_updated: " + err.Error())
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, found, nil
+	}
+	found = true
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return nil, found, errors.New("scanning last_updated: " + err.Error())
+	}
+	return &lastUpdated, found, nil
+}
+
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
+func IsUnmodified(h http.Header, lastUpdated time.Time) bool {
+	unmodifiedTime, ok := rfc.GetUnmodifiedTime(h)
+	if !ok {
+		return true // no IUS/IM header: unmodified, proceed with normal update
+	}
+	return !lastUpdated.After(unmodifiedTime)
+}
+
+// FormatLastModified trims the time string and formats it according to RFC1123.
+func FormatLastModified(t time.Time) string {
+	return rfc.FormatHTTPDate(t.Truncate(time.Second).Add(time.Second))
+}
+
+// AddLastModifiedHdr adds the "last modified" header to the response.
+func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
+	w.Header().Add(rfc.LastModified, FormatLastModified(t))
+}
+
+// DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
+func DefaultSort(readerType *APIInfo, param string) {
+	if _, ok := readerType.Params["orderby"]; !ok {
+		readerType.Params["orderby"] = param
+	}
+	return
 }

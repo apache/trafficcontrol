@@ -25,7 +25,13 @@ services:
   unit_router:
     build:
       context: ../..
-      dockerfile: traffic_router/tests/Dockerfile-test
+      dockerfile: traffic_router/tests/Dockerfile-test-alpine
+      #dockerfile: traffic_router/tests/Dockerfile-test-centos
     volumes:
       - traffic_router:/traffic_router
       - ../../junit:/junit
+      - ../../.m2:/root/.m2
+    environment:
+      DEBUG_ENABLE: 'false' # Set to 'true' to debug the TR unit tests
+      DEBUG_PORT: 8000
+      DEBUG_HOST: host.docker.internal

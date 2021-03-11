@@ -20,18 +20,26 @@ package api
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 )
 
 type CRUDer interface {
 	Create() (error, error, int)
-	Read() ([]interface{}, error, error, int)
-	Update() (error, error, int)
+	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
+	Update(http.Header) (error, error, int)
 	Delete() (error, error, int)
 	APIInfoer
 	Identifier
 	Validator
+}
+
+type AlertsResponse interface {
+	// GetAlerts retrieves an array of alerts that were generated over the course of handling an endpoint.
+	GetAlerts() tc.Alerts
 }
 
 type Identifier interface {
@@ -66,13 +74,13 @@ type MultipleCreator interface {
 
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read() ([]interface{}, error, error, int)
+	Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time)
 	APIInfoer
 }
 
 type Updater interface {
 	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Update() (error, error, int)
+	Update(h http.Header) (error, error, int)
 	APIInfoer
 	Identifier
 	Validator
@@ -92,6 +100,7 @@ type OptionsDeleter interface {
 	OptionsDelete() (error, error, int)
 	APIInfoer
 	Identifier
+	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 type Validator interface {
@@ -100,10 +109,6 @@ type Validator interface {
 
 type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
-}
-
-type HasDeleteKeyOptions interface {
-	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 // APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.

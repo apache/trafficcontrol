@@ -1,0 +1,139 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Check that valid postgresql version was passed
+  assert:
+    that:  
+      - " valid_major_version == 'true' "
+      - " valid_minor_version == 'true' "
+      - " valid_build_version == 'true' "
+
+- name: Install Postgres
+  yum:
+    name:
+      - "{{ postgresql_server_pkg_name }}"
+      - "{{ postgresql_client_pkg_name }}"
+      - "{{ postgresql_devel_pkg_name }}"
+      - gcc
+      - python-devel
+    state: present
+    lock_timeout: 300
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+  retries: 5
+  delay: 5
+
+- name: Ensure postgres data directory exists
+  file:
+    state: directory
+    path: "{{ postgresql_datadir }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0755
+
+- name: Initialize database
+  shell: "{{ pgdb_init_command }}"
+  become: yes
+  become_user: "{{ postgresql_user }}"
+  args:
+    creates: "{{ postgresql_datadir }}/pg_hba.conf"
+
+- name: Update the systemd definition of PGDATA
+  ini_file:
+    create: no
+    path: "{{ pg_service_path }}"
+    section: Service
+    option: Environment
+    value: "PGDATA={{ postgresql_datadir }}"
+
+- name: Refresh Systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Add Postgres bin dir to system-wide $PATH.
+  copy:
+    dest: "{{ pg_profile_path }}"
+    content: PATH=$PATH:{{ pg_bin_path }}
+
+- name: Install psycopg2 python module
+  easy_install:
+    name: psycopg2
+  environment:
+    PATH: "{{ pg_bin_path }}:{{ lookup('env', 'PATH') }}"
+
+- name: Render pgpass file for TrafficOps
+  template:
+    src: .pgpass.j2
+    dest: "~{{ postgresql_user }}/.pgpass"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+
+- name: Apply Postgresql Configs
+  template:
+    src: "templates/{{ item }}.j2"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0775
+    dest: "{{ postgresql_datadir }}/{{ item }}"
+  with_items:
+    - pg_hba.conf
+    - postgresql.conf
+
+- name: Copy in SSL certificate
+  copy:
+    src: /etc/pki/tls/certs/server.crt
+    dest: "{{ postgresql_datadir }}/server.crt"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Copy in SSL private key
+  copy:
+    src: /etc/pki/tls/private/server.key.pem
+    dest: "{{ postgresql_datadir }}/server.key"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Copy in SSL CA certificate
+  copy:
+    src: /etc/pki/ca-trust/source/anchors/lab.rootca.crt
+    dest: "{{ postgresql_certs_ca }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Update Log Directory Permissions
+  file:
+    state: directory
+    path: /var/log/postgresql
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0775
+
+- name: Enable and start TODB
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - "{{ pg_service_name }}"
+
+- name: Wait for TODB to Init Postgres and become available
+  wait_for:
+    port: "{{ postgresql_port }}"
+    delay: 3
+    

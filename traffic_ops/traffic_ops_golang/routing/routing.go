@@ -55,12 +55,11 @@ type Route struct {
 	RequiredPrivLevel int
 	Authenticated     bool
 	Middlewares       []middleware.Middleware
-	ID                int  // unique ID for referencing this Route
-	CanBypassToPerl   bool // if true, this Route can be passed through to Perl
+	ID                int // unique ID for referencing this Route
 }
 
 func (r Route) String() string {
-	return fmt.Sprintf("id=%d method=%s version=%d.%d path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
+	return fmt.Sprintf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path)
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
@@ -87,6 +86,7 @@ type CompiledRoute struct {
 	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
 	Params  []string
+	ID      int
 }
 
 func getSortedRouteVersions(rs []Route) []api.Version {
@@ -142,24 +142,23 @@ func indexOfApiVersion(versions []api.Version, desiredVersion api.Version) int {
 type PathHandler struct {
 	Path    string
 	Handler http.HandlerFunc
+	ID      int
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
 // Returns the map of routes, and a map of API versions served.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase middleware.AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[api.Version]struct{}) {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase middleware.AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[api.Version]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	requestTimeout := middleware.DefaultRequestTimeout
 	if reqTimeOutSeconds > 0 {
 		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
 	}
-	perlRoutes := GetRouteIDMap(perlRouteIDs)
 	disabledRoutes := GetRouteIDMap(disabledRouteIDs)
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
 		versionI := indexOfApiVersion(versions, r.Version)
 		nextMajorVer := r.Version.Major + 1
-		_, isPerlRoute := perlRoutes[r.ID]
 		_, isDisabledRoute := disabledRoutes[r.ID]
 		for _, version := range versions[versionI:] {
 			if version.Major >= nextMajorVer {
@@ -169,12 +168,10 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
 			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 
-			if isPerlRoute {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: perlHandler})
-			} else if isDisabledRoute {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler())})
+			if isDisabledRoute {
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler()), ID: r.ID})
 			} else {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares)})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares), ID: r.ID})
 			}
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
@@ -189,7 +186,6 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 	for _, version := range versions {
 		versionSet[version] = struct{}{}
 	}
-
 	return m, versionSet
 }
 
@@ -223,7 +219,8 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
 			regex := regexp.MustCompile(route)
-			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
+			id := pathHandler.ID
+			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params, ID: id})
 		}
 	}
 	return compiledRoutes
@@ -270,7 +267,6 @@ func Handler(
 		catchall.ServeHTTP(w, r)
 		return
 	}
-
 	for _, compiledRoute := range mRoutes {
 		match := compiledRoute.Regex.FindStringSubmatch(requested)
 		if len(match) == 0 {
@@ -283,10 +279,10 @@ func Handler(
 
 		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
 		r = r.WithContext(routeCtx)
+		r.Header.Add(middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		compiledRoute.Handler(w, r)
 		return
 	}
-
 	if IsRequestAPIAndUnknownVersion(r, versions) {
 		h := middleware.WrapAccessLog(cfg.Secrets[0], middleware.NotImplementedHandler())
 		h.ServeHTTP(w, r)
@@ -343,7 +339,7 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := middleware.AuthBase{Secret: d.Config.Secrets[0], Override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.PerlRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout)
+	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout)
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()

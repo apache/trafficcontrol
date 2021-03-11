@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-jobs:
+.. _to-api-v2-jobs:
 
 ********
 ``jobs``

@@ -23,12 +23,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -214,7 +217,6 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	} else {
 		where += " AND " + tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"
 	}
-
 	queryValues["accessibleTenants"] = pq.Array(tenantIDs)
 
 	return where, queryValues
@@ -273,6 +275,18 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 		return tc.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return name, true, nil
+}
+
+// GetDSCDNIdFromID loads the DeliveryService's cdn ID from the database, from the delivery service ID. Returns whether the delivery service was found, and any error.
+func GetDSCDNIdFromID(tx *sql.Tx, dsID int) (int, bool, error) {
+	var cdnID int
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = $1`, dsID).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("querying cdn_id for delivery service ID '%v': %v", dsID, err)
+	}
+	return cdnID, true, nil
 }
 
 // GetDSTenantIDFromXMLID fetches the ID of the Tenant to whom the Delivery Service identified by the
@@ -424,20 +438,75 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	return caps, nil
 }
 
+const dsrExistsQuery = `
+SELECT EXISTS(
+	SELECT id
+	FROM deliveryservice_request
+	WHERE status <> 'complete' AND
+		status <> 'rejected' AND
+		deliveryservice ->> 'xmlId' = $1
+)
+`
+
+// DSRExistsWithXMLID returns whether or not an **open** Delivery Service
+// Request with the given xmlid exists, and any error that occurred.
+func DSRExistsWithXMLID(xmlid string, tx *sql.Tx) (bool, error) {
+	if tx == nil {
+		return false, errors.New("checking for DSR with nil transaction")
+	}
+
+	var exists bool
+	err := tx.QueryRow(dsrExistsQuery, xmlid).Scan(&exists)
+	return exists, err
+}
+
+// ScanCachegroupsServerCapabilities, given rows of (server ID, CDN ID, cachegroup name, server capabilities),
+// returns a map of cachegroup names to server IDs, a map of server IDs to a map of their capabilities,
+// a map of server IDs to CDN IDs, and an error (if one occurs).
+func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[int]map[string]struct{}, map[int]int, error) {
+	defer log.Close(rows, "closing rows in ScanCachegroupsServerCapabilities")
+
+	cachegroupServers := make(map[string][]int)
+	serverCapabilities := make(map[int]map[string]struct{})
+	serverCDNs := make(map[int]int)
+	for rows.Next() {
+		serverID := 0
+		cdnID := 0
+		cachegroup := ""
+		serverCap := []string{}
+		if err := rows.Scan(&serverID, &cdnID, &cachegroup, pq.Array(&serverCap)); err != nil {
+			return nil, nil, nil, fmt.Errorf("scanning rows in ScanCachegroupsServerCapabilities: %v", err)
+		}
+		cachegroupServers[cachegroup] = append(cachegroupServers[cachegroup], serverID)
+		serverCapabilities[serverID] = make(map[string]struct{}, len(serverCap))
+		serverCDNs[serverID] = cdnID
+		for _, sc := range serverCap {
+			serverCapabilities[serverID][sc] = struct{}{}
+		}
+	}
+	return cachegroupServers, serverCapabilities, serverCDNs, nil
+}
+
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
-	var caps []string
-	q := `SELECT ARRAY(SELECT drc.required_capability FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = $1 ORDER BY drc.required_capability);`
+	q := `
+	SELECT required_capability
+	FROM deliveryservices_required_capability
+	WHERE deliveryservice_id = $1
+	ORDER BY required_capability`
 	rows, err := tx.Query(q, id)
 	if err != nil {
 		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
 	}
 	defer rows.Close()
 
+	caps := []string{}
 	for rows.Next() {
-		if err := rows.Scan(pq.Array(&caps)); err != nil {
+		var cap string
+		if err := rows.Scan(&cap); err != nil {
 			return nil, errors.New("scanning capability: " + err.Error())
 		}
+		caps = append(caps, cap)
 	}
 	return caps, nil
 }
@@ -489,34 +558,77 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
-// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
-func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
+// GetServerInterfaces, given the IDs of one or more servers, returns all of their network
+// interfaces mapped by their ids, or an error if one occurs during retrieval.
+func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerInterfaceInfoV40, error) {
 	q := `
-SELECT
-  s.cachegroup as cachegroup_id,
-  s.cdn_id as cdn_id,
-  s.domain_name as domain_name,
-  s.host_name as host_name,
-  t.name as server_type
-FROM
-  server s
-JOIN type t ON s.type = t.id
-WHERE s.id = $1
-`
-	row := tc.ServerInfo{}
-	if err := tx.QueryRow(q, serverID).Scan(
-		&row.CachegroupID,
-		&row.CDNID,
-		&row.DomainName,
-		&row.HostName,
-		&row.Type,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return row, false, nil
-		}
-		return row, false, fmt.Errorf("querying server id %d: %v", serverID, err.Error())
+	SELECT max_bandwidth,
+	       monitor,
+	       mtu,
+	       name,
+	       server,
+	       router_host_name,
+	       router_port_name
+	FROM interface
+	WHERE interface.server = ANY ($1)
+	`
+	ifaceRows, err := tx.Query(q, pq.Array(ids))
+	if err != nil {
+		return nil, err
 	}
-	return row, true, nil
+	defer ifaceRows.Close()
+
+	infs := map[int]map[string]tc.ServerInterfaceInfoV40{}
+	for ifaceRows.Next() {
+		var inf tc.ServerInterfaceInfoV40
+		var server int
+		if err := ifaceRows.Scan(&inf.MaxBandwidth, &inf.Monitor, &inf.MTU, &inf.Name, &server, &inf.RouterHostName, &inf.RouterPortName); err != nil {
+			return nil, err
+		}
+		if _, ok := infs[server]; !ok {
+			infs[server] = make(map[string]tc.ServerInterfaceInfoV40)
+		}
+
+		infs[server][inf.Name] = inf
+	}
+
+	q = `
+	SELECT address,
+	       gateway,
+	       service_address,
+	       interface,
+	       server
+	FROM ip_address
+	WHERE ip_address.server = ANY ($1)
+	`
+	ipRows, err := tx.Query(q, pq.Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	defer ipRows.Close()
+
+	for ipRows.Next() {
+		var ip tc.ServerIPAddress
+		var inf string
+		var server int
+		if err = ipRows.Scan(&ip.Address, &ip.Gateway, &ip.ServiceAddress, &inf, &server); err != nil {
+			return nil, err
+		}
+
+		ifaces, ok := infs[server]
+		if !ok {
+			return nil, fmt.Errorf("retrieved ip_address with server not previously found: %d", server)
+		}
+
+		iface, ok := ifaces[inf]
+		if !ok {
+			return nil, fmt.Errorf("retrieved ip_address with interface not previously found: %s", inf)
+		}
+		iface.IPAddresses = append(iface.IPAddresses, ip)
+		infs[server][inf] = iface
+	}
+
+	return infs, nil
 }
 
 // GetStatusByID returns a Status struct, a bool for whether or not a status of the given ID exists, and an error (if one occurs).
@@ -598,6 +710,75 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
+// language=sql
+const getServerInfoBaseQuery = `
+SELECT
+  s.cachegroup,
+  c.name,
+  s.host_name,
+  s.domain_name,
+  s.cdn_id,
+  t.name,
+  s.id,
+  status.name
+FROM
+  server s JOIN type t ON s.type = t.id
+  JOIN cachegroup c on s.cachegroup = c.id
+  JOIN status on status.id = s.status
+`
+
+// GetServerInfosFromIDs returns the ServerInfo structs of the given server IDs or an error if any occur.
+func GetServerInfosFromIDs(tx *sql.Tx, ids []int) ([]tc.ServerInfo, error) {
+	qry := getServerInfoBaseQuery + `
+WHERE s.id = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(ids))
+	if err != nil {
+		return nil, errors.New("querying server info: " + err.Error())
+	}
+	return scanServerInfoRows(rows)
+}
+
+// GetServerInfosFromHostNames returns the ServerInfo structs of the given server host names or an error if any occur.
+func GetServerInfosFromHostNames(tx *sql.Tx, hostNames []string) ([]tc.ServerInfo, error) {
+	qry := getServerInfoBaseQuery + `
+WHERE s.host_name = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(hostNames))
+	if err != nil {
+		return nil, errors.New("querying server info: " + err.Error())
+	}
+	return scanServerInfoRows(rows)
+}
+
+func scanServerInfoRows(rows *sql.Rows) ([]tc.ServerInfo, error) {
+	defer log.Close(rows, "error closing rows")
+	servers := []tc.ServerInfo{}
+	for rows.Next() {
+		s := tc.ServerInfo{}
+		if err := rows.Scan(&s.CachegroupID, &s.Cachegroup, &s.HostName, &s.DomainName, &s.CDNID, &s.Type, &s.ID, &s.Status); err != nil {
+			return nil, errors.New("scanning server info: " + err.Error())
+		}
+		servers = append(servers, s)
+	}
+	return servers, nil
+}
+
+// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
+func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
+	servers, err := GetServerInfosFromIDs(tx, []int{serverID})
+	if err != nil {
+		return tc.ServerInfo{}, false, fmt.Errorf("getting server info: %v", err)
+	}
+	if len(servers) == 0 {
+		return tc.ServerInfo{}, false, nil
+	}
+	if len(servers) != 1 {
+		return tc.ServerInfo{}, false, fmt.Errorf("getting server info - expected row count: 1, actual: %d", len(servers))
+	}
+	return servers[0], true, nil
+}
+
 func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
 	dses := map[tc.DeliveryServiceName]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
@@ -666,7 +847,7 @@ func GetParamNameByID(tx *sql.Tx, id int) (string, bool, error) {
 }
 
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
-func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+func GetCacheGroupNameFromID(tx *sql.Tx, id int) (tc.CacheGroupName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -675,6 +856,142 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, err
 		return "", false, errors.New("querying cachegroup ID: " + err.Error())
 	}
 	return tc.CacheGroupName(name), true, nil
+}
+
+// TopologyExists checks if a Topology with the given name exists.
+// Returns whether or not the Topology exists, along with any encountered error.
+func TopologyExists(tx *sql.Tx, name string) (bool, error) {
+	q := `
+	SELECT COUNT("name")
+	FROM topology
+	WHERE name = $1
+	`
+	var count int
+	var err error
+	if err = tx.QueryRow(q, name).Scan(&count); err != nil {
+		err = fmt.Errorf("querying topologies: %s", err)
+	}
+	return count > 0, err
+}
+
+// CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
+// empty with respect to the Delivery Service's CDN.
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
+	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
+
+	if ds.Topology == nil {
+		return statusCode, userErr, sysErr
+	}
+
+	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+	}
+	if len(cacheGroupIDs) == 0 {
+		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
+	}
+
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, *ds.CDNID, err.Error()), nil
+	}
+
+	return statusCode, userErr, sysErr
+}
+
+// GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup
+// names for the given topology, or any error.
+func GetTopologyCachegroups(tx *sql.Tx, name string) ([]int, []string, error) {
+	q := `
+	SELECT ARRAY_AGG(c.id), ARRAY_AGG(tc.cachegroup)
+	FROM topology_cachegroup tc
+	JOIN cachegroup c ON tc.cachegroup = c."name"
+	WHERE tc.topology = $1
+`
+	int64Ids := []int64{}
+	names := []string{}
+	if err := tx.QueryRow(q, name).Scan(pq.Array(&int64Ids), pq.Array(&names)); err != nil {
+		return nil, nil, fmt.Errorf("querying topology '%s' cachegroups: %s", name, err)
+	}
+
+	ids := make([]int, len(int64Ids))
+	for index, int64Id := range int64Ids {
+		ids[index] = int(int64Id)
+	}
+
+	return ids, names, nil
+}
+
+// GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
+// list that have a topology assigned. An error indicates unexpected errors that occurred when querying.
+func GetDeliveryServicesWithTopologies(tx *sql.Tx, dsIDs []int) ([]int, error) {
+	q := `
+SELECT
+  id
+FROM
+  deliveryservice
+WHERE
+  id = ANY($1::bigint[])
+  AND topology IS NOT NULL
+`
+	rows, err := tx.Query(q, pq.Array(dsIDs))
+	if err != nil {
+		return nil, errors.New("querying deliveryservice topologies: " + err.Error())
+	}
+	defer log.Close(rows, "error closing rows")
+	dses := make([]int, 0)
+	for rows.Next() {
+		id := 0
+		if err := rows.Scan(&id); err != nil {
+			return nil, errors.New("scanning deliveryservice id: " + err.Error())
+		}
+		dses = append(dses, id)
+	}
+	return dses, nil
+}
+
+// GetDeliveryServiceCDNsByTopology returns a slice of CDN IDs for all delivery services
+// assigned to the given topology.
+func GetDeliveryServiceCDNsByTopology(tx *sql.Tx, topology string) ([]int, error) {
+	q := `
+SELECT
+  COALESCE(ARRAY_AGG(DISTINCT d.cdn_id), '{}'::BIGINT[])
+FROM
+  deliveryservice d
+WHERE
+  d.topology = $1
+`
+	cdnIDs := []int64{}
+	if err := tx.QueryRow(q, topology).Scan(pq.Array(&cdnIDs)); err != nil {
+		return nil, fmt.Errorf("in GetDeliveryServiceCDNsByTopology: querying deliveryservices by topology '%s': %v", topology, err)
+	}
+	res := make([]int, len(cdnIDs))
+	for i, id := range cdnIDs {
+		res[i] = int(id)
+	}
+	return res, nil
+}
+
+// CheckCachegroupHasTopologyBasedDeliveryServicesOnCDN returns true if the given cachegroup is assigned to
+// any topologies with delivery services assigned on the given CDN.
+func CachegroupHasTopologyBasedDeliveryServicesOnCDN(tx *sql.Tx, cachegroupID int, CDNID int) (bool, error) {
+	q := `
+SELECT EXISTS(
+  SELECT
+    1
+  FROM cachegroup c
+  JOIN topology_cachegroup tc on c.name = tc.cachegroup
+  JOIN topology t ON tc.topology = t.name
+  JOIN deliveryservice d on t.name = d.topology
+  WHERE
+    c.id = $1
+    AND d.cdn_id = $2
+)
+`
+	res := false
+	if err := tx.QueryRow(q, cachegroupID, CDNID).Scan(&res); err != nil {
+		return false, fmt.Errorf("in CachegroupHasTopologyBasedDeliveryServicesOnCDN: %v", err)
+	}
+	return res, nil
 }
 
 // GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by
@@ -779,4 +1096,130 @@ func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
 		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
 	}
 	return dsType, true, nil
+}
+
+// GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.
+func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx) (tc.DSType, []string, *string, bool, error) {
+	var dsType tc.DSType
+	var reqCap []string
+	var topology *string
+	q := `
+SELECT
+  t.name,
+  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities,
+  ds.topology
+FROM deliveryservice AS ds
+LEFT JOIN deliveryservices_required_capability AS dsrc ON dsrc.deliveryservice_id = ds.id
+JOIN type t ON ds.type = t.id
+WHERE ds.id = $1
+GROUP BY t.name, ds.topology
+`
+	if err := tx.QueryRow(q, dsID).Scan(&dsType, pq.Array(&reqCap), &topology); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DSTypeInvalid, nil, nil, false, nil
+		}
+		return tc.DSTypeInvalid, nil, nil, false, errors.New("querying type from delivery service: " + err.Error())
+	}
+	return dsType, reqCap, topology, true, nil
+}
+
+// CheckOriginServerInDSCG checks if a DS has ORG server and if it does, to make sure the cachegroup is part of DS
+func CheckOriginServerInDSCG(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type in a delivery service
+	q := `
+		SELECT s.host_name, c.name
+		FROM server s
+			INNER JOIN deliveryservice_server ds ON ds.server = s.id
+			INNER JOIN type t ON t.id = s.type
+			INNER JOIN cachegroup c ON c.id = s.cachegroup
+		WHERE ds.deliveryservice=$1 AND t.name=$2
+	`
+
+	serverName := ""
+	cacheGroupName := ""
+	servers := make(map[string]string)
+	var offendingSCG []string
+	rows, err := tx.Query(q, dsID, tc.OriginTypeName)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+	for rows.Next() {
+		if err := rows.Scan(&serverName, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+		servers[cacheGroupName] = serverName
+	}
+
+	if len(servers) > 0 {
+		//Validation for DS
+		_, cachegroups, sysErr := GetTopologyCachegroups(tx, dsTopology)
+		if sysErr != nil {
+			return nil, fmt.Errorf("validating %s servers in topology: %v", tc.OriginTypeName, sysErr), http.StatusInternalServerError
+		}
+		// put slice values into map for DS's validation
+		topoCachegroups := make(map[string]string)
+		for _, cg := range cachegroups {
+			topoCachegroups[cg] = ""
+		}
+		for cg, s := range servers {
+			_, ok := topoCachegroups[cg]
+			if !ok {
+				offendingSCG = append(offendingSCG, fmt.Sprintf("%s (%s)", cg, s))
+			}
+		}
+	}
+	if len(offendingSCG) > 0 {
+		return errors.New("the following ORG server cachegroups are not in the delivery service's topology (" + dsTopology + "): " + strings.Join(offendingSCG, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckTopologyOrgServerCGInDSCG checks if ORG server are part of DS. IF they are then the user is not allowed to remove the ORG servers from the associated DS's topology
+func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string, topologyCGNames []string) (error, error, int) {
+	// get servers and respective cachegroup name that have ORG type for evert delivery service
+	q := `
+		SELECT ARRAY_AGG(d.xml_id), s.id, c.name
+		FROM server s
+			INNER JOIN deliveryservice_server ds ON ds.server = s.id
+			INNER JOIN deliveryservice d ON d.id = ds.deliveryservice
+			INNER JOIN type t ON t.id = s.type
+			INNER JOIN cachegroup c ON c.id = s.cachegroup
+		WHERE d.cdn_id =ANY($1) AND t.name=$2 AND d.topology=$3
+		GROUP BY s.id, c.name
+	`
+	serverId := ""
+	cacheGroupName := ""
+	dsNames := []string{}
+	serversCG := make(map[string]string)
+	serversDS := make(map[string][]string)
+	rows, err := tx.Query(q, pq.Array(cdnIds), tc.OriginTypeName, dsTopology)
+	if err != nil {
+		return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "error closing rows")
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&dsNames), &serverId, &cacheGroupName); err != nil {
+			return nil, fmt.Errorf("querying deliveryservice origin server: %s", err), http.StatusInternalServerError
+		}
+		serversCG[cacheGroupName] = serverId
+		serversDS[serverId] = dsNames
+	}
+
+	var offendingDSSerCG []string
+	// put slice values into map for Topology's validation
+	topoCacheGroupNames := make(map[string]string)
+	for _, currentCG := range topologyCGNames {
+		topoCacheGroupNames[currentCG] = ""
+	}
+	for cg, s := range serversCG {
+		_, currentTopoCGOk := topoCacheGroupNames[cg]
+		if !currentTopoCGOk {
+			offendingDSSerCG = append(offendingDSSerCG, fmt.Sprintf("cachegroup=%s (serverID=%s, delivery_services=%s)", cg, s, serversDS[s]))
+		}
+	}
+	if len(offendingDSSerCG) > 0 {
+		return errors.New("ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed: " + strings.Join(offendingDSSerCG, ", ")), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
 }

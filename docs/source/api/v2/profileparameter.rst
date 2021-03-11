@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profileparameter:
+.. _to-api-v2-profileparameter:
 
 ********************
 ``profileparameter``

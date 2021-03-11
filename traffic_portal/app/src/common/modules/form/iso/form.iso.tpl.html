@@ -28,97 +28,95 @@ under the License.
         <br>
         <form name="isoForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.server), 'has-feedback': hasError(isoForm.server)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Copy Server Attributes From</label>
+                <label for="server" class="control-label col-md-2 col-sm-2 col-xs-12">Copy Server Attributes From</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="server" class="form-control" ng-change="copyServerAttributes()" ng-model="selectedServer" ng-options="server as fqdn(server) for server in servers">
-                        <option value="">Select (optional)...</option>
+                    <select name="server" id="server" class="form-control" ng-change="copyServerAttributes()" ng-model="selectedServer" ng-options="server as fqdn(server) for server in servers">
+                        <option selected value="">Select (optional)...</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.osversionDir), 'has-feedback': hasError(isoForm.osversionDir)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">OS Version *</label>
+                <label for="osversionDir" class="control-label col-md-2 col-sm-2 col-xs-12">OS Version *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="osversionDir" class="form-control" ng-model="iso.osversionDir" required>
-                        <option value="">Select...</option>
+                    <select name="osversionDir" id="osversionDir" class="form-control" ng-model="iso.osversionDir" required>
+                        <option hidden disabled selected value="">Select...</option>
                         <option ng-repeat="(key, value) in osversions" value="{{::value}}">{{::key}}</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.osversionDir, 'required')">Required</small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.hostName), 'has-feedback': hasError(isoForm.hostName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Hostname *</label>
+                <label for="hostName" class="control-label col-md-2 col-sm-2 col-xs-12">Hostname *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="hostName" type="text" class="form-control" ng-model="iso.hostName" required autofocus>
+                    <input id="hostName" name="hostName" type="text" class="form-control" ng-model="iso.hostName" required>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.hostName, 'required')">Required</small>
                     <span ng-show="hasError(isoForm.hostName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.domainName), 'has-feedback': hasError(isoForm.domainName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Domain *</label>
+                <label for="domainName" class="control-label col-md-2 col-sm-2 col-xs-12">Domain *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="domainName" type="text" class="form-control" ng-model="iso.domainName" required autofocus>
+                    <input id="domainName" name="domainName" type="text" class="form-control" ng-model="iso.domainName" required>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.domainName, 'required')">Required</small>
                     <span ng-show="hasError(isoForm.domainName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(isoForm.dhcp), 'has-feedback': hasError(isoForm.dhcp)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">DHCP *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="dhcp" class="form-control" ng-model="iso.dhcp" ng-options="x.value as x.label for x in falseTrue" required>
-                        <option value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.dhcp, 'required')">Required</small>
+            <div class="form-group">
+                <label for="dhcp" class="control-label col-md-2 col-sm-2 col-xs-12" style="padding-top: 0">DHCP</label>
+                <div class="col-md-10 col-sm-10 col-xs-12" style="width: auto">
+                    <input type="checkbox" id="dhcp" name="dhcp" ng-model="iso.dhcp"/>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.ipAddress), 'has-feedback': hasError(isoForm.ipAddress)}">
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.ipAddress), 'has-feedback': hasError(isoForm.ipAddress)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">IP Address *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipAddress" type="text" class="form-control" ng-model="iso.ipAddress" ng-required="!isDHCP(iso)" ng-maxlength="45" autofocus>
+                    <input name="ipAddress" type="text" class="form-control" ng-model="iso.ipAddress" required pattern="((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)"/>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.ipAddress, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipAddress, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipAddress, 'pattern')">Invalid IPv4 Address</small>
                     <span ng-show="hasError(isoForm.ipAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.ipNetmask), 'has-feedback': hasError(isoForm.ipNetmask)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Subnet *</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.ipNetmask), 'has-feedback': hasError(isoForm.ipNetmask)}">
+                <label for="ipNetmask" class="control-label col-md-2 col-sm-2 col-xs-12">Network Subnet *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipNetmask" type="text" class="form-control" ng-model="iso.ipNetmask" ng-required="!isDHCP(iso)" ng-maxlength="45" autofocus>
+                    <input name="ipNetmask" id="ipNetmask" type="text" class="form-control" ng-model="iso.ipNetmask" pattern="((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)" required/>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.ipNetmask, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipNetmask, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipNetmask, 'pattern')">Invalid IPv4 Netmask</small>
                     <span ng-show="hasError(isoForm.ipNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.ipGateway), 'has-feedback': hasError(isoForm.ipGateway)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Gateway *</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.ipGateway), 'has-feedback': hasError(isoForm.ipGateway)}">
+                <label for="ipGateway" class="control-label col-md-2 col-sm-2 col-xs-12">Network Gateway *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipGateway" type="text" class="form-control" ng-model="iso.ipGateway" ng-required="!isDHCP(iso)" ng-maxlength="45" autofocus>
+                    <input name="ipGateway" id="ipGateway" type="text" class="form-control" ng-model="iso.ipGateway" required pattern="((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)"/>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.ipGateway, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipGateway, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.ipGateway, 'pattern')">Invalid IPv4 Gateway</small>
                     <span ng-show="hasError(isoForm.ipGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.interfaceMtu), 'has-feedback': hasError(isoForm.interfaceMtu)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Network MTU *</label>
+                <label for="interfaceMtu" class="control-label col-md-2 col-sm-2 col-xs-12">Network MTU *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="interfaceMtu" type="text" class="form-control" placeholder="1500 or 9000" ng-model="iso.interfaceMtu" ng-maxlength="11" ng-pattern="/(^1500$|^9000$)/" required autofocus>
+                    <input name="interfaceMtu" id="interfaceMtu" type="number" class="form-control" min="1500" max="9000" step="7500" ng-model="iso.interfaceMtu" required/>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'pattern')">1500 or 9000</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'min')">Too Low</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'max')">Too High</small>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceMtu, 'step')">Invalid Value - must be 1500 or 9000</small>
                     <span ng-show="hasError(isoForm.interfaceMtu)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.disk), 'has-feedback': hasError(isoForm.disk)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Disk for OS Install *</label>
+                <label for="disk" class="control-label col-md-2 col-sm-2 col-xs-12">Disk for OS Install *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="disk" type="text" class="form-control" placeholder='Typical values are "sda"' ng-model="iso.disk" ng-maxlength="8" required autofocus>
+                    <input id="disk" name="disk" type="text" class="form-control" title="The name of the disk device without '/dev/', e.g. 'sda', 'nvme0n1p3' etc." placeholder="sda" ng-model="iso.disk" maxlength="10" required>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.disk, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.disk)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.rootPass), 'has-feedback': hasError(isoForm.rootPass)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Root Password *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="rootPass" type="password" class="form-control" ng-model="iso.rootPass" ng-maxlength="40" ng-minlength="8" required autofocus>
+                <label for="rootPass" class="control-label col-md-2 col-sm-2 col-xs-12">Root Password *</label>
+                <div id="rootPass" class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="rootPass" name="rootPass" autocomplete="new-password" type="password" class="form-control" ng-model="iso.rootPass" maxlength="40" minlength="8" required>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.rootPass, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.rootPass, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.rootPass, 'minlength')">8 characters minimum</small>
@@ -126,65 +124,66 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.confirmRootPass), 'has-feedback': hasError(isoForm.confirmRootPass)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Confirm Root Password</label>
+                <label for="confirmRootPass" class="control-label col-md-2 col-sm-2 col-xs-12">Confirm Root Password</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="confirmRootPass" type="password" class="form-control" ng-model="iso.confirmRootPass" match="iso.rootPass">
+                    <input name="confirmRootPass" id="confirmRootPass" type="password" autocomplete="new-password" class="form-control" ng-model="iso.confirmRootPass" match="iso.rootPass">
                     <small class="input-error" ng-show="hasPropertyError(isoForm.confirmRootPass, 'match')">[ Doesn't Match ]</small>
                     <span ng-show="hasError(isoForm.confirmRootPass)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.ip6Address), 'has-feedback': hasError(isoForm.ip6Address)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.ip6Address), 'has-feedback': hasError(isoForm.ip6Address)}">
+                <label for="ip6Address" class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="ip6Address" name="ip6Address" type="text" class="form-control" placeholder="/64 is assumed if prefix is omitted" ng-model="iso.ip6Address" ng-maxlength="50" autofocus>
+                    <input id="ip6Address" id="ip6Address" name="ip6Address" type="text" class="form-control" title="/64 is assumed if prefix is omitted" placeholder="2001:DB8::01/63" ng-model="iso.ip6Address" maxlength="42">
                     <small class="input-error" ng-show="hasPropertyError(isoForm.ip6Address, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.ip6Address)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.ip6Gateway), 'has-feedback': hasError(isoForm.ip6Gateway)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Gateway</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.ip6Gateway), 'has-feedback': hasError(isoForm.ip6Gateway)}">
+                <label for="ip6Gateway" class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Gateway</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ip6Gateway" type="text" class="form-control" ng-model="iso.ip6Gateway" ng-maxlength="50" autofocus>
+                    <input name="ip6Gateway" id="ip6Gateway" type="text" class="form-control" ng-model="iso.ip6Gateway" maxlength="42">
                     <small class="input-error" ng-show="hasPropertyError(isoForm.ip6Gateway, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.ip6Gateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(isoForm.interfaceName), 'has-feedback': hasError(isoForm.interfaceName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Interface Name</label>
+                <label for="interfaceName" class="control-label col-md-2 col-sm-2 col-xs-12">Interface Name</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="interfaceName" type="text" class="form-control" placeholder="Typical values are bond0, eth4, etc. Note: if you enter bond0, a LACP bonding config will be written" ng-model="iso.interfaceName" ng-maxlength="45" autofocus>
+                    <input name="interfaceName" id="interfaceName" type="text" class="form-control" placeholder="bond0" title="Typical values are bond0, eth4, etc. Note: if you enter bond0, an LACP bonding config will be written" ng-model="iso.interfaceName" maxlength="45">
                     <small class="input-error" ng-show="hasPropertyError(isoForm.interfaceName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.interfaceName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpAddress), 'has-feedback': hasError(isoForm.mgmtIpAddress)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpAddress), 'has-feedback': hasError(isoForm.mgmtIpAddress)}">
+                <label for="mgmtIpAddress" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpAddress" type="text" class="form-control" ng-model="iso.mgmtIpAddress" ng-maxlength="50" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpAddress, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpAddress" id="mgmtIpAddress" type="text" class="form-control" ng-model="iso.mgmtIpAddress" ng-pattern="iso.mgmtIpNetmask ? IPv4Pattern : IPPattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpAddress, 'pattern')">Invalid IP Address</small>
                     <span ng-show="hasError(isoForm.mgmtIpAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpNetmask), 'has-feedback': hasError(isoForm.mgmtIpNetmask)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Netmask</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpNetmask), 'has-feedback': hasError(isoForm.mgmtIpNetmask)}">
+                <label for="mgmtIpNetmask" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Netmask</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpNetmask" type="text" class="form-control" ng-model="iso.mgmtIpNetmask" ng-maxlength="50" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpNetmask, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpNetmask" id="mgmtIpNetmask" type="text" class="form-control" ng-model="iso.mgmtIpNetmask" ng-pattern="IPv4Pattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpNetmask, 'pattern')">Invalid Netmask</small>
                     <span ng-show="hasError(isoForm.mgmtIpNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpGateway), 'has-feedback': hasError(isoForm.mgmtIpGateway)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Gateway</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpGateway), 'has-feedback': hasError(isoForm.mgmtIpGateway)}">
+                <label for="mgmtIpGateway" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Gateway</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpGateway" type="text" class="form-control" ng-model="iso.mgmtIpGateway" ng-maxlength="50" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpGateway, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpGateway" id="mgmtIpGateway" type="text" class="form-control" ng-model="iso.mgmtIpGateway" ng-pattern="iso.mgmtIpNetmask ? IPv4Pattern : IPPattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpGateway, 'pattern')">Invalid Gateway</small>
                     <span ng-show="hasError(isoForm.mgmtIpGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtInterface), 'has-feedback': hasError(isoForm.mgmtInterface)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management Interface</label>
+            <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtInterface), 'has-feedback': hasError(isoForm.mgmtInterface)}">
+                <label for="mgmtInterface" class="control-label col-md-2 col-sm-2 col-xs-12">Management Interface</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtInterface" type="text" class="form-control" placeholder="Typical values are em3, eth3, etc. The name of the management interface. Required if Management IP Address is entered." ng-model="iso.mgmtInterface" ng-maxlength="50" autofocus>
+                    <input name="mgmtInterface" id="mgmtInterface" type="text" class="form-control" title="Typical values are em3, eth3, etc. The name of the management interface. Required if Management IP Address is entered." ng-model="iso.mgmtInterface" maxlength="50" ng-required="iso.mgmtIpAddress">
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtInterface, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtInterface, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.mgmtInterface)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

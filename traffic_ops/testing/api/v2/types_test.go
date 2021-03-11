@@ -52,7 +52,7 @@ func CreateTestTypes(t *testing.T) {
 		}
 
 		if typ.UseInTable != "server" {
-			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable), "type")
+			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
 		} else {
 			_, _, err = TOSession.CreateType(typ)
 		}
@@ -153,7 +153,7 @@ func DeleteTestTypes(t *testing.T) {
 		respType := resp[0]
 
 		if respType.UseInTable != "server" {
-			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name), "type")
+			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name))
 			if err != nil {
 				t.Fatalf("cannot DELETE Type by name: %v", err)
 			}

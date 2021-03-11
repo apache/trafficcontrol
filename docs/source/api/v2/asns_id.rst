@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-asns-id:
+.. _to-api-v2-asns-id:
 
 ***************
 ``asns/{{id}}``

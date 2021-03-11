@@ -29,18 +29,26 @@ import (
 const ContentTypeServerUnknownConfig = ContentTypeTextASCII
 
 func MakeServerUnknown(
-	serverName tc.CacheName,
-	serverDomain string,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	params map[string][]string, // map[name]value - for the requested unknown 'take-and-bake' config_file
-) string {
+	fileName string,
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
 
-	hdr := GenericHeaderComment(string(serverName), toToolName, toURL)
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "server missing HostName")
+	} else if server.DomainName == nil {
+		return Cfg{}, makeErr(warnings, "server missing DomainName")
+	}
+
+	params := paramsToMultiMap(filterParams(serverParams, fileName, "", "", ""))
+
+	hdr := makeHdrComment(hdrComment)
 
 	txt := ""
 
-	sortedParams := SortParams(params)
+	sortedParams := sortParams(params)
 	for _, pa := range sortedParams {
 		if pa.Name == "location" {
 			continue
@@ -56,30 +64,53 @@ func MakeServerUnknown(
 		txt += pa.Val + "\n"
 	}
 
-	txt = strings.Replace(txt, `__HOSTNAME__`, string(serverName)+`.`+serverDomain, -1)
+	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
 	txt = strings.Replace(txt, `__RETURN__`, "\n", -1)
 
-	return hdr + txt
+	lineComment := getServerUnknownConfigCommentType(params)
+
+	txt = hdr + txt
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeServerUnknownConfig,
+		LineComment: lineComment,
+		Warnings:    warnings,
+	}, nil
 }
 
-type Param struct {
+type param struct {
 	Name string
 	Val  string
 }
 
-type Params []Param
+type paramsSort []param
 
-func (a Params) Len() int           { return len(a) }
-func (a Params) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a Params) Less(i, j int) bool { return a[i].Name < a[j].Name }
+func (a paramsSort) Len() int           { return len(a) }
+func (a paramsSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a paramsSort) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-func SortParams(params map[string][]string) []Param {
-	sortedParams := []Param{}
+func sortParams(params map[string][]string) []param {
+	sortedParams := []param{}
 	for name, vals := range params {
 		for _, val := range vals {
-			sortedParams = append(sortedParams, Param{Name: name, Val: val})
+			sortedParams = append(sortedParams, param{Name: name, Val: val})
 		}
 	}
-	sort.Sort(Params(sortedParams))
+	sort.Sort(paramsSort(sortedParams))
 	return sortedParams
+}
+
+// getServerUnknownConfigCommentType takes the same data as MakeUnknownConfig and returns the comment type for that config.
+// In particular, it returns # unless there is a 'header' parameter, in which case it returns an empty string.
+// Wwe don't actually know that the first characters of a custom header are a comment, or how many characters it might be.
+func getServerUnknownConfigCommentType(
+	params map[string][]string,
+) string {
+	for name, _ := range params {
+		if name == "header" {
+			return ""
+		}
+	}
+	return LineCommentHash
 }

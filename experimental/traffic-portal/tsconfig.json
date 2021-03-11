@@ -1,0 +1,21 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"baseUrl": "./",
+		"downlevelIteration": true,
+		"outDir": "./dist/out-tsc",
+		"sourceMap": true,
+		"declaration": false,
+		"module": "es2020",
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"strict": true,
+		"emitDecoratorMetadata": true,
+		"target": "es2015",
+		"lib": [
+			"es2018",
+			"dom"
+		]
+	}
+}

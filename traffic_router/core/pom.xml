@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>4.1.0</version>
+		<version>5.0.0</version>
 	</parent>
 
 	<artifactId>ROOT</artifactId>
@@ -100,8 +100,9 @@
 					<targetJdk>${java.version}</targetJdk>
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
+					<printFailingErrors>true</printFailingErrors>
 					<rulesets>
-						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
+						<ruleset>${project.basedir}${file.separator}build${file.separator}pmd${file.separator}ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
@@ -311,14 +312,19 @@
 			<version>0.9</version>
 		</dependency>
 		<dependency>
-			<groupId>com.ning</groupId>
+			<groupId>org.asynchttpclient</groupId>
 			<artifactId>async-http-client</artifactId>
-			<version>1.7.24</version>
+			<version>2.12.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.4.3</version>
+			<version>2.11.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.11.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
@@ -340,19 +346,19 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-catalina</artifactId>
-			<version>8.5.32</version>
+			<version>9.0.43</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
-			<version>8.5.32</version>
+			<version>9.0.43</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jni</artifactId>
-			<version>8.5.32</version>
+			<version>9.0.43</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -364,7 +370,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-websocket</artifactId>
-			<version>4.0.0.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 
 		<dependency>

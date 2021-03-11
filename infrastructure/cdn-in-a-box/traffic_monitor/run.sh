@@ -35,7 +35,7 @@ set -m
 envvars=( TO_HOST TO_PORT TM_PORT TM_USER TM_PASSWORD)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 set-dns.sh
@@ -128,7 +128,7 @@ traffic_monitor_command=(/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/t
 if [[ "$TM_DEBUG_ENABLE" == true ]]; then
   dlv '--continue' '--listen=:2344' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
     "${traffic_monitor_command[0]}" -- "${traffic_monitor_command[@]:1}" &
-  tail -f /dev/null;
 else
-  "${traffic_monitor_command[@]}"
+  "${traffic_monitor_command[@]}" &
 fi;
+tail -f /dev/null; # Keeps the container running indefinitely. The container health check (see dockerfile) will report whether Traffic Monitor is running.

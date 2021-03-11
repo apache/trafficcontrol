@@ -20,23 +20,30 @@ package servercapability
  */
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type TOServerCapability struct {
 	api.APIInfoImpl `json:"-"`
+	RequestedName   string
 	tc.ServerCapability
 }
 
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
-
 func (v *TOServerCapability) InsertQuery() string {
 	return `
 INSERT INTO server_capability (
@@ -56,6 +63,15 @@ SELECT
   last_updated
 FROM
   server_capability sc
+`
+}
+
+func (v *TOServerCapability) updateQuery() string {
+	return `
+UPDATE server_capability sc SET
+	name = $1
+WHERE sc.name = $2
+RETURNING sc.name, sc.last_updated
 `
 }
 
@@ -81,6 +97,7 @@ func (v TOServerCapability) GetKeys() (map[string]interface{}, bool) {
 }
 
 func (v *TOServerCapability) SetKeys(keys map[string]interface{}) {
+	v.RequestedName = v.Name
 	v.Name, _ = keys["name"].(string)
 }
 
@@ -100,6 +117,55 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
-func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
-func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }
+func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(v.APIInfo(), "name")
+	return api.GenericRead(h, v, useIMS)
+}
+
+func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
+	sc, userErr, sysErr, errCode, _ := v.Read(h, false)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if len(sc) != 1 {
+		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
+	}
+
+	// check if the name was being updated by someone else
+	var existingLastUpdated *tc.TimeNoMod
+	q := `SELECT last_updated FROM server_capability WHERE name = $1`
+	if err := v.ReqInfo.Tx.QueryRow(q, v.Name).Scan(&existingLastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("server capability was not found"), nil, http.StatusNotFound
+		}
+		return nil, errors.New("server capability update: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	if !api.IsUnmodified(h, existingLastUpdated.Time) {
+		return errors.New("the resource has been modified since the time specified by the request headers"), nil, http.StatusPreconditionFailed
+	}
+
+	// udpate server capability name
+	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
+	if err != nil {
+		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	for rows.Next() {
+		err = rows.Scan(&v.Name, &v.LastUpdated)
+		if err != nil {
+			return api.ParseDBError(err)
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(sc.last_updated) as t from server_capability sc ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(l.last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
+}
+
+func (v *TOServerCapability) Create() (error, error, int) { return api.GenericCreateNameBasedID(v) }
+func (v *TOServerCapability) Delete() (error, error, int) { return api.GenericDelete(v) }

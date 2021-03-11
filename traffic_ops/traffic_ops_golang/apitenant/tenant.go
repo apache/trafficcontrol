@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -36,9 +37,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
-
 	"github.com/lib/pq"
 )
+
+const rootName = `root`
 
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
@@ -46,13 +48,23 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
-func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOTenant) InsertQuery() string           { return insertQuery() }
-func (v *TOTenant) NewReadObj() interface{}       { return &tc.TenantNullable{} }
-func (v *TOTenant) SelectQuery() string {
-	return selectQuery(v.APIInfo().User.TenantID)
+func (ten *TOTenant) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(ten.APIInfo().Tx, *ten.ID, "tenant")
 }
-func (v *TOTenant) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+
+func (ten *TOTenant) SetLastUpdated(t tc.TimeNoMod) { ten.LastUpdated = &t }
+func (ten *TOTenant) InsertQuery() string           { return insertQuery() }
+func (ten *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` q ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+func (ten *TOTenant) NewReadObj() interface{} { return &tc.TenantNullable{} }
+func (ten *TOTenant) SelectQuery() string {
+	return selectQuery(ten.APIInfo().User.TenantID)
+}
+func (ten *TOTenant) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"active":      dbhelpers.WhereColumnInfo{Column: "q.active", Checker: nil},
 		"id":          dbhelpers.WhereColumnInfo{Column: "q.id", Checker: api.IsInt},
@@ -61,7 +73,7 @@ func (v *TOTenant) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"parent_name": dbhelpers.WhereColumnInfo{Column: "p.name", Checker: nil},
 	}
 }
-func (v *TOTenant) UpdateQuery() string { return updateQuery() }
+func (ten *TOTenant) UpdateQuery() string { return updateQuery() }
 
 // GetID wraps the ID member with null checking
 // Part of the Identifier interface
@@ -120,16 +132,16 @@ func (ten TOTenant) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
+func (ten *TOTenant) Create() (error, error, int) { return api.GenericCreate(ten) }
 
-func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
-		return nil, nil, nil, http.StatusOK
+		return nil, nil, nil, http.StatusOK, nil
 	}
-
-	tenants, userErr, sysErr, errCode := api.GenericRead(ten)
+	api.DefaultSort(ten.APIInfo(), "name")
+	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	tenantNames := map[int]*string{}
@@ -146,7 +158,7 @@ func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
 		p := *tenantNames[*t.ParentID]
 		t.ParentName = &p // copy
 	}
-	return tenants, nil, nil, http.StatusOK
+	return tenants, nil, nil, errCode, maxTime
 }
 
 // IsTenantAuthorized implements the Tenantable interface for TOTenant
@@ -175,13 +187,16 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 		// get current parentID to check if it's being changed
 		var parentID int
 		tx := ten.APIInfo().Tx.Tx
-		err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
-		if err != nil {
-			return false, err
-		}
-		if parentID == *ten.ParentID {
-			// parent not being changed
-			return ok, err
+		// If it's the root tenant, don't check for parent
+		if ten.Name != nil && *ten.Name != rootName {
+			err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
+			if err != nil {
+				return false, err
+			}
+			if parentID == *ten.ParentID {
+				// parent not being changed
+				return ok, err
+			}
 		}
 	}
 
@@ -193,7 +208,51 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx.Tx)
 }
 
-func (tn *TOTenant) Update() (error, error, int) { return api.GenericUpdate(tn) }
+// Update wraps tenant validation and the generic API Update call into a single call.
+func (ten *TOTenant) Update(h http.Header) (error, error, int) {
+
+	userErr, sysErr, statusCode := ten.isUpdatable()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+
+	return api.GenericUpdate(h, ten)
+}
+
+// isUpdatable peforms validation on the fields for the Tenant, such as ensuring
+// the tenant cannot be modified if it is root, or that it cannot convert its own child
+// to its own parent. This is different than the basic validation rules performed in
+// Validate() as it pertains to specific business logic, not generic API rules.
+func (ten *TOTenant) isUpdatable() (error, error, int) {
+	if ten.Name != nil && *ten.Name == rootName {
+		return errors.New("trying to change the root tenant, which is immutable"), nil, http.StatusBadRequest
+	}
+
+	// Perform SelectQuery
+	vals := []tc.TenantNullable{}
+	query := selectQuery(*ten.ID)
+	rows, err := ten.APIInfo().Tx.Queryx(query)
+	if err != nil {
+		return nil, errors.New("querying " + ten.GetType() + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var v tc.TenantNullable
+		if err = rows.StructScan(&v); err != nil {
+			return nil, errors.New("scanning " + ten.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		}
+		vals = append(vals, v)
+	}
+
+	// Ensure the new desired ParentID does not exist in the susequent list of Children
+	for _, val := range vals {
+		if *ten.ParentID == *val.ID {
+			return errors.New("trying to set existing child as new parent"), nil, http.StatusBadRequest
+		}
+	}
+	return nil, nil, http.StatusOK
+}
 
 func (ten *TOTenant) Delete() (error, error, int) {
 	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)

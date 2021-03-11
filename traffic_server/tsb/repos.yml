@@ -1,0 +1,27 @@
+ats:
+    src: https://github.com/apache/trafficserver
+    branch: 8.0.x
+    head: a29528dffb8ea1c6fa57fe0c76ca1ec9d0f08694
+    extra:
+        - https://github.com/jrushford/trafficserver
+        - https://github.com/traeak/trafficserver
+cjose:
+    src: https://github.com/cisco/cjose
+    branch: master
+    head: 254ab05e04cc32d866712bea838990eb4011cbf5
+    extra: []
+jansson:
+    src: https://github.com/akheron/jansson
+    branch: master
+    head: aed855e6920923898b94a1b922fbace27a34ddf2
+    extra: []
+openssl:
+    src: https://github.com/openssl/openssl
+    branch: OpenSSL_1_1_1
+    head: 1708e3e85b4a86bae26860aa5d2913fc8eff6086
+    extra: []
+trafficcontrol:
+    src: https://github.com/apache/trafficcontrol
+    branch: master
+    head: a766f880d3a8f1565867faa27b228eea8e30efed
+    extra: []

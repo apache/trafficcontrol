@@ -22,15 +22,26 @@ The Apache Traffic Control documentation is written in :abbr:`RST (reStructuredT
 
 .. seealso:: `The docutils RST reference <http://docutils.sourceforge.net/rst.html>`_.
 
+.. _docs-build:
+
 Building
 ========
-To build the documentation, see :ref:`docs-build`.
+This documentation uses the `Sphinx documentation build system <http://www.sphinx-doc.org/en/master/>`_, and as such requires a Python3 version that is at least 3.4.1. It also has dependency on Sphinx, and Sphinx extensions and themes. All of these can be easily installed using `pip` by referencing the requirements file like so:
+
+.. code-block:: shell
+	:caption: Run from the Repository's Root Directory
+
+	python3 -m pip install --user -r docs/source/requirements.txt
+
+Once all dependencies have been satisfied, build using the Makefile at ``docs/Makefile``.
+
+Alternatively, it is also possible to :ref:`pkg` or to :ref:`build-with-dc`, both of which will output a documentation "tarball" to ``dist/``.
 
 Writing
 =======
 When writing documentation, the most important things to remember are:
 
-- Spell Check. Most text editors have this built in (e.g. :kbd:`F6` in Sublime Text) or have plugins that will do this for you.
+- Spell Check. Most text editors have this built-in (e.g. :kbd:`F6` in Sublime Text) or have plugins that will do this for you.
 - Proof-Read. Spell-checkers won't catch grammatical errors or poor wording, so it's very important to actually proof-read all documentation *before* submitting it in a Pull Request.
 - Make Sure the Documentation Actually Builds. Please actually verify the documentation not only builds, but builds *correctly*. That means there probably shouldn't be any warnings, no malformed tables etc. and it also means that new documentation is actually accessible once built. It's not enough to create a new :file:`{something}.rst` file, that file must actually be linked to from some other, already included document. Some warnings may be considered acceptable, but do be prepared to defend them.
 - Traffic Ops UI is Dead. Do not ever create documentation that references or includes images of the Traffic Ops UI. That is officially dead now, and if the documentation being created is best made with references to a user-friendly UI, such references, examples and/or images should all be to/of Traffic Portal.
@@ -184,6 +195,8 @@ Terms
 """""
 Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache servers` associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache servers` responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
 Generally speaking, be wary of using the word "cache". To most people that means the *actual* cache on a hard disk somewhere. This word is frequently confused with " :term:`cache server`", which - when accurate - is always preferred over "cache".
+
+.. _api-doc-guidelines:
 
 Documenting API Routes
 ----------------------

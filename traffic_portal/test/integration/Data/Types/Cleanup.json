@@ -1,0 +1,23 @@
+{
+    "Prerequisites" : [
+        {
+            "Action": "DeleteTypes",
+            "Route" : "/types",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/types/",
+                    "getRequest": [
+                        {
+                            "route": "/types",
+                            "queryKey": "name",
+                            "queryValue": "TPType3",
+                            "replace": "route"
+                        }
+                    ]   
+                }
+            ]
+        }
+
+    ]
+}

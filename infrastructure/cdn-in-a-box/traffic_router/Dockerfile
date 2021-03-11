@@ -16,34 +16,45 @@
 # under the License.
 ############################################################
 # Dockerfile to build Traffic Router 3.0
-# Based on CentOS 7.x
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
 MAINTAINER dev@trafficcontrol.apache.org
 
 # Default values for TOMCAT RPM and RPM -- override with `docker build --build-arg JDK=...'
 ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
 ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
-RUN yum -y install epel-release git rpm-build net-tools iproute nc wget tar unzip \
-          perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
+RUN dnf -y install epel-release && \
+    dnf -y install jq git rpm-build net-tools iproute nc wget tar unzip \
+          perl-JSON perl-WWW-Curl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
-          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel && \
-    yum -y clean all && \
-    ln -sfv $(find /usr/lib/jvm -type d -name 'java-1.8.0*openjdk*') /opt/java
+          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
+    dnf -y clean all && \
+    ln -sfv $(realpath /usr/lib/jvm/java-1.8.0) /opt/java
 
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm
 
-RUN yum -y install /traffic_router.rpm /tomcat.rpm
-
-RUN find /usr/lib* -name libtc\* -exec ln -sfv '{}' /opt/tomcat/lib \;
+RUN rpm -Uvh /traffic_router.rpm /tomcat.rpm && \
+    find /usr/lib* -name libtc\* -exec ln -sfv {} /opt/tomcat/lib \;
 
 ADD enroller/server_template.json \
     traffic_router/run.sh \
     traffic_ops/to-access.sh \
     /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 EXPOSE 53 80 3333 3443
 

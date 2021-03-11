@@ -36,16 +36,13 @@ import java.util.List;
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(LetsEncryptDnsChallengeWatcher.class);
     public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/2.0/letsencrypt/dnsrecords/";
-    private static final String configFile = "/opt/traffic_router/db/cr-config.json";
 
+    private String configFile;
     private ConfigHandler configHandler;
-
-    public void setConfigHandler(final ConfigHandler configHandler) {
-        this.configHandler = configHandler;
-    }
 
     public LetsEncryptDnsChallengeWatcher() {
         setDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
+        setDefaultDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
     }
 
     @Override
@@ -107,7 +104,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
             return true;
         } catch (Exception e) {
-            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL + ": " + e.getMessage());
+            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL + ":", e);
         }
 
         return false;
@@ -120,7 +117,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             mapper.readValue(data, new TypeReference<HashMap<String, List<LetsEncryptDnsChallenge>>>() { });
             return true;
         } catch (Exception e) {
-            LOGGER.warn("Failed to build dns challenge data while verifying");
+            LOGGER.warn("Failed to build dns challenge data while verifying:", e);
         }
 
         return false;
@@ -133,7 +130,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
     private String readConfigFile() {
         try {
-            final InputStream is = new FileInputStream(configFile);
+            final InputStream is = new FileInputStream(databasesDirectory.resolve(configFile).toString());
             final BufferedReader buf = new BufferedReader(new InputStreamReader(is));
             String line = buf.readLine();
             final StringBuilder sb = new StringBuilder();
@@ -143,7 +140,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             }
             return sb.toString();
         } catch (Exception e) {
-            LOGGER.error("Could not read cr-config file.");
+            LOGGER.error("Could not read cr-config file " + configFile + ":", e);
             return null;
         }
     }
@@ -177,4 +174,14 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
         return newStaticDnsEntriesNode;
     }
 
+    public void setConfigHandler(final ConfigHandler configHandler) {
+        this.configHandler = configHandler;
+    }
+    public ConfigHandler getConfigHandler() {
+        return this.configHandler;
+    }
+
+    public void setConfigFile(final String configFile) {
+        this.configFile = configFile;
+    }
 }

@@ -16,7 +16,7 @@
 *****************************
 Traffic Portal Administration
 *****************************
-Traffic Portal is only supported on CentOS Linux distributions version 7.x. It runs on `NodeJS <https://nodejs.org/>`_ and requires version 6.0 or higher.
+Traffic Portal is only supported on CentOS Linux distributions version 7.x and 8.x. It runs on `NodeJS <https://nodejs.org/>`_ and requires version 12 or higher.
 
 
 Installing Traffic Portal
@@ -24,12 +24,12 @@ Installing Traffic Portal
 
 #. Download the Traffic Portal RPM from `Apache Jenkins <https://builds.apache.org/job/trafficcontrol-master-build/>`_ or build the Traffic Portal RPM from source using the instructions in :ref:`dev-building`.
 #. Copy the Traffic Portal RPM to your server
-#. Install NodeJS. This can be done by building it from source, installing with :manpage:`yum(8)` if it happens to be in your available repositories (at version 6.0+), or using the NodeSource setup script.
+#. Install NodeJS. This can be done by building it from source, installing with :manpage:`yum(8)` if it happens to be in your available repositories (at version 12+), or using the NodeSource setup script.
 
 	.. code-block:: bash
 		:caption: Installing NodeJS using the NodeSource Setup Script
 
-		curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
+		curl --silent --location https://rpm.nodesource.com/setup_12.x | sudo bash -
 
 #. Install the Traffic Portal RPM with :manpage:`yum(8)` or :manpage:`rpm(8)` e.g. by running ``yum install path/to/traffic_portal.rpm`` as the root user or with :manpage:`sudo(8)`.
 

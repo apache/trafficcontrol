@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-tenants-id:
+.. _to-api-v2-tenants-id:
 
 ******************
 ``tenants/{{ID}}``

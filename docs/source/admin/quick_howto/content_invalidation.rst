@@ -18,11 +18,11 @@
 ****************************
 Forcing Content Invalidation
 ****************************
-Invalidating content on the CDN is sometimes necessary when the :term:`origin` was mis-configured and something is cached in the CDN  that needs to be removed.
+Invalidating content on the CDN is sometimes necessary when the :term:`Origin` was mis-configured and something is cached in the CDN  that needs to be removed.
 
 .. impl-detail:: Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Control does not try to remove the content from the caches, but it makes the content inaccessible using the `regex_revalidate plugin for Apache Traffic Server <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/regex_revalidate.en.html>`_. This forces a "re-validation" of the content.
 
-.. Note:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`origin` needs to support revalidation according to section 13 of :rfc:`2616`.
+.. Note:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 13 of :rfc:`2616`.
 
 To invalidate content for a specific :term:`Delivery Service`, follow these steps:
 
@@ -42,7 +42,7 @@ To invalidate content for a specific :term:`Delivery Service`, follow these step
 
 		Select 'Manage Invalidation Requests'
 
-#. Click/tap on the :guilabel:`+` button to open the submission form for a new content invalidation. Fill out this form. The "Path Regex" field should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression that matches all content that must be invalidated - and should **not** match any content that must *not* be invalidated. "TTL (hours)" specifies the number of hours for which the invalidation should remain active. Best practice is to set this to the same as the content's cache lifetime (typically set in the :term:`origin`'s ``Cache-Control`` response header).
+#. Click/tap on the :guilabel:`+` button to open the submission form for a new content invalidation. Fill out this form. The "Path Regex" field should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression that matches all content that must be invalidated - and should **not** match any content that must *not* be invalidated. "TTL (hours)" specifies the number of hours for which the invalidation should remain active. Best practice is to set this to the same as the content's cache lifetime (typically set in the :term:`Origin`'s ``Cache-Control`` response header).
 
 	.. figure:: content_invalidation/03.png
 		:align: center

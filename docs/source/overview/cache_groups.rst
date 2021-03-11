@@ -22,7 +22,7 @@ A :dfn:`Cache Group` is - ostensibly - exactly what it sounds like it is: a grou
 
 The most typical :ref:`Types <cache-group-type>` of Cache Groups are EDGE_LOC_ which contain :term:`Edge-tier cache servers` and MID_LOC_ which contain :term:`Mid-tier cache servers`. The latter are each designated as a Parent_ of one or more of the former to fill out the two-tiered caching hierarchy of an :abbr:`ATC (Apache Traffic Control)` CDN.
 
-Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`origin` and the result cached.
+Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`Origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`Origin` and the result cached.
 
 .. _fig-cg_hierarchy:
 
@@ -53,7 +53,7 @@ A Cache Group is a logical grouping of cache servers, that don't have to be in t
 
 Properties
 ==========
-Cache Groups are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, in the legacy Perl Traffic Ops codebase, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#CacheGroupNullable>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Cache Group objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
+Cache Groups are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#CacheGroupNullable>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Cache Group objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
 
 .. seealso:: The API reference for Cache Group-related endpoints such as :ref:`to-api-cachegroups` contains definitions of the Cache Group object(s) returned and/or accepted by those endpoints.
 
@@ -307,7 +307,7 @@ This :term:`Type` of Cache Group contains :term:`Mid-tier cache servers`
 
 ORG_LOC
 """""""
-This :term:`Type` of Cache Group contains :term:`origins`. The primary purpose of these is to group :term:`origins` for the purposes of "multi-site-origins", and it's suggested that if that doesn't meet your use-case that these be mostly avoided. In general, it's not strictly necessary to create :term:`origin` *servers* in ATC at all, unless you have to support "multi-site-origins".
+This :term:`Type` of Cache Group contains :term:`Origins`. The primary purpose of these is to group :term:`Origins` for the purposes of "multi-site-origins", and it's suggested that if that doesn't meet your use-case that these be mostly avoided. In general, it's not strictly necessary to create :term:`Origin` *servers* in ATC at all, unless you have to support "multi-site-origins".
 
 .. seealso:: :ref:`multi-site-origin-qht`
 
@@ -318,4 +318,3 @@ A catch-all :term:`Type` of Cache Group that's meant to house infrastructure ser
 TR_LOC
 """"""
 This :term:`Type` of Cache Group is meant specifically to contain Traffic Router instances.
-

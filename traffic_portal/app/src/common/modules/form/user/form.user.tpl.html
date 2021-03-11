@@ -25,7 +25,7 @@ under the License.
             <li class="active">{{userName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDeliveryServices()">View Delivery Services</button>
+            <a class="btn btn-primary" ng-href="/#!/tenants/{{user.tenantId}}/delivery-services?all=true">View Delivery Services</a>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -105,8 +105,20 @@ under the License.
                     <textarea name="publicSshKey" rows="5" class="form-control" ng-model="user.publicSshKey"></textarea>
                 </div>
             </div>
+            <div class="form-group" ng-if="!settings.isNew" ng-class="{'has-error': hasError(userForm.registrationSent), 'has-feedback': hasError(userForm.registrationSent)}">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Registration Sent<div class="helptooltip">
+                    <div class="helptext">The date on which a registration email was sent to create this user. The value is blank if the user was not created via a new user registration.</div>
+                </div>
+                </label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="registrationSent" type="text" class="form-control" ng-model="user.registrationSent" ng-maxlength="128" readonly>
+                    <span ng-show="hasError(userForm.registrationSent)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.uName)">{{settings.saveLabel}}</button>
+                <button ng-if="user.newUser" type="button" class="btn btn-default" ng-click="resendRegistration(user)">Resend Registration</button>
+                <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

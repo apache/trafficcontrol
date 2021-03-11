@@ -1,0 +1,45 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Create Non-DS Profiles - Per CDN
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+    method: POST
+    body: "{{ lookup('template', 'profile.j2') }}"
+  with_items: "{{ dl_ds_merged_profile_cdntemplates }}"
+  when: item.type != 'DS_PROFILE'
+  vars:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    cdn: "{{ Target_cdn_id }}"
+    type: "{{ item.type }}"
+    routingDisabled: "{{ (item.routingDisabled | default(false)) | lower }}"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    target_xmlId: "Invalid (only for rendering)"
+  register: create_profiles_out
+  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+
+- name: Create and Associate Parameters to Non-DS Profiles - Per CDN
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
+    method: POST
+    body: "{{ lookup('template', 'parameter.j2') }}"
+  when: item.type != 'DS_PROFILE'
+  with_items:
+    - "{{ dl_ds_merged_profile_cdntemplates }}"
+  vars:
+    cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    target_xmlId: "Invalid (only for rendering)"
+  register: create_profiles_out
+  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)

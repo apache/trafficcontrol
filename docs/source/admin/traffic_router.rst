@@ -21,7 +21,7 @@ Traffic Router Administration
 
 Requirements
 ============
-* CentOS 7
+* CentOS 7 or later
 * 4 CPUs
 * 8GB of RAM
 * Successful install of Traffic Ops (usually on another machine)
@@ -34,7 +34,7 @@ Installing Traffic Router
 =========================
 #. If no suitable :term:`Profile` exists, create a new :term:`Profile` for Traffic Router via the :guilabel:`+` button on the :ref:`tp-configure-profiles` page in Traffic Portal
 
-	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future as the old Perl parts of Traffic Ops are re-written in Go.
+	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future.
 
 #. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-configure-servers` page (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
 #. Ensure the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router is resolvable in DNS. This :abbr:`FQDN (Fully Qualified Domain Name)` must be resolvable by the clients expected to use this CDN.
@@ -116,6 +116,10 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.tcp.backlog                           | Maximum length of the queue for incoming TCP connection requests                 | ``0``                                              |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.tcp.host                              | IP Address Traffic Router will listen on for incoming TCP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.udp.host                              | IP Address Traffic Router will listen on for incoming UDP DNS requests           | ``0.0.0.0``                                        |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.udp.port                              | UDP port that Traffic Router will use for incoming DNS requests                  | ``53``                                             |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.max-threads                           | Maximum number of threads used to process incoming DNS requests                  | ``1000``                                           |
@@ -164,7 +168,7 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            |                                           | `their site <http://logging.apache.org/log4j/2.x/index.html>`_; adjust as needed |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	| server.xml                 | various parameters                        | Traffic Router specific configuration for Apache Tomcat. See the Apache Tomcat   | N/A                                                |
-	|                            |                                           | `documentation <https://tomcat.apache.org/tomcat-8.5-doc/index.html>`_           |                                                    |
+	|                            |                                           | `documentation <https://tomcat.apache.org/tomcat-9.0-doc/index.html>`_           |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	| web.xml                    | various parameters                        | Default settings for all Web Applications running in the Traffic Router instance | N/A                                                |
 	|                            |                                           | of Tomcat                                                                        |                                                    |
@@ -211,7 +215,7 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| deepcoveragezone.polling.url            | CRConfig.json                | The location (URL) where a :term:`Deep Coverage Zone Map` may be found.                                                               |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| client.steering.forced.diversity        | CRConfig.json                | When this :term:`Parameter` exists and is exactly "true", it enables the "Client Steering Forced Diversity" feature to diversify      |
-	|                                         |                              | CLIENT_STEERING results by including more unique :term:`Edge-Tier Cache Servers` in the response to the client's request.             |
+	|                                         |                              | CLIENT_STEERING results by including more unique :term:`Edge-tier cache servers` in the response to the client's request.             |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tld.soa.expire                          | CRConfig.json                | The value for the "expire" field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.         |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -252,6 +256,11 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| dnssec.zone.diffing.enabled             | CRConfig.json                | If DNSSEC is enabled, enabling this parameter allows Traffic Router to diff existing zones with newly generated zones. If the newly   |
 	|                                         |                              | generated zone is the same as the existing zone, Traffic Router will simply reuse the existing signed zone instead of signing the     |
 	|                                         |                              | same new zone. This reduces the CPU time taken to process new snapshots and new DNSSEC keys. Defaults to "false".                     |
+	|                                         |                              | NOTE: this may be removed in favor of the ``dnssec.rrsig.cache.enabled`` setting in a future release.                                 |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dnssec.rrsig.cache.enabled              | CRConfig.json                | If DNSSEC is enabled, enabling this parameter allows Traffic Router to cache RRSIG records for reuse during DNSSEC signing.           |
+	|                                         |                              | This greatly reduces the CPU time taken to sign DNS zones. Defaults to "false".                                                       |
+	|                                         |                              | NOTE: this may supersede the ``dnssec.zone.diffing.enabled`` setting in a future release.                                             |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dnssec.allow.expired.keys               | CRConfig.json                | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is "true". This helps prevent DNSSEC related outages due to    |
 	|                                         |                              | failed Traffic Control components or connectivity issues.                                                                             |
@@ -259,6 +268,16 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| dynamic.cache.primer.enabled            | CRConfig.json                | Allow Traffic Router to attempt to prime the dynamic zone cache; defaults to "true".                                                  |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dynamic.cache.primer.limit              | CRConfig.json                | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to "500".                              |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.limit                          | CRConfig.json                | Integer that controls the default number of records returned when edge.dns.routing is set to true                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.dns.routing                        | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of NS records                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.limit                         | CRConfig.json                | Integer that controls the default number of records returned when edge.http.routing is set to true; this can be overridden by the     |
+	|                                         |                              | maxDnsAnswers delivery service setting                                                                                                |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| edge.http.routing                       | CRConfig.json                | Boolean flag to control whether edge routing is enabled; this controls localization of traffic router routing names for HTTP delivery |
+	|                                         |                              | service records                                                                                                                       |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| keystore.maintenance.interval           | CRConfig.json                | The interval in seconds which Traffic Router will check the :ref:`to-api` for new DNSSEC keys.                                        |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -378,9 +397,60 @@ Rolling Zone Signing Keys
 -------------------------
 Traffic Router currently follows the :abbr:`ZSK (Zone Signing Key)` pre-publishing operational best practice described in :rfc:`6781#section-4.1.1.1`. Once :abbr:`DNSSEC (Domain Name System Security Extensions)` is enabled for a CDN in Traffic Portal, key rolls are triggered by Traffic Ops via the automated key generation process, and Traffic Router selects the active :abbr:`ZSK (Zone Signing Keys)`\ s based on the expiration information returned from the 'keystore' API of Traffic Ops.
 
+.. _tr-edge_traffic_routing:
+
+Edge Traffic Routing
+====================
+
+Overview
+--------
+Edge Traffic Routing is a feature that enables localization for more DNS record types than just the routing name for DNS delivery services. This feature has two main components: localization of HTTP delivery service routing names and localization for CDN-managed NS records. This allows Traffic Router to scale horizontally more easily, as there is a practical limit to how many records can be in an RRset for ``NS``, ``A``, or ``AAAA`` record types. The practical limit is typically an answer size exceeding 512 bytes; we have observed issues where some clients and/or resolvers do not honor larger answer responses, while in some cases, resolvers are unable to use TCP for larger responses. Additionally, this feature allows Traffic Router to serve an RRset containing only Traffic Routers that are near the client (resolver), placing more control over which Traffic Routers a given resolver or client will interact with.
+
+Localizing ``NS`` records reduces latency for the resolver, which, due to caching in DNS is of little utility for ``NS`` records, but it will force resolvers to use the closest Traffic Routers for all queries. This is important for lookups of CDN routing name records that have very short TTLs, meaning DNS traffic for routing name records is frequent. Like localization for routing names of DNS delivery services, localizing the routing name for HTTP delivery services provides the client (end user) with a list of Traffic Routers that are physically close, reducing latency when the client moves from DNS resolution to the HTTP connection to Traffic Router for the 302 redirect to the edge cache. This feature reduces latency between a resolver and Traffic Router, reduces latency for the client's HTTP request to Traffic Router, and allows Traffic Control to dictate which Traffic Routers are used in any given location when a client can be localized.
+
+Edge DNS Routing
+----------------
+Edge DNS routing refers to the localization of ``NS`` records in Traffic Router. This can be turned on and off via the ``edge.dns.routing`` parameter; the number of records returned is controlled via ``edge.dns.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. See :ref:`tr-profile` documentation for parameter details.
+
+Edge HTTP Routing
+-----------------
+Edge HTTP routing refers to the localization of ``A`` and ``AAAA`` records that represent routing names for HTTP delivery services. This can be turned on and off via the ``edge.http.routing`` parameter; the number of records returned is controlled via ``edge.http.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. The default or global limit can be overridden by modifying the ``maxDnsAnswers`` setting on the delivery service. See :ref:`tr-profile` documentation for parameter details.
+
+Edge Traffic Router Selection
+-----------------------------
+Traffic Router performs localization on client requests in order to determine which Traffic Routers should service a given request. After localization, Traffic Router will perform a consistent hash on the incoming name and will use the value to refine Traffic Router selection. There are two main cases for Traffic Router selection: a localization hit, and a localization miss.
+
+Localization Hit: Consistent Hash (CH)
+""""""""""""""""""""""""""""""""""""""
+When a client is localized, Traffic Router selects the nearest Traffic Router Location (cachegroup) based on proximity. Proximity is determined by using the latitude and longitude of the client, regardless of whether it is a coverage zone or geolocation hit, and the latitude and longitude specified on Traffic Router Locations. Once the location is identified, a consistent hash is performed on the incoming name and the list of Traffic Routers is ordered based upon the consistent hash. Once ordered, the list is limited to the appropriate number based on the limit parameter specified by the hardcoded default (4), ``edge.dns.limit``, ``edge.http.limit``, or ``maxDnsAnswers``, depending on the configuration and request being localized. This approach can be thought of as the consistent hash (CH) selection process.
+
+Localization Miss: Consistent Hash + Round Robin (CH + RR)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+When a client cannot be localized, Traffic Router still needs to produce a list of Traffic Routers to service the request. Because the number of Traffic Routers in the CDN could far exceed the practical limits of what constitutes a "normal" sized answer, a selection algorithm is applied to select Traffic Routers. Much like the localization hit scenario, the incoming request name is consistent hashed and results size is limited by the same parameters. Because no client location is known, Traffic Router must distribute the load across all Traffic Router Locations. To distribute the load, Traffic Router will order all Traffic Routers at each location based on the consistent hash, selecting a Traffic Router at the nth position, incrementing the index, n, after iterating over all locations.
+
+For example, with four Traffic Router Locations each containing 10 Traffic Routers and a limit of 6, the algorithm would:
+
+- Consistent hash the incoming name
+- Order the Traffic Routers at each location by the consistent hash
+- Select the Traffic Router at at the first position of each location
+- Select the Traffic Router at the second position of each location, stopping after selecting the 6th Traffic Router
+
+Because the algorithm employs consistent hashing, the answers should be consistent as long as the topology remains the same. This approach can be thought of as the consistent hash round robin (CH + RR) selection process.
+
+Example Request Flow
+""""""""""""""""""""
+The following is an example of the request flow when a client requests the routing name for an example delivery service, ``tr.service.cdn.example.com``. The request flow assumes that the resolver is cold and has yet to build a local cache of lookups, meaning it has to walk the domain hierarchy asking for ``NS`` records until it reaches ``service.cdn.example.com``. This example starts after the resolver has determined which name servers are authoritative for ``cdn.example.com``. Note that the same logic is applied for each of the three queries made by the resolver.
+
+.. figure:: traffic_router/images/edge_tr_example.png
+   :scale: 30%
+   :align: center
+   :alt: Example Request Flow for Edge Traffic Routing
+
+   Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
+
 .. _tr-logs:
 
-Troubleshooting and Log Files
+Troubleshooting and log files
 =============================
 Traffic Router log files can be found under :file:`/opt/traffic_router/var/log` and :file:`/opt/tomcat/logs`. Initialization and shutdown logs are in :file:`/opt/tomcat/logs/catalina{date}.out`. Application related logging is in :file:`/opt/traffic_router/var/log/traffic_router.log`, while access logs are written to :file:`/opt/traffic_router/var/log/access.log`.
 
@@ -462,6 +532,8 @@ GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
 	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the :term:`Delivery Service`
+GEO_DS
+	The request was redirected to the Miss Location configured on the :term:`Delivery Service`, because CZF couldn't resolve the client IP, and Maxmind returned the default coordinates of the country code of the client IP
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT
@@ -695,6 +767,45 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use :manpage:`openssl(1ssl)` on each individual certificate
 
+Automatic Certificate Management Environment
+--------------------------------------------
+Automatic Certificate Management Environment (ACME) is a protocol for automatically generating, renewing, and revoking SSL certificates.  Currently, :abbr:`ACME (Automatic Certificate Management Environment)` can be used through :ref:`lets_encrypt` or through :ref:`external_account_binding`.
+
+.. _external_account_binding:
+
+External Account Binding
+------------------------
+External account binding allows the user to use an existing account with an :abbr:`ACME (Automatic Certificate Management Environment)` provider to obtain, renew, and revoke SSL certificates.
+To use this functionality, fill in the fields in :ref:`cdn.conf` for the :abbr:`ACME (Automatic Certificate Management Environment)` provider with which the account is set up.
+The first time this is used for a specific :abbr:`ACME (Automatic Certificate Management Environment)` provider (defined by the `acme_provider` and `user_email` fields) the information will be used to get a private key and account URL from the :abbr:`ACME (Automatic Certificate Management Environment)` provider and register the account. These will be stored for later use.
+External account binding information can only be used once, so after the first time, the private key and URL will be used.
+
+.. Important:: The `acme_provider` and `user_email` combination must be unique.  The `acme_provider` field must correlate to the `AuthType` field for each certificate to be renewed using that provider.
+
+.. Note:: As of writing, external account binding can only be used for certificate renewals.
+
+External account binding can be set up through :ref:`cdn.conf` by updating the following fields:
+
+.. table:: Fields to update for external account binding using :abbr:`ACME (Automatic Certificate Management Environment)` protocol under `acme_accounts`
+
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                                                                                                        |
+	+==============================+=========+==========+====================================================================================================================================================================================================================+
+	| acme_provider                | string  | Yes      | The certificate provider. This field needs to correlate to the AuthType field for each certificate so the renewal functionality knows which provider to use.                                                       |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| user_email                   | string  | Yes      | The email used to set up the account with the provider.                                                                                                                                                            |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| acme_url                     | string  | Yes      | The URL for the :abbr:`ACME (Automatic Certificate Management Environment)`.                                                                                                                                       |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| kid                          | string  | No       | The key ID provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for external account binding.                                                                                      |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| hmac_encoded                 | string  | No       | The :abbr:`HMAC (Hashed Message Authentication Code)` key provided by the :abbr:`ACME (Automatic Certificate Management Environment)` provider for external account binding. This should be in Base64 URL encoded. |
+	+------------------------------+---------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. Note:: The `kid` and `hmac_encoded` fields are required unless the account has already been registered and the information has been stored in the Traffic Ops Database.
+
+.. _lets_encrypt:
+
 Let's Encrypt
 -------------
 Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
@@ -727,8 +838,26 @@ Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fi
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates                                                                                                            |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                     |
+	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'.                                                                    |
 	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Automatic Certificate Renewal
+-----------------------------
+If desired, an automated certificate renewal script is located at :file:`/traffic_ops/etc/cron.d/autorenew_certs`. This job is setup to be run, but the file must be updated with the username and password for Traffic Ops in order to be run.  In :ref:`cdn.conf` the following fields can be defined in order to alter the number of days in advance to renew and send a summary email after renewal.
+
+.. note:: In order for this to work, the AuthType field for the certificate must match the ACME provider in the :ref:`cdn.conf`.
+
+.. important:: After the automatic renewal script has run, a queue and snapshot must be run manually in order for the certificates to be used.
+
+.. table:: Fields to update to run the automatic renewal script under `acme_renewal`:
+
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                |
+	+==============================+=========+==========+============================================================================================================================+
+	| summary_email                | boolean | No       | The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent. |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates. Default is 30 days.                                           |
+	+------------------------------+---------+----------+----------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 

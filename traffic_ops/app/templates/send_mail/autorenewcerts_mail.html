@@ -56,6 +56,30 @@ td, th {
        	</tbody>
 		</table>
 
+		<h1>ACME Certificates Summary</h1>
+		<table>
+			<thead>
+			<tr>
+				<th>XmlId</th>
+				<th>Version</th>
+				<th>Expiration</th>
+				<th>AuthType</th>
+				<th>Error</th>
+			</tr>
+			</thead>
+			<tbody>
+			{{range .AcmeExpirations}}
+				<tr>
+					<td>{{.XmlId}}</td>
+					<td>{{.Version}}</td>
+					<td>{{.Expiration}}</td>
+					<td>{{.AuthType}}</td>
+					<td>{{.Error}}</td>
+				</tr>
+			{{end}}
+			</tbody>
+		</table>
+
 		<h1>Self Signed Certificates Summary</h1>
 		<table>
 		<thead>

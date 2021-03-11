@@ -28,10 +28,12 @@
 # Here are some links can be used to check grafana:
 #
 #  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Edge
-#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Mid
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Mid-01
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Mid-02
 #  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_deliveryservice.js?which=demo1
 #  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=edge
-#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=mid
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=mid-01
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=mid-02
 
 
 ---
@@ -49,8 +51,6 @@ services:
     env_file:
       - variables.env
     volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
 volumes:

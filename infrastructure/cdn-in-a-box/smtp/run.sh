@@ -32,6 +32,8 @@ until [[ -v 'X509_GENERATION_COMPLETE' ]]; do
   source "$X509_CA_ENV_FILE";
 done;
 
+cat "$X509_CA_CERT_FULL_CHAIN_FILE" >> /etc/ssl/cert.pem;
+
 # It crashes if STARTTLS is not hidden, see maildev/maildev#274
 exec bin/maildev \
   --smtp="$SMTP_PORT" \

@@ -17,16 +17,14 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $controller, $scope, $state, $uibModal, cacheGroupService) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, filter, $controller, $scope, $state, $uibModal, cacheGroupService) {
 
 	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
-
-	let cacheGroupServersTable;
+	angular.extend(this, $controller('TableServersController', { tableName: 'cacheGroupServers', servers: servers, filter: filter, $scope: $scope }));
 
 	$scope.cacheGroup = cacheGroup;
 
-	var queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
+	let queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -35,7 +33,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 			);
 	};
 
-	var clearCacheGroupServerUpdates = function(cacheGroup, cdnId) {
+	let clearCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -45,11 +43,11 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 	};
 
 	$scope.confirmCacheGroupQueueServerUpdates = function(cacheGroup) {
-		var params = {
+		const params = {
 			title: 'Queue Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 			controller: 'DialogSelectController',
 			size: 'md',
@@ -70,11 +68,11 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 	};
 
 	$scope.confirmCacheGroupClearServerUpdates = function(cacheGroup) {
-		var params = {
+		const params = {
 			title: 'Clear Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 			controller: 'DialogSelectController',
 			size: 'md',
@@ -94,30 +92,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 		});
 	};
 
-	$scope.toggleVisibility = function(colName) {
-		const col = cacheGroupServersTable.column(colName + ':name');
-		col.visible(!col.visible());
-		cacheGroupServersTable.rows().invalidate().draw();
-	};
-
-	angular.element(document).ready(function () {
-		cacheGroupServersTable = $('#cacheGroupServersTable').DataTable({
-			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [],
-			"columns": $scope.columns,
-			"initComplete": function(settings, json) {
-				try {
-					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_cacheGroupServersTable_/')).columns;
-				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_cacheGroupServersTable_/):", e);
-				}
-			}
-		});
-	});
-
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', 'filter', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
 module.exports = TableCacheGroupsServersController;

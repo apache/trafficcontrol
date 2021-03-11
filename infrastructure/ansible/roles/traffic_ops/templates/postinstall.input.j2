@@ -1,0 +1,176 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+  "/opt/traffic_ops/app/conf/cdn.conf": [
+    {
+      "Generate a new secret?": "{{ to_gen_new_secret }}",
+      "config_var": "genSecret"
+    },
+    {
+      "Number of secrets to keep?": "{{ to_no_of_secrets_to_keep }}",
+      "config_var": "keepSecrets"
+    },
+    {
+      "Number of workers?": "{{ to_hypnotoad_number_of_workers }}",
+      "config_var": "workers"
+    },
+    {
+      "Traffic Ops url?": "{{ to_url }}",
+      "config_var": "base_url"
+    }
+  ],
+  "/opt/traffic_ops/app/conf/ldap.conf": [
+    {
+      "Do you want to set up LDAP?": "{{ to_ldap_setup }}",
+      "config_var": "setupLdap"
+    },
+    {
+      "LDAP server hostname": "{{ to_ldap_hostname }}",
+      "config_var": "hostname"
+    },
+    {
+      "LDAP Admin DN": "{{ to_ldap_admin_dn }}",
+      "config_var": "admin_dn"
+    },
+    {
+      "LDAP Admin Password": "{{ to_ldap_password }}",
+      "config_var": "password",
+      "hidden": "1"
+    },
+    {
+      "LDAP Search Base": "{{ to_ldap_search_base }}",
+      "config_var": "search_base"
+    },
+    {
+      "LDAP Search Query": "{{ to_ldap_search_query }}",
+      "config_var": "search_query"
+    },
+    {
+      "LDAP Skip TLS verify": "{{ to_ldap_insecure }}",
+      "config_var": "insecure"
+    },
+    {
+      "LDAP Timeout Seconds": "{{ to_ldap_timeout_secs }}",
+      "config_var": "ldap_timeout_secs"
+    }
+  ],
+  "/opt/traffic_ops/app/conf/production/database.conf": [
+    {
+      "Database type": "{{ todb_type }}",
+      "config_var": "type"
+    },
+    {
+      "Database name": "{{ todb_db_name }}",
+      "config_var": "dbname"
+    },
+    {
+      "Database server hostname IP or FQDN": "{{ todb_host }}",
+      "config_var": "hostname"
+    },
+    {
+      "Database port number": "{{ todb_port }}",
+      "config_var": "port"
+    },
+    {
+      "Traffic Ops database user": "{{ todb_username }}",
+      "config_var": "user"
+    },
+    {
+      "Traffic Ops database password": "{{ todb_password }}",
+      "config_var": "password",
+      "hidden": "1"
+    }
+  ],
+  "/opt/traffic_ops/app/db/dbconf.yml": [
+    {
+      "Database server root (admin) username": "{{ postgresql_admin_user }}",
+      "config_var": "pgUser"
+    },
+    {
+      "Database server admin password": "{{ postgresql_admin_user_password }}",
+      "config_var": "pgPassword",
+      "hidden": "1"
+    },
+    {
+      "Download Maxmind Database?": "{{ to_pi_maxmind_download }}",
+      "config_var": "maxmind"
+    }
+  ],
+  "/opt/traffic_ops/install/data/json/openssl_configuration.json": [
+    {
+      "Do you want to generate a certificate?": "{{ to_pi_openssl_generate_certificate }}",
+      "config_var": "genCert"
+    },
+    {
+      "Country Name (2 letter code)": "{{ to_pi_openssl_country_name }}",
+      "config_var": "country"
+    },
+    {
+      "State or Province Name (full name)": "{{ to_pi_openssl_state_or_province }}",
+      "config_var": "state"
+    },
+    {
+      "Locality Name (eg, city)": "{{ to_pi_openssl_locality_name }}",
+      "config_var": "locality"
+    },
+    {
+      "Organization Name (eg, company)": "{{ to_pi_openssl_org_name }}",
+      "config_var": "company"
+    },
+    {
+      "Organizational Unit Name (eg, section)": "{{ to_pi_openssl_unit_name }}",
+      "config_var": "org_unit"
+    },
+    {
+      "Common Name (eg, your name or your server's hostname)": "{{ to_pi_openssl_common_name }}",
+      "config_var": "common_name"
+    },
+    {
+      "RSA Passphrase": "{{ to_pi_openssl_rsa_passphrase }}",
+      "config_var": "rsaPassword",
+      "hidden": "1"
+    }
+  ],
+  "/opt/traffic_ops/install/data/json/profiles.json": [
+    {
+      "Traffic Ops url": "{{ to_url }}",
+      "config_var": "tm.url"
+    },
+    {
+      "Human-readable CDN Name.  (No whitespace, please)": "{{ to_pi_cdn_name }}",
+      "config_var": "cdn_name"
+    },
+    {
+      "DNS sub-domain for which your CDN is authoritative": "{{ to_pi_dns_subdomain }}",
+      "config_var": "dns_subdomain"
+    }
+  ],
+  "/opt/traffic_ops/install/data/json/users.json": [
+    {
+      "Administration username for Traffic Ops": "{{ to_admin_user }}",
+      "config_var": "tmAdminUser"
+    },
+    {
+      "Password for the admin user": "{{ to_admin_user_password }}",
+      "config_var": "tmAdminPw",
+      "hidden": "1"
+    }
+  ],
+  "/opt/traffic_ops/install/data/profiles/": [
+    {
+      "Add custom profiles?": "{{ to_pi_add_custom_profiles }}",
+      "config_var": "custom_profiles"
+    }
+  ]
+}

@@ -1162,7 +1162,6 @@
     "tm_version": "1.5.0-3027.8d600a8e",
     "CDN_name": "thecdn",
     "tm_user": "admin2",
-    "tm_path": "/tools/write_crconfig/thecdn",
     "date": 1465171200,
     "tm_host": "localhost:8889"
   },
@@ -1198,6 +1197,16 @@
     "location-9": {
       "longitude": -86.0,
       "latitude": 36.0
+    }
+  },
+  "trafficRouterLocations": {
+    "location-0": {
+      "longitude": -84.0,
+      "latitude": 33.0
+    },
+    "location-9": {
+      "longitude": -87.0,
+      "latitude": 41.0
     }
   },
   "config": {

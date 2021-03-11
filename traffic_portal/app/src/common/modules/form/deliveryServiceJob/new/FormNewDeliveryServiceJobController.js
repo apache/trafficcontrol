@@ -34,8 +34,10 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 		job.deliveryService = deliveryService.xmlId;
 		jobService.createJob(job)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery Service Invalidation Request Created' } ], true);
+				function(result) {
+					if(result.data !== undefined && result.data.alerts !== undefined){
+						messageModel.setMessages(result.data.alerts, true);
+					}
 					locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/jobs');
 				},
 				function(fault) {

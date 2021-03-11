@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-vault-bucket-bucket-key-key-values:
+.. _to-api-v2-vault-bucket-bucket-key-key-values:
 
 **********************************************
 ``vault/bucket/{{bucket}}/key/{{key}}/values``

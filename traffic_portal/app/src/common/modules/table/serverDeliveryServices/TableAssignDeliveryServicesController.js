@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableAssignDeliveryServicesController = function(server, deliveryServices, assignedDeliveryServices, $scope, $uibModalInstance) {
+var TableAssignDeliveryServicesController = function(server, deliveryServices, assignedDeliveryServices, $scope, $uibModalInstance, serverUtils) {
 
 	var selectedDeliveryServices = [];
 
@@ -35,6 +35,9 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
+			if (ds.topology && $scope.isCache(server)) {
+				return ds;
+			}
 			if (visibleDSIds.includes(ds.id)) {
 				ds['selected'] = selected;
 			}
@@ -50,6 +53,8 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 
 	$scope.server = server;
 
+	$scope.isCache = serverUtils.isCache;
+
 	$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
 		var isAssigned = _.find(assignedDeliveryServices, function(assignedDS) { return assignedDS.id == ds.id });
 		if (isAssigned) {
@@ -57,6 +62,15 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 		}
 		return ds;
 	});
+
+	$scope.toggleRow = function(ds) {
+		// a ds w/ a topology has no use being assigned to cache servers
+		if (ds.topology && $scope.isCache(server)) {
+			return;
+		}
+		ds.selected = !ds.selected;
+		$scope.onChange();
+	};
 
 	$scope.selectAll = function($event) {
 		var checkbox = $event.target;
@@ -100,5 +114,5 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 
 };
 
-TableAssignDeliveryServicesController.$inject = ['server', 'deliveryServices', 'assignedDeliveryServices', '$scope', '$uibModalInstance'];
+TableAssignDeliveryServicesController.$inject = ['server', 'deliveryServices', 'assignedDeliveryServices', '$scope', '$uibModalInstance', 'serverUtils'];
 module.exports = TableAssignDeliveryServicesController;

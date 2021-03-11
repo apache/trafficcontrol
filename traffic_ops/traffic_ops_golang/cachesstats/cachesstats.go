@@ -21,7 +21,6 @@ package cachesstats
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -32,6 +31,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
+
+const ATSCurrentConnectionsStat = "ats.proxy.process.http.current_client_connections"
 
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -77,14 +78,22 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 				continue
 			}
 
-			cacheStats, err := getCacheStats(monitorFQDN, client)
+			var cacheStats tc.Stats
+			var url string
+			stats := []string{ATSCurrentConnectionsStat, tc.StatNameBandwidth}
+			cacheStats, url, err = monitorhlp.GetCacheStats(monitorFQDN, client, stats)
 			if err != nil {
-				errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
-				continue
+				legacyCacheStats, legacyUrl, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, stats)
+				if err != nil {
+					errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+					continue
+				}
+				url = legacyUrl
+				cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
 			}
 
 			cacheData = addHealth(cacheData, crStates)
-			cacheData = addStats(cacheData, cacheStats)
+			cacheData = addStats(cacheData, cacheStats, url)
 			success = true
 			break
 		}
@@ -128,49 +137,37 @@ func addTotals(data []CacheData) []CacheData {
 	return data
 }
 
-// CRStates contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
-}
-
-type CacheStat struct {
-	BandwidthKBPS []CacheStatData `json:"bandwidth"`
-	Connections   []CacheStatData `json:"ats.proxy.process.http.current_client_connections"`
-}
-
-type CacheStatData struct {
-	Value int64 `json:"value,string"`
-}
-
-func getCacheStats(monitorFQDN string, client *http.Client) (CacheStats, error) {
-	path := `/publish/CacheStats?stats=ats.proxy.process.http.current_client_connections,bandwidth`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CacheStats{}, errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	cs := CacheStats{}
-	if err := json.NewDecoder(resp.Body).Decode(&cs); err != nil {
-		return CacheStats{}, errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return cs, nil
-}
-
-func addStats(cacheData []CacheData, stats CacheStats) []CacheData {
+func addStats(cacheData []CacheData, stats tc.Stats, url string) []CacheData {
+	var err error
 	if stats.Caches == nil {
 		return cacheData // TODO warn?
 	}
 	for i, cache := range cacheData {
-		stat, ok := stats.Caches[cache.HostName]
+		stat, ok := stats.Caches[string(cache.HostName)]
 		if !ok {
 			continue
 		}
-		if len(stat.BandwidthKBPS) > 0 {
-			cache.KBPS = uint64(stat.BandwidthKBPS[0].Value)
+		bandwidth, ok := stat.Stats[tc.StatNameBandwidth]
+		if ok && len(bandwidth) > 0 {
+			if kbps, ok := bandwidth[0].Val.(string); !ok {
+				log.Warnf("bandwidth %v of cache %s from url %s couldn't be converted into string", bandwidth[0].Val, string(cache.HostName), url)
+			} else {
+				cache.KBPS, err = strconv.ParseUint(kbps, 10, 64)
+				if err != nil {
+					log.Warnf("'bandwidth' stat %v of cache %s from url %s couldn't be converted into uint64", kbps, string(cache.HostName), url)
+				}
+			}
 		}
-		if len(stat.Connections) > 0 {
-			cache.Connections = uint64(stat.Connections[0].Value)
+		connections, ok := stat.Stats[ATSCurrentConnectionsStat]
+		if ok && len(connections) > 0 {
+			if conn, ok := connections[0].Val.(string); !ok {
+				log.Warnf("'connections' stat %v of cache %s from url %s couldn't be converted into string", connections[0].Val, string(cache.HostName), url)
+			} else {
+				cache.Connections, err = strconv.ParseUint(conn, 10, 64)
+				if err != nil {
+					log.Warnf("'connections' stat %v of cache %s from url %s couldn't be converted into uint64", conn, string(cache.HostName), url)
+				}
+			}
 		}
 		cacheData[i] = cache
 	}
@@ -214,7 +211,7 @@ SELECT
   cg.name as cachegroup,
   st.name as status,
   p.name as profile,
-  s.ip_address
+  (select address from ip_address where s.id = ip_address.server and service_address = true AND family(address) = 4) as ip
 FROM
   server s
   JOIN cachegroup cg ON s.cachegroup = cg.id

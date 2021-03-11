@@ -26,6 +26,7 @@ import (
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServicesRegexes}, func() {
 		QueryDSRegexTest(t)
+		CreateTestDSRegexWithMissingPattern(t)
 	})
 }
 
@@ -48,7 +49,7 @@ func CreateTestDeliveryServicesRegexes(t *testing.T) {
 	for i, regex := range testData.DeliveryServicesRegexes {
 		loadDSRegexIDs(t, &regex)
 
-		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type), "regex")
+		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type))
 		if err != nil {
 			t.Fatalf("unable to create regex: %v", err)
 		}
@@ -59,7 +60,7 @@ func CreateTestDeliveryServicesRegexes(t *testing.T) {
 			t.Fatalf("unable to query regex: %v", err)
 		}
 
-		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber), "deliveryservice_regex")
+		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber))
 		if err != nil {
 			t.Fatalf("unable to create ds regex %v", err)
 		}
@@ -81,15 +82,40 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 	}()
 
 	for _, regex := range testData.DeliveryServicesRegexes {
-		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID), "regex")
+		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID))
 		if err != nil {
 			t.Fatalf("unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
 		}
 
-		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID), "regex")
+		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID))
 		if err != nil {
 			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
 		}
+	}
+}
+
+func CreateTestDSRegexWithMissingPattern(t *testing.T) {
+	var regex = testData.DeliveryServicesRegexes[3]
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(regex.DSName)
+	if err != nil {
+		t.Fatalf("unable to get ds %v: %v", regex.DSName, err)
+	}
+	if len(ds) == 0 {
+		t.Fatalf("unable to get ds %v", regex.DSName)
+	}
+
+	var dsID int
+	if ds[0].ID == nil {
+		t.Fatal("ds has a nil id")
+	} else {
+		dsID = *ds[0].ID
+	}
+
+	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
+
+	_, _, err = TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
+	if err == nil {
+		t.Fatalf("Expected: 400 Bad Request but got: %v", err)
 	}
 }
 
@@ -132,8 +158,8 @@ func QueryDSRegexTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(dsID))
 	}
-	if len(dsRegexes) != 3 {
-		t.Fatal("expected to get 3 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	if len(dsRegexes) != 4 {
+		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
 	}
 
 	params := make(map[string]string)

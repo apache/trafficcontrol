@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -27,50 +28,70 @@ import (
 )
 
 const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+const LineCommentSSLMultiCertDotConfig = LineCommentHash
 const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
-type SSLMultiCertDS struct {
+func MakeSSLMultiCertDotConfig(
+	server *Server,
+	deliveryServices []DeliveryService,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	}
+
+	dses, dsWarns := DeliveryServicesToSSLMultiCertDSes(deliveryServices)
+	warnings = append(warnings, dsWarns...)
+
+	hdr := makeHdrComment(hdrComment)
+
+	dses = GetSSLMultiCertDotConfigDeliveryServices(dses)
+
+	lines := []string{}
+	for dsName, ds := range dses {
+		cerName, keyName := GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
+		lines = append(lines, `ssl_cert_name=`+cerName+"\t"+` ssl_key_name=`+keyName+"\n")
+	}
+	sort.Strings(lines)
+
+	txt := hdr + strings.Join(lines, "")
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeSSLMultiCertDotConfig,
+		LineComment: LineCommentSSLMultiCertDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type sslMultiCertDS struct {
 	XMLID       string
 	Type        tc.DSType
 	Protocol    int
 	ExampleURLs []string
 }
 
-func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]SSLMultiCertDS {
-	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+// deliveryServicesToSSLMultiCertDSes returns the "SSLMultiCertDS" map, and any warnings.
+func DeliveryServicesToSSLMultiCertDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]sslMultiCertDS, []string) {
+	warnings := []string{}
+	sDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
 	for _, ds := range dses {
 		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
 			if ds.XMLID == nil {
-				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got unknown DS with nil values! Skipping!")
+				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {
-				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got DS '" + *ds.XMLID + "' with nil values! Skipping!")
+				warnings = append(warnings, "got DS '"+*ds.XMLID+"' with nil values! Skipping!")
 			}
 			continue
 		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sslMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
 	}
-	return sDSes
-}
-
-func MakeSSLMultiCertDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses map[tc.DeliveryServiceName]SSLMultiCertDS,
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
-
-	dses = GetSSLMultiCertDotConfigDeliveryServices(dses)
-
-	for dsName, ds := range dses {
-		cerName, keyName := GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
-		text += `ssl_cert_name=` + cerName + "\t" + ` ssl_key_name=` + keyName + "\n"
-	}
-	return text
+	return sDSes, warnings
 }
 
 // GetSSLMultiCertDotConfigCertAndKeyName returns the cert file name and key file name for the given delivery service.
-func GetSSLMultiCertDotConfigCertAndKeyName(dsName tc.DeliveryServiceName, ds SSLMultiCertDS) (string, string) {
+func GetSSLMultiCertDotConfigCertAndKeyName(dsName tc.DeliveryServiceName, ds sslMultiCertDS) (string, string) {
 	hostName := ds.ExampleURLs[0] // first one is the one we want
 
 	scheme := "https://"
@@ -94,8 +115,8 @@ func GetSSLMultiCertDotConfigCertAndKeyName(dsName tc.DeliveryServiceName, ds SS
 // GetSSLMultiCertDotConfigDeliveryServices takes a list of delivery services, and returns the delivery services which will be inserted into the config by MakeSSLMultiCertDotConfig.
 // This is public, so users can see which Delivery Services are used, without parsing the config file.
 // For example, this is useful to determine which certificates are needed.
-func GetSSLMultiCertDotConfigDeliveryServices(dses map[tc.DeliveryServiceName]SSLMultiCertDS) map[tc.DeliveryServiceName]SSLMultiCertDS {
-	usedDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+func GetSSLMultiCertDotConfigDeliveryServices(dses map[tc.DeliveryServiceName]sslMultiCertDS) map[tc.DeliveryServiceName]sslMultiCertDS {
+	usedDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
 	for dsName, ds := range dses {
 		if ds.Type == tc.DSTypeAnyMap {
 			continue

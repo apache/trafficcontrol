@@ -20,13 +20,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/remapdata"
 	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // ParentResponseData contains data about the parent/origin response.
 type ParentRespData struct {
-	Reuse            remapdata.Reuse
+	Reuse            rfc.Reuse
 	OriginCode       int
 	OriginReqSuccess bool
 	// OriginConnectFailed is whether the connection to the origin succeeded. It's possible to get a failure response from an origin, but have the connection succeed.

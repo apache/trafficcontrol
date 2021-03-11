@@ -22,9 +22,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +43,9 @@ import org.apache.log4j.Logger;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.RRSIGRecord;
 import org.xbill.DNS.TextParseException;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
@@ -50,6 +55,9 @@ public final class SignatureManager {
 	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
 	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
+	private static ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> RRSIGCache = new ConcurrentHashMap<>();
+	private static final Object RRSIGCacheLock = new Object(); // to ensure that the RRSIGCache is totally empty if disabled
+	private boolean RRSIGCacheEnabled = false;
 	private static ScheduledExecutorService keyMaintenanceExecutor;
 	private TrafficOpsUtils trafficOpsUtils;
 	private boolean dnssecEnabled = false;
@@ -64,6 +72,7 @@ public final class SignatureManager {
 		this.setCacheRegister(cacheRegister);
 		this.setTrafficOpsUtils(trafficOpsUtils);
 		this.setZoneManager(zoneManager);
+		setRRSIGCacheEnabled(cacheRegister.getConfig());
 		initKeyMap();
 	}
 
@@ -71,6 +80,19 @@ public final class SignatureManager {
 		if (keyMaintenanceExecutor != null) {
 			keyMaintenanceExecutor.shutdownNow();
 		}
+	}
+
+	private void setRRSIGCacheEnabled(final JsonNode config) {
+		RRSIGCacheEnabled = JsonUtils.optBoolean(config, TrafficRouter.DNSSEC_RRSIG_CACHE_ENABLED, false);
+		if (!RRSIGCacheEnabled) {
+			synchronized (RRSIGCacheLock) {
+				RRSIGCache = new ConcurrentHashMap<>();
+			}
+		}
+	}
+
+	private boolean isRRSIGCacheEnabled() {
+		return this.RRSIGCacheEnabled;
 	}
 
 	private void initKeyMap() {
@@ -154,6 +176,7 @@ public final class SignatureManager {
 								}
 							}
 						}
+						cleanRRSIGCache(keyMap, newKeyMap);
 
 						if (keyMap == null) {
 							// initial startup
@@ -177,16 +200,44 @@ public final class SignatureManager {
 		};
 	}
 
-	private boolean hasNewKeys(final Map<String, List<DnsSecKeyPair>> keyMap, final Map<String, List<DnsSecKeyPair>> newKeyMap) {
-		for (final String key : newKeyMap.keySet()) {
-			if (!keyMap.containsKey(key)) {
-				return true;
+	private void cleanRRSIGCache(final Map<String, List<DnsSecKeyPair>> oldKeyMap, final Map<String, List<DnsSecKeyPair>> newKeyMap) {
+		synchronized (RRSIGCacheLock) {
+			if (RRSIGCache.isEmpty() || oldKeyMap == null || getKeyDifferences(oldKeyMap, newKeyMap).isEmpty()) {
+				return;
+			}
+			final int oldKeySize = RRSIGCache.size();
+			final int oldRRSIGSize = RRSIGCache.values().stream().map(Map::size).reduce(0, Integer::sum);
+			final long now = new Date().getTime();
+			final ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> newRRSIGCache = new ConcurrentHashMap<>();
+			newKeyMap.forEach((name, keyPairs) -> keyPairs.forEach(keypair -> {
+				final RRSIGCacheKey cacheKey = new RRSIGCacheKey(keypair.getPrivate().getEncoded(), keypair.getDNSKEYRecord().getAlgorithm());
+				final ConcurrentMap<RRsetKey, RRSIGRecord> cacheValue = RRSIGCache.get(cacheKey);
+				if (cacheValue != null) {
+					cacheValue.entrySet().removeIf(e -> e.getValue().getExpire().getTime() <= now);
+					newRRSIGCache.put(cacheKey, cacheValue);
+				}
+			}));
+			RRSIGCache = newRRSIGCache;
+			final int keySize = RRSIGCache.size();
+			final int RRSIGSize = RRSIGCache.values().stream().map(Map::size).reduce(0, Integer::sum);
+			LOGGER.info("DNSSEC keys were changed or removed so RRSIG cache was cleaned. Old key size: " + oldKeySize +
+					", new key size: " + keySize + ", old RRSIG size: " + oldRRSIGSize + ", new RRSIG size: " + RRSIGSize);
+		}
+	}
+
+	// return the key names from newKeyMap that are different or missing from oldKeyMap
+	private Set<String> getKeyDifferences(final Map<String, List<DnsSecKeyPair>> newKeyMap, final Map<String, List<DnsSecKeyPair>> oldKeyMap) {
+		final Set<String> newKeyNames = new HashSet<>();
+		for (final String newName : newKeyMap.keySet()) {
+			if (!oldKeyMap.containsKey(newName)) {
+				newKeyNames.add(newName);
+				continue;
 			}
 
-			for (final DnsSecKeyPair newKeyPair : newKeyMap.get(key)) {
+			for (final DnsSecKeyPair newKeyPair : newKeyMap.get(newName)) {
 				boolean matched = false;
 
-				for (final DnsSecKeyPair keyPair : keyMap.get(key)) {
+				for (final DnsSecKeyPair keyPair : oldKeyMap.get(newName)) {
 					if (newKeyPair.equals(keyPair)) {
 						matched = true;
 						break;
@@ -194,12 +245,20 @@ public final class SignatureManager {
 				}
 
 				if (!matched) {
-					LOGGER.info("Found new or changed key for " + newKeyPair.getName());
-					return true; // has a new key because we didn't find a match
+					newKeyNames.add(newKeyPair.getName());
+					break;
 				}
 			}
 		}
+		return newKeyNames;
+	}
 
+	private boolean hasNewKeys(final Map<String, List<DnsSecKeyPair>> oldKeyMap, final Map<String, List<DnsSecKeyPair>> newKeyMap) {
+		final Set<String> newOrChangedKeyNames = getKeyDifferences(newKeyMap, oldKeyMap);
+		if (!newOrChangedKeyNames.isEmpty()) {
+			newOrChangedKeyNames.forEach(name -> LOGGER.info("Found new or changed key for " + name));
+			return true;
+		}
 		return false;
 	}
 
@@ -407,7 +466,7 @@ public final class SignatureManager {
 		sb.append(" is ");
 		sb.append(zoneKey.getTimestampDate());
 		sb.append("; expires ");
-		sb.append(zoneKey.getSignatureExpiration().getTime());
+		sb.append(zoneKey.getMinimumSignatureExpiration().getTime());
 
 		if (needsRefresh) {
 			sb.append("; refresh needed");
@@ -447,9 +506,10 @@ public final class SignatureManager {
 
 				final ZoneSigner zoneSigner = new ZoneSignerImpl();
 
-				signedRecords = zoneSigner.signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				signedRecords = zoneSigner.signZone(records, kskPairs, zskPairs, start.getTime(),
+						signatureExpiration.getTime(), isRRSIGCacheEnabled() ? RRSIGCache : null);
 
-				zoneKey.setSignatureExpiration(signatureExpiration);
+				zoneKey.setMinimumSignatureExpiration(signedRecords, signatureExpiration);
 				zoneKey.setKSKExpiration(kskExpiration);
 				zoneKey.setZSKExpiration(zskExpiration);
 

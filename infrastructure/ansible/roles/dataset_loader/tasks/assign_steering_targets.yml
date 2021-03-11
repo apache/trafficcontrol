@@ -1,0 +1,31 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: Assign Steering Targets
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/steering/{{dsId}}/targets"
+    method: POST
+    body: "{{ lookup('template', 'steering_target.j2') }}"
+  register: create_steering_assignment_out
+  failed_when: (create_steering_assignment_out.status == 400 and create_steering_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_steering_assignment_out.status > 400 and create_steering_assignment_out.status < 600)
+  with_items: "{{ Target_steering_ds.1.assigned_steering_targets }}"
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    target_ds_query: "[?cdnId == `{{ Target_cdn_id }}` && starts_with(xmlId, `{{ item.uniqueKey }}`) == `true`].id | [0]"
+    targetId: "{{ get_all_ds_cdn.json.response | to_json | from_json | json_query(target_ds_query) }}"
+    type_query: "[?useInTable == `steering_target` && name == `{{ item.type }}` ].id | [0]"
+    typeId: "{{ get_all_types.json.response | json_query(type_query) }}"
+    ds_query: "[?cdnId == `{{ Target_cdn_id }}` && starts_with(xmlId, `{{ Target_steering_ds.1.uniqueKey }}`) == `true`].id | [0]"
+    dsId: "{{ get_all_ds_cdn.json.response | to_json | from_json | json_query(ds_query) }}"
+    value: "{{ item.value }}"

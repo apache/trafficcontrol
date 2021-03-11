@@ -6,14 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
-	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
-
-	"github.com/asaskevich/govalidator"
-	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 /*
@@ -32,6 +25,9 @@ import (
 */
 
 const DefaultRoutingName = "cdn"
+const DefaultMaxRequestHeaderBytes = 0
+const MinRangeSliceBlockSize = 262144   // 265Kib
+const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
@@ -39,52 +35,68 @@ type GetDeliveryServiceResponse struct {
 }
 
 // DeliveryServicesResponse ...
+// Deprecated: use DeliveryServicesNullableResponse instead
 type DeliveryServicesResponse struct {
 	Response []DeliveryService `json:"response"`
 	Alerts
 }
 
+// DeliveryServicesResponseV30 is the type of a response from the
+// /api/3.0/deliveryservices Traffic Ops endpoint.
+// TODO: Move these into the respective clients?
+type DeliveryServicesResponseV30 struct {
+	Response []DeliveryServiceNullableV30 `json:"response"`
+	Alerts
+}
+
+// DeliveryServicesResponseV4 is the type of a response from the
+// /api/4.0/deliveryservices Traffic Ops endpoint.
+type DeliveryServicesResponseV4 struct {
+	Response []DeliveryServiceV4 `json:"response"`
+	Alerts
+}
+
 // DeliveryServicesNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type DeliveryServicesNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
 	Alerts
 }
 
 // CreateDeliveryServiceResponse ...
+// Deprecated: use CreateDeliveryServiceNullableResponse instead
 type CreateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // CreateDeliveryServiceNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type CreateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
+	Alerts
 }
 
 // UpdateDeliveryServiceResponse ...
+// Deprecated: use UpdateDeliveryServiceNullableResponse instead
 type UpdateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // UpdateDeliveryServiceNullableResponse ...
+// Deprecated: Please only use the versioned structures.
 type UpdateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
-}
-
-// DeliveryServiceResponse ...
-type DeliveryServiceResponse struct {
-	Response DeliveryService        `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
 // DeleteDeliveryServiceResponse ...
 type DeleteDeliveryServiceResponse struct {
-	Alerts []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
+// Deprecated: use DeliveryServiceNullable instead
 type DeliveryService struct {
 	DeliveryServiceV13
 	MaxOriginConnections      int      `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -161,16 +173,68 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceV40 struct {
+	DeliveryServiceFieldsV31
+	DeliveryServiceFieldsV30
+	DeliveryServiceFieldsV15
+	DeliveryServiceFieldsV14
+	DeliveryServiceFieldsV13
+	DeliveryServiceNullableFieldsV11
+}
 
-type DeliveryServiceNullable struct {
+type DeliveryServiceV31 struct {
+	DeliveryServiceV30
+	DeliveryServiceFieldsV31
+}
+
+// DeliveryServiceFieldsV31 contains additions to delivery services in api v3.1
+type DeliveryServiceFieldsV31 struct {
+	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
+}
+
+type DeliveryServiceV30 struct {
+	DeliveryServiceNullableV15
+	DeliveryServiceFieldsV30
+}
+
+// DeliveryServiceFieldsV30 contains additions to delivery services in api v3.0
+type DeliveryServiceFieldsV30 struct {
+	Topology           *string `json:"topology" db:"topology"`
+	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
+	InnerHeaderRewrite *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
+	LastHeaderRewrite  *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
+	ServiceCategory    *string `json:"serviceCategory" db:"service_category"`
+}
+
+// DeliveryServiceNullableV30 is the aliased structure that we should be using for all api 3.x delivery structure operations
+// This type should always alias the latest 3.x minor version struct. For ex, if you wanted to create a DeliveryServiceV32 struct, you would do the following:
+// type DeliveryServiceNullableV30 DeliveryServiceV32
+// DeliveryServiceV32 = DeliveryServiceV31 + the new fields
+type DeliveryServiceNullableV30 DeliveryServiceV31
+
+// DeliveryServiceV4 is the aliased structure that we should be using for all api 4.x delivery structure operations
+type DeliveryServiceV4 DeliveryServiceV40
+
+// Deprecated: Use versioned structures only from now on.
+type DeliveryServiceNullable DeliveryServiceNullableV15
+type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
+	DeliveryServiceFieldsV15
+}
+
+// DeliveryServiceFieldsV15 contains additions to delivery services in api v1.5
+type DeliveryServiceFieldsV15 struct {
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
 }
 
 type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
+	DeliveryServiceFieldsV14
+}
+
+// DeliveryServiceFieldsV14 contains additions to delivery services in api v1.4
+type DeliveryServiceFieldsV14 struct {
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -178,6 +242,11 @@ type DeliveryServiceNullableV14 struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
+	DeliveryServiceFieldsV13
+}
+
+// DeliveryServiceFieldsV13 contains additions to delivery services in api v1.3
+type DeliveryServiceFieldsV13 struct {
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
 	FQPacingRate      *int             `json:"fqPacingRate" db:"fq_pacing_rate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
@@ -194,11 +263,13 @@ type DeliveryServiceNullableV12 struct {
 // for all fields to be null.
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
-	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
-	//
+	DeliveryServiceNullableFieldsV11
+	DeliveryServiceRemovedFieldsV11
+}
+
+type DeliveryServiceNullableFieldsV11 struct {
 	Active                   *bool                   `json:"active" db:"active"`
 	AnonymousBlockingEnabled *bool                   `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
-	CacheURL                 *string                 `json:"cacheurl" db:"cacheurl"`
 	CCRDNSTTL                *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
 	CDNID                    *int                    `json:"cdnId" db:"cdn_id"`
 	CDNName                  *string                 `json:"cdnName"`
@@ -253,225 +324,87 @@ type DeliveryServiceNullableV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
-	return func(value interface{}) error {
-		switch v := value.(type) {
-		case *int:
-			if v != nil {
-				return nil
-			}
-		case *bool:
-			if v != nil {
-				return nil
-			}
-		case *string:
-			if v != nil {
-				return nil
-			}
-		case *float64:
-			if v != nil {
-				return nil
-			}
-		default:
-			return fmt.Errorf("validation failure: unknown type %T", value)
-		}
-		pattern := strings.Join(patterns, "|")
-		err := error(nil)
-		match := false
-		if typeName != "" {
-			match, err = regexp.MatchString(pattern, typeName)
-			if match {
-				return fmt.Errorf("is required if type is '%s'", typeName)
-			}
-		}
-		return err
+// Deprecated: used for backwards compatibility  with ATC <v5.1
+// DeliveryServiceRemovedFieldsV11 contains additions to delivery services in api v1.1 that were later removed
+type DeliveryServiceRemovedFieldsV11 struct {
+	CacheURL *string `json:"cacheurl" db:"cacheurl"`
+}
+
+// DowngradeToV3 converts the 4.x DS to a 3.x DS
+func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
+	return DeliveryServiceNullableV30{
+		DeliveryServiceV30: DeliveryServiceV30{
+			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
+				DeliveryServiceNullableV14: DeliveryServiceNullableV14{
+					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
+						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
+							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
+								DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+							},
+						},
+						DeliveryServiceFieldsV13: ds.DeliveryServiceFieldsV13,
+					},
+					DeliveryServiceFieldsV14: ds.DeliveryServiceFieldsV14,
+				},
+				DeliveryServiceFieldsV15: ds.DeliveryServiceFieldsV15,
+			},
+			DeliveryServiceFieldsV30: ds.DeliveryServiceFieldsV30,
+		},
+		DeliveryServiceFieldsV31: ds.DeliveryServiceFieldsV31,
 	}
 }
 
-func validateOrgServerFQDN(orgServerFQDN string) bool {
-	_, fqdn, port, err := ParseOrgServerFQDN(orgServerFQDN)
-	if err != nil || !govalidator.IsHost(*fqdn) || (port != nil && !govalidator.IsPort(*port)) {
-		return false
+// UpgradeToV4 converts the 3.x DS to a 4.x DS
+func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
+	return DeliveryServiceV4{
+		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
+		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
+		DeliveryServiceFieldsV15:         ds.DeliveryServiceFieldsV15,
+		DeliveryServiceFieldsV14:         ds.DeliveryServiceFieldsV14,
+		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
+		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 	}
-	return true
 }
 
-func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error) {
-	originRegex := regexp.MustCompile(`^(https?)://([^:]+)(:(\d+))?$`)
-	matches := originRegex.FindStringSubmatch(orgServerFQDN)
-	if len(matches) == 0 {
-		return nil, nil, nil, fmt.Errorf("unable to parse invalid orgServerFqdn: '%s'", orgServerFQDN)
-	}
-
-	protocol := strings.ToLower(matches[1])
-	FQDN := matches[2]
-
-	if len(protocol) == 0 || len(FQDN) == 0 {
-		return nil, nil, nil, fmt.Errorf("empty Origin protocol or FQDN parsed from '%s'", orgServerFQDN)
-	}
-
-	var port *string
-	if len(matches[4]) != 0 {
-		port = &matches[4]
-	}
-	return &protocol, &FQDN, port, nil
-}
-
-func (ds *DeliveryServiceNullable) Sanitize() {
-	if ds.GeoLimitCountries != nil {
-		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
-	}
-	if ds.ProfileID != nil && *ds.ProfileID == -1 {
-		ds.ProfileID = nil
-	}
-	if ds.EdgeHeaderRewrite != nil && strings.TrimSpace(*ds.EdgeHeaderRewrite) == "" {
-		ds.EdgeHeaderRewrite = nil
-	}
-	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
-		ds.MidHeaderRewrite = nil
-	}
-	if ds.RoutingName == nil || *ds.RoutingName == "" {
-		ds.RoutingName = util.StrPtr(DefaultRoutingName)
-	}
-	if ds.AnonymousBlockingEnabled == nil {
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	}
-	signedAlgorithm := SigningAlgorithmURLSig
-	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
-		ds.SigningAlgorithm = &signedAlgorithm
-	}
-	if !ds.Signed && ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == signedAlgorithm {
-		ds.Signed = true
-	}
-	if ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 0 {
-		ds.MaxOriginConnections = util.IntPtr(0)
-	}
-	if ds.DeepCachingType == nil {
-		s := DeepCachingType("")
-		ds.DeepCachingType = &s
-	}
-	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
-}
-
-func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
-	// Validate the TypeName related fields below
-	err := error(nil)
-	DNSRegexType := "^DNS.*$"
-	HTTPRegexType := "^HTTP.*$"
-	SteeringRegexType := "^STEERING.*$"
-	latitudeErr := "Must be a floating point number within the range +-90"
-	longitudeErr := "Must be a floating point number within the range +-180"
-
-	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
-	if err != nil {
-		return err
-	}
-
-	errs := validation.Errors{
-		"consistentHashQueryParams": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullable)
-				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
-					return nil
-				}
-				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
-			})),
-		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
-			validation.By(tovalidate.IsGreaterThanZero)),
-		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"missLat": validation.Validate(ds.MissLat,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.Min(-90.0).Error(latitudeErr),
-			validation.Max(90.0).Error(latitudeErr)),
-		"missLong": validation.Validate(ds.MissLong,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.Min(-180.0).Error(longitudeErr),
-			validation.Max(180.0).Error(longitudeErr)),
-		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
-			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
-		"rangeSliceBlockSize": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullable)
-				if ds.RangeRequestHandling != nil {
-					if *ds.RangeRequestHandling == 3 {
-						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
-							// Per Slice Plugin implementation
-							validation.Min(262144),   // 256KiB
-							validation.Max(33554432), // 32MiB
-						)
-					}
-					if ds.RangeSliceBlockSize != nil {
-						return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
-					}
-				}
-				return nil
-			})),
-		"protocol": validation.Validate(ds.Protocol,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"qstringIgnore": validation.Validate(ds.QStringIgnore,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-	}
-	toErrs := tovalidate.ToErrors(errs)
-	if len(toErrs) > 0 {
-		return errors.New(util.JoinErrsStr(toErrs))
-	}
-	return nil
-}
-
-func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
-	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
-		"must be one of 'NEVER' or 'ALWAYS'")
-	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
-	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
-	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
-	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
-	errs := tovalidate.ToErrors(validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
-		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
-		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
-		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
-		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
-		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
-		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
-		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
-		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
-	})
-	if err := ds.validateTypeFields(tx); err != nil {
-		errs = append(errs, errors.New("type fields: "+err.Error()))
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return util.JoinErrs(errs)
-}
-
-// Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
-func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
-	b, err := json.Marshal(d)
+func jsonValue(v interface{}) (driver.Value, error) {
+	b, err := json.Marshal(v)
 	return b, err
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
-func (d *DeliveryServiceNullable) Scan(src interface{}) error {
+func jsonScan(src interface{}, dest interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
-	return json.Unmarshal(b, d)
+	return json.Unmarshal(b, dest)
+}
+
+// NOTE: the driver.Valuer and sql.Scanner interface implementations are
+// necessary for Delivery Service Requests which store and read raw JSON
+// from the database.
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceNullable) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceNullable struct.
+func (ds *DeliveryServiceNullable) Scan(src interface{}) error {
+	return jsonScan(src, ds)
+}
+
+// Value implements the driver.Valuer interface --
+// marshals struct to json to pass back as a json.RawMessage.
+func (ds *DeliveryServiceV4) Value() (driver.Value, error) {
+	return jsonValue(ds)
+}
+
+// Scan implements the sql.Scanner interface --
+// expects json.RawMessage and unmarshals to a DeliveryServiceV4 struct.
+func (ds *DeliveryServiceV4) Scan(src interface{}) error {
+	return jsonScan(src, ds)
 }
 
 // DeliveryServiceMatch ...
@@ -479,12 +412,6 @@ type DeliveryServiceMatch struct {
 	Type      DSMatchType `json:"type"`
 	SetNumber int         `json:"setNumber"`
 	Pattern   string      `json:"pattern"`
-}
-
-// DeliveryServiceAlert ...
-type DeliveryServiceAlert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
 }
 
 // DeliveryServiceStateResponse ...
@@ -609,13 +536,13 @@ type DSServerIDs struct {
 }
 
 type CachegroupPostDSReq struct {
-	DeliveryServices []int64 `json:"deliveryServices"`
+	DeliveryServices []int `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSResp struct {
 	ID               util.JSONIntStr `json:"id"`
 	ServerNames      []CacheName     `json:"serverNames"`
-	DeliveryServices []int64         `json:"deliveryServices"`
+	DeliveryServices []int           `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSRespResponse struct {
@@ -632,10 +559,10 @@ type AssignedDsResponse struct {
 // DeliveryServiceSafeUpdateRequest represents a request to update the "safe" fields of a
 // Delivery Service.
 type DeliveryServiceSafeUpdateRequest struct {
-	DisplayName *string `json:"displayName`
+	DisplayName *string `json:"displayName"`
 	InfoURL     *string `json:"infoUrl"`
 	LongDesc    *string `json:"longDesc"`
-	LongDesc1   *string `json:"longDesc1`
+	LongDesc1   *string `json:"longDesc1"`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
@@ -647,12 +574,20 @@ func (r *DeliveryServiceSafeUpdateRequest) Validate(*sql.Tx) error {
 	return nil
 }
 
-// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT request to its
-// /deliveryservices/{{ID}}/safe endpoint.
+// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
+// request to its /deliveryservices/{{ID}}/safe endpoint.
+// Deprecated: Please only use versioned structures.
 type DeliveryServiceSafeUpdateResponse struct {
 	Alerts
 	// Response contains the representation of the Delivery Service after it has been updated.
-	// Note that this should be "cast" to the appropriate version of Delivery Service, reflecting
-	// the API version that was called.
 	Response []DeliveryServiceNullable `json:"response"`
+}
+
+// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
+// request to its /api/3.0/deliveryservices/{{ID}}/safe endpoint.
+type DeliveryServiceSafeUpdateResponseV30 struct {
+	Alerts
+	// Response contains the representation of the Delivery Service after it has
+	// been updated.
+	Response []DeliveryServiceNullableV30 `json:"response"`
 }

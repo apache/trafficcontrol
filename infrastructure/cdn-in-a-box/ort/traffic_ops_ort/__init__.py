@@ -70,6 +70,10 @@ Arguments and Flags
 
 	Print version information and exit
 
+.. option:: -t, --timeout
+
+	Sets the timeout in milliseconds for connections to Traffic Ops.
+
 .. option:: -k, --insecure
 
 	An optional flag which, when used, disables the checking of SSL certificates for validity
@@ -207,31 +211,15 @@ Arguments and Flags
 	that :program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
 	defined, either on the command line or in the execution environment.
 
+.. option:: --hostname HOSTNAME
+
+	Causes ORT to request configuration information for the server named ``HOSTNAME`` instead of
+	detecting the server's actual hostname. This is primarily useful for testing purposes.
+
 Environment Variables
 ---------------------
-.. envvar:: TO_URL
-
-	Should be set to the URL of a Traffic Ops server. This doesn't need to be a full URL, an
-	:abbr:`FQDN (Fully Qualified Domain Name)` will do just as well. It may also omit the port
-	number on which the Traffic Ops server listens for incoming connections - port 443 will be
-	assumed unless :envvar:`TO_URL` is prefixed by ``http://`` (case-insensitive), in which case
-	port 80 will be assumed. The value of this environment variable will only be considered if
-	:program:`traffic_ops_ort` was invoked using the new call signature, which allows it to be
-	overridden on the command line by the value of :option:`--to_url`.
-
-.. envvar:: TO_USER
-
-	The username to use when authenticating to the Traffic Ops server. The value of this environment
-	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
-	signature, which allows it to be overridden on the command line by the value of
-	:option:`-u`/:option:`--to_user`.
-
-.. envvar:: TO_PASSWORD
-
-	The password to use when authenticating to the Traffic Ops server. The value of this environment
-	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
-	signature, which allows it to be overridden on the command line by the value of
-	:option:`-p`/:option:`--to_password`.
+:program:`traffic_ops_ort` supports authentication with a Traffic Ops instance using the environment
+variables :envvar:`TO_URL`, :envvar:`TO_USER` and :envvar:`TO_PASSWORD`.
 
 .. _ort-special-strings:
 
@@ -325,11 +313,12 @@ Module Contents
 ===============
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__  = "Brennan Fieck"
 
 import argparse
 import datetime
+from distutils.spawn import find_executable
 import logging
 import os
 import random
@@ -452,6 +441,9 @@ def main() -> int:
 	                    help="wait a random number between 0 and <dispersion> before starting.",
 	                    type=int,
 	                    default=300)
+	parser.add_argument("--hostname",
+	                    help="Pretend to be a server with the provided hostname instead of using "
+	                         "this server's actual hostname in communications with Traffic Ops")
 	parser.add_argument("--login_dispersion",
 	                    help="wait a random number between 0 and <login_dispersion> before login.",
 	                    type=int,
@@ -476,6 +468,18 @@ def main() -> int:
 	                    help="Skip verification of SSL certificates for Traffic Ops connections. "\
 	                         "DON'T use this in production!",
 	                    action="store_true")
+	parser.add_argument("-t", "--timeout",
+	                    help="Sets the timeout in milliseconds for requests made to Traffic Ops.",
+	                    type=int,
+	                    default=None)
+	parser.add_argument("--via-string-release",
+			    		help="set the ATS via string to the package release instead of version",
+			    		type=int,
+			    		default=0)
+	parser.add_argument("--disable-parent-config-comments",
+						help="Do not insert comments in parent.config files",
+						type=int,
+						default=0)
 	parser.add_argument("-v", "--version",
 	                    action="version",
 	                    version="%(prog)s v"+__version__,
@@ -522,5 +526,8 @@ def main() -> int:
 			print("(Hint: use -h/--help for usage)", file=sys.stderr)
 			return 1
 
+	if not find_executable("atstccfg"):
+		print("Could not find atstccfg executable - this is required to run ORT!", file=sys.stderr)
+		return 1
 
 	return doMain(args)

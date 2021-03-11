@@ -17,11 +17,29 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
+
+    let getCDNs = function(notifications) {
+        cdnService.getCDNs()
+            .then(function(cdns) {
+                cdns.forEach(function(cdn) {
+                    const cdnNotification = notifications.find(function(notification){ return cdn.name === notification.cdn });
+                    if (cdnNotification) {
+                        cdn.notificationCreatedBy = cdnNotification.user;
+                        cdn.notification = cdnNotification.notification;
+                    }
+                });
+                $scope.cdns = cdns;
+            });
+    };
 
     $scope.isCollapsed = true;
 
     $scope.userLoaded = userModel.loaded;
+
+    $scope.enviroName = (propertiesModel.properties.environment) ? propertiesModel.properties.environment.name : '';
+
+    $scope.isProd = (propertiesModel.properties.environment) ? propertiesModel.properties.environment.isProd : false;
 
     /* we don't want real time changes to the user showing up. we want the ability to revert changes
     if necessary. thus, we will only update this on save. see userModel::userUpdated event below.
@@ -60,6 +78,68 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
+    $scope.toggleNotification = function(cdn) {
+        if (cdn.notificationCreatedBy) {
+            confirmDeleteNotification(cdn);
+        } else {
+            confirmCreateNotification(cdn);
+        }
+    };
+
+    let confirmCreateNotification = function(cdn) {
+        const params = {
+            title: 'Create Global ' + cdn.name + ' Notification',
+            message: 'What is the content of your global notification for the ' + cdn.name + ' CDN?'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(notification) {
+            cdnService.createNotification(cdn, notification).
+                then(
+                    function() {
+                        $rootScope.$broadcast('headerController::notificationCreated');
+                    }
+                );
+        }, function () {
+            // do nothing
+        });
+    };
+
+    let confirmDeleteNotification = function(cdn) {
+        const params = {
+            title: 'Delete Global ' + cdn.name + ' Notification',
+            message: 'Are you sure you want to delete the global notification for the ' + cdn.name + ' CDN? This will remove the notification from the view of all users.'
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            cdnService.deleteNotification({ cdn: cdn.name }).
+                then(
+                    function() {
+                        $rootScope.$broadcast('headerController::notificationDeleted');
+                    }
+                );
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.confirmQueueServerUpdates = function() {
         var params = {
             title: 'Queue Server Updates',
@@ -73,8 +153,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -98,8 +178,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -155,6 +235,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         $scope.user = angular.copy(userModel.user);
     });
 
+    $rootScope.$on('notificationsController::refreshNotifications', function(event, options) {
+        getCDNs(options.notifications);
+    });
+
     var init = function () {
         scrollToTop();
         initToggleMenu();
@@ -162,5 +246,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel', 'propertiesModel'];
 module.exports = HeaderController;

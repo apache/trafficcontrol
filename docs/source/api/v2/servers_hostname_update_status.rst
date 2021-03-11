@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-hostname-update_status:
+.. _to-api-v2-servers-hostname-update_status:
 
 **************************************
 ``servers/{{hostname}}/update_status``

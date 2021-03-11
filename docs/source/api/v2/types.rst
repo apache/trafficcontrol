@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-types:
+.. _to-api-v2-types:
 
 *********
 ``types``

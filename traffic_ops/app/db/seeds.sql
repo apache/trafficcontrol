@@ -175,6 +175,9 @@ insert into capability (name, description) values ('server-capabilities-write', 
 -- servers
 insert into capability (name, description) values ('servers-read', 'Ability to view servers') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('servers-write', 'Ability to edit servers') ON CONFLICT (name) DO NOTHING;
+-- service categories
+insert into capability (name, description) values ('service-categories-read', 'Ability to view service categories') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('service-categories-write', 'Ability to edit service categories') ON CONFLICT (name) DO NOTHING;
 -- stats
 insert into capability (name, description) values ('stats-read', 'Ability to view cache stats') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('stats-write', 'Ability to edit cache stats') ON CONFLICT (name) DO NOTHING;
@@ -262,6 +265,8 @@ insert into role_capability (role_id, cap_name) values ((select id from role whe
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'server-capabilities-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'service-categories-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'service-categories-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'statuses-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
@@ -313,6 +318,7 @@ INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHER
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'roles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'server-capabilities-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'service-categories-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'stats-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'statuses-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'static-dns-entries-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
@@ -355,6 +361,7 @@ INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHER
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'roles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'server-capabilities-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'service-categories-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'stats-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'statuses-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'static-dns-entries-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
@@ -384,6 +391,7 @@ INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHER
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'regions-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'roles-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'servers-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'service-categories-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'stats-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'statuses-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'tenants-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
@@ -684,6 +692,11 @@ insert into api_capability (http_method, route, capability) values ('POST', 'ser
 insert into api_capability (http_method, route, capability) values ('GET', 'server_server_capabilities', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('DELETE', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- service categories
+insert into api_capability (http_method, route, capability) values ('GET', 'service_categories', 'service-categories-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'service_categories', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'service_categories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'service_categories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- stats
 insert into api_capability (http_method, route, capability) values ('GET', 'caches/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'stats_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
@@ -884,3 +897,58 @@ insert into to_extension (id, name, servercheck_short_name, servercheck_column_n
 values (30, 'OPEN', '', 'bd', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
 values (31, 'OPEN', '', 'be', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
+
+insert into last_deleted (table_name) VALUES ('api_capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('asn') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('cachegroup') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('cachegroup_fallbacks') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('cachegroup_localization_method') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('cachegroup_parameter') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('cdn') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('coordinate') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice_regex') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice_request') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice_request_comment') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice_server') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservice_tmuser') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('division') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('federation') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('federation_deliveryservice') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('federation_federation_resolver') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('federation_resolver') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('federation_tmuser') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('hwinfo') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('job') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('job_agent') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('job_status') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('log') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('origin') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('parameter') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('phys_location') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('profile') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('profile_parameter') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('regex') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('region') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('role') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('role_capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('server') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('servercheck') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('snapshot') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('staticdnsentry') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('stats_summary') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('status') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('steering_target') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('tenant') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('tm_user') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('topology') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('topology_cachegroup') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('topology_cachegroup_parents') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('to_extension') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('type') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('user_role') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('server_capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('server_server_capability') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('service_category') ON CONFLICT (table_name) DO NOTHING;
+insert into last_deleted (table_name) VALUES ('deliveryservices_required_capability') ON CONFLICT (table_name) DO NOTHING;

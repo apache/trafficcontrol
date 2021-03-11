@@ -20,8 +20,10 @@ package coordinate
  */
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -48,9 +50,13 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"name": dbhelpers.WhereColumnInfo{"name", nil},
 	}
 }
+
+func (v *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
+}
+
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
-
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
@@ -117,10 +123,22 @@ func (coordinate TOCoordinate) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (coord *TOCoordinate) Create() (error, error, int)              { return api.GenericCreate(coord) }
-func (coord *TOCoordinate) Read() ([]interface{}, error, error, int) { return api.GenericRead(coord) }
-func (coord *TOCoordinate) Update() (error, error, int)              { return api.GenericUpdate(coord) }
-func (coord *TOCoordinate) Delete() (error, error, int)              { return api.GenericDelete(coord) }
+func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
+func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(coord.APIInfo(), "name")
+	return api.GenericRead(h, coord, useIMS)
+}
+func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+
+func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
+	return api.GenericUpdate(h, coord)
+}
+func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT

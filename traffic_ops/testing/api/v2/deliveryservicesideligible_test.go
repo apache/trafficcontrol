@@ -26,7 +26,7 @@ func TestDeliveryServicesEligible(t *testing.T) {
 }
 
 func GetTestDeliveryServicesEligible(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices()
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v", err)
 	}
@@ -34,7 +34,7 @@ func GetTestDeliveryServicesEligible(t *testing.T) {
 		t.Error("GET DeliveryServices returned no delivery services, need at least 1 to test")
 	}
 	dsID := dses[0].ID
-	servers, _, err := TOSession.GetDeliveryServicesEligible(dsID)
+	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID)
 	if err != nil {
 		t.Errorf("getting delivery services eligible: %v", err)
 	}

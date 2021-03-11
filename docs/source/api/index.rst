@@ -31,7 +31,6 @@ Documents all API version 1 routes.
 
 	v1/*
 
-
 API V2 Routes
 =============
 Documents all API version 2 routes.
@@ -42,6 +41,28 @@ Documents all API version 2 routes.
 	:glob:
 
 	v2/*
+
+API V3 Routes
+=============
+Documents all API version 3 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v3/*
+
+API V4 Routes
+=============
+Documents all API version 4 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v4/*
 
 How to Read this Documentation
 ==============================
@@ -91,6 +112,17 @@ Object
 	The fields in the field list refer to the keys of the ``response`` object.
 ``undefined``
 	No ``response`` object is present in the response payload. Unless the format is otherwise noted, this means that there should be no field list in the "Response Structure" subsection.
+
+Summary
+-------
+The top-level ``summary`` object is used to provide summary statistics about object collections. In general the use of ``summary`` is left to be defined by API endpoints (subject to some restrictions). When an endpoint uses the ``summary`` object, its fields will be explained in a subsection of the "Response Structure" named "Summary Fields".
+
+The following, reserved properties of ``summary`` are guaranteed to always have their herein-described meaning.
+
+.. _reserved-summary-fields:
+
+``count``
+	``count`` contains an unsigned integer that defines the total number of results that could possibly be returned given the non-pagination query parameters supplied by the client.
 
 Using API Endpoints
 ===================
@@ -304,3 +336,13 @@ TrafficOps Native Client Libraries
 TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in `the client README <https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients>`_.
 
 .. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.
+
+Migrating from API V1
+=====================
+
+.. toctree::
+	:hidden:
+
+	migrating-from-v1
+
+See the :ref:`to-migrating` page for help migrating existing code from API v1 to a new API version.

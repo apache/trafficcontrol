@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-letsencrypt-autorenew:
+.. _to-api-v2-letsencrypt-autorenew:
 
 *************************
 ``letsencrypt/autorenew``
@@ -34,29 +34,6 @@ No parameters available
 
 Response Structure
 ------------------
-:LetsEncryptExpirations: A list of objects with information regarding certificate expiration for all Let's Encrypt certificates
-
-	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
-	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` in :rfc:`3339` format
-	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
-	:Error:       Any errors received in the renewal process
-
-:SelfSignedExpirations:  A list of objects with information regarding certificate expiration for all self signed certificates
-
-	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
-	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` in :rfc:`3339` format
-	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
-	:Error:       Any errors received in the renewal process
-
-:OtherExpirations:       A list of objects with information regarding certificate expiration for all other certificates
-
-	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
-	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` in :rfc:`3339` format
-	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
-	:Error:       Any errors received in the renewal process
 
 .. code-block:: http
 	:caption: Response Example
@@ -64,24 +41,13 @@ Response Structure
 	HTTP/1.1 200 OK
 	Content-Type: application/json
 
-	{ "response": {
-		"LetsEncryptExpirations": [
-			{
-				"XmlId":"demo2",
-				"Version":1,
-				"Expiration":"2020-08-18T13:53:06Z",
-				"AuthType":"Lets Encrypt",
-				"Error":null
-			}
-		],
-		"SelfSignedExpirations": [
-			{
-				"XmlId":"demo1",
-				"Version":3,
-				"Expiration":"2020-08-18T13:53:06Z",
-				"AuthType":"Self Signed",
-				"Error":null
-			}
-		],
-		"OtherExpirations":null
-	}}
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, please use letsencrypt/autorenew instead",
+			"level": "warning"
+		},
+		{
+			"text": "Beginning async call to renew certificates. This may take a few minutes.",
+			"level": "success"
+		}
+	]}

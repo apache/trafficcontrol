@@ -17,36 +17,49 @@
 
 ############################################################
 # Dockerfile to build Traffic Portal container images
-# Based on CentOS 7.2
+# Based on CentOS 8
 ############################################################
 
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
 
-RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
+
+RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
-ADD $TRAFFIC_PORTAL_RPM /
 
 ARG TO_HOST=$TO_HOST
 
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
-RUN yum install -y \
+RUN dnf install -y \
     epel-release && \
-    yum install -y \
+    dnf install -y \
       jq \
       nodejs \
       openssl \
       gettext \
       bind-utils \
-      net-tools \
-      /$(basename $TRAFFIC_PORTAL_RPM) && \
-    rm /$(basename $TRAFFIC_PORTAL_RPM) && \
-    yum clean all || \
+      net-tools && \
+    dnf clean all || \
     echo "ERROR INSTALLING PACKAGES"
+
+ADD $TRAFFIC_PORTAL_RPM /
+RUN rpm -Uvh /$(basename $TRAFFIC_PORTAL_RPM) && \
+    rm /$(basename $TRAFFIC_PORTAL_RPM)
 
 ADD enroller/server_template.json \
     traffic_portal/run.sh \
     traffic_ops/to-access.sh /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
+EXPOSE 443
 
 CMD /run.sh

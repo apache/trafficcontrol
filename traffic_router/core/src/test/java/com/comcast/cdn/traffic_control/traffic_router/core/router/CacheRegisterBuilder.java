@@ -16,9 +16,9 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
@@ -119,8 +119,7 @@ public class CacheRegisterBuilder {
     }
 
     public static void parseDeliveryServiceConfig(final JsonNode deliveryServices, final CacheRegister cacheRegister) throws JsonUtilsException {
-        final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
-        final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
+        final TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
         final Iterator<String> keyIter = deliveryServices.fieldNames();
@@ -136,17 +135,8 @@ public class CacheRegisterBuilder {
             for (final JsonNode matchset : matchsets) {
                 final String protocol = JsonUtils.getString(matchset, "protocol");
 
-                if ("DNS".equals(protocol)) {
-                    isDns = true;
-                }
-
                 final DeliveryServiceMatcher m = new DeliveryServiceMatcher(ds);
-
-                if ("HTTP".equals(protocol)) {
-                    httpServiceMatchers.add(m);
-                } else if("DNS".equals(protocol)) {
-                    dnsServiceMatchers.add(m);
-                }
+                deliveryServiceMatchers.add(m);
 
                 for (JsonNode matchlist : matchset.get("matchlist")) {
                     final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(JsonUtils.getString(matchlist, "match-type"));
@@ -158,8 +148,7 @@ public class CacheRegisterBuilder {
         }
 
         cacheRegister.setDeliveryServiceMap(dsMap);
-        cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
-        cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);
+        cacheRegister.setDeliveryServiceMatchers(deliveryServiceMatchers);
     }
 
 }

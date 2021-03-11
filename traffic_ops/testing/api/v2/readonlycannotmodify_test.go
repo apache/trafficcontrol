@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 func TestReadOnlyCannotModify(t *testing.T) {
@@ -57,7 +57,7 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	}
 
 	for _, alert := range alerts.Alerts {
-		if alert.Level == string(tc.SuccessLevel) {
+		if alert.Level == tc.SuccessLevel.String() {
 			t.Errorf("readonlyuser creating cdn, alerts expected: no success alert, actual: got success alert '" + alert.Text + "'")
 		}
 	}

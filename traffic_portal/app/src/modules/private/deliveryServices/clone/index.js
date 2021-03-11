@@ -48,7 +48,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.clone', 
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							origin: function($stateParams, originService) {
-								return originService.getOrigins({ deliveryservice: $stateParams.deliveryServiceId, primary: true })
+								return originService.getOrigins({ deliveryservice: $stateParams.deliveryServiceId, primary: true });
+							},
+							topologies: function(topologyService) {
+								return topologyService.getTopologies();
 							},
 							type: function($stateParams) {
 								return $stateParams.type;

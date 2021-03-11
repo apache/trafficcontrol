@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-osversions:
+.. _to-api-v2-osversions:
 
 **************
 ``osversions``
@@ -31,8 +31,6 @@ Gets all available :abbr:`OS (Operating System)` versions for ISO generation, as
 Request Structure
 -----------------
 No parameters available.
-
-.. _response-structure:
 
 Response Structure
 ------------------
@@ -63,7 +61,7 @@ Configuration File
 The data returned from the endpoint comes directly from a configuration file. By default, the file is located at ``/var/www/files/osversions.json``.
 The **directory** of the file can be changed by creating a specific :term:`Parameter` named ``kickstart.files.location`` in configuration file ``mkisofs``.
 
-The format of the file is a JSON object as described in :ref:`response-structure`.
+The format of the file is a JSON object as described in `Response Structure`_.
 
 .. code-block:: json
 	:caption: Example osversions.json file

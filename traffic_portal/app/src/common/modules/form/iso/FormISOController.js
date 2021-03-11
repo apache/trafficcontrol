@@ -17,25 +17,20 @@
  * under the License.
  */
 
-var FormISOController = function(servers, osversions, $scope, $anchorScroll, formUtils, toolsService, messageModel) {
+var FormISOController = function(servers, osversions, $scope, $anchorScroll, formUtils, toolsService, messageModel, serverUtils) {
+
+	$scope.IPPattern = serverUtils.IPPattern;
+	$scope.IPv4Pattern = serverUtils.IPv4Pattern;
 
 	$scope.servers = servers;
 
 	$scope.osversions = osversions;
 
-	$scope.selectedServer = {};
-
-	$scope.falseTrue = [
-		{ value: 'yes', label: 'yes' },
-		{ value: 'no', label: 'no' }
-	];
+	$scope.selectedServer = null;
 
 	$scope.iso = {
-		dhcp: 'no'
-	};
-
-	$scope.isDHCP = function() {
-		return $scope.iso.dhcp == 'yes';
+		dhcp: false,
+		interfaceMtu: 1500
 	};
 
 	$scope.fqdn = function(server) {
@@ -43,11 +38,28 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 	};
 
 	$scope.copyServerAttributes = function() {
-		$scope.iso = angular.extend($scope.iso, $scope.selectedServer);
+		const legacyNet = serverUtils.toLegacyIPInfo($scope.selectedServer.interfaces);
+		$scope.iso.hostName = $scope.selectedServer.hostName;
+		$scope.iso.domainName = $scope.selectedServer.domainName;
+		$scope.iso.interfaceName = legacyNet.interfaceName;
+		$scope.iso.interfaceMtu = legacyNet.interfaceMtu;
+		$scope.iso.ip6Address = legacyNet.ip6Address;
+		$scope.iso.ip6Gateway = legacyNet.ip6Gateway;
+		$scope.iso.ipAddress = legacyNet.ipAddress;
+		$scope.iso.ipGateway = legacyNet.ipGateway;
+		$scope.iso.ipNetmask = legacyNet.ipNetmask;
+		$scope.iso.mgmtIpAddress = $scope.selectedServer.mgmtIpAddress;
+		$scope.iso.mgmtIpNetmask = $scope.selectedServer.mgmtIpNetmask;
+		$scope.iso.mgmtIpGateway = $scope.selectedServer.mgmtIpGateway;
+		$scope.iso.mgmtInterface = $scope.selectedServer.mgmtInterface;
 	};
 
 	$scope.generate = function(iso) {
-		toolsService.generateISO(iso)
+		// for whatever reason this was designed with "yes" and "no" instead of actual
+		// boolean values, so we need to emulate that here.
+		const tmp = Object.assign({}, iso);
+		tmp.dhcp = iso.dhcp ? "yes" : "no";
+		toolsService.generateISO(tmp)
 			.then(function() {
 				$anchorScroll(); // scrolls window to top
 				messageModel.setMessages([{level: 'success', text: 'ISO successfully downloaded'}], false);
@@ -60,5 +72,5 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 
 };
 
-FormISOController.$inject = ['servers', 'osversions', '$scope', '$anchorScroll', 'formUtils', 'toolsService', 'messageModel'];
+FormISOController.$inject = ['servers', 'osversions', '$scope', '$anchorScroll', 'formUtils', 'toolsService', 'messageModel', "serverUtils"];
 module.exports = FormISOController;

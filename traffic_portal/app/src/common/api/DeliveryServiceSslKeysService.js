@@ -54,6 +54,21 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
         );
 	};
 
+	this.renewCert = function(deliveryService) {
+		return $http.post(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys/renew").then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, false);
+				return result.data.response;
+			},
+			function(err) {
+				if (err.data && err.data.alerts) {
+					messageModel.setMessages(err.data.alerts, false);
+				}
+				throw err;
+			}
+		);
+	};
+
 	this.addSslKeys = function(sslKeys, deliveryService) {
 
         sslKeys.key = deliveryService.xmlId;

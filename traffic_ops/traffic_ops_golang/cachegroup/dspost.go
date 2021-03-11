@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -36,7 +37,7 @@ import (
 	"github.com/lib/pq"
 )
 
-func DSPostHandler(w http.ResponseWriter, r *http.Request) {
+func DSPostHandlerV31(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -49,68 +50,117 @@ func DSPostHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	vals := map[string]interface{}{
-		"alerts": tc.CreateAlerts(tc.SuccessLevel, "Delivery services successfully assigned to all the servers of cache group "+strconv.Itoa(inf.IntParams["id"])+".").Alerts,
-	}
 
-	resp, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, int64(inf.IntParams["id"]), req.DeliveryServices)
+	resp, vals, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+
+	if err := updateDSParam(inf.Tx.Tx, req.DeliveryServices, "cacheurl_", "cacheurl"); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating delivery service parameters: "+err.Error()))
+		return
+	}
+
+	if err, errCode := writeChangeLog(inf.Tx.Tx, inf.User, inf.IntParams["id"]); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
+		return
+	}
+
 	api.WriteRespVals(w, r, resp, vals)
 }
 
+func DSPostHandlerV40(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	req := tc.CachegroupPostDSReq{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	resp, vals, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if err, errCode := writeChangeLog(inf.Tx.Tx, inf.User, inf.IntParams["id"]); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
+	}
+
+	api.WriteRespVals(w, r, resp, vals)
+}
+
+func writeChangeLog(tx *sql.Tx, user *auth.CurrentUser, cgID int) (error, int) {
+	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(tx, cgID)
+	if err != nil {
+		return fmt.Errorf("getting cachegroup name from ID %d: %s", cgID, err.Error()), http.StatusInternalServerError
+	} else if !ok {
+		return fmt.Errorf("cachegroup %d does not exist", cgID), http.StatusNotFound
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
+	return nil, 0
+}
+
 // postDSes returns the post response, any user error, any system error, and the HTTP status code to be returned in the event of an error.
-func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc.CacheGroupPostDSResp, error, error, int) {
+func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int, dsIDs []int) (tc.CacheGroupPostDSResp, map[string]interface{}, error, error, int) {
 	cdnName, usrErr, sysErr, errCode := getCachegroupCDN(tx, cgID)
 	if sysErr != nil {
 		sysErr = errors.New("getting cachegroup CDN: " + sysErr.Error())
 	}
 	if usrErr != nil || sysErr != nil {
-		return tc.CacheGroupPostDSResp{}, usrErr, sysErr, errCode
+		return tc.CacheGroupPostDSResp{}, nil, usrErr, sysErr, errCode
 	}
 
 	tenantIDs, err := getDSTenants(tx, dsIDs)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting delivery service tennat IDs: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting delivery service tenant IDs: " + err.Error()), http.StatusInternalServerError
 	}
 	for _, tenantID := range tenantIDs {
 		ok, err := tenant.IsResourceAuthorizedToUserTx(int(tenantID), user, tx)
 		if err != nil {
-			return tc.CacheGroupPostDSResp{}, nil, errors.New("checking tenancy: " + err.Error()), http.StatusInternalServerError
+			return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("checking tenancy: " + err.Error()), http.StatusInternalServerError
 		}
 		if !ok {
-			return tc.CacheGroupPostDSResp{}, errors.New("not authorized for delivery service tenant " + strconv.FormatInt(tenantID, 10)), nil, http.StatusForbidden
+			return tc.CacheGroupPostDSResp{}, nil, fmt.Errorf("not authorized for delivery service tenant %d", tenantID), nil, http.StatusForbidden
 		}
 	}
 
-	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(tx, cgID)
+	topologyDSes, err := dbhelpers.GetDeliveryServicesWithTopologies(tx, dsIDs)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting cachegroup name from ID '" + string(cgID) + "': " + err.Error()), http.StatusInternalServerError
-	} else if !ok {
-		return tc.CacheGroupPostDSResp{}, errors.New("cachegroup " + string(cgID) + " does not exist"), nil, http.StatusNotFound
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting delivery services with topologies: " + err.Error()), http.StatusInternalServerError
+	}
+	if len(topologyDSes) > 0 {
+		return tc.CacheGroupPostDSResp{}, nil, fmt.Errorf("delivery services %v are already assigned to a topology", topologyDSes), nil, http.StatusBadRequest
 	}
 
 	if err := verifyDSesCDN(tx, dsIDs, cdnName); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error()), http.StatusInternalServerError
 	}
 	cgServers, err := getCachegroupServers(tx, cgID)
 	if err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting cachegroup server names " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("getting cachegroup server names " + err.Error()), http.StatusInternalServerError
 	}
 	if err := insertCachegroupDSes(tx, cgID, dsIDs); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("inserting cachegroup delivery services: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("inserting cachegroup delivery services: " + err.Error()), http.StatusInternalServerError
 	}
 
 	if err := updateParams(tx, dsIDs); err != nil {
-		return tc.CacheGroupPostDSResp{}, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
+		return tc.CacheGroupPostDSResp{}, nil, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
-	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, nil, nil, http.StatusOK
+	vals := map[string]interface{}{
+		"alerts": tc.CreateAlerts(tc.SuccessLevel, "Delivery services successfully assigned to all the servers of cache group "+strconv.Itoa(cgID)+".").Alerts,
+	}
+	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, vals, nil, nil, http.StatusOK
 }
 
-func insertCachegroupDSes(tx *sql.Tx, cgID int64, dsIDs []int64) error {
+func insertCachegroupDSes(tx *sql.Tx, cgID int, dsIDs []int) error {
 	_, err := tx.Exec(`
 INSERT INTO deliveryservice_server (deliveryservice, server) (
   SELECT unnest($1::int[]), server.id
@@ -126,7 +176,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server) (
 	return nil
 }
 
-func getCachegroupServers(tx *sql.Tx, cgID int64) ([]tc.CacheName, error) {
+func getCachegroupServers(tx *sql.Tx, cgID int) ([]tc.CacheName, error) {
 	q := `
 SELECT server.host_name FROM server
 JOIN type on type.id = server.type
@@ -149,7 +199,7 @@ AND (type.name LIKE 'EDGE%' OR type.name LIKE 'ORG%')
 	return names, nil
 }
 
-func verifyDSesCDN(tx *sql.Tx, dsIDs []int64, cdn string) error {
+func verifyDSesCDN(tx *sql.Tx, dsIDs []int, cdn string) error {
 	q := `
 SELECT count(cdn.name)
 FROM cdn
@@ -167,7 +217,7 @@ AND cdn.name <> $2::text
 	return nil
 }
 
-func getCachegroupCDN(tx *sql.Tx, cgID int64) (string, error, error, int) {
+func getCachegroupCDN(tx *sql.Tx, cgID int) (string, error, error, int) {
 	q := `
 SELECT cdn.name
 FROM cdn
@@ -195,17 +245,14 @@ AND (type.name LIKE 'EDGE%' OR type.name LIKE 'ORG%')
 		}
 	}
 	if cdn == "" {
-		return "", errors.New("no edge or origin servers found on cachegroup " + strconv.FormatInt(cgID, 10)), nil, http.StatusBadRequest
+		return "", fmt.Errorf("no edge or origin servers found on cachegroup %d", cgID), nil, http.StatusBadRequest
 	}
 	return cdn, nil, nil, http.StatusOK
 }
 
-// updateParams updated the header rewrite, cacheurl, and regex remap params for the given edge caches, on the given delivery services. NOTE it does not update Mid params.
-func updateParams(tx *sql.Tx, dsIDs []int64) error {
+// updateParams updated the header rewrite, and regex remap params for the given edge caches, on the given delivery services. NOTE it does not update Mid params.
+func updateParams(tx *sql.Tx, dsIDs []int) error {
 	if err := updateDSParam(tx, dsIDs, "hdr_rw_", "edge_header_rewrite"); err != nil {
-		return err
-	}
-	if err := updateDSParam(tx, dsIDs, "cacheurl_", "cacheurl"); err != nil {
 		return err
 	}
 	if err := updateDSParam(tx, dsIDs, "regex_remap_", "regex_remap"); err != nil {
@@ -214,7 +261,7 @@ func updateParams(tx *sql.Tx, dsIDs []int64) error {
 	return nil
 }
 
-func updateDSParam(tx *sql.Tx, dsIDs []int64, paramPrefix string, dsField string) error {
+func updateDSParam(tx *sql.Tx, dsIDs []int, paramPrefix string, dsField string) error {
 	_, err := tx.Exec(`
 DELETE FROM parameter
 WHERE name = 'location'
@@ -244,9 +291,9 @@ INSERT INTO parameter (name, config_file, value) (
 	if err != nil {
 		return errors.New("inserting parameters: " + err.Error())
 	}
-	ids := []int64{}
+	ids := []int{}
 	for rows.Next() {
-		id := int64(0)
+		id := 0
 		if err := rows.Scan(&id); err != nil {
 			return errors.New("scanning inserted parameters: " + err.Error())
 		}
@@ -268,7 +315,7 @@ INSERT INTO profile_parameter (parameter, profile) (
 	return nil
 }
 
-func getDSTenants(tx *sql.Tx, dsIDs []int64) ([]int64, error) {
+func getDSTenants(tx *sql.Tx, dsIDs []int) ([]int, error) {
 	q := `
 SELECT COALESCE(tenant_id, 0) FROM deliveryservice
 WHERE deliveryservice.id = ANY($1)
@@ -278,9 +325,9 @@ WHERE deliveryservice.id = ANY($1)
 		return nil, errors.New("selecting delivery service tenants: " + err.Error())
 	}
 	defer rows.Close()
-	tenantIDs := []int64{}
+	tenantIDs := []int{}
 	for rows.Next() {
-		id := int64(0)
+		id := 0
 		if err := rows.Scan(&id); err != nil {
 			return nil, errors.New("querying cachegroup delivery service tenants: " + err.Error())
 		}

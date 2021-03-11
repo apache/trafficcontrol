@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.api.controllers;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.DataExporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,7 +33,7 @@ public class StatsController {
 	@Autowired
 	private DataExporter dataExporter;
 
-	@RequestMapping
+	@GetMapping
 	public @ResponseBody
 	Map<String, Object> getStats() {
 		final Map<String, Object> map = new HashMap<String, Object>();
@@ -43,7 +44,7 @@ public class StatsController {
 		return map;
 	}
 
-	@RequestMapping(value = "/ip/{ip:.+}")
+	@GetMapping(value = "/ip/{ip:.+}")
 	public @ResponseBody
 	Map<String, Object> getCaches(@PathVariable("ip") final String ip,
 	                              @RequestParam(name = "geolocationProvider", required = false, defaultValue = "maxmindGeolocationService") final String geolocationProvider) {

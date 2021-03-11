@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-cache_stats:
+.. _to-api-v2-cache_stats:
 
 ***************
 ``cache_stats``
@@ -64,7 +64,7 @@ Request Structure
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _cache_stats-get-request-example:
+.. _v2-cache_stats-get-request-example:
 .. code-block:: http
 	:caption: Request Example
 
@@ -77,7 +77,7 @@ Request Structure
 
 Content Format
 """"""""""""""
-It's important to note in :ref:`cache_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
+It's important to note in :ref:`v2-cache_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
 
 rfc
 	Returned timestamps will be formatted according to :rfc:`3339` (no sub-second precision).

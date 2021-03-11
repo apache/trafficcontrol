@@ -119,7 +119,7 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if client == nil {
-		sysErr = errors.New("Traffic Stats is not configured, but DS stats were requested")
+		sysErr = errors.New("Traffic Stats is not configured, but Cache stats were requested")
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}

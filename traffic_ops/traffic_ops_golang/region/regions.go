@@ -21,6 +21,8 @@ package region
 
 import (
 	"errors"
+	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -31,6 +33,10 @@ import (
 type TORegion struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Region
+}
+
+func (v *TORegion) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, v.ID, "region")
 }
 
 func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
@@ -70,8 +76,13 @@ func (region TORegion) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 }
 
 func (region *TORegion) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	region.ID = i
+	//this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	if id, exists := keys["id"].(int); exists {
+		region.ID = id
+	}
+	if name, exists := keys["name"].(string); exists {
+		region.Name = name
+	}
 }
 
 func (region *TORegion) GetAuditName() string {
@@ -84,13 +95,27 @@ func (region *TORegion) GetType() string {
 
 func (region *TORegion) Validate() error {
 	if len(region.Name) < 1 {
-		return errors.New(`Region 'name' is required.`)
+		return errors.New(`region 'name' is required`)
+	}
+	if region.Division == 0 {
+		return errors.New(`region 'division' is required`)
 	}
 	return nil
 }
 
-func (rg *TORegion) Read() ([]interface{}, error, error, int) { return api.GenericRead(rg) }
-func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
+func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(rg.APIInfo(), "name")
+	return api.GenericRead(h, rg, useIMS)
+}
+func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM region r
+JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='region') as res`
+}
+
+func (rg *TORegion) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, rg) }
 func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
 

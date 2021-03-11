@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 var SteeringUserSession *client.Session

@@ -15,61 +15,75 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION} as os-dependencies
+ARG RHEL_VERSION=8
 
-COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /usr/local/sbin/
-COPY ./traffic_portal/ /lang/traffic_portal/
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
+# Installs the Google Chrome dnf repo
+COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        utils_package=yum-utils; \
+    else \
+        utils_package=dnf-utils; \
+    fi && \
+    dnf install -y \
+        bind-utils \
+        # jq is in EPEL
+        epel-release \
+        GConf2 \
+        git \
+        google-chrome-stable \
+        java-1.8.0-openjdk \
+        net-tools \
+        $utils_package && \
+    dnf -y install jq && \
+    dnf -y clean all
+
+FROM os-dependencies AS node-dependencies
+# Download and install node
+RUN curl -Lo node.tar.xz https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz && \
+    tar --strip-components=1 -C /usr/local -xf node.tar.xz && \
+    rm node.tar.xz && \
+    npm install -g protractor@^7.0.0
+
+FROM node-dependencies
+
+COPY    traffic_portal/ /lang/traffic_portal/
 WORKDIR /lang/traffic_portal/test/end_to_end
-RUN printf "\n\
-[google-chrome] \n\
-name=google-chrome \n\
-baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64 \n\
-enabled=1 \n\
-gpgcheck=1 \n\
-gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
-" > /etc/yum.repos.d/google-chrome.repo
+COPY    infrastructure/cdn-in-a-box/traffic_portal_integration_test/junit-jasmine-onprepare.js .
 
-RUN yum update -y
-
-RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
-
-RUN curl -LO https://nodejs.org/dist/v10.15.0/node-v10.15.0-linux-x64.tar.xz
-
-RUN ls -lah
-
-# Use bsdtar, because regular tar doesn't work with Docker
-RUN yum install -y bsdtar
-RUN bsdtar --strip-components 1 -xzvf node-v* -C /usr/local
-RUN npm install -g protractor
 RUN npm install --save-dev jasmine-reporters@^2.0.0
 
-RUN ls -lah /lang/traffic_portal/test/end_to_end
+# Sets the exports.config.onPrepare handler, which cannot be stored in JSON
+RUN mkdir /portaltestresults && \
+    cat junit-jasmine-onprepare.js >> conf.js && \
+    rm junit-jasmine-onprepare.js
 
-RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
-RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/login/conf.js
+RUN jq ' \
+        .capabilities.chromeOptions.args = [ \
+            "--disable-extensions", \
+            "--disable-gpu", \
+            "--headless", \
+            "--ignore-certificate-errors", \
+            "--no-sandbox", \
+            "--whitelisted-ips=" \
+        ] ' \
+        conf.json > conf.json.tmp && \
+    mv conf.json.tmp conf.json
 
-RUN export junit_conf_jasmine="\n\
-	onPrepare: function() {\n\
-		var jasmineReporters = require('jasmine-reporters');\n\
-		jasmine.getEnv().addReporter(\n\
-			new jasmineReporters.JUnitXmlReporter({savePath:'/portaltestresults', filePrefix: 'portaltestresults', consolidateAll:true})\n\
-		);\n\
-	},\n\
-" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_jasmine}) =~ s/\\n/\n/g } if (/^\s*suites\b/) {print $e}' conf.js
+RUN webdriver-manager clean && \
+    repoquery --installed --qf='%{version}' google-chrome-stable | \
+        xargs webdriver-manager update --versions.chrome
 
-RUN export junit_conf_chrome="\
-		chromeOptions: {\n\
-			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips'] \n\
-		},\n\
-" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
+COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+     infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \
+     infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
-# debug
-RUN cat conf.js
-RUN cat login/conf.js
-
-RUN webdriver-manager clean
-RUN webdriver-manager update
-
-COPY ./infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh /lang/traffic_portal/test/end_to_end/
-CMD ./run.sh
+CMD run.sh

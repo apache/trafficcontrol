@@ -38,7 +38,20 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)`\ [2]_ from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build --parallel`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make native`` instead of ``make`` to build the RPMs quickly. Another option is running ``make -j4`` to build 4 components at once, if your computer can handle it.
+
+.. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
+
+By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, it defaults to ``8``):
+
+.. code-block:: shell
+	:caption: Building CDN in a Box to run CentOS 7 instead of CentOS 8
+
+	export RHEL_VERSION=7
+	make # Builds RPMs for CentOS 7
+	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
 Usage
 -----
@@ -56,6 +69,9 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Second Mid-Tier Cache (parent   | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	| of the first Mid-Tier Cache)    |                                                                |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Mock Origin Server              | Example web page served on port 9200                           | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| SMTP Server                     | Passwordless, cleartext SMTP server on port 25 (no relay)      | N/A                                   | N/A                                       |
@@ -63,8 +79,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Monitor                 | Web interface and API on port 80                               | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the    | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	|                                 | Perl API on port 60443\ [3]_                                   |                                       |                                           |
+	| Traffic Ops                     | API endpoints on port 6443                                     | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name:   | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
 	|                                 | ``DB_NAME`` in `variables.env`_)                               |                                       |                                           |
@@ -94,6 +109,33 @@ While the components may be interacted with by the host using these ports, the t
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
 
+Readiness Check
+"""""""""""""""
+
+In order to check the "readiness" of your CDN, you can optionally start the Readiness Container, which will continually :manpage:`curl(1)` the :term:`Delivery Services` in your CDN until they all return successful responses before exiting successfully.
+
+.. code-block:: shell
+	:caption: Example Command to Run the Readiness Container
+
+	sudo docker-compose -f docker-compose.readiness.yml up
+
+Integration Tests
+"""""""""""""""""
+
+There also exist TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
+
+.. code-block:: shell
+	:caption: Running TP Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-portal-test.yml up
+
+.. code-block:: shell
+	:caption: Running TO Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
+
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+
 variables.env
 """""""""""""
 .. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
@@ -104,8 +146,6 @@ variables.env
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
 
 .. [1] It is perfectly possible to build and run all containers without Docker Compose, but it's not recommended and not covered in this guide.
-.. [2] Consider ``make -j`` to build quickly, if your computer can handle multiple builds at once.
-.. [3] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
 
 X.509 SSL/TLS Certificates
 ==========================
@@ -162,14 +202,14 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
 #. Import the CIAB intermediate :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Centos7
------------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on CentOS 8 (Linux)
+--------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
 #. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Ubuntu
-----------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on Ubuntu (Linux)
+------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/usr/local/share/ca-certificates/`.
 #. Run ``update-ca-certificates`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
@@ -180,6 +220,8 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Ubuntu
 Advanced Usage
 ==============
 This section will be amended as functionality is added to the CDN in a Box project.
+
+.. _ciab-enroller:
 
 The Enroller
 ------------

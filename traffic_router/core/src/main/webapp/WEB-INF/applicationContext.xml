@@ -89,14 +89,15 @@
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
-    <bean id="letsEncryptDnsChallengeWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
-        <property name="executorService" ref="ScheduledExecutorService" />
-        <property name="databasesDirectory" ref="databasesDir" />
-        <property name="databaseName" value="$[cache.letsencrypt.database:letsencrypt.json]" />
-        <property name="trafficOpsUtils" ref="trafficOpsUtils" />
-        <property name="trafficRouterManager" ref="trafficRouterManager" />
+	<bean id="letsEncryptDnsChallengeWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.letsencrypt.database:letsencrypt.json]" />
+		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="pollingInterval" value="60000" />
-        <property name="configHandler" ref="ConfigHandler" />
+		<property name="configFile" value="$[cache.config.json:cr-config.json]" />
+		<property name="configHandler" ref="ConfigHandler" />
 	</bean>
 
 	<bean id="certificatesQueue" class="java.util.concurrent.ArrayBlockingQueue" >
@@ -297,9 +298,14 @@
 		<constructor-arg index="4" ref="TCPBlockingQueue" />
 	</bean>
 
+	<bean id="DnsStreamInetAddress" class="java.net.InetAddress" factory-method="getByName">
+		<constructor-arg index="0" value="$[dns.tcp.host:0.0.0.0]" />
+	</bean>
+
 	<bean id="ServerSocket" class="java.net.ServerSocket">
 		<constructor-arg index="0" value="$[dns.tcp.port:53]" />
 		<constructor-arg index="1" value="$[dns.tcp.backlog:0]" />
+		<constructor-arg index="2" ref="DnsStreamInetAddress" />
 	</bean>
 
 	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
@@ -312,8 +318,13 @@
 		<property name="taskTimeout" value="$[dns.tcp.timeout.task:5000]" />
 	</bean>
 
+	<bean id="DatagramInetAddress" class="java.net.InetAddress" factory-method="getByName">
+		<constructor-arg index="0" value="$[dns.udp.host:0.0.0.0]" />
+	</bean>
+
 	<bean id="DatagramSocket" class="java.net.DatagramSocket">
 		<constructor-arg index="0" value="$[dns.udp.port:53]" />
+		<constructor-arg index="1" ref="DatagramInetAddress" />
 	</bean>
 
 	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">
@@ -334,8 +345,8 @@
 		<property name="protocolService" ref="ProtocolExecutorService" />
 		<property name="protocols">
 			<list>
-				<ref local="TCP" />
-				<ref local="UDP" />
+				<ref bean="TCP" />
+				<ref bean="UDP" />
 			</list>
 		</property>
 	</bean>

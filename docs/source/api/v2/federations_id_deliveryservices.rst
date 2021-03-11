@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federations-id-deliveryservices:
+.. _to-api-v2-federations-id-deliveryservices:
 
 ***************************************
 ``federations/{{ID}}/deliveryservices``

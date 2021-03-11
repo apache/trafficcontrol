@@ -15,8 +15,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.api.controllers;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,8 @@ public class CoverageZoneController {
 	public @ResponseBody
 	ResponseEntity<CacheLocation> getCacheLocationForIp(@RequestParam(name = "ip") final String ip,
 	                                    @RequestParam(name = "deliveryServiceId") final String deliveryServiceId) {
-		final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId);
+		final IPVersions requestVersion = ip.contains(":") ? IPVersions.IPV6ONLY : IPVersions.IPV4ONLY;
+		final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId, requestVersion);
 		if (cacheLocation == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
@@ -50,7 +52,7 @@ public class CoverageZoneController {
 	public @ResponseBody
 	ResponseEntity<List<Cache>> getCachesForDeliveryService(@RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
 	                                                        @RequestParam(name = "cacheLocationId") final String cacheLocationId) {
-		final List<Cache> caches = trafficRouterManager.getTrafficRouter().selectCachesByCZ(deliveryServiceId, cacheLocationId, null);
+		final List<Cache> caches = trafficRouterManager.getTrafficRouter().selectCachesByCZ(deliveryServiceId, cacheLocationId, null, IPVersions.ANY);
 		if (caches == null || caches.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}

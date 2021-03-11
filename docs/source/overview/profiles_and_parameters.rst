@@ -100,7 +100,7 @@ LOGSTASH_PROFILE
 	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``LOGSTASH_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 ORG_PROFILE
-	A Profile that may be used by either :term:`origin servers` or :term:`origins` (no, they aren't the same thing).
+	A Profile that may be used by either :term:`origin servers` or :term:`Origins` (no, they aren't the same thing).
 
 	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``MSO``, or contain either ``ORG`` or ``ORIGIN`` anywhere in the name. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
@@ -314,7 +314,7 @@ Config Files that match this pattern - where ``anything`` is zero or more charac
 
 hosting.config
 ''''''''''''''
-This configuration file is mainly generated based on the assignments of :term:`cache servers` to :term:`Delivery Services` and the :term:`Cache Group` hierarchy, but there are a couple of Parameter :ref:`Names <parameter-name>` that can affect it when assigned to this Config File. When a Parameter assigned to the ``storage.config`` Config File - **NOT this Config File** - with the :ref:`parameter-name` "RAM_Drive_Prefix" *exists*, it will cause lines to be generated in this configuration file for each :term:`Delivery Service` that is of on of the :ref:`Types <ds-types>` DNS_LIVE (only if the server is an :term:`Edge-Tier Cache Server`), HTTP_LIVE (only if the server is an :term:`Edge-Tier Cache Server`), DNS_LIVE_NATNL, or HTTP_LIVE_NATNL to which the :term:`cache server` to which the :ref:`Profile <profiles>` containing that Parameter belongs is assigned. Specifically, it will cause each of them to use ``volume=1`` **UNLESS** the Parameter with the :ref:`parameter-name` "Drive_Prefix" associated with Config File ``storage.config`` - again, **NOT this Config File** - *also* exists, in which case they will use ``volume=2``.
+This configuration file is mainly generated based on the assignments of :term:`cache servers` to :term:`Delivery Services` and the :term:`Cache Group` hierarchy, but there are a couple of Parameter :ref:`Names <parameter-name>` that can affect it when assigned to this Config File. When a Parameter assigned to the ``storage.config`` Config File - **NOT this Config File** - with the :ref:`parameter-name` "RAM_Drive_Prefix" *exists*, it will cause lines to be generated in this configuration file for each :term:`Delivery Service` that is of on of the :ref:`Types <ds-types>` DNS_LIVE (only if the server is an :term:`Edge-tier cache server`), HTTP_LIVE (only if the server is an :term:`Edge-tier cache server`), DNS_LIVE_NATNL, or HTTP_LIVE_NATNL to which the :term:`cache server` to which the :ref:`Profile <profiles>` containing that Parameter belongs is assigned. Specifically, it will cause each of them to use ``volume=1`` **UNLESS** the Parameter with the :ref:`parameter-name` "Drive_Prefix" associated with Config File ``storage.config`` - again, **NOT this Config File** - *also* exists, in which case they will use ``volume=2``.
 
 .. caution:: If a Parameter with Config File ``storage.config`` and :ref:`parameter-name` "RAM_Drive_Prefix" does *not* exist on a :ref:`Profile <profiles>`, then the :term:`cache servers` using that :ref:`Profile <profiles>` will **be incapable of serving traffic for** :term:`Delivery Services` **of the aforementioned** :ref:`Types <ds-types>`, **even when a** :ref:`"location" <parameter-name-location>` **Parameter exists**.
 
@@ -478,7 +478,7 @@ Furthermore, for a given value of ``N``, if a Parameter exists on the :term:`cac
 
 package
 '''''''
-This is a special, reserved Config File that isn't a file at all. When a Parameter's Config File is ``package``, then its name is interpreted as the name of a package. :term:`ORT` on the server using the :ref:`Profile <profiles>` that has this Parameter will attempt to install a package by that name, interpreting the Parameter's Value_ as a version string if it is not empty. The package manager used will be :manpage:`yum(8)`, regardless of system (though the Python version of :term:`ORT` will attempt to use the host system's package manager - :manpage:`yum(8)`, :manpage:`apt(8)` and ``pacman`` are supported) but that shouldn't be a problem because only CentOS 7 is supported.
+This is a special, reserved Config File that isn't a file at all. When a Parameter's Config File is ``package``, then its name is interpreted as the name of a package. :term:`ORT` on the server using the :ref:`Profile <profiles>` that has this Parameter will attempt to install a package by that name, interpreting the Parameter's Value_ as a version string if it is not empty. The package manager used will be :manpage:`yum(8)`, regardless of system (though the Python version of :term:`ORT` will attempt to use the host system's package manager - :manpage:`yum(8)`, :manpage:`apt(8)` and ``pacman`` are supported) but that shouldn't be a problem because only CentOS 7 and CentOS 8 are supported.
 
 The current implementation of :term:`ORT` will expect Parameters to exist on a :term:`cache server`'s :ref:`Profile <profiles>` with the :ref:`Names <parameter-name>` ``astats_over_http`` and ``trafficserver`` before being run the first time, as both of these are required for a :term:`cache server` to operate within a Traffic Control CDN. It is possible to install these outside of :term:`ORT` - and indeed even outside of :manpage:`yum(8)` - but such configuration is not officially supported.
 
@@ -494,6 +494,7 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 - ``qstring``
 - ``psel.qstring_handling``
 - ``not_a_parent`` - unlike the other Parameters listed (which have a 1:1 correspondence with Apache Traffic Server configuration options), this Parameter affects the generation of :term:`parent` relationships between :term:`cache servers`. When a Parameter with this :ref:`parameter-name` and Config File exists on a :ref:`Profile <profiles>` used by a :term:`cache server`, it will not be added as a :term:`parent` of any other :term:`cache server`, regardless of :term:`Cache Group` hierarchy. Under ordinary circumstances, there's no real reason for this Parameter to exist.
+- ``try_all_primaries_before_secondary`` - on a Delivery Service Profile, if this exists, try all primary parents before failing over to secondary parents, which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed secondary parent will be the primary parent in its own cachegroup and therefore receive requests for that object from clients near its own cachegroup.
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
 
@@ -560,7 +561,7 @@ health.threshold.loadavg
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
 
 health.threshold.availableBandwidthInKbps
-	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server`. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth on the network interface used by the caching proxy falls below 1.5Gbps.
+	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server` - for all network interfaces. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth across all of the network interfaces used by the caching proxy fall below 1.5Gbps.
 
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
 

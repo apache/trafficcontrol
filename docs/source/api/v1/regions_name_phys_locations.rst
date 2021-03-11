@@ -22,7 +22,7 @@
 
 ``POST``
 ========
-Creates a new :term:`Physical Location` within the specified :term:`region`.
+Creates a new :term:`Physical Location` within the specified :term:`Region`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

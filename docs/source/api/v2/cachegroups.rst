@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups:
+.. _to-api-v2-cachegroups:
 
 ***************
 ``cachegroups``

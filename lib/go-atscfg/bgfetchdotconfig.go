@@ -19,18 +19,26 @@ package atscfg
  * under the License.
  */
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
+const LineCommentBGFetchDotConfig = LineCommentHash
 
 func MakeBGFetchDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	server *Server,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	}
+
+	text := makeHdrComment(hdrComment)
 	text += "include User-Agent *\n"
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeBGFetchDotConfig,
+		LineComment: LineCommentBGFetchDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

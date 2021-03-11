@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -64,7 +65,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %s", err), nil)
 		return
 	}
-
 	if ok, err := updateDSSafe(tx, dsID, dsr); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Updating Delivery Service (safe): %s", err))
 		return
@@ -73,8 +73,14 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
 		return
 	}
-
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(inf.Params, inf.Tx, inf.User)
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	dses, userErr, sysErr, errCode, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -91,14 +97,14 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	if inf.Version != nil && inf.Version.Major == 1 && inf.Version.Minor < 5 {
 		switch inf.Version.Minor {
 		case 4:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV14{ds.DeliveryServiceNullableV14})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV14{ds.DowngradeToV3().DeliveryServiceNullableV14})
 		case 3:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV13{ds.DeliveryServiceNullableV13})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV13{ds.DowngradeToV3().DeliveryServiceNullableV13})
 		default:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV12{ds.DeliveryServiceNullableV12})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV12{ds.DowngradeToV3().DeliveryServiceNullableV12})
 		}
 	} else {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullable{ds})
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV30{ds.DowngradeToV3()})
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", *ds.XMLID, *ds.ID), inf.User, tx)

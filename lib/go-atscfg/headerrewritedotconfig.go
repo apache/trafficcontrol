@@ -21,9 +21,11 @@ package atscfg
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -31,112 +33,92 @@ import (
 
 const HeaderRewritePrefix = "hdr_rw_"
 const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
+const LineCommentHeaderRewriteDotConfig = LineCommentHash
+
+const ServiceCategoryHeader = "CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
-type HeaderRewriteDS struct {
-	EdgeHeaderRewrite    string
-	ID                   int
-	MaxOriginConnections int
-	MidHeaderRewrite     string
-	Type                 tc.DSType
-}
-
-type HeaderRewriteServer struct {
-	HostName   string
-	DomainName string
-	Port       int
-	Status     tc.CacheStatus
-}
-
-func HeaderRewriteServersFromServers(servers []tc.ServerNullable) ([]HeaderRewriteServer, error) {
-	hServers := []HeaderRewriteServer{}
-	for _, sv := range servers {
-		hsv, err := HeaderRewriteServerFromServer(sv)
-		if err != nil {
-			return nil, err
-		}
-		hServers = append(hServers, hsv)
-	}
-	return hServers, nil
-}
-
-func HeaderRewriteServerFromServer(sv tc.ServerNullable) (HeaderRewriteServer, error) {
-	if sv.HostName == nil {
-		return HeaderRewriteServer{}, errors.New("server host name must not be nil")
-	}
-	if sv.DomainName == nil {
-		return HeaderRewriteServer{}, errors.New("server domain name must not be nil")
-	}
-	if sv.TCPPort == nil {
-		return HeaderRewriteServer{}, errors.New("server port must not be nil")
-	}
-	if sv.Status == nil {
-		return HeaderRewriteServer{}, errors.New("server status must not be nil")
-	}
-	status := tc.CacheStatusFromString(*sv.Status)
-	if status == tc.CacheStatusInvalid {
-		return HeaderRewriteServer{}, errors.New("server status '" + *sv.Status + "' invalid")
-	}
-	return HeaderRewriteServer{Status: status, HostName: *sv.HostName, DomainName: *sv.DomainName, Port: *sv.TCPPort}, nil
-}
-
-func HeaderRewriteServerFromServerNotNullable(sv tc.Server) (HeaderRewriteServer, error) {
-	if sv.HostName == "" {
-		return HeaderRewriteServer{}, errors.New("server host name must not be nil")
-	}
-	if sv.DomainName == "" {
-		return HeaderRewriteServer{}, errors.New("server domain name must not be nil")
-	}
-	if sv.TCPPort == 0 {
-		return HeaderRewriteServer{}, errors.New("server port must not be nil")
-	}
-	status := tc.CacheStatusFromString(sv.Status)
-	if status == tc.CacheStatusInvalid {
-		return HeaderRewriteServer{}, errors.New("server status '" + sv.Status + "' invalid")
-	}
-	return HeaderRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
-}
-
-func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, error) {
-	errs := []error{}
-	if ds.ID == nil {
-		errs = append(errs, errors.New("ID cannot be nil"))
-	}
-	if ds.Type == nil {
-		errs = append(errs, errors.New("Type cannot be nil"))
-	}
-	if len(errs) > 0 {
-		return HeaderRewriteDS{}, util.JoinErrs(errs)
-	}
-
-	if ds.MaxOriginConnections == nil {
-		ds.MaxOriginConnections = util.IntPtr(MaxOriginConnectionsNoMax)
-	}
-	if ds.EdgeHeaderRewrite == nil {
-		ds.EdgeHeaderRewrite = util.StrPtr("")
-	}
-	if ds.MidHeaderRewrite == nil {
-		ds.MidHeaderRewrite = util.StrPtr("")
-	}
-
-	return HeaderRewriteDS{
-		EdgeHeaderRewrite:    *ds.EdgeHeaderRewrite,
-		ID:                   *ds.ID,
-		MaxOriginConnections: *ds.MaxOriginConnections,
-		MidHeaderRewrite:     *ds.MidHeaderRewrite,
-		Type:                 *ds.Type,
-	}, nil
-}
-
 func MakeHeaderRewriteDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	ds HeaderRewriteDS,
-	assignedEdges []HeaderRewriteServer, // the edges assigned to ds
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	fileName string,
+	deliveryServices []DeliveryService,
+	deliveryServiceServers []tc.DeliveryServiceServer,
+	server *Server,
+	servers []Server,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, HeaderRewritePrefix), ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
+
+	tcDS := DeliveryService{}
+	for _, ds := range deliveryServices {
+		if ds.XMLID == nil {
+			warnings = append(warnings, "deliveryServices had DS with nil xmlId (name)")
+			continue
+		}
+		if *ds.XMLID != dsName {
+			continue
+		}
+		tcDS = ds
+		break
+	}
+	if tcDS.ID == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' not found")
+	}
+
+	if tcDS.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "ds '"+dsName+"' missing cdn")
+	}
+
+	ds, err := headerRewriteDSFromDS(&tcDS)
+	if err != nil {
+		return Cfg{}, makeErr(warnings, "converting ds to config ds: "+err.Error())
+	}
+
+	dsServers := filterDSS(deliveryServiceServers, map[int]struct{}{ds.ID: {}}, nil)
+
+	dsServerIDs := map[int]struct{}{}
+	for _, dss := range dsServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+			continue
+		}
+		if *dss.DeliveryService != *tcDS.ID {
+			continue
+		}
+		dsServerIDs[*dss.Server] = struct{}{}
+	}
+
+	assignedEdges := []headerRewriteServer{}
+	for _, server := range servers {
+		if server.CDNName == nil {
+			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
+			continue
+		}
+		if server.ID == nil {
+			warnings = append(warnings, "servers had server with missing id, skipping!")
+			continue
+		}
+		if *server.CDNName != *tcDS.CDNName {
+			continue
+		}
+		if _, ok := dsServerIDs[*server.ID]; !ok && tcDS.Topology == nil {
+			continue
+		}
+		cfgServer, err := headerRewriteServerFromServer(server)
+		if err != nil {
+			warnings = append(warnings, "error getting header rewrite server, skipping: "+err.Error())
+			continue
+		}
+		assignedEdges = append(assignedEdges, cfgServer)
+	}
+
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing CDNName")
+	}
+
+	text := makeHdrComment(hdrComment)
 
 	// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
 	if ds.MaxOriginConnections > 0 && !ds.Type.UsesMidCache() {
@@ -164,6 +146,116 @@ func MakeHeaderRewriteDotConfig(
 		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
 	}
 
+	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
+		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsName, ds.ServiceCategory)
+	}
+
 	text += "\n"
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeHeaderRewriteDotConfig,
+		LineComment: LineCommentHeaderRewriteDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type headerRewriteDS struct {
+	EdgeHeaderRewrite    string
+	ID                   int
+	MaxOriginConnections int
+	MidHeaderRewrite     string
+	Type                 tc.DSType
+	ServiceCategory      string
+}
+
+type headerRewriteServer struct {
+	HostName   string
+	DomainName string
+	Port       int
+	Status     tc.CacheStatus
+}
+
+func headerRewriteServersFromServers(servers []Server) ([]headerRewriteServer, error) {
+	hServers := []headerRewriteServer{}
+	for _, sv := range servers {
+		hsv, err := headerRewriteServerFromServer(sv)
+		if err != nil {
+			return nil, err
+		}
+		hServers = append(hServers, hsv)
+	}
+	return hServers, nil
+}
+
+func headerRewriteServerFromServer(sv Server) (headerRewriteServer, error) {
+	if sv.HostName == nil {
+		return headerRewriteServer{}, errors.New("server host name must not be nil")
+	}
+	if sv.DomainName == nil {
+		return headerRewriteServer{}, errors.New("server domain name must not be nil")
+	}
+	if sv.TCPPort == nil {
+		return headerRewriteServer{}, errors.New("server port must not be nil")
+	}
+	if sv.Status == nil {
+		return headerRewriteServer{}, errors.New("server status must not be nil")
+	}
+	status := tc.CacheStatusFromString(*sv.Status)
+	if status == tc.CacheStatusInvalid {
+		return headerRewriteServer{}, errors.New("server status '" + *sv.Status + "' invalid")
+	}
+	return headerRewriteServer{Status: status, HostName: *sv.HostName, DomainName: *sv.DomainName, Port: *sv.TCPPort}, nil
+}
+
+func headerRewriteServerFromServerNotNullable(sv tc.Server) (headerRewriteServer, error) {
+	if sv.HostName == "" {
+		return headerRewriteServer{}, errors.New("server host name must not be nil")
+	}
+	if sv.DomainName == "" {
+		return headerRewriteServer{}, errors.New("server domain name must not be nil")
+	}
+	if sv.TCPPort == 0 {
+		return headerRewriteServer{}, errors.New("server port must not be nil")
+	}
+	status := tc.CacheStatusFromString(sv.Status)
+	if status == tc.CacheStatusInvalid {
+		return headerRewriteServer{}, errors.New("server status '" + sv.Status + "' invalid")
+	}
+	return headerRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
+}
+
+func headerRewriteDSFromDS(ds *DeliveryService) (headerRewriteDS, error) {
+	errs := []error{}
+	if ds.ID == nil {
+		errs = append(errs, errors.New("ID cannot be nil"))
+	}
+	if ds.Type == nil {
+		errs = append(errs, errors.New("Type cannot be nil"))
+	}
+	if len(errs) > 0 {
+		return headerRewriteDS{}, util.JoinErrs(errs)
+	}
+
+	if ds.MaxOriginConnections == nil {
+		ds.MaxOriginConnections = util.IntPtr(MaxOriginConnectionsNoMax)
+	}
+	if ds.EdgeHeaderRewrite == nil {
+		ds.EdgeHeaderRewrite = util.StrPtr("")
+	}
+	if ds.MidHeaderRewrite == nil {
+		ds.MidHeaderRewrite = util.StrPtr("")
+	}
+	if ds.ServiceCategory == nil {
+		ds.ServiceCategory = new(string)
+	}
+
+	return headerRewriteDS{
+		EdgeHeaderRewrite:    *ds.EdgeHeaderRewrite,
+		ID:                   *ds.ID,
+		MaxOriginConnections: *ds.MaxOriginConnections,
+		MidHeaderRewrite:     *ds.MidHeaderRewrite,
+		Type:                 *ds.Type,
+		ServiceCategory:      *ds.ServiceCategory,
+	}, nil
 }

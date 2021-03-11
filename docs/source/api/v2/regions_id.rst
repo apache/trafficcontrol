@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-regions-id:
+.. _to-api-v2-regions-id:
 
 ******************
 ``regions/{{ID}}``

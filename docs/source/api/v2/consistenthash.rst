@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-consistenthash:
+.. _to-api-v2-consistenthash:
 
 ******************
 ``consistenthash``

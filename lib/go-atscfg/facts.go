@@ -20,14 +20,26 @@ package atscfg
  */
 
 const ContentType12MFacts = ContentTypeTextASCII
+const LineComment12MFacts = LineCommentHash
 
 func Make12MFacts(
-	profileName string,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
+	server *Server,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Profile")
+	}
+
+	hdr := makeHdrComment(hdrComment)
 	txt := hdr
-	txt += "profile:" + profileName + "\n"
-	return txt
+	txt += "profile:" + *server.Profile + "\n"
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentType12MFacts,
+		LineComment: LineComment12MFacts,
+		Warnings:    warnings,
+	}, nil
 }

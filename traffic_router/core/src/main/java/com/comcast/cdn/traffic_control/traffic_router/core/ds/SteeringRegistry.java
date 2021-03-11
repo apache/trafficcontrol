@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +29,7 @@ import java.util.Map;
 public class SteeringRegistry {
 	private static final Logger LOGGER = Logger.getLogger(SteeringRegistry.class);
 
-	private final Map<String, Steering> registry = new HashMap<String, Steering>();
+	private Map<String, Steering> registry = new HashMap<>();
 	private final ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
@@ -53,25 +52,29 @@ public class SteeringRegistry {
 			newSteerings.put(steering.getDeliveryService(), steering);
 		}
 
-		registry.clear();
-		registry.putAll(newSteerings);
-		for (final Steering steering : steerings) {
-			for (final SteeringTarget target : steering.getTargets()) {
-				if (target.getGeolocation() != null && target.getGeoOrder() != 0) {
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "] and geoOrder " + target.getGeoOrder());
-				} else if (target.getGeolocation() != null && target.getWeight() > 0) {
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "] and weight " + target.getWeight());
-				} else if (target.getGeolocation() != null) {
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "]");
-				} else if (target.getWeight() > 0) {
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
-				} else if (target.getOrder() != 0) { // this target has a specific order set
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has order " + target.getOrder());
-				} else {
-					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight() + " and order " + target.getOrder());
+		newSteerings.forEach((k, newSteering) -> {
+			final Steering old = registry.get(k);
+			if (old == null || !old.equals(newSteering)) {
+				for (final SteeringTarget target : newSteering.getTargets()) {
+					if (target.getGeolocation() != null && target.getGeoOrder() != 0) {
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "] and geoOrder " + target.getGeoOrder());
+					} else if (target.getGeolocation() != null && target.getWeight() > 0) {
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "] and weight " + target.getWeight());
+					} else if (target.getGeolocation() != null) {
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has geolocation [" + target.getLatitude() + ", "  + target.getLongitude() + "]");
+					} else if (target.getWeight() > 0) {
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
+					} else if (target.getOrder() != 0) { // this target has a specific order set
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has order " + target.getOrder());
+					} else {
+						LOGGER.info("Steering " + newSteering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight() + " and order " + target.getOrder());
+					}
 				}
 			}
-		}
+		});
+
+		registry = newSteerings;
+		LOGGER.info("Finished updating steering registry");
 	}
 
 	public boolean verify(final String json) {
@@ -98,13 +101,4 @@ public class SteeringRegistry {
 		return registry.values();
 	}
 
-	public Collection<Steering> removeAll(final List<String> steeringIds) {
-		final List<Steering> removedEntries = new ArrayList<Steering>();
-
-		for (final String steeringId : steeringIds) {
-			removedEntries.add(registry.remove(steeringId));
-		}
-
-		return removedEntries;
-	}
 }

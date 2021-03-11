@@ -21,36 +21,59 @@ package atscfg
 
 import (
 	"encoding/json"
+	"sort"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const PackagesFileName = `packages`
 const PackagesParamConfigFile = `package`
 
 const ContentTypePackages = ContentTypeTextASCII
-
-type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
+const LineCommentPackages = ""
 
 // MakePackages returns the 'packages' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakePackages(
-	params map[string][]string, // map[name]value - config file should always be 'package'
-) string {
-	packages := []Package{}
+	serverParams []tc.Parameter,
+) (Cfg, error) {
+	warnings := []string{}
+
+	params := paramsToMultiMap(filterParams(serverParams, PackagesParamConfigFile, "", "", ""))
+
+	pkgs := []pkg{}
 	for name, versions := range params {
 		for _, version := range versions {
-			packages = append(packages, Package{Name: name, Version: version})
+			pkgs = append(pkgs, pkg{Name: name, Version: version})
 		}
 	}
-	bts, err := json.Marshal(&packages)
+	sort.Sort(packages(pkgs))
+	bts, err := json.Marshal(&pkgs)
 	if err != nil {
 		// should never happen
-		log.Errorln("marshalling chkconfig NameVersions: " + err.Error())
-		bts = []byte("error encoding params to json, see Traffic Ops log for details")
+		return Cfg{}, makeErr(warnings, "marshalling chkconfig NameVersions: "+err.Error())
 	}
-	return string(bts)
+
+	return Cfg{
+		Text:        string(bts),
+		ContentType: ContentTypePackages,
+		LineComment: LineCommentPackages,
+		Warnings:    warnings,
+	}, nil
 }
+
+type pkg struct {
+	Name    string
+	Version string
+}
+
+type packages []pkg
+
+func (ps packages) Len() int { return len(ps) }
+func (ps packages) Less(i, j int) bool {
+	if ps[i].Name != ps[j].Name {
+		return ps[i].Name < ps[j].Name
+	}
+	return ps[i].Version < ps[j].Version
+}
+func (ps packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }

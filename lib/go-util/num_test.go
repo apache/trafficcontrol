@@ -83,6 +83,17 @@ func TestJSONNameOrIDStr(t *testing.T) {
 	}
 }
 
+func TestToNumeric(t *testing.T) {
+	var number interface{} = "34.59354233"
+	val, success := ToNumeric(number)
+	if !success {
+		t.Errorf("expected ToNumeric to succeed for string %v", number)
+	}
+	if val != 34.59354233 {
+		t.Errorf("expected ToNumeric to return %v, got %v", number, val)
+	}
+}
+
 func TestBytesLenSplit(t *testing.T) {
 	{
 		b := []byte("abcdefghijklmnopqrstuvwxyz1234567890_-+=")

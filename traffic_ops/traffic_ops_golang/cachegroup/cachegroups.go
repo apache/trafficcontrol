@@ -26,6 +26,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -88,23 +91,28 @@ func (cg *TOCacheGroup) SetID(i int) {
 // Is the cachegroup being used?
 func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 
+	var usedByTopology bool
 	var usedByServer bool
 	var usedByParent bool
 	var usedBySecondaryParent bool
 	var usedByASN bool
 
 	query := `SELECT
+    (SELECT id FROM topology_cachegroup WHERE topology_cachegroup.cachegroup = (SELECT name FROM cachegroup WHERE id = $1) LIMIT 1) IS NOT NULL,
     (SELECT id FROM server WHERE server.cachegroup = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.secondary_parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM asn WHERE cachegroup = $1 LIMIT 1) IS NOT NULL;`
 
-	err := tx.QueryRow(query, ID).Scan(&usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
+	err := tx.QueryRow(query, ID).Scan(&usedByTopology, &usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
 	}
 	//Only return the immediate error
+	if usedByTopology {
+		return true, errors.New("cachegroup is in use by one or more topologies")
+	}
 	if usedByServer {
 		return true, errors.New("cachegroup is in use by one or more servers")
 	}
@@ -150,6 +158,79 @@ func IsValidParentCachegroupID(id *int) bool {
 	return false
 }
 
+// ValidateTypeInTopology validates cachegroup updates to ensure the type of the cachegroup does not change
+// if it is assigned to a topology.
+func (cg *TOCacheGroup) ValidateTypeInTopology() error {
+	userErr := fmt.Errorf("unable to check whether cachegroup %s is used in any topologies", *cg.Name)
+
+	// language=SQL
+	const previousTypeQuery = `
+	SELECT t.id
+	FROM cachegroup c
+	JOIN "type" t ON c."type" = t.id
+	WHERE c.id = $1
+	`
+	var previousTypeID int
+	// We only run this validation on PUT, not POST
+	if cg.ID == nil {
+		return nil
+	}
+	err := cg.ReqInfo.Tx.QueryRow(previousTypeQuery, *cg.ID).Scan(&previousTypeID)
+	// Cachegroup does not exist in the database yet
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		log.Errorf("%s: getting the previous type of cachegroup %s: %s", userErr.Error(), *cg.Name, err.Error())
+		return userErr
+	}
+	if cg.TypeID == nil || *cg.TypeID == previousTypeID {
+		return nil
+	}
+
+	// language=SQL
+	const usedInTopologyQuery = `
+	SELECT EXISTS (SELECT
+	FROM topology_cachegroup tc
+	WHERE tc.cachegroup = $1)
+	`
+	var usedInTopology bool
+	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, *cg.Name).Scan(&usedInTopology)
+	if err != nil {
+		log.Errorf("%s: querying topology_cachegroup by cachegroup name: %s", userErr.Error(), err.Error())
+		return userErr
+	}
+	if !usedInTopology {
+		return nil
+	}
+
+	// language=SQL
+	const readableTypesQuery = `
+	SELECT t.id, t."name"
+	FROM "type" t
+	WHERE id = $1 OR id = $2
+	`
+	rows, err := cg.ReqInfo.Tx.Query(readableTypesQuery, previousTypeID, *cg.TypeID)
+	if err != nil {
+		log.Errorf("%s: querying type names: %s", userErr.Error(), err.Error())
+		return userErr
+	}
+	typeNameByID := map[int]string{}
+	for rows.Next() {
+		var typeID int
+		var typeName string
+		err = rows.Scan(&typeID, &typeName)
+		if err != nil {
+			log.Errorf("%s: scanning type names: %s", userErr.Error(), err.Error())
+			return userErr
+		}
+		typeNameByID[typeID] = typeName
+	}
+	log.Close(rows, "error closing rows for type names")
+
+	return fmt.Errorf("cannot change type of cachegroup %s from %s to %s because it is in use by a topology", *cg.Name, typeNameByID[previousTypeID], typeNameByID[*cg.TypeID])
+}
+
 // Validate fulfills the api.Validator interface
 func (cg TOCacheGroup) Validate() error {
 	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
@@ -188,6 +269,7 @@ func (cg TOCacheGroup) Validate() error {
 		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
 		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
 		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
+		"type":                        cg.ValidateTypeInTopology(),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
@@ -379,30 +461,18 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
-func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
-	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
-	}
-
-	query := SelectQuery() + where + orderBy + pagination
-	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
+func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, error, error, int) {
+	query := SelectQuery() + multipleCacheGroupsWhere()
+	namesPqArray := pq.Array(names)
+	rows, err := Tx.Query(query, namesPqArray)
 	if err != nil {
-		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, userErr, sysErr, errCode
 	}
-	defer rows.Close()
-
-	cacheGroups := []interface{}{}
+	defer log.Close(rows, "unable to close DB connection")
+	cacheGroupMap := map[string]tc.CacheGroupNullable{}
 	for rows.Next() {
-		var s TOCacheGroup
+		var s tc.CacheGroupNullable
 		lms := make([]tc.LocalizationMethod, 0)
 		cgfs := make([]string, 0)
 		if err = rows.Scan(
@@ -426,14 +496,102 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 		}
 		s.LocalizationMethods = &lms
 		s.Fallbacks = &cgfs
-		cacheGroups = append(cacheGroups, s)
+		cacheGroupMap[*s.Name] = s
+	}
+	return cacheGroupMap, nil, nil, http.StatusOK
+}
+
+func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	cacheGroups := []interface{}{}
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":        {"cachegroup.id", api.IsInt},
+		"name":      {"cachegroup.name", nil},
+		"shortName": {"cachegroup.short_name", nil},
+		"type":      {"cachegroup.type", nil},
+		"topology":  {"topology_cachegroup.topology", nil},
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	return cacheGroups, nil, nil, http.StatusOK
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return cacheGroups, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	baseSelect := SelectQuery()
+	if _, ok := cg.ReqInfo.Params["topology"]; ok {
+		baseSelect += `
+LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+`
+	}
+	// If the type cannot be converted to an int, return 400
+	if cgType, ok := cg.ReqInfo.Params["type"]; ok {
+		_, err := strconv.Atoi(cgType)
+		if err != nil {
+			return nil, errors.New("cachegroup read: converting cachegroup type to integer " + err.Error()), nil, http.StatusBadRequest, nil
+		}
+	}
+	query := baseSelect + where + orderBy + pagination
+	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError, nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var s TOCacheGroup
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&s.ID,
+			&s.Name,
+			&s.ShortName,
+			&s.Latitude,
+			&s.Longitude,
+			pq.Array(&lms),
+			&s.ParentCachegroupID,
+			&s.ParentName,
+			&s.SecondaryParentCachegroupID,
+			&s.SecondaryParentName,
+			&s.Type,
+			&s.TypeID,
+			&s.LastUpdated,
+			pq.Array(&cgfs),
+			&s.FallbackToClosest,
+		); err != nil {
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError, nil
+		}
+		s.LocalizationMethods = &lms
+		s.Fallbacks = &cgfs
+		cacheGroups = append(cacheGroups, s)
+	}
+	return cacheGroups, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(cachegroup.last_updated) as t FROM cachegroup
+LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
+INNER JOIN type ON cachegroup.type = type.id
+LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='cachegroup') as res`
 }
 
 //The TOCacheGroup implementation of the Updater interface
-func (cg *TOCacheGroup) Update() (error, error, int) {
+func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
@@ -446,6 +604,11 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 	if cg.FallbackToClosest == nil {
 		fbc := true
 		cg.FallbackToClosest = &fbc
+	}
+
+	userErr, sysErr, errCode := api.CheckIfUnModified(h, cg.ReqInfo.Tx, *cg.ID, "cachegroup")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
@@ -618,7 +781,15 @@ FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
-LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id
+`
+}
+
+func multipleCacheGroupsWhere() string {
+	return `
+WHERE
+cachegroup.name = ANY ($1)
+`
 }
 
 func UpdateQuery() string {

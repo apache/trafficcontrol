@@ -19,21 +19,49 @@ package atscfg
  * under the License.
  */
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 const DropQStringDotConfigFileName = "drop_qstring.config"
 const DropQStringDotConfigParamName = "content"
 const ContentTypeDropQStringDotConfig = ContentTypeTextASCII
+const LineCommentDropQStringDotConfig = LineCommentHash
 
 func MakeDropQStringDotConfig(
-	profileName string,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dropQStringVal *string, // value of the parameter name "content" configFile "drop_qstring.config"; nil if it doesn't exist
-) string {
-	text := GenericHeaderComment(profileName, toToolName, toURL)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Profile")
+	}
+
+	dropQStringVal := (*string)(nil)
+	for _, param := range serverParams {
+		if param.ConfigFile != DropQStringDotConfigFileName {
+			continue
+		}
+		if param.Name != DropQStringDotConfigParamName {
+			continue
+		}
+		dropQStringVal = &param.Value
+		break
+	}
+
+	text := makeHdrComment(hdrComment)
 	if dropQStringVal != nil {
 		text += *dropQStringVal + "\n"
 	} else {
 		text += `/([^?]+) $s://$t/$1` + "\n"
 	}
-	return text
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeDropQStringDotConfig,
+		LineComment: LineCommentDropQStringDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

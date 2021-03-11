@@ -20,24 +20,45 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-type ServerCacheConfigDS struct {
-	OrgServerFQDN string
-	Type          tc.DSType
-}
+const ServerCacheDotConfigIncludeInactiveDSes = false
 
-func MakeServerCacheDotConfig(
-	serverName tc.CacheName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses map[tc.DeliveryServiceName]ServerCacheConfigDS,
-) string {
-	text := GenericHeaderComment(string(serverName), toToolName, toURL)
+func makeCacheDotConfigMid(
+	server *Server,
+	deliveryServices []DeliveryService,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "server missing HostName")
+	}
+	if !strings.HasPrefix(string(server.Type), tc.MidTypePrefix) {
+		return Cfg{}, makeErr(warnings, "server cache.config generation called for non-Mid server, this is a code error and should never happen! Please file a bug.")
+	}
+
+	dses := map[tc.DeliveryServiceName]serverCacheConfigDS{}
+	for _, ds := range deliveryServices {
+		if ds.XMLID == nil || ds.Active == nil || ds.OrgServerFQDN == nil || ds.Type == nil {
+			// TODO orgserverfqdn is nil for some DSes - MSO? Verify.
+			continue
+			//			return "", fmt.Errorf("getting delivery services: got DS with nil values! '%v' %v %+v\n", *ds.XMLID, *ds.ID, ds)
+		}
+		if !ServerCacheDotConfigIncludeInactiveDSes && !*ds.Active {
+			continue
+		}
+		dses[tc.DeliveryServiceName(*ds.XMLID)] = serverCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
+	}
+
+	text := makeHdrComment(hdrComment)
+
+	lines := []string{}
 
 	seenOrigins := map[string]struct{}{}
 	for _, ds := range dses {
@@ -49,18 +70,26 @@ func MakeServerCacheDotConfig(
 		}
 		seenOrigins[ds.OrgServerFQDN] = struct{}{}
 
-		originFQDN, originPort := GetOriginFQDNAndPort(ds.OrgServerFQDN)
+		originFQDN, originPort := getOriginFQDNAndPort(ds.OrgServerFQDN)
 		if originPort != nil {
-			text += `dest_domain=` + originFQDN + ` port=` + strconv.Itoa(*originPort) + ` scheme=http action=never-cache` + "\n"
+			lines = append(lines, `dest_domain=`+originFQDN+` port=`+strconv.Itoa(*originPort)+` scheme=http action=never-cache`+"\n")
 		} else {
-			text += `dest_domain=` + originFQDN + ` scheme=http action=never-cache` + "\n"
+			lines = append(lines, `dest_domain=`+originFQDN+` scheme=http action=never-cache`+"\n")
 		}
 	}
-	return text
+	sort.Strings(lines)
+	text += strings.Join(lines, "")
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeCacheDotConfig,
+		LineComment: LineCommentCacheDotConfig,
+		Warnings:    warnings,
+	}, nil
 }
 
 // TODO unit test
-func GetOriginFQDNAndPort(origin string) (string, *int) {
+func getOriginFQDNAndPort(origin string) (string, *int) {
 	origin = strings.TrimSpace(origin)
 	origin = strings.Replace(origin, `https://`, ``, -1)
 	origin = strings.Replace(origin, `http://`, ``, -1)
@@ -88,4 +117,9 @@ func GetOriginFQDNAndPort(origin string) (string, *int) {
 
 	hostName = origin[:colonI]
 	return hostName, &port
+}
+
+type serverCacheConfigDS struct {
+	OrgServerFQDN string
+	Type          tc.DSType
 }

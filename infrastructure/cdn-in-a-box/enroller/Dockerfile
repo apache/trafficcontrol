@@ -15,29 +15,51 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2 AS enroller-builder
+FROM debian:buster AS enroller-builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        wget && \
+    apt-get clean
+
+COPY GO_VERSION /
+RUN go_version=$(cat /GO_VERSION) && \
+    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go.tar.gz
+ENV GOPATH=/go
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
+COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
-COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
-COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
+COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
+COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN go clean && go get -v && go build
+RUN go clean && go mod vendor -v && go build
 
+FROM debian:buster
 
-
-FROM debian:stretch
-
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools && apt-get clean
+RUN apt-get update && apt-get install -y \
+        netcat curl dnsutils net-tools \
+        #to-access dependencies
+        jq gettext && \
+    apt-get clean
 COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/enroller \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/run.sh \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/server_template.json \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
    /
+
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 WORKDIR /shared/enroller
 CMD /run.sh

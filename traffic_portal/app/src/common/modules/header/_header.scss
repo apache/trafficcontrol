@@ -82,23 +82,18 @@ body.nav-sm .main_container .top_nav {
 
 .navbar-brand,
 .navbar-nav>li>.btn-group>.btn-link {
-  color: #fff !important;
-}
-
-.navbar-brand,
-.navbar-nav>li>.btn-group>.btn-link {
   margin-bottom: 5px
 }
 
 .nav.navbar-nav>li>.btn-group>.btn-link {
-  color: #515356 !important;
+  color: #515356;
 }
 
 .nav.top_menu>li>a {
   position: relative;
   display: block;
   padding: 10px 15px;
-  color: #34495E !important;
+  color: #34495E;
 }
 
 .nav>li>a:hover,
@@ -121,6 +116,21 @@ body.nav-sm .main_container .top_nav {
 
 .toggle a i {
   font-size: 26px;
+}
+
+.enviro-banner {
+  float: left;
+  border-radius: 0;
+  height: 57px;
+  text-align: center;
+}
+
+.enviro-banner.prod {
+  background: #B22222;
+}
+
+.notification.btn-link:hover {
+  text-decoration: none;
 }
 
 @media (max-width: 991px) {

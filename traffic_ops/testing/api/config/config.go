@@ -37,6 +37,9 @@ type Config struct {
 	TrafficOps   TrafficOps   `json:"trafficOps"`
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
 	Default      Default      `json:"default"`
+	UseIMS       bool         `json:"use_ims"`
+	// Sets whether or not to perform tests that involve ISO generation
+	NoISO bool `json:"noISO"`
 }
 
 // TrafficOps - config section

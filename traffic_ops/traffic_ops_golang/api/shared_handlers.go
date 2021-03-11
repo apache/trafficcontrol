@@ -32,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -114,8 +115,8 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	return v.Validate()
 }
 
-func hasDeleteKeyOption(obj interface{}, params map[string]string) (bool, error, error, int) {
-	optionsDeleter, ok := obj.(HasDeleteKeyOptions)
+func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, error, error, int) {
+	optionsDeleter, ok := obj.(OptionsDeleter)
 	if !ok {
 		return false, nil, nil, http.StatusOK
 	}
@@ -129,6 +130,18 @@ func hasDeleteKeyOption(obj interface{}, params map[string]string) (bool, error,
 	return false, errors.New("Refusing to delete all resources of type " + name), nil, http.StatusBadRequest
 }
 
+// SetLastModifiedHeader sets the Last-Modified header in case the "useIMS" is set to true in the config,
+// and if there is an "If-Modified-Since" header in the incoming request
+func SetLastModifiedHeader(r *http.Request, useIMS bool) bool {
+	if r == nil {
+		return false
+	}
+	if r.Header.Get(rfc.IfModifiedSince) != "" && useIMS {
+		return true
+	}
+	return false
+}
+
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
@@ -136,6 +149,7 @@ func hasDeleteKeyOption(obj interface{}, params map[string]string) (bool, error,
 //      marshals the structs returned into the proper response json
 func ReadHandler(reader Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		useIMS := false
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -152,11 +166,23 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		cfg, err := GetConfig(r.Context())
+		if err != nil {
+			log.Warnf("Couldnt get the config %v", err)
+		}
+		if cfg != nil {
+			useIMS = cfg.UseIMS
+		}
+		results, userErr, sysErr, errCode, maxTime := obj.Read(r.Header, useIMS)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
+			date := maxTime.Format(rfc.LastModifiedFormat)
+			w.Header().Add(rfc.LastModified, date)
+		}
+		w.WriteHeader(errCode)
 		WriteResp(w, r, results)
 	}
 }
@@ -187,7 +213,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode, _ := obj.Read(r.Header, false)
 		if userErr != nil || sysErr != nil {
 			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
@@ -272,7 +298,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = obj.Update()
+		userErr, sysErr, errCode = obj.Update(r.Header)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -282,7 +308,11 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was updated.", obj)
+		alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was updated.")
+		if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+			alerts.AddAlerts(alertsObj.GetAlerts())
+		}
+		WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 	}
 }
 
@@ -310,14 +340,38 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		isOptionsDeleter, userErr, sysErr, errCode := checkIfOptionsDeleter(obj, inf.Params)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-		if !deleteKeyOptionExists {
+		var (
+			keys = make(map[string]interface{})
+			err  error
+		)
+		if isOptionsDeleter {
+			for key, info := range obj.(OptionsDeleter).DeleteKeyOptions() {
+				paramKey := inf.Params[key]
+				if paramKey == "" {
+					continue
+				}
+				switch reflect.ValueOf(info.Checker) {
+				case reflect.ValueOf(IsInt):
+					if keys[key], err = GetIntKey(paramKey); err != nil {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil)
+						return
+					}
+				case reflect.ValueOf(IsBool):
+					if keys[key], err = strconv.ParseBool(paramKey); err != nil {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil)
+						return
+					}
+				default:
+					keys[key] = paramKey
+				}
+			}
+		} else {
 			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
-			keys := make(map[string]interface{})
 			for _, kf := range keyFields {
 				paramKey := inf.Params[kf.Field]
 				if paramKey == "" {
@@ -332,8 +386,8 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 				}
 				keys[kf.Field] = paramValue
 			}
-			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 		}
+		obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
 		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
@@ -347,7 +401,7 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 			}
 		}
 
-		if deleteKeyOptionExists {
+		if isOptionsDeleter {
 			obj := reflect.New(objectType).Interface().(OptionsDeleter)
 			obj.SetInfo(inf)
 			userErr, sysErr, errCode = obj.OptionsDelete()
@@ -392,14 +446,38 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		isOptionsDeleter, userErr, sysErr, errCode := checkIfOptionsDeleter(obj, inf.Params)
 		if userErr != nil || sysErr != nil {
 			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
 			return
 		}
-		if !deleteKeyOptionExists {
+		var (
+			keys = make(map[string]interface{})
+			err  error
+		)
+		if isOptionsDeleter {
+			for key, info := range obj.(OptionsDeleter).DeleteKeyOptions() {
+				paramKey := inf.Params[key]
+				if paramKey == "" {
+					continue
+				}
+				switch reflect.ValueOf(info.Checker) {
+				case reflect.ValueOf(IsInt):
+					if keys[key], err = GetIntKey(paramKey); err != nil {
+						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+key), nil, alternative)
+						return
+					}
+				case reflect.ValueOf(IsBool):
+					if keys[key], err = strconv.ParseBool(paramKey); err != nil {
+						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil, alternative)
+						return
+					}
+				default:
+					keys[key] = paramKey
+				}
+			}
+		} else {
 			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
-			keys := make(map[string]interface{})
 			for _, kf := range keyFields {
 				paramKey := inf.Params[kf.Field]
 				if paramKey == "" {
@@ -414,8 +492,8 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 				}
 				keys[kf.Field] = paramValue
 			}
-			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 		}
+		obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
 		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
@@ -429,7 +507,7 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 			}
 		}
 
-		if deleteKeyOptionExists {
+		if isOptionsDeleter {
 			obj := reflect.New(objectType).Interface().(OptionsDeleter)
 			obj.SetInfo(inf)
 			userErr, sysErr, errCode = obj.OptionsDelete()
@@ -525,11 +603,25 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 			}
 			if len(objSlice) == 0 {
 				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
-			} else if len(objSlice) == 1 {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
-			} else {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)
+				return
 			}
+			var (
+				responseObj interface{}
+				message     string
+			)
+			if len(objSlice) == 1 {
+				responseObj = objSlice[0]
+				message = objSlice[0].GetType() + " was created."
+			} else {
+				message = objSlice[0].GetType() + "s were created."
+			}
+			alerts := tc.CreateAlerts(tc.SuccessLevel, message)
+			if _, hasAlerts := objSlice[0].(AlertsResponse); hasAlerts {
+				for _, objElem := range objSlice {
+					alerts.AddAlerts(objElem.(AlertsResponse).GetAlerts())
+				}
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
 			err := decodeAndValidateRequestBody(r, obj)
@@ -560,7 +652,11 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 				return
 			}
-			WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
+			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")
+			if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+				alerts.AddAlerts(alertsObj.GetAlerts())
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 		}
 	}
 }

@@ -27,13 +27,13 @@ $TTL 30 ; 30 seconds
 1.0.0         IN PTR   gw.infra.ciab.test.
 0.1.0         IN PTR   db.infra.ciab.test.
 0.2.0         IN PTR   trafficops.infra.ciab.test.
-0.2.1         IN PTR   trafficops-perl.infra.ciab.test.
 0.3.0         IN PTR   trafficportal.infra.ciab.test.
 0.4.0         IN PTR   trafficmonitor.infra.ciab.test.
 0.5.0         IN PTR   trafficvault.infra.ciab.test.
 0.6.0         IN PTR   trafficrouter.infra.ciab.test.
 0.0.1         IN PTR   edge.infra.ciab.test.
-0.2.1         IN PTR   mid.infra.ciab.test.
+0.2.1         IN PTR   mid-01.infra.ciab.test.
+0.3.1         IN PTR   mid-02.infra.ciab.test.
 0.4.1         IN PTR   origin.infra.ciab.test.
 0.0.2         IN PTR   enroller.infra.ciab.test.
 3.3.2         IN PTR   socksproxy.infra.ciab.test.

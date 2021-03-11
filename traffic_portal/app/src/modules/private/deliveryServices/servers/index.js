@@ -30,8 +30,11 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.servers'
 							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
-							servers: function($stateParams, serverService) {
-								return serverService.getDeliveryServiceServers($stateParams.deliveryServiceId);
+							servers: function(deliveryService, $stateParams, serverService) {
+								return serverService.getServers({ dsId: $stateParams.deliveryServiceId, orderby: 'hostName' });
+							},
+							filter: function() {
+								return null;
 							}
 						}
 					}

@@ -19,21 +19,39 @@ package atscfg
  * under the License.
  */
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 const SysctlSeparator = " = "
 const SysctlFileName = "sysctl.conf"
 const ContentTypeSysctlDotConf = ContentTypeTextASCII
+const LineCommentSysctlDotConf = LineCommentHash
 
 func MakeSysCtlDotConf(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
-	hdr := GenericHeaderComment(profileName, toToolName, toURL)
-	txt := GenericProfileConfig(paramData, SysctlSeparator)
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "server missing Profile")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, SysctlFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	hdr := makeHdrComment(hdrComment)
+	txt := genericProfileConfig(paramData, SysctlSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}
 	txt = hdr + txt
-	return txt
+
+	return Cfg{
+		Text:        txt,
+		ContentType: ContentTypeSysctlDotConf,
+		LineComment: LineCommentSysctlDotConf,
+		Warnings:    warnings,
+	}, nil
 }

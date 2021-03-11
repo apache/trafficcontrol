@@ -20,10 +20,10 @@ package crconfig
  */
 
 import (
-	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
+	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 )
 
 // Handler creates and serves the CRConfig from the raw SQL data.
@@ -47,7 +48,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	start := time.Now()
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
+	emulate := inf.Config.CRConfigEmulateOldPath || inf.Version.Major < 4
+	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, emulate)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -74,8 +76,43 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
-	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+
+	var decoded tc.CRConfig
+	if err = json.Unmarshal([]byte(snapshot), &decoded); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to unmarshal stored snapshot for cdn '%s': %v", inf.Params["cdn"], err))
+	}
+
+	if inf.Version.Major < 4 || (inf.Config != nil && inf.Config.CRConfigEmulateOldPath) {
+		decoded.Stats.TMPath = new(string)
+		*decoded.Stats.TMPath = fmt.Sprintf("/api/4.0/cdns/%s/snapshot", inf.Params["cdn"])
+	}
+	api.WriteResp(w, r, decoded)
+}
+
+func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		return
+	}
+
+	var data tc.TrafficMonitorConfig
+	if err := json.Unmarshal([]byte(snapshot), &data); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, data.ToLegacyConfig())
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
@@ -148,9 +185,9 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
+	id := -1
 	cdn, ok := inf.Params["cdn"]
 	if !ok {
-		var id int
 		if deprecated {
 			id, ok = inf.IntParams["id"]
 			if !ok {
@@ -176,7 +213,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		}
 		cdn = name
 	} else {
-		_, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+		id, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
 		if err != nil {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN ID from name: "+err.Error()), deprecated, &alt)
 			return
@@ -187,12 +224,12 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		}
 	}
 
-	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
+	// We never store tm_path, even though low API versions show it in responses.
+	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, &alt)
 		return
 	}
-
 	monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()), deprecated, &alt)
@@ -209,7 +246,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(id)+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
 	if deprecated {
 		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(&alt), "SUCCESS")
 		return
@@ -217,11 +254,11 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	api.WriteResp(w, r, "SUCCESS")
 }
 
-// SnapshotGUIHandler creates the CRConfig JSON and writes it to the snapshot table in the database. The response emulates the old Perl UI function. This should go away when the old Perl UI ceases to exist.
+// SnapshotOldGUIHandler creates the CRConfig JSON and writes it to the snapshot table in the database. The response emulates the old Perl UI function. This should go away when the old Perl UI ceases to exist.
 func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, _ := api.NewInfo(r, []string{"cdn"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()), userErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()))
 		return
 	}
 	defer inf.Close()
@@ -233,10 +270,15 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cdn := inf.Params["cdn"]
-
-	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
+	_, exists, _ := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+	if !exists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to find the CDN: "+cdn), nil)
+		return
+	}
+	// We never store tm_path, even though low API versions show it in responses.
+	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
@@ -247,7 +289,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()))
 		return
 	}
 
@@ -257,11 +299,5 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
-	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
-}
-
-func writePerlHTMLErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, logErr error, err error) {
-	log.Errorln(logErr.Error())
-	tx.Rollback()
-	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Error: "+err.Error()), http.StatusFound)
+	http.Redirect(w, r, client.API_v13_CDNs+"/"+cdn+"/snapshot", http.StatusFound)
 }

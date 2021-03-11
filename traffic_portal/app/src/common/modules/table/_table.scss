@@ -16,24 +16,30 @@
 */
 
 .x_content {
-    table {
-        width: 100% !important;
-    }
+	table {
+		width: 100% !important;
+	}
 }
 
 .update-column {
-  text-align: center;
-  .fa-flag {
-    font-weight: bold;
-  }
+	text-align: center;
+	.fa-flag {
+		font-weight: bold;
+	}
+}
+
+button.action-link {
+	padding: 5px;
+	color: #337ab7;
+	border: none;
+	background-color: inherit;
 }
 
 .action-link {
-  padding: 5px;
 }
 
 td span {
-  line-height: 19px;
+	line-height: 19px;
 }
 
 .filter-checkbox {
@@ -41,69 +47,197 @@ td span {
 }
 
 .table {
-    margin-bottom: 0px !important;
+	margin-bottom: 0px !important;
 }
 
 .ds-comment-bold {
-    font-weight:bold;
+	font-weight:bold;
 }
 .ds-comment-italic {
-    font-style:italic;
-    font-size:x-small;
+	font-style:italic;
+	font-size:x-small;
 }
 .dsComments-container {
-    border-bottom: 1px solid #111;
-    margin-top: -2px;
+	border-bottom: 1px solid #111;
+	margin-top: -2px;
 }
 .ds-comment-cell {
-    line-height: 1.428571429;
-    vertical-align: top;
-    border-top: 1px solid #ddd;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-    padding-bottom: 8px;
-    min-height: 52px;
+	line-height: 1.428571429;
+	vertical-align: top;
+	border-top: 1px solid #ddd;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	padding-bottom: 8px;
+	min-height: 52px;
 
-    &:hover {
-        background-color: #F1FAF8;
-    }
+	&:hover {
+		background-color: #F1FAF8;
+	}
 
-    .cell-left {
-        padding-top: 8px;
-        margin-left: 8px;
-        width: 80%;
-    }
-    .cell-right {
-        padding-top: 8px;
-        margin-right: 8px;
-    }
+	.cell-left {
+		padding-top: 8px;
+		margin-left: 8px;
+		width: 80%;
+	}
+	.cell-right {
+		padding-top: 8px;
+		margin-right: 8px;
+	}
 }
 .ds-comment-nodata {
-    line-height: 1.428571429;
-    text-align: center;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-    padding-top: 4px;
-    padding-bottom: 8px;
-    min-height: 30px;
+	line-height: 1.428571429;
+	text-align: center;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	padding-top: 4px;
+	padding-bottom: 8px;
+	min-height: 30px;
 
-    &:hover {
-        background-color: #F1FAF8;
-    }
+	&:hover {
+		background-color: #F1FAF8;
+	}
 }
 .column-settings {
-    max-height: 300px;
-    padding: 10px 20px;
-    overflow-y: auto;
+	max-height: 300px;
+	padding: 10px 20px;
+	overflow-y: auto;
+
+  .checkbox {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    label {
+      min-height: 20px;
+      padding-left: 20px;
+      margin-bottom: 0;
+      font-weight: normal;
+      cursor: pointer;
+
+      input[type="checkbox"] {
+        position: absolute;
+        margin-left: -20px;
+      }
+
+    }
+
+  }
+
 }
+
 table.dataTable.params tbody td {
-    word-break: break-word;
-    vertical-align: top;
+	word-break: break-word;
+	vertical-align: top;
 }
 th.center, td.center {
-    text-align: center;
+	text-align: center;
 }
 
 .dt-button.btn-link {
-    text-decoration: underline;
+	text-decoration: underline;
+}
+
+/* Table context menus */
+menu[type="contextmenu"] {
+    display: block;
+    position: fixed;
+    background-color: white;
+    padding: 0;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+    border-radius: 3px;
+
+    ul {
+        display: block;
+        clear: both;
+        font-weight: normal;
+        line-height: 1.428571429;
+        white-space: nowrap;
+        padding: 0;
+        margin: 0;
+
+        li {
+            display: block;
+            clear: both;
+
+            &:hover {
+                color: #262626;
+                background-color: #f5f5f5;
+            }
+
+            a, button {
+                color: #333333;
+                text-decoration: none;
+                padding: 7px 20px;
+                display: block;
+                clear: both;
+            }
+
+            button {
+                background: transparent;
+                border: none;
+                width: 100%;
+                text-align: left;
+
+                &[disabled] {
+                    color: gray;
+                    background-color: #f5f5f5;
+                }
+            }
+        }
+
+        hr.divider {
+            margin: 0;
+        }
+    }
+}
+
+div.dropdown button.menu-item-button {
+    color: #333333;
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: inherit;
+    display: block;
+    clear: both;
+    padding: 3px 20px;
+    margin: 0;
+
+    &:hover {
+        color: #262626;
+        background-color: #f5f5f5;
+    }
+}
+
+.jobs-table {
+  .ag-row.active-job {
+    background-color: #dff0d8;
+  }
+  .ag-row.expired-job {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.ds-requests-table {
+  .ag-row.draft-request {
+    background-color: #e2e3e5;
+  }
+  .ag-row.submitted-request {
+    background-color: #dff0d8;
+  }
+  .ag-row.pending-request {
+    background-color: #fff3cd;
+  }
+  .ag-row.completed-request {
+    background-color: #fcfcfc;
+  }
+  .ag-row.rejected-request {
+    background-color: #f8d7da;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
 }

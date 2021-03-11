@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-configs-monitoring:
+.. _to-api-v2-cdns-name-configs-monitoring:
 
 ************************************
 ``cdns/{{name}}/configs/monitoring``

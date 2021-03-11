@@ -57,7 +57,7 @@ func GetCurrentStats(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if client == nil {
-		sysErr = errors.New("Traffic Stats is not configured, but DS stats were requested")
+		sysErr = errors.New("Traffic Stats is not configured and 'current_stats' was requested.")
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	}

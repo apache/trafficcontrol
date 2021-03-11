@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-phys_locations:
+.. _to-api-v2-phys_locations:
 
 ******************
 ``phys_locations``

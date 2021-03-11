@@ -178,10 +178,9 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 }
 
 func DeleteTestDeliveryServiceServers(t *testing.T) {
-	dses, servers := getServersAndDSes(t)
-	ds, server := dses[0], servers[0]
+	ds, server := getServerAndDSofSameCDN(t)
 
-	_, err := TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
+	_, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{server.ID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
@@ -193,7 +192,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 
 	found := false
 	for _, dss := range dsServers.Response {
-		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
+		if *dss.DeliveryService == *ds.ID && *dss.Server == server.ID {
 			found = true
 			break
 		}
@@ -202,7 +201,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
-	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
+	setInactive(t, *ds.ID)
+	if _, _, err := TOSession.DeleteDeliveryServiceServer(*ds.ID, server.ID); err != nil {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
@@ -213,7 +213,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 
 	found = false
 	for _, dss := range dsServers.Response {
-		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
+		if *dss.DeliveryService == *ds.ID && *dss.Server == server.ID {
 			found = true
 			break
 		}
@@ -223,8 +223,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
-	dses, _, err := TOSession.GetDeliveryServices()
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.Server) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -240,5 +240,14 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
 		t.Fatal("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	return dses, servers
+	for _, ds := range dses {
+		for _, s := range servers {
+			if ds.CDNName != nil && *ds.CDNName == s.CDNName {
+				return ds, s
+			}
+		}
+	}
+	t.Fatal("expected at least one delivery service and server in the same CDN")
+
+	return tc.DeliveryServiceNullable{}, tc.Server{}
 }

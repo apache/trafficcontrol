@@ -25,6 +25,13 @@ RUN apk add --no-cache \
 COPY traffic_ops/to-access.sh /
 COPY smtp/run.sh /usr/bin/
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 # Unset entrypoint
 ENTRYPOINT []
 CMD ["/usr/bin/env", "run.sh"]
+
+HEALTHCHECK --interval=10s --timeout=1s \
+	CMD bash -c 'source /to-access.sh && [[ "$(wget -qO- https://$SMTP_FQDN/healthz)" == true ]]'

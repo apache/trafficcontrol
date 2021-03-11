@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federation_resolvers:
+.. _to-api-v2-federation_resolvers:
 
 ************************
 ``federation_resolvers``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-snapshot:
+.. _to-api-v2-cdns-name-snapshot:
 
 **************************
 ``cdns/{{name}}/snapshot``
@@ -116,7 +116,7 @@ Response Structure
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-Tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
 	:cacheGroup:       A string that is the :ref:`cache-group-name` of the :term:`Cache Group` to which the server belongs
 	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of :abbr:`FQDNs (Fully Qualified Domain Names)` that resolve to this :term:`cache server`
@@ -180,9 +180,9 @@ Response Structure
 		:shuffled: A string containing a boolean that tells whether the :term:`cache servers` chosen for content dispersion are chosen randomly or based on a consistent hash of the request URL; one of:
 
 			"false"
-				:term:`Cache servers` will be chosen consistently
+				:term:`cache servers` will be chosen consistently
 			"true"
-				:term:`Cache servers` will be chosen at random
+				:term:`cache servers` will be chosen at random
 
 	:domains:             An array of domains served by this :term:`Delivery Service`
 	:ecsEnabled:          A string containing a boolean from :ref:`ds-ecs` that tells whether EDNS0 client subnet is enabled on this :term:`Delivery Service`; one of:
@@ -315,6 +315,10 @@ Response Structure
 	:date:       The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:    The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
 	:tm_path:    A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
+		.. deprecated:: ATCv6
+
+			This information should never be used; instead all tools and (especially) components **must** use the documented API. This field was removed in APIv4
+
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
 

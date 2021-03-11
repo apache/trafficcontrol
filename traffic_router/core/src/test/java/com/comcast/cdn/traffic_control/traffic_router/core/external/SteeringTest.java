@@ -326,8 +326,8 @@ public class SteeringTest {
 		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/steering");
 		httpClient.execute(httpPost).close();
 
-		// steering is checked every 15 seconds by default.
-		Thread.sleep(30 * 1000);
+		// a polling interval of 60 seconds is common
+		Thread.sleep(90 * 1000);
 
 		Map<String, List<String>> rehashedPaths = new HashMap<>();
 		rehashedPaths.put(smallerTarget, new ArrayList<String>());

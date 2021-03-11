@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_stats:
+.. _to-api-v2-deliveryservice_stats:
 
 *************************
 ``deliveryservice_stats``
@@ -56,12 +56,6 @@ Request Structure
 	|                     |                   |                                                                                                                                                                                           |
 	|                     |                   | kbps                                                                                                                                                                                      |
 	|                     |                   |   The total traffic rate in kilobytes per second served by the :term:`Delivery Service`                                                                                                   |
-	|                     |                   | out_bytes                                                                                                                                                                                 |
-	|                     |                   |   The total number of bytes sent out to clients through the :term:`Delivery Service`                                                                                                      |
-	|                     |                   | status_4xx                                                                                                                                                                                |
-	|                     |                   |   The amount of requests that were serviced with 400-499 HTTP status codes                                                                                                                |
-	|                     |                   | status_5xx                                                                                                                                                                                |
-	|                     |                   |   The amount of requests that were serviced with 500-599 HTTP status codes                                                                                                                |
 	|                     |                   | tps_total                                                                                                                                                                                 |
 	|                     |                   |   The total traffic rate in transactions per second served by the :term:`Delivery Service`                                                                                                |
 	|                     |                   | tps_2xx                                                                                                                                                                                   |
@@ -82,7 +76,7 @@ Request Structure
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _deliveryservice_stats-get-request-example:
+.. _v2-deliveryservice_stats-get-request-example:
 .. code-block:: http
 	:caption: Request Example
 
@@ -95,7 +89,7 @@ Request Structure
 
 Content Format
 """"""""""""""
-It's important to note in :ref:`deliveryservice_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
+It's important to note in :ref:`v2-deliveryservice_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
 
 rfc
 	Returned timestamps will be formatted according to :rfc:`3339` (no sub-second precision).

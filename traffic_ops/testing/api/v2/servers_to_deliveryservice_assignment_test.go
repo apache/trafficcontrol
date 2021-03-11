@@ -36,7 +36,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 	firstServer := rs[0]
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {
@@ -92,7 +92,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	}
 	server = &rs[0]
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {

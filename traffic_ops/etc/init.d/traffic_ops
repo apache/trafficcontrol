@@ -6,7 +6,7 @@
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,10 +37,6 @@
 ### END INIT INFO
 
 TO_DIR="/opt/traffic_ops/app"; export TO_DIR
-TO_EXT_PRIVATE_LIB="/opt/traffic_ops_extensions/private/lib"; export TO_PRIVATE_LIB
-PERL5LIB=$TO_EXT_PRIVATE_LIB:$TO_DIR/lib:$TO_DIR/local/lib/perl5:$PERL5LIB; export PERL5LIB
-
-PIDFILE="/var/run/traffic_ops.pid"
 
 # uncomment this for riak client debug logging to the defined info log location.
 # logs to stdout if the info log location is not defined in the cdn.conf
@@ -49,35 +45,20 @@ PIDFILE="/var/run/traffic_ops.pid"
 # source function library
 . /etc/rc.d/init.d/functions
 
-stopHypnotoad ()
-{
-	echo -e "Shutting down Traffic Ops\n"
-	if [ -e $PIDFILE ]; then
-		_PID=`/bin/cat $PIDFILE`
-		PIDS=( `/bin/ps -ef | /bin/awk '/traffic_ops\/app\/script\/cdn/ {if ($3 == 1) {print $2}}'` )
-		# Check if original is in pidfile,  but kill any orphans, too..
-		if [[ " ${PIDS[@]} " =~ " $_PID " ]]; then
-			kill -term "${PIDS[@]}"
-		fi
-	fi
-}
-
-start () 
+start ()
 {
 	stop
 	echo -e "Starting Traffic Ops\n"
 	ulimit -n 200000 || echo "Setting ulimit max files failed for traffic_ops_golang"
 	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/cdn.conf -dbcfg $TO_DIR/conf/production/database.conf -riakcfg $TO_DIR/conf/production/riak.conf &
-	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 }
 
 stop ()
 {
 	killproc $TO_DIR/bin/traffic_ops_golang
-	stopHypnotoad
 }
 
-restart () 
+restart ()
 {
 	stop
 	start
@@ -85,23 +66,13 @@ restart ()
 
 status ()
 {
-	_PID=`/bin/cat $PIDFILE`
-	PID=`/bin/ps -ef|/bin/awk '/traffic_ops\/app\/script\/cdn/ {if ($3 == 1) {print $2}}'`
-	PID_GOLANG=`pidof -s /opt/traffic_ops/app/bin/traffic_ops_golang`
-	if [[ -z $PID && -z $_PID ]]; then
-		echo -e "\nTraffic Ops is offline\n"
+	PID=`pidof -s /opt/traffic_ops/app/bin/traffic_ops_golang`
+	if [ -z "$PID" ] ; then
+		echo "Traffic Ops is offline" >&2
 		return 1
 	fi
-	if [ -z $PID_GOLANG ] ; then
-		echo -e "\nTraffic Ops is offline (Golang)\n"
-		return 1
-	fi
-	if [[ $_PID = $PID && ! -z $PID_GOLANG ]] ; then
-		echo -e "\nTraffic Ops is running, pid = $PID , golang pid = $PID_GOLANG\n"
-		return 0
-	fi
-	echo -e "\nTraffic Ops not running (Perl pid file = $_PID , actual pid(s) = $PID , Golang pid = $PID_GOLANG)\n"
-	return 1
+	echo "Traffic Ops is running, pid = $PID"
+	return 0
 }
 
 case "$1" in

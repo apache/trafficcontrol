@@ -15,84 +15,113 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-version: '2'
+version: '2.1'
 
 services:
+  weasel:
+    image: licenseweasel/weasel:v0.4
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
   source:
-    image: trafficcontrol_tarball
+    image: apache/traffic_source_tarballer:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-source
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_monitor_build:
-    image: traffic_monitor_builder
+    image: apache/traffic_monitor_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_build:
-    image: traffic_ops_builder
+    image: apache/traffic_ops_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  traffic_ops_ort_build:
+    image: apache/traffic_ops_ort_builder:master
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+      context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   traffic_portal_build:
-    image: traffic_portal_builder
+    image: apache/traffic_portal_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
+      - ../../../.npm:/root/.npm:z
 
   traffic_router_build:
-    image: traffic_router_builder
+    image: apache/traffic_router_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.m2:/root/.m2:z
 
   traffic_stats_build:
-    image: traffic_stats_builder
+    image: apache/traffic_stats_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   grove_build:
-    image: grove_builder
+    image: apache/traffic_grove_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grove
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
 
   grovetccfg_build:
-    image: grovetccfg_builder
+    image: apache/traffic_grovetccfg_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
-
-  weasel:
-    image: licenseweasel/weasel:0.2
-    volumes:
-      - ../../..:/trafficcontrol:z
-    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
 
   docs:
-    image: docs_builder
+    image: apache/traffic_docs_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-docs
       context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z

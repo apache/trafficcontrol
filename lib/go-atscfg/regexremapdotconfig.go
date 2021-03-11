@@ -22,61 +22,94 @@ package atscfg
 import (
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
+const LineCommentRegexRemapDotConfig = LineCommentHash
 
-type CDNDS struct {
+func MakeRegexRemapDotConfig(
+	fileName string,
+	server *Server,
+	deliveryServices []DeliveryService,
+	hdrComment string,
+) (Cfg, error) {
+	warnings := []string{}
+	if server.CDNName == nil {
+		return Cfg{}, makeErr(warnings, "server CDNName missing")
+	}
+
+	configSuffix := `.config`
+	if !strings.HasPrefix(fileName, RegexRemapPrefix) || !strings.HasSuffix(fileName, configSuffix) {
+		return Cfg{}, makeErr(warnings, "file '"+fileName+"' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen")
+	}
+
+	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
+	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, RegexRemapPrefix), configSuffix)
+	if dsName == "" {
+		return Cfg{}, makeErr(warnings, "file '"+fileName+"' has no delivery service name!")
+	}
+
+	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent deliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
+	ds := DeliveryService{}
+	for _, dsesDS := range deliveryServices {
+		if dsesDS.XMLID == nil {
+			continue // TODO log?
+		}
+		if *dsesDS.XMLID != dsName {
+			continue
+		}
+		ds = dsesDS
+	}
+	if ds.ID == nil {
+		return Cfg{}, makeErr(warnings, "delivery service '"+dsName+"' not found! Do you have a regex_remap_*.config location Parameter for a delivery service that doesn't exist?")
+	}
+
+	dses, dsWarns := deliveryServicesToCDNDSes([]DeliveryService{ds})
+	warnings = append(warnings, dsWarns...)
+
+	text := makeHdrComment(hdrComment)
+
+	cdnDS, ok := dses[tc.DeliveryServiceName(dsName)]
+	if !ok {
+		warnings = append(warnings, "ds '"+dsName+"' not in dses, skipping!")
+	} else {
+		text += cdnDS.RegexRemap + "\n"
+		text = strings.Replace(text, `__RETURN__`, "\n", -1)
+	}
+
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeRegexRemapDotConfig,
+		LineComment: LineCommentRegexRemapDotConfig,
+		Warnings:    warnings,
+	}, nil
+}
+
+type cdnDS struct {
 	OrgServerFQDN string
 	QStringIgnore int
-	CacheURL      string
 	RegexRemap    string
 }
 
-func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CDNDS {
-	sDSes := map[tc.DeliveryServiceName]CDNDS{}
+// deliveryServicesToCDNDSes returns the CDNDSes and any warnings.
+func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]cdnDS, []string) {
+	warnings := []string{}
+	sDSes := map[tc.DeliveryServiceName]cdnDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {
 			if ds.XMLID == nil {
-				log.Errorln("atscfg.DeliveryServicesToCDNDSes got unknown DS with nil values! Skipping!")
+				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {
-				log.Errorln("atscfg.DeliveryServicesToCDNDSes got DS '" + *ds.XMLID + "' with nil values! Skipping!")
+				warnings = append(warnings, "got DS '"+*ds.XMLID+"' with nil values! Skipping!")
 			}
 			continue
 		}
-		sds := CDNDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		sds := cdnDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
 		if ds.RegexRemap != nil {
 			sds.RegexRemap = *ds.RegexRemap
 		}
-		if ds.CacheURL != nil {
-			sds.CacheURL = *ds.CacheURL
-		}
 		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
 	}
-	return sDSes
-}
-
-func MakeRegexRemapDotConfig(
-	cdnName tc.CDNName,
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-	fileName string,
-	dses map[tc.DeliveryServiceName]CDNDS,
-) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
-
-	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
-	dsName := tc.DeliveryServiceName(strings.TrimSuffix(strings.TrimPrefix(fileName, "regex_remap_"), ".config"))
-
-	ds, ok := dses[dsName]
-	if !ok {
-		log.Errorln("MakeRegexRemapDotConfig: ds '" + dsName + "' not in dses, skipping!")
-		return text
-	}
-
-	text += ds.RegexRemap + "\n"
-	text = strings.Replace(text, `__RETURN__`, "\n", -1)
-	return text
+	return sDSes, warnings
 }

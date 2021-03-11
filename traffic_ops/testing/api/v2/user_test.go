@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 func TestUsers(t *testing.T) {
@@ -164,7 +164,7 @@ func UserRegistrationTest(t *testing.T) {
 	}
 	defer db.Close()
 	q := `DELETE FROM tm_user WHERE email IN (` + strings.Join(emails, ",") + `)`
-	if err := execSQL(db, q, "tm_user"); err != nil {
+	if err := execSQL(db, q); err != nil {
 		t.Errorf("cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
 	}
 }
@@ -427,13 +427,13 @@ func ForceDeleteTestUsers(t *testing.T) {
 
 	// there is a constraint that prevents users from being deleted when they have a log
 	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
-	err = execSQL(db, q, "log")
+	err = execSQL(db, q)
 	if err != nil {
 		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 
 	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
-	err = execSQL(db, q, "tm_user")
+	err = execSQL(db, q)
 	if err != nil {
 		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}

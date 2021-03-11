@@ -251,6 +251,10 @@ type ProfileParametersNullable struct {
 	Parameter   *int       `json:"parameter" db:"parameter_id"`
 }
 
+type ProfileParametersNullableResponse struct {
+	Response []ProfileParametersNullable `json:"response"`
+}
+
 // ProfileExportImportParameterNullable is an object of the form used by Traffic Ops
 // to represent parameters for exported and imported profiles.
 type ProfileExportImportParameterNullable struct {

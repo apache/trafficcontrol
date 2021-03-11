@@ -15,7 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;

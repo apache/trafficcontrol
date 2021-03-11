@@ -17,13 +17,19 @@
 
 ############################################################
 # Dockerfile to build optional CiaB Socks Proxy
-# Based on CentOS 7
+# Based on CentOS 8
 ############################################################
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+
+RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+        yum -y install dnf || exit 1; \
+    fi
 
 ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
 
-RUN yum install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
+RUN dnf install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
     curl -Ls -o /tmp/dante.tar.gz $DANTES_SRC && \
     tar -C /usr/src -zxvpf $(find /tmp -type f -name dante\*) && \
     cd $(find /usr/src -type d -name dante\*) && \
@@ -32,12 +38,16 @@ RUN yum install -y net-tools bind-utils iproute wget curl automake autoconf gcc 
     make install && \
     groupadd -g 8062 sockd  && \
     useradd -m -u 8062 -g sockd sockd && \
-    yum remove -y automake autoconf gcc make && \
-    yum clean all && \
+    dnf remove -y automake autoconf gcc make && \
+    dnf clean all && \
     rm -rf /tmp/*  
 
 COPY optional/socksproxy/sockd.conf /etc
 COPY optional/socksproxy/run.sh /
+
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
 
 EXPOSE 1080
 

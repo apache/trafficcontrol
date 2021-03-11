@@ -14,13 +14,13 @@
 # limitations under the License.
 #
 
-trap "echo Error on line ${LINENO} of '$0'; exit 1" ERR
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o nounset
 echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go
 mkdir -p $GOPATH
 
-go get bitbucket.org/liamstask/goose/cmd/goose
-go get github.com/lib/pq
+go get -v bitbucket.org/liamstask/goose/cmd/goose
+go get -v github.com/lib/pq
 
 echo "Successfully installed goose to $GOPATH/bin/goose"

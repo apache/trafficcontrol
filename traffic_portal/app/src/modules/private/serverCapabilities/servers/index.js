@@ -21,17 +21,17 @@ module.exports = angular.module('trafficPortal.private.serverCapabilities.server
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.serverCapabilities.servers', {
-				url: '/{serverCapability}/servers',
+				url: '/servers?name',
 				views: {
 					serverCapabilitiesContent: {
 						templateUrl: 'common/modules/table/serverCapabilityServers/table.serverCapabilityServers.tpl.html',
 						controller: 'TableServerCapabilityServersController',
 						resolve: {
 							serverCapability: function($stateParams, serverCapabilityService) {
-								return serverCapabilityService.getServerCapability($stateParams.serverCapability);
+								return serverCapabilityService.getServerCapability($stateParams.name);
 							},
 							servers: function($stateParams, serverCapabilityService) {
-								return serverCapabilityService.getServerCapabilityServers($stateParams.serverCapability);
+								return serverCapabilityService.getServerCapabilityServers($stateParams.name);
 							}
 						}
 					}

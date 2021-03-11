@@ -22,30 +22,33 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 )
 
-// CacheAvailableStatus wraps a map of cache available statuses to be safe for multiple reader goroutines and one writer.
+// CacheAvailableStatus wraps a map of cache available statuses to be safe for
+// multiple reader goroutines and one writer.
 type CacheAvailableStatus struct {
 	caches *cache.AvailableStatuses
 	m      *sync.RWMutex
 }
 
-// NewCacheAvailableStatus creates and returns a new CacheAvailableStatus, initializing internal pointer values.
+// NewCacheAvailableStatus creates and returns a new CacheAvailableStatus,
+// initializing internal pointer values.
 func NewCacheAvailableStatus() CacheAvailableStatus {
-	c := cache.AvailableStatuses(map[tc.CacheName]cache.AvailableStatus{})
+	c := cache.AvailableStatuses(map[string]cache.AvailableStatus{})
 	return CacheAvailableStatus{m: &sync.RWMutex{}, caches: &c}
 }
 
-// Get returns the internal map of cache statuses. The returned map MUST NOT be modified. If modification is necessary, copy.
+// Get returns the internal map of cache statuses. The returned map MUST NOT be
+// modified. If modification is necessary, copy.
 func (o *CacheAvailableStatus) Get() cache.AvailableStatuses {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.caches
 }
 
-// Set sets the internal map of cache availability. This MUST NOT be called by multiple goroutines.
+// Set sets the internal map of cache availability. This MUST NOT be called by
+// multiple goroutines.
 func (o *CacheAvailableStatus) Set(v cache.AvailableStatuses) {
 	o.m.Lock()
 	*o.caches = v

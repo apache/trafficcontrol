@@ -36,11 +36,12 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Request;
-import com.ning.http.client.Response;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.Response;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
@@ -74,7 +75,11 @@ public class PeriodicResourceUpdater {
 		executorService.shutdownNow();
 
 		while (!asyncHttpClient.isClosed()) {
-			asyncHttpClient.close();
+			try {
+				asyncHttpClient.close();
+			} catch (IOException e) {
+				LOGGER.error(e.getMessage());
+			}
 		}
 	}
 
@@ -119,11 +124,12 @@ public class PeriodicResourceUpdater {
 	}
 
 	private AsyncHttpClient newAsyncClient() {
-		return new AsyncHttpClient(
-				new AsyncHttpClientConfig.Builder()
-						.setFollowRedirects(true)
-							.setConnectionTimeoutInMs(10000)
+		return new DefaultAsyncHttpClient(
+				new DefaultAsyncHttpClientConfig.Builder()
+						.setFollowRedirect(true)
+							.setConnectTimeout(10000)
 								.build());
+
 	}
 
 	private synchronized void putCurrent() {
@@ -189,7 +195,7 @@ public class PeriodicResourceUpdater {
 	/**
 	 * Sets executorService.
 	 * 
-	 * @param executorService
+	 * @param es
 	 *            the executorService to set
 	 */
 	public void setExecutorService(final ScheduledExecutorService es) {
@@ -266,6 +272,9 @@ public class PeriodicResourceUpdater {
 			final int code = response.getStatusCode();
 
 			if (code != 200) {
+				if (code >= 400) {
+					LOGGER.warn("failed to GET " + response.getUri() + " - returned status code " + code);
+				}
 				return code;
 			}
 
@@ -297,7 +306,7 @@ public class PeriodicResourceUpdater {
 	private Request getRequest(final String url) {
 		try {
 			new URI(url);
-			return asyncHttpClient.prepareGet(url).setFollowRedirects(true).build();
+			return asyncHttpClient.prepareGet(url).setFollowRedirect(true).build();
 		} catch (URISyntaxException e) {
 			LOGGER.fatal("Cannot update database from Bad URI - " + url);
 			return null;

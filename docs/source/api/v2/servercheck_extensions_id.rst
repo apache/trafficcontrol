@@ -13,12 +13,12 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servercheck_extensions-id:
+.. _to-api-v2-servercheck_extensions-id:
 
 *********************************
 ``servercheck/extensions/{{ID}}``
 *********************************
- 
+
 ``DELETE``
 ==========
 Deletes a Traffic Ops server check extension definition. This does **not** delete the actual extension file.

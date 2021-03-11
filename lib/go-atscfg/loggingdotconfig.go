@@ -20,27 +20,36 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const MaxLogObjects = 10
 
 const LoggingFileName = "logging.config"
 const ContentTypeLoggingDotConfig = ContentTypeTextASCII
+const LineCommentLoggingDotConfig = LineCommentHash
 
 // MakeStorageDotConfig creates storage.config for a given ATS Profile.
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeLoggingDotConfig(
-	profileName string,
-	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)
-	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
-	toURL string, // tm.url global parameter (TODO: cache itself?)
-) string {
+	server *Server,
+	serverParams []tc.Parameter,
+	hdrCommentTxt string,
+) (Cfg, error) {
+	warnings := []string{}
 
-	hdrComment := GenericHeaderComment(profileName, toToolName, toURL)
+	if server.Profile == nil {
+		return Cfg{}, makeErr(warnings, "this server missing Profile")
+	}
+
+	paramData, paramWarns := paramsToMap(filterParams(serverParams, LoggingFileName, "", "", "location"))
+	warnings = append(warnings, paramWarns...)
+
+	hdrComment := makeHdrComment(hdrCommentTxt)
 	// This is an LUA file, so we need to massage the header a bit for LUA commenting.
 	hdrComment = strings.Replace(hdrComment, `# `, ``, -1)
 	hdrComment = strings.Replace(hdrComment, "\n", ``, -1)
@@ -55,7 +64,7 @@ func MakeLoggingDotConfig(
 			format := paramData[logFormatField+".Format"]
 			if format == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				log.Errorf("Profile '%v' has logging.config format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", profileName, logFormatField)
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", *server.Profile, logFormatField))
 			}
 			format = strings.Replace(format, `"`, `\"`, -1)
 			text += logFormatName + " = format {\n"
@@ -74,7 +83,7 @@ func MakeLoggingDotConfig(
 			filter := paramData[logFilterField+".Filter"]
 			if filter == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				log.Errorf("Profile '%v' has logging.config format '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", profileName, logFilterField)
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", *server.Profile, logFilterField))
 			}
 
 			filter = strings.Replace(filter, `\`, `\\`, -1)
@@ -123,5 +132,10 @@ func MakeLoggingDotConfig(
 		}
 	}
 
-	return text
+	return Cfg{
+		Text:        text,
+		ContentType: ContentTypeLoggingDotConfig,
+		LineComment: LineCommentLoggingDotConfig,
+		Warnings:    warnings,
+	}, nil
 }

@@ -15,9 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import org.apache.log4j.Logger;
+
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.apache.log4j.Logger;
 
 
 public class RegionalGeoRule {
@@ -40,10 +42,12 @@ public class RegionalGeoRule {
 
     private final String alternateUrl; // if disallowed, client will be redirected to this url
 
+    private final List<RegionalGeoCoordinateRange> coordinateRanges;
+
     public RegionalGeoRule(final RegionalGeoDsvc regionalGeoDsvc,
-            final String urlRegex, final Pattern urlRegexPattern, final PostalsType postalsType,
-            final Set<String> postals, final NetworkNode whiteListRoot,
-            final String alternateUrl) {
+                           final String urlRegex, final Pattern urlRegexPattern, final PostalsType postalsType,
+                           final Set<String> postals, final NetworkNode whiteListRoot,
+                           final String alternateUrl, final List<RegionalGeoCoordinateRange> coordinateRanges) {
         this.regionalGeoDsvc = regionalGeoDsvc;
         this.urlRegex = urlRegex;
         this.pattern = urlRegexPattern;
@@ -51,6 +55,7 @@ public class RegionalGeoRule {
         this.postals = postals;
         this.whiteListRoot = whiteListRoot;
         this.alternateUrl = alternateUrl;
+        this.coordinateRanges = coordinateRanges;
     }
 
     public boolean matchesUrl(final String url) {
@@ -69,6 +74,20 @@ public class RegionalGeoRule {
             }
         }
 
+        return false;
+    }
+
+    public boolean isAllowedCoordinates(final double lat, final double lon) {
+        if (coordinateRanges == null) {
+            return false;
+        }
+        for (int i=0; i < coordinateRanges.size(); i++) {
+            final RegionalGeoCoordinateRange coordinateRange = coordinateRanges.get(i);
+            if ((lat >= coordinateRange.getMinLat() && lon >= coordinateRange.getMinLon()) &&
+                    (lat <= coordinateRange.getMaxLat() && lon <= coordinateRange.getMaxLon())) {
+                return true;
+            }
+        }
         return false;
     }
 
