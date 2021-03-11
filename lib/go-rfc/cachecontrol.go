@@ -107,8 +107,5 @@ func ParseETags(eTags []string) (time.Time, bool) {
 			latestTime = et
 		}
 	}
-	if latestTime == (time.Time{}) {
-		return time.Time{}, false
-	}
-	return latestTime, true
+	return latestTime, latestTime != time.Time{}
 }

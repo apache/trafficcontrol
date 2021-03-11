@@ -97,7 +97,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest($scope.dsRequest.id, $scope.dsRequest));
 		}
 		// make sure the ds request is assigned to the user that is fulfilling the request
-		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.id));
+		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.username));
 		// set the status to 'pending'
 		promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, 'pending'));
 		return promises;
