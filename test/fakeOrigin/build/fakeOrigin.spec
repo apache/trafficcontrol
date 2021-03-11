@@ -15,18 +15,16 @@
 #
 # RPM spec file for the test origin fakeOrigin
 #
-
-Summary: fakeOrigin CDN Origin
+%define   debug_package %{nil}
 Name: fakeOrigin
-Version: %{_version}
-Release: %{_release}
-Prefix: /usr/sbin/%{name}
-Source: %{_sourcedir}/%{name}-%{_version}-%{_release}.tgz
-Distribution: CentOS Linux
-BuildRoot: %{buildroot}
+Version: %{traffic_control_version}
+Release: %{build_number}
+Summary: fakeOrigin CDN Origin
+Vendor:	Apache Software Foundation
+Group:    Applications/Communications
 License: Apache License, Version 2.0
 URL: https://github.com/apache/trafficcontrol
-Vendor:	Apache Software Foundation
+Source: %{_sourcedir}/%{name}-%{traffic_control_version}.tgz
 Requires: initscripts
 
 %description
@@ -35,13 +33,18 @@ A fake HTTP CDN Origin for testing
 %prep
 
 %build
-set -o nounset
 # copy license
-cp "${DIR}/../../../LICENSE" %{_builddir}
+cp "$TC_DIR/LICENSE" %{_builddir}
 
-tar -xvzf %{_sourcedir}/%{name}-%{_version}-%{_release}.tgz --directory %{_builddir}
+# copy fakeOrigin binary
+godir=src/github.com/apache/trafficcontrol/test/%{name}
+( mkdir -p "$godir" && \
+	cd "$godir" && \
+	cp -r "$TC_DIR"/test/%{name}/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
+cd src/github.com/apache/trafficcontrol/test/%{name}
 rm -rf %{buildroot}/opt/%{name}
 mkdir -p %{buildroot}/opt/%{name}/example
 cp -p %{name} %{buildroot}/opt/%{name}
@@ -71,5 +74,5 @@ rm -r -f %{buildroot}
 /opt/%{name}/example
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
-%config(noreplace) /etc/logrotate.d/%{name}
+%config(noreplace) %attr(644, root, root) /etc/logrotate.d/%{name}
 /etc/init.d/%{name}
