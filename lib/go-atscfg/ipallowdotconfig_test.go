@@ -112,7 +112,7 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 				ip4deny = true
 			case strings.Contains(line, `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`) && strings.Contains(line, `ip_deny`) && strings.Contains(line, `PUSH`) && strings.Contains(line, `PURGE`):
 				ip6deny = true
-			case strings.Contains(line, `ip_allow`):
+			case strings.Contains(line, `ip_allow`) && !(strings.Contains(line, `127.0.0.1`) || strings.Contains(line, `::1`)):
 				if !(ip4deny && ip6deny) {
 					t.Errorf("Expected denies for PUSH and PURGE before any ips are allowed; pre-denial allowance on line %d.", i+1)
 				}
@@ -402,7 +402,7 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 				ip4deny = true
 			case strings.Contains(line, `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`) && strings.Contains(line, `ip_deny`) && strings.Contains(line, `PUSH`) && strings.Contains(line, `PURGE`):
 				ip6deny = true
-			case strings.Contains(line, `ip_allow`):
+			case strings.Contains(line, `ip_allow`) && !(strings.Contains(line, `127.0.0.1`) || strings.Contains(line, `::1`)):
 				if !(ip4deny && ip6deny) {
 					t.Errorf("Expected denies for PUSH and PURGE before any ips are allowed; pre-denial allowance on line %d.", i+1)
 				}
