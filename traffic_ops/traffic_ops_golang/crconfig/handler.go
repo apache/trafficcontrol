@@ -226,7 +226,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	}
 	// Check if the current user has the lock on this cdn, if yes -> proceed
 	// if no, try to post the lock for this CDN and then go on to snap it
-	lockexists, err, errCode := checkIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+	lockexists, err, errCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
 	if errCode != http.StatusOK {
 		if errCode == http.StatusForbidden {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, err, nil, deprecated, &alt)
@@ -237,7 +237,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	}
 	if !lockexists {
 		// POST to get a lock here
-		err = acquireCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+		err = dbhelpers.AcquireCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
 		if err != nil {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, &alt)
 			return
@@ -271,42 +271,6 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 	api.WriteResp(w, r, "SUCCESS")
-}
-
-func checkIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (bool, error, int) {
-	query := `SELECT username FROM cdn_lock WHERE cdn_name=$1`
-	var userName string
-	rows, err := tx.Query(query, cdn)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil, http.StatusOK
-		}
-		return false, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(&userName)
-		if err != nil {
-			return false, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
-		}
-	}
-	if userName == "" {
-		return false, nil, http.StatusOK
-	}
-	if user == userName {
-		return true, nil, http.StatusOK
-	}
-	return false, errors.New("user " + userName + " currently has the lock on cdn " + cdn), http.StatusForbidden
-}
-
-func acquireCdnLock(tx *sql.Tx, cdn, user string) error {
-	query := `INSERT INTO cdn_lock (cdn_name, username) VALUES ($1, $2)`
-	rows, err := tx.Query(query, cdn, user)
-	if err != nil {
-		return errors.New("acquiring cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error())
-	}
-	defer rows.Close()
-	return nil
 }
 
 // SnapshotOldGUIHandler creates the CRConfig JSON and writes it to the snapshot table in the database. The response emulates the old Perl UI function. This should go away when the old Perl UI ceases to exist.

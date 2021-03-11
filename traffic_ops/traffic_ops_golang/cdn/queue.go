@@ -48,6 +48,32 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
+
+	cdn, _, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(inf.IntParams["id"]))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	// Check if the current user has the lock on this cdn, if yes -> proceed
+	// if no, try to post the lock for this CDN and then go on to snap it
+	lockexists, err, errCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if errCode != http.StatusOK {
+		if errCode == http.StatusForbidden {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, err, nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
+		return
+	}
+	if !lockexists {
+		// POST to get a lock here
+		err = dbhelpers.AcquireCdnLock(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	}
+
 	if err := queueUpdates(inf.Tx.Tx, int64(inf.IntParams["id"]), reqObj.Action == "queue"); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN queueing updates: "+err.Error()))
 		return

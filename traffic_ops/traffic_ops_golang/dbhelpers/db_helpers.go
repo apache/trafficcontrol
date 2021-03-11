@@ -1201,3 +1201,56 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 	}
 	return nil, nil, http.StatusOK
 }
+
+func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (bool, error, int) {
+	query := `SELECT username FROM cdn_lock WHERE cdn_name=$1`
+	var userName string
+	rows, err := tx.Query(query, cdn)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil, http.StatusOK
+		}
+		return false, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName)
+		if err != nil {
+			return false, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if userName == "" {
+		return false, nil, http.StatusOK
+	}
+	if user == userName {
+		return true, nil, http.StatusOK
+	}
+	return false, errors.New("user " + userName + " currently has the lock on cdn " + cdn), http.StatusForbidden
+}
+
+func AcquireCdnLock(tx *sql.Tx, cdn, user string) error {
+	query := `INSERT INTO cdn_lock (cdn_name, username) VALUES ($1, $2)`
+	rows, err := tx.Query(query, cdn, user)
+	if err != nil {
+		return errors.New("acquiring cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error())
+	}
+	defer rows.Close()
+	return nil
+}
+
+func GetCDNNameFromServerId(tx *sql.Tx, serverId int64) (string, error) {
+	cdn := ""
+	query := `SELECT name FROM cdn JOIN server s ON cdn.id = s.cdn_id WHERE s.id=$1`
+	rows, err := tx.Query(query, serverId)
+	if err != nil {
+		return cdn, errors.New("getting cdn name for server " + strconv.Itoa(int(serverId)) + ": " + err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cdn)
+		if err != nil {
+			return cdn, errors.New("scanning cdn name " + cdn + ": " + err.Error())
+		}
+	}
+	return cdn, nil
+}
