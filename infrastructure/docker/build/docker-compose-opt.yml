@@ -27,7 +27,7 @@ services:
     volumes:
       - ../../../traffic_server/tsb:/opt/tsb-ats:z
   fakeorigin_build:
-    image: apache/fakeorigin_builder:master
+    image: apache/traffic_fakeorigin_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-fakeOrigin
       context: ../../..
