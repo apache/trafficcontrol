@@ -92,7 +92,6 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 
 	err := validation.ValidateStruct(&dsr,
 		validation.Field(&dsr.ChangeType, validation.Required),
-		validation.Field(&dsr.DeliveryService, validation.Required),
 		validation.Field(&dsr.Status, validation.By(
 			func(s interface{}) error {
 				if s == nil {
@@ -103,6 +102,52 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 					return fmt.Errorf("expected RequestStatus type, got %T", s)
 				}
 				return fromStatus.ValidTransition(toStatus)
+			},
+		)),
+		validation.Field(&dsr.Requested, validation.By(
+			func(r interface{}) error {
+				if dsr.ChangeType != tc.DSRChangeTypeUpdate && dsr.ChangeType != tc.DSRChangeTypeCreate {
+					return nil
+				}
+				if r == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				ds, ok := r.(*tc.DeliveryServiceV4)
+				if !ok {
+					return fmt.Errorf("expected a Delivery Service, got %T", r)
+				}
+				if ds == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				err := deliveryservice.Validate(tx, ds)
+				if err == nil {
+					dsr.XMLID = *ds.XMLID
+				}
+				return err
+			},
+		)),
+		validation.Field(&dsr.Original, validation.By(
+			func(o interface{}) error {
+				if dsr.ChangeType != tc.DSRChangeTypeDelete {
+					return nil
+				}
+				if o == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				ds, ok := o.(*tc.DeliveryServiceV4)
+				if !ok {
+					return fmt.Errorf("expected a Delivery Service, got %T", o)
+				}
+				if ds == nil {
+					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
+				}
+				if ds.ID == nil {
+					return errors.New("must be identified (specify ID)")
+				}
+				return nil
+				// I don't really think we need to validate this, since it's
+				// being deleted. ID is sufficient to fully identify it.
+				// return ds.Validate(tx)
 			},
 		)),
 		validation.Field(&dsr.Assignee, validation.By(
@@ -133,10 +178,6 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 	)
 	if err != nil {
 		return err, nil
-	}
-
-	if err = deliveryservice.Validate(tx, dsr.DeliveryService); err != nil {
-		err = fmt.Errorf("deliveryService: %v", err)
 	}
 
 	return err, nil
