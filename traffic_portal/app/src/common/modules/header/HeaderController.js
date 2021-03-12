@@ -23,11 +23,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         cdnService.getCDNs()
             .then(function(cdns) {
                 cdns.forEach(function(cdn) {
-                    const cdnNotification = notifications.find(function(notification){ return cdn.name === notification.cdn });
-                    if (cdnNotification) {
-                        cdn.notificationCreatedBy = cdnNotification.user;
-                        cdn.notification = cdnNotification.notification;
-                    }
+                    cdn.hasNotifications = notifications.find(function(notification){ return cdn.name === notification.cdn });
                 });
                 $scope.cdns = cdns;
             });
@@ -63,6 +59,16 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             .then(function(response) {
                 $scope.loadingChangeLogs = false;
                 $scope.changeLogs = response;
+            });
+    };
+
+    $scope.getNotifications = function(cdn) {
+        $scope.loadingNotifications = true;
+        $scope.notifications = [];
+        cdnService.getNotifications({ cdn: cdn.name })
+            .then(function(response) {
+                $scope.loadingNotifications = false;
+                $scope.notifications = response;
             });
     };
 
