@@ -97,12 +97,14 @@
    host  all   {{ postgresql_user }}  127.0.0.1/32  trust
    host  all   {{ postgresql_user }}  ::1/128  trust
 
+{% if groups['traffic_ops'] is defined %}
    # --  TO Instances for Postinstall
 {% for host_obj in (groups['traffic_ops']) %}
    hostssl  all {{ postgresql_user }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
    #host  all {{ postgresql_user }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
 
 {% endfor %}
+{% endif %}
 
 # ------------------------------------------------------
 #  Postgres SUPERUSER
@@ -125,6 +127,7 @@
 #-------------------------------------
 #  TRAFFIC OPS
 # ------------------------------------------------------
+{% if groups['traffic_ops'] is defined %}
 {% for host_obj in (groups['traffic_ops']) %}
    hostssl  {{ todb_db_name }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
    host  {{ todb_db_name }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
@@ -132,6 +135,7 @@
    hostssl  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
    host  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
 {% endfor %}
+{% endif %}
 
 {% if postgresql_replica_user is defined and postgresql_replica_user is not none %}
 # ------------------------------------------------------
