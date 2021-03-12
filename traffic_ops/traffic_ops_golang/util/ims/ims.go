@@ -30,12 +30,13 @@ import (
  * under the License.
  */
 
-// LatestTimestamp to keep track of the max of "last updated" times in tables
+// LatestTimestamp to keep track of the max of "last updated" times in tables.
 type LatestTimestamp struct {
 	LatestTime *tc.TimeNoMod `json:"latestTime" db:"max"`
 }
 
-// TryIfModifiedSinceQuery for components that DO NOT implement the CRUDER interface
+// TryIfModifiedSinceQuery for components that DO NOT implement the CRUDER
+// interface(s).
 // Checks to see the max time that an entity was changed, and then returns a boolean (which tells us whether or not to run the main query for the endpoint)
 // along with the max time
 // If the returned boolean is false, there is no need to run the main query for the GET API endpoint, and we return a 304 status

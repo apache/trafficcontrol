@@ -89,25 +89,30 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
 	dsr := testData.DeliveryServiceRequests[0].DeliveryService
+	resetDS(dsr)
+	if dsr == nil || dsr.XMLID == nil {
+		t.Fatal("first DSR in the test data had a nil DeliveryService or one with no XMLID")
+	}
 
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
+	resp, _, _, err := TOSession.GetDeliveryServiceRequestsByXMLID(*dsr.XMLID, nil)
 	if err != nil {
-		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
+		t.Fatalf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
 	}
 	if len(resp) != 1 {
-		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)
-	} else {
-		respDSR := resp[0]
-
-		for _, comment := range testData.DeliveryServiceRequestComments {
-			comment.DeliveryServiceRequestID = respDSR.ID
-			resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
-			if err != nil {
-				t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
-			}
-		}
+		t.Fatalf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, *dsr.XMLID)
+	}
+	respDSR := resp[0]
+	if respDSR.ID == nil {
+		t.Fatalf("got Delivery Service Request with xml_id '%s' that had a null ID", *dsr.XMLID)
 	}
 
+	for _, comment := range testData.DeliveryServiceRequestComments {
+		comment.DeliveryServiceRequestID = *respDSR.ID
+		resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
+		if err != nil {
+			t.Errorf("could not CREATE delivery service request comment: %v - %v", err, resp)
+		}
+	}
 }
 
 func SortTestDeliveryServiceRequestComments(t *testing.T) {

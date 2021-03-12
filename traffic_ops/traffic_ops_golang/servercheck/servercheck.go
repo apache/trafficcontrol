@@ -270,6 +270,12 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		if ok && ok1 {
 			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND (server.host_name=:hostName AND server.id=:id)"
 			whereSC = "WHERE servercheck.server=:id"
+		} else if ok && !ok1 {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.id=:id "
+			whereSC = "WHERE servercheck.server=:id"
+		} else if ok1 && !ok {
+			whereSI = "WHERE (type.name LIKE 'MID%' OR type.name LIKE 'EDGE%') AND server.host_name=:hostName "
+			whereSC = ""
 		} else {
 			whereSI = "WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%' "
 			whereSC = ""
