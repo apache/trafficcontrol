@@ -24,7 +24,14 @@ fakeOrigin is a simple HLS video server, capable of simulating live video traffi
 * Serve HLS VOD video, from a static video file
 * Serve static video and other files
 
-# How to install
+# How to build an rpm
+From the root of the trafficcontrol repository use the `pkg` script such as:
+```
+./pkg -o fakeorigin_build
+```
+Since this is considered an extra non-required component of the overall functionality of Apache Traffic Control, it's placed in the optional grouping not built by default by `pkg`.
+
+# How to install locally
 Local build pre-requesites:
 * Go 1.9+
   * OSX: ```brew install go```

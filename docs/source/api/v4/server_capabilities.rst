@@ -135,6 +135,66 @@ Response Structure
 		}
 	}
 
+``PUT``
+========
+Update an existing :term:`Server Capability`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+:name: The name of the :term:`Server Capability`
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/4.0/server_capabilities/edit?name=RAM HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 15
+	Content-Type: application/json
+
+	{
+		"name": "HDD"
+	}
+
+Response Structure
+------------------
+:name:        The name of this :term:`Server Capability`
+:lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: ysdopC//JQI79BRUa61s6M2HzHxYHpo5RdcuauOoqCYxiVOoUhNZfOVydVkv8zDN2qA374XKnym4kWj3VzQIXg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 03 March 2021 21:22:08 GMT
+	Content-Length: 137
+
+	{
+		"alerts": [
+			{
+				"text": "server capability was updated.",
+				"level": "success"
+			}
+		],
+		"response": {
+			"name": "HDD",
+			"lastUpdated": "2021-03-03 21:22:08+00"
+		}
+	}
+
 ``DELETE``
 ==========
 Deletes a specific :term:`Server Capability`.

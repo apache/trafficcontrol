@@ -17,12 +17,5 @@
  * under the License.
  */
 
-module.exports = function(){
-	this.name=element(by.name('name'));
-	this.createButton=element(by.buttonText('Create'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.deleteButton=element(by.buttonText('Delete'));
-	this.searchFilter=element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
-	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
-};
+module.exports = angular.module('trafficPortal.form.serverCapability.view', [])
+	.controller('FormEditServerCapabilityController', require('./FormEditServerCapabilityController'));

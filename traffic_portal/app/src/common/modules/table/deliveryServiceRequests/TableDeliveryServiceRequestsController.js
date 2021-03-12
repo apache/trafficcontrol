@@ -377,8 +377,8 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			}
 		});
 		modalInstance.result.then(function () {
-			var assigneeId = (assign) ? userModel.user.id : null;
-			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).then(function () {
+			var assignee = (assign) ? userModel.user.username : null;
+			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assignee).then(function () {
 				$scope.refresh();
 				if (assign) {
 					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was assigned' } ], false);
