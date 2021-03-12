@@ -1131,7 +1131,7 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
 	_, okIUS := h[rfc.IfUnmodifiedSince]
 	_, okIM := h[rfc.IfMatch]
-	if !okIUS || !okIM {
+	if !okIUS && !okIM {
 		return nil, nil, http.StatusOK
 	}
 	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
@@ -1153,7 +1153,7 @@ func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (er
 func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName string) (error, error, int) {
 	_, okIUS := h[rfc.IfUnmodifiedSince]
 	_, okIM := h[rfc.IfMatch]
-	if !okIUS || !okIM {
+	if !okIUS && !okIM {
 		return nil, nil, http.StatusOK
 	}
 	existingLastUpdated, found, err := GetLastUpdatedByName(tx, name, tableName)

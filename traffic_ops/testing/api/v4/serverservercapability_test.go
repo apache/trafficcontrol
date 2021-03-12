@@ -234,17 +234,17 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	if len(resp) == 0 {
 		t.Fatal("no server capability in response, quitting")
 	}
-	origName := resp[0].Name
+	originalName := resp[0].Name
 	newSCName := "sc-test"
 	resp[0].Name = newSCName
 
 	// Get all servers related to original sever capability name
-	servOrigResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &origName, nil)
+	servOrigResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &originalName, nil)
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", origName, err)
+		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", originalName, err)
 	}
 	if len(servOrigResp) == 0 {
-		t.Fatalf("no servers associated with server capability name: %v", origName)
+		t.Fatalf("no servers associated with server capability name: %v", originalName)
 	}
 	mapOrigServ := make(map[string]string)
 	for _, s := range servOrigResp {
@@ -252,7 +252,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, &resp[0])
+	updateResponse, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(originalName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
 	}
@@ -266,7 +266,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("no server associated with server capability name:%v", newSCName)
 	}
 	if len(servOrigResp) != len(servUpdatedResp) {
-		t.Fatalf("length of servers for a given server capability name is different, expected: %v-%v, got: %v-%v", origName, len(servOrigResp), newSCName, len(servUpdatedResp))
+		t.Fatalf("length of servers for a given server capability name is different, expected: %v-%v, got: %v-%v", originalName, len(servOrigResp), newSCName, len(servUpdatedResp))
 	}
 	for _, s := range servUpdatedResp {
 		if newSCName != *s.ServerCapability {
@@ -279,8 +279,8 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Set everything back as it was for further testing.
-	resp[0].Name = origName
-	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, &resp[0])
+	resp[0].Name = originalName
+	r, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(newSCName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}
