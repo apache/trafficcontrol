@@ -84,41 +84,6 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
-    $scope.toggleNotification = function(cdn) {
-        if (cdn.notificationCreatedBy) {
-            confirmDeleteNotification(cdn);
-        } else {
-            confirmCreateNotification(cdn);
-        }
-    };
-
-    let confirmCreateNotification = function(cdn) {
-        const params = {
-            title: 'Create Global ' + cdn.name + ' Notification',
-            message: 'What is the content of your global notification for the ' + cdn.name + ' CDN?'
-        };
-        const modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
-            controller: 'DialogInputController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function(notification) {
-            cdnService.createNotification(cdn, notification).
-                then(
-                    function() {
-                        $rootScope.$broadcast('headerController::notificationCreated');
-                    }
-                );
-        }, function () {
-            // do nothing
-        });
-    };
-
     let confirmDeleteNotification = function(cdn) {
         const params = {
             title: 'Delete Global ' + cdn.name + ' Notification',

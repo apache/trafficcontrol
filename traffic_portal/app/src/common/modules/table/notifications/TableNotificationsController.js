@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableNotificationsController = function(tableName, notifications, filter, $scope, dateUtils) {
+var TableNotificationsController = function(tableName, notifications, filter, $scope, $rootScope, $state, $uibModal, dateUtils, cdnService) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -232,7 +232,61 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 		$scope.gridOptions.api.setFilterModel(null);
 	};
 
+	$scope.selectCDNandCreateNotification = function() {
+		const params = {
+			title: 'Create Notification',
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			$scope.createNotification(cdn);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.createNotification = function(cdn) {
+		const params = {
+			title: 'Create ' + cdn.name + ' Notification',
+			message: 'What is the content of your notification for the ' + cdn.name + ' CDN?'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+			controller: 'DialogInputController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function(notification) {
+			cdnService.createNotification(cdn, notification).
+			then(
+				function() {
+					$state.reload();
+					// $rootScope.$broadcast('headerController::notificationCreated');
+				}
+			);
+		}, function () {
+			// do nothing
+		});
+	};
+
+
 };
 
-TableNotificationsController.$inject = ['tableName', 'notifications', 'filter', '$scope', 'dateUtils'];
+TableNotificationsController.$inject = ['tableName', 'notifications', 'filter', '$scope', '$rootScope', '$state', '$uibModal', 'dateUtils', 'cdnService'];
 module.exports = TableNotificationsController;
