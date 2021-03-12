@@ -88,7 +88,7 @@ Request Structure
 	| Name | Description                                                                             |
 	+======+=========================================================================================+
 	|  ID  | The integral, unique identifier of the :term:`Delivery Service Request` being modified  |
-	+======+=========================================================================================+
+	+------+-----------------------------------------------------------------------------------------+
 
 
 :status: The status of the :term:`DSR`. Can be "draft", "submitted", "rejected", "pending", or "complete".
