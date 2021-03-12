@@ -84,33 +84,6 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         trafficPortalService.dbDump();
     };
 
-    let confirmDeleteNotification = function(cdn) {
-        const params = {
-            title: 'Delete Global ' + cdn.name + ' Notification',
-            message: 'Are you sure you want to delete the global notification for the ' + cdn.name + ' CDN? This will remove the notification from the view of all users.'
-        };
-        const modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            cdnService.deleteNotification({ cdn: cdn.name }).
-                then(
-                    function() {
-                        $rootScope.$broadcast('headerController::notificationDeleted');
-                    }
-                );
-        }, function () {
-            // do nothing
-        });
-    };
-
     $scope.confirmQueueServerUpdates = function() {
         var params = {
             title: 'Queue Server Updates',

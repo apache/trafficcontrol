@@ -17,20 +17,13 @@
  * under the License.
  */
 
-var TableNotificationsController = function(tableName, notifications, filter, $scope, $rootScope, $state, $uibModal, dateUtils, cdnService) {
+var TableNotificationsController = function(tableName, notifications, filter, $scope, $state, $uibModal, $document, dateUtils, cdnService) {
 
 	/**
 	 * Gets value to display a default tooltip.
 	 */
 	function defaultTooltip(params) {
 		return params.value;
-	}
-
-	/**
-	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
-	 */
-	function dateCellFormatterRelative(params) {
-		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
 
 	function dateCellFormatter(params) {
@@ -84,18 +77,38 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 			filter: true,
 			sortable: true,
 			resizable: true,
-			tooltip: defaultTooltip
+			tooltipValueGetter: defaultTooltip
 		},
 		rowData: notifications,
 		pagination: true,
 		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
-		onColumnResized: function() {
+		onColumnResized: function(params) {
 			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		},
 		tooltipShowDelay: 500,
 		allowContextMenuWithControlKey: true,
 		preventDefaultOnContextMenu: true,
+		onCellContextMenu: function(params) {
+			$scope.showMenu = true;
+			$scope.menuStyle.left = String(params.event.clientX) + "px";
+			$scope.menuStyle.top = String(params.event.clientY) + "px";
+			$scope.menuStyle.bottom = "unset";
+			$scope.menuStyle.right = "unset";
+			$scope.$apply();
+			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+
+			if (boundingRect.bottom > window.innerHeight){
+				$scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
+				$scope.menuStyle.top = "unset";
+			}
+			if (boundingRect.right > window.innerWidth) {
+				$scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
+				$scope.menuStyle.left = "unset";
+			}
+			$scope.notification = params.data;
+			$scope.$apply();
+		},
 		onColumnVisible: function(params) {
 			if (params.visible){
 				return;
@@ -110,12 +123,9 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 				}
 			}
 		},
-		colResizeDefault: "shift",
 		onFirstDataRendered: function() {
 			try {
 				const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
-				// apply any filter provided to the controller
-				Object.assign(filterState, filter);
 				$scope.gridOptions.api.setFilterModel(filterState);
 			} catch (e) {
 				console.error("Failure to load stored filter state:", e);
@@ -195,7 +205,14 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 					console.error("Failed to store column defs to local storage:", e);
 				}
 			});
-		}
+		},
+		colResizeDefault: "shift"
+	};
+
+	/** This is used to position the context menu under the cursor. */
+	$scope.menuStyle = {
+		left: 0,
+		top: 0,
 	};
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
@@ -208,10 +225,10 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 	$scope.exportCSV = function() {
 		const params = {
 			allColumns: true,
-			fileName: "notifications.csv",
+			fileName: "invalidation_requests.csv",
 		};
 		$scope.gridOptions.api.exportDataAsCsv(params);
-	};
+	}
 
 	$scope.onQuickSearchChanged = function() {
 		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
@@ -277,7 +294,6 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 			then(
 				function() {
 					$state.reload();
-					// $rootScope.$broadcast('headerController::notificationCreated');
 				}
 			);
 		}, function () {
@@ -285,8 +301,45 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 		});
 	};
 
+	$scope.confirmDeleteNotification = function(notification, event) {
+		event.stopPropagation();
+		const params = {
+			title: 'Delete Notification',
+			message: 'Are you sure you want to delete the notification for the ' + notification.cdn + ' CDN? This will remove the notification from the view of all users.'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			cdnService.deleteNotification({ cdn: notification.cdn }).
+				then(
+					function() {
+						$state.reload();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	/**** Initialization code, including loading user columns from localstorage ****/
+	angular.element(document).ready(function () {
+		// clicks outside the context menu will hide it
+		$document.bind("click", function(e) {
+			$scope.showMenu = false;
+			e.stopPropagation();
+			$scope.$apply();
+		});
+	});
 
 };
 
-TableNotificationsController.$inject = ['tableName', 'notifications', 'filter', '$scope', '$rootScope', '$state', '$uibModal', 'dateUtils', 'cdnService'];
+TableNotificationsController.$inject = ['tableName', 'notifications', 'filter', '$scope', '$state', '$uibModal', '$document', 'dateUtils', 'cdnService'];
 module.exports = TableNotificationsController;
