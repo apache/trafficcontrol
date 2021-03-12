@@ -602,16 +602,9 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	}
 
 	// check if the name field was being updated by someone else
-	var existingLastUpdated *tc.TimeNoMod
-	q := `SELECT last_updated FROM topology WHERE name = $1`
-	if err := topology.ReqInfo.Tx.QueryRow(q, topology.Name).Scan(&existingLastUpdated); err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("topology was not found"), nil, http.StatusNotFound
-		}
-		return nil, errors.New("topology update: querying: " + err.Error()), http.StatusInternalServerError
-	}
-	if !api.IsUnmodified(h, existingLastUpdated.Time) {
-		return errors.New("the resource has been modified since the time specified by the request headers"), nil, http.StatusPreconditionFailed
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}

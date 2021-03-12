@@ -21,12 +21,15 @@ package v4
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -38,7 +41,18 @@ type topologyTestCase struct {
 func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		GetTestTopologies(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestTopologies(t)
+		UpdateTestTopologiesWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestTopologiesWithHeaders(t, header)
 		ValidationTestTopologies(t)
 		UpdateValidateTopologyORGServerCacheGroup(t)
 		EdgeParentOfEdgeSucceedsWithWarning(t)
@@ -73,6 +87,28 @@ func GetTestTopologies(t *testing.T) {
 	}
 	if len(topos) != len(testData.Topologies) {
 		t.Errorf("expected topologies GET to return %v topologies, actual %v", len(testData.Topologies), len(topos))
+	}
+}
+
+func UpdateTestTopologiesWithHeaders(t *testing.T, header http.Header) {
+	originalName := "top-used-by-cdn1-and-cdn2"
+	newName := "blah"
+
+	// Retrieve the Topology by name so we can get the id for Update()
+	resp, _, err := TOSession.GetTopologyWithHdr(originalName, nil)
+	if err != nil {
+		t.Errorf("cannot GET Topology by name: '%s', %v", originalName, err)
+	}
+	if (resp) != nil {
+		resp.Name = newName
+		_, reqInf, err := TOSession.UpdateTopologyWithHdr(originalName, *resp, header)
+		if err == nil {
+			t.Errorf("Expected error about Precondition Failed, got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+
+		}
 	}
 }
 
@@ -170,7 +206,7 @@ func ValidationTestTopologies(t *testing.T) {
 }
 
 func updateSingleTopology(topology tc.Topology) error {
-	updateResponse, _, err := TOSession.UpdateTopology(topology.Name, topology)
+	updateResponse, _, err := TOSession.UpdateTopologyWithHdr(topology.Name, topology, nil)
 	if err != nil {
 		return fmt.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
 	}
@@ -194,7 +230,7 @@ func UpdateTestTopologies(t *testing.T) {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
 	top.Nodes = append(top.Nodes, tc.TopologyNode{Cachegroup: "cachegroup1", Parents: []int{0}})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top)
+	_, _, err = TOSession.UpdateTopologyWithHdr(top.Name, *top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology - expected: error, actual: nil")
 	}
@@ -250,7 +286,7 @@ func UpdateTestTopologies(t *testing.T) {
 		Cachegroup: "cdn1-only",
 		Parents:    []int{0},
 	})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top)
+	_, _, err = TOSession.UpdateTopologyWithHdr(top.Name, *top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
@@ -286,7 +322,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if *remoteDS[0].Topology == resp.Name {
 		resp.Nodes = newNodes
 	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp)
+	_, _, err = TOSession.UpdateTopologyWithHdr(*remoteDS[0].Topology, *resp, nil)
 	if err == nil {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
 	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
@@ -321,7 +357,7 @@ func UpdateTopologyName(t *testing.T) {
 	resp.Name = newTopologyName
 
 	// Update topology with new name
-	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, *resp)
+	updateResponse, _, err := TOSession.UpdateTopologyWithHdr(currentTopologyName, *resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
 	}
@@ -340,7 +376,7 @@ func UpdateTopologyName(t *testing.T) {
 
 	// Set everything back as it was for further testing.
 	resp.Name = currentTopologyName
-	r, _, err := TOSession.UpdateTopology(newTopologyName, *resp)
+	r, _, err := TOSession.UpdateTopologyWithHdr(newTopologyName, *resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, r)
 	}

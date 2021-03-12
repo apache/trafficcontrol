@@ -20,9 +20,9 @@ package servercapability
  */
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,8 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"net/http"
-	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -131,17 +129,10 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
 	}
 
-	// check if the name was being updated by someone else
-	var existingLastUpdated *tc.TimeNoMod
-	q := `SELECT last_updated FROM server_capability WHERE name = $1`
-	if err := v.ReqInfo.Tx.QueryRow(q, v.Name).Scan(&existingLastUpdated); err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("server capability was not found"), nil, http.StatusNotFound
-		}
-		return nil, errors.New("server capability update: querying: " + err.Error()), http.StatusInternalServerError
-	}
-	if !api.IsUnmodified(h, existingLastUpdated.Time) {
-		return errors.New("the resource has been modified since the time specified by the request headers"), nil, http.StatusPreconditionFailed
+	// check if the name field was being updated by someone else
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	// udpate server capability name
