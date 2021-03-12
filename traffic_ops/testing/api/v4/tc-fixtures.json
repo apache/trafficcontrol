@@ -295,7 +295,7 @@
     "deliveryServiceRequests": [
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "active": true,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
@@ -325,7 +325,7 @@
         },
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "active": true,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
@@ -354,7 +354,7 @@
         },
         {
             "changeType": "create",
-            "deliveryService": {
+            "requested": {
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Bad Test Case CDN",
@@ -383,7 +383,7 @@
         },
         {
             "changeType": "update",
-            "deliveryService": {
+            "requested": {
                 "active": false,
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
