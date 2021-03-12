@@ -44,7 +44,7 @@
 
 - name: Initialize database
   command: "{{ pgdb_init_command }}"
-  become: yes
+  become: true
   become_user: "{{ postgresql_user }}"
   args:
     creates: "{{ postgresql_datadir }}/pg_hba.conf"
@@ -52,7 +52,7 @@
 
 - name: Update the systemd definition of PGDATA
   ini_file:
-    create: no
+    create: false
     path: "{{ pg_service_path }}"
     section: Service
     option: Environment
@@ -61,7 +61,7 @@
 
 - name: Refresh Systemd
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
 
 - name: Add Postgres bin dir to system-wide $PATH.
   copy:
@@ -103,7 +103,7 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0600
-    remote_src: yes
+    remote_src: true
   notify: Restart Traffic OpsDB
 
 - name: Copy in SSL private key
@@ -113,7 +113,7 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0600
-    remote_src: yes
+    remote_src: true
   notify: Restart Traffic OpsDB
 
 - name: Copy in SSL CA certificate
@@ -123,7 +123,7 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0600
-    remote_src: yes
+    remote_src: true
   notify: Restart Traffic OpsDB
 
 - name: Update Log Directory Permissions
@@ -138,7 +138,7 @@
 - name: Enable and start TODB
   systemd:
     name: "{{ _loop_ittr }}"
-    enabled: yes
+    enabled: true
     state: started
   loop:
     - "{{ pg_service_name }}"
@@ -152,7 +152,7 @@
 
 - name: Create Postgres Replication Database User
   postgresql_user:
-    encrypted: yes
+    encrypted: true
     name: "{{ postgresql_replica_user }}"
     password: "{{ postgresql_admin_user_password }}"
     port: "{{ postgresql_port }}"
