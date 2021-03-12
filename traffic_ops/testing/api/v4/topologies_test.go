@@ -107,7 +107,6 @@ func UpdateTestTopologiesWithHeaders(t *testing.T, header http.Header) {
 		}
 		if reqInf.StatusCode != http.StatusPreconditionFailed {
 			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-
 		}
 	}
 }
