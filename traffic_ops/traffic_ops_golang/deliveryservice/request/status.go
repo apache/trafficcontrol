@@ -91,6 +91,13 @@ WHERE id = $3
 RETURNING last_updated
 `
 
+const updateStatusAndOriginalQuery = `
+UPDATE deliveryservice_request
+SET original=$1, status=$2, last_edited_by_id=$3
+WHERE id=$4
+RETURNING last_updated
+`
+
 // PutStatus is the handler for PUT requests to
 // /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
@@ -158,9 +165,51 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	dsr.LastEditedByID = new(int)
 	*dsr.LastEditedByID = inf.User.ID
 
-	if err := tx.QueryRow(updateStatusQuery, req.Status, inf.User.ID, dsrID).Scan(&dsr.LastUpdated); err != nil {
-		sysErr = fmt.Errorf("updating DSR #%d status: %v", dsrID, err)
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	// store the current original DS if the DSR is being closed
+	// (and isn't a "create" request)
+	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
+			}
+		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
+			if dsr.Original == nil {
+				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; original ID: %d", dsrID, *dsr.Original.ID)
+			}
+		}
+
+		if sysErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		err := tx.QueryRow(updateStatusAndOriginalQuery, dsr.Original, req.Status, dsr.LastEditedByID, dsrID).Scan(&dsr.LastUpdated)
+		if err != nil {
+			sysErr = fmt.Errorf("updating original for dsr #%d: %v", dsrID, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
+		if dsr.ChangeType != tc.DSRChangeTypeCreate {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+				return
+			}
+		}
+	} else {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
