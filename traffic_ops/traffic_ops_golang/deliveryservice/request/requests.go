@@ -370,7 +370,6 @@ func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, er
 		*dsr.Original = originals[0]
 	}
 	return http.StatusOK, nil, nil
-	return http.StatusOK, nil, nil
 }
 
 // dsrManipulationResult encodes the result of manipulating a DSR.
