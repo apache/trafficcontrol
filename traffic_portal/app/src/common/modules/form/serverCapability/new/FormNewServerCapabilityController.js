@@ -25,11 +25,12 @@ var FormNewServerCapabilityController = function(serverCapability, $scope, $cont
 	$scope.serverCapabilityName = 'New';
 
 	$scope.settings = {
-		isNew: true
+		isNew: true,
+		saveLabel: 'Create'
 	};
 
 	$scope.save = function(serverCapability) {
-		serverCapabilityService.createServerCapability(serverCapability)
+		serverCapabilityService.createServerCapability(serverCapability);
 	};
 
 };

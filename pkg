@@ -99,8 +99,8 @@ while getopts :?78abdf:lopqv opt; do
 			PROJECTS=`$SELF -l | sed "s/^/  - /"`
 			<<-HELP_TEXT cat
 			Usage: $SELF [options] [projects]
-			  -7           Build RPMs targeting CentOS 7 (default)
-			  -8           Build RPMs targeting CentOS 8
+			  -7           Build RPMs targeting CentOS 7
+			  -8           Build RPMs targeting CentOS 8 (default)
 			  -a           Build all projects, including optional ones.
 			  -b           Build builder Docker images before building projects
 			  -d           Disable compiler optimizations for debugging.

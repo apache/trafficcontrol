@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- Python client: [#5611] Added server detail endpoint 
+- Python client: [#5611] Added server_detail endpoint
+- Traffic Ops/Traffic Portal: [#5479](https://github.com/apache/trafficcontrol/issues/5479) - Added the ability to change a server capability name
 - Traffic Ops: [#3577](https://github.com/apache/trafficcontrol/issues/3577) - Added a query param (server host_name or ID) for servercheck API
 - Traffic Portal: [#5318](https://github.com/apache/trafficcontrol/issues/5318) - Rename server columns for IPv4 address fields.
 - Traffic Portal: [#5361](https://github.com/apache/trafficcontrol/issues/5361) - Added the ability to change the name of a topology.
@@ -29,8 +30,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ACME certificate renewals and ACME account registration using external account binding
 - Added functionality to automatically renew ACME certificates.
 - Added an endpoint for statuses on asynchronous jobs and applied it to the ACME renewal endpoint.
+- Traffic Ops API version 4.0
+- `GET` request method for `/deliveryservices/{{ID}}/assign`
+- `GET` request method for `/deliveryservices/{{ID}}/status`
+- Atscfg: Added a rule to ip_allow such that PURGE requests are allowed over localhost 
 
 ### Fixed
+- [#5609](https://github.com/apache/trafficcontrol/issues/5609) - Fixed GET /servercheck filter for an extra query param.
+- [#5565](https://github.com/apache/trafficcontrol/issues/5565) - TO GET /caches/stats panic converting string to uint64
 - [#5558](https://github.com/apache/trafficcontrol/issues/5558) - Fixed `TM UI` and `/api/cache-statuses` to report aggregate `bandwidth_kbps` correctly.
 - [#5288](https://github.com/apache/trafficcontrol/issues/5288) - Fixed the ability to create and update a server with MTU value >= 1280.
 - [#5445](https://github.com/apache/trafficcontrol/issues/5445) - When updating a registered user, ignore updates on registration_sent field.

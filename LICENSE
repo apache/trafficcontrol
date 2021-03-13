@@ -341,7 +341,7 @@ This product bundles yaml, which is available under an Apache-2.0 license.
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 Refer to the above license for the full text.
 
-This product bundles pq, which is available under a BSD-3-Clause license.
+This product bundles pq, which is available under an MIT license.
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 Refer to the above license for the full text.
@@ -467,7 +467,7 @@ This product bundles ldap.v2 component, which is available under an MIT license.
 ./vendor/gopkg.in/ldap.v2/LICENSE
 Refer to the above license for the full text.
 
-This product bundles fakeOrigin example video, which is available under an CC-PDM-1.0 license.
+This product bundles an example video for fakeOrigin, which is available under an CC-PDM-1.0 license.
 @test/fakeOrigin/example/video/*
 ./test/fakeOrigin/example/video/LICENSE
 Refer to the above license for the full text.
@@ -547,7 +547,7 @@ This product bundles pborman/getopt/v2, which is available under a BSD-3-Clause 
 vendor/github.com/pborman/getopt/v2/LICENSE
 Refer to the above license for the full text.
 
-This product bundles gopkg.in/square/go-jose.v2/json, which is available under an Apache-2.0 license.
+This product bundles gopkg.in/square/go-jose.v2/json, which is available under a BSD-3-Clause license.
 @vendor/gopkg.in/square/go-jose.v2/json/*
 @vendor/gopkg.in/square/go-jose.v2/json/LICENSE
 Refer to the above license for the full text.
