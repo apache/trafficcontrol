@@ -80,7 +80,7 @@ under the License.
                     <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
                 </div>
             </li>
-            <li role="presentation" class="dropdown" ng-repeat="cdn in cdns">
+            <li role="presentation" class="dropdown" ng-repeat="cdn in cdns | orderBy: '-name'">
                 <div class="btn-group" title="{{cdn.name}} Notifications" uib-dropdown is-open="{{cdn.name}}-notifications.isopen">
                     <button id="{{cdn.name}}-notifications" type="button" class="btn btn-link" ng-click="getNotifications(cdn)" uib-dropdown-toggle>
                         {{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.hasNotifications, 'fa-bell-o': !cdn.hasNotifications }"></i>

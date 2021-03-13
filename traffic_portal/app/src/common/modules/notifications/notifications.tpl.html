@@ -18,7 +18,7 @@ under the License.
 -->
 
 <div id="notificationsContainer">
-    <div class="alert alert-info" ng-repeat="n in notifications">
+    <div class="alert alert-info" ng-repeat="n in notifications | orderBy: 'cdn'">
         <div ng-bind-html="n.cdn + ': ' + n.notification + ' (' + n.user + ')' | linky:'_blank'"></div>
     </div>
 </div>
