@@ -28,7 +28,7 @@ cp -fa /opt/{src,build}/jansson
 cp -fa /opt/{src,build}/cjose
 
 if [ "$1" == "--with_openssl" ]; then
-	cp -far /opt/{src,build}/openssl
+	cp -fa /opt/{src,build}/openssl
 
 	# Build OpenSSL
 	(
