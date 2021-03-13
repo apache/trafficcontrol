@@ -24,8 +24,8 @@ die() {
 }
 
 mkdir /opt/build
-cp -far /opt/{src,build}/jansson
-cp -far /opt/{src,build}/cjose
+cp -fa /opt/{src,build}/jansson
+cp -fa /opt/{src,build}/cjose
 
 if [ "$1" == "--with_openssl" ]; then
 	cp -far /opt/{src,build}/openssl
