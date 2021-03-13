@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -45,11 +46,11 @@ func (to *Session) CreateCDNNotification(notification tc.CDNNotificationRequest)
 	return alerts, reqInf, err
 }
 
-// DeleteCDNNotification deletes a CDN Notification by CDN name.
-func (to *Session) DeleteCDNNotification(cdnName string) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteCDNNotification deletes a CDN Notification by notification ID.
+func (to *Session) DeleteCDNNotification(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	params := url.Values{}
-	params.Add("cdn", cdnName)
+	params.Add("id", strconv.Itoa(id))
 	route := fmt.Sprintf("%s?%s", APICDNNotifications, params.Encode())
 	reqInf, err := to.del(route, nil, &alerts)
 	return alerts, reqInf, err
