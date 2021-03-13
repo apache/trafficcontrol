@@ -318,7 +318,7 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 			}
 		});
 		modalInstance.result.then(function() {
-			cdnService.deleteNotification({ cdn: notification.cdn }).
+			cdnService.deleteNotification({ id: notification.id }).
 				then(
 					function() {
 						$state.reload();

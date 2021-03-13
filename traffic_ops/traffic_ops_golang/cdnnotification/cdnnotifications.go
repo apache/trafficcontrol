@@ -32,7 +32,8 @@ import (
 )
 
 const readQuery = `
-SELECT cn.cdn, 
+SELECT cn.id,
+	cn.cdn, 
 	cn.last_updated,
 	cn.user, 
 	cn.notification 
@@ -44,7 +45,8 @@ INNER JOIN tm_user ON tm_user.username = cn.user
 const insertQuery = `
 INSERT INTO cdn_notification (cdn, "user", notification)
 VALUES ($1, $2, $3)
-RETURNING cdn_notification.cdn,
+RETURNING cdn_notification.id,
+cdn_notification.cdn,
           cdn_notification.last_updated,
           cdn_notification.user,
           cdn_notification.notification
@@ -52,8 +54,9 @@ RETURNING cdn_notification.cdn,
 
 const deleteQuery = `
 DELETE FROM cdn_notification
-WHERE cdn_notification.cdn = $1
-RETURNING cdn_notification.cdn,
+WHERE cdn_notification.id = $1
+RETURNING cdn_notification.id,
+		cdn_notification.cdn,
           cdn_notification.last_updated,
           cdn_notification.user,
           cdn_notification.notification
@@ -72,6 +75,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	cdnNotifications := []tc.CDNNotification{}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"cn.id", api.IsInt},
 		"cdn":  dbhelpers.WhereColumnInfo{"cdn.name", nil},
 		"user": dbhelpers.WhereColumnInfo{"tm_user.username", nil},
 	}
@@ -99,7 +103,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var n tc.CDNNotification
-		if err = rows.Scan(&n.CDN, &n.LastUpdated, &n.User, &n.Notification); err != nil {
+		if err = rows.Scan(&n.ID, &n.CDN, &n.LastUpdated, &n.User, &n.Notification); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn notifications: "+err.Error()))
 			return
 		}
@@ -126,7 +130,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var resp tc.CDNNotification
-	err := tx.QueryRow(insertQuery, req.CDN, inf.User.UserName, req.Notification).Scan(&resp.CDN, &resp.LastUpdated, &resp.User, &resp.Notification)
+	err := tx.QueryRow(insertQuery, req.CDN, inf.User.UserName, req.Notification).Scan(&resp.ID, &resp.CDN, &resp.LastUpdated, &resp.User, &resp.Notification)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -143,7 +147,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for DELETE requests to /cdn_notifications.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -167,10 +171,10 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 	var alert tc.Alert
 	var result tc.CDNNotification
 
-	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["cdn"]).Scan(&result.CDN, &result.LastUpdated, &result.User, &result.Notification)
+	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["id"]).Scan(&result.ID, &result.CDN, &result.LastUpdated, &result.User, &result.Notification)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("No CDN Notification for %s", inf.Params["cdn"])
+			userErr = fmt.Errorf("No CDN Notification for %s", inf.Params["id"])
 			statusCode = http.StatusNotFound
 		} else {
 			userErr, sysErr, statusCode = api.ParseDBError(err)

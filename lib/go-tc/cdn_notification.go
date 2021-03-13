@@ -44,6 +44,7 @@ type CDNNotificationRequest struct {
 
 // CDNNotification is a notification created for a specific CDN.
 type CDNNotification struct {
+	ID           int       `json:"id" db:"id"`
 	CDN          string    `json:"cdn" db:"cdn"`
 	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
 	Notification *string   `json:"notification" db:"notification"`
