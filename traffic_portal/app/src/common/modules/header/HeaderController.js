@@ -20,7 +20,7 @@
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     let getCDNs = function(notifications) {
-        cdnService.getCDNs()
+        cdnService.getCDNs(true)
             .then(function(cdns) {
                 cdns.forEach(function(cdn) {
                     cdn.hasNotifications = notifications.find(function(notification){ return cdn.name === notification.cdn });
