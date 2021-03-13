@@ -40,6 +40,13 @@ var NotificationsController = function($rootScope, $scope, $interval, cdnService
 		}
 	};
 
+	$scope.dismissedNotifications = JSON.parse(localStorage.getItem("dismissed_notification_ids")) || [];
+
+	$scope.dismissNotification = function(notification) {
+		$scope.dismissedNotifications.push(notification.id);
+		localStorage.setItem("dismissed_notification_ids", JSON.stringify($scope.dismissedNotifications));
+	};
+
 	$scope.$on("$destroy", function() {
 		killInterval();
 	});
