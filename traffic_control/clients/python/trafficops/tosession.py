@@ -1645,7 +1645,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@restapi.api_request('get', 'servers/details?hostName={name}', ('3.0','4.0',))
+	@api_request('get', 'servers/details?hostName={name}', ('3.0','4.0',))
 	def get_server_details(self, name=None):
 		"""
 		Get servers/details
