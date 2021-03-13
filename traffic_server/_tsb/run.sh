@@ -38,17 +38,15 @@ if [ "$1" == "--with_openssl" ]; then
 		make install_sw
 	) || die "Failed to build OpenSSL"
 	cjose_openssl='--with-openssl=/opt/trafficserver/openssl'
-	enable_shared='--enable-shared=no'
 	rpmbuild_openssl='--with openssl_included'
 else
 	cjose_openssl=''
-	enable_shared=''
 	rpmbuild_openssl='--without openssl_included'
 fi
 
 
-(cd /opt/build/jansson && patch -p1 < /opt/src/jansson.pic.patch && autoreconf -i && ./configure ${enable_shared} && make -j`nproc` && make install) || die "Failed to install jansson from source."
-(cd /opt/build/cjose && patch -p1 < /opt/src/cjose.pic.patch && autoreconf -i && ./configure ${enable_shared} ${cjose_openssl} && make -j`nproc` && make install) || die "Failed to install cjose from source."
+(cd /opt/build/jansson && patch -p1 < /opt/src/jansson.pic.patch && autoreconf -i && ./configure --enable-shared=no && make -j`nproc` && make install) || die "Failed to install jansson from source."
+(cd /opt/build/cjose && patch -p1 < /opt/src/cjose.pic.patch && autoreconf -i && ./configure --enable-shared=no ${cjose_openssl} && make -j`nproc` && make install) || die "Failed to install cjose from source."
 
 # Patch astats in so that it builds in-tree.
 cp -far /opt/src/astats_over_http /rpmbuilddir/SOURCES/src/plugins/astats_over_http
