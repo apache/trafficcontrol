@@ -680,26 +680,27 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		_, err = r.writeCfgFile(cfg, "", data)
 		if err != nil {
 			return errors.New("Failed to write the new config file: " + err.Error())
-		} else {
-			cfg.ChangeApplied = true
-			if cfg.RemapPluginConfig == true { // trafficserver config reload is required
-				r.TrafficCtlReload = true
-				r.RemapConfigReload = true
-			}
-			if cfg.Name == "plugin.config" { // trafficserver restart is required
-				r.TrafficServerRestart = true
-			} else if cfg.Name == "remap.config" {
-				r.TrafficCtlReload = true
-				r.RemapConfigReload = true
-			} else if cfg.Name == "sysctl.conf" { // sysctl reload is required
-				r.SysCtlReload = true
-			} else if cfg.Name == "ssl_multicert.config" {
-				r.TrafficCtlReload = true
-			} else if cfg.Name == "ntpd.conf" { // ntpd reload is required
-				r.NtpdRestart = true
-			}
-			log.Debugf("Setting change applied for '%s'\n", cfg.Name)
 		}
+		cfg.ChangeApplied = true
+
+		r.TrafficCtlReload = r.TrafficCtlReload ||
+			strings.HasSuffix(cfg.Dir, "trafficserver") ||
+			cfg.RemapPluginConfig ||
+			cfg.Name == "remap.config" ||
+			cfg.Name == "ssl_multicert.config" ||
+			strings.HasPrefix(cfg.Name, "url_sig_") ||
+			strings.HasPrefix(cfg.Name, "uri_signing") ||
+			strings.HasPrefix(cfg.Name, "hdr_rw_") ||
+			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
+			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
+
+		r.TrafficServerRestart = cfg.Name == "plugin.config"
+		r.RemapConfigReload = cfg.RemapPluginConfig || cfg.Name == "remap.config"
+		r.NtpdRestart = cfg.Name == "ntpd.conf"
+		r.SysCtlReload = cfg.Name == "sysctl.conf"
+
+		log.Debugf("Setting change applied for '%s'\n", cfg.Name)
+
 	} else {
 		log.Infof("You elected not to replace %s with the version from Traffic Ops.\n", cfg.Name)
 		cfg.ChangeApplied = false
