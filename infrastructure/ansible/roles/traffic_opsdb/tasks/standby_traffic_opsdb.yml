@@ -15,7 +15,7 @@
   block:
     - name: Stop existing instance
       systemd:
-        name: postgresql-9.6
+        name: "{{ pg_service_name }}"
         state: stopped
 
     - name: Remove host-unique config
@@ -59,7 +59,7 @@
 
 - name: Startup Secondary instance
   systemd:
-    name: postgresql-9.6
+    name: "{{ pg_service_name }}"
     state: started
 
 - name: Wait for TODB to become available
