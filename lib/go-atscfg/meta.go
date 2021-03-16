@@ -65,6 +65,9 @@ func MakeConfigFilesList(
 		return nil, warnings, errors.New("server missing Profile")
 	}
 
+	atsMajorVer, verWarns := getATSMajorVersion(serverParams)
+	warnings = append(warnings, verWarns...)
+
 	tmURL, tmReverseProxyURL := getTOURLAndReverseProxy(globalParams)
 	if tmURL == "" {
 		warnings = append(warnings, "global tm.url parameter missing or empty! Setting empty in meta config!")
@@ -125,7 +128,7 @@ locationParamsFor:
 		configFiles = append(configFiles, atsCfg)
 	}
 
-	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies)
+	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies, atsMajorVer)
 	warnings = append(warnings, configDirWarns...)
 	return configFiles, warnings, err
 }
@@ -146,6 +149,7 @@ func addMetaObjConfigDir(
 	dses map[tc.DeliveryServiceName]DeliveryService,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
+	atsMajorVer int,
 ) ([]CfgMeta, []string, error) {
 	warnings := []string{}
 
@@ -168,7 +172,7 @@ func addMetaObjConfigDir(
 	// If they don't exist, create them.
 	// If they exist with a relative path, prepend configDir.
 	// If any exist with a relative path, or don't exist, and configDir is empty, return an error.
-	for _, fileName := range requiredFiles() {
+	for _, fileName := range requiredFiles(atsMajorVer) {
 		if _, ok := configFilesM[fileName]; ok {
 			continue
 		}
@@ -414,14 +418,38 @@ type configProfileParams struct {
 	Path string
 }
 
-// requiredFiles is a constant (because Go doesn't allow const slices).
+func requiredFiles(atsMajorVer int) []string {
+	if atsMajorVer >= 9 {
+		return requiredFiles9()
+	}
+	return requiredFiles8()
+}
+
+// requiredFiles8 the list of config files required by ATS 8.
 // Note these are not exhaustive. This is only used to error if these are missing.
 // The presence of these is no guarantee the location Parameters are complete and correct.
-func requiredFiles() []string {
+func requiredFiles8() []string {
 	return []string{
 		"cache.config",
 		"hosting.config",
 		"ip_allow.config",
+		"parent.config",
+		"plugin.config",
+		"records.config",
+		"remap.config",
+		"storage.config",
+		"volume.config",
+	}
+}
+
+// requiredFiles9 is the list of config files required by ATS 9.
+// Note these are not exhaustive. This is only used to error if these are missing.
+// The presence of these is no guarantee the location Parameters are complete and correct.
+func requiredFiles9() []string {
+	return []string{
+		"cache.config",
+		"hosting.config",
+		"ip_allow.yaml",
 		"parent.config",
 		"plugin.config",
 		"records.config",

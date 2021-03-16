@@ -94,7 +94,7 @@ func MakeHeaderRewriteMidDotConfig(
 			continue
 		}
 
-		if sv.CDNName != server.CDNName {
+		if *sv.CDNName != *server.CDNName {
 			continue
 		}
 		if _, ok := assignedServers[*sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {

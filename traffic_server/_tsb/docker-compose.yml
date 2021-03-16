@@ -17,15 +17,17 @@
 ---
 version: "2.1"
 services:
-    ats_build:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        image: ats_build
-        volumes:
-            - ./src/jansson:/opt/src/jansson
-            - ./src/cjose:/opt/src/cjose
-            - ./src/openssl:/opt/src/openssl
-            - ./src/ats:/rpmbuilddir/SOURCES/src
-            - ./src/trafficcontrol/traffic_server/plugins/astats_over_http:/opt/src/astats_over_http
-            - ./dist:/rpmbuilddir/RPMS/x86_64
+  ats_build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    image: ats_build
+    volumes:
+    - ./src/jansson:/opt/src/jansson:Z
+    - ./src/cjose:/opt/src/cjose:Z
+    - ./src/openssl:/opt/src/openssl:Z
+    - ./src/ats:/rpmbuilddir/SOURCES/src:Z
+    - ./src/trafficcontrol/traffic_server/plugins/astats_over_http:/opt/src/astats_over_http:Z
+    - ./dist:/rpmbuilddir/RPMS/x86_64:Z

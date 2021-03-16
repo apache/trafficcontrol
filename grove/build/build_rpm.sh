@@ -42,7 +42,7 @@ checkGroveEnvironment() {
 	BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	RPMBUILD="${GROVE_DIR}/rpmbuild"
 	DIST="${TC_DIR}/dist"
-	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
 	GOOS="${GOOS:-linux}"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	export GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM GOOS RPM_TARGET_OS
@@ -102,7 +102,7 @@ buildRpmGrove() {
 	rpmbuild \
 		--define "_topdir $RPMBUILD" \
 		--define "version ${GROVE_VERSION}" \
-		--define "build_number ${BUILD_NUMBER}" \
+		--define "build_number ${BUILD_NUMBER}.${RHEL_VERSION}" \
 		--define "_target_os ${RPM_TARGET_OS}" \
 		--define '%_source_payload w2.xzdio' \
 		--define '%_binary_payload w2.xzdio' \
