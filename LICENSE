@@ -235,12 +235,7 @@ This product bundles jQuery, which is available under an MIT license.
 Refer to the above license for the full text.
 
 This product bundles JSON formatter, which is available under an Apache-2.0 license.
-@traffic_portal/app/src/assets/css/jsonformatter.min_0.6.0.css
-./licenses/AL2-jsonformatter
-Refer to the above license for the full text.
-
-This product bundles JSON formatter, which is available under an Apache-2.0 license.
-@traffic_portal/app/src/assets/js/jsonformatter.min_0.6.0.js
+@traffic_portal/app/src/assets/*/jsonformatter.min_0.6.0.*
 ./licenses/AL2-jsonformatter
 Refer to the above license for the full text.
 
