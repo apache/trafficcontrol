@@ -64,8 +64,8 @@ func (to *Session) GetTopology(name string) (*tc.Topology, toclientlib.ReqInf, e
 	return to.GetTopologyWithHdr(name, nil)
 }
 
-// UpdateTopologyWithHdr updates a Topology by name with header.
-func (to *Session) UpdateTopologyWithHdr(name string, t tc.Topology, header http.Header) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
+// UpdateTopology updates a Topology by name.
+func (to *Session) UpdateTopology(name string, t tc.Topology, header http.Header) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APITopologies, name)
 	var response = new(tc.TopologyResponse)
 	reqInf, err := to.put(route, t, header, &response)

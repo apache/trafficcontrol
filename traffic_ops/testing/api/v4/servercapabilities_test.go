@@ -29,11 +29,11 @@ func TestServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCapabilities}, func() {
 		GetTestServerCapabilities(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
+		rfcTime := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
+		header.Set(rfc.IfModifiedSince, rfcTime)
+		header.Set(rfc.IfUnmodifiedSince, rfcTime)
 		SortTestServerCapabilities(t)
 		UpdateTestServerCapabilities(t)
 		UpdateTestServerCapabilitiesWithHeaders(t, header)
@@ -108,14 +108,12 @@ func UpdateTestServerCapabilitiesWithHeaders(t *testing.T, header http.Header) {
 	newSCName := "sc-test"
 	resp[0].Name = newSCName
 
-	if (resp) != nil {
-		_, reqInf, err := TOSession.UpdateServerCapabilityByNameWithHdr(originalName, &resp[0], header)
-		if err == nil {
-			t.Errorf("Expected error about Precondition Failed, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
+	_, reqInf, err := TOSession.UpdateServerCapability(originalName, &resp[0], header)
+	if err == nil {
+		t.Errorf("Expected error about Precondition Failed, got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -142,7 +140,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	resp[0].Name = newSCName
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(origName, &resp[0], nil)
+	updateResponse, _, err := TOSession.UpdateServerCapability(origName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
 	}
@@ -161,7 +159,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 
 	// Set everything back as it was for further testing.
 	resp[0].Name = origName
-	r, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(newSCName, &resp[0], nil)
+	r, _, err := TOSession.UpdateServerCapability(newSCName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}

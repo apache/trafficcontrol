@@ -129,7 +129,7 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 		return fmt.Errorf("cannot find exactly one server capability with the query string provided"), nil, http.StatusBadRequest
 	}
 
-	// check if the name field was being updated by someone else
+	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, v.ReqInfo.Tx, v.Name, "server_capability")
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode

@@ -48,8 +48,8 @@ func GetTestServerServerCapabilitiesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+	rfcTime := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, rfcTime)
 	_, reqInf, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
@@ -252,7 +252,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(originalName, &resp[0], nil)
+	updateResponse, _, err := TOSession.UpdateServerCapability(originalName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
 	}
@@ -280,7 +280,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 
 	// Set everything back as it was for further testing.
 	resp[0].Name = originalName
-	r, _, err := TOSession.UpdateServerCapabilityByNameWithHdr(newSCName, &resp[0], nil)
+	r, _, err := TOSession.UpdateServerCapability(newSCName, &resp[0], nil)
 	if err != nil {
 		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}
