@@ -332,7 +332,7 @@ Refer to the above license for the full text.
 
 This product bundles gopkg.in/tomb.v1, which is available under a BSD-3-Clause license.
 @vendor/gopkg.in/tomb.v1/*
-@vendor/gopkg.in/tomb.v1/LICENSE
+./vendor/gopkg.in/tomb.v1/LICENSE
 Refer to the above license for the full text.
 
 This product bundles yaml, which is available under an Apache-2.0 license.
@@ -549,12 +549,12 @@ Refer to the above license for the full text.
 
 This product bundles gopkg.in/square/go-jose.v2/json, which is available under a BSD-3-Clause license.
 @vendor/gopkg.in/square/go-jose.v2/json/*
-@vendor/gopkg.in/square/go-jose.v2/json/LICENSE
+./vendor/gopkg.in/square/go-jose.v2/json/LICENSE
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/square/go-jose.v2, which is available under an Apache-2.0 license.
 @vendor/gopkg.in/square/go-jose.v2/*
-@vendor/gopkg.in/square/go-jose.v2/LICENSE
+./vendor/gopkg.in/square/go-jose.v2/LICENSE
 Refer to the above license for the full text.
 
 This product bundles cenkalti/backoff, which is available under an MIT license.
