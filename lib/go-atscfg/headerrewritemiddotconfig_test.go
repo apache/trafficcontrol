@@ -32,11 +32,19 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDNName = util.StrPtr(cdnName)
 	server.Cachegroup = util.StrPtr("edgeCG")
 	server.HostName = util.StrPtr("myserver")
 	serverStatus := string(tc.CacheStatusReported)
 	server.Status = &serverStatus
+
+	// server, as inserted in servers.
+	// needs to be different, so the pointers are different, like they will be with different API calls.
+	serverSvs := makeGenericServer()
+	serverSvs.CDNName = util.StrPtr(cdnName)
+	serverSvs.Cachegroup = util.StrPtr("edgeCG")
+	serverSvs.HostName = util.StrPtr("myserver")
+	serverSvs.Status = util.StrPtr(string(tc.CacheStatusReported))
 
 	ds := makeGenericDS()
 	ds.EdgeHeaderRewrite = util.StrPtr("edgerewrite")
@@ -44,27 +52,27 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	ds.XMLID = util.StrPtr("ds0")
 	ds.MaxOriginConnections = util.IntPtr(42)
 	ds.MidHeaderRewrite = util.StrPtr("midrewrite")
-	ds.CDNName = &cdnName
+	ds.CDNName = util.StrPtr(cdnName)
 	dsType := tc.DSTypeHTTP
 	ds.Type = &dsType
 	ds.ServiceCategory = util.StrPtr("servicecategory")
 
 	mid0 := makeGenericServer()
-	mid0.CDNName = &cdnName
+	mid0.CDNName = util.StrPtr(cdnName)
 	mid0.Cachegroup = util.StrPtr("midCG")
 	mid0.HostName = util.StrPtr("mymid0")
 	mid0Status := string(tc.CacheStatusReported)
 	mid0.Status = &mid0Status
 
 	mid1 := makeGenericServer()
-	mid1.CDNName = &cdnName
+	mid1.CDNName = util.StrPtr(cdnName)
 	mid1.Cachegroup = util.StrPtr("midCG")
 	mid1.HostName = util.StrPtr("mymid1")
 	mid1Status := string(tc.CacheStatusOnline)
 	mid1.Status = &mid1Status
 
 	mid2 := makeGenericServer()
-	mid2.CDNName = &cdnName
+	mid2.CDNName = util.StrPtr(cdnName)
 	mid2.Cachegroup = util.StrPtr("midCG")
 	mid2.HostName = util.StrPtr("mymid2")
 	mid2Status := string(tc.CacheStatusOffline)
@@ -85,7 +93,7 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	mCG.Type = &mCGType
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
-	servers := []Server{*server, *mid0, *mid1, *mid2}
+	servers := []Server{*serverSvs, *mid0, *mid1, *mid2}
 	dses := []DeliveryService{*ds}
 	dss := makeDSS(servers, dses)
 

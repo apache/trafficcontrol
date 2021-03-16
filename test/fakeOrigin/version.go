@@ -1,3 +1,5 @@
+package main
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,5 +19,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.form.serverCapability.view', [])
-	.controller('FormViewServerCapabilityController', require('./FormViewServerCapabilityController'));
+// Version is the current version of the app, in string form.
+var Version = "0.2.0"

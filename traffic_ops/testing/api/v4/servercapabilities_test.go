@@ -28,6 +28,7 @@ func TestServerCapabilities(t *testing.T) {
 		SortTestServerCapabilities(t)
 		GetTestServerCapabilities(t)
 		ValidationTestServerCapabilities(t)
+		UpdateTestServerCapabilities(t)
 	})
 }
 
@@ -86,6 +87,47 @@ func ValidationTestServerCapabilities(t *testing.T) {
 	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"})
 	if err == nil {
 		t.Error("expected POST with invalid name to return an error, actual: nil")
+	}
+}
+
+func UpdateTestServerCapabilities(t *testing.T) {
+	var header http.Header
+
+	// Get server capability name and edit it to a new name
+	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if len(resp) == 0 {
+		t.Fatalf("no server capability in response, quitting")
+	}
+	origName := resp[0].Name
+	newSCName := "sc-test"
+	resp[0].Name = newSCName
+
+	// Update server capability with new name
+	updateResponse, _, err := TOSession.UpdateServerCapabilityByName(origName, &resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+	}
+
+	// Get updated name
+	getResp, _, err := TOSession.GetServerCapabilityWithHdr(newSCName, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but %v", err.Error())
+	}
+	if getResp == nil {
+		t.Fatalf("no server capability in response, quitting")
+	}
+	if getResp.Name != newSCName {
+		t.Errorf("failed to update server capability name, expected: %v but got: %v", newSCName, updateResponse.Name)
+	}
+
+	// Set everything back as it was for further testing.
+	resp[0].Name = origName
+	r, _, err := TOSession.UpdateServerCapabilityByName(newSCName, &resp[0])
+	if err != nil {
+		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
 	}
 }
 

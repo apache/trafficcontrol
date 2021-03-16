@@ -26,6 +26,10 @@
 %global install_prefix "/opt"
 %global api_stats "4096"
 %global _find_debuginfo_dwz_opts %{nil}
+%{!?_with_openssl_included: %{!?_without_openssl_included: %define _without_openssl_included --without-openssl_included}}
+%{?_with_openssl_included: %{?_without_openssl_included: %{error: both _with_openssl_included and _without_openssl_included}}}
+%{!?_with_openssl_included: %{!?_without_openssl_included: %{error: neither _with_openssl_included nor _without_openssl_included}}}
+%{?_without_openssl_included:BuildRequires: openssl-devel}
 
 Name:		trafficserver
 Version:	%{tag}
@@ -51,9 +55,17 @@ cp -far %{src}/../traffic_server_jemalloc ..
 autoreconf -vfi
 
 %build
+%if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
 ./configure --with-openssl=/opt/trafficserver/openssl --prefix=%{install_prefix}/%{name} --with-user=ats --with-group=ats --with-build-number=%{release} --enable-experimental-plugins --with-max-api-stats=%{api_stats} --disable-unwind
+%else
+./configure --prefix=%{install_prefix}/%{name} --with-user=ats --with-group=ats --with-build-number=%{release} --enable-experimental-plugins --with-max-api-stats=%{api_stats} --disable-unwind
+%endif
 make %{?_smp_mflags}
+%if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/trafficserver/openssl/lib:/usr/local/lib
+%else
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+%endif
 make %{?_smp_mflags} check || ( cat ./test-suite.log; exit 1 )
 
 %install
@@ -64,8 +76,10 @@ mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system
 cp rc/trafficserver.service $RPM_BUILD_ROOT/usr/lib/systemd/system/
 cp ../traffic_server_jemalloc $RPM_BUILD_ROOT/opt/trafficserver/bin/
 
+%if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
 mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/openssl
 cp -r /opt/trafficserver/openssl/lib $RPM_BUILD_ROOT/opt/trafficserver/openssl/lib
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -102,7 +116,9 @@ fi
 %defattr(-,root,root)
 %attr(644,-,-) /usr/lib/systemd/system/trafficserver.service
 %dir /opt/trafficserver
+%if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
 /opt/trafficserver/openssl
+%endif
 /opt/trafficserver/bin
 /opt/trafficserver/include
 /opt/trafficserver/lib
@@ -133,6 +149,8 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/volume.config
 
 %changelog
+* Wed Mar 10 2021 Jonathan Gray <jhg03a(at)apache.org>
+- Modified to support stop bundling openssl with ats
 * Wed Aug 26 2020 Chris Lemmons <alficles(at)gmail.com>
 - Updated to incorporate new tooling and Apache Traffic Control patches
 * Wed Jun 8 2016 John Rushford <john_rushford(at)cable.comcast.com>

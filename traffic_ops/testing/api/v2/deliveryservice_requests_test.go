@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 const (
@@ -94,12 +93,18 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 			t.Errorf("Error occurred %v", err)
 		}
 
-		expected := []string{
-			"deliveryservice_request was created.",
-			//"'xmlId' the length must be between 1 and 48",
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Expected only succuss-level alerts creating a DSR, got error-level alert: %s", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() {
+				t.Logf("Got expected alert creating a DSR: %s", alert.Text)
+				found = true
+			}
 		}
-
-		utils.Compare(t, expected, alerts.ToStrings())
+		if !found {
+			t.Errorf("Expected a success-level alert creating a DSR, got none")
+		}
 
 		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 		if len(dsrs) != 1 {
@@ -126,10 +131,20 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
-		expected := []string{
-			`'status' invalid transition from draft to pending`,
+
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Expected only error-level alerts creating a DSR with a bad status, got success-level alert: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Got expected alert creating a DSR with a bad status: %s", alert.Text)
+				found = true
+			}
 		}
-		utils.Compare(t, expected, alerts.ToStrings())
+
+		if !found {
+			t.Errorf("Expected an error-level alert creating a DSR with a bad status, got none")
+		}
 	})
 }
 
@@ -156,8 +171,18 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected := []string{`deliveryservice_request was created.`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		found := false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Expected only succuss-level alerts creating a DSR, got error-level alert: %s", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() {
+				t.Logf("Got expected alert creating a DSR: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Expected a success-level alert creating a DSR, got none")
+		}
 
 		// Create a duplicate request -- should fail because xmlId is the same
 		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
@@ -165,8 +190,18 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error creating DeliveryServiceRequest %v", err)
 		}
 
-		expected = []string{`An active request exists for delivery service 'test-transitions'`}
-		utils.Compare(t, expected, alerts.ToStrings())
+		found = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.SuccessLevel.String() {
+				t.Errorf("Expected only error-level alerts creating a duplicate DSR, got success-level alert: %s", alert.Text)
+			} else if alert.Level == tc.ErrorLevel.String() {
+				t.Logf("Got expected alert creating a duplicate DSR: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Expected an error-level alert creating a DSR, got none")
+		}
 
 		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
 		if len(dsrs) != 1 {
@@ -178,11 +213,19 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
 
-		expected = []string{
-			"deliveryservice_request was updated.",
+		found = false
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() {
+				t.Errorf("Expected only succuss-level alerts updating a DSR, got error-level alert: %s", alert.Text)
+			} else if alert.Level == tc.SuccessLevel.String() {
+				t.Logf("Got expected alert updating a DSR: %s", alert.Text)
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Expected a success-level alert updating a DSR, got none")
 		}
 
-		utils.Compare(t, expected, alerts.ToStrings())
 		if dsr.Status != tc.RequestStatus("submitted") {
 			t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
 		}

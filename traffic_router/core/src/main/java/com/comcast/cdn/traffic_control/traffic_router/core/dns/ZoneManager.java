@@ -212,6 +212,11 @@ public class ZoneManager extends Resolver {
 				ZoneManager.dynamicZoneCache = dzc;
 				ZoneManager.zoneCache = zc;
 
+				final long oldZCSize = tzc == null ? 0 : tzc.size();
+				final long oldDCZSize = tzc == null ? 0 : tdzc.size();
+				LOGGER.info("old static zone cache size: " + oldZCSize + ", new static zone cache size: " + zc.size() +
+						", old dynamic zone cache size: " + oldDCZSize + ", new dynamic zone cache size: " + dzc.size());
+
 				ZoneManager.domainsToZoneKeys = newDomainsToZoneKeys;
 
 				if (tze != null) {
@@ -278,6 +283,7 @@ public class ZoneManager extends Resolver {
 	private static Runnable getMaintenanceRunnable(final LoadingCache<ZoneKey, Zone> cache, final ZoneCacheType type, final int refreshInterval) {
 		return new Runnable() {
 			public void run() {
+				LOGGER.info("starting maintenance on " + type.toString() + " zone cache: " + Integer.toHexString(cache.hashCode()) + ". Current size: " + cache.size());
 				cache.cleanUp();
 
 				for (final ZoneKey zoneKey : cache.asMap().keySet()) {
@@ -289,6 +295,7 @@ public class ZoneManager extends Resolver {
 						LOGGER.fatal("RuntimeException caught on " + zoneKey.getClass().getSimpleName() + " for " + zoneKey.getName(), ex);
 					}
 				}
+				LOGGER.info("completed maintenance on " + type.toString() + " zone cache: " + Integer.toHexString(cache.hashCode()));
 			}
 		};
 	}
