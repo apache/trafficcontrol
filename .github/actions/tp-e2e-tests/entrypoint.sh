@@ -165,8 +165,10 @@ if [[ ! -e "$REPO_DIR" ]]; then
 fi
 
 cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-/usr/local/go/bin/go mod vendor -v > /dev/null
-/usr/local/go/bin/go build . > /dev/null
+
+go mod vendor -v > /dev/null
+go build . > /dev/null
+ 
 
 openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 

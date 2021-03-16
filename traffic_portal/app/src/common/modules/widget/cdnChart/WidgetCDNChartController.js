@@ -91,7 +91,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
-			_.each(series.values, function(seriesItem) {
+			series.values.forEach(function(seriesItem) {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					if (_.isNumber(seriesItem[1])) {
 						normalizedChartData.push([ moment(seriesItem[0]).valueOf(), seriesItem[1] ]);
@@ -109,7 +109,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 			xaxis: {
 				mode: "time",
 				timezone: "utc",
-				twelveHourClock: false
+				twelveHourClock: false,
+				timeBase: "milliseconds"
 			},
 			yaxes: [
 				{

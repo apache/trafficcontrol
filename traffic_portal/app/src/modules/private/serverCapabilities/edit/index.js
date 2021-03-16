@@ -20,15 +20,15 @@
 module.exports = angular.module('trafficPortal.private.serverCapabilities.view', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficPortal.private.serverCapabilities.view', {
-				url: '/{serverCapability}',
+			.state('trafficPortal.private.serverCapabilities.edit', {
+				url: '/edit?name',
 				views: {
 					serverCapabilitiesContent: {
 						templateUrl: 'common/modules/form/serverCapability/form.serverCapability.tpl.html',
-						controller: 'FormViewServerCapabilityController',
+						controller: 'FormEditServerCapabilityController',
 						resolve: {
 							serverCapability: function($stateParams, serverCapabilityService) {
-								return serverCapabilityService.getServerCapability($stateParams.serverCapability);
+								return serverCapabilityService.getServerCapability($stateParams.name);
 							}
 						}
 					}

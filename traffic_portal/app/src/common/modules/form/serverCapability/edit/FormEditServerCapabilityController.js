@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormViewServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, $anchorScroll, locationUtils, serverCapabilityService) {
+var FormEditServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, $anchorScroll, locationUtils, messageModel, serverCapabilityService) {
 
 	// extends the FormServerCapabilityController to inherit common methods
 	angular.extend(this, $controller('FormServerCapabilityController', { serverCapability: serverCapability, $scope: $scope }));
@@ -32,7 +32,8 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 	$scope.serverCapabilityName = serverCapability.name;
 
 	$scope.settings = {
-		isNew: false
+		isNew: false,
+		saveLabel: 'Update'
 	};
 
 	$scope.confirmDelete = function(serverCapability) {
@@ -55,7 +56,15 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 		});
 	};
 
+	$scope.save = function(currentName, serverCapability) {
+		serverCapabilityService.updateServerCapability(currentName, serverCapability).
+			then(function(result) {
+				messageModel.setMessages(result.data.alerts, currentName !== serverCapability.name);
+				locationUtils.navigateToPath('/server-capabilities/edit?name=' + result.data.response.name);
+			});
+	};
+
 };
 
-FormViewServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'serverCapabilityService'];
-module.exports = FormViewServerCapabilityController;
+FormEditServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'messageModel', 'serverCapabilityService'];
+module.exports = FormEditServerCapabilityController;

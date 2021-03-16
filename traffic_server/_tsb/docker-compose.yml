@@ -14,26 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-FROM golang:1.11
-MAINTAINER dev@trafficcontrol.apache.org
-
-RUN apt-get update &&           \
-    apt-get install -y          \
-    cross-gcc-dev               \
-    gccgo-aarch64-linux-gnu     \
-    gccgo-arm-linux-gnueabi     \
-    gccgo-arm-linux-gnueabihf   \
-    gccgo-go                    \
-    zip                         \
-    rpm &&                      \
-    apt-get autoremove -y &&    \
-    apt-get autoclean -y &&     \
-    rm -rf /var/lib/apt/lists/*
-
-COPY . /go/src/github.com/apache/trafficcontrol
-WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
-
-VOLUME ["/go/src/github.com/apache/trafficcontrol/test/fakeOrigin/dist"]
-
-CMD ["/bin/bash","build/build_rpm.sh"]
+---
+version: "2.1"
+services:
+  ats_build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    image: ats_build
+    volumes:
+    - ./src/jansson:/opt/src/jansson:Z
+    - ./src/cjose:/opt/src/cjose:Z
+    - ./src/openssl:/opt/src/openssl:Z
+    - ./src/ats:/rpmbuilddir/SOURCES/src:Z
+    - ./src/trafficcontrol/traffic_server/plugins/astats_over_http:/opt/src/astats_over_http:Z
+    - ./dist:/rpmbuilddir/RPMS/x86_64:Z
