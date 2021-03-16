@@ -236,19 +236,35 @@ Refer to the above license for the full text.
 
 This product bundles JSON formatter, which is available under an Apache-2.0 license.
 @traffic_portal/app/src/assets/css/jsonformatter.min_0.6.0.css
+./licenses/AL2-jsonformatter
+Refer to the above license for the full text.
+
+This product bundles JSON formatter, which is available under an Apache-2.0 license.
 @traffic_portal/app/src/assets/js/jsonformatter.min_0.6.0.js
 ./licenses/AL2-jsonformatter
 Refer to the above license for the full text.
 
 This product bundles DataTables, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
+./licenses/MIT-datatables
+Refer to the above license for the full text.
+
+This product bundles DataTables, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.19_patched.js
+./licenses/MIT-datatables
+Refer to the above license for the full text.
+
+This product bundles DataTables, which is available under an MIT license.
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
 Refer to the above license for the full text.
 
 This product bundles DataTables ColReorder, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/colReorder.dataTables.min_1.5.1.css
+./licenses/MIT-ColReorder
+Refer to the above license for the full text.
+
+This product bundles DataTables ColReorder, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
 ./licenses/MIT-ColReorder
 Refer to the above license for the full text.
@@ -280,12 +296,20 @@ Refer to the above license for the full text.
 
 This product bundles angular-moment-picker, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/angular-moment-picker_0.10.2.css
+./licenses/MIT-angular_moment_picker
+Refer to the above license for the full text.
+
+This product bundles angular-moment-picker, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/moment-picker/angular-moment-picker.min_0.10.2.js
 ./licenses/MIT-angular_moment_picker
 Refer to the above license for the full text.
 
 This product bundles angular-ui-tree, which is available under an MIT license.
 @traffic_portal/app/src/assets/css/angular-ui-tree.min_2.22.6.css
+./licenses/MIT-angular_ui_tree
+Refer to the above license for the full text.
+
+This product bundles angular-ui-tree, which is available under an MIT license.
 @traffic_portal/app/src/assets/js/angular-ui-tree.min_2.22.6.js
 ./licenses/MIT-angular_ui_tree
 Refer to the above license for the full text.
@@ -338,6 +362,10 @@ Refer to the above license for the full text.
 This product bundles yaml, which is available under an Apache-2.0 license.
 @vendor/gopkg.in/yaml.v2/*
 ./vendor/gopkg.in/yaml.v2/LICENSE
+Refer to the above license for the full text.
+
+This product bundles yaml, which is available under an Apache-2.0 license.
+@vendor/gopkg.in/yaml.v2/*
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 Refer to the above license for the full text.
 
@@ -349,6 +377,10 @@ Refer to the above license for the full text.
 This product bundles influxdb, which is available under an MIT license.
 @vendor/github.com/influxdata/influxdb/*
 ./vendor/github.com/influxdata/influxdb/LICENSE
+Refer to the above license for the full text.
+
+This product bundles influxdb, which is available under an MIT license.
+@vendor/github.com/influxdata/influxdb/*
 ./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
 Refer to the above license for the full text.
 
