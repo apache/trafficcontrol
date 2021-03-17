@@ -126,7 +126,7 @@ func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error 
 		}
 		if rows == 0 {
 			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
-			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '")
+			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
 		}
 	}
 
