@@ -51,6 +51,23 @@ for file in "$(ls)"; do
 	fi
 done
 
+# Files added must have date and name later than all existing file
+LATEST_FILE="$(ls -t1 |  head -n 1)"
+LATEST_FILE_TIME="$(stat -f "%m%t%Sm %N" $LATEST_FILE | cut -f1)"
+
+# Get modified times in an array
+mtime_array=()
+arr=("$(ls)")
+for file in $arr; do
+  mtime_array+=( "$(stat -f "%m%t%Sm %N"  $file | cut -f1)" )
+done
+mtime_length=${#mtime_array[@]}
+
+if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
+  echo "ERROR: latest added file: $LATESTFILE is not in the right order" >&2;
+  CODE=1;
+fi
+
 set +e;
 # All new migrations must use 16-digit timestamps.
 VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | tr '[:space:]' '\n' | grep -vE '^[0-9]{16}$')";
