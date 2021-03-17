@@ -1,0 +1,33 @@
+{
+    "Prerequisites": [
+        {
+            "Action": "DeleteCacheGroup",
+            "Route": "/cachegroups",
+            "Method": "delete",
+            "Data": [
+                {
+                    "route": "/cachegroups/",
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "TopoTestCGE1",
+                            "replace": "route"
+                        }
+                    ]
+                },
+                {
+                    "route": "/cachegroups/",
+                    "getRequest": [
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "TopoTestCGE2",
+                            "replace": "route"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

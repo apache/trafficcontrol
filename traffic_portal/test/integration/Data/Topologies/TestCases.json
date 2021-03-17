@@ -15,24 +15,22 @@
             ],
             "Add": [
                 {
-                    "description": "create a Topologies",
-                    "Name": "TPTopologies1",
-                    "Description": "test",
+                    "description": "create a Topologies with empty cachegroup (no server)",
+                    "Name": "TPTopTest1",
+                    "DescriptionData": "test",
                     "Type": "EDGE_LOC",
-                    "CacheGroup": "CacheGroupEdgeOp",
-                    "TypeChild": "EDGE_LOC",
-                    "CacheGroupChild": "CacheGroupEdgeOp2",
-                    "validationMessage": "topology was created.",
-                    "validationWarning": true
+                    "CacheGroup": "TopoTestCGE1",
+                    "validationMessage": "'empty cachegroups' cachegroups with no servers in them: TopoTestCGE1"
+                },
+                {
+                    "description": "create a Topologies with cachegroup has server in it",
+                    "Name": "TPTopTest2",
+                    "DescriptionData": "test",
+                    "Type": "EDGE_LOC",
+                    "CacheGroup": "TopoTestCGE2",
+                    "validationMessage": "topology was created."
                 }
-            ],
-            "Update": [
-               
-            ],
-            "Remove": [
-
             ]
-            
         }
     ]
 } 

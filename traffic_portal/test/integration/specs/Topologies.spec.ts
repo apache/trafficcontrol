@@ -20,6 +20,7 @@
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopologiesPage } from '../PageObjects/TopologiesPage.po';
+import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import  * as using  from "jasmine-data-provider";
 import { readFileSync } from "fs"
 import { API } from '../CommonUtils/API';
@@ -27,10 +28,11 @@ import { API } from '../CommonUtils/API';
 const api = new API();
 const testFile = 'Data/Topologies/TestCases.json';
 const setupFile = 'Data/Topologies/Setup.json';
-const cleanupFile = 'Data/Regions/Cleanup.json';
+const cleanupFile = 'Data/Topologies/Cleanup.json';
 const testData = JSON.parse(readFileSync(testFile,'utf-8'));
 const loginPage = new LoginPage();
 const topologiesPage = new TopologiesPage();
+const topNavigation = new TopNavigationPage();
 
 describe('Setup prereq for Topologies Test', function(){
     it('Setup', async function(){
@@ -39,6 +41,7 @@ describe('Setup prereq for Topologies Test', function(){
         expect(output).toBeNull();
     })
 })
+
 using(testData.Topologies, async function(topologiesData){
     using(topologiesData.Login, function(login){
         describe('Traffic Portal - Topologies - ' + login.description, function(){
@@ -47,15 +50,24 @@ using(testData.Topologies, async function(topologiesData){
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
-            
             it('can open topologies page', async function(){
                 await topologiesPage.OpenTopologyMenu();
                 await topologiesPage.OpenTopologiesPage();
             })
-
+            using(topologiesData.Add, function (add) {
+                it(add.description, async function () {
+                    expect(await topologiesPage.CreateTopologies(add)).toBeTruthy();
+                    await topologiesPage.OpenTopologiesPage();
+                })
+            })
+            it('can logout', async function(){
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
+        
         })
     })
 })
+
 describe('Clean up prereq and test data for Topologies Test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile,'utf-8'));
