@@ -532,67 +532,67 @@ Refer to the above license for the full text.
 
 This product bundles contrib.go.opencensus.io/exporter/ocagent, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/*
-@traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/contrib.go.opencensus.io/exporter/ocagent/LICENSE
 Refer to the above license for the full text.
 
 This product bundles google.golang.org/api/googleapi/internal/uritemplates, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/*
-@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/googleapi/internal/uritemplates/LICENSE
 Refer to the above license for the full text.
 
 This product bundles google.golang.org/api, which is available under a BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/*
-@traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/google.golang.org/api/LICENSE
 Refer to the above license for the full text.
 
 This product bundles google.golang.org/appengine, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/*
-@traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/google.golang.org/appengine/LICENSE
 Refer to the above license for the full text.
 
 This product bundles google.golang.org/genproto, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/*
-@traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/google.golang.org/genproto/LICENSE
 Refer to the above license for the full text.
 
 This product bundles google.golang.org/grpc, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/*
-@traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/google.golang.org/grpc/LICENSE
 Refer to the above license for the full text.
 
 This product bundles go.opencensus.io, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/*
-@traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/go.opencensus.io/LICENSE
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/ini.v1, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/*
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/ini.v1/LICENSE
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/ns1/ns1-go.v2, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/*
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/LICENSE.txt
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/ns1/ns1-go.v2/LICENSE.txt
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/resty.v1, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/*
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/resty.v1/LICENSE
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/square/go-jose.v2/json, which is available under an BSD-3-Clause license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/*
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/json/LICENSE
 Refer to the above license for the full text.
 
 This product bundles gopkg.in/square/go-jose.v2, which is available under an Apache-2.0 license.
 @traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/*
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/square/go-jose.v2/LICENSE
 Refer to the above license for the full text.
 
 This product bundles go.uber.org/ratelimit, which is available under an MIT license.
 @traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/*
-@traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/go.uber.org/ratelimit/LICENSE
 Refer to the above license for the full text.
 
 This product bundles akamai/AkamaiOPEN-edgegrid-golang, which is available under an Apache-2.0 license.
