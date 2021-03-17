@@ -79,7 +79,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/to_requester/config"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/to_requester/getdata"
 )
@@ -118,16 +117,18 @@ func main() {
  * connect and login to traffic ops
  */
 func toConnect() (*config.TCCfg, error) {
-	_toClient, err := toreq.New(cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeoutMS, config.UserAgent)
+	toClient, err := toreq.New(cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeoutMS, config.UserAgent)
 	if err != nil {
 		return nil, errors.New("failed to connect to traffic ops: " + err.Error())
 	}
-	_toClientNew, err := toreqnew.New(_toClient.Cookies(cfg.TOURL), cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeoutMS, config.UserAgent)
+
+	if toClient.FellBack() {
+		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
+	}
 
 	tccfg := config.TCCfg{
-		Cfg:         cfg,
-		TOClient:    _toClient,
-		TOClientNew: _toClientNew,
+		Cfg:      cfg,
+		TOClient: toClient,
 	}
 
 	return &tccfg, nil

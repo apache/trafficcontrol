@@ -59,7 +59,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/getdata"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 )
 
 func main() {
@@ -94,9 +93,11 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	toClientNew, err := toreqnew.New(toClient.Cookies(cfg.TOURL), cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
+	if toClient.FellBack() {
+		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
+	}
 
-	tccfg := config.TCCfg{Cfg: cfg, TOClient: toClient, TOClientNew: toClientNew}
+	tccfg := config.TCCfg{Cfg: cfg, TOClient: toClient}
 
 	if tccfg.GetData != "" {
 		if err := getdata.WriteData(tccfg); err != nil {
