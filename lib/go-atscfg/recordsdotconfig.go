@@ -37,6 +37,10 @@ type RecordsConfigOpts struct {
 	// defined build hash (or whatever the user wants) type value to give more
 	// specific info as well as obfuscating the real ATS version from prying eyes
 	ReleaseViaStr bool
+
+	// DNSLocalBindServiceAddr is whether to set the server's service addresses
+	// as the records.config proxy.config.dns.local_ipv* settings.
+	DNSLocalBindServiceAddr bool
 }
 
 func MakeRecordsDotConfig(
@@ -83,6 +87,12 @@ func addRecordsDotConfigOverrides(txt string, server *Server, opt RecordsConfigO
 		viaWarns := []string{}
 		txt, viaWarns = addRecordsDotConfigViaStr(txt)
 		warnings = append(warnings, viaWarns...)
+	}
+
+	if opt.DNSLocalBindServiceAddr {
+		dnsWarns := []string{}
+		txt, dnsWarns = addRecordsDotConfigDNSLocal(txt, server)
+		warnings = append(warnings, dnsWarns...)
 	}
 
 	return txt, warnings
@@ -150,6 +160,28 @@ func addRecordsDotConfigViaStr(txt string) (string, []string) {
 	} else {
 		txt = txt + `CONFIG ` + responseServerStr + ` STRING ` + releaseVer
 		txt += "\n"
+	}
+
+	return txt, warnings
+}
+
+func addRecordsDotConfigDNSLocal(txt string, server *Server) (string, []string) {
+	warnings := []string{}
+
+	const dnsLocalV4 = `proxy.config.dns.local_ipv4`
+	const dnsLocalV6 = `proxy.config.dns.local_ipv6`
+
+	v4, v6 := getServiceAddresses(server)
+	if v4 == nil {
+		warnings = append(warnings, "server had no IPv4 Service Address, not setting records.config dns v4 local bind addr!")
+	} else {
+		txt += `CONFIG ` + dnsLocalV4 + ` STRING ` + v4.String() + "\n"
+	}
+
+	if v6 == nil {
+		warnings = append(warnings, "server had no IPv6 Service Address, not setting records.config dns v6 local bind addr!")
+	} else {
+		txt += `CONFIG ` + dnsLocalV6 + ` STRING [` + v6.String() + `]` + "\n"
 	}
 
 	return txt, warnings
