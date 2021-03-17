@@ -6,11 +6,6 @@
                     "description": "Admin Role",
                     "username": "TPAdmin",
                     "password": "pa$$word"
-                },
-                {
-                    "description": "Operation Role",
-                    "username": "TPOperator",
-                    "password": "pa$$word"
                 }
             ],
             "Add": [

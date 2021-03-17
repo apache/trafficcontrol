@@ -1,6 +1,34 @@
 {
     "Prerequisites": [
         {
+            "Action": "DeleteTopologies",
+            "Route": "/topologies",
+            "Method": "delete",
+            "Data": [
+                {
+                    "route": "/topologies?name=TPTopTest2"
+                }
+            ]
+        },
+        {
+            "Action": "DeleteServers",
+            "Route" : "/servers",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/servers/",
+                    "getRequest": [
+                        {
+                            "route": "/servers",
+                            "queryKey": "hostName",
+                            "queryValue": "topologieserver1",
+                            "replace": "route"                           
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "Action": "DeleteCacheGroup",
             "Route": "/cachegroups",
             "Method": "delete",

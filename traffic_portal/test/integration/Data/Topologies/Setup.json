@@ -1,8 +1,8 @@
 {
-    "Prerequisites" : [
+    "Prerequisites": [
         {
             "Action": "CreateCacheGroup",
-            "Route" : "/cachegroups",
+            "Route": "/cachegroups",
             "Method": "post",
             "Data": [
                 {
@@ -12,22 +12,22 @@
                     "longitude": 0,
                     "fallbackToClosest": true,
                     "localizationMethods": [
-                            "DEEP_CZ",
-                            "CZ",
-                            "GEO"
+                        "DEEP_CZ",
+                        "CZ",
+                        "GEO"
                     ],
                     "typeId": 23
                 },
                 {
                     "name": "TopoTestCGE2",
-                    "shortName": "CGEdge",
+                    "shortName": "CGEdge2",
                     "latitude": 0,
                     "longitude": 0,
                     "fallbackToClosest": true,
                     "localizationMethods": [
-                            "DEEP_CZ",
-                            "CZ",
-                            "GEO"
+                        "DEEP_CZ",
+                        "CZ",
+                        "GEO"
                     ],
                     "typeId": 23
                 }
@@ -40,7 +40,6 @@
             "Data": [
                 {
                     "cachegroupId": 0,
-                    "cdnId": 2,
                     "getRequest": [
                         {
                             "route": "/cachegroups",
@@ -49,8 +48,9 @@
                             "replace": "cachegroupId"
                         }
                     ],
+                    "cdnId": 2,
                     "domainName": "test.net",
-                    "hostName": "topologiesserver1",
+                    "hostName": "topologieserver1",
                     "httpsPort": 443,
                     "iloIpAddress": "",
                     "iloIpGateway": "",
@@ -83,8 +83,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 1,
-                    "profileId": 34,
+                    "physLocationId": 2,
+                    "profileId": 9,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,

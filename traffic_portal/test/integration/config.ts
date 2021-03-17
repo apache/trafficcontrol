@@ -42,7 +42,7 @@ export let config: Config = {
     acceptSslCerts: true,
     chromeOptions: {
       //Run protractor headlessly. Comment it out if user want to see the process.
-      //args: ["--headless", "--no-sandbox", "--window-size=1920,1080"],
+      args: ["--headless", "--no-sandbox", "--window-size=1920,1080"],
       prefs: {
         download: {
           'prompt_for_download': false,
