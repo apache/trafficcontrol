@@ -147,7 +147,8 @@ func MakeRecordsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 		toData.ServerParams,
 		hdrCommentTxt,
 		atscfg.RecordsConfigOpts{
-			ReleaseViaStr: cfg.ViaRelease,
+			ReleaseViaStr:           cfg.ViaRelease,
+			DNSLocalBindServiceAddr: cfg.SetDNSLocalBind,
 		},
 	)
 }

@@ -38,10 +38,16 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	})
 
 	server := makeTestRemapServer()
-	ipStr := "192.168.2.99"
-	setIP(server, ipStr)
+	server.Interfaces = nil
+	ipStr := "192.163.2.99"
+	ipCIDR := ipStr + "/30" // set the ip to a cidr, to make sure addr logic removes it
+	setIP(server, ipCIDR)
+	ip6Str := "2001:db8::9"
+	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
+	setIP6(server, ip6CIDR)
 	server.Profile = util.StrPtr(profileName)
 	opt := RecordsConfigOpts{}
+	opt.DNSLocalBindServiceAddr = true
 	cfg, err := MakeRecordsDotConfig(server, paramData, hdr, opt)
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +69,13 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 		t.Errorf("expected config to replace 'STRING __HOSTNAME__' with 'STRING __FULL_HOSTNAME__', actual: '%v'", txt)
 	}
 	if !strings.Contains(txt, "LOCAL proxy.local.outgoing_ip_to_bind STRING "+ipStr) {
-		t.Errorf("expected config to contain outgoing_ip_to_bind from server, actual: '%v'", txt)
+		t.Errorf("expected config to contain outgoing_ip_to_bind from server, actual: '%v' warnings '%+v'", txt, cfg.Warnings)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+ipStr) {
+		t.Errorf("expected config to contain dns.local_ipv4 from server, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING ["+ip6Str+"]") {
+		t.Errorf("expected config to contain dns.local_ipv6 from server, actual: '%v'", txt)
 	}
 }
 
