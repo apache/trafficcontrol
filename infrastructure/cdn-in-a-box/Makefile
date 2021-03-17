@@ -21,14 +21,6 @@
 # Based on CentOS 8
 ############################################################
 
-# Check for proper invocation
-PWD := $(strip $(lastword $(patsubst %/,%,$(notdir $(shell pwd)))))
-makefile_dir := $(strip $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))))
-
-ifneq ($(PWD),$(makefile_dir))
-$(error This makefile MUST be run from within its directory)
-endif
-
 ifeq ($(RHEL_VERSION),)
 	export RHEL_VERSION := 8
 else
