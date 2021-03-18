@@ -80,9 +80,31 @@ under the License.
                     <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
                 </div>
             </li>
-            <li ng-repeat="cdn in cdns">
-                <div class="btn-group" title="{{(cdn.notificationCreatedBy) ? 'Delete Global ' + cdn.name + ' Notification' : 'Create Global ' + cdn.name + ' Notification'}}">
-                    <button type="button" class="notification btn btn-link" ng-click="toggleNotification(cdn)">{{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.notificationCreatedBy, 'fa-bell-o': !cdn.notificationCreatedBy }"></i> <i ng-show="cdn.notificationCreatedBy" class="fa fa-times"></i></button>
+            <li role="presentation" class="dropdown" ng-repeat="cdn in cdns | orderBy: '-name'">
+                <div class="btn-group" title="{{cdn.name}} Notifications" uib-dropdown is-open="{{cdn.name}}-notifications.isopen">
+                    <button id="{{cdn.name}}-notifications" type="button" class="btn btn-link" ng-click="getNotifications(cdn)" uib-dropdown-toggle>
+                        {{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.hasNotifications, 'fa-bell-o': !cdn.hasNotifications }"></i>
+                    </button>
+                    <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
+                        <li ng-if="loadingNotifications" style="text-align: center"><i class="fa fa-refresh fa-spin fa-1x fa-fw"></i></li>
+                        <li ng-if="notifications.length === 0">
+                            <div class="text-center">No {{cdn.name}} notifications</div>
+                        </li>
+                        <li ng-repeat="notification in notifications">
+                            <a ng-click="$event.stopPropagation()">
+                                <span>
+                                    <span>{{::notification.user}}</span>
+                                    <span class="time">{{::getRelativeTime(notification.lastUpdated)}}</span>
+                                </span>
+                                <span class="message">{{::notification.notification}}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-link" title="Manage {{cdn.name}} notifications" ng-click="navigateToPath('/cdns/' + cdn.id + '/notifications')"><strong>Manage {{cdn.name}} notifications <i class="fa fa-angle-right"></i></strong></button>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </li>
         </ul>

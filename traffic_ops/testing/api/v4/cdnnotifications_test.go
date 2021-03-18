@@ -36,8 +36,8 @@ func GetTestCDNotifications(t *testing.T) {
 		if len(resp) > 0 {
 			respNotification := resp[0]
 			expectedNotification := "test notification: " + cdn.Name
-			if respNotification.Notification != nil && *respNotification.Notification != expectedNotification {
-				t.Errorf("expected notification does not match actual: %s, expected: %s", *respNotification.Notification, expectedNotification)
+			if respNotification.Notification != expectedNotification {
+				t.Errorf("expected notification does not match actual: %s, expected: %s", respNotification.Notification, expectedNotification)
 			}
 		}
 	}
@@ -54,9 +54,17 @@ func CreateTestCDNNotifications(t *testing.T) {
 
 func DeleteTestCDNNotifications(t *testing.T) {
 	for _, cdn := range testData.CDNs {
-		_, _, err := TOSession.DeleteCDNNotification(cdn.Name)
+		// Retrieve the notifications for a cdn
+		resp, _, err := TOSession.GetCDNNotifications(cdn.Name, nil)
 		if err != nil {
-			t.Errorf("cannot DELETE CDN notification: '%s' %v", cdn.Name, err)
+			t.Errorf("cannot GET notifications for a CDN: %v - %v", cdn.Name, err)
+		}
+		if len(resp) > 0 {
+			respNotification := resp[0]
+			_, _, err := TOSession.DeleteCDNNotification(respNotification.ID)
+			if err != nil {
+				t.Errorf("cannot DELETE CDN notification by ID: '%d' %v", respNotification.ID, err)
+			}
 		}
 	}
 }
