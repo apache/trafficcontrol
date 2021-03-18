@@ -22,9 +22,10 @@ import (
 	"reflect"
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"	
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -50,6 +51,7 @@ func TestCacheGroups(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCacheGroupsWithHeaders(t, header)
+		VerifyPaginationSupportCg(t)
 	})
 }
 
@@ -582,5 +584,69 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 	}
 	if _, _, err = NoAuthTOSession.DeleteCacheGroupByID(*cg.ID); err == nil {
 		t.Error(fmt.Errorf(errFormat, "DeleteCacheGroupByID"))
+	}
+}
+
+func VerifyPaginationSupportCg(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	cachegroup, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	if err != nil {
+		t.Fatalf("cannot GET Cachegroup: %v", err)
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	cachegroupWithLimit, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit) {
+		t.Error("expected GET Cachegroups with limit = 1 to return first result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "1")
+	cachegroupsWithOffset, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset) {
+		t.Error("expected GET cachegroup with limit = 1, offset = 1 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("page", "2")
+	cachegroupWithPage, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage) {
+		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	if err == nil {
+		t.Error("expected GET cachegroup to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET cachegroup to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	if err == nil {
+		t.Error("expected GET cachegroup to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET cachegroup to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	if err == nil {
+		t.Error("expected GET cachegroup to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET cachegroup to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
