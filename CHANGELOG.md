@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5565](https://github.com/apache/trafficcontrol/issues/5565) - TO GET /caches/stats panic converting string to uint64
 - [#5558](https://github.com/apache/trafficcontrol/issues/5558) - Fixed `TM UI` and `/api/cache-statuses` to report aggregate `bandwidth_kbps` correctly.
 - Fix for config gen missing max_origin_connections on mids in certain scenarios
+- [#5192](https://github.com/apache/trafficcontrol/issues/5192) - Fixed TO log warnings when generating snapshots for topology-based delivery services.
 - Fixed Invalid TS logrotate configuration permissions causing TS logs to be ignored by logrotate.
 
 ## [5.1.0] - 2021-02-21
