@@ -47,19 +47,19 @@ INSERT INTO cdn_notification (cdn, "user", notification)
 VALUES ($1, $2, $3)
 RETURNING cdn_notification.id,
 cdn_notification.cdn,
-          cdn_notification.last_updated,
-          cdn_notification.user,
-          cdn_notification.notification
+cdn_notification.last_updated,
+cdn_notification.user,
+cdn_notification.notification
 `
 
 const deleteQuery = `
 DELETE FROM cdn_notification
 WHERE cdn_notification.id = $1
 RETURNING cdn_notification.id,
-		cdn_notification.cdn,
-          cdn_notification.last_updated,
-          cdn_notification.user,
-          cdn_notification.notification
+cdn_notification.cdn,
+cdn_notification.last_updated,
+cdn_notification.user,
+cdn_notification.notification
 `
 
 // Read is the handler for GET requests to /cdn_notifications.
