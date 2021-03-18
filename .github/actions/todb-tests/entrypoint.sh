@@ -18,7 +18,7 @@
 
 set -e
 
-cd ../../../traffic_ops/app/db/migrations;
+cd traffic_ops/app/db/migrations;
 
 # Ensure proper order
 SORTED="$(mktemp)";
