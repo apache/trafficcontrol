@@ -41,14 +41,14 @@ TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/b
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
 
-TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**/*)
-TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**/*)
-ORT_SOURCE:= $(wildcard $(TC_DIR)/traffic_ops_ort/atstccfg/**/*.go)
-ORT_SOURCE+= $(wildcard $(TC_DIR)/lib/**/*.go)
-TM_SOURCE := $(wildcard $(TC_DIR)/traffic_monitor/**/*)
-TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**/*)
-TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**/*)
-TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**/*)
+TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
+TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**)
+ORT_SOURCE:= $(wildcard $(TC_DIR)/traffic_ops_ort/atstccfg/**.go)
+ORT_SOURCE+= $(wildcard $(TC_DIR)/lib/**.go)
+TM_SOURCE := $(wildcard $(TC_DIR)/traffic_monitor/**)
+TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
+TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**)
+TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**)
 
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
