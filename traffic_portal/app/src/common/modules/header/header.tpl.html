@@ -101,10 +101,7 @@ under the License.
                         </li>
                         <li>
                             <div class="text-center">
-                                <a>
-                                    <strong><a ng-click="navigateToPath('/cdns/' + cdn.id + '/notifications')">Manage {{cdn.name}} notifications</a></strong>
-                                    <i class="fa fa-angle-right"></i>
-                                </a>
+                                <button type="button" class="btn btn-link" title="Manage {{cdn.name}} notifications" ng-click="navigateToPath('/cdns/' + cdn.id + '/notifications')"><strong>Manage {{cdn.name}} notifications <i class="fa fa-angle-right"></i></strong></button>
                             </div>
                         </li>
                     </ul>
