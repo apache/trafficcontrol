@@ -52,6 +52,9 @@ for file in "$(ls)"; do
 done
 
 # Files added must have date and name later than all existing file
+LATEST_FILE="$(git ls-tree -r --name-only HEAD | while read filename; do
+  echo "$filename"
+done | sort | tail -n 1)"
 LATEST_FILE_TIME="$(git ls-tree -r --name-only HEAD | while read filename; do
   echo "$(git log -1 --format="%ct" -- $filename)"
 done | sort | tail -n 1)"
@@ -65,7 +68,7 @@ done
 mtime_length=${#mtime_array[@]}
 
 if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
-  echo "ERROR: latest added file: $LATESTFILE is not in the right order" >&2;
+  echo "ERROR: latest added file: $LATEST_FILE is not in the right order" >&2;
   CODE=1;
 fi
 
