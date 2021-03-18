@@ -70,7 +70,7 @@ export interface Server {
 	/** The port used to serve HTTPS responses, if any. */
 	httpsPort: number | null;
 	/** An integral, unique identifier for this Server. */
-	id: number | null;
+	id?: number;
 	/** The IP address of the Server's ILO interface. */
 	iloIpAddress: string | null;
 	/** The IP address of the gateway to the Server's ILO interface. */
@@ -115,6 +115,8 @@ export interface Server {
 	status?: string;
 	/** An integral, unique, identifier for the Server's Status. */
 	statusId: number;
+	/** The time at which the server's status was last updated. */
+	statusLastUpdated?: Date | null;
 	/** The port on which the Server listens for incoming TCP connections. */
 	tcpPort: number | null;
 	/** The type of the Server. */
@@ -156,20 +158,20 @@ export interface Servercheck {
 	type: string;
 	/** whether or not the server has updates pending */
 	updPending: boolean;
-
-	/** Builds a true Map from the Servercheck's "checks" property */
-	checkMap(): Map<string, number | boolean>;
 }
 
 /**
  * Builds a true Map from the Servercheck's "checks" property.
+ *
+ * @param srv The Servercheck to convert.
+ * @returns A map of servercheck check names to their values.
  */
-export function checkMap(this: Servercheck): Map<string, number | boolean> {
+export function checkMap(srv: Servercheck): Map<string, number | boolean> {
 	const ret = new Map();
-	if (!this.checks) {
+	if (!srv.checks) {
 		return ret;
 	}
-	for (const [key, value] of Object.entries(this.checks)) {
+	for (const [key, value] of Object.entries(srv.checks)) {
 		switch (key) {
 			case "ILO":
 			case "10G":
@@ -186,3 +188,38 @@ export function checkMap(this: Servercheck): Map<string, number | boolean> {
 	}
 	return ret;
 }
+
+/**
+ *
+ */
+export interface Status {
+	description: string;
+	id?: number;
+	lastUpdated?: Date;
+	name: string;
+}
+
+export const DUMMY_SERVER: Server = {
+	cachegroupId: -1,
+	cdnId: -1,
+	domainName: "",
+	hostName: "",
+	httpsPort: null,
+	iloIpAddress: null,
+	iloIpGateway: null,
+	iloIpNetmask: null,
+	iloPassword: null,
+	iloUsername: null,
+	interfaces: [],
+	mgmtIpAddress: null,
+	mgmtIpGateway: null,
+	mgmtIpNetmask: null,
+	offlineReason: null,
+	physLocationId: -1,
+	profileId: -1,
+	revalPending: false,
+	statusId: -1,
+	tcpPort: null,
+	typeId: -1,
+	updPending: false
+};

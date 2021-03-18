@@ -16,6 +16,8 @@ package v4
 */
 
 import (
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -28,6 +30,8 @@ func TestServerChecks(t *testing.T) {
 		CreateTestInvalidServerChecks(t)
 		UpdateTestServerChecks(t)
 		GetTestServerChecks(t)
+		GetTestServerChecksWithName(t)
+		GetTestServerChecksWithID(t)
 	})
 }
 
@@ -101,7 +105,7 @@ func UpdateTestServerChecks(t *testing.T) {
 func GetTestServerChecks(t *testing.T) {
 	hostname := testData.Serverchecks[0].HostName
 	// Get server checks
-	serverChecksResp, alerts, _, err := TOSession.GetServersChecks()
+	serverChecksResp, alerts, _, err := TOSession.GetServersChecks(nil, nil)
 	if err != nil {
 		t.Fatalf("could not GET serverchecks: %v (alerts: %+v)", err, alerts)
 	}
@@ -135,6 +139,72 @@ func GetTestServerChecks(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("expected to find servercheck for host %v", hostname)
+	}
+}
+
+func GetTestServerChecksWithName(t *testing.T) {
+	params := url.Values{}
+	params.Set("hostName", "atlanta-edge-01")
+
+	// Get server checks
+	scResp, alerts, _, err := TOSession.GetServersChecks(params, nil)
+	if len(scResp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", scResp[0].HostName, err, alerts)
+	}
+
+	//Add unknown param key
+	params.Add("foo", "car")
+	// Get server checks
+	resp, alerts, _, err := TOSession.GetServersChecks(params, nil)
+	if len(resp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", resp[0].HostName, err, alerts)
+	}
+
+	if len(scResp) != len(resp) {
+		t.Fatalf("expected: Both response lengths should be equal, got: first resp:%v-second resp:%v", len(scResp), len(resp))
+	}
+}
+
+func GetTestServerChecksWithID(t *testing.T) {
+	params := url.Values{}
+	serverChecksResp, _, _, err := TOSession.GetServersChecks(nil, nil)
+	if len(serverChecksResp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if serverChecksResp[0].ID == 0 {
+		t.Fatal("ID of the response server is nil, quitting")
+	}
+	id := serverChecksResp[0].ID
+	params.Set("id", strconv.Itoa(id))
+
+	// Get server checks
+	scResp, alerts, _, err := TOSession.GetServersChecks(params, nil)
+	if len(scResp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by id (%v): %v (alerts: %+v)", scResp[0].ID, err, alerts)
+	}
+
+	//Add unknown param key
+	params.Add("foo", "car")
+	// Get server checks
+	resp, alerts, _, err := TOSession.GetServersChecks(params, nil)
+	if len(resp) == 0 {
+		t.Fatal("no server checks in response, quitting")
+	}
+	if err != nil {
+		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", resp[0].HostName, err, alerts)
+	}
+
+	if len(scResp) != len(resp) {
+		t.Fatalf("expected: Both response lengths should be equal, got: first resp:%v-second resp:%v", len(scResp), len(resp))
 	}
 }
 

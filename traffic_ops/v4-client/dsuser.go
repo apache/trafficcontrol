@@ -18,12 +18,12 @@ package client
 import (
 	"strconv"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // SetUserDeliveryService associates the given delivery services with the given user.
 func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) (*tc.UserDeliveryServicePostResponse, error) {
-	uri := apiBase + `/deliveryservice_user`
+	uri := `/deliveryservice_user`
 	ds := tc.DeliveryServiceUserPost{UserID: &userID, DeliveryServices: &dses, Replace: &replace}
 	resp := tc.UserDeliveryServicePostResponse{}
 	_, err := to.post(uri, ds, nil, &resp)
@@ -35,7 +35,7 @@ func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) 
 
 // DeleteDeliveryServiceUser deletes the association between the given delivery service and user
 func (to *Session) DeleteDeliveryServiceUser(userID int, dsID int) (*tc.UserDeliveryServiceDeleteResponse, error) {
-	uri := apiBase + `/deliveryservice_user/` + strconv.Itoa(dsID) + `/` + strconv.Itoa(userID)
+	uri := `/deliveryservice_user/` + strconv.Itoa(dsID) + `/` + strconv.Itoa(userID)
 	resp := tc.UserDeliveryServiceDeleteResponse{}
 	if _, err := to.del(uri, nil, &resp); err != nil {
 		return nil, err

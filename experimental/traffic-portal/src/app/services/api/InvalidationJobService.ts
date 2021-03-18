@@ -18,10 +18,13 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { APIService } from "./apiservice";
-
 import { DeliveryService, InvalidationJob, User } from "../../models";
 
+import { APIService } from "./apiservice";
+
+/**
+ * JobOpts defines the options that can be passed to getInvalidationJobs.
+ */
 interface JobOpts {
 	/** return only the Jobs that operate on this Delivery Service */
 	deliveryService?: DeliveryService;
@@ -42,51 +45,54 @@ interface JobOpts {
 export class InvalidationJobService extends APIService {
 
 	/**
-	 * Fetches all invalidation jobs that match the passed criteria.
+	 * Injects the Angular HTTP client service into the parent constructor.
+	 *
+	 * @param http The Angular HTTP client service.
 	 */
-	public getInvalidationJobs (opts?: JobOpts): Observable<Array<InvalidationJob>> {
-		let path = `/api/${this.API_VERSION}/jobs`;
-		if (opts) {
-			const args = new Array<string>();
-			if (opts.id) {
-				args.push(`id=${opts.id}`);
-			}
-			if (opts.dsID) {
-				args.push(`dsId=${opts.dsID}`);
-			}
-			if (opts.userId) {
-				args.push(`userId=${opts.userId}`);
-			}
-			if (opts.deliveryService && opts.deliveryService.id) {
-				args.push(`dsId=${opts.deliveryService.id}`);
-			}
-			if (opts.user && opts.user.id) {
-				args.push(`userId=${opts.user.id}`);
-			}
-
-			if (args.length > 0) {
-				path += `?${args.join("&")}`;
-			}
-		}
-		return this.get(path).pipe(map(
-			r => {
-				return r.body.response as Array<InvalidationJob>;
-			}
-		));
+	constructor(http: HttpClient) {
+		super(http);
 	}
 
 	/**
-	 * Creates the passed invalidation job, returning whether or not the creation was successful.
+	 * Fetches all invalidation jobs that match the passed criteria.
+	 *
+	 * @param opts Optional identifiers for the requested Jobs.
+	 * @returns An Observable that will emit the request Jobs.
 	 */
-	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
-		const path = `/api/${this.API_VERSION}/user/current/jobs`;
-		return this.post(path, job).pipe(map(
-			_ => true,
-			_ => false
-		));
+	public getInvalidationJobs(opts?: JobOpts): Observable<Array<InvalidationJob>> {
+		const path = "jobs";
+		const params: Record<string, string> = {};
+		if (opts) {
+			if (opts.id) {
+				params.id = String(opts.id);
+			}
+			if (opts.dsID) {
+				params.dsId = String(opts.dsID);
+			}
+			if (opts.userId) {
+				params.userId = String(opts.userId);
+			}
+			if (opts.deliveryService && opts.deliveryService.id) {
+				params.dsId = String(opts.deliveryService.id);
+			}
+			if (opts.user && opts.user.id) {
+				params.userId = String(opts.user.id);
+			}
+		}
+		return this.get<Array<InvalidationJob>>(path, undefined, params).pipe();
 	}
 
-	constructor(http: HttpClient) {
-		super(http);
+	/**
+	 * Creates an Invalidation Job.
+	 *
+	 * @param job The Job to create.
+	 * @returns An Observable that emits whether or not creation succeeded.
+	 */
+	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
+		const path = "user/current/jobs";
+		return this.post(path, job).pipe(map(
+			() => true,
+			() => false
+		));
 	}
 }

@@ -22,7 +22,7 @@
  * @param type The MIME type of the download - used as a hint for file extensions. If not given and {@link content}
  * is not a File or Blob, this will default to 'text/plain' for strings, and 'application/json' for all others.
  */
-export function download (content: Blob | File | string | any, filename?: string, type?: string): void {
+export function download(content: Blob | File | string | unknown, filename?: string, type?: string): void {
 	if (content instanceof File) {
 		const url = URL.createObjectURL(content);
 		window.location.assign(url);
@@ -41,12 +41,12 @@ export function download (content: Blob | File | string | any, filename?: string
 		if (!type) {
 			type = "text/plain";
 		}
-		f = new File([content], filename, {type: type});
+		f = new File([content], filename, {type});
 	} else {
 		if (!type) {
 			type = "application/json";
 		}
-		f = new File([JSON.stringify(content)], filename, {type: type});
+		f = new File([JSON.stringify(content)], filename, {type});
 	}
 
 	const exportURL = URL.createObjectURL(f);

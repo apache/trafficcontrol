@@ -234,7 +234,7 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 		return nil, err, http.StatusInternalServerError
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
 	}
 
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)

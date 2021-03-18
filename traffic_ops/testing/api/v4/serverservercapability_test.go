@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
@@ -32,6 +33,8 @@ func TestServerServerCapabilities(t *testing.T) {
 		SortTestServerServerCapabilities(t)
 		GetTestServerServerCapabilitiesIMS(t)
 		GetTestServerServerCapabilities(t)
+		GetDeliveryServiceServersWithCapabilities(t)
+		UpdateTestServerServerCapabilities(t)
 	})
 }
 
@@ -45,8 +48,8 @@ func GetTestServerServerCapabilitiesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+	rfcTime := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, rfcTime)
 	_, reqInf, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
@@ -220,6 +223,69 @@ func GetTestServerServerCapabilities(t *testing.T) {
 	}
 }
 
+func UpdateTestServerServerCapabilities(t *testing.T) {
+	var header http.Header
+
+	// Get server capability name and edit it to a new name
+	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if len(resp) == 0 {
+		t.Fatal("no server capability in response, quitting")
+	}
+	originalName := resp[0].Name
+	newSCName := "sc-test"
+	resp[0].Name = newSCName
+
+	// Get all servers related to original sever capability name
+	servOrigResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &originalName, nil)
+	if err != nil {
+		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", originalName, err)
+	}
+	if len(servOrigResp) == 0 {
+		t.Fatalf("no servers associated with server capability name: %v", originalName)
+	}
+	mapOrigServ := make(map[string]string)
+	for _, s := range servOrigResp {
+		mapOrigServ[*s.Server] = *s.ServerCapability
+	}
+
+	// Update server capability with new name
+	updateResponse, _, err := TOSession.UpdateServerCapability(originalName, &resp[0], nil)
+	if err != nil {
+		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+	}
+
+	//To check whether the primary key change trickled down to server table
+	servUpdatedResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
+	if err != nil {
+		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
+	}
+	if len(servUpdatedResp) == 0 {
+		t.Fatalf("no server associated with server capability name:%v", newSCName)
+	}
+	if len(servOrigResp) != len(servUpdatedResp) {
+		t.Fatalf("length of servers for a given server capability name is different, expected: %v-%v, got: %v-%v", originalName, len(servOrigResp), newSCName, len(servUpdatedResp))
+	}
+	for _, s := range servUpdatedResp {
+		if newSCName != *s.ServerCapability {
+			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %v", *s.ServerCapability)
+		}
+		_, ok := mapOrigServ[*s.Server]
+		if !ok {
+			t.Fatalf("server capability name change didn't trickle to server: %v", *s.Server)
+		}
+	}
+
+	// Set everything back as it was for further testing.
+	resp[0].Name = originalName
+	r, _, err := TOSession.UpdateServerCapability(newSCName, &resp[0], nil)
+	if err != nil {
+		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
+	}
+}
+
 func DeleteTestServerServerCapabilities(t *testing.T) {
 	// Get Server Capabilities to delete them
 	sscs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, nil)
@@ -384,4 +450,98 @@ func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 		}
 	}
 
+}
+
+func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds4"}})
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Fatal("Failed to get at least one Delivery Service")
+	}
+
+	ds := dses[0]
+	if ds.ID == nil {
+		t.Fatal("Got Delivery Service with nil ID")
+	}
+
+	// Get an edge
+	params := url.Values{}
+	params.Add("hostName", "atlanta-edge-16")
+	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to fetch server information: %v", err)
+	} else if len(rs.Response) == 0 {
+		t.Fatalf("Failed to fetch server information: No results returned!")
+	}
+	edgeID := *rs.Response[0].ID
+
+	// Get a MID
+	params = url.Values{}
+	params.Add("hostName", "atlanta-mid-02")
+	rs, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to fetch server information: %v", err)
+	} else if len(rs.Response) == 0 {
+		t.Fatalf("Failed to fetch server information: No results returned!")
+	}
+	midID := *rs.Response[0].ID
+	// assign edge and mid
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{edgeID, midID}, true)
+	if err != nil {
+		t.Fatalf("expected no error while assigning servers to DS, but got %s", err.Error())
+	}
+	params = url.Values{}
+	params.Add("dsId", strconv.Itoa(*ds.ID))
+	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	if len(servers.Response) != 2 {
+		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+	}
+
+	// now assign a capability
+	reqCap := tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  ds.ID,
+		RequiredCapability: util.StrPtr("blah"),
+	}
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	// this should fail because the mid doesn't have the reqd capability
+	if err == nil {
+		t.Fatalf("expected error creating DS reqd capability, but got nothing")
+	}
+	ssc := tc.ServerServerCapability{
+		ServerID:         &midID,
+		ServerCapability: util.StrPtr("blah"),
+	}
+	// assign the capability to the mid
+	_, _, err = TOSession.CreateServerServerCapability(ssc)
+	if err != nil {
+		t.Fatalf("couldn't assign server capability to server with ID %d, err: %s", midID, err.Error())
+	}
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	// this should pass now because the mid has the reqd capability
+	if err != nil {
+		t.Fatalf("expected no error creating DS reqd capability, but got %s", err.Error())
+	}
+
+	params = url.Values{}
+	params.Add("dsId", strconv.Itoa(*ds.ID))
+	servers, _, err = TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	if len(servers.Response) != 2 {
+		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
+	}
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, edgeID)
+	if err != nil {
+		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+	}
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID)
+	if err != nil {
+		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+	}
 }

@@ -1,8 +1,24 @@
-#!/usr/bin/env python3
+#!/usr/bin/env bash
+"exec" "bash" "-c" "PATH+=:/usr/libexec/; exec \$(type -p python38 python3.8 python36 python3.8 python3 python python27 python2.7 python2 platform-python | head -n1) \"$0\" $*"
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # There's a bug in asteroid with Python 3.9's NamedTuple being
 # recognized for the dynamically generated class that it is. Should be fixed
 # with the next release, but 'til then...
 #pylint:disable=inherit-non-class
+from __future__ import print_function
+
 """
 This script is meant as a drop-in replacement for the old _postinstall Perl script.
 
@@ -30,28 +46,16 @@ testing.
 >>> [c for c in [[a for a in b if not a.config_var] for b in DEFAULTS.values()] if c]
 []
 """
-
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 import argparse
 import base64
+import errno
 import getpass
+import grp
 import hashlib
 import json
 import logging
 import os
+import pwd
 import random
 import re
 import shutil
@@ -59,7 +63,9 @@ import stat
 import string
 import subprocess
 import sys
-from typing import Dict, NamedTuple, List, Optional
+
+from collections import namedtuple
+from struct import unpack, pack
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
@@ -87,7 +93,14 @@ POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 # Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
 # OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
-class Question:
+if sys.version_info.major >= 3:
+	# Accepting a string for json.dump()'s `indent` keyword argument is a Python 3 feature
+	indent = "\t"  # type: str
+else:
+	indent = 4 #  type: int
+	str = unicode  # type: type[unicode]
+
+class Question(object):
 	"""
 	Question represents a single question to be asked of the user, to determine a configuration
 	value.
@@ -96,25 +109,25 @@ class Question:
 	Question(question='question', default='answer', config_var='var', hidden=False)
 	"""
 
-	def __init__(self, question: str, default: str, config_var: str, hidden: bool = False):
+	def __init__(self, question, default, config_var, hidden = False): # type: (str, str, str, bool) -> None
 		self.question = question
 		self.default = default
 		self.config_var = config_var
 		self.hidden = hidden
 
-	def __str__(self) -> str:
+	def __str__(self): # type: () -> str
 		if self.default:
-			return f"{self.question} [{self.default}]: "
-		return f"{self.question}: "
+			return "{question} [{default}]: ".format(question=self.question, default=self.default)
+		return "{question}: ".format(question=self.question)
 
-	def __repr__(self) -> str:
+	def __repr__(self): # type: () -> str
 		qstn = self.question
 		ans = self.default
 		cfgvr = self.config_var
 		hddn = self.hidden
-		return f"Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})"
+		return "Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})".format(qstn=qstn, ans=ans, cfgvr=cfgvr, hddn=hddn)
 
-	def ask(self) -> str:
+	def ask(self): # type: () -> str
 		"""
 		Asks the user the Question interactively.
 
@@ -125,13 +138,13 @@ class Question:
 				passwd = getpass.getpass(str(self))
 				if not passwd:
 					continue
-				if passwd == getpass.getpass(f"Re-Enter {self.question}: "):
+				if passwd == getpass.getpass("Re-Enter {question}: ".format(question=self.question)):
 					return passwd
 				print("Error: passwords do not match, try again")
 		ipt = input(self)
 		return ipt if ipt else self.default
 
-	def to_json(self) -> str:
+	def to_json(self): # type: () -> str
 		"""
 		Converts a question to JSON encoding.
 
@@ -144,39 +157,36 @@ class Question:
 		ans = self.default
 		cfgvr = self.config_var
 		if self.hidden:
-			return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'
-		return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'
+			return '{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'.format(qstn=qstn, ans=ans, cfgvr=cfgvr)
+		return '{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'.format(qstn=qstn, ans=ans, cfgvr=cfgvr)
 
-	def serialize(self) -> object:
+	def serialize(self): # type: () -> object
 		"""Returns a serializable dictionary, suitable for converting to JSON."""
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
-class User(NamedTuple):
-	"""Users represents a user that will be inserted into the Traffic Ops database."""
+class User(namedtuple('User', ['username', 'password'])):
+	"""Users represents a user that will be inserted into the Traffic Ops database.
 
-	#: The user's username.
-	username: str
-	#: The user's password - IN PLAINTEXT.
-	password: str
+	Attributes
+	----------
+	self.username: str
+		The user's username.
+	self.password: str
+		The user's password - IN PLAINTEXT.
+	"""
 
 class SSLConfig:
 	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
 
-	def __init__(self, gen_cert: bool, cfg_map: Dict[str, str]):
+	def __init__(self, gen_cert, cfg_map): # type: (bool, dict[str, str]) -> None
 
 		self.gen_cert = gen_cert
 		self.rsa_password = cfg_map["rsaPassword"]
 		self.params = "/C={country}/ST={state}/L={locality}/O={company}/OU={org_unit}/CN={common_name}/"
 		self.params = self.params.format(**cfg_map)
 
-class CDNConfig(NamedTuple):
+class CDNConfig(namedtuple('CDNConfig', ['gen_secret', 'num_secrets', 'port', 'num_workers', 'url', 'ldap_conf_location'])):
 	"""CDNConfig holds all of the options needed to format a cdn.conf file."""
-	gen_secret: bool
-	num_secrets: int
-	port: int
-	num_workers: int
-	url: str
-	ldap_conf_location: str
 
 	def generate_secret(self, conf):
 		"""
@@ -279,7 +289,7 @@ class ConfigEncoder(json.JSONEncoder):
 	"""
 
 	# The linter is just wrong about this
-	def default(self, o) -> object:
+	def default(self, o): # type: (object) -> object
 		"""
 		Returns a serializable representation of 'o'.
 
@@ -292,7 +302,7 @@ class ConfigEncoder(json.JSONEncoder):
 
 		return json.JSONEncoder.default(self, o)
 
-def get_config(questions: List[Question], fname: str, automatic: bool = False) -> Dict[str, str]:
+def get_config(questions, fname, automatic = False): # type: (list[Question], str, bool) -> dict[str, str]
 	"""Asks all provided questions, or uses their defaults in automatic mode"""
 
 	logging.info("===========%s===========", fname)
@@ -306,7 +316,7 @@ def get_config(questions: List[Question], fname: str, automatic: bool = False) -
 
 	return config
 
-def generate_db_conf(qstns: List[Question], fname: str, automatic: bool, root: str) -> dict:
+def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, bool, str) -> dict
 	"""
 	Generates the database.conf file and returns a map of its configuration.
 
@@ -317,18 +327,18 @@ def generate_db_conf(qstns: List[Question], fname: str, automatic: bool, root: s
 	hostname = db_conf.get("hostname", "UNKNOWN")
 	port = db_conf.get("port", "UNKNOWN")
 
-	db_conf["description"] = f"{typ} database on {hostname}:{port}"
+	db_conf["description"] = "{typ} database on {hostname}:{port}".format(typ=typ, hostname=hostname, port=port)
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump(db_conf, conf_file, indent="\t")
+		json.dump(db_conf, conf_file, indent=indent)
 		print(file=conf_file)
 
 	logging.info("Database configuration has been saved")
 
 	return db_conf
 
-def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dict) -> dict:
+def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str, dict) -> dict
 	"""
 	Generates the dbconf.yml file and returns a map of its configuration.
 
@@ -349,15 +359,15 @@ def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dic
 	password = conf.get('password', 'UNKNOWN')
 	dbname = conf.get('dbname', 'UNKNOWN')
 
-	open_line = f"host={hostname} port={port} user={user} password={password} dbname={dbname}"
+	open_line = "host={hostname} port={port} user={user} password={password} dbname={dbname}".format(hostname=hostname, port=port, user=user, password=password, dbname=dbname)
 	with open(path, 'w+') as conf_file:
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
-		print(f"    open: {open_line} sslmode=disable", file=conf_file)
+		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
 
 	return todbconf
 
-def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, root: str):
+def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
 	Generates the ldap.conf file by asking the questions or using default answers in auto mode.
 
@@ -369,7 +379,7 @@ def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, r
 		return
 	use_ldap = use_ldap_question[0].default if automatic else use_ldap_question[0].ask()
 
-	if use_ldap.casefold() not in {'y', 'yes'}:
+	if use_ldap.lower() not in {'y', 'yes'}:
 		logging.info("Not setting up ldap")
 		return
 
@@ -386,35 +396,168 @@ def generate_ldap_conf(questions: List[Question], fname: str, automatic: bool, r
 
 	for key in keys:
 		if key not in ldap_conf:
-			raise ValueError(f"{key} is a required key in {fname}")
+			raise ValueError("{key} is a required key in {fname}".format(key=key, fname=fname))
 
-	if not re.fullmatch(r"\S+:\d+", ldap_conf["host"]):
-		raise ValueError(f"host in {fname} must be of form 'hostname:port'")
+	if not re.match(r"^\S+:\d+$", ldap_conf["host"]):
+		raise ValueError("host in {fname} must be of form 'hostname:port'".format(fname=fname))
 
 	path = os.path.join(root, fname.lstrip('/'))
-	os.makedirs(os.path.dirname(path), exist_ok=True)
+	try:
+		os.makedirs(os.path.dirname(path))
+	except OSError as e:
+		if e.errno == errno.EEXIST:
+			pass
 	with open(path, 'w+') as conf_file:
-		json.dump(ldap_conf, conf_file, indent="\t")
+		json.dump(ldap_conf, conf_file, indent=indent)
 		print(file=conf_file)
 
-def hash_pass(passwd: str) -> str:
+def hash_pass(passwd): # type: (str) -> str
 	"""
 	Generates a Scrypt-based hash of the given password in a Perl-compatible format.
 	It's hard-coded - like the Perl - to use 64 random bytes for the salt, n=16384,
 	r=8, p=1 and dklen=64.
 	"""
-	salt = os.urandom(64)
-	n = 16384
+	n = 2 ** 14
 	r_val = 8
 	p_val = 1
-	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r_val, p=p_val, dklen=64)
-
+	dklen = 64
+	salt = os.urandom(dklen)
+	hashed = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val, parallelization_factor=p_val, key_length=dklen).derive()
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
 	salt_b64 = base64.standard_b64encode(salt).decode()
 
-	return f"SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}"
+	return "SCRYPT:{n}:{r_val}:{p_val}:{salt_b64}:{hashed_b64}".format(n=n, r_val=r_val, p_val=p_val, salt_b64=salt_b64, hashed_b64=hashed_b64)
 
-def generate_users_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> User:
+
+class Scrypt:
+	def __init__(self, password, salt, cost_factor, block_size_factor, parallelization_factor, key_length):  # type: (bytes, bytes, int, int, int, int) -> None
+		self.password = password  # type: bytes
+		self.salt = salt  # type: bytes
+		self.cost_factor = cost_factor  # type: int
+		self.block_size_factor = block_size_factor  # type: int
+		self.parallelization_factor = parallelization_factor  # type: int
+		self.key_length = key_length
+		self.block_unit = 32 * self.block_size_factor  # 1 block unit = 32 * block_size_factor 32-bit ints
+
+	def derive(self):  # type: () -> bytes
+		salt_length = 2 ** 7 * self.block_size_factor * self.parallelization_factor  # type: int
+		pack_format = '<' + 'L' * int(salt_length / 4)  # `<` means `little-endian` and `L` means `unsigned long`
+		salt = hashlib.pbkdf2_hmac('sha256', password=self.password, salt=self.salt, iterations=1, dklen=salt_length)  # type: bytes
+		block = list(unpack(pack_format, salt))  # type: list[int]
+		block = self.ROMix(block)
+		salt = pack(pack_format, *block)
+		key = hashlib.pbkdf2_hmac('sha256', password=self.password, salt=salt, iterations=1, dklen=self.key_length)  # type: bytes
+		return key
+
+	def ROMix(self, block):  # type: (list[int]) -> list[int]
+		xored_block = [0] * len(block)  # type: list[int]
+		variations = [list()] * self.cost_factor  # type: list[list[int]]
+		variations[0] = block
+		index = 1
+		while index < self.cost_factor:
+			variations[index] = self.block_mix(variations[index - 1])
+			index += 1
+		block = self.block_mix(variations[-1])
+		for unused in variations:
+			variation_index = block[self.block_unit - 16] % self.cost_factor  # type: int
+			variation = variations[variation_index]
+			for index, unused in enumerate(xored_block):
+				xored_block[index] = block[index] ^ variation[index]
+			block = self.block_mix(xored_block)
+		return block
+
+	def block_mix(self, previous_block):  # type: (list[int]) -> list[int]
+		block = previous_block[:]  # type: list[int]
+		X_length = 16  # X is the list of numbers within `block` that we mix
+		copy_index = self.block_unit - X_length
+		X = previous_block[copy_index:copy_index + X_length]  # type: list[int]
+		octet_index = 0  # type: int
+		block_xor_index = 0
+		while octet_index < 2 * self.block_size_factor:
+			for index, unused in enumerate(X):
+				X[index] ^= previous_block[block_xor_index + index]
+			block_xor_index += X_length
+			self.salsa20(X)
+			block_offset = (int(octet_index / 2) + octet_index % 2 * self.block_size_factor) * X_length
+			block[block_offset:block_offset + X_length] = X
+			octet_index += 1
+		return block
+
+	def salsa20(self, block):  # type: (list[int]) -> None
+		X = block[:]  # make a copy (list.copy() is Python 3-only)
+		for i in range(0, 4):
+			# These bit shifting operations could be condensed into a single line of list comprehensions,
+			# but there is a >3x performance benefit from writing it out explicitly.
+			bits = X[0] + X[12] & 0xffffffff
+			X[4] ^= bits << 7 | bits >> 32 - 7
+			bits = X[4] + X[0] & 0xffffffff
+			X[8] ^= bits << 9 | bits >> 32 - 9
+			bits = X[8] + X[4] & 0xffffffff
+			X[12] ^= bits << 13 | bits >> 32 - 13
+			bits = X[12] + X[8] & 0xffffffff
+			X[0] ^= bits << 18 | bits >> 32 - 18
+			bits = X[5] + X[1] & 0xffffffff
+			X[9] ^= bits << 7 | bits >> 32 - 7
+			bits = X[9] + X[5] & 0xffffffff
+			X[13] ^= bits << 9 | bits >> 32 - 9
+			bits = X[13] + X[9] & 0xffffffff
+			X[1] ^= bits << 13 | bits >> 32 - 13
+			bits = X[1] + X[13] & 0xffffffff
+			X[5] ^= bits << 18 | bits >> 32 - 18
+			bits = X[10] + X[6] & 0xffffffff
+			X[14] ^= bits << 7 | bits >> 32 - 7
+			bits = X[14] + X[10] & 0xffffffff
+			X[2] ^= bits << 9 | bits >> 32 - 9
+			bits = X[2] + X[14] & 0xffffffff
+			X[6] ^= bits << 13 | bits >> 32 - 13
+			bits = X[6] + X[2] & 0xffffffff
+			X[10] ^= bits << 18 | bits >> 32 - 18
+			bits = X[15] + X[11] & 0xffffffff
+			X[3] ^= bits << 7 | bits >> 32 - 7
+			bits = X[3] + X[15] & 0xffffffff
+			X[7] ^= bits << 9 | bits >> 32 - 9
+			bits = X[7] + X[3] & 0xffffffff
+			X[11] ^= bits << 13 | bits >> 32 - 13
+			bits = X[11] + X[7] & 0xffffffff
+			X[15] ^= bits << 18 | bits >> 32 - 18
+			bits = X[0] + X[3] & 0xffffffff
+			X[1] ^= bits << 7 | bits >> 32 - 7
+			bits = X[1] + X[0] & 0xffffffff
+			X[2] ^= bits << 9 | bits >> 32 - 9
+			bits = X[2] + X[1] & 0xffffffff
+			X[3] ^= bits << 13 | bits >> 32 - 13
+			bits = X[3] + X[2] & 0xffffffff
+			X[0] ^= bits << 18 | bits >> 32 - 18
+			bits = X[5] + X[4] & 0xffffffff
+			X[6] ^= bits << 7 | bits >> 32 - 7
+			bits = X[6] + X[5] & 0xffffffff
+			X[7] ^= bits << 9 | bits >> 32 - 9
+			bits = X[7] + X[6] & 0xffffffff
+			X[4] ^= bits << 13 | bits >> 32 - 13
+			bits = X[4] + X[7] & 0xffffffff
+			X[5] ^= bits << 18 | bits >> 32 - 18
+			bits = X[10] + X[9] & 0xffffffff
+			X[11] ^= bits << 7 | bits >> 32 - 7
+			bits = X[11] + X[10] & 0xffffffff
+			X[8] ^= bits << 9 | bits >> 32 - 9
+			bits = X[8] + X[11] & 0xffffffff
+			X[9] ^= bits << 13 | bits >> 32 - 13
+			bits = X[9] + X[8] & 0xffffffff
+			X[10] ^= bits << 18 | bits >> 32 - 18
+			bits = X[15] + X[14] & 0xffffffff
+			X[12] ^= bits << 7 | bits >> 32 - 7
+			bits = X[12] + X[15] & 0xffffffff
+			X[13] ^= bits << 9 | bits >> 32 - 9
+			bits = X[13] + X[12] & 0xffffffff
+			X[14] ^= bits << 13 | bits >> 32 - 13
+			bits = X[14] + X[13] & 0xffffffff
+			X[15] ^= bits << 18 | bits >> 32 - 18
+
+		for index in range(0, 16):
+			block[index] = block[index] + X[index] & 0xffffffff
+
+
+def generate_users_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> User
 	"""
 	Generates a users.json file from the given questions and returns a User containing the same
 	information.
@@ -422,18 +565,18 @@ def generate_users_conf(qstns: List[Question], fname: str, auto: bool, root: str
 	config = get_config(qstns, fname, auto)
 
 	if "tmAdminUser" not in config or "tmAdminPw" not in config:
-		raise ValueError(f"{fname} must include 'tmAdminUser' and 'tmAdminPw'")
+		raise ValueError("{fname} must include 'tmAdminUser' and 'tmAdminPw'".format(fname=fname))
 
 	hashed_pass = hash_pass(config["tmAdminPw"])
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent="\t")
+		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent=indent)
 		print(file=conf_file)
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
 
-def generate_profiles_dir(questions: List[Question]):
+def generate_profiles_dir(questions): # type: (list[Question]) -> None
 	"""
 	I truly have no idea what's going on here. This is what the Perl did, so I
 	copied it. It does nothing. Literally nothing.
@@ -442,7 +585,7 @@ def generate_profiles_dir(questions: List[Question]):
 	user_in = questions
 	#pylint:enable=unused-variable
 
-def generate_openssl_conf(questions: List[Question], fname: str, auto: bool) -> SSLConfig:
+def generate_openssl_conf(questions, fname, auto): # type: (list[Question], str, bool) -> SSLConfig
 	"""
 	Constructs an SSLConfig by asking the passed questions, or using their default answers if in
 	auto mode.
@@ -451,11 +594,11 @@ def generate_openssl_conf(questions: List[Question], fname: str, auto: bool) -> 
 	if "genCert" not in cfg_map:
 		raise ValueError("missing 'genCert' key")
 
-	gen_cert = cfg_map["genCert"].casefold() in {"y", "yes"}
+	gen_cert = cfg_map["genCert"].lower() in {"y", "yes"}
 
 	return SSLConfig(gen_cert, cfg_map)
 
-def generate_param_conf(qstns: List[Question], fname: str, auto: bool, root: str) -> dict:
+def generate_param_conf(qstns, fname, auto, root): # type: (list[Question], str, bool, str) -> dict
 	"""
 	Generates a profiles.json by asking the passed questions, or using their default answers in auto
 	mode.
@@ -466,12 +609,12 @@ def generate_param_conf(qstns: List[Question], fname: str, auto: bool, root: str
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
-		json.dump(conf, conf_file, indent="\t")
+		json.dump(conf, conf_file, indent=indent)
 		print(file=conf_file)
 
 	return conf
 
-def sanity_check_config(cfg: Dict[str, List[Question]], automatic: bool) -> int:
+def sanity_check_config(cfg, automatic): # type: (dict[str, list[Question]], bool) -> int
 	"""
 	Checks a user-input configuration file, and outputs the number of files in the
 	default question set that did not appear in the input.
@@ -511,7 +654,7 @@ def sanity_check_config(cfg: Dict[str, List[Question]], automatic: bool) -> int:
 
 	return diffs
 
-def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
+def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 	"""
 	Reads in a raw parsed configuration file and returns the resulting configuration.
 
@@ -523,20 +666,20 @@ def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
 	ret = {}
 	for file, questions in dct.items():
 		if not isinstance(questions, list):
-			raise ValueError(f"file '{file}' has malformed questions")
+			raise ValueError("file '{file}' has malformed questions".format(file=file))
 
 		qstns = []
 		for qstn in questions:
 			if not isinstance(qstn, dict):
-				raise ValueError(f"file '{file}' has a malformed question ({qstn})")
+				raise ValueError("file '{file}' has a malformed question ({qstn})".format(file=file, qstn=qstn))
 			try:
-				question = next(key for key in qstn.keys() if qstn not in ("hidden", "config_var"))
+				question = next(key for key in qstn.keys() if key not in ("hidden", "config_var"))
 			except StopIteration:
-				raise ValueError(f"question in '{file}' has no question/answer properties ({qstn})")
+				raise ValueError("question in '{file}' has no question/answer properties ({qstn})".format(file=file, qstn=qstn))
 
 			answer = qstn[question]
 			if not isinstance(question, str) or not isinstance(answer, str):
-				errstr = f"question in '{file}' has malformed question/answer property ({question}: {answer})"
+				errstr = "question in '{file}' has malformed question/answer property ({question}: {answer})".format(file=file, question=question, answer=answer)
 				raise ValueError(errstr)
 
 			del qstn[question]
@@ -546,10 +689,10 @@ def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
 				del qstn["hidden"]
 
 			if "config_var" not in qstn:
-				raise ValueError(f"question in '{file}' has no 'config_var' property")
+				raise ValueError("question in '{file}' has no 'config_var' property".format(file=file))
 			cfg_var = qstn["config_var"]
 			if not isinstance(cfg_var, str):
-				raise ValueError(f"question in '{file}' has malformed 'config_var' property ({cfg_var})")
+				raise ValueError("question in '{file}' has malformed 'config_var' property ({cfg_var})".format(file=file, cfg_var=cfg_var))
 			del qstn["config_var"]
 
 			if qstn:
@@ -560,48 +703,52 @@ def unmarshal_config(dct: dict) -> Dict[str, List[Question]]:
 
 	return ret
 
-def setup_maxmind(maxmind_answer: str, root: str):
+def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 	"""
 	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
 	database using `wget`.
 	"""
-	if maxmind_answer.casefold() not in {'y', 'yes'}:
+	if maxmind_answer.lower() not in {'y', 'yes'}:
 		logging.info("Not downloading Maxmind data")
 		return
 
 	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
 
+	def failed_download(e, ip_version):  # type: (Exception, int) -> None
+		logging.error("Failed to download MaxMind data")
+		logging.debug("(ipv%d) Exception: %s", ip_version, e)
+
 	wget = "/usr/bin/wget"
 	cmd = [wget, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
-		subprocess.run(
+		subprocess.check_call(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
-			check=True,
 			universal_newlines=True
 		)
+	except subprocess.CalledProcessError as e:
+		failed_download(e, 4)
 	except subprocess.SubprocessError as e:
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv4) Exception: %s", e)
+		failed_download(e, 4)
 
 	cmd[1] = (
 		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
 	)
 	try:
-		subprocess.run(
+		subprocess.check_call(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
-			check=True,
 			universal_newlines=True
 		)
+	except subprocess.CalledProcessError as e:
+		failed_download(e, 6)
 	except subprocess.SubprocessError as e:
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv6) Exception: %s", e)
+		failed_download(e, 6)
 
-def exec_openssl(description: str, *cmd_args) -> bool:
+def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
 	Executes openssl with the supplied command-line arguments.
 
@@ -610,28 +757,28 @@ def exec_openssl(description: str, *cmd_args) -> bool:
 	"""
 	logging.info(description)
 
-	cmd = ["/usr/bin/openssl", *cmd_args]
+	cmd = ("/usr/bin/openssl",) + cmd_args
 
 	while True:
-		proc = subprocess.run(
+		proc = subprocess.Popen(
 			cmd,
 			stderr=subprocess.PIPE,
 			stdout=subprocess.PIPE,
 			universal_newlines=True,
-			check=False
 		)
+		proc.wait()
 		if proc.returncode == 0:
 			return True
 
 		logging.debug("openssl exec failed with code %s; stderr: %s", proc.returncode, proc.stderr)
 		while True:
-			ans = input(f"{description} failed. Try again (y/n) [y]: ")
-			if not ans or ans.casefold().startswith('n'):
+			ans = input("{description} failed. Try again (y/n) [y]: ".format(description=description))
+			if not ans or ans.lower().startswith('n'):
 				return False
-			if ans.casefold().startswith('y'):
+			if ans.lower().startswith('y'):
 				break
 
-def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str) -> int:
+def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str, str, str) -> int
 	"""
 	Generates self-signed SSL certificates from the given configuration.
 	:returns: For whatever reason this subroutine needs to dictate the return code of the script, so that's what it returns.
@@ -659,7 +806,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		"-out",
 		"server.key",
 		"-passout",
-		f"pass:{conf.rsa_password}",
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password),
 		"1024"
 	)
 	if not exec_openssl("Generating an RSA Private Server Key", *args):
@@ -673,7 +820,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		"-out",
 		"server.csr",
 		"-passin",
-		f"pass:{conf.rsa_password}",
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password),
 		"-subj",
 		conf.params
 	)
@@ -690,7 +837,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		"-out",
 		"server.key",
 		"-passin",
-		f"pass:{conf.rsa_password}"
+		"pass:{rsa_password}".format(rsa_password=conf.rsa_password)
 	)
 	if not exec_openssl("Removing the pass phrase from the server key", *args):
 		return 1
@@ -718,7 +865,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	keypath = os.path.join(root, 'etc/pki/tls/private/localhost.key')
 	shutil.copy("server.key", keypath)
 	os.chmod(keypath, stat.S_IRUSR | stat.S_IWUSR)
-	shutil.chown(keypath, user=ops_user, group=ops_group)
+	os.chown(keypath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	logging.info("The private key has been installed")
 	logging.info("Installing self signed certificate")
@@ -726,14 +873,14 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	certpath = os.path.join(root, 'etc/pki/tls/certs/localhost.crt')
 	shutil.copy("server.crt", certpath)
 	os.chmod(certpath, stat.S_IRUSR | stat.S_IWUSR)
-	shutil.chown(certpath, user=ops_user, group=ops_group)
+	os.chown(certpath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	logging.info("Saving the self signed csr")
 
 	csrpath = os.path.join(root, 'etc/pki/tls/certs/localhost.csr')
 	shutil.copy("server.csr", csrpath)
 	os.chmod(csrpath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
-	shutil.chown(csrpath, user=ops_user, group=ops_group)
+	os.chown(csrpath, pwd.getpwnam(ops_user).pw_uid, grp.getgrnam(ops_group).gr_gid)
 
 	log_msg = """
         The self signed certificate has now been installed.
@@ -749,8 +896,10 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	try:
 		with open(cdn_conf_path) as conf_file:
 			cdn_conf = json.load(conf_file)
-	except (OSError, json.JSONDecodeError) as e:
-		raise OSError(f"reading {cdn_conf_path}: {e}") from e
+	except (OSError, ValueError) as e:
+		exception = OSError("reading {cdn_conf_path}: {e}".format(cdn_conf_path=cdn_conf_path, e=e))
+		exception.__cause__ = e
+		raise exception
 
 	if (
 		not isinstance(cdn_conf, dict) or
@@ -774,7 +923,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 
 	listen = hypnotoad["listen"][0]
 
-	if f"cert={certpath}" not in listen or f"key={keypath}" not in listen:
+	if "cert={certpath}".format(certpath=certpath) not in listen or "key={keypath}".format(keypath=keypath) not in listen:
 		log_msg = """	The "listen" portion of %s is:
 	%s
 	and does not reference the same "cert=" and "key=" values as are created here.
@@ -785,7 +934,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 
 	return 0
 
-def random_word(length: int = 12) -> str:
+def random_word(length = 12): # type: (int) -> str
 	"""
 	Returns a randomly generated string 'length' characters long containing only word
 	characters ([a-zA-Z0-9_]).
@@ -793,7 +942,7 @@ def random_word(length: int = 12) -> str:
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, root: str):
+def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
 	Generates some properties of a cdn.conf file based on the passed questions.
 
@@ -804,38 +953,54 @@ def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, ro
 	if "genSecret" not in cdn_conf:
 		raise ValueError("missing 'genSecret' config_var")
 
-	gen_secret = cdn_conf["genSecret"].casefold() in {'y', 'yes'}
+	gen_secret = cdn_conf["genSecret"].lower() in {'y', 'yes'}
 
 	try:
 		num_secrets = int(cdn_conf["keepSecrets"])
 	except KeyError as e:
-		raise ValueError("missing 'keepSecrets' config_var") from e
+		exception = ValueError("missing 'keepSecrets' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError(f"invalid 'keepSecrets' config_var value: {e}") from e
+		exception = ValueError("invalid 'keepSecrets' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		port = int(cdn_conf["port"])
 	except KeyError as e:
-		raise ValueError("missing 'port' config_var") from e
+		exception = ValueError("missing 'port' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError(f"invalid 'port' config_var value: {e}") from e
+		exception = ValueError("invalid 'port' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		workers = int(cdn_conf["workers"])
 	except KeyError as e:
-		raise ValueError("missing 'workers' config_var") from e
+		exception = ValueError("missing 'workers' config_var")
+		exception.__cause__ = e
+		raise exception
 	except ValueError as e:
-		raise ValueError(f"invalid 'workers' config_var value: {e}") from e
+		exception = ValueError("invalid 'workers' config_var value: {e}".format(e=e))
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		url = cdn_conf["base_url"]
 	except KeyError as e:
-		raise ValueError("missing 'base_url' config_var") from e
+		exception = ValueError("missing 'base_url' config_var")
+		exception.__cause__ = e
+		raise exception
 
 	try:
 		ldap_loc = cdn_conf["ldap_conf_location"]
 	except KeyError as e:
-		raise ValueError("missing 'ldap_conf_location' config_var") from e
+		exception = ValueError("missing 'ldap_conf_location' config_var")
+		exception.__cause__ = e
+		raise exception
 
 	conf = CDNConfig(gen_secret, num_secrets, port, workers, url, ldap_loc)
 
@@ -845,8 +1010,10 @@ def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, ro
 		with open(path) as conf_file:
 			try:
 				existing_conf = json.load(conf_file)
-			except json.JSONDecodeError as e:
-				raise ValueError(f"invalid existing cdn.config at {path}: {e}") from e
+			except ValueError as e:
+				exception = ValueError("invalid existing cdn.config at {path}: {e}".format(path=path, e=e))
+				exception.__cause__ = e
+				raise exception
 
 	if not isinstance(existing_conf, dict):
 		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
@@ -871,11 +1038,11 @@ def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, ro
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
 
 	with open(path, "w+") as conf_file:
-		json.dump(existing_conf, conf_file, indent="\t")
+		json.dump(existing_conf, conf_file, indent=indent)
 		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
 
-def db_connection_string(dbconf: dict) -> str:
+def db_connection_string(dbconf): # type: (dict) -> str
 	"""
 	Constructs a database connection string from the passed configuration object.
 	"""
@@ -884,9 +1051,9 @@ def db_connection_string(dbconf: dict) -> str:
 	db_name = "traffic_ops" if dbconf["type"] == "Pg" else dbconf["type"]
 	hostname = dbconf["hostname"]
 	port = dbconf["port"]
-	return f"postgresql://{user}:{password}@{hostname}:{port}/{db_name}"
+	return "postgresql://{user}:{password}@{hostname}:{port}/{db_name}".format(user=user, password=password, hostname=hostname, port=port, db_name=db_name)
 
-def exec_psql(conn_str: str, query: str) -> str:
+def exec_psql(conn_str, query): # type: (str, str) -> str
 	"""
 	Executes SQL queries by forking and exec-ing '/usr/bin/psql'.
 
@@ -896,19 +1063,22 @@ def exec_psql(conn_str: str, query: str) -> str:
 	:returns: The comma-separated columns of each line-delimited row of the results of the query.
 	"""
 	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
-	proc = subprocess.run(
+	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE,
 		universal_newlines=True,
-		check=False
 	)
+	proc.wait()
 	if proc.returncode != 0:
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
-	return proc.stdout.strip()
+	if sys.version_info.major >= 3:
+		return proc.stdout.strip()
+	else:
+		return string.strip(proc.stdout)
 
-def invoke_db_admin_pl(action: str, root: str):
+def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	"""
 	Exectues admin with the given action, and looks for it from the given root directory.
 	"""
@@ -917,19 +1087,19 @@ def invoke_db_admin_pl(action: str, root: str):
 	# should be fixed at some point, IMO, but for now this works.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
-	proc = subprocess.run(
+	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE,
 		universal_newlines=True,
-		check=False
 	)
+	proc.wait()
 	if proc.returncode != 0:
 		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
-		raise OSError(f"Database {action} failed")
+		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
-def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
+def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
@@ -1044,18 +1214,19 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 def main(
-automatic: bool,
-debug: bool,
-defaults: Optional[str],
-cfile: Optional[str],
-root_dir: str,
-ops_user: str,
-ops_group: str,
-no_restart_to: bool,
-no_database: bool
-) -> int:
+automatic, # type: bool
+debug, # type: bool
+defaults, # type: str
+cfile, # type: str
+root_dir, # type: str
+ops_user, # type: str
+ops_group, # type: str
+no_restart_to, # type: bool
+no_database, # type: bool
+):
 	"""
 	Runs the main routine given the parsed arguments as input.
+	:rtype: int
 	"""
 	if debug:
 		logging.getLogger().setLevel(logging.DEBUG)
@@ -1077,12 +1248,12 @@ no_database: bool
 			if defaults:
 				try:
 					with open(defaults, "w") as dump_file:
-						json.dump(DEFAULTS, dump_file, indent="\t")
+						json.dump(DEFAULTS, dump_file, indent=indent)
 				except OSError as e:
 					logging.critical("Writing output: %s", e)
 					return 1
 			else:
-				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent="\t")
+				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent=indent)
 				print()
 		except ValueError as e:
 			logging.critical("Converting defaults to JSON: %s", e)
@@ -1103,7 +1274,7 @@ no_database: bool
 			diffs,
 			'' if diffs == 1 else 's'
 			)
-		except (OSError, ValueError, json.JSONDecodeError) as e:
+		except (OSError, ValueError) as e:
 			logging.critical("Reading in input file '%s': %s", cfile, e)
 			return 1
 
@@ -1161,40 +1332,47 @@ no_database: bool
 				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
 				"on the db server to create it and run `postinstall` again."
 			)
-			return -1
+			return 1
 
 		if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
 			logging.critical("psql is not installed, please install it to continue with database setup")
 			return 1
 
-		try:
-			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
-		except (OSError, subprocess.SubprocessError)as e:
+		def db_connect_failed():
 			logging.error("Failed to set up database: %s", e)
 			logging.error(
-				"Can't connect to the database.  " \
-				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
+				"Can't connect to the database.  "
+				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` "
 				"on the db server to create it and run `postinstall` again."
 			)
-			return -1
+
+		try:
+			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+		except (OSError, subprocess.CalledProcessError)as e:
+			db_connect_failed()
+			return 1
+		except subprocess.SubprocessError as e:
+			db_connect_failed()
+			return 1
 
 
 	if not no_restart_to:
 		logging.info("Starting Traffic Ops")
 		try:
 			cmd = ["/sbin/service", "traffic_ops", "restart"]
-			subprocess.run(
+			proc = subprocess.Popen(
 				cmd,
 				stderr=subprocess.PIPE,
 				stdout=subprocess.PIPE,
 				universal_newlines=True,
-				check=True
 			)
+			if proc.wait():
+				raise subprocess.CalledProcessError(proc.returncode, cmd)
 		except subprocess.CalledProcessError as e:
 			logging.critical("Failed to restart Traffic Ops, return code %s: %s", e.returncode, e)
-			logging.debug("stderr: %s\n\tstdout: %s", e.stderr, e.stdout)
+			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 			return 1
-		except (OSError, subprocess.SubprocessError) as e:
+		except OSError as e:
 			logging.critical("Failed to restart Traffic Ops: unknown error occurred: %s", e)
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so

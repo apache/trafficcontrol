@@ -48,8 +48,8 @@ using(testData.Divisions, async function(divisionsData){
         describe('Traffic Portal - Divisions - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open divisions page', async function(){
                 await divisionsPage.OpenTopologyMenu();

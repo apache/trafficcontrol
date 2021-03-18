@@ -50,8 +50,8 @@ using(testData.Parameters, async function(parametersData){
 
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
-                await loginPage.Login(login.username, login.password);
-                expect(await loginPage.CheckUserName(login.username)).toBeTruthy();
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
             })
             it('can open parameters page', async function(){
                 await parametersPage.OpenConfigureMenu();

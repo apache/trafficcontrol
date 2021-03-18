@@ -90,6 +90,17 @@ func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 	)
 }
 
+func MakeIPAllowDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+	return atscfg.MakeIPAllowDotYAML(
+		toData.ServerParams,
+		toData.Server,
+		toData.Servers,
+		toData.CacheGroups,
+		toData.Topologies,
+		hdrCommentTxt,
+	)
+}
+
 func MakeLoggingDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLoggingDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
@@ -136,7 +147,8 @@ func MakeRecordsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 		toData.ServerParams,
 		hdrCommentTxt,
 		atscfg.RecordsConfigOpts{
-			ReleaseViaStr: cfg.ViaRelease,
+			ReleaseViaStr:           cfg.ViaRelease,
+			DNSLocalBindServiceAddr: cfg.SetDNSLocalBind,
 		},
 	)
 }

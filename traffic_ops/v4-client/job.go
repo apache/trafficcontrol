@@ -22,27 +22,28 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // Creates a new Content Invalidation Job
-func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(apiBase+`/jobs`, job, nil, &alerts)
+	reqInf, err := to.post(`/jobs`, job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
 // Deletes a Content Invalidation Job
-func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.del(fmt.Sprintf("%s/jobs?id=%d", apiBase, jobID), nil, &alerts)
+	reqInf, err := to.del(fmt.Sprintf("/jobs?id=%d", jobID), nil, &alerts)
 	return alerts, reqInf, err
 
 }
 
 // Updates a Content Invalidation Job
-func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(fmt.Sprintf(`%s/jobs?id=%d`, apiBase, *job.ID), job, nil, &alerts)
+	reqInf, err := to.put(fmt.Sprintf(`/jobs?id=%d`, *job.ID), job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -51,7 +52,7 @@ func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, Req
 // that user are returned. Both deliveryServiceID and userID may be nil.
 //
 // Deprecated, use GetInvalidationJobs instead
-func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqInf, error) {
+func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, toclientlib.ReqInf, error) {
 	params := url.Values{}
 	if deliveryServiceID != nil {
 		params.Add("dsId", strconv.Itoa(*deliveryServiceID))
@@ -59,7 +60,7 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqIn
 	if userID != nil {
 		params.Add("userId", strconv.Itoa(*userID))
 	}
-	path := apiBase + "/jobs?" + params.Encode()
+	path := "/jobs?" + params.Encode()
 	data := struct {
 		Response []tc.Job `json:"response"`
 	}{}
@@ -82,7 +83,7 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqIn
 // desired user (in the case of a float64 the fractional part is dropped, e.g. 3.45 -> 3), or it may
 // be a string, in which case it should be the username of the desired user, or it may be an actual
 // tc.User or tc.UserCurrent structure.
-func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc.InvalidationJob, ReqInf, error) {
+func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
 	const DSIDKey = "dsId"
 	const DSKey = "deliveryService"
 	const UserKey = "userId"
@@ -106,10 +107,10 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 			} else if d.(tc.DeliveryServiceNullable).ID != nil {
 				params.Add(DSIDKey, strconv.FormatInt(int64(*d.(tc.DeliveryServiceNullable).ID), 10))
 			} else {
-				return nil, ReqInf{}, errors.New("no non-nil identifier on passed Delivery Service")
+				return nil, toclientlib.ReqInf{}, errors.New("no non-nil identifier on passed Delivery Service")
 			}
 		default:
-			return nil, ReqInf{}, fmt.Errorf("invalid type for argument 'ds': %T*", t)
+			return nil, toclientlib.ReqInf{}, fmt.Errorf("invalid type for argument 'ds': %T*", t)
 		}
 	}
 	if user != nil {
@@ -129,7 +130,7 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 			} else if u.(tc.User).ID != nil {
 				params.Add(UserKey, strconv.FormatInt(int64(*u.(tc.User).ID), 10))
 			} else {
-				return nil, ReqInf{}, errors.New("no non-nil identifier on passed User")
+				return nil, toclientlib.ReqInf{}, errors.New("no non-nil identifier on passed User")
 			}
 		case tc.UserCurrent:
 			if u.(tc.UserCurrent).UserName != nil {
@@ -137,13 +138,13 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 			} else if u.(tc.UserCurrent).ID != nil {
 				params.Add(UserKey, strconv.FormatInt(int64(*u.(tc.UserCurrent).ID), 10))
 			} else {
-				return nil, ReqInf{}, errors.New("no non-nil identifier on passed UserCurrent")
+				return nil, toclientlib.ReqInf{}, errors.New("no non-nil identifier on passed UserCurrent")
 			}
 		default:
-			return nil, ReqInf{}, fmt.Errorf("invalid type for argument 'user': %T*", t)
+			return nil, toclientlib.ReqInf{}, fmt.Errorf("invalid type for argument 'user': %T*", t)
 		}
 	}
-	path := apiBase + "/jobs"
+	path := "/jobs"
 	if len(params) > 0 {
 		path += "?" + params.Encode()
 	}

@@ -85,6 +85,7 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 	{"drop_qstring.config", MakeDropQStringDotConfig},
 	{"hosting.config", MakeHostingDotConfig},
 	{"ip_allow.config", MakeIPAllowDotConfig},
+	{"ip_allow.yaml", MakeIPAllowDotYAML},
 	{"logging.config", MakeLoggingDotConfig},
 	{"logging.yaml", MakeLoggingDotYAML},
 	{"logs_xml.config", MakeLogsXMLDotConfig},

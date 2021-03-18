@@ -104,6 +104,7 @@ public class TrafficRouter {
 	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 	public static final String DNSSEC_ENABLED = "dnssec.enabled";
 	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
+	public static final String DNSSEC_RRSIG_CACHE_ENABLED = "dnssec.rrsig.cache.enabled";
 	private static final long DEFAULT_EDGE_NS_TTL = 3600;
 	private static final int DEFAULT_EDGE_TR_LIMIT = 4;
 

@@ -271,8 +271,19 @@ func MakeIPAllowDotConfig(
 		sort.Sort(ipAllowDatas(ipAllowDat))
 
 		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
+		// but leave purge open through localhost
 		if isMid { // Edges already deny PUSH and PURGE
 			ipAllowDat = append([]ipAllowData{
+				{
+					Src:    `127.0.0.1`,
+					Action: ActionAllow,
+					Method: `PURGE`,
+				},
+				{
+					Src:    `::1`,
+					Action: ActionAllow,
+					Method: `PURGE`,
+				},
 				{
 					Src:    `0.0.0.0-255.255.255.255`,
 					Action: ActionDeny,

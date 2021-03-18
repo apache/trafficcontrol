@@ -35,10 +35,15 @@ span.warning {
 
 button {
 	cursor: pointer;
+}
 
-	&:disabled {
-		cursor: not-allowed;
-	}
+/* read-only pseudo-class always applies to checkbox inputs, because read-write never applies. Go figure. */
+optgroup:disabled option:disabled, button:disabled, input:read-only:not([type="checkbox"]), select:disabled, textarea:read-only, input[type="checkbox"][readonly] {
+	cursor: not-allowed;
+}
+
+h1, h2, h3, h4, h5, h6, label, legend {
+	font-family: 'Ubuntu', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 @import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
@@ -46,4 +51,8 @@ button {
 
 .ag-theme-alpine {
 	@include ag-theme-alpine();
+}
+
+.ag-header-cell-menu-button {
+	cursor: pointer;
 }

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-acnme-autorenew:
+.. _to-api-acme-autorenew:
 
 ******************
 ``acme_autorenew``
@@ -43,7 +43,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "Beginning async call to renew certificates. This may take a few minutes.",
+			"text": "Beginning async call to renew certificates. This may take a few minutes. Status updates can be found here: /api/4.0/async_status/1",
 			"level": "success"
 		}
 	]}

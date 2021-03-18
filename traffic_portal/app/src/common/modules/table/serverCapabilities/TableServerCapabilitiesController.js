@@ -19,6 +19,14 @@
 
 var TableServerCapabilitiesController = function(serverCapabilities, $scope, $state, $uibModal, $window, locationUtils, serverCapabilityService, messageModel) {
 
+	var deleteServerCapability = function(serverCapability) {
+		serverCapabilityService.deleteServerCapability(serverCapability.name)
+			.then(function(result) {
+				messageModel.setMessages(result.alerts, false);
+				$scope.refresh();
+			});
+	};
+
 	var confirmDelete = function(serverCapability) {
 		var params = {
 			title: 'Delete Server Capability: ' + serverCapability.name,
@@ -39,14 +47,6 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 		});
 	};
 
-	var deleteServerCapability = function(serverCapability) {
-		serverCapabilityService.deleteServerCapability(serverCapability.name)
-			.then(function(result) {
-				messageModel.setMessages(result.alerts, false);
-				$scope.refresh();
-			});
-	};
-
 	$scope.serverCapabilities = serverCapabilities;
 
 	$scope.contextMenuItems = [
@@ -58,9 +58,9 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 		},
 		null, // Dividier
 		{
-			text: 'View',
+			text: 'Edit',
 			click: function ($itemScope) {
-				$scope.viewServerCapability($itemScope.sc.name);
+				$scope.editServerCapability($itemScope.sc.name);
 			}
 		},
 		{
@@ -88,8 +88,8 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 		locationUtils.navigateToPath('/server-capabilities/new');
 	};
 
-	$scope.viewServerCapability = function(name) {
-		locationUtils.navigateToPath('/server-capabilities/' + name);
+	$scope.editServerCapability = function(name) {
+		locationUtils.navigateToPath('/server-capabilities/edit?name=' + name);
 	};
 
 	$scope.refresh = function() {

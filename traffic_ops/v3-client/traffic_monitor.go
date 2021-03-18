@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 /*
@@ -37,7 +38,7 @@ const APICDNMonitoringConfig = "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it
 // coerces the value returned by the API to the tc.TrafficMonitorConfigMap structure.
-func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, toclientlib.ReqInf, error) {
 	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
 		return nil, reqInf, err
@@ -50,7 +51,7 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 }
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
-func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf(APICDNMonitoringConfig, cdn)
 	var data tc.TMConfigResponse
 	reqInf, err := to.get(route, nil, &data)
