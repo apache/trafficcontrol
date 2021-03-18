@@ -55,7 +55,6 @@ done
 LATEST_FILE_TIME="$(git ls-tree -r --name-only HEAD | while read filename; do
   echo "$(git log -1 --format="%ct" -- $filename)"
 done | sort | tail -n 1)"
-echo $LATEST_FILE_TIME
 
 # Get modified times in an array
 mtime_array=()
