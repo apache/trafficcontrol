@@ -36,8 +36,8 @@ func GetTestCDNotifications(t *testing.T) {
 		if len(resp) > 0 {
 			respNotification := resp[0]
 			expectedNotification := "test notification: " + cdn.Name
-			if respNotification.Notification != nil && *respNotification.Notification != expectedNotification {
-				t.Errorf("expected notification does not match actual: %s, expected: %s", *respNotification.Notification, expectedNotification)
+			if respNotification.Notification != expectedNotification {
+				t.Errorf("expected notification does not match actual: %s, expected: %s", respNotification.Notification, expectedNotification)
 			}
 		}
 	}

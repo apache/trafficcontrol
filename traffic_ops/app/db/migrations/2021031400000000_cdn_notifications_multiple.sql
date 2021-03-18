@@ -23,7 +23,7 @@ CREATE TABLE cdn_notification (
     id BIGSERIAL PRIMARY KEY,
     cdn text NOT NULL,
     "user" text NOT NULL,
-    notification text,
+    notification text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT fk_notification_cdn FOREIGN KEY (cdn) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_notification_user FOREIGN KEY ("user") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE
