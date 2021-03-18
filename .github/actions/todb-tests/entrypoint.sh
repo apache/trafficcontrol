@@ -53,13 +53,13 @@ done
 
 # Files added must have date and name later than all existing file
 LATEST_FILE="$(ls -t1 |  head -n 1)"
-LATEST_FILE_TIME="$(stat -f "%m%t%Sm %N" $LATEST_FILE | cut -f1)"
+LATEST_FILE_TIME="$(git log --format=%ct $LATEST_FILE)"
 
 # Get modified times in an array
 mtime_array=()
 arr=("$(ls)")
 for file in $arr; do
-  mtime_array+=( "$(stat -f "%m%t%Sm %N"  $file | cut -f1)" )
+  mtime_array+=( "$(git log --format=%ct  $file)" )
 done
 mtime_length=${#mtime_array[@]}
 

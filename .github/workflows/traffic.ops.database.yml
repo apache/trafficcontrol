@@ -26,10 +26,12 @@ on:
   push:
     paths:
       - traffic_ops/app/db/**
+      - .github/actions/todb-tests/**
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - traffic_ops/app/db/**
+      - .github/actions/todb-tests/**
 
 jobs:
   tests:
