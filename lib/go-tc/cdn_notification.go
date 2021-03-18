@@ -44,16 +44,18 @@ type CDNNotificationRequest struct {
 
 // CDNNotification is a notification created for a specific CDN.
 type CDNNotification struct {
+	ID           int       `json:"id" db:"id"`
 	CDN          string    `json:"cdn" db:"cdn"`
 	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
-	Notification *string   `json:"notification" db:"notification"`
+	Notification string    `json:"notification" db:"notification"`
 	User         string    `json:"user" db:"user"`
 }
 
 // Validate validates the CDNNotificationRequest request is valid for creation.
 func (n *CDNNotificationRequest) Validate(tx *sql.Tx) error {
 	errs := validation.Errors{
-		"cdn": validation.Validate(n.CDN, validation.Required),
+		"cdn":          validation.Validate(n.CDN, validation.Required),
+		"notification": validation.Validate(n.Notification, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
