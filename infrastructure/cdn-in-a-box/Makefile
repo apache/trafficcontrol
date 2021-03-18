@@ -96,20 +96,20 @@ endif
 endif
 
 # Actual output rpm recipies
-traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
-	cp -f $? $@
-traffic_ops/traffic_ops.rpm: ../../dist/traffic_ops-$(SPECIAL_SAUCE)
-	cp -f $? $@
-traffic_portal/traffic_portal.rpm: ../../dist/traffic_portal-$(SPECIAL_SAUCE)
-	cp -f $? $@
-traffic_router/traffic_router.rpm: ../../dist/traffic_router-$(SPECIAL_SAUCE)
-	cp -f $? $@
-traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
-	cp -f $? $@
-traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
-	cp -f $? $@
-cache/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(SPECIAL_SAUCE)
-	cp -f $? $@
+traffic_monitor/traffic_monitor.rpm: $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
+traffic_ops/traffic_ops.rpm: $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
+traffic_portal/traffic_portal.rpm: $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
+traffic_router/traffic_router.rpm: $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
+traffic_router/tomcat.rpm: $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
+	cp -f "$?" "$@"
+traffic_stats/traffic_stats.rpm: $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
+cache/traffic_ops_ort.rpm: $(TC_DIR)/dist/traffic_ops_ort-$(SPECIAL_SAUCE)
+	cp -f "$?" "$@"
 
 # Dist rpms
 ../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
