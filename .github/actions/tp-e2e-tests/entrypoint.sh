@@ -161,7 +161,7 @@ ln -s "$PWD" "$SRCDIR/trafficcontrol"
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
-/usr/local/go/bin/go get -v golang.org/x/net/publicsuffix\
+go get -v golang.org/x/net/publicsuffix\
 	golang.org/x/crypto/ed25519 \
 	golang.org/x/crypto/scrypt \
 	golang.org/x/net/idna \
@@ -169,7 +169,7 @@ cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 	golang.org/x/net/ipv6 \
 	golang.org/x/sys/unix \
 	golang.org/x/text/secure/bidirule > /dev/null
-/usr/local/go/bin/go build . > /dev/null
+go build . > /dev/null
 
 openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 
