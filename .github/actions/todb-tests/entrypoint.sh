@@ -52,12 +52,8 @@ for file in "$(ls)"; do
 done
 
 # Files added must have date and name later than all existing file
-LATEST_FILE="$(git ls-tree -r --name-only HEAD | while read filename; do
-  echo "$filename"
-done | sort | tail -n 1)"
-LATEST_FILE_TIME="$(git ls-tree -r --name-only HEAD | while read filename; do
-  echo "$(git log -1 --format="%ct" -- $filename)"
-done | sort | tail -n 1)"
+LATEST_FILE="$(git log -1 --name-status --format="%ct" . | tail -n 1 | awk '{print $2}' | cut -d / -f5)"
+LATEST_FILE_TIME="$(git log -1 --name-status --format="%ct" . | head -n 1 )"
 
 # Get modified times in an array
 mtime_array=()
