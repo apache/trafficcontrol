@@ -108,6 +108,7 @@ type Cfg struct {
 	TOUser              string
 	TOPass              string
 	TOURL               string
+	DNSLocalBind        bool
 	WaitForParents      bool
 	YumOptions          string
 }
@@ -185,6 +186,7 @@ func GetCfg() (Cfg, error) {
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS")
 	tsHomePtr := getopt.StringLong("trafficserver-home", 'R', "", "Trafficserver Package directory. May also be set with the environment variable TS_HOME")
 	waitForParentsPtr := getopt.BoolLong("wait-for-parents", 'W', "[true | false] do not update if parent_pending = 1 in the update json. default is false, wait for parents")
+	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
@@ -215,6 +217,7 @@ func GetCfg() (Cfg, error) {
 	toUser := *toUserPtr
 	toPass := *toPassPtr
 	waitForParents := *waitForParentsPtr
+	dnsLocalBind := *dnsLocalBindPtr
 	help := *helpPtr
 
 	if help {
@@ -318,6 +321,7 @@ func GetCfg() (Cfg, error) {
 		TOUser:              toUser,
 		TOPass:              toPass,
 		TOURL:               toURL,
+		DNSLocalBind:        dnsLocalBind,
 		WaitForParents:      waitForParents,
 		YumOptions:          yumOptions,
 	}
