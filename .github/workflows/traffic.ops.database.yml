@@ -47,7 +47,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Rut Traffic Ops Database Tests
-        uses: ./.github/actions/todb-tests
+      - name: Run Traffic Ops Database Tests
+        run: ./.github/actions/todb-tests/entrypoint.sh
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
