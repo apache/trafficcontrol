@@ -36,7 +36,9 @@ const HeaderRewriteMidPrefix = "hdr_rw_mid_"
 const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
 const LineCommentHeaderRewriteDotConfig = LineCommentHash
 
-const ServiceCategoryHeader = "CDN-SVC"
+// ServiceCategoryHeader is the internal service category header for logging the service category.
+// Note this is internal, and will never be set in an HTTP Request or Response by ATS.
+const ServiceCategoryHeader = "@CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
