@@ -41,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        with:
+          fetch-depth: 0
         uses: actions/checkout@master
       - name: Cache Alpine Docker image
         uses: actions/cache@v2
