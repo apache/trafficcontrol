@@ -27,11 +27,13 @@ on:
     paths:
       - traffic_ops/app/db/**
       - .github/actions/todb-tests/**
+      - .github/workflows/traffic.ops.database.yml
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - traffic_ops/app/db/**
       - .github/actions/todb-tests/**
+      - .github/workflows/traffic.ops.database.yml
 
 jobs:
   tests:
