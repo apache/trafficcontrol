@@ -124,7 +124,7 @@ cache/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(SPECIAL_SAUCE)
 ../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal$(BUILD_SUFFIX)
 
-../../dist/traffic_router-$(SPECIAL_SAUCE) $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
+../../dist/traffic_router-$(SPECIAL_SAUCE) ../../dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_router$(BUILD_SUFFIX)
 
 ../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
