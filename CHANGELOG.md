@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Invalid TS logrotate configuration permissions causing TS logs to be ignored by logrotate.
 - [#5604](https://github.com/apache/trafficcontrol/issues/5604) - traffic_monitor.log is no longer truncated when restarting Traffic Monitor
 - [#1624](https://github.com/apache/trafficcontrol/issues/1624) - Fixed ORT to reload Traffic Server if LUA scripts are added or changed.
+- #5554 - TM UI overflows screen width and hides table data
+
 
 ## [5.1.0] - 2021-02-21
 ### Added
