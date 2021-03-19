@@ -50,10 +50,26 @@ TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
 TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**)
 TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**)
 
+TM_RPM := $(CIAB_DIR)/traffic_monitor/traffic_monitor.rpm
+TO_RPM := $(CIAB_DIR)/traffic_ops/traffic_ops.rpm
+TP_RPM := $(CIAB_DIR)/traffic_portal/traffic_portal.rpm
+TR_RPM := $(CIAB_DIR)/traffic_router/traffic_router.rpm
+TOMCAT_RPM := $(CIAB_DIR)/traffic_router/tomcat.rpm
+TS_RPM := $(CIAB_DIR)/traffic_stats/traffic_stats.rpm
+ORT_RPM := $(CIAB_DIR)/cache/traffic_ops_ort.rpm
+
+TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
+TO_DIST_RPM := $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
+TP_DIST_RPM := $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
+TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE)
+TOMCAT_DIST_RPM := $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
+TS_DIST_RPM := $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
+ORT_DIST_RPM := $(TC_DIR)/dist/traffic_ops_ort-$(SPECIAL_SAUCE)
+
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
-all: cache/traffic_ops_ort.rpm traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
+all: $(ORT_RPM) $(TM_RPM) $(TP_RPM) $(TO_RPM) $(TR_RPM) $(TOMCAT_RPM) $(TS_RPM)
 
 ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
 PKG_FLAGS += -b
@@ -99,43 +115,43 @@ endif
 endif
 
 # Actual output rpm recipies
-traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-traffic_ops/traffic_ops.rpm: ../../dist/traffic_ops-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-traffic_portal/traffic_portal.rpm: ../../dist/traffic_portal-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-traffic_router/traffic_router.rpm: ../../dist/traffic_router-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
-cache/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(SPECIAL_SAUCE)
-	cp -f "$(CIAB_DIR)/$?" "$(CIAB_DIR)/$@"
+$(TM_RPM): $(TM_DIST_RPM)
+	cp -f "$?" "$@"
+$(TO_RPM): $(TO_DIST_RPM)
+	cp -f "$?" "$@"
+$(TP_RPM): $(TP_DIST_RPM)
+	cp -f "$?" "$@"
+$(TR_RPM): $(TR_DIST_RPM)
+	cp -f "$?" "$@"
+$(TOMCAT_RPM): $(TOMCAT_DIST_RPM)
+	cp -f "$?" "$@"
+$(TS_RPM): $(TS_DIST_RPM)
+	cp -f "$?" "$@"
+$(ORT_RPM): $(ORT_DIST_RPM)
+	cp -f "$?" "$@"
 
 # Dist rpms
-../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
+$(TM_DIST_RPM): $(TM_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_monitor$(BUILD_SUFFIX)
 
-../../dist/traffic_ops-$(SPECIAL_SAUCE): $(TO_SOURCE)
+$(TO_DIST_RPM): $(TO_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_ops$(BUILD_SUFFIX)
 
-../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
+$(TP_DIST_RPM): $(TP_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal$(BUILD_SUFFIX)
 
-../../dist/traffic_router-$(SPECIAL_SAUCE) ../../dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
+$(TR_DIST_RPM) $(TOMCAT_DIST_RPM): $(TR_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_router$(BUILD_SUFFIX)
 
-../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
+$(TS_DIST_RPM): $(TS_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_stats$(BUILD_SUFFIX)
 
-../../dist/traffic_ops_ort-$(SPECIAL_SAUCE): $(ORT_SOURCE)
+$(ORT_DIST_RPM): $(ORT_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_ops_ort$(BUILD_SUFFIX)
 
 clean:
 	cd "$(CIAB_DIR)"
-	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm cache/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm
+	$(RM) $(TM_RPM) $(TO_RPM) $(TP_RPM) $(TR_RPM) $(TOMCAT_RPM) $(ORT_RPM) $(TS_RPM)
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)
