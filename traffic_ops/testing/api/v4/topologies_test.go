@@ -29,6 +29,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -41,107 +42,44 @@ type topologyTestCase struct {
 
 func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
-		//GetTestTopologies(t)
-		//currentTime := time.Now().UTC().Add(-5 * time.Second)
-		//rfcTime := currentTime.Format(time.RFC1123)
-		//var header http.Header
-		//header = make(map[string][]string)
-		//header.Set(rfc.IfModifiedSince, rfcTime)
-		//header.Set(rfc.IfUnmodifiedSince, rfcTime)
-		//UpdateTestTopologies(t)
-		//UpdateTestTopologiesWithHeaders(t, header)
-		//header = make(map[string][]string)
-		//etag := rfc.ETag(currentTime)
-		//header.Set(rfc.IfMatch, etag)
-		//UpdateTestTopologiesWithHeaders(t, header)
-		//ValidationTestTopologies(t)
-		//UpdateValidateTopologyORGServerCacheGroup(t)
-		//EdgeParentOfEdgeSucceedsWithWarning(t)
-		//UpdateTopologyName(t)
-		//GetTopologyWithNonExistentName(t)
-		//CreateTopologyWithInvalidCacheGroup(t)
-		//CreateTopologyWithInvalidParentNumber(t)
-		//CreateTopologyWithoutDescription(t)
-		//CreateTopologyWithoutName(t)
-		//CreateTopologyWithoutServers(t)
-		//CreateTopologyWithDuplicateParents(t)
-		//CreateTopologyWithNodeAsParentOfItself(t)
-		//CreateTopologyWithOrgLocAsChildNode(t)
-		//CreateTopologyWithExistingName(t)
-		//CreateTopologyWithMidLocTypeWithoutChild(t)
-		//CreateTopologyReadOnlyUser(t)
-		//UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t)
-		//UpdateTopologyWithNoServers(t)
-		//UpdateTopologyWithInvalidParentNumber(t)
+		GetTestTopologies(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		rfcTime := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, rfcTime)
+		header.Set(rfc.IfUnmodifiedSince, rfcTime)
+		UpdateTestTopologies(t)
+		UpdateTestTopologiesWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestTopologiesWithHeaders(t, header)
+		ValidationTestTopologies(t)
+		UpdateValidateTopologyORGServerCacheGroup(t)
+		EdgeParentOfEdgeSucceedsWithWarning(t)
+		UpdateTopologyName(t)
+		GetTopologyWithNonExistentName(t)
+		CreateTopologyWithInvalidCacheGroup(t)
+		CreateTopologyWithInvalidParentNumber(t)
+		CreateTopologyWithoutDescription(t)
+		CreateTopologyWithoutName(t)
+		CreateTopologyWithoutServers(t)
+		CreateTopologyWithDuplicateParents(t)
+		CreateTopologyWithNodeAsParentOfItself(t)
+		CreateTopologyWithOrgLocAsChildNode(t)
+		CreateTopologyWithExistingName(t)
+		CreateTopologyWithMidLocTypeWithoutChild(t)
+		CRUDTopologyReadOnlyUser(t)
+		UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t)
+		UpdateTopologyWithNoServers(t)
+		UpdateTopologyWithInvalidParentNumber(t)
+		UpdateTopologyWithMidLocTypeWithoutChild(t)
+		UpdateTopologyWithOrgLocAsChildNode(t)
+		UpdateTopologyWithSameParentAndSecondaryParent(t)
+		DeleteTopologyWithNonExistentName(t)
+		DeleteTopologyBeingUsedByDeliveryService(t)
 	})
-}
-
-func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
-	if err != nil {
-		t.Fatalf("couldn't get topologies: %v", err)
-	}
-	if len(tops) == 0 {
-		t.Fatal("expected to get one or more topologies in the response, but got none")
-	}
-	tp := tops[0]
-	parents := make([]int, 0)
-	parents = append(parents, len(tp.Nodes)+1)
-	for i, _ := range tp.Nodes {
-		tp.Nodes[i].Parents = parents
-	}
-	_, reqInf, err := TOSession.UpdateTopology(tp.Name, tp, nil)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a '400 Bad Request' response code, but got %d", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("expected error about the parent not being valid, but got none")
-	}
-}
-
-func UpdateTopologyWithNoServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
-	if err != nil {
-		t.Fatalf("error while getting cachegroups: %v", err)
-	}
-	if len(cacheGroups) == 0 {
-		t.Fatalf("no cachegroups in response")
-	}
-	nodes := make([]tc.TopologyNode, 0)
-
-	cachegroupName := ""
-	params := url.Values{}
-	for _, cg := range cacheGroups {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
-		if len(resp.Response) == 0 {
-			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
-				cachegroupName = *cg.Name
-				break
-			}
-		}
-	}
-	node := tc.TopologyNode{
-		Cachegroup: cachegroupName,
-		Parents:    nil,
-	}
-	nodes = append(nodes, node)
-
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
-	if err != nil {
-		t.Fatalf("error getting topologies: %v", err)
-	}
-	if len(tops) == 0 {
-		t.Fatalf("expected 1 or more topologies in response, but got none")
-	}
-	tops[0].Nodes = nodes
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, tops[0], nil)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("error about topology having no servers expected, but got none")
-	}
 }
 
 func CreateTestTopologies(t *testing.T) {
@@ -922,7 +860,7 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	}
 }
 
-func CreateTopologyReadOnlyUser(t *testing.T) {
+func CRUDTopologyReadOnlyUser(t *testing.T) {
 	resp, _, err := TOSession.TenantByNameWithHdr("root", nil)
 	if err != nil {
 		t.Fatalf("couldn't get the root tenant ID: %v", err)
@@ -962,6 +900,7 @@ func CreateTopologyReadOnlyUser(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
+	// Create
 	_, reqInf, err := client.CreateTopology(top)
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
@@ -973,6 +912,36 @@ func CreateTopologyReadOnlyUser(t *testing.T) {
 			t.Errorf("could not delete topology %s: %v", top.Name, err)
 		}
 	}
+
+	// Read
+	tops, _, err := client.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("couldn't get topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatal("expected to get one or more topologies in the response, but got none")
+	}
+
+	// Update
+	updatedTop := tops[0]
+	updatedTop.Description = "updated description"
+	_, reqInf, err = client.UpdateTopology(updatedTop.Name, updatedTop, nil)
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("expected error about Read-Only users not being able to update topologies, but got nothing")
+	}
+
+	// Delete
+	_, reqInf, err = client.DeleteTopology(tops[0].Name)
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("expected error about Read-Only users not being able to delete topologies, but got nothing")
+	}
+
 	if u != nil && u.Response.Username != nil {
 		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
 	}
@@ -1008,5 +977,291 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 	}
 	if err == nil {
 		t.Errorf("error about topology having parents the same as children expected, but got none")
+	}
+}
+
+func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
+	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	if err != nil {
+		t.Fatalf("error while getting cachegroups: %v", err)
+	}
+	if len(cacheGroups) == 0 {
+		t.Fatalf("no cachegroups in response")
+	}
+
+	cachegroupName := ""
+	parentName := ""
+	params := url.Values{}
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) != 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+				parentName = *cg.Name
+				break
+			}
+		}
+	}
+
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) != 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+				cachegroupName = *cg.Name
+				break
+			}
+		}
+	}
+
+	nodes := []tc.TopologyNode{
+		{
+			Cachegroup: parentName,
+			Parents:    []int{},
+		},
+		{
+			Cachegroup: cachegroupName,
+			Parents:    []int{0, 0},
+		},
+	}
+
+	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("couldn't get topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatal("expected to get one or more topologies in the response, but got none")
+	}
+
+	top := tc.Topology{
+		Description: tops[0].Description,
+		Name:        tops[0].Name,
+		Nodes:       nodes,
+	}
+	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology's cachegroup having same primary and secondary parents, but got none")
+	}
+}
+
+func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
+	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	if err != nil {
+		t.Fatalf("error while getting cachegroups: %v", err)
+	}
+	if len(cacheGroups) == 0 {
+		t.Fatalf("no cachegroups in response")
+	}
+
+	cachegroupName := ""
+	parentName := ""
+	params := url.Values{}
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) != 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+				parentName = *cg.Name
+				break
+			}
+		}
+	}
+
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) != 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
+				cachegroupName = *cg.Name
+				break
+			}
+		}
+	}
+
+	nodes := []tc.TopologyNode{
+		{
+			Cachegroup: parentName,
+			Parents:    []int{},
+		},
+		{
+			Cachegroup: cachegroupName,
+			Parents:    []int{0},
+		},
+	}
+
+	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("couldn't get topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatal("expected to get one or more topologies in the response, but got none")
+	}
+	top := tc.Topology{
+		Name:        "topology_with_orgloc_as_child_node",
+		Description: "description",
+		Nodes:       nodes,
+	}
+	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology having ord_loc node as child expected, but got none")
+	}
+}
+
+func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
+	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	if err != nil {
+		t.Fatalf("error while getting cachegroups: %v", err)
+	}
+	if len(cacheGroups) == 0 {
+		t.Fatalf("no cachegroups in response")
+	}
+
+	parentName := ""
+	params := url.Values{}
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) != 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupMidTypeName {
+				parentName = *cg.Name
+				break
+			}
+		}
+	}
+
+	nodes := []tc.TopologyNode{
+		{
+			Cachegroup: parentName,
+			Parents:    []int{},
+		},
+	}
+	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("couldn't get topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatal("expected to get one or more topologies in the response, but got none")
+	}
+
+	top := tc.Topology{
+		Name:        tops[0].Name,
+		Description: tops[0].Description,
+		Nodes:       nodes,
+	}
+
+	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology having mid_loc node and no children expected, but got none")
+	}
+}
+
+func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
+	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("couldn't get topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatal("expected to get one or more topologies in the response, but got none")
+	}
+	tp := tops[0]
+	parents := make([]int, 0)
+	parents = append(parents, len(tp.Nodes)+1)
+	for i, _ := range tp.Nodes {
+		tp.Nodes[i].Parents = parents
+	}
+	_, reqInf, err := TOSession.UpdateTopology(tp.Name, tp, nil)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a '400 Bad Request' response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("expected error about the parent not being valid, but got none")
+	}
+}
+
+func UpdateTopologyWithNoServers(t *testing.T) {
+	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	if err != nil {
+		t.Fatalf("error while getting cachegroups: %v", err)
+	}
+	if len(cacheGroups) == 0 {
+		t.Fatalf("no cachegroups in response")
+	}
+	nodes := make([]tc.TopologyNode, 0)
+
+	cachegroupName := ""
+	params := url.Values{}
+	for _, cg := range cacheGroups {
+		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
+		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		if len(resp.Response) == 0 {
+			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+				cachegroupName = *cg.Name
+				break
+			}
+		}
+	}
+	node := tc.TopologyNode{
+		Cachegroup: cachegroupName,
+		Parents:    nil,
+	}
+	nodes = append(nodes, node)
+
+	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	if err != nil {
+		t.Fatalf("error getting topologies: %v", err)
+	}
+	if len(tops) == 0 {
+		t.Fatalf("expected 1 or more topologies in response, but got none")
+	}
+	tops[0].Nodes = nodes
+	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, tops[0], nil)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology having no servers expected, but got none")
+	}
+}
+
+func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
+	ds, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
+	if err != nil {
+		t.Fatalf("couldn't get deliveryservices: %v", err)
+	}
+	if len(ds) == 0 {
+		t.Fatalf("expected one or more ds's in the response, got none")
+	}
+	topologyName := ""
+	for _, d := range ds {
+		if d.Topology != nil && *d.Topology != "" {
+			topologyName = *d.Topology
+			break
+		}
+	}
+	_, reqInf, err := TOSession.DeleteTopology(topologyName)
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology being used by a ds expected, but got none")
+	}
+}
+
+func DeleteTopologyWithNonExistentName(t *testing.T) {
+	_, reqInf, err := TOSession.DeleteTopology("non existent name")
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("error about topology not being present expected, but got none")
 	}
 }
