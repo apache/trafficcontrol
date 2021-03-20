@@ -116,7 +116,7 @@ fi
 
 %config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats.cfg
 %config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats_seelog.xml
-%config(noreplace) /etc/logrotate.d/traffic_stats
+%config(noreplace) %attr(644, root, root) /etc/logrotate.d/traffic_stats
 
 %dir /opt/traffic_stats
 %dir /opt/traffic_stats/bin

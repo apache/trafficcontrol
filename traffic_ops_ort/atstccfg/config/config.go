@@ -31,7 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 
 	flag "github.com/ogier/pflag"
 )
@@ -67,13 +66,13 @@ type Cfg struct {
 	TOUser          string
 	Dir             string
 	ViaRelease      bool
+	SetDNSLocalBind bool
 	ParentComments  bool
 }
 
 type TCCfg struct {
 	Cfg
-	TOClient    *toreq.TOClient
-	TOClientNew *toreqnew.TOClient
+	TOClient *toreq.TOClient
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -84,120 +83,102 @@ func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLoca
 
 // GetCfg gets the application configuration, from arguments and environment variables.
 func GetCfg() (Cfg, error) {
-	toURLPtr := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
-	toUserPtr := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
-	toPassPtr := flag.StringP("traffic-ops-password", "P", "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS.")
-	numRetriesPtr := flag.IntP("num-retries", "r", 5, "The number of times to retry getting a file if it fails.")
-	logLocationErrPtr := flag.StringP("log-location-error", "e", "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
-	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
-	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
-	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
-	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in milliseconds for Traffic Ops requests.")
-	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
-	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
-	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
-	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
-	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
-	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revalidate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
-	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
-	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
-	dirPtr := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
-	viaReleasePtr := flag.BoolP("via-string-release", "", false, "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
+	toURL := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
+	toUser := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
+	toPass := flag.StringP("traffic-ops-password", "P", "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS.")
+	numRetries := flag.IntP("num-retries", "r", 5, "The number of times to retry getting a file if it fails.")
+	logLocationErr := flag.StringP("log-location-error", "e", "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
+	logLocationWarn := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
+	logLocationInfo := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
+	toInsecure := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
+	toTimeoutMS := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in milliseconds for Traffic Ops requests.")
+	version := flag.BoolP("version", "v", false, "Print version information and exit.")
+	listPlugins := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
+	help := flag.BoolP("help", "h", false, "Print usage information and exit")
+	cacheHostName := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
+	getData := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
+	setQueueStatus := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
+	setRevalStatus := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revalidate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
+	revalOnly := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
+	disableProxy := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
+	dir := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
+	viaRelease := flag.BoolP("via-string-release", "", false, "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
+	dnsLocalBind := flag.BoolP("dns-local-bind", "", false, "Whether to use the server's Service Addresses to set the ATS DNS local bind address.")
 	disableParentConfigComments := flag.BoolP("disable-parent-config-comments", "", false, "Disable adding a comments to parent.config individual lines")
 
 	flag.Parse()
 
-	if *versionPtr {
+	if *version {
 		fmt.Println(AppName + " v" + Version)
 		os.Exit(0)
-	} else if *helpPtr {
+	} else if *help {
 		flag.PrintDefaults()
 		os.Exit(0)
-	} else if *listPluginsPtr {
+	} else if *listPlugins {
 		return Cfg{ListPlugins: true}, nil
 	}
 
-	toURL := *toURLPtr
-	toUser := *toUserPtr
-	toPass := *toPassPtr
-	numRetries := *numRetriesPtr
-	logLocationErr := *logLocationErrPtr
-	logLocationWarn := *logLocationWarnPtr
-	logLocationInfo := *logLocationInfoPtr
-	toInsecure := *toInsecurePtr
-	toTimeout := time.Millisecond * time.Duration(*toTimeoutMSPtr)
-	listPlugins := *listPluginsPtr
-	cacheHostName := *cacheHostNamePtr
-	getData := *getDataPtr
-	setQueueStatus := *setQueueStatusPtr
-	setRevalStatus := *setRevalStatusPtr
-	revalOnly := *revalOnlyPtr
-	disableProxy := *disableProxyPtr
-	dir := *dirPtr
-	viaRelease := *viaReleasePtr
-	parentComments := !(*disableParentConfigComments) //we use this as a boolean value so reverse it here to not have negative logic
-
 	urlSourceStr := "argument" // for error messages
-	if toURL == "" {
+	if *toURL == "" {
 		urlSourceStr = "environment variable"
-		toURL = os.Getenv("TO_URL")
+		*toURL = os.Getenv("TO_URL")
 	}
-	if toUser == "" {
-		toUser = os.Getenv("TO_USER")
+	if *toUser == "" {
+		*toUser = os.Getenv("TO_USER")
 	}
 
 	// TO_PASSWORD is preferred over TO_PASS, as it's the one commonly used by
 	// Traffic Control tools. Hopefully, we'll be able to get rid of TO_PASS
 	// entirely in the near future, to make this less confusing.
-	if toPass == "" {
-		toPass = os.Getenv("TO_PASS")
+	if *toPass == "" {
+		*toPass = os.Getenv("TO_PASS")
 	}
-	if toPass == "" {
-		toPass = os.Getenv("TO_PASSWORD")
+	if *toPass == "" {
+		*toPass = os.Getenv("TO_PASSWORD")
 	}
 
 	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
-	if strings.TrimSpace(toURL) == "" {
+	if strings.TrimSpace(*toURL) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
 	}
-	if strings.TrimSpace(toUser) == "" {
+	if strings.TrimSpace(*toUser) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. " + usageStr)
 	}
-	if strings.TrimSpace(toPass) == "" {
+	if strings.TrimSpace(*toPass) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
 	}
-	if strings.TrimSpace(cacheHostName) == "" {
+	if strings.TrimSpace(*cacheHostName) == "" {
 		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
 
-	toURLParsed, err := url.Parse(toURL)
+	toURLParsed, err := url.Parse(*toURL)
 	if err != nil {
-		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + *toURL + "': " + err.Error())
 	} else if err := ValidateURL(toURLParsed); err != nil {
-		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + *toURL + "': " + err.Error())
 	}
 
 	cfg := Cfg{
-		LogLocationErr:  logLocationErr,
-		LogLocationWarn: logLocationWarn,
-		LogLocationInfo: logLocationInfo,
-		NumRetries:      numRetries,
-		TOInsecure:      toInsecure,
-		TOPass:          toPass,
-		TOTimeout:       toTimeout,
+		LogLocationErr:  *logLocationErr,
+		LogLocationWarn: *logLocationWarn,
+		LogLocationInfo: *logLocationInfo,
+		NumRetries:      *numRetries,
+		TOInsecure:      *toInsecure,
+		TOPass:          *toPass,
+		TOTimeout:       time.Millisecond * time.Duration(*toTimeoutMS),
 		TOURL:           toURLParsed,
-		TOUser:          toUser,
-		ListPlugins:     listPlugins,
-		CacheHostName:   cacheHostName,
-		GetData:         getData,
-		SetRevalStatus:  setRevalStatus,
-		SetQueueStatus:  setQueueStatus,
-		RevalOnly:       revalOnly,
-		DisableProxy:    disableProxy,
-		Dir:             dir,
-		ViaRelease:      viaRelease,
-		ParentComments:  parentComments,
+		TOUser:          *toUser,
+		ListPlugins:     *listPlugins,
+		CacheHostName:   *cacheHostName,
+		GetData:         *getData,
+		SetRevalStatus:  *setRevalStatus,
+		SetQueueStatus:  *setQueueStatus,
+		RevalOnly:       *revalOnly,
+		DisableProxy:    *disableProxy,
+		Dir:             *dir,
+		ViaRelease:      *viaRelease,
+		SetDNSLocalBind: *dnsLocalBind,
+		ParentComments:  !(*disableParentConfigComments),
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")

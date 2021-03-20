@@ -173,6 +173,12 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/servers');
             }
+        },
+        {
+            text: 'Manage Notifications',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/notifications');
+            }
         }
     ];
 

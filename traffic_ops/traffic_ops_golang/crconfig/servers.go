@@ -327,8 +327,9 @@ order by dsr.set_number asc
 	hostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``)
 
 	dsInfs := map[string][]DSRouteInfo{}
-	var hasTopology bool
+	dsHasTopology := make(map[string]bool)
 	for rows.Next() {
+		hasTopology := false
 		ds := ""
 		dsType := ""
 		dsPattern := ""
@@ -337,6 +338,7 @@ order by dsr.set_number asc
 		if err := rows.Scan(&ds, &dsType, &dsRoutingName, &dsPattern, &hasTopology); err != nil {
 			return nil, errors.New("Error scanning server deliveryservices: " + err.Error())
 		}
+		dsHasTopology[ds] = hasTopology
 		// Topology-based delivery services do not use the contentServers.deliveryServices field
 		if hasTopology {
 			continue
@@ -361,7 +363,7 @@ order by dsr.set_number asc
 		for _, dsName := range dses {
 			dsInfList, ok := dsInfs[string(dsName)]
 			if !ok {
-				if !hasTopology {
+				if !dsHasTopology[string(dsName)] {
 					log.Warnln("Creating CRConfig: deliveryservice " + string(dsName) + " has no regexes, skipping")
 				}
 				continue

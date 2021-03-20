@@ -35,9 +35,11 @@ Request Structure
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
 	| Parameter  | Required | Description                                                                                         |
 	+============+==========+=====================================================================================================+
-	| cdn        | no       | The CDN name of the notification you wish to retrieve.                                              |
+	| cdn        | no       | The CDN name of the notifications you wish to retrieve.                                             |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| user       | no       | The username of the user responsible for creating the CDN notification.                             |
+	| id         | no       | The integral, unique identifier of the notification you wish to retrieve.                           |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| user       | no       | The username of the user responsible for creating the CDN notifications.                            |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
@@ -52,6 +54,7 @@ Request Structure
 
 Response Structure
 ------------------
+:id:			The integral, unique identifier of the notification
 :cdn:			The name of the CDN to which the notification belongs to
 :lastUpdated:	The time and date this server entry was last updated in an ISO-like format
 :notification:	The content of the notification
@@ -75,6 +78,7 @@ Response Structure
 
 	{ "response": [
 		{
+			"id": 42,
 			"cdn": "cdn1",
 			"lastUpdated": "2019-12-02 21:49:08+00",
 			"notification": "the content of the notification",
@@ -113,6 +117,7 @@ Request Structure
 
 Response Structure
 ------------------
+:id:			The integral, unique identifier of the notification
 :cdn:			The name of the CDN to which the notification belongs to
 :lastUpdated:	The time and date this server entry was last updated in an ISO-like format
 :notification:	The content of the notification
@@ -144,6 +149,7 @@ Response Structure
 		],
 	"response":
 		{
+			"id": 42,
 			"cdn": "cdn1",
 			"lastUpdated": "2019-12-02 21:49:08+00",
 			"notification": "the content of the notification",
@@ -166,13 +172,13 @@ Request Structure
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
 	| Parameter  | Required | Description                                                                                         |
 	+============+==========+=====================================================================================================+
-	| cdn        | yes      | The CDN name of the notification you wish to delete.                                                |
+	| id         | yes      | The integral, unique identifier of the notification you wish to delete.                             |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/4.0/cdn_notifications?cdn=cdn1 HTTP/1.1
+	DELETE /api/4.0/cdn_notifications?id=42 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

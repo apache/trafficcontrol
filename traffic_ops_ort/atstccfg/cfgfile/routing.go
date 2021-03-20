@@ -102,10 +102,10 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 }
 
 var configFilePrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
-	{atscfg.HeaderRewriteFirstPrefix, ".config", MakeTopologyHeaderRewrite},
-	{atscfg.HeaderRewriteInnerPrefix, ".config", MakeTopologyHeaderRewrite},
-	{atscfg.HeaderRewriteLastPrefix, ".config", MakeTopologyHeaderRewrite},
-	{"hdr_rw_mid_", ".config", MakeHeaderRewriteMid},
+	{atscfg.HeaderRewriteFirstPrefix, ".config", MakeHeaderRewrite},
+	{atscfg.HeaderRewriteInnerPrefix, ".config", MakeHeaderRewrite},
+	{atscfg.HeaderRewriteLastPrefix, ".config", MakeHeaderRewrite},
+	{"hdr_rw_mid_", ".config", MakeHeaderRewrite},
 	{"hdr_rw_", ".config", MakeHeaderRewrite},
 	{"regex_remap_", ".config", MakeRegexRemap},
 	{"set_dscp_", ".config", MakeSetDSCP},
