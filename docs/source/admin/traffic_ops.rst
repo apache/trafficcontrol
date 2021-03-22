@@ -240,7 +240,7 @@ After this completes, see Guide_ for instructions on running the :program:`posti
 Upgrading to 6.0
 ----------------
 
-As of 6.0, Traffic Ops supports PostgreSQL version 13.2. In order to migrate from the prior PostgreSQL version 9.6, it is recommended to use the `pg_upgrade <https://www.postgresql.org/docs/13/pgupgrade.html>`_ tool.
+As of Apache Traffic Control 6.0, Traffic Ops supports PostgreSQL version 13.2. In order to migrate from the prior PostgreSQL version 9.6, it is recommended to use the `pg_upgrade <https://www.postgresql.org/docs/13/pgupgrade.html>`_ tool.
 
 .. _to-running:
 
