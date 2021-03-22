@@ -1048,12 +1048,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
 
 		// depending on ds type, also need to add mids
-		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
+		dsType, _, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
 			return nil, 0, nil, err, http.StatusInternalServerError, nil
-		}
-		if !exists {
-			return nil, 0, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest, nil
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
