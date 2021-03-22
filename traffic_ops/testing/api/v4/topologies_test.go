@@ -643,7 +643,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
 		if len(resp.Response) != 0 {
-			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
 				break
 			}
@@ -712,7 +712,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
 		if len(resp.Response) != 0 {
-			if cg.Name != nil {
+			if cg.Name != nil && parentName != *cg.Name {
 				parentName = *cg.Name
 				break
 			}
@@ -770,7 +770,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
 		if len(resp.Response) != 0 {
-			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
+			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
 				break
 			}
@@ -1007,7 +1007,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
 		if len(resp.Response) != 0 {
-			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
+			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
 				break
 			}
@@ -1074,7 +1074,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
 		if len(resp.Response) != 0 {
-			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
+			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
 				break
 			}
