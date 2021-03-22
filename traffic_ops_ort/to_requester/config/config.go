@@ -29,7 +29,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 	"github.com/pborman/getopt/v2"
 )
 
@@ -54,8 +53,7 @@ type Cfg struct {
 
 type TCCfg struct {
 	Cfg
-	TOClient    *toreq.TOClient
-	TOClientNew *toreqnew.TOClient
+	TOClient *toreq.TOClient
 }
 
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }

@@ -18,7 +18,8 @@ under the License.
 -->
 
 <div id="notificationsContainer">
-    <div class="alert alert-info" ng-repeat="n in notifications">
+    <div ng-if="!dismissedNotifications.includes(n.id)" class="alert alert-dismissable alert-info" ng-repeat="n in notifications | orderBy: 'cdn'">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="dismissNotification(n)">&times;</button>
         <div ng-bind-html="n.cdn + ': ' + n.notification + ' (' + n.user + ')' | linky:'_blank'"></div>
     </div>
 </div>

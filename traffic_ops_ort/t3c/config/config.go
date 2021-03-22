@@ -108,8 +108,36 @@ type Cfg struct {
 	TOUser              string
 	TOPass              string
 	TOURL               string
+	DNSLocalBind        bool
 	WaitForParents      bool
 	YumOptions          string
+	// UseGit is whether to create and maintain a git repo of config changes.
+	// Note this only applies to the ATS config directory inferred or set via the flag.
+	//      It does not do anything for config files generated outside that location.
+	UseGit UseGitFlag
+}
+
+type UseGitFlag string
+
+const (
+	UseGitAuto    = "auto"
+	UseGitYes     = "yes"
+	UseGitNo      = "no"
+	UseGitInvalid = ""
+)
+
+func StrToUseGitFlag(str string) UseGitFlag {
+	str = strings.ToLower(strings.TrimSpace(str))
+	switch str {
+	case UseGitAuto:
+		fallthrough
+	case UseGitYes:
+		fallthrough
+	case UseGitNo:
+		return UseGitFlag(str)
+	default:
+		return UseGitInvalid
+	}
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -185,7 +213,9 @@ func GetCfg() (Cfg, error) {
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS")
 	tsHomePtr := getopt.StringLong("trafficserver-home", 'R', "", "Trafficserver Package directory. May also be set with the environment variable TS_HOME")
 	waitForParentsPtr := getopt.BoolLong("wait-for-parents", 'W', "[true | false] do not update if parent_pending = 1 in the update json. default is false, wait for parents")
+	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
 	getopt.Parse()
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -205,6 +235,12 @@ func GetCfg() (Cfg, error) {
 		}
 	}
 
+	useGit := StrToUseGitFlag(*useGitStr)
+
+	if useGit == UseGitInvalid {
+		return Cfg{}, errors.New("Invalid git flag '" + *useGitStr + "'. Valid options are yes, no, auto.")
+	}
+
 	retries := *retriesPtr
 	revalWaitTime := time.Second * time.Duration(*revalWaitTimePtr)
 	reverseProxyDisable := *reverseProxyDisablePtr
@@ -215,6 +251,7 @@ func GetCfg() (Cfg, error) {
 	toUser := *toUserPtr
 	toPass := *toPassPtr
 	waitForParents := *waitForParentsPtr
+	dnsLocalBind := *dnsLocalBindPtr
 	help := *helpPtr
 
 	if help {
@@ -318,8 +355,10 @@ func GetCfg() (Cfg, error) {
 		TOUser:              toUser,
 		TOPass:              toPass,
 		TOURL:               toURL,
+		DNSLocalBind:        dnsLocalBind,
 		WaitForParents:      waitForParents,
 		YumOptions:          yumOptions,
+		UseGit:              useGit,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
