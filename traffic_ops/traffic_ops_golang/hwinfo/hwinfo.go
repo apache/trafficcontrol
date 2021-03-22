@@ -104,12 +104,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {
 
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":             dbhelpers.WhereColumnInfo{"h.id", api.IsInt},
-		"serverHostName": dbhelpers.WhereColumnInfo{"s.host_name", nil},
-		"serverId":       dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
-		"description":    dbhelpers.WhereColumnInfo{"h.description", nil},
-		"val":            dbhelpers.WhereColumnInfo{"h.val", nil},
-		"lastUpdated":    dbhelpers.WhereColumnInfo{"h.last_updated", nil}, //TODO: this doesn't appear to work needs debugging
+		"id":             dbhelpers.WhereColumnInfo{Column: "h.id", Checker: api.IsInt},
+		"serverHostName": dbhelpers.WhereColumnInfo{Column: "s.host_name"},
+		"serverId":       dbhelpers.WhereColumnInfo{Column: "s.id", Checker: api.IsInt},
+		"description":    dbhelpers.WhereColumnInfo{Column: "h.description"},
+		"val":            dbhelpers.WhereColumnInfo{Column: "h.val"},
+		"lastUpdated":    dbhelpers.WhereColumnInfo{Column: "h.last_updated"}, //TODO: this doesn't appear to work needs debugging
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {

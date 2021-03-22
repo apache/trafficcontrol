@@ -79,7 +79,7 @@ func TestReadStatuses(t *testing.T) {
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOStatus{
-		api.APIInfoImpl{&reqInfo},
+		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.StatusNullable{},
 		sql.NullString{},
 	}

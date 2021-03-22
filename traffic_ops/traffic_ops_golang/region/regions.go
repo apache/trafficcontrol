@@ -45,9 +45,9 @@ func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
 func (v *TORegion) SelectQuery() string           { return selectQuery() }
 func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":     dbhelpers.WhereColumnInfo{"r.name", nil},
-		"division": dbhelpers.WhereColumnInfo{"r.division", nil},
-		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
+		"name":     dbhelpers.WhereColumnInfo{Column: "r.name"},
+		"division": dbhelpers.WhereColumnInfo{Column: "r.division"},
+		"id":       dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
 	}
 }
 func (v *TORegion) UpdateQuery() string { return updateQuery() }
@@ -59,7 +59,7 @@ func (v *TORegion) DeleteQuery() string { return deleteQuery() }
 func (v *TORegion) DeleteQueryBase() string { return deleteQueryBase() }
 
 func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -70,8 +70,8 @@ func (region TORegion) GetKeys() (map[string]interface{}, bool) {
 // DeleteKeyOptions returns a map containing the different fields a resource can be deleted by.
 func (region TORegion) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"r.name", nil},
+		"id":   dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{Column: "r.name"},
 	}
 }
 

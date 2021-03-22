@@ -61,17 +61,17 @@ func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
 func (v *TODeliveryServiceRequestComment) SelectQuery() string { return selectQuery() }
 func (v *TODeliveryServiceRequestComment) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"authorId":                 dbhelpers.WhereColumnInfo{"dsrc.author_id", nil},
-		"author":                   dbhelpers.WhereColumnInfo{"a.username", nil},
-		"deliveryServiceRequestId": dbhelpers.WhereColumnInfo{"dsrc.deliveryservice_request_id", nil},
-		"id":                       dbhelpers.WhereColumnInfo{"dsrc.id", api.IsInt},
+		"authorId":                 dbhelpers.WhereColumnInfo{Column: "dsrc.author_id"},
+		"author":                   dbhelpers.WhereColumnInfo{Column: "a.username"},
+		"deliveryServiceRequestId": dbhelpers.WhereColumnInfo{Column: "dsrc.deliveryservice_request_id"},
+		"id":                       dbhelpers.WhereColumnInfo{Column: "dsrc.id", Checker: api.IsInt},
 	}
 }
 func (v *TODeliveryServiceRequestComment) UpdateQuery() string { return updateQuery() }
 func (v *TODeliveryServiceRequestComment) DeleteQuery() string { return deleteQuery() }
 
 func (comment TODeliveryServiceRequestComment) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

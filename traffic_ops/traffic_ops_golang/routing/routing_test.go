@@ -204,7 +204,7 @@ func TestRoutes(t *testing.T) {
 }
 
 func TestCreateRouteMap(t *testing.T) {
-	authBase := middleware.AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	authBase := middleware.AuthBase{Secret: "secret", Override: func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
@@ -241,11 +241,11 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{api.Version{1, 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0},
-		{api.Version{1, 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1},
-		{api.Version{1, 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2},
-		{api.Version{1, 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3},
-		{api.Version{1, 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4},
 	}
 
 	disabledRoutesIDs := []int{4}

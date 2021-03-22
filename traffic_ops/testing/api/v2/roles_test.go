@@ -38,7 +38,7 @@ func TestRoles(t *testing.T) {
 }
 
 func CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}}
+	expectedAlerts := []tc.Alerts{tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "role was created.", Level: "success"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "can not add non-existent capabilities: [invalid-capability]", Level: "error"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "role was created.", Level: "success"}}}}
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
