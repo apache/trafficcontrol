@@ -88,7 +88,7 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok || dsTenantID == nil {
-		log.Errorf("delivery service %s not found", strconv.Itoa(dsID))
+		log.Warnf("delivery service %s not found", strconv.Itoa(dsID))
 		return nil, nil, http.StatusOK
 	}
 
