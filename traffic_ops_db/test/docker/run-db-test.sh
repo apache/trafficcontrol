@@ -32,9 +32,9 @@ if [[ ! -r /goose-config.sh ]]; then
 fi
 . /goose-config.sh
 
-pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready)
+pg_isready=$(rpm -ql postgresql13 | grep bin/pg_isready)
 if [[ ! -x $pg_isready ]] ; then
-    echo "Can't find pg_ready in postgresql96"
+    echo "Can't find pg_ready in postgresql13"
     exit 1
 fi
 
@@ -42,6 +42,10 @@ while ! $pg_isready -h$DB_SERVER -p$DB_PORT -d $DB_NAME; do
         echo "waiting for db on $DB_SERVER $DB_PORT"
         sleep 3
 done
+
+echo "*:*:*:postgres:$DB_USER_PASS" > $HOME/.pgpass
+echo "*:*:*:traffic_ops:$DB_USER_PASS" >> $HOME/.pgpass
+chmod 0600 $HOME/.pgpass
 
 export TO_DIR=/opt/traffic_ops/app
 

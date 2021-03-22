@@ -52,7 +52,7 @@ Docker containers you will need to provide the following resources:
   1.  Build the Traffic Ops and Traffic Ops ORT RPM's that you wish
       to test.  See the top level 'build' directory for building 
       instructions. 
-  2.  Copy the Traffic Ops RPM to docker/trafffic_ops/traffic_ops.rpm 
+  2.  Copy the Traffic Ops RPM to docker/traffic_ops/traffic_ops.rpm
       (NOTE:  Use the file name 'traffic_ops.rpm')
   3.  Copy the Traffic Ops ORT rpm to docker/ort_test/traffic_ops_ort.rpm
       (NOTE:  Use the file name 'traffic_ops_ort.rpm'
