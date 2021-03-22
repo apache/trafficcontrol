@@ -26,10 +26,14 @@ on:
   push:
     paths:
       - traffic_ops/app/db/**
+      - .github/actions/todb-tests/**
+      - .github/workflows/traffic.ops.database.yml
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - traffic_ops/app/db/**
+      - .github/actions/todb-tests/**
+      - .github/workflows/traffic.ops.database.yml
 
 jobs:
   tests:
@@ -37,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        with:
+          fetch-depth: 0
         uses: actions/checkout@master
       - name: Cache Alpine Docker image
         uses: actions/cache@v2
@@ -45,7 +51,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Rut Traffic Ops Database Tests
-        uses: ./.github/actions/todb-tests
+      - name: Run Traffic Ops Database Tests
+        run: ./.github/actions/todb-tests/entrypoint.sh
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

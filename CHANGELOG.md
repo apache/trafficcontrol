@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - ORT config generation: Added a rule to ip_allow such that PURGE requests are allowed over localhost
 
 ### Fixed
+- [#2471](https://github.com/apache/trafficcontrol/issues/2471) - A PR check to ensure added db migration file is the latest.
 - [#5609](https://github.com/apache/trafficcontrol/issues/5609) - Fixed GET /servercheck filter for an extra query param.
 - [#5565](https://github.com/apache/trafficcontrol/issues/5565) - TO GET /caches/stats panic converting string to uint64
 - [#5558](https://github.com/apache/trafficcontrol/issues/5558) - Fixed `TM UI` and `/api/cache-statuses` to report aggregate `bandwidth_kbps` correctly.
