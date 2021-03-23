@@ -57,6 +57,19 @@ got3cdir=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
 	cp "$TC_DIR"/traffic_ops_ort/t3c/t3c .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# copy to_requester binary
+go_toreq_dir=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_requester
+( mkdir -p "$go_toreq_dir" && \
+	cd "$go_toreq_dir" && \
+	cp "$TC_DIR"/traffic_ops_ort/to_requester/to_requester .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy to_updater binary
+go_toupd_dir=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_updater
+( mkdir -p "$go_toupd_dir" && \
+	cd "$go_toupd_dir" && \
+	cp "$TC_DIR"/traffic_ops_ort/to_updater/to_updater .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
@@ -74,6 +87,12 @@ cp -p "$src"/atstccfg/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 t3csrc=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
 cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/opt/ort
 
+to_req_src=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_requester
+cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/opt/ort
+
+to_upd_src=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_updater
+cp -p "$to_upd_src"/to_updater ${RPM_BUILD_ROOT}/opt/ort
+
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -86,6 +105,8 @@ rm -rf ${RPM_BUILD_ROOT}
 /opt/ort/supermicro_udev_mapper.pl
 /opt/ort/atstccfg
 /opt/ort/t3c
+/opt/ort/to_requester
+/opt/ort/to_updater
 
 %config(noreplace) /etc/logrotate.d/atstccfg
 %config(noreplace) /var/log/ort/atstccfg.log
