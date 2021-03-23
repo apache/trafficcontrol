@@ -65,10 +65,13 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
 			}
 
-			result, err := util.DiffFiles(bfn, tfn)
-			if err != nil || !result {
-				t.Fatalf("ERROR: the contents of '%s' does not match those in %s",
-					tfn, bfn)
+			diffStr, err := util.DiffFiles(bfn, tfn)
+			if err != nil {
+				t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
+			} else if diffStr != "" {
+				t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
+			} else {
+				t.Logf("%s and %s diff clean", tfn, bfn)
 			}
 		}
 

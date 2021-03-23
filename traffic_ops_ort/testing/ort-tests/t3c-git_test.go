@@ -18,12 +18,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/util"
@@ -37,6 +35,10 @@ func TestT3cGit(t *testing.T) {
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
+
+		if err := util.RMGit(base_line_dir); err != nil {
+			t.Fatalf("removing existing git directory: %v", err)
+		}
 
 		// run badass and check config files.
 		err := t3cUpdateGit("atlanta-edge-03", "badass")
@@ -53,47 +55,37 @@ func TestT3cGit(t *testing.T) {
 				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
 			}
 
-			result, err := util.DiffFiles(bfn, tfn)
-			if err != nil || !result {
-				t.Fatalf("ERROR: the contents of '%s' does not match those in %s",
-					tfn, bfn)
+			diffStr, err := util.DiffFiles(bfn, tfn)
+			if err != nil {
+				t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
+			} else if diffStr != "" {
+				t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
+			} else {
+				t.Logf("%s and %s diff clean", tfn, bfn)
 			}
 		}
 
-		time.Sleep(time.Second * 5)
-
-		t.Logf("------------------------ running SYNCDS Test ------------------")
-		// remove the remap.config in preparation for running syncds
-		remap := test_config_dir + "/remap.config"
-		err = os.Remove(remap)
+		gitLog, err := gitLogOneline(test_config_dir)
 		if err != nil {
-			t.Fatalf("ERROR: unable to remove %s\n", remap)
+			t.Fatalf("getting git log: %v", err)
 		}
-		// prepare for running syncds.
-		err = setQueueUpdateStatus("atlanta-edge-03", "true")
-		if err != nil {
-			t.Fatalf("ERROR: queue updates failed: %v\n", err)
-		}
-
-		// remap.config is removed and atlanta-edge-03 should have
-		// queue updates enabled.  run t3c to verify a new remap.config
-		// is pulled down.
-		err = t3cUpdateGit("atlanta-edge-03", "syncds")
-		if err != nil {
-			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
-		}
-		if !util.FileExists(remap) {
-			t.Fatalf("ERROR: syncds failed to pull down %s\n", remap)
-		}
-		t.Logf("------------------------ end SYNCDS Test ------------------")
 
 		numCommits, err := gitNumCommits(test_config_dir)
 		if err != nil {
 			t.Errorf("ERROR: checking number of git commits: %v\n", err)
-		} else if numCommits != 3 { // expecting 3 commits: initial commit, startup commit of preexisting files, and the post-run commit
-			t.Errorf("ERROR: git commits expected %v actual %v\n", 3, numCommits)
-		}
+		} else if numCommits != 3 {
+			// expecting 3 commits: initial commit, startup commit of preexisting files, and the post-run commit.
+			t.Errorf("ERROR: git commits expected >=3 actual %v\n%v", numCommits, gitLog)
 
+			for i := 0; i < numCommits; i++ {
+				showTxt, err := gitShow(i, test_config_dir)
+				if err != nil {
+					t.Errorf("git show: %v\n", err)
+				} else {
+					t.Logf("git HEAD~%v: %v\n\n\n", i, showTxt)
+				}
+			}
+		}
 	})
 	t.Logf("------------- End of TestT3cGit ---------------")
 }
@@ -110,6 +102,26 @@ func gitNumCommits(dir string) (int, error) {
 		return 0, fmt.Errorf("git error: in dir '%v' expected number, but got '%v'", dir, string(output))
 	}
 	return numChanges, nil
+}
+
+func gitShow(n int, dir string) (string, error) {
+	cmd := exec.Command("git", "show", "HEAD~"+strconv.Itoa(n))
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("git error: in dir '%v' returned err %v msg '%v'", dir, err, string(output))
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+func gitLogOneline(dir string) (string, error) {
+	cmd := exec.Command("git", "log", "--pretty=oneline")
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("git error: in dir '%v' returned err %v msg '%v'", dir, err, string(output))
+	}
+	return strings.TrimSpace(string(output)), nil
 }
 
 func t3cUpdateGit(host string, run_mode string) error {
