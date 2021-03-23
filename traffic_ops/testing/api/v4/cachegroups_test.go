@@ -38,6 +38,7 @@ func TestCacheGroups(t *testing.T) {
 		GetTestCacheGroupsByShortName(t)
 		GetTestCacheGroupsByTopology(t)
 		CheckCacheGroupsAuthentication(t)
+		VerifyPaginationSupportCg(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -51,7 +52,6 @@ func TestCacheGroups(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCacheGroupsWithHeaders(t, header)
-		VerifyPaginationSupportCg(t)
 	})
 }
 
