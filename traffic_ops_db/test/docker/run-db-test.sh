@@ -122,6 +122,6 @@ fi
 # test full restoration of the initial DB dump
 for d in $(get_db_dumps); do
     echo "testing restoration of DB dump: $d"
-    pg_restore --verbose --clean --if-exists --create -h $DB_SERVER -p $DB_PORT -U postgres < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
+    pg_restore --verbose --clean --if-exists --create -h $DB_SERVER -p $DB_PORT -U postgres -d traffic_ops < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
 done
 

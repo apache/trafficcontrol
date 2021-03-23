@@ -23,7 +23,7 @@ set -ex
 d=/docker-entrypoint-initdb.d
 for dump in "$d"/*dump; do
     [[ -f $dump ]] || break
-    t=$(mktemp XXX.sql)
+    t=$(mktemp -p /tmp XXX.sql)
     # convert to sql -- can't load a dump until db initialized,  but sql works
     echo "Restoring from $dump"
     pg_restore -f "$t" $dump
