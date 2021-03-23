@@ -65,7 +65,10 @@
     content: PATH=$PATH:{{ pg_bin_path }}
 
 - name: Openssl shell to troubleshoot
-  shell: "echo Q | opesnssl s_client -connect files.pythonhosted.org:443 -showcerts -servername files.pythonhosted.org"
+  shell: "echo Q | openssl s_client -connect files.pythonhosted.org:443 -showcerts -servername files.pythonhosted.org"
+
+- name: output resolv.conf
+  shell: cat /etc/resolv.conf
 
 - name: nslookup for pythonhosted
   shell: nslookup files.pythonhosted.org
