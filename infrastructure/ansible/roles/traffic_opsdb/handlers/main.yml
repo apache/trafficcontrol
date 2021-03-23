@@ -14,7 +14,7 @@
 #
 - name: Restart Traffic OpsDB
   systemd:
-    name: postgresql-9.6
+    name: "{{ pg_service_name }}"
     state: restarted
     daemon_reload: yes
   notify: Wait for TODB to become available
