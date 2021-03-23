@@ -64,6 +64,12 @@
     dest: "{{ pg_profile_path }}"
     content: PATH=$PATH:{{ pg_bin_path }}
 
+- name: Openssl shell to troubleshoot
+  shell: "echo Q | opesnssl s_client -connect files.pythonhosted.org:443 -showcerts -servername files.pythonhosted.org"
+
+- name: nslookup for pythonhosted
+  shell: nslookup files.pythonhosted.org
+
 - name: Install psycopg2 python module
   pip:
     name: psycopg2
