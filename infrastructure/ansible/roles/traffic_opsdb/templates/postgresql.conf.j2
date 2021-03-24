@@ -256,9 +256,11 @@ archive_mode = off               # enables archiving; off, on, or always
 max_wal_senders = 10		# max number of walsender processes
 				# (change requires restart)
 
+{% if (pg_major_version) | int <= 12 %}
 wal_keep_segments = 32 # in logfile segments, 16MB each; 0 disables
-
-#wal_keep_size = 512
+{% else %}
+wal_keep_size = 512
+{% endif %}
 
 #wal_sender_timeout = 60s	# in milliseconds; 0 disables
 
