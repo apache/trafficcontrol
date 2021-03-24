@@ -32,9 +32,12 @@ if [[ ! -r /goose-config.sh ]]; then
 fi
 . /goose-config.sh
 
-pg_isready=$(rpm -ql postgresql13 | grep bin/pg_isready)
+postgresql_package="$(<<<"postgresql${POSTGRES_VERSION}" sed 's/\.//g' |
+	sed -E 's/([0-9]{2})[0-9]+/\1/g'
+)"
+pg_isready=$(rpm -ql "$postgresql_package" | grep bin/pg_isready)
 if [[ ! -x "$pg_isready" ]] ; then
-    echo "Can't find pg_ready in postgresql13"
+    echo "Can't find pg_ready in ${postgresql_package}"
     exit 1
 fi
 

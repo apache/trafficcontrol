@@ -19,8 +19,9 @@
 # Dockerfile to build Traffic Ops DB admin test environment
 ############################################################
 
-
 FROM centos:7
+ARG POSTGRES_VERSION=13.2
+ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
 # NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo
 RUN yum install -y \
