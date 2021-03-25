@@ -122,13 +122,13 @@ export class ServersPage extends BasePage {
   IsServersItemPresent(serversName: string) {
     return element(by.xpath("//table[@id='serversTable']//tr/td[text()='" + "']")).isPresent()
   }
-  
+
   async ClickAddServer() {
     await this.btnCreateServer.click()
   }
-  
+
   async CreateServer(server){
-    let result = false; 
+    let result = false;
     let basePage = new BasePage();
     let networkIp = Math.round(Math.random() * 100).toString()+ "." + Math.round(Math.random() * 100).toString() + "." + Math.round(Math.random() * 100).toString() +
     "." + Math.round(Math.random() * 100).toString();
@@ -146,7 +146,7 @@ export class ServersPage extends BasePage {
     await this.txtPhysLocation.sendKeys(server.PhysLocation);
     await this.txtInterfaceName.sendKeys(server.InterfaceName);
     await element(by.id(""+server.InterfaceName+"-")).sendKeys(ipv6.toString());
-    if (!await basePage.ClickCreate()) 
+    if (!await basePage.ClickCreate())
         result = false;
     await basePage.GetOutputMessage().then(function(value){
       if(server.validationMessage == value){
@@ -167,7 +167,7 @@ export class ServersPage extends BasePage {
     await browser.actions().mouseMove(element(by.xpath("//span[text()='"+name+"']"))).perform();
     await browser.actions().doubleClick(element(by.xpath("//span[text()='"+name+"']"))).perform();
   }
-  
+
   async SearchDeliveryServiceFromServerPage(name:string){
     let result = false;
     await this.txtDSSearch.clear();
@@ -180,7 +180,7 @@ export class ServersPage extends BasePage {
     }
     return result;
   }
- 
+
   async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string){
     let result = false;
     let basePage = new BasePage();
@@ -244,7 +244,7 @@ export class ServersPage extends BasePage {
     await this.OpenServerPage();
     return result;
    }
-   
+
    async SearchServerServerCapabilities(name:string){
     let result = false;
     await this.searchFilter.clear();
@@ -263,7 +263,7 @@ export class ServersPage extends BasePage {
     return result;
    }
 
- 
+
    async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string){
     let result = false;
     let basePage = new BasePage();

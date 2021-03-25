@@ -38,7 +38,7 @@ config.onPrepare = async function () {
     fs.emptyDir('./Reports/', function (err) {
       console.log(err);
     });
-    
+
     jasmine.getEnv().addReporter(new HtmlReporter({
       baseDirectory: './Reports/',
       clientDefaults: {

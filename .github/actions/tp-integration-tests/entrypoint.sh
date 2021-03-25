@@ -79,7 +79,7 @@ download_go() {
 		return
 	fi
 	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
-	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz" --no-verbose 
+	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz" --no-verbose
 	echo "Extracting Go ${go_version}..."
 	<<-'SUDO_COMMANDS' sudo sh
 		set -o errexit
@@ -146,7 +146,7 @@ sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
 	gcc musl-dev
 
-sudo gem update --system && sudo gem install sass compass 
+sudo gem update --system && sudo gem install sass compass
 sudo npm i -g forever bower grunt
 
 CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
@@ -170,8 +170,8 @@ fi
 to_build() {
   cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
   go mod vendor -v
-  go build . 
-  
+  go build .
+
   openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 
   envsubst <"${resources}/cdn.json" >cdn.conf
@@ -179,8 +179,8 @@ to_build() {
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   envsubst <"${resources}/riak.json" >riak.conf
-  truncate --size=0 warning.log error.log event.log info.log 
-  
+  truncate --size=0 warning.log error.log event.log info.log
+
   ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
   tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
   tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
@@ -228,7 +228,7 @@ jq " .capabilities.chromeOptions.args = [
   ] | .params.apiUrl = \"${tp_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
-  
+
 tsc
 
 # Wait for tp/to build
@@ -236,7 +236,7 @@ timeout 5m bash <<TMOUT
   while ! curl -Lvsk "${tp_fqdn}/api/4.0/ping" >/dev/null 2>&1; do
     echo "waiting for TP/TO server to start on '${tp_fqdn}'"
     sleep 10
-  done 
+  done
 TMOUT
 
 protractor ./GeneratedCode/config.js --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail

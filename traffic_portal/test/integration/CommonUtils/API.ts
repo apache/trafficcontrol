@@ -63,7 +63,7 @@ export class API {
             if(data.hasOwnProperty('getRequest')){
                 let response = await this.GetId(data);
                 if (response != null) {
-                    throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data) 
+                    throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
                 }
             }
 
@@ -76,7 +76,7 @@ export class API {
                         data: data
                     });
                     break;
-                case "get": 
+                case "get":
                     response = await axios({
                         method: method,
                         url: config.params.apiUrl + route,
@@ -121,7 +121,7 @@ export class API {
                     url: config.params.apiUrl + data.getRequest[i].route + query,
                     headers: { Cookie: this.cookie},
                });
-               
+
                if (response.status == 200) {
                     if(data.getRequest[i].hasOwnProperty('isArray')){
                         data[data.getRequest[i].replace] = [await response.data.response[0].id];
@@ -207,7 +207,7 @@ export class API {
                 }
                 return null
             } else if (response.status == undefined) {
-                throw new Error(`Error requesting ${config.params.apiUrl}: ${response}`); 
+                throw new Error(`Error requesting ${config.params.apiUrl}: ${response}`);
             } else {
                 throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
             }
