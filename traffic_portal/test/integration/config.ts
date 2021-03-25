@@ -63,4 +63,3 @@ config.onPrepare = async function () {
       throw error
     }
 }
-
