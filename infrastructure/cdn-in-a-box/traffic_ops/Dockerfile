@@ -35,12 +35,16 @@ RUN set -o nounset -o errexit && \
 	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
 		enable_repo=''; \
+		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
+		dnf -y install gcc centos-release-scl-rh; \
 	else \
-		use_repo='--repo=pgdg96'; \
+		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
 	fi; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y $use_repo -- install postgresql96; \
+	# libicu required by postgresql13
+	dnf -y install libicu; \
+	dnf -y $use_repo -- install postgresql13; \
 	dnf -y install epel-release; \
 	dnf -y $enable_repo install      \
 		bind-utils           \

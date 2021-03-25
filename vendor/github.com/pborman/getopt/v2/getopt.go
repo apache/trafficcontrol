@@ -152,6 +152,34 @@
 // Unless an option type explicitly prohibits it, an option may appear more than
 // once in the arguments.  The last value provided to the option is the value.
 //
+// MANDATORY OPTIONS
+//
+// An option marked as mandatory and not seen when parsing will cause an error
+// to be reported such as: "program: --name is a mandatory option".  An option
+// is marked mandatory by using the Mandatory method:
+//
+//	getopt.FlagLong(&fileName, "path", 0, "the path").Mandatory()
+//
+// Mandatory options have (required) appended to their help message:
+//
+//	--path=value    the path (required)
+//
+// MUTUALLY EXCLUSIVE OPTIONS
+//
+// Options can be marked as part of a mutually exclusive group.  When two or
+// more options in a mutually exclusive group are both seen while parsing then
+// an error such as "program: options -a and -b are mutually exclusive" will be
+// reported.  Mutually exclusive groups are declared using the SetGroup method:
+//
+//	getopt.Flag(&a, 'a', "use method A").SetGroup("method")
+//	getopt.Flag(&a, 'b', "use method B").SetGroup("method")
+//
+// A set can have multiple mutually exclusive groups.  Mutually exclusive groups
+// are identified with their group name in {}'s appeneded to their help message:
+//
+//	 -a    use method A {method}
+//	 -b    use method B {method}
+//
 // BUILTIN TYPES
 //
 // The Flag and FlagLong functions support most standard Go types.  For the
@@ -318,7 +346,7 @@ func (s *Set) PrintOptions(w io.Writer) {
 	for _, opt := range s.options {
 		if opt.uname != "" {
 			opt.help = strings.TrimSpace(opt.help)
-			if len(opt.help) == 0 {
+			if len(opt.help) == 0 && !opt.mandatory && opt.group == "" {
 				fmt.Fprintf(w, " %s\n", opt.uname)
 				continue
 			}
@@ -349,6 +377,12 @@ func (s *Set) PrintOptions(w io.Writer) {
 			}
 			if def != "" {
 				helpMsg += " [" + def + "]"
+			}
+			if opt.group != "" {
+				helpMsg += " {" + opt.group + "}"
+			}
+			if opt.mandatory {
+				helpMsg += " (required)"
 			}
 
 			help := strings.Split(helpMsg, "\n")
@@ -442,6 +476,12 @@ func (s *Set) Getopt(args []string, fn func(Option) bool) (err error) {
 			default:
 				s.setState(Unknown)
 			}
+		}
+	}()
+
+	defer func() {
+		if err == nil {
+			err = s.checkOptions()
 		}
 	}()
 	if fn == nil {
@@ -560,5 +600,37 @@ Parsing:
 		}
 	}
 	s.args = []string{}
+	return nil
+}
+
+func (s *Set) checkOptions() error {
+	groups := map[string]Option{}
+	for _, opt := range s.options {
+		if !opt.Seen() {
+			if opt.mandatory {
+				return fmt.Errorf("option %s is mandatory", opt.Name())
+			}
+			continue
+		}
+		if opt.group == "" {
+			continue
+		}
+		if opt2 := groups[opt.group]; opt2 != nil {
+			return fmt.Errorf("options %s and %s are mutually exclusive", opt2.Name(), opt.Name())
+		}
+		groups[opt.group] = opt
+	}
+	for _, group := range s.requiredGroups {
+		if groups[group] != nil {
+			continue
+		}
+		var flags []string
+		for _, opt := range s.options {
+			if opt.group == group {
+				flags = append(flags, opt.Name())
+			}
+		}
+		return fmt.Errorf("exactly one of the following options must be specified: %s", strings.Join(flags, ", "))
+	}
 	return nil
 }

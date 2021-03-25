@@ -63,7 +63,7 @@ start() {
 
         # Start daemons.
         echo -n $"Starting $name: "
-        daemon nohup $prog $options < /dev/null > /opt/traffic_monitor/var/log/traffic_monitor.log 2>&1 &
+        daemon nohup $prog $options < /dev/null &
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch $lockfile

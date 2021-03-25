@@ -77,11 +77,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
 		// TODO TOAPI add /servers?cdn=1 query param
-		servers, toAddr, unsupported, err := cfg.TOClientNew.GetServers()
-		if err == nil && unsupported {
-			log.Warnln("Traffic Ops newer than ORT, falling back to previous API Servers!")
-			servers, toAddr, err = cfg.TOClient.GetServers()
-		}
+		servers, toAddr, err := cfg.TOClient.GetServers()
 		if err != nil {
 			return errors.New("getting servers: " + err.Error())
 		}
@@ -120,11 +116,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, toAddr, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(*server.CDNID)
-			if err == nil && unsupported {
-				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
-				dses, toAddr, err = cfg.TOClient.GetCDNDeliveryServices(*server.CDNID)
-			}
+			dses, toAddr, err := cfg.TOClient.GetCDNDeliveryServices(*server.CDNID)
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
 			}
@@ -335,13 +327,9 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 
 	topologiesF := func() error {
 		defer func(start time.Time) { log.Infof("topologiesF took %v\n", time.Since(start)) }(time.Now())
-		topologies, toAddr, unsupported, err := cfg.TOClientNew.GetTopologies()
+		topologies, toAddr, err := cfg.TOClient.GetTopologies()
 		if err != nil {
 			return errors.New("getting topologies: " + err.Error())
-		}
-		if unsupported {
-			log.Warnln("Traffic Ops didn't support Topologies, topologies will be not be used for config generation!")
-			return nil
 		}
 		toIPs.Store(toAddr, nil)
 		toData.Topologies = topologies

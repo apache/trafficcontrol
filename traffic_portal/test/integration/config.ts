@@ -18,6 +18,7 @@
  */
 import { API } from './CommonUtils/API';
 import { Config, browser } from 'protractor'
+import * as conf from "./config.json"
 
 let path = require('path');
 let downloadsPath = path.resolve('Downloads');
@@ -27,52 +28,10 @@ let twoNumberRandomize = Math.floor(Math.random() * 101);
 exports.twoNumberRandomize = twoNumberRandomize;
 exports.randomize = randomize;
 
-export let config: Config = {
-  // The address of a running selenium server.
-  seleniumAddress: 'http://localhost:4444/wd/hub',
-  allScriptsTimeout: 200000,
-  // Capabilities to be passed to the webdriver instance.
-  capabilities: {
-    browserName: 'chrome',
-    //Parallelization Configuration (shardTestFiles and maxInstances)
-    shardTestFiles: false,
-    maxInstances: 1,
-    marionette: true,
-    acceptInsecureCerts: true,
-    acceptSslCerts: true,
-    chromeOptions: {
-      //Run protractor headlessly. Comment it out if user want to see the process.
-      args: ["--headless", "--no-sandbox", "--window-size=1920,1080"],
-      prefs: {
-        download: {
-          'prompt_for_download': false,
-          'default_directory': downloadsPath
-        }
-      }
-    }
-  },
-  specs: [
-    "specs/*.spec.js",
-  ],
-  // Options to be passed to Jasmine-node.
-  jasmineNodeOpts: {
-    showColors: true, // Use colors in the command line report.
-    defaultTimeoutInterval: 1000000,
-    random: false,
-    stopSpecOnExpectationFailure: true,
-  },
-
-  params: {
-    apiUrl: ' https://localhost:443/api/3.0',
-    baseUrl: 'https://localhost:443/',
-    login: {
-      username: 'admin',
-      password: 'twelve12'
-    }
-  },
-
-  onPrepare: async function () {
-    browser.waitForAngularEnabled(true);
+export let config: Config = conf;
+config.capabilities.chromeOptions.prefs.download.default_directory = downloadsPath;
+config.onPrepare = async function () {
+    await browser.waitForAngularEnabled(true);
 
     var fs = require('fs-extra');
 
@@ -103,6 +62,4 @@ export let config: Config = {
     } catch (error) {
       throw error
     }
-  },
-  
-};
+}

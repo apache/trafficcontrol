@@ -19,7 +19,7 @@
 # Dockerfile for trafficops db
 ############################################################
 
-FROM postgres:9.6-alpine
+FROM postgres:13.2-alpine
 
 ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 RUN apk add bind-tools \
@@ -35,4 +35,4 @@ COPY dns/set-dns.sh \
      /usr/local/sbin/
 
 RUN chmod -R a+rx /run-db.sh /docker-entrypoint-initdb.d
-ENTRYPOINT /run-db.sh
+CMD ["/run-db.sh"]

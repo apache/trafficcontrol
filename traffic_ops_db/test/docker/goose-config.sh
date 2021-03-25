@@ -22,7 +22,7 @@
 envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS DB_NAME )
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 cat <<-EOF >/opt/traffic_ops/app/db/dbconf.yml

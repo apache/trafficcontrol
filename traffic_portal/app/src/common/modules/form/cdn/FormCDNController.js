@@ -58,6 +58,10 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
         $location.path($location.path() + '/delivery-services');
     };
 
+    $scope.viewNotifications = function() {
+        $location.path($location.path() + '/notifications');
+    };
+
     $scope.queueServerUpdates = function(cdn) {
         var params = {
             title: 'Queue Server Updates: ' + cdn.name,

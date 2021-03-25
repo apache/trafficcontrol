@@ -38,6 +38,8 @@ RUN yum install -y perl-Crypt-ScryptKDF
 RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
+# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
+RUN yum install -y centos-release-scl-rh
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
 ARG RPM=traffic_ops.rpm
@@ -47,9 +49,6 @@ RUN yum install -y /$(basename $RPM)
 # once installed, remove rpm to lower image size
 RUN rm /$(basename $RPM)
 
-RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton
-
-RUN /opt/traffic_ops/install/bin/install_go.sh
 RUN /opt/traffic_ops/install/bin/install_goose.sh
 
 # RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \

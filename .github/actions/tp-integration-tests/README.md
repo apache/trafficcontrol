@@ -17,8 +17,8 @@
   under the License.
 -->
 
-# tp-e2e-tests javascript action
-this action runs the traffic portal e2e tests
+# tp-integration-tests javascript action
+this action runs the traffic portal integration tests
 - requires an smtp service (see `smtp_address` input)
 - provides a riak server at address `trafficvault.infra.ciab.test`
 

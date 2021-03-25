@@ -600,6 +600,13 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	if len(topologies) != 1 {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
+
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(h, topology.ReqInfo.Tx, topology.Name, "topology")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
 	if err := oldTopology.removeParents(); err != nil {

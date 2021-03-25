@@ -67,7 +67,7 @@ const NilTransactionError = errorConstant("method called on APIInfo with nil tra
 
 // ResourceModifiedError is a user-safe error that indicates a precondition
 // failure.
-const ResourceModifiedError = errorConstant("resource was modified")
+const ResourceModifiedError = errorConstant("resource was modified since the time specified by the request headers")
 
 // Common context.Context value keys.
 const (
@@ -1129,12 +1129,39 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 // In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
 // error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
 func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
+	_, okIUS := h[rfc.IfUnmodifiedSince]
+	_, okIM := h[rfc.IfMatch]
+	if !okIUS && !okIM {
+		return nil, nil, http.StatusOK
+	}
 	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
 	if err == nil && found == false {
 		return errors.New("no " + tableName + " found with this id"), nil, http.StatusNotFound
 	}
 	if err != nil {
 		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckIfUnModifiedByName checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
+// In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
+// error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
+func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName string) (error, error, int) {
+	_, okIUS := h[rfc.IfUnmodifiedSince]
+	_, okIM := h[rfc.IfMatch]
+	if !okIUS && !okIM {
+		return nil, nil, http.StatusOK
+	}
+	existingLastUpdated, found, err := GetLastUpdatedByName(tx, name, tableName)
+	if err == nil && found == false {
+		return errors.New("no " + tableName + " found with this name"), nil, http.StatusNotFound
+	}
+	if err != nil {
+		return nil, errors.New(tableName + "update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
 		return ResourceModifiedError, nil, http.StatusPreconditionFailed

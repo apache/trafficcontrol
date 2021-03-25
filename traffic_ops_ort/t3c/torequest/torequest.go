@@ -228,6 +228,10 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 		args = append(args, "--traffic-ops-insecure")
 	}
 
+	if r.Cfg.DNSLocalBind {
+		args = append(args, "--dns-local-bind")
+	}
+
 	switch cmdstr {
 	case "chkconfig":
 		args = append(args, "--get-data=chkconfig")
