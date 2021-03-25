@@ -1,0 +1,39 @@
+{
+  "seleniumAddress": "http://localhost:4444/wd/hub",
+  "allScriptsTimeout": 200000,
+  "capabilities": {
+    "browserName": "chrome",
+    "shardTestFiles": false,
+    "maxInstances": 1,
+    "marionette": true,
+    "acceptInsecureCerts": true,
+    "acceptSslCerts": true,
+    "chromeOptions": {
+      "args": ["--headless", "--no-sandbox", "--window-size=1920,1080"],
+      "prefs": {
+        "download": {
+          "prompt_for_download": false
+        }
+      }
+    }
+  },
+  "specs": [
+    "specs/*.spec.js"
+  ],
+  "framework": "jasmine",
+  "getPageTimeout": 60000,
+  "jasmineNodeOpts": {
+    "showColors": true,
+    "defaultTimeoutInterval": 1000000,
+    "random": false,
+    "stopSpecOnExpectationFailure": true
+  },
+  "params": {
+    "apiUrl": " https://localhost:443/api/4.0",
+    "baseUrl": "https://localhost:443/",
+    "login": {
+      "username": "admin",
+      "password": "twelve12"
+    }
+  }
+}

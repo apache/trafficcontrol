@@ -16,7 +16,7 @@
 # under the License.
 
 name: 'tp-integration-tests'
-description: 'Runs Traffic Portal E2E tests'
+description: 'Runs Traffic Portal Integration tests'
 inputs:
   smtp_address:
     description: 'Address of an SMTP server to use for the Traffic Ops API tests'
@@ -33,4 +33,4 @@ inputs:
     required: false
 runs:
   using: 'node12'
-  main: 'dist/tp-e2e-tests.js'
+  main: 'dist/tp-integration-tests.js'

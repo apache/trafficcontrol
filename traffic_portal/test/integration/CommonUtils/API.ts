@@ -63,7 +63,7 @@ export class API {
             if(data.hasOwnProperty('getRequest')){
                 let response = await this.GetId(data);
                 if (response != null) {
-                    throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data) 
+                    throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
                 }
             }
 
@@ -76,7 +76,7 @@ export class API {
                         data: data
                     });
                     break;
-                case "get": 
+                case "get":
                     response = await axios({
                         method: method,
                         url: config.params.apiUrl + route,
@@ -103,6 +103,8 @@ export class API {
             if (response.status == 200 || response.status == 201) {
                 return null
             } else {
+                console.log("Reponse Data: " , response.data);
+                console.log("Response: " , response);
                 throw new Error('Request Failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data);
             }
         } catch (error) {
@@ -119,7 +121,7 @@ export class API {
                     url: config.params.apiUrl + data.getRequest[i].route + query,
                     headers: { Cookie: this.cookie},
                });
-               
+
                if (response.status == 200) {
                     if(data.getRequest[i].hasOwnProperty('isArray')){
                         data[data.getRequest[i].replace] = [await response.data.response[0].id];
@@ -198,11 +200,14 @@ export class API {
                     for(var j = 0; j < data.Prerequisites[i].Data.length; j++){
                         let output = await this.SendRequest(data.Prerequisites[i].Route, data.Prerequisites[i].Method, data.Prerequisites[i].Data[j]);
                         if (output != null) {
-                            throw new Error(output)
+                            console.error(`UseAPI failed on Action ${data.Prerequisites[i].Action} with index ${i}, and Data index ${j}`);
+                            throw new Error(output);
                         }
                     }
                 }
                 return null
+            } else if (response.status == undefined) {
+                throw new Error(`Error requesting ${config.params.apiUrl}: ${response}`);
             } else {
                 throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
             }
