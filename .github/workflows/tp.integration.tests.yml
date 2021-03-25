@@ -57,8 +57,6 @@ jobs:
         ports:
           - "4444:4444"
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
-        env:
-          GRID_DEBUG: true
       chrome:
         image: selenium/node-chrome
         env:
@@ -92,20 +90,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-#      - name: Cache Alpine Docker image
-#        uses: actions/cache@v2
-#        with:
-#          path: ${{ github.workspace }}/docker-images
-#          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-#      - name: Import cached Alpine Docker image
-#        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-#      - name: Cache node modules
-#        uses: actions/cache@v2
-#        with:
-#          path: ~/.npm
-#          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/bower.json') }}
-#          restore-keys: |
-#            ${{ runner.os }}-node-modules-
+      - name: Cache Alpine Docker image
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/docker-images
+          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+      - name: Import cached Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/integration/package-lock.json traffic_portal/bower.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
