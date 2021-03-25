@@ -1077,9 +1077,9 @@ def exec_psql(conn_str, query): # type: (str, str) -> str
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
 	if sys.version_info.major >= 3:
-		return proc.stdout.strip()
+		return proc.stdout.read().strip()
 	else:
-		return string.strip(proc.stdout)
+		return string.strip(proc.stdout.read())
 
 def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	"""
