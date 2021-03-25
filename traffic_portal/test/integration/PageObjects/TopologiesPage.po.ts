@@ -48,10 +48,7 @@ export class TopologiesPage extends BasePage {
         await this.txtSearchCacheGroup.sendKeys(topologies.CacheGroup + this.randomize)
         if(await browser.isElementPresent(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")) === true){
             await element(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")).click();
-        }else{
-            throw new Error('Test '+topologies.description+' Failed because '+topologies.CacheGroup+' does not display to assign');
         }
-        
         if(await basePage.ClickSubmit() == false){
             result = undefined;
             await snp.NavigateToTopologiesPage();
