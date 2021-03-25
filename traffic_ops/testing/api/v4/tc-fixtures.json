@@ -382,7 +382,7 @@
             "status": "draft"
         },
         {
-            "changeType": "update",
+            "changeType": "create",
             "requested": {
                 "active": false,
                 "cdnName": "cdn1",
