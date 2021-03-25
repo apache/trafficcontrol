@@ -78,6 +78,18 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 
 		time.Sleep(time.Second * 5)
 
+		fmt.Println("------------------------ Verify Plugin Configs ----------------")
+		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/remap.config")
+		if err != nil {
+			t.Errorf("Plugin verification failed for remap.config")
+		}
+		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/plugin.config")
+		if err != nil {
+			t.Errorf("Plugin verification failed for plugin.config")
+		}
+
+		fmt.Println("----------------- End of Verify Plugin Configs ----------------")
+
 		fmt.Println("------------------------ running SYNCDS Test ------------------")
 		// remove the remap.config in preparation for running syncds
 		remap := test_config_dir + "/remap.config"
@@ -124,6 +136,23 @@ func setQueueUpdateStatus(host_name string, update string) error {
 		"--set-reval-status=false",
 	}
 	cmd := exec.Command("/opt/ort/atstccfg", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return nil
+}
+
+func verify_plugin_config(config_file string) error {
+	args := []string{
+		"--log-location-debug=test.log",
+		config_file,
+	}
+	cmd := exec.Command("/opt/ort/plugin_verifier", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out
