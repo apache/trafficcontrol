@@ -79,8 +79,8 @@ INSERT INTO deliveryservice_request (
 	$2,
 	$3,
 	$2,
-	$4,
-	$5,
+	NULLIF($4, 'null'::jsonb),
+	NULLIF($5, 'null'::jsonb),
 	$6
 )
 RETURNING
@@ -95,8 +95,8 @@ SET
 	assignee_id = $1,
 	change_type = $2,
 	last_edited_by_id = $3,
-	deliveryservice = $4,
-	original = $5,
+	deliveryservice = NULLIF($4, 'null'::jsonb),
+	original = NULLIF($5, 'null'::jsonb),
 	status = $6
 WHERE id = $7
 RETURNING
