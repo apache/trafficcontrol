@@ -1096,9 +1096,9 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 		stdout=subprocess.PIPE,
 		universal_newlines=True,
 	)
-	proc.wait()
+	output = proc.communicate()  # type: str
 	if proc.returncode != 0:
-		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
