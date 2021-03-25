@@ -422,7 +422,10 @@ def hash_pass(passwd): # type: (str) -> str
 	p_val = 1
 	dklen = 64
 	salt = os.urandom(dklen)
-	hashed = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val, parallelization_factor=p_val, key_length=dklen).derive()
+	if sys.version_info.major >= 3:
+		hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r_val, p=p_val, dklen=dklen)
+	else:
+		hashed = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val, parallelization_factor=p_val, key_length=dklen).derive()
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
 	salt_b64 = base64.standard_b64encode(salt).decode()
 
