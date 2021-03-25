@@ -136,6 +136,7 @@ tp_default_properties_template:
           geoProvider: 0
           geoLimit: 0
           ccrDnsTtl: 30
+          serviceCategory: other
           anonymousBlockingEnabled: false
         DNS:
           routingName: cdn
@@ -151,9 +152,11 @@ tp_default_properties_template:
           geoLimit: 0
           missLat: 41.881944
           missLong: -87.627778
+          serviceCategory: other
           signingAlgorithm:
           ccrDnsTtl: 30
           regionalGeoBlocking: false
+          maxDnsAnswers: 6
           anonymousBlockingEnabled: false
           ecsEnabled: false
         HTTP:
@@ -167,12 +170,14 @@ tp_default_properties_template:
           maxRequestHeaderBytes: 0
           multiSiteOrigin: false
           logsEnabled: false
-          initialDispersion: 1
+          initialDispersion: 2
           regionalGeoBlocking: false
+          maxDnsAnswers: 6
           geoProvider: 0
           geoLimit: 0
           missLat: 41.881944
           missLong: -87.627778
+          serviceCategory: other
           signingAlgorithm:
           ccrDnsTtl: 3600
           anonymousBlockingEnabled: false
@@ -186,7 +191,9 @@ tp_default_properties_template:
           geoProvider: 0
           geoLimit: 0
           regionalGeoBlocking: false
+          maxDnsAnswers: 6
           ccrDnsTtl: 30
+          serviceCategory: other
           anonymousBlockingEnabled: false
           ecsEnabled: false
       charts:
