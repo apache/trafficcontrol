@@ -65,6 +65,7 @@ func TestDeliveryServices(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestDeliveryServicesWithHeaders(t, header)
+		VerifyPaginationSupportDS(t)
 	})
 }
 
@@ -1169,5 +1170,69 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
 	if _, _, err = tenant4TOClient.CreateDeliveryServiceV4(tenant3DS); err == nil {
 		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
+	}
+}
+
+func VerifyPaginationSupportDS(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	deliveryservice, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	if err != nil {
+		t.Fatalf("cannot GET DeliveryService: %v", err)
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	if !reflect.DeepEqual(deliveryservice[:1], deliveryserviceWithLimit) {
+		t.Error("expected GET deliveryservice with limit = 1 to return first result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "1")
+	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	if !reflect.DeepEqual(deliveryservice[1:2], deliveryserviceWithOffset) {
+		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("page", "2")
+	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	if !reflect.DeepEqual(deliveryservice[1:2], deliveryserviceWithPage) {
+		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	if err == nil {
+		t.Error("expected GET deliveryservice to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET deliveryservice to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	if err == nil {
+		t.Error("expected GET deliveryservice to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET deliveryservice to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	if err == nil {
+		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
