@@ -970,7 +970,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		raise exception
 
 	try:
-		port = int(cdn_conf["port"])
+		port = cdn_conf["port"]  # type: str
 	except KeyError as e:
 		exception = ValueError("missing 'port' config_var")
 		exception.__cause__ = e
