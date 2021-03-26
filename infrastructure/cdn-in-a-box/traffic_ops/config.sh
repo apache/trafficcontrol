@@ -133,7 +133,7 @@ INFLUX_CONF
 
 install_bin=/opt/traffic_ops/install/bin
 input_json="${install_bin}/input.json"
-echo "$(jq "$(<<JQ_FILTER cat
+echo "$(jq "$(<<'JQ_FILTER' envsubst
   ."/opt/traffic_ops/app/conf/cdn.conf"[] |= (
     (select(.config_var == "base_url") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${TO_URL}"
