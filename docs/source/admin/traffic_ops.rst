@@ -214,6 +214,13 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
+
+The postinstall script can also be run non-interactively using :atc-file:`traffic_ops/install/bin/input.json`. To use it, first change the values to match your environment, then pass it to the ``postinstall`` script:
+	.. code-block:: console
+		:caption: Postinstall in Automatic (-a) mode
+
+		/opt/traffic_ops/install/bin/postinstall -a --cfile /opt/traffic_ops/install/bin/input.json
+
 .. deprecated::
 	The postinstall script is now written in Python. If you run into issues with the postinstall script, you are encouraged to file an issue at `https://github.com/apache/trafficcontrol/issues/new/choose`_. The original Perl postinstall script is deprecated and will be removed in a future ATC release. To use the deprecated version anyway, run ``/opt/traffic_ops/install/bin/_postinstall.pl`` directly instead of ``/opt/traffic_ops/install/bin/postinstall``.
 

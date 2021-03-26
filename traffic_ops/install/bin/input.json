@@ -9,8 +9,12 @@
       "config_var": "keepSecrets"
     },
     {
-      "Port to serve on?": "443",
-      "config_var": "port"
+      "Number of workers?": "12",
+      "config_var": "workers"
+    },
+    {
+      "Traffic Ops url?": "https://[::]",
+      "config_var": "base_url"
     }
   ],
   "/opt/traffic_ops/app/conf/ldap.conf": [
@@ -54,27 +58,27 @@
       "config_var": "port"
     },
     {
-      "Traffic Ops database user": "traffic_ops",
+      "Traffic Ops database user": "dbuser",
       "config_var": "user"
     },
     {
-      "Traffic Ops database password": "default",
+      "Traffic Ops database password": "dbpass",
       "config_var": "password",
       "hidden": "1"
     }
   ],
   "/opt/traffic_ops/app/db/dbconf.yml": [
     {
-      "Database server root (admin) user": "root",
-      "config_var": "dbAdminUser"
+      "Database server root (admin) username": "dbuser",
+      "config_var": "pgUser"
     },
     {
-      "Database server admin password": "default",
-      "config_var": "dbAdminPw",
+      "Database server admin password": "dbpass",
+      "config_var": "pgPassword",
       "hidden": "1"
     },
     {
-      "Download Maxmind Database?": "yes",
+      "Download Maxmind Database?": "no",
       "config_var": "maxmind"
     }
   ],
@@ -115,7 +119,7 @@
   ],
   "/opt/traffic_ops/install/data/json/profiles.json": [
     {
-      "Traffic Ops url": "https://localhost",
+      "Traffic Ops url": "https://[::]",
       "config_var": "tm.url"
     },
     {
@@ -123,49 +127,17 @@
       "config_var": "cdn_name"
     },
     {
-      "Health Polling Interval (milliseconds)": "8000",
-      "config_var": "health_polling_int"
-    },
-    {
       "DNS sub-domain for which your CDN is authoritative": "cdn1.kabletown.net",
       "config_var": "dns_subdomain"
-    },
-    {
-      "TLD SOA admin": "traffic_ops",
-      "config_var": "soa_admin"
-    },
-    {
-      "TrafficServer Drive Prefix": "/dev/sd",
-      "config_var": "driver_prefix"
-    },
-    {
-      "TrafficServer RAM Drive Prefix": "/dev/ram",
-      "config_var": "ram_drive_prefix"
-    },
-    {
-      "TrafficServer RAM Drive Letters (comma separated)": "0,1,2,3,4,5,6,7",
-      "config_var": "ram_drive_letters"
-    },
-    {
-      "Health Threshold Load Average": "25",
-      "config_var": "health_thresh_load_avg"
-    },
-    {
-      "Health Threshold Available Bandwidth in Kbps": "1750000",
-      "config_var": "health_thresh_kbps"
-    },
-    {
-      "Traffic Server Health Connection Timeout (milliseconds)": "2000",
-      "config_var": "health_connect_timeout"
     }
   ],
   "/opt/traffic_ops/install/data/json/users.json": [
     {
-      "Administration username for Traffic Ops": "root",
+      "Administration username for Traffic Ops": "admin",
       "config_var": "tmAdminUser"
     },
     {
-      "Password for the admin user": "default",
+      "Password for the admin user": "twelve",
       "config_var": "tmAdminPw",
       "hidden": "1"
     }
