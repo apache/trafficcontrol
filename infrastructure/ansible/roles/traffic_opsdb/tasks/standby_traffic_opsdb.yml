@@ -49,7 +49,7 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: 0700
-    dest: "{{ postgresql_datadir }}/{{ item }}"
+    dest: "{{ postgresql_datadir }}/{{ _loop_ittr }}"
   loop:
     - recovery.conf
   loop_control:
