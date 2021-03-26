@@ -102,7 +102,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout*time.Duration(len(existingCerts)))
+	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
@@ -226,10 +226,11 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 					DeliveryService: &keyObj.DeliveryService,
 					CDN:             &keyObj.CDN,
 					Version:         &newVersion,
+					AuthType:        &keyObj.AuthType,
 				},
 			}
 
-			if error := GetLetsEncryptCertificates(cfg, req, ctx, currentUser); error != nil {
+			if error := GetAcmeCertificates(cfg, req, ctx, currentUser); error != nil {
 				dsExpInfo.Error = error
 				errorCount++
 			} else {

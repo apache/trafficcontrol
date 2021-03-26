@@ -132,6 +132,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
+
+		{api.Version{4, 1}, http.MethodGet, `acme_accounts/providers?$`, acme.ReadProviders, auth.PrivLevelOperations, Authenticated, nil, 4034390565},
+		{api.Version{4, 1}, http.MethodPost, `deliveryservices/sslkeys/generate/acme/?$`, deliveryservice.GenerateAcmeCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390576},
+
 		// ACME account information
 		{api.Version{4, 0}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, Authenticated, nil, 4034390561},
 		{api.Version{4, 0}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, Authenticated, nil, 4034390562},

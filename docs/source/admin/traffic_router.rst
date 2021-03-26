@@ -782,8 +782,6 @@ External account binding information can only be used once, so after the first t
 
 .. Important:: The `acme_provider` and `user_email` combination must be unique.  The `acme_provider` field must correlate to the `AuthType` field for each certificate to be renewed using that provider.
 
-.. Note:: As of writing, external account binding can only be used for certificate renewals.
-
 External account binding can be set up through :ref:`cdn.conf` by updating the following fields:
 
 .. table:: Fields to update for external account binding using :abbr:`ACME (Automatic Certificate Management Environment)` protocol under `acme_accounts`
