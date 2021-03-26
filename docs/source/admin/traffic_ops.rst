@@ -105,7 +105,7 @@ Guide
 		Password:
 		to-#
 
-#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. The :program:`postinstall` script will first get all required Perl packages from :abbr:`CPAN (The Comprehensive Perl Archive Network)`. This may take a while, expect up to 30 minutes on the first install. If there are any prompts in this phase, please just answer with the defaults (some :abbr:`CPAN (The Comprehensive Perl Archive Network)` installs can prompt for install questions). When this phase is complete, you will see ``Complete! Modules were installed into /opt/traffic_ops/app/local``. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
+#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
 
 	.. code-block:: console
 		:caption: Example Output
@@ -214,7 +214,8 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
-.. note:: A Python postinstall script also exists, and, unlike the Perl postinstall script, has no dependencies besides the interpreter itself. To use it, run ``/opt/traffic_ops/install/bin/postinstall.py`` with the same arguments you would have passed to ``/opt/traffic_ops/install/bin/postinstall`` (runs under either Python 3 or Python 2).
+.. deprecated::
+	The postinstall script is now written in Python. If you run into issues with the postinstall script, you are encouraged to file an issue at `https://github.com/apache/trafficcontrol/issues/new/choose`_. The original Perl postinstall script is deprecated and will be removed in a future ATC release. To use the deprecated version anyway, run ``/opt/traffic_ops/install/bin/_postinstall.pl`` directly instead of ``/opt/traffic_ops/install/bin/postinstall``.
 
 .. _to-upgrading:
 
