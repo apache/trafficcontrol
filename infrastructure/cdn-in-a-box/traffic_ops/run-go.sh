@@ -165,11 +165,6 @@ until [[ -f "$ENROLLER_DIR/enroller-started" ]]; do
 	sleep 3;
 done
 
-/trafficops-init.sh;
-
-# enroll in the background so traffic_ops_golang can run in foreground
-TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
-
 # Add initial data to traffic ops
 /trafficops-init.sh
 
