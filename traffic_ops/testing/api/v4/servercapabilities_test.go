@@ -97,7 +97,7 @@ func GetTestServerCapabilities(t *testing.T) {
 }
 
 func UpdateTestServerCapabilitiesWithHeaders(t *testing.T, header http.Header) {
-	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	resp, _, err := TOSession.GetServerCapabilities(header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -128,7 +128,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	var header http.Header
 
 	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	resp, _, err := TOSession.GetServerCapabilities(header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -146,7 +146,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	}
 
 	// Get updated name
-	getResp, _, err := TOSession.GetServerCapabilityWithHdr(newSCName, header)
+	getResp, _, err := TOSession.GetServerCapability(newSCName, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but %v", err.Error())
 	}

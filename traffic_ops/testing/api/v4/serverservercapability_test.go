@@ -227,7 +227,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	var header http.Header
 
 	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilitiesWithHdr(header)
+	resp, _, err := TOSession.GetServerCapabilities(header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -239,7 +239,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	resp[0].Name = newSCName
 
 	// Get all servers related to original sever capability name
-	servOrigResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &originalName, nil)
+	servOrigResp, _, err := TOSession.GetServerServerCapabilities(nil, nil, &originalName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", originalName, err)
 	}
@@ -258,7 +258,7 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	//To check whether the primary key change trickled down to server table
-	servUpdatedResp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, &newSCName, nil)
+	servUpdatedResp, _, err := TOSession.GetServerServerCapabilities(nil, nil, &newSCName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
 	}

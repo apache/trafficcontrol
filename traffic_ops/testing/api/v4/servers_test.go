@@ -1080,7 +1080,7 @@ func DeleteTestServers(t *testing.T) {
 func GetServersForNonExistentDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Set("dsId", "999999")
-	resp, reqInf, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, reqInf, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Errorf("error getting the servers for DS with ID %d: %v", 999999, err.Error())
 	}

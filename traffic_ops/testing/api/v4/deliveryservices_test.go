@@ -1177,7 +1177,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 func VerifyPaginationSupportDS(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
-	deliveryservice, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	deliveryservice, _, err := TOSession.GetDeliveryServices(nil, qparams)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryService: %v", err)
 	}
@@ -1185,7 +1185,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
-	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServices(nil, qparams)
 	if !reflect.DeepEqual(deliveryservice[:1], deliveryserviceWithLimit) {
 		t.Error("expected GET deliveryservice with limit = 1 to return first result")
 	}
@@ -1194,7 +1194,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "1")
-	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServices(nil, qparams)
 	if !reflect.DeepEqual(deliveryservice[1:2], deliveryserviceWithOffset) {
 		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
 	}
@@ -1203,14 +1203,14 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("page", "2")
-	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
+	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServices(nil, qparams)
 	if !reflect.DeepEqual(deliveryservice[1:2], deliveryserviceWithPage) {
 		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
 	}
 
 	qparams = url.Values{}
 	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	_, _, err = TOSession.GetDeliveryServices(nil, qparams)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when limit is not bigger than -1")
 	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
@@ -1220,7 +1220,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	_, _, err = TOSession.GetDeliveryServices(nil, qparams)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when offset is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
@@ -1230,7 +1230,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("page", "0")
-	_, _, err = TOSession.GetDeliveryServicesV4(nil, qparams)
+	_, _, err = TOSession.GetDeliveryServices(nil, qparams)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
