@@ -59,8 +59,16 @@ trap 'rm -rf $ROOT_DIR' EXIT;
 
 "$python_bin" <<EOF;
 from __future__ import print_function
+import importlib
 import sys
-from _postinstall import Scrypt
+from os.path import dirname, join
+module_name = '_postinstall'
+if sys.version_info.major >= 3:
+	from importlib.machinery import SourceFileLoader
+	Scrypt = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name).Scrypt
+else:
+	import imp
+	Scrypt = imp.load_source(module_name, join(dirname(__file__), module_name)).Scrypt
 
 passwd = '${TO_PASSWORD}'
 n = 2 ** 10
