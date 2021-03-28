@@ -46,10 +46,10 @@ python_version="${python_version:-3}";
 python_bin="${python_bin:-/usr/bin/python${python_version}}";
 
 if [[ ! -x "$python_bin" && "$python_version" -ge 3 ]]; then
-	echo "Python 3.6+ is required to run - or test - postinstall.py" >&2;
+	echo "Python 3.6+ is required to run - or test - _postinstall" >&2;
 	exit 1;
 elif [[ ! -x "$python_bin" && "$python_version" == 2 ]]; then
-	echo "Python ${python_version} is required to run - or test - postinstall.py against Python 2" >&2;
+	echo "Python ${python_version} is required to run - or test - _postinstall against Python 2" >&2;
 fi
 
 readonly TO_PASSWORD=twelve;
@@ -59,8 +59,16 @@ trap 'rm -rf $ROOT_DIR' EXIT;
 
 "$python_bin" <<EOF;
 from __future__ import print_function
+import importlib
 import sys
-from postinstall import Scrypt
+from os.path import dirname, join
+module_name = '_postinstall'
+if sys.version_info.major >= 3:
+	from importlib.machinery import SourceFileLoader
+	Scrypt = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name).Scrypt
+else:
+	import imp
+	Scrypt = imp.load_source(module_name, join(dirname(__file__), module_name)).Scrypt
 
 passwd = '${TO_PASSWORD}'
 n = 2 ** 10
@@ -110,7 +118,7 @@ EOF
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
-# defaults.json is used as input into the `--cfile` option of postinstall.py
+# defaults.json is used as input into the `--cfile` option of _postinstall
 # for testing purposes
 cat <<- EOF > "$ROOT_DIR/defaults.json"
 {
@@ -318,7 +326,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 }
 EOF
 
-"$python_bin" "$MY_DIR/postinstall.py" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
+"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
 
 if grep -q 'ERROR' $ROOT_DIR/stderr; then
 	echo "Errors found in script logs" >&2;
@@ -449,7 +457,7 @@ if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_gol
 	print('Malformed traffic_ops_golang object in cdn.conf:', conf['traffic_ops_golang'], sys.stderr)
 	exit(1)
 
-if conf['traffic_ops_golang']['port'] != 443:
+if conf['traffic_ops_golang']['port'] != '443':
 	print('Incorrect traffic_ops_golang.port, expected: 443, got:', conf['traffic_ops_golang']['port'], file=sys.stderr)
 	exit(1)
 
