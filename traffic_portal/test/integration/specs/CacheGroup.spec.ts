@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { readFileSync } from "fs";
+
 import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CacheGroupPage } from '../PageObjects/CacheGroup.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 
 
-let fs = require('fs')
-let using = require('jasmine-data-provider');
-
 let filename = 'Data/CacheGroup/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
@@ -56,21 +57,21 @@ using(testData.CacheGroup, function (cacheGroupData) {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
                         await cacheGroupPage.OpenCacheGroupsPage();
-                    }) 
+                    })
                 }else{
                     it(update.description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
                         await cacheGroupPage.OpenCacheGroupsPage();
-                    }) 
+                    })
                 }
-                
+
             })
             using(cacheGroupData.Remove, function (remove) {
                 it(remove.description, async function () {
                     await cacheGroupPage.SearchCacheGroups(remove.Name)
                     expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
-                }) 
+                })
             })
             it('can logout', async function () {
                 expect(await topNavigation.Logout()).toBeTruthy();
