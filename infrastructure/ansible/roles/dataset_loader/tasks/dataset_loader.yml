@@ -881,6 +881,30 @@
     method: POST
     body: '{"dsIds":[{{ dns_ds_id }}],"replace":false}'
 
+- name: Create IPv4 Federation Resolvers
+  with_items: "{{ dl_ds_merged_federation.mappings.resolve4 }}"
+  vars:
+    type_name: RESOLVE4
+    type_query: "[?name == `{{ type_name }}`].id | [0]"
+    resolve4_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
+    method: POST
+    body: '{"ipAddress":{{ item | to_json }},"typeId":{{ resolve4_type_id }}}'
+  register: ipv4_federation_resolver_out
+
+- name: Create IPv6 Federation Resolvers
+  with_items: "{{ dl_ds_merged_federation.mappings.resolve6 }}"
+  vars:
+    type_name: RESOLVE6
+    type_query: "[?name == `{{ type_name }}`].id | [0]"
+    resolve6_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
+    method: POST
+    body: '{"ipAddress":{{ item | to_json }},"typeId":{{ resolve6_type_id }}}'
+  register: ipv6_federation_resolver_out
+
 - name: Ensure SSL info directory exists
   file:
     state: directory
