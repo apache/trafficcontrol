@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - t3c: Added option to track config changes in git.
 - ORT config generation: Added a rule to ip_allow such that PURGE requests are allowed over localhost
 - Added integration to use ACME to generate new SSL certificates.
+- Add a Federation to the Ansible Dataset Loader
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.

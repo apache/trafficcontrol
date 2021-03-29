@@ -4042,3 +4042,15 @@ dl_ds_default_ds_template:
     longDesc: A basic HTTP routed Delivery Service with Anonymous IP Block Enabled
     anonymousBlockingEnabled: true 
     uniqueKey: simple-http-anon-block
+
+# Federations
+dl_ds_merged_federation: "{{ dl_ds_default_federation }}"
+dl_ds_default_federation:
+  deliveryService: simple-dns-{{ Target_cdn_delegation | lower }}
+  mappings:
+    cname: 'foo.kabletown.net.'
+    resolve4:
+      - '0.0.0.0/0'
+    resolve6:
+      - '::/0'
+    ttl: 60

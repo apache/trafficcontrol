@@ -21,6 +21,12 @@
   register: dl_mojo_token
   no_log: true
 
+- name: Get TO User
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/user/current"
+    method: GET
+  register: current_user_out
+
 - name: Collect All CDN delegations assigned to Traffic Routers
   set_fact:
     tmp_cdnDelegation: "{{ hostvars[item]['cdn'] }}"
@@ -837,6 +843,23 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
     method: GET
   register: get_all_ds
+
+- name: Get DNS Delivery Service ID
+  vars:
+    dns_ds_id_query: 'response[?xmlId == `{{ dl_ds_merged_federation.deliveryService | to_json }}`].id | [0]'
+  set_fact:
+    dns_ds_id: "{{ get_all_ds.json | json_query(dns_ds_id_query) }}"
+
+- name: Create Federation
+  vars:
+    user_id: '{{ current_user_out.json | json_query("response.id") }}'
+    cdn_name_query: 'response[?xmlId == `{{ dl_ds_merged_federation.deliveryService | to_json }}`].cdnName | [0]'
+    cdn_name: '{{ get_all_ds.json | json_query(cdn_name_query) }}'
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ cdn_name }}/federations"
+    method: POST
+    body: '{"cname":{{ dl_ds_merged_federation.mappings.cname | to_json }},"ttl":{{ dl_ds_merged_federation.mappings.ttl }},"dsId":{{ dns_ds_id }},"userId":{{ user_id }}}'
+  register: create_federation_out
 
 - name: Ensure SSL info directory exists
   file:
