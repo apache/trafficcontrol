@@ -66,6 +66,13 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestDeliveryServicesWithHeaders(t, header)
 		VerifyPaginationSupportDS(t)
+		GetDeliveryServiceByCdn(t)
+		GetDeliveryServiceByInvalidCdn(t)
+		GetDeliveryServiceByLogsEnabled(t)
+		GetDeliveryServiceByValidProfile(t)
+		GetDeliveryServiceByInvalidProfile(t)
+		GetDeliveryServiceByValidTenant(t)
+		GetDeliveryServiceByInvalidTenant(t)
 	})
 }
 
@@ -1204,7 +1211,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	qparams.Set("page", "2")
 	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 	if !reflect.DeepEqual(deliveryservice[1:2], deliveryserviceWithPage) {
-		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
+		t.Error("expected GET deliveryservice with limit = 1, page = 2 to return second result")
 	}
 
 	qparams = url.Values{}
@@ -1234,5 +1241,127 @@ func VerifyPaginationSupportDS(t *testing.T) {
 		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
 		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: " + err.Error())
+	}
+}
+
+func GetDeliveryServiceByCdn(t *testing.T){
+
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.CDNID == nil && firstDS.CDNName != nil {
+			cdns, _, err := TOSession.GetCDNByNameWithHdr(*firstDS.CDNName, nil)
+			if err != nil {
+				t.Errorf("Error in Getting CDN by Name: %v", err)
+			}
+			if len(cdns) == 0 {
+				t.Errorf("no CDN named " + *firstDS.CDNName)
+			}
+			firstDS.CDNID = &cdns[0].ID
+		}
+		resp, _, err := TOSession.GetDeliveryServicesByCDNIDWithHdr(*firstDS.CDNID, nil)
+		if err != nil {
+				t.Errorf("Error in Getting DeliveryServices by CDN ID: %v - %v", err, resp)
+		}
+		if *resp[0].CDNName != *firstDS.CDNName {
+				t.Errorf("name expected: %s, actual: %s", *firstDS.CDNName, *resp[0].CDNName)
+		}
+	}
+}
+
+func GetDeliveryServiceByInvalidCdn(t *testing.T){
+	resp, _, err := TOSession.GetDeliveryServicesByCDNIDWithHdr(10000, nil)
+	if err != nil {
+		t.Errorf("Error!! Getting CDN by Invalid ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid CDN shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByLogsEnabled(t *testing.T){
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		qparams := url.Values{}
+		qparams.Set("logsEnabled", strconv.FormatBool(*firstDS.LogsEnabled))
+		resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+		if err != nil {
+			t.Errorf("Error in Getting deliveryservice by logsEnabled: %v", err)
+		}
+		if *resp[0].LogsEnabled != *firstDS.LogsEnabled {
+				t.Errorf("name expected: %t, actual: %t", *firstDS.LogsEnabled, *resp[0].LogsEnabled)
+		}
+	}
+}
+
+func GetDeliveryServiceByValidProfile(t *testing.T){
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+		if firstDS.ProfileID == nil && firstDS.ProfileName != nil {
+			profile, _, err := TOSession.GetProfileByNameWithHdr(*firstDS.ProfileName, nil)
+			if err != nil {
+				t.Errorf("Error in Getting Profile by Name: %v", err)
+			}
+			if len(profile) == 0 {
+				t.Errorf("no Profile named " + *firstDS.ProfileName)
+			}
+			firstDS.ProfileID = &profile[0].ID
+			qparams := url.Values{}
+			qparams.Set("profile", strconv.Itoa(*firstDS.ProfileID))
+			resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+			if err != nil {
+				t.Errorf("Error in Getting deliveryservice by Profile: %v", err)
+			}
+			if *resp[0].ProfileName != *firstDS.ProfileName {
+					t.Errorf("name expected: %s, actual: %s", *firstDS.ProfileName, *resp[0].ProfileName)
+			}
+		}
+	}
+}
+
+func GetDeliveryServiceByInvalidProfile(t *testing.T){
+	qparams := url.Values{}
+	qparams.Set("profile", "10000")
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting deliveryservice by Invalid Profile ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Profile shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByValidTenant(t *testing.T){
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+		if firstDS.TenantID == nil && firstDS.Tenant != nil {
+			ten, _, err := TOSession.TenantByNameWithHdr(*firstDS.Tenant, nil)
+			if err != nil {
+				t.Errorf("Error in Getting Tenant by Name: %v", err)
+			}
+			firstDS.TenantID = &ten.ID
+			qparams := url.Values{}
+			qparams.Set("tenant", strconv.Itoa(*firstDS.TenantID))
+			resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+			if err != nil {
+				t.Errorf("Error in Getting Deliveryservice by Tenant: %v", err)
+			}
+			if *resp[0].Tenant != *firstDS.Tenant {
+					t.Errorf("name expected: %s, actual: %s", *firstDS.Tenant, *resp[0].Tenant)
+			}
+		}
+	}
+}
+
+func GetDeliveryServiceByInvalidTenant(t *testing.T){
+	qparams := url.Values{}
+	qparams.Set("tenant", "10000")
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting Deliveryservice by Invalid Tenant ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Tenant shouldn't have any response %v Error %v", resp, err)
 	}
 }
