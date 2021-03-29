@@ -307,7 +307,7 @@ TrafficOps client libraries are available in Java, Go and Python. You can read (
 
 API V2 Routes
 =============
-Documents all API version 2 routes.
+API routes available in version 2.
 
 .. toctree::
 	:maxdepth: 4
@@ -317,13 +317,23 @@ Documents all API version 2 routes.
 
 API V3 Routes
 =============
-Documents all API version 3 routes.
+API routes available in version 3.
 
 .. toctree::
 	:maxdepth: 4
 	:glob:
 
 	v3/*
+
+API V4 Routes
+=============
+API routes available in version 4.
+
+.. toctree::
+	:maxdepth: 4
+	:glob:
+
+	v4/*
 
 Migrating from API V1
 =====================
