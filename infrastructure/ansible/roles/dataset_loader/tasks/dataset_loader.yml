@@ -905,6 +905,20 @@
     body: '{"ipAddress":{{ item | to_json }},"typeId":{{ resolve6_type_id }}}'
   register: ipv6_federation_resolver_out
 
+- name: Get Federation Resolver IDs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
+    method: GET
+  register: federation_resolver_ids_out
+
+- name: Assign Federation Resolvers to Federation
+  vars:
+    federation_resolver_ids_query: 'response[].id'
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/federation_resolvers"
+    method: POST
+    body: '{"fedResolverIds":{{ federation_resolver_ids_out.json | json_query(federation_resolver_ids_query) }},"replace":true}'
+
 - name: Ensure SSL info directory exists
   file:
     state: directory
