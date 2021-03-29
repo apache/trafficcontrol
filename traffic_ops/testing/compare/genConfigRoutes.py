@@ -89,7 +89,6 @@ def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 		return
 
 	for cdn in cdns:
-		yield "/CRConfig-Snapshots/%s/CRConfig.json" % cdn
 		yield "/api/2.0/cdns/%s/snapshot" % cdn
 		yield "/api/2.0/cdns/%s/snapshot/new" % cdn
 

@@ -6,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -44,7 +44,7 @@ init() {
 	TMP_DOMAIN=$DOMAIN
 	TMP_GATEWAY=$GATEWAY
 
-	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"		
+	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
 	echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
 	TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="CCR"]; print match[0]')"
@@ -99,9 +99,9 @@ init() {
 	sed -i -- "s/# traffic_monitor.bootstrap.hosts=some-traffic_monitor.company.net:80;/traffic_monitor.bootstrap.hosts=$TRAFFIC_MONITORS/g" /opt/traffic_router/conf/traffic_monitor.properties
 
 	sed -i -- "s/traffic_ops.username=admin/traffic_ops.username=$TRAFFIC_OPS_USER/g" /opt/traffic_router/conf/traffic_ops.properties
-	sed -i -- "s/traffic_ops.password=FIXME/traffic_ops.password=$TRAFFIC_OPS_PASS/g" /opt/traffic_router/conf/traffic_ops.properties	
+	sed -i -- "s/traffic_ops.password=FIXME/traffic_ops.password=$TRAFFIC_OPS_PASS/g" /opt/traffic_router/conf/traffic_ops.properties
 
-	curl -k -v --cookie "mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/tools/write_crconfig/cdn
+	curl -k -v -X PUT --cookie "mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/snapshot/cdn
 
 	echo "INITIALIZED=1" >> /etc/environment
 }
