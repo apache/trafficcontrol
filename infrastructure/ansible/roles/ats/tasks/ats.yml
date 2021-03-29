@@ -27,6 +27,7 @@
   copy:
     src: /opt/ort/supermicro_udev_mapper.pl
     dest: /bin/supermicro_udev_mapper.pl
+    remote_src: true
     owner: root
     group: root
     mode: 0755
