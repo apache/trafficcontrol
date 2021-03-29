@@ -239,7 +239,7 @@ sub get_crconfigs {
 	my $result     = &curl_me($to_cdn_url);
 	my $cdn_json   = decode_json($result);
 
-    my $old_ops = $CURL_OPTS;
+	my $old_ops = $CURL_OPTS;
 
 	foreach my $cdn ( @{ $cdn_json->{response} } ) {
 		next unless $cdn->{name} ne "ALL";
@@ -250,7 +250,7 @@ sub get_crconfigs {
 			my $start = [gettimeofday];
 			$CURL_OPTS = $CURL_OPTS . ' -X PUT';
 			&curl_me( $to_url . "/api/2.0/snapshot/" . $cdn->{name} );
-            $CURL_OPTS = $old_ops;
+			$CURL_OPTS = $old_ops;
 			my $load_time = tv_interval($start);
 			print " time: " . $load_time . "\n";
 		}
