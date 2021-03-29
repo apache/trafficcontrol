@@ -18,24 +18,22 @@
  */
 
 // API Utility
-import axios from 'axios';
-import { config } from '../config';
+import { Agent } from "https";
 
-const https = require('https');
+import axios from 'axios';
+import randomIpv6 from "random-ipv6";
+
+import { config } from '../config';
 
 export class API {
 
-    private config = require('../config');
-    private randomIpv6 = require('random-ipv6');
-    private randomize = this.config.randomize;
-    private twoNumberRandomize = this.config.twoNumberRandomize;
-    private cookie: string;
+    private cookie = "";
 
     constructor() {
         axios.defaults.headers.common['Accept'] = 'application/json'
         axios.defaults.headers.common['Authorization'] = 'No-Auth'
         axios.defaults.headers.common['Content-Type'] = 'application/json'
-        axios.defaults.httpsAgent = new https.Agent({ rejectUnauthorized: false })
+        axios.defaults.httpsAgent = new Agent({ rejectUnauthorized: false })
     }
 
     Login = async function () {
@@ -85,13 +83,13 @@ export class API {
                     break;
                 case "delete":
                     if ((data.route).includes('?name')){
-                        data.route = data.route + this.randomize
+                        data.route = data.route + config.randomize
                     }
                     if ((data.route).includes('?id')){
                         data.route = data.route + data.id;
                     }
                     if((data.route).includes('/service_categories/')){
-                        data.route = data.route + this.randomize
+                        data.route = data.route + config.randomize
                     }
                     response = await axios({
                         method: method,
@@ -114,7 +112,7 @@ export class API {
 
     GetId = async function (data) {
         for(var i = 0; i < data.getRequest.length; i++) {
-            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + this.randomize;
+            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + config.randomize;
             try {
                 const response = await axios({
                     method: 'get',
@@ -142,48 +140,48 @@ export class API {
 
    Randomize = function(data) {
         if(data.hasOwnProperty('email')) {
-            data['email'] = data.fullName + this.randomize + data.email;
+            data['email'] = data.fullName + config.randomize + data.email;
         }
         if(data.hasOwnProperty('fullName')) {
-            data['fullName'] = data.fullName + this.randomize;
+            data['fullName'] = data.fullName + config.randomize;
         }
         if(data.hasOwnProperty('hostName')) {
-            data['hostName'] = data.hostName + this.randomize;
+            data['hostName'] = data.hostName + config.randomize;
         }
         if(data.hasOwnProperty('ipAddress')) {
             data['ipAddress'] = (Math.floor(Math.random() * 255) + 1)+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255));
         }
         if(data.hasOwnProperty('name')) {
-            data['name'] = data.name + this.randomize;
+            data['name'] = data.name + config.randomize;
         }
         if(data.hasOwnProperty('requiredCapability')) {
-            data['requiredCapability'] = data.requiredCapability + this.randomize;
+            data['requiredCapability'] = data.requiredCapability + config.randomize;
         }
         if(data.hasOwnProperty('serverCapability')) {
-            data['serverCapability'] = data.serverCapability + this.randomize;
+            data['serverCapability'] = data.serverCapability + config.randomize;
         }
         if(data.hasOwnProperty('username')) {
-            data['username'] = data.username + this.randomize;
+            data['username'] = data.username + config.randomize;
         }
         if(data.hasOwnProperty('xmlId')) {
-            data['xmlId'] = data.xmlId + this.randomize;
+            data['xmlId'] = data.xmlId + config.randomize;
         }
         if(data.hasOwnProperty('shortName')) {
-            data['shortName'] = data.shortName + this.randomize;
+            data['shortName'] = data.shortName + config.randomize;
         }
         if(data.hasOwnProperty('divisionName')) {
-            data['divisionName'] = data.divisionName + this.randomize;
+            data['divisionName'] = data.divisionName + config.randomize;
         }
         if(data.hasOwnProperty('domainName')) {
-            data['domainName'] = data.domainName + this.randomize;
+            data['domainName'] = data.domainName + config.randomize;
         }
         if(data.hasOwnProperty('nodes')){
            for(var i in  data['nodes']){
-               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + this.randomize;
+               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + config.randomize;
            }
         }
         if(data.hasOwnProperty('interfaces')){
-            let ipv6 = this.randomIpv6();
+            let ipv6 = randomIpv6();
             for(var i in data['interfaces']){
                 for(var j in data['interfaces'][i].ipAddresses){
                    data['interfaces'][i].ipAddresses[j].address = ipv6.toString();
