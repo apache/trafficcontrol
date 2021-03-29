@@ -17,7 +17,7 @@ ADD COLUMN original jsonb DEFAULT NULL;
 
 UPDATE public.deliveryservice_request
 SET original=deliveryservice
-WHERE status = 'complete' OR status = 'rejected' OR status = 'pending' OR change_type = 'delete';
+WHERE (status = 'complete' OR status = 'rejected' OR status = 'pending' OR change_type = 'delete') AND change_type != 'create';
 
 ALTER TABLE public.deliveryservice_request
 ALTER COLUMN deliveryservice
