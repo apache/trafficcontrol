@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element } from 'protractor'
+import { by, element } from 'protractor';
+
+import { config } from '../config';
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from './SideNavigationPage.po';
 export class TenantsPage extends BasePage {
@@ -29,7 +31,7 @@ export class TenantsPage extends BasePage {
     private mnuTenantTable = element(by.id('tenantsTable'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
+    private readonly config = config;
     private randomize = this.config.randomize;
 
     async OpenTenantPage(){

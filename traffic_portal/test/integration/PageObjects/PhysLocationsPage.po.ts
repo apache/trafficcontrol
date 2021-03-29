@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element } from 'protractor'
+import { by, element } from 'protractor';
+
+import { config } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class PhysLocationsPage extends BasePage {
 
   private btnCreateNewPhysLocation = element(by.name('createPhysLocationButton'));
@@ -37,7 +40,7 @@ export class PhysLocationsPage extends BasePage {
   private mnuPhysLocationsTable = element(by.id('physLocationsTable'));
   private btnDelete = element(by.buttonText('Delete'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private config = require('../config');
+  private readonly config = config;
   private randomize = this.config.randomize;
 
   async OpenPhysLocationPage() {

@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ExpectedConditions, browser, by, element } from 'protractor'
+import { ExpectedConditions, browser, by, element } from 'protractor';
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
+import { config } from '../config';
 
 export class ServerCapabilitiesPage extends BasePage{
 
@@ -37,7 +39,7 @@ export class ServerCapabilitiesPage extends BasePage{
      private btnAddCapabilities = element(by.name('addCapabilityBtn'));
      private selectCapabilities = element(by.name('selectFormDropdown'));
      private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
-     private config = require('../config');
+     private readonly config = config;
      private randomize = this.config.randomize;
 
 

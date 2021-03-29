@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { config } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 
@@ -36,7 +38,7 @@ export class CacheGroupPage extends BasePage {
     private txtNoMatchingError = element(by.xpath("//td[text()='No data available in table']"));
     private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
     private btnDelete = element(by.buttonText('Delete'));
-    private config = require('../config');
+    private config = config;
     private randomize = this.config.randomize;
 
     async OpenTopologyMenu() {

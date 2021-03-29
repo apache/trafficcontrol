@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element } from 'protractor'
+import { by, element } from 'protractor';
+
+import { config } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class ParametersPage extends BasePage {
 
   private btnCreateNewParameter = element(by.xpath("//button[@title='Create Parameter']"));
@@ -32,7 +35,7 @@ export class ParametersPage extends BasePage {
   private btnDelete = element(by.buttonText('Delete'));
   private btnYes = element(by.buttonText('Yes'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private config = require('../config');
+  private readonly config = config;
   private randomize = this.config.randomize;
 
   async OpenParametersPage() {

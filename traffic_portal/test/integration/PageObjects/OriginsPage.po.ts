@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { config } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class OriginsPage extends BasePage {
     private btnCreateNewOrigins = element(by.xpath("//button[@title='Create Origin']"));
     private txtSearch = element(by.id('originsTable_filter')).element(by.css('label input'));
@@ -29,7 +32,7 @@ export class OriginsPage extends BasePage {
     private txtDeliveryService = element(by.name("deliveryServiceId"));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
+    private readonly config = config;
     private randomize = this.config.randomize;
     async OpenOriginsPage() {
         let snp = new SideNavigationPage();

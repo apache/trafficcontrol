@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element} from 'protractor'
+import { browser, by, element} from 'protractor';
+
+import { config } from "../config";
 import { BasePage } from './BasePage.po'
 
 interface LoginData {
@@ -31,10 +33,10 @@ export class LoginPage extends BasePage{
     private btnLogin = element(by.name("loginSubmit"))
     private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
     private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
-    private config = require('../config');
+    private readonly config = config;
     private randomize = this.config.randomize;
-    
-    
+
+
     async Login(login:LoginData){
         let result = false;
         const basePage = new BasePage();
@@ -42,12 +44,12 @@ export class LoginPage extends BasePage{
             await this.txtUserName.sendKeys(login.username)
             await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
-            await browser.actions().click(this.btnLogin).perform();    
+            await browser.actions().click(this.btnLogin).perform();
         }else{
             await this.txtUserName.sendKeys(login.username+this.randomize)
             await this.txtPassword.sendKeys(login.password)
             await browser.actions().mouseMove(this.btnLogin).perform();
-            await browser.actions().click(this.btnLogin).perform();    
+            await browser.actions().click(this.btnLogin).perform();
         }
         if(await browser.getCurrentUrl() === browser.params.baseUrl + "#!/login"){
             result = await basePage.GetOutputMessage().then(value => value === login.validationMessage);
@@ -63,7 +65,7 @@ export class LoginPage extends BasePage{
         if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
             return true;
         }else{
-            return false;   
+            return false;
         }
     }
 };

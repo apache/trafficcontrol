@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { existsSync, readdirSync, unlink } from "fs";
+
 import { browser, by, element, ExpectedConditions } from 'protractor';
 import { BasePage } from './BasePage.po';
 
@@ -76,22 +78,21 @@ export class TopNavigationPage extends BasePage{
         let filename= "";
         let result = false;
         let readme = 'Readme.md';
-        const fs = require('fs');
         const folder = 'Downloads';
         await this.btnDBDump.click();
         await browser.wait(async function(){
-            await fs.readdirSync(folder).forEach(file => {
+            await readdirSync(folder).forEach(file => {
                 if (file != readme){
                     filename = file;
                 }
             });
         }, 30*1000, 'File has not downloaded within 30 seconds').catch(function(){
-            if(fs.existsSync(`Downloads/${filename}`))
+            if(existsSync(`Downloads/${filename}`))
         {
             //if file exist result will be true
             result = true;
             //delete the file
-            fs.unlink(`Downloads/${filename}`, (err) => {
+            unlink(`Downloads/${filename}`, (err) => {
                 if (err) throw err;
             });
         }
