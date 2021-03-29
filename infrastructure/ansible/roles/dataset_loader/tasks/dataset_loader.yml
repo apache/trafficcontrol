@@ -875,6 +875,12 @@
     method: POST
     body: '{"userIds":[{{ user_id }}],"replace":false}'
 
+- name: Assign Delivery Service to Federation
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/deliveryservices"
+    method: POST
+    body: '{"dsIds":[{{ dns_ds_id }}],"replace":false}'
+
 - name: Ensure SSL info directory exists
   file:
     state: directory
