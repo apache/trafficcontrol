@@ -861,6 +861,20 @@
     body: '{"cname":{{ dl_ds_merged_federation.mappings.cname | to_json }},"ttl":{{ dl_ds_merged_federation.mappings.ttl }},"dsId":{{ dns_ds_id }},"userId":{{ user_id }}}'
   register: create_federation_out
 
+- name: Get Federation ID
+  vars:
+    federation_id_query: response.id
+  set_fact:
+    federation_id: "{{ create_federation_out.json | json_query(federation_id_query) }}"
+
+- name: Assign User to Federation
+  vars:
+    user_id: '{{ current_user_out.json | json_query("response.id") }}'
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/users"
+    method: POST
+    body: '{"userIds":[{{ user_id }}],"replace":false}'
+
 - name: Ensure SSL info directory exists
   file:
     state: directory
