@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
+- The `compare` tool stack has been removed, as it no longer serves a purpose.
 
 ## [5.1.0] - 2021-03-11
 ### Added

@@ -149,7 +149,6 @@ Traffic Ops Project Tree Overview
 	- testing/ - Holds utilities for testing the :ref:`to-api`
 
 		- api/ - Integration testing for the `Traffic Ops Go client <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/client>`_ and Traffic Ops
-		- compare/ - Contains :ref:`compare-tool`
 
 	- traffic_ops_golang/ - The root of the Go implementation's code-base
 
