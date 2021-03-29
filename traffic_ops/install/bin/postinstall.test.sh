@@ -205,42 +205,42 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 	],
 	"/opt/traffic_ops/app/conf/ldap.conf": [
 		{
-			"Do you want to set up LDAP?": "no",
+			"Do you want to set up LDAP?": "yes",
 			"config_var": "setupLdap",
 			"hidden": false
 		},
 		{
-			"LDAP server hostname": "",
+			"LDAP server hostname": "ldaps://ad.cdn.site:3269",
 			"config_var": "host",
 			"hidden": false
 		},
 		{
-			"LDAP Admin DN": "",
+			"LDAP Admin DN": "contact@cdn.site",
 			"config_var": "admin_dn",
 			"hidden": false
 		},
 		{
-			"LDAP Admin Password": "",
+			"LDAP Admin Password": "${TO_PASSWORD}",
 			"config_var": "admin_pass",
 			"hidden": true
 		},
 		{
-			"LDAP Search Base": "",
+			"LDAP Search Base": "dc=cdn,dc=site",
 			"config_var": "search_base",
 			"hidden": false
 		},
 		{
-			"LDAP Search Query": "",
+			"LDAP Search Query": "(&(objectCategory=person)(objectClass=user)(sAMAccountName=%s))",
 			"config_var": "search_query",
 			"hidden": false
 		},
 		{
-			"LDAP Skip TLS verify": "",
+			"LDAP Skip TLS verify": "True",
 			"config_var": "insecure",
 			"hidden": false
 		},
 		{
-			"LDAP Timeout Seconds": "",
+			"LDAP Timeout Seconds": "120",
 			"config_var": "ldap_timeout_secs",
 			"hidden": false
 		}

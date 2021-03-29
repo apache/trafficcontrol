@@ -398,6 +398,11 @@ def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Questio
 		if key not in ldap_conf:
 			raise ValueError("{key} is a required key in {fname}".format(key=key, fname=fname))
 
+	keys_converted = {'password': 'admin_pass', 'hostname': 'host'}
+	for deprecated, key in keys_converted.items():
+		if deprecated in ldap_conf and ldap_conf[key] == '':
+			ldap_conf[key] = ldap_conf[deprecated]
+
 	if not re.match(r"^\S+:\d+$", ldap_conf["host"]):
 		raise ValueError("host in {fname} must be of form 'hostname:port'".format(fname=fname))
 
