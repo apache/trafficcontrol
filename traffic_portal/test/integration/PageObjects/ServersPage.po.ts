@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element, ExpectedConditions } from 'protractor'
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { ServerCapabilitiesPage } from './ServerCapabilitiesPage.po';
 
 export class ServersPage extends BasePage {
 

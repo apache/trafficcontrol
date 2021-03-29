@@ -20,7 +20,6 @@ import { browser } from 'protractor'
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CDNPage } from '../PageObjects/CDNPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
 
 
 let fs = require('fs')
@@ -56,7 +55,7 @@ using(testData.CDN, async function(cdnsData){
                     await cdnsPage.SearchCDN(update.Name);
                     expect(await cdnsPage.UpdateCDN(update)).toBeTruthy();
                 })
-            
+
             })
             using(cdnsData.Remove, function(remove){
                 it(remove.description, async function(){

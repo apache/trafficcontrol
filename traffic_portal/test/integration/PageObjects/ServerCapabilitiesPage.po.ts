@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ExpectedConditions, ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { ExpectedConditions, browser, by, element } from 'protractor'
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import {ServersPage} from '../PageObjects/ServersPage.po';
-import { protractor } from 'protractor/built/ptor';
 
 export class ServerCapabilitiesPage extends BasePage{
-     
+
      private btnCreateServerCapabilities = element(by.name('createServerCapabilityButton'));
      private txtSCName = element(by.id("name"))
      private btnYesRemoveSC = element(by.buttonText("Yes"))
@@ -42,8 +39,8 @@ export class ServerCapabilitiesPage extends BasePage{
      private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
      private config = require('../config');
      private randomize = this.config.randomize;
-     
-  
+
+
      async OpenServerCapabilityPage(){
       let snp = new SideNavigationPage();
       await snp.NavigateToServerCapabilitiesPage();
@@ -52,7 +49,7 @@ export class ServerCapabilitiesPage extends BasePage{
       let snp = new SideNavigationPage();
       await snp.ClickConfigureMenu();
      }
- 
+
       async CreateServerCapabilities(nameSC: string, outputMessage:string){
         let result = false
         let basePage = new BasePage();
@@ -74,12 +71,12 @@ export class ServerCapabilitiesPage extends BasePage{
             result = true;
           }else{
             result = false;
-          } 
+          }
         }
         return result;
       }
 
- 
+
     async SearchServerCapabilities(nameSC:string){
       let name = nameSC+this.randomize;
       await this.searchFilter.clear();
