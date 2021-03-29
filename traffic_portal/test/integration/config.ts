@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+import { emptyDir } from "fs-extra";
+import { Config, browser } from 'protractor';
+import HtmlReporter from "protractor-beautiful-reporter";
+
 import { API } from './CommonUtils/API';
-import { Config, browser } from 'protractor'
 import * as conf from "./config.json"
 
-let path = require('path');
-let downloadsPath = path.resolve('Downloads');
+let downloadsPath = resolve('Downloads');
 let randomize = Math.random().toString(36).substring(3, 7);
-let HtmlReporter = require('protractor-beautiful-reporter');
 let twoNumberRandomize = Math.floor(Math.random() * 101);
 exports.twoNumberRandomize = twoNumberRandomize;
 exports.randomize = randomize;
@@ -33,9 +37,7 @@ config.capabilities.chromeOptions.prefs.download.default_directory = downloadsPa
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
 
-    var fs = require('fs-extra');
-
-    fs.emptyDir('./Reports/', function (err) {
+    emptyDir('./Reports/', function (err) {
       console.log(err);
     });
 
@@ -54,7 +56,7 @@ config.onPrepare = async function () {
     try {
       let api = new API();
       let setupFile = 'Data/Prerequisites/user.setup.json';
-      let setupData = JSON.parse(fs.readFileSync(setupFile));
+      let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
       let output = await api.UseAPI(setupData);
       if (output != null){
         throw new Error(output)
