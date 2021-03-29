@@ -597,12 +597,16 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 3 && version.Minor >= 0:
+		case version.Major > 3:
 			returnable = append(returnable, ds.RemoveLD1AndLD2())
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
-		default:
+		case version.Major > 2:
+			returnable = append(returnable, ds.DowngradeToV3().DeliveryServiceV30)
+		case version.Major > 1:
 			returnable = append(returnable, ds.DowngradeToV3().DeliveryServiceNullableV15)
+		default:
+			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
 	}
 	return returnable, nil, nil, errCode, maxTime
