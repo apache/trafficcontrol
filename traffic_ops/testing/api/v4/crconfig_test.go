@@ -17,9 +17,13 @@ package v4
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCRConfig(t *testing.T) {
@@ -29,7 +33,52 @@ func TestCRConfig(t *testing.T) {
 		SnapshotTestCDNbyInvalidName(t)
 		SnapshotTestCDNbyID(t)
 		SnapshotTestCDNbyInvalidID(t)
+		SnapshotWithReadOnlyUser(t)
 	})
+}
+
+func SnapshotWithReadOnlyUser(t *testing.T) {
+	if len(testData.CDNs) == 0 {
+		t.Fatalf("expected one or more valid CDNs, but got none")
+	}
+	resp, _, err := TOSession.TenantByNameWithHdr("root", nil)
+	if err != nil {
+		t.Fatalf("couldn't get the root tenant ID: %v", err)
+	}
+	if resp == nil {
+		t.Fatalf("expected a valid tenant response, but got nothing")
+	}
+
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	user := tc.User{
+		Username:             util.StrPtr("test_user"),
+		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		RoleName:             util.StrPtr("read-only user"),
+	}
+	user.Email = util.StrPtr("email@domain.com")
+	user.TenantID = util.IntPtr(resp.ID)
+	user.FullName = util.StrPtr("firstName LastName")
+
+	u, _, err := TOSession.CreateUser(&user)
+	if err != nil {
+		t.Fatalf("could not create read-only user: %v", err)
+	}
+	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to log in with test_user: %v", err.Error())
+	}
+	reqInf, err := client.SnapshotCRConfigWithHdr(testData.CDNs[0].Name, nil)
+	if err == nil {
+		t.Errorf("expected to get an error about a read-only client trying to snap a CDN, but got none")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status code, but got %d", reqInf.StatusCode)
+	}
+	if u != nil && u.Response.Username != nil {
+		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
+	}
 }
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
