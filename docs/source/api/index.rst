@@ -335,15 +335,5 @@ API routes available in version 4.
 
 	v4/*
 
-Migrating from API V1
-=====================
-
-.. toctree::
-	:hidden:
-
-	migrating-from-v1
-
-See the :ref:`to-migrating` page for help migrating existing code from API v1 to a new API version.
-
 
 .. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.
