@@ -115,7 +115,7 @@ cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 }
 EOF
 
-"$python_bin" <<SETUP_MAXMIND_TEST 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
+"$python_bin" <<TESTS 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
 from __future__ import print_function
 import subprocess
 import sys
@@ -151,7 +151,9 @@ else:
 	except Exception as e:
 		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
 		exit(1)
-SETUP_MAXMIND_TEST
+
+_postinstall.exec_psql('N/A', 'N/A', '--version')
+TESTS
 
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
