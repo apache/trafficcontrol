@@ -21,7 +21,7 @@ import { resolve } from "path";
 
 import { emptyDir } from "fs-extra";
 import { Config, browser } from 'protractor';
-import HtmlReporter from "protractor-beautiful-reporter";
+import * as HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
 import * as conf from "./config.json"
