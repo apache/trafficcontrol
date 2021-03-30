@@ -115,6 +115,44 @@ cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 }
 EOF
 
+"$python_bin" <<SETUP_MAXMIND_TEST 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
+from __future__ import print_function
+import subprocess
+import sys
+from os.path import dirname, join
+
+module_name = '_postinstall'
+download_tool = '/does/not/exist'
+root = '${ROOT_DIR}'
+unexpected_exception_message = 'Unexpected exception type {exception_type} raised from setup_maxmind()'
+uncaught_exception_message = 'Expected exception of type {exception_type} to be caught for download_tool "{download_tool}" within setup_maxmind(), but none was raised.'
+if sys.version_info.major >= 3:
+	import importlib
+	from importlib.machinery import SourceFileLoader
+	_postinstall = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name)
+
+	try:
+		_postinstall.setup_maxmind('yes', root, download_tool)
+	except subprocess.SubprocessError as e:
+		print(uncaught_exception_message.format(exception_type=type(e).__name, download_tool=download_tool), file=sys.stderr)
+		exit(1)
+	except Exception as e:
+		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
+		exit(1)
+else:
+	import imp
+	_postinstall = imp.load_source(module_name, join(dirname(__file__), module_name))
+
+	try:
+		_postinstall.setup_maxmind('yes', root, download_tool)
+	except (subprocess.CalledProcessError, OSError) as e:
+		print(uncaught_exception_message.format(exception_type=type(e).__name, download_tool=download_tool), file=sys.stderr)
+		exit(1)
+	except Exception as e:
+		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
+		exit(1)
+SETUP_MAXMIND_TEST
+
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
@@ -326,7 +364,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 }
 EOF
 
-"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>"$ROOT_DIR/stderr" | tee "$ROOT_DIR/stdout"
+"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>>"$ROOT_DIR/stderr" | tee -a "$ROOT_DIR/stdout"
 
 if grep -q 'ERROR' $ROOT_DIR/stderr; then
 	echo "Errors found in script logs" >&2;
