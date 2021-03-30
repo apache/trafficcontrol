@@ -155,6 +155,11 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating ACME certificates: Riak is not configured"))
+		return
+	}
+
 	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
 
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
@@ -208,6 +213,11 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating Let's Encrypt certificates: Riak is not configured"))
+		return
+	}
 
 	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
 
