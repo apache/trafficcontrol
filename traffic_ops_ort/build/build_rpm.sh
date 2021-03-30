@@ -73,6 +73,9 @@ initBuildArea() {
 	(cd to_updater;
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
+	(cd plugin_verifier;
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
+
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
 	mkdir -p "${dest}/build";

@@ -71,11 +71,15 @@ func InitConfig() (Cfg, error) {
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'U', "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	versionPtr := getopt.BoolLong("version", 'v', "Print the to_requester version")
 
 	getopt.Parse()
 
 	if *helpPtr == true {
 		Usage()
+	}
+	if *versionPtr == true {
+		fmt.Println(AppName + " v" + Version)
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -127,6 +131,7 @@ func InitConfig() (Cfg, error) {
 			TOUser:        toUser,
 			TOPass:        toPass,
 			TOURL:         toURLParsed,
+			UserAgent:     UserAgent,
 		},
 	}
 
