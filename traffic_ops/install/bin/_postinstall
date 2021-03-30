@@ -711,7 +711,7 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 
 	return ret
 
-def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
+def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/wget'): # type: (str, str, str) -> None
 	"""
 	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
 	database using `wget`.
@@ -726,8 +726,7 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv%d) Exception: %s", ip_version, e)
 
-	wget = "/usr/bin/wget"
-	cmd = [wget, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
+	cmd = [download_tool, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
 		subprocess.check_call(
@@ -736,7 +735,7 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 			stdout=subprocess.PIPE,
 			universal_newlines=True
 		)
-	except subprocess.CalledProcessError as e:
+	except (subprocess.CalledProcessError, OSError) as e:
 		failed_download(e, 4)
 	except subprocess.SubprocessError as e:
 		failed_download(e, 4)
@@ -751,7 +750,7 @@ def setup_maxmind(maxmind_answer, root): # type: (str, str) -> None
 			stdout=subprocess.PIPE,
 			universal_newlines=True
 		)
-	except subprocess.CalledProcessError as e:
+	except (subprocess.CalledProcessError, OSError) as e:
 		failed_download(e, 6)
 	except subprocess.SubprocessError as e:
 		failed_download(e, 6)
@@ -1356,7 +1355,7 @@ no_database, # type: bool
 
 		try:
 			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
-		except (OSError, subprocess.CalledProcessError)as e:
+		except (subprocess.CalledProcessError, OSError) as e:
 			db_connect_failed()
 			return 1
 		except subprocess.SubprocessError as e:
@@ -1376,7 +1375,7 @@ no_database, # type: bool
 			)
 			if proc.wait():
 				raise subprocess.CalledProcessError(proc.returncode, cmd)
-		except subprocess.CalledProcessError as e:
+		except (subprocess.CalledProcessError, OSError) as e:
 			logging.critical("Failed to restart Traffic Ops, return code %s: %s", e.returncode, e)
 			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 			return 1
