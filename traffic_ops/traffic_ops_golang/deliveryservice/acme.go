@@ -155,7 +155,7 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.RenewAcmeCertificate: Traffic Vault is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateAcmeCertificates: Traffic Vault is not configured"))
 		return
 	}
 	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
@@ -211,6 +211,11 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateLetsEncryptCertificates: Traffic Vault is not configured"))
+		return
+	}
 
 	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
 
