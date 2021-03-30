@@ -711,10 +711,10 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 
 	return ret
 
-def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/curl'): # type: (str, str, str) -> None
+def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/wget'): # type: (str, str, str) -> None
 	"""
 	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
-	database using `curl`.
+	database using `wget`.
 	"""
 	if maxmind_answer.lower() not in {'y', 'yes'}:
 		logging.info("Not downloading Maxmind data")
@@ -726,7 +726,7 @@ def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/curl'): # type
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv%d) Exception: %s", ip_version, e)
 
-	cmd = [download_tool, "-LO", "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
+	cmd = [download_tool, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
 		subprocess.check_call(
