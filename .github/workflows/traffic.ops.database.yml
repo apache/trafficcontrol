@@ -51,4 +51,4 @@ jobs:
       - name: Build the TO rpm
         run: ./pkg traffic_ops_build && cp ./dist/traffic_ops-*.x86_64.rpm traffic_ops_db/test/docker/
       - name: Run Traffic Ops Database Docker Tests
-        run: cd traffic_ops_db/test/docker/ && docker-compose up trafficops-db-admin
+        run: cd traffic_ops_db/test/docker/ && docker-compose up --exit-code-from trafficops-db-admin
