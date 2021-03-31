@@ -27,6 +27,11 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 
 # Write config files
 set -x
+set -e
+
+echo 'Checking to see if this test fails here';
+exit 1;
+
 if [[ ! -r /goose-config.sh ]]; then
 	echo "/goose-config.sh not found/readable"
 	exit 1
@@ -79,9 +84,6 @@ for d in $(get_db_dumps); do
     echo "checking integrity of DB dump: $d"
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
-
-echo 'Checking to see if this test fails here';
-exit 1;
 
 cd "$TO_DIR"
 db_is_empty=false

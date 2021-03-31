@@ -80,5 +80,4 @@ if [[ ! -z "$VIOLATING_FILES" ]]; then
 	CODE=1;
 fi
 
-exit 1;
 exit "$CODE";
