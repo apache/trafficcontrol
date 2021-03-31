@@ -115,7 +115,7 @@ cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 }
 EOF
 
-"$python_bin" <<SETUP_MAXMIND_TEST 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
+"$python_bin" <<TESTS 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
 from __future__ import print_function
 import subprocess
 import sys
@@ -151,7 +151,9 @@ else:
 	except Exception as e:
 		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
 		exit(1)
-SETUP_MAXMIND_TEST
+
+_postinstall.exec_psql('N/A', 'N/A', '--version')
+TESTS
 
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
@@ -364,12 +366,11 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 }
 EOF
 
-"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug 2>>"$ROOT_DIR/stderr" | tee -a "$ROOT_DIR/stdout"
+"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug > >(tee -a "$ROOT_DIR/stdout") 2> >(tee -a "$ROOT_DIR/stderr" >&2);
 
-if grep -q 'ERROR' $ROOT_DIR/stderr; then
+if grep -q 'ERROR' $ROOT_DIR/stdout; then
 	echo "Errors found in script logs" >&2;
-	cat "$ROOT_DIR/stderr";
-	cat "$ROOT_DIR/stdout";
+	cat "$ROOT_DIR/stdout" "$ROOT_DIR/stderr";
 	exit 1;
 fi
 
