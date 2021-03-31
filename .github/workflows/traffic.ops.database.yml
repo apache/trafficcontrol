@@ -46,13 +46,13 @@ jobs:
         with:
           fetch-depth: 0
         uses: actions/checkout@master
-      - name: Cache Alpine Docker image
-        uses: actions/cache@v2
-        with:
-          path: ${{ github.workspace }}/docker-images
-          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-      - name: Import cached Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+#      - name: Cache Alpine Docker image
+#        uses: actions/cache@v2
+#        with:
+#          path: ${{ github.workspace }}/docker-images
+#          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+#      - name: Import cached Alpine Docker image
+#        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Run Traffic Ops Database Tests
         run: ./.github/actions/todb-tests/entrypoint.sh
       - name: Build the TO rpm
@@ -61,5 +61,5 @@ jobs:
         # make sure you only run the db admin service
       - name: Run Traffic Ops Database Docker Tests
         run: cd traffic_ops_db/test/docker/ && docker-compose up trafficops-db-admin
-      - name: Save Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+#      - name: Save Alpine Docker image
+#        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
