@@ -1,0 +1,245 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: CDN-in-a-Box CI
+
+env:
+  RHEL_VERSION: 8
+  # alpine:3.13
+  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+
+on:
+  push:
+    paths-ignore:
+      - '*.*'
+      - '**/.gitignore'
+      - '**/*.md'
+      - '**/test/**'
+      - 'blueprints/**'
+      - 'docs/**'
+      - 'experimental/**'
+      - '.github/**'
+      - '!.github/actions/build-ciab/*'
+      - '!.github/actions/build-rpms/*'
+      - '!.github/actions/run-ciab/*'
+      - '!.github/workflows/ciab.yaml'
+      - 'LICENSE'
+      - 'licenses/**'
+      - 'misc/**'
+      - 'NOTICE'
+      - 'traffic_control/java'
+  create:
+  pull_request:
+    paths-ignore:
+      - '*.*'
+      - '**/.gitignore'
+      - '**/*.md'
+      - '**/test/**'
+      - 'blueprints/**'
+      - 'docs/**'
+      - 'experimental/**'
+      - '.github/**'
+      - '!.github/actions/build-ciab/*'
+      - '!.github/actions/build-rpms/*'
+      - '!.github/actions/run-ciab/*'
+      - '!.github/workflows/ciab.yaml'
+      - 'LICENSE'
+      - 'licenses/**'
+      - 'misc/**'
+      - 'NOTICE'
+      - 'traffic_control/java'
+    types: [ opened, reopened, ready_for_review, synchronize ]
+
+jobs:
+  traffic_monitor:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  traffic_ops:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  traffic_ops_ort:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  traffic_portal:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/**/package*.json traffic_portal/bower.json') }}-
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  traffic_router:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/*.rpm
+
+  traffic_stats:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  grove:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  grovetccfg:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
+  ciab-build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    needs:
+      - traffic_monitor
+      - traffic_ops
+      - traffic_ops_ort
+      - traffic_portal
+      - traffic_router
+      - traffic_stats
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Cache Alpine Docker image
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/docker-images
+          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+      - name: Import cached Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+      - name: Download RPMs
+        uses: actions/download-artifact@v2
+        with:
+          path: ${{ github.workspace }}/dist/
+      - name: Build CDN-in-a-Box images
+        uses: ./.github/actions/build-ciab
+      - name: Start CDN-in-a-Box
+        uses: ./.github/actions/run-ciab
+      - name: Upload CDN-in-a-Box logs
+        uses: actions/upload-artifact@v2
+        with:
+          name: ciab-logs
+          path: infrastructure/cdn-in-a-box/logs/*.log
+        if: ${{ failure() }}
+      - name: Save Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
