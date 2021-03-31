@@ -53,7 +53,7 @@ jobs:
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Run Traffic Ops Database Tests
         run: ./.github/actions/todb-tests/entrypoint.sh
-      - name: Run Traffic Ops Database Docker Tests
+      - name: Run Traffic Ops Database Docker Tests Srijeet
         run: docker-compose -f traffic_ops_db/test/docker/docker-compose.yml up -d
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
