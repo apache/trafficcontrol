@@ -1395,6 +1395,8 @@ no_database, # type: bool
 	return 0
 
 if __name__ == '__main__':
+	logging.basicConfig(stream=sys.stdout)
+
 	PARSER = argparse.ArgumentParser()
 	PARSER.add_argument(
 		"-a",
