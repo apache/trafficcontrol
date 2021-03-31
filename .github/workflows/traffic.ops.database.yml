@@ -56,7 +56,7 @@ jobs:
       - name: Run Traffic Ops Database Tests
         run: ./.github/actions/todb-tests/entrypoint.sh
       - name: Build the TO rpm
-        run: ./pkg traffic_ops_build && cp ./dist/traffic_ops-*.rpm traffic_ops_db/test/docker/
+        run: ./pkg traffic_ops_build && cp ./dist/traffic_ops-*.x86_64.rpm.rpm traffic_ops_db/test/docker/
         # new step here to build TO rpm
         # make sure you only run the db admin service
       - name: Run Traffic Ops Database Docker Tests
