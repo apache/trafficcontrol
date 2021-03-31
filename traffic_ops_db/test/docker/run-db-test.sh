@@ -29,9 +29,6 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 set -x
 set -e
 
-echo 'Checking to see if this test fails here';
-exit 1;
-
 if [[ ! -r /goose-config.sh ]]; then
 	echo "/goose-config.sh not found/readable"
 	exit 1
