@@ -26,7 +26,6 @@ import (
 
 const (
 	APIAbout = "/about"
-	TEST = "test"
 )
 
 // GetAbout gets data about the TO instance.
