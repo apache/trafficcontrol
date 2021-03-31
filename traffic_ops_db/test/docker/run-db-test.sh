@@ -80,6 +80,9 @@ for d in $(get_db_dumps); do
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
 
+echo 'Checking to see if this test fails here'
+exit 1
+
 cd "$TO_DIR"
 db_is_empty=false
 old_db_version=$(get_current_db_version)
