@@ -1070,7 +1070,7 @@ def exec_psql(conn_str, query, **args): # type: (str, str, dict) -> str
 	:param query: The query to be run. It can actually be a script containing multiple queries.
 	:returns: The comma-separated columns of each line-delimited row of the results of the query.
 	"""
-	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query] + args.values()
+	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query] + list(args.values())
 	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
