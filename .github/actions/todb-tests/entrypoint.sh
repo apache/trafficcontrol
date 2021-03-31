@@ -18,7 +18,6 @@
 
 set -e
 
-# Todo: change this for local
 cd traffic_ops/app/db/migrations;
 
 # Ensure proper order
@@ -81,4 +80,5 @@ if [[ ! -z "$VIOLATING_FILES" ]]; then
 	CODE=1;
 fi
 
+exit 1;
 exit "$CODE";
