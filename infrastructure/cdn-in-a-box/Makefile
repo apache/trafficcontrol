@@ -130,6 +130,15 @@ $(TS_RPM): $(TS_DIST_RPM)
 $(ORT_RPM): $(ORT_DIST_RPM)
 	cp -f "$?" "$@"
 
+# RPM target aliases
+traffic_monitor/traffic_monitor.rpm: $(TM_RPM)
+traffic_ops/traffic_ops.rpm: $(TO_RPM)
+traffic_portal/traffic_portal.rpm: $(TP_RPM)
+traffic_router/traffic_router.rpm: $(TR_RPM)
+traffic_router/tomcat.rpm: $(TOMCAT_RPM)
+traffic_stats/traffic_stats.rpm: $(TS_RPM)
+cache/traffic_ops_ort.rpm: $(ORT_RPM)
+
 # Dist rpms
 $(TM_DIST_RPM): $(TM_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_monitor$(BUILD_SUFFIX)
