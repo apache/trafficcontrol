@@ -18,6 +18,7 @@
 
 set -e
 
+# Todo: change this for local
 cd traffic_ops/app/db/migrations;
 
 # Ensure proper order
