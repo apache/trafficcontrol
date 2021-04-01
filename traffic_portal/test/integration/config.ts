@@ -52,7 +52,7 @@ export let config: Config = {
     }
   },
   specs: [
-    "specs/Topologies.spec.js",
+    "specs/*.spec.js",
   ],
   // Options to be passed to Jasmine-node.
   jasmineNodeOpts: {
