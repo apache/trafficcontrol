@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ExpectedConditions, ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor'
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
-import { ServersPage } from '../PageObjects/ServersPage.po';
-import { protractor } from 'protractor/built/ptor';
 
 export class CacheGroupPage extends BasePage {
     private btnCreateCacheGroups = element(by.name('createCacheGroupButton'));
@@ -109,7 +106,7 @@ export class CacheGroupPage extends BasePage {
             }else{
                 result = undefined;
             }
-        } 
+        }
         await this.txtType.sendKeys(cachegroup.Type);
         await snp.ClickUpdate();
         if(result != undefined)
