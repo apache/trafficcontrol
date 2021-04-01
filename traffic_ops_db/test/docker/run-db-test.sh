@@ -27,7 +27,6 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 
 # Write config files
 set -x
-set -e
 
 if [[ ! -r /goose-config.sh ]]; then
 	echo "/goose-config.sh not found/readable"
@@ -60,19 +59,16 @@ export GOPATH=/opt/traffic_ops/go
 
 # gets the current DB version. On success, output the version number. On failure, output a failure message starting with 'failed'.
 get_current_db_version() {
-    echo 'srijeet here'
     local dbversion_output=$(./db/admin --env=production dbversion 2>&1)
     if [[ $? -ne 0 ]]; then
         echo "failed to get dbversion: $dbversion_output"
         return
     fi
-    echo 'srijeet here2'
     local version=$(echo "$dbversion_output" | egrep '^goose: dbversion [[:digit:]]+$' | awk '{print $3}')
     if [[ -z "$version" ]]; then
         echo "failed to get dbversion from output: $db_version_output"
         return
     fi
-    echo 'srijeet here3'
     echo "$version"
 }
 
@@ -80,15 +76,21 @@ get_db_dumps() {
     find /db_dumps -name '*.dump'
 }
 
+db_is_empty=true
+
 for d in $(get_db_dumps); do
+    db_is_empty=false
     echo "checking integrity of DB dump: $d"
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
 
 cd "$TO_DIR"
-db_is_empty=false
-old_db_version=$(get_current_db_version)
-[[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+old_db_version=0
+
+if [[ "$db_is_empty" = false ]]; then
+  old_db_version=$(get_current_db_version)
+  [[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+fi
 
 # reset the DB if it is empty (i.e. no db.dump was provided)
 if [[ "$old_db_version" -eq 0 ]]; then

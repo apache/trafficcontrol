@@ -209,7 +209,7 @@ func createUser() {
 	userExistsCmd.Stderr = &stderr
 	out, err := userExistsCmd.Output()
 	if err != nil {
-		die("unable to check if user already exists: " + err.Error() + ", stderr: " + stderr.String())
+		fmt.Println("unable to check if user already exists: " + err.Error() + ", stderr: " + stderr.String())
 	}
 	if len(out) > 0 {
 		fmt.Println("User " + DBUser + " already exists")

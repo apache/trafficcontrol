@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@master
       - name: Run Traffic Ops Database Tests
         run: ./.github/actions/todb-tests/entrypoint.sh
-      - name: Build the TO RPM
+      - name: Build Traffic Ops RPM
         run: ./pkg traffic_ops_build && cp ./dist/traffic_ops-*.x86_64.rpm traffic_ops_db/test/docker/
       - name: Run Traffic Ops Database Docker Tests
         run: cd traffic_ops_db/test/docker/ && docker-compose up --exit-code-from trafficops-db-admin
