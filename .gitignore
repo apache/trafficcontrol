@@ -79,3 +79,6 @@ __debug_bin
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
 junit/
+go.mod
+go.sum
+vendor/modules.txt
