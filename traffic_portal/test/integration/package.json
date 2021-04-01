@@ -1,10 +1,10 @@
 {
   "name": "trafficportal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Traffic Portal Testing",
   "main": "config.ts",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "chromedriver": "^78.0.1",
     "constants": "0.0.2",
     "download-file": "^0.1.5",
@@ -27,11 +27,19 @@
     "jasmine-data-provider": "^2.2.0",
     "typescript": "^3.6.4"
   },
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "start-webdriver": "webdriver-manager update && webdriver-manager start",
+    "test": "npm run build && protractor GeneratedCode/config.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apache/trafficcontrol"
   },
-  "author": "Lavanya, Dandy",
-  "license": "ISC"
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=12"
+  },
+  "engineStrict": true
 }

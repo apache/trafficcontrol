@@ -19,7 +19,6 @@
 import { by, element } from 'protractor'
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
-import { ParametersPage } from './ParametersPage.po';
 export class PhysLocationsPage extends BasePage {
 
   private btnCreateNewPhysLocation = element(by.name('createPhysLocationButton'));
