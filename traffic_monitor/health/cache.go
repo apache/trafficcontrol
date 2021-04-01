@@ -60,7 +60,27 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 
-	for ifaceName, iface := range newResult.Interfaces() {
+	var monitoredInterfaces []tc.ServerInterfaceInfo
+	for _, srvrIfaceInfo := range mc.TrafficServer[newResult.ID].Interfaces {
+		if srvrIfaceInfo.Monitor {
+			monitoredInterfaces = append(monitoredInterfaces, srvrIfaceInfo)
+		}
+	}
+
+	if len(monitoredInterfaces) == 0 {
+		log.Debugf("no interfaces selected to be monitored for %v", newResult.ID)
+		return
+	}
+
+	for _, monitoredInterface := range monitoredInterfaces {
+		ifaceName := monitoredInterface.Name
+		iface, exists := newResult.Interfaces()[ifaceName]
+		if !exists {
+			// monitored interface doesn't exist in Result interfaces, skip
+			log.Warnf("monitored interface %v does not exist in %v cache.Result.Interfaces()", ifaceName, newResult.ID)
+			continue
+		}
+
 		ifaceVitals := cache.Vitals{
 			BytesIn:    iface.BytesIn,
 			BytesOut:   iface.BytesOut,

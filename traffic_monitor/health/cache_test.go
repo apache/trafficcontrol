@@ -33,6 +33,334 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// TestNoMonitoredInterfacesGetVitals assures that GetVitals
+// does not fail even if no interfaces are marked to be monitored
+func TestNoMonitoredInterfacesGetVitals(t *testing.T) {
+	serverID := "no-monitored"
+	fakeRequestTime := time.Now()
+	zeroValueVitals := cache.Vitals{}
+
+	// Interfaces to monitor are marked true (none)
+	tmcm := tc.TrafficMonitorConfigMap{
+		TrafficServer: map[string]tc.TrafficServer{
+			serverID: {
+				Interfaces: []tc.ServerInterfaceInfo{
+					{
+						Name:    "bond0",
+						Monitor: false,
+					},
+					{
+						Name:    "bond1",
+						Monitor: false,
+					},
+					{
+						Name:    "lo",
+						Monitor: false,
+					},
+				},
+			},
+		},
+	}
+
+	// multiple interfaces, plus extra
+	firstResult := cache.Result{
+		ID:            serverID,
+		Error:         nil,
+		Miscellaneous: map[string]interface{}{},
+		Statistics: cache.Statistics{
+			Interfaces: map[string]cache.Interface{
+				"bond0": {
+					Speed:    100000,
+					BytesIn:  570791700709,
+					BytesOut: 4212211168526,
+				},
+				"bond1": {
+					Speed:    100000,
+					BytesIn:  1989352297218,
+					BytesOut: 10630690813,
+				},
+				"lo": {
+					Speed:    0,
+					BytesIn:  181882394,
+					BytesOut: 181882394,
+				},
+				"em5": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+			},
+		},
+		Time:            fakeRequestTime,
+		RequestTime:     time.Second,
+		Vitals:          cache.Vitals{},
+		InterfaceVitals: nil,
+		PollID:          42,
+		PollFinished:    make(chan uint64, 1),
+		PrecomputedData: cache.PrecomputedData{},
+		Available:       true,
+		UsingIPv4:       false,
+	}
+	GetVitals(&firstResult, nil, &tmcm)
+
+	// No interfaces were selected to be monitored so none
+	// should have been added later
+	if len(firstResult.InterfaceVitals) > 0 {
+		t.Errorf("InterfaceVitals map should be empty. expected: %v actual: %v:", 0, len(firstResult.InterfaceVitals))
+	}
+
+	// No interfaces were selected to be monitored so no vitals
+	// should have been calculated
+	if firstResult.Vitals != zeroValueVitals {
+		t.Errorf("Vitals should have zero values. expected: %v actual: %v:", zeroValueVitals, firstResult.Vitals)
+	}
+
+	// multiple interfaces, plus extras
+	secondResult := cache.Result{
+		ID:            serverID,
+		Error:         nil,
+		Miscellaneous: map[string]interface{}{},
+		Statistics: cache.Statistics{
+			Interfaces: map[string]cache.Interface{
+				"bond0": {
+					Speed:    100000,
+					BytesIn:  570791700709,
+					BytesOut: 4212211168526,
+				},
+				"bond1": {
+					Speed:    100000,
+					BytesIn:  1989352297218,
+					BytesOut: 10630690813,
+				},
+				"lo": {
+					Speed:    0,
+					BytesIn:  181882394,
+					BytesOut: 181882394,
+				},
+				"em5": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+			},
+		},
+		Time:            fakeRequestTime.Add(5 * time.Second),
+		RequestTime:     time.Second,
+		Vitals:          cache.Vitals{},
+		InterfaceVitals: map[string]cache.Vitals{},
+		PollID:          42,
+		PollFinished:    make(chan uint64, 1),
+		PrecomputedData: cache.PrecomputedData{},
+		Available:       true,
+		UsingIPv4:       false,
+	}
+	GetVitals(&secondResult, &firstResult, &tmcm)
+
+	// No interfaces were selected to be monitored so none
+	// should have been added later
+	if len(secondResult.InterfaceVitals) > 0 {
+		t.Errorf("InterfaceVitals map should be empty. expected: %v actual: %v:", 0, len(secondResult.InterfaceVitals))
+	}
+
+	// No interfaces were selected to be monitored so no vitals
+	// should have been calculated
+	if secondResult.Vitals != zeroValueVitals {
+		t.Errorf("Vitals should have zero values. expected: %v actual: %v:", zeroValueVitals, secondResult.Vitals)
+	}
+
+	// The previous results should not have been impacted
+	if firstResult.Vitals != zeroValueVitals {
+		t.Errorf("Vitals should have zero values. expected: %v actual: %v:", zeroValueVitals, firstResult.Vitals)
+	}
+}
+
+// TestDualHomingMonitoredInterfacesGetVitals ensures cache servers
+// with multiple interfaces correctly calculate bandwidth based on
+// whether the interfaces are marked as "Monitor this interface"
+func TestDualHomingMonitoredInterfacesGetVitals(t *testing.T) {
+
+	serverID := "dual-homed"
+	fakeRequestTime := time.Now()
+
+	// Interfaces to monitor are marked true
+	tmcm := tc.TrafficMonitorConfigMap{
+		TrafficServer: map[string]tc.TrafficServer{
+			serverID: {
+				Interfaces: []tc.ServerInterfaceInfo{
+					{
+						Name:    "bond0",
+						Monitor: true,
+					},
+					{
+						Name:    "bond1",
+						Monitor: true,
+					},
+					{
+						Name:    "lo",
+						Monitor: false,
+					},
+				},
+			},
+		},
+	}
+
+	// multiple interfaces, plus extras
+	firstResult := cache.Result{
+		ID:            serverID,
+		Error:         nil,
+		Miscellaneous: map[string]interface{}{},
+		Statistics: cache.Statistics{
+			Interfaces: map[string]cache.Interface{
+				"bond0": {
+					Speed:    100000,
+					BytesIn:  570791700709,
+					BytesOut: 4212211168526,
+				},
+				"bond1": {
+					Speed:    100000,
+					BytesIn:  1989352297218,
+					BytesOut: 10630690813,
+				},
+				"p1p1": {
+					Speed:    100000,
+					BytesIn:  570793589545,
+					BytesOut: 4212220919951,
+				},
+				"p3p1": {
+					Speed:    100000,
+					BytesIn:  1989354450479,
+					BytesOut: 10630690813,
+				},
+				"lo": {
+					Speed:    0,
+					BytesIn:  181882394,
+					BytesOut: 181882394,
+				},
+				"em5": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+				"em6": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+			},
+		},
+		Time:            fakeRequestTime,
+		RequestTime:     time.Second,
+		Vitals:          cache.Vitals{},
+		InterfaceVitals: nil,
+		PollID:          42,
+		PollFinished:    make(chan uint64, 1),
+		PrecomputedData: cache.PrecomputedData{},
+		Available:       true,
+		UsingIPv4:       false,
+	}
+	GetVitals(&firstResult, nil, &tmcm)
+
+	// Two interfaces were selected to be monitored so they
+	// should have been added later
+	if len(firstResult.InterfaceVitals) != 2 {
+		t.Errorf("InterfaceVitals map should not be empty. expected: %v actual: %v:", 2, len(firstResult.InterfaceVitals))
+	}
+
+	expectedFirstVitals := cache.Vitals{
+		LoadAvg:    0,
+		BytesIn:    2560143997927,
+		BytesOut:   4222841859339,
+		KbpsOut:    0,
+		MaxKbpsOut: 200000000,
+	}
+	// Only two interfaces were selected to be monitored so vitals
+	// should have been calculated based on those two (bond0 and bond1)
+	if firstResult.Vitals != expectedFirstVitals {
+		t.Errorf("Vitals do not match expected output. expected: %v actual: %v:", expectedFirstVitals, firstResult.Vitals)
+	}
+
+	// multiple interfaces, plus extras
+	secondResult := cache.Result{
+		ID:            serverID,
+		Error:         nil,
+		Miscellaneous: map[string]interface{}{},
+		Statistics: cache.Statistics{
+			Interfaces: map[string]cache.Interface{
+				"bond0": {
+					Speed:    100000,
+					BytesIn:  572608907987,
+					BytesOut: 4227149141326,
+				},
+				"bond1": {
+					Speed:    100000,
+					BytesIn:  1996376171468,
+					BytesOut: 10630696953,
+				},
+				"p1p1": {
+					Speed:    100000,
+					BytesIn:  572609282353,
+					BytesOut: 4227157881921,
+				},
+				"p3p1": {
+					Speed:    100000,
+					BytesIn:  1996378204692,
+					BytesOut: 10630696953,
+				},
+				"lo": {
+					Speed:    0,
+					BytesIn:  181882394,
+					BytesOut: 181882394,
+				},
+				"em5": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+				"em6": {
+					Speed:    0,
+					BytesIn:  0,
+					BytesOut: 0,
+				},
+			},
+		},
+		Time:            fakeRequestTime.Add(5 * time.Second),
+		RequestTime:     time.Second,
+		Vitals:          cache.Vitals{},
+		InterfaceVitals: map[string]cache.Vitals{},
+		PollID:          42,
+		PollFinished:    make(chan uint64, 1),
+		PrecomputedData: cache.PrecomputedData{},
+		Available:       true,
+		UsingIPv4:       false,
+	}
+	GetVitals(&secondResult, &firstResult, &tmcm)
+
+	// Two interfaces were selected to be monitored so they
+	// should have been added later
+	if len(secondResult.InterfaceVitals) != 2 {
+		t.Errorf("InterfaceVitals map should not be empty. expected: %v actual: %v:", 2, len(secondResult.InterfaceVitals))
+	}
+
+	expectedSecondVitals := cache.Vitals{
+		LoadAvg:    0,
+		BytesIn:    2568985079455,
+		BytesOut:   4237779838279,
+		KbpsOut:    23900766,
+		MaxKbpsOut: 200000000,
+	}
+
+	// Only two interfaces were selected to be monitored so vitals
+	// should have been calculated based on those two (bond0 and bond1)
+	if secondResult.Vitals != expectedSecondVitals {
+		t.Errorf("Vitals do not match expected output. expected: %v actual: %v:", expectedSecondVitals, secondResult.Vitals)
+	}
+
+	// Previous result values should have been altered
+	if firstResult.Vitals != expectedFirstVitals {
+		t.Errorf("Vitals do not match expected output. expected: %v actual: %v:", expectedFirstVitals, firstResult.Vitals)
+	}
+}
+
 func TestCalcAvailabilityThresholds(t *testing.T) {
 	result := cache.Result{
 		ID:            "myCacheName",
