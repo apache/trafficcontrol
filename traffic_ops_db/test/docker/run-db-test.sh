@@ -27,7 +27,6 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 
 # Write config files
 set -x
-
 if [[ ! -r /goose-config.sh ]]; then
 	echo "/goose-config.sh not found/readable"
 	exit 1
