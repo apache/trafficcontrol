@@ -43,6 +43,7 @@ func TestDeliveryServices(t *testing.T) {
 
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
+			GetTestDeliveryServicesURLSigKeys(t)
 		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
@@ -1169,5 +1170,20 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
 	if _, _, err = tenant4TOClient.CreateDeliveryServiceV30(tenant3DS); err == nil {
 		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
+	}
+}
+
+func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.GetDeliveryServiceURLSigKeysWithHdr(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get url sig keys: " + err.Error())
 	}
 }
