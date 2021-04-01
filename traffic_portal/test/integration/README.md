@@ -1,30 +1,48 @@
-# Traffic Portal Test Automation 
 
-**Test Development Environment Setup**
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
-* Install [Node](http://nodejs.org) (v6.x.x or later): `brew install node`
-* Follow setup steps described to install protractor: [here](http://www.protractortest.org/#/tutorial#setup)
-* Now install packages manager: `npm install`
-* Now install protractor: `npm i protractor`
-* Now install typescript: `npm install typescript@3.6.4 -g`
-* Now install selenium standalone: `sudo webdriver-manager update`
-* In a separate command line window, run: `sudo webdriver-manager start` and keep it running.
-* Run CDN-in-a-Box in a separate command line window and make sure all the components and features display.
+      http://www.apache.org/licenses/LICENSE-2.0
 
-**How To Run Tests**
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+# Traffic Portal Test Automation
+This directory contains integration tests for Traffic Portal.
 
-Run this command below from integration directory. This command will compile and convert the typescript files into javascript files. The generated js files are available in integration/GeneratedCode directory.
-```
-tsc
-```
-After that, run this command below to run the protractor test from the environment user input.
-```
-protractor ./GeneratedCode/config.js --params.baseUrl='https://localhost:443'
-```
-**Command Line Parameters**
+## Prerequisites
+* [Node](https://nodejs.org) v12 or later.
+
+## Building and Running
+To build and run the tests, one can use the `npm` (or `pnpm`) scripts.
+
+* Install the dependencies with `npm install` (or `pnpm install`)
+* Run the webdriver, either in the background or in a separate terminal -
+	because it's a long-running process - with `npm run start-webdriver` (or
+	`pnpm run start-webdriver`)
+* Run the tests with `npm test` (or `pnpm test`)
+
+## Command Line Parameters
+The tests can accept a few command line parameters - which can be separated
+from the `npm` flags with `--`.
 
 | Flag                            | Description                                                                                          |
 | ------------------------------- | :--------------------------------------------------------------------------------------------------: |
 | params.baseUrl                  | Environment test run on. Tests are written for cdn-in-a-box only. Do not run on other environment                                   |
 | capabilities.shardTestFiles     | Input `true` or `false` to turn on or off parallelization. If the value is false, maxInstances will always count as 1. The default value in the config file = false                            |
 | capabilities.maxInstances       | Input number of chrome instances that your machine can handle. Test will fail if local machine cannot handle a lot of chrome instances. The default value = 1    |
+
+### Example
+```bash
+npm test -- --params.baseUrl https://localhost --capabilities.shardTestFiles true
+```
