@@ -1,4 +1,4 @@
-# Traffic Portal Test Automation
+# Traffic Portal Test Automation 
 
 **Test Development Environment Setup**
 
