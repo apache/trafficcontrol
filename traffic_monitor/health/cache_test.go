@@ -362,8 +362,35 @@ func TestDualHomingMonitoredInterfacesGetVitals(t *testing.T) {
 }
 
 func TestCalcAvailabilityThresholds(t *testing.T) {
+
+	resultID := "myCacheName"
+
+	mc := tc.TrafficMonitorConfigMap{
+		TrafficServer: map[string]tc.TrafficServer{
+			string(resultID): {
+				ServerStatus: string(tc.CacheStatusReported),
+				Profile:      "myProfileName",
+				Interfaces: []tc.ServerInterfaceInfo{
+					{
+						Name:    "bond0",
+						Monitor: true,
+					},
+					{
+						Name:    "eth0",
+						Monitor: true,
+					},
+					{
+						Name:    "lo",
+						Monitor: false,
+					},
+				},
+			},
+		},
+		Profile: map[string]tc.TMProfile{},
+	}
+
 	result := cache.Result{
-		ID:            "myCacheName",
+		ID:            resultID,
 		Error:         nil,
 		Miscellaneous: map[string]interface{}{},
 		Statistics: cache.Statistics{
@@ -376,12 +403,12 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 				LatestPID:        32109,
 			},
 			Interfaces: map[string]cache.Interface{
-				"bond0": cache.Interface{
+				"bond0": {
 					Speed:    20000,
 					BytesIn:  1234567891011121,
 					BytesOut: 12345678910111213,
 				},
-				"eth0": cache.Interface{
+				"eth0": {
 					Speed:    30000,
 					BytesIn:  1234567891011121,
 					BytesOut: 12345678910111213,
@@ -399,7 +426,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		Available:       true,
 		UsingIPv4:       false,
 	}
-	GetVitals(&result, nil, nil)
+	GetVitals(&result, nil, &mc)
 
 	totalBytesOut := result.Statistics.Interfaces["bond0"].BytesOut + result.Statistics.Interfaces["eth0"].BytesOut
 	if totalBytesOut != result.Vitals.BytesOut {
@@ -414,23 +441,13 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		Vitals:          cache.Vitals{BytesOut: result.Vitals.BytesOut - 1250000000}, // 10 gigabits
 		InterfaceVitals: prevIV,
 	}
-	GetVitals(&result, &prevResult, nil)
+	GetVitals(&result, &prevResult, &mc)
 
-	statResultHistory := (*threadsafe.ResultStatHistory)(nil)
-	mc := tc.TrafficMonitorConfigMap{
-		TrafficServer: map[string]tc.TrafficServer{
-			string(result.ID): {
-				ServerStatus: string(tc.CacheStatusReported),
-				Profile:      "myProfileName",
-			},
-		},
-		Profile: map[string]tc.TMProfile{},
-	}
 	mc.Profile[mc.TrafficServer[string(result.ID)].Profile] = tc.TMProfile{
 		Name: mc.TrafficServer[string(result.ID)].Profile,
 		Parameters: tc.TMParameters{
 			Thresholds: map[string]tc.HealthThreshold{
-				"availableBandwidthInKbps": tc.HealthThreshold{
+				"availableBandwidthInKbps": {
 					Val:        15000000,
 					Comparator: ">",
 				},
@@ -458,6 +475,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 
 	// Ensure that if the interfaces haven't been reported yet that CalcAvailability doesn't panic
 	original := results[0].Statistics.Interfaces
+	statResultHistory := (*threadsafe.ResultStatHistory)(nil)
 	results[0].Statistics.Interfaces = make(map[string]cache.Interface)
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 	results[0].Statistics.Interfaces = original

@@ -53,12 +53,22 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		return
 	}
 
+	if mc == nil {
+		log.Errorf("mc TrafficMonitorConfigMap cannot be nil")
+		return
+	}
+
 	if newResult.InterfaceVitals == nil {
 		newResult.InterfaceVitals = map[string]cache.Vitals{}
 	}
 
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
+
+	if mc.TrafficServer[newResult.ID].Interfaces == nil {
+		log.Debugf("no interfaces reported in config map to be monitored")
+		return
+	}
 
 	var monitoredInterfaces []tc.ServerInterfaceInfo
 	for _, srvrIfaceInfo := range mc.TrafficServer[newResult.ID].Interfaces {
