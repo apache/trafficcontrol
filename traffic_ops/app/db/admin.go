@@ -176,9 +176,10 @@ func createDB() {
 	stderr := bytes.Buffer{}
 	dbExistsCmd.Stderr = &stderr
 	out, err := dbExistsCmd.Output()
-	if err != nil {
-		die("unable to check if DB already exists: " + err.Error() + ", stderr: " + stderr.String())
-	}
+	fmt.Println(dbExistsCmd.String())
+	//if err != nil {
+	//	die("unable to check if DB already exists: " + err.Error() + ", stderr: " + stderr.String())
+	//}
 	if len(out) > 0 {
 		fmt.Println("Database " + DBName + " already exists")
 		return
