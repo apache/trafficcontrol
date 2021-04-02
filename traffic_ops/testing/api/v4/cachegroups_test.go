@@ -112,6 +112,10 @@ func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cg := range testData.CacheGroups {
+		if cg.ShortName == nil {
+			t.Error("found Cache Group with null or undefined 'short name' in test data")
+			continue
+		}
 		_, reqInf, err := TOSession.GetCacheGroupByShortName(*cg.ShortName, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
@@ -129,6 +133,10 @@ func GetTestCacheGroupsByNameIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cg := range testData.CacheGroups {
+		if cg.Name == nil {
+			t.Error("found Cache Group with null or undefined name in test data")
+			continue
+		}
 		_, reqInf, err := TOSession.GetCacheGroupByName(*cg.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
@@ -188,7 +196,7 @@ func CreateTestCacheGroups(t *testing.T) {
 }
 
 func GetTestCacheGroups(t *testing.T) {
-	resp, _, err := TOSession.GetCacheGroups(url.Values{}, nil)
+	resp, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroups %v - %v", err, resp)
 	}
@@ -211,6 +219,10 @@ func GetTestCacheGroups(t *testing.T) {
 
 func GetTestCacheGroupsByName(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
+		if cg.Name == nil {
+			t.Error("found Cache Group with null or undefined name in test data")
+			continue
+		}
 		resp, _, err := TOSession.GetCacheGroupByName(*cg.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by name: %v - %v", err, resp)
@@ -223,6 +235,10 @@ func GetTestCacheGroupsByName(t *testing.T) {
 
 func GetTestCacheGroupsByShortName(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
+		if cg.ShortName == nil {
+			t.Error("found Cache Group with null or undefined 'short name' in test data")
+			continue
+		}
 		resp, _, err := TOSession.GetCacheGroupByShortName(*cg.ShortName, nil)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by shortName: %v - %v", err, resp)
@@ -259,15 +275,27 @@ func topologyCachegroups(top tc.Topology) map[string]struct{} {
 }
 
 func UpdateTestCacheGroups(t *testing.T) {
+	if len(testData.CacheGroups) < 1 {
+		t.Fatal("Need at least one Cache Group to test updating Cache Groups")
+	}
 	firstCG := testData.CacheGroups[0]
+	if firstCG.Name == nil {
+		t.Fatal("Cache Group selected for testing had a null or undefined name")
+	}
 	resp, _, err := TOSession.GetCacheGroupByName(*firstCG.Name, nil)
 	if err != nil {
-		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
+		t.Fatalf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg := resp[0]
+	if cg.TypeID == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined typeId")
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined id")
+	}
 	expectedShortName := "blah"
 	cg.ShortName = &expectedShortName
 
@@ -308,7 +336,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// Retrieve the CacheGroup to check CacheGroup name got updated
 	resp, _, err = TOSession.GetCacheGroupByID(*cg.ID, nil)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '%s', %v", *firstCG.Name, err)
+		t.Fatalf("cannot GET CacheGroup by name: '%s', %v", *firstCG.Name, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("got an empty response for cachegroups")
@@ -316,6 +344,9 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg = resp[0]
 	if *cg.ShortName != expectedShortName {
 		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, expectedShortName)
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined id")
 	}
 
 	// test coordinate updates
@@ -334,12 +365,21 @@ func UpdateTestCacheGroups(t *testing.T) {
 	resp, _, err = TOSession.GetCacheGroupByID(*cg.ID, nil)
 
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+		t.Fatalf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
+	if cg.Latitude == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined latitude")
+	}
+	if cg.Longitude == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined longitude")
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined id")
+	}
 	if *cg.Latitude != expectedLat {
 		t.Errorf("failed to update latitude (expected = %f, actual = %f)", expectedLat, *cg.Latitude)
 	}
@@ -383,8 +423,13 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
-	if *cg.Name != firstEdgeCGName {
+	if cg.Name == nil {
+		t.Error("Cache Group returned from Traffic Ops had null or undefined name")
+	} else if *cg.Name != firstEdgeCGName {
 		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, firstEdgeCGName)
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned from Traffic Ops had null or undefined id")
 	}
 
 	// Test adding fallbacks when previously nil
@@ -407,8 +452,13 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+	if cg.Fallbacks == nil {
+		t.Error("Cache Group returned by Traffic Ops had null or undefined fallbacks")
+	} else if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
 		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned by Traffic Ops had null or undefined ID")
 	}
 
 	// Test adding fallback to existing list
@@ -431,8 +481,13 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+	if cg.Fallbacks == nil {
+		t.Error("Cache Group returned by Traffic Ops had null or undefined fallbacks")
+	} else if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
 		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned by Traffic Ops had null or undefined ID")
 	}
 
 	// Test removing fallbacks
@@ -455,19 +510,30 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+	if cg.Fallbacks == nil {
+		t.Error("Cache Group returned by Traffic Ops had null or undefined fallbacks")
+	} else if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
 		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned by Traffic Ops had null or undefined ID")
 	}
 
 	const topologyEdgeCGName = "topology-edge-cg-01"
 	resp, _, err = TOSession.GetCacheGroupByName(topologyEdgeCGName, nil)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '$%s', %v", topologyEdgeCGName, err)
+		t.Fatalf("cannot GET CacheGroup by name: '$%s', %v", topologyEdgeCGName, err)
 	}
 	if len(resp) == 0 {
 		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
+	if cg.TypeID == nil {
+		t.Error("Cache Group returned by Traffic Ops had null or undefined typeId")
+	}
+	if cg.ID == nil {
+		t.Fatal("Cache Group returned by Traffic Ops had null or undefined ID")
+	}
 
 	var cacheGroupEdgeType, cacheGroupMidType tc.Type
 	types, _, err := TOSession.GetTypes(nil)
