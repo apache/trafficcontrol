@@ -18,7 +18,7 @@
  */
 import { by, element } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -31,11 +31,9 @@ export class ParametersPage extends BasePage {
   private txtSecure = element(by.name('secure'));
 
   private txtSearch = element(by.id('parametersTable_filter')).element(by.css('label input'));
-  private mnuParametersTable = element(by.id('parametersTable'));
   private btnDelete = element(by.buttonText('Delete'));
   private btnYes = element(by.buttonText('Yes'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private readonly config = config;
   private randomize = randomize;
 
   async OpenParametersPage() {

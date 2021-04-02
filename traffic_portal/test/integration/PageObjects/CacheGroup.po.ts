@@ -31,11 +31,8 @@ export class CacheGroupPage extends BasePage {
     private txtLongtitude = element(by.name("longitude"));
     private txtParentCacheGroup = element(by.name("parentCacheGroup"));
     private txtSecondaryParentCG = element(by.name("secondaryParentCacheGroup"));
-    private btnCZEnabled = element(by.name("CZEnabled"));
-    private btnGeoEnabled = element(by.name("GeoEnabled"));
     private txtFailoverCG = element(by.name("fallbackOptions"));
     private txtSearch = element(by.id('cacheGroupsTable_filter')).element(by.css('label input'));
-    private txtNoMatchingError = element(by.xpath("//td[text()='No data available in table']"));
     private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
     private btnDelete = element(by.buttonText('Delete'));
     private randomize = randomize;

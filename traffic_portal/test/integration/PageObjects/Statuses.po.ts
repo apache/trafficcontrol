@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -29,7 +29,6 @@ export class StatusesPage extends BasePage {
     private txtSearch = element(by.id('statusesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = config;
     private randomize = randomize;
 
     async OpenStatusesPage() {

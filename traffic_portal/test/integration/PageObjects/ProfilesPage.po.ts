@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -31,7 +31,6 @@ export class ProfilesPage extends BasePage {
     private txtRoutingDisable = element(by.name('routingDisabled'));
     private txtDescription = element(by.id('description'));
     private txtSearch = element(by.id('profilesTable_filter')).element(by.css('label input'));
-    private mnuProfilesTable = element(by.id('profilesTable'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private btnMore = element(by.name('moreBtn'));
@@ -40,7 +39,6 @@ export class ProfilesPage extends BasePage {
     private txtCompareDropdown2 = element(by.name('compareDropdown2'));
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
-    private readonly config = config;
     private randomize = randomize;
     async OpenProfilesPage() {
         let snp = new SideNavigationPage();

@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -32,7 +32,6 @@ export class OriginsPage extends BasePage {
     private txtDeliveryService = element(by.name("deliveryServiceId"));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private readonly config = config;
     private randomize = randomize;
     async OpenOriginsPage() {
         let snp = new SideNavigationPage();

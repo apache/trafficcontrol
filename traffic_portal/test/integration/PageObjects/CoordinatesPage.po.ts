@@ -18,7 +18,7 @@
  */
 import { by, element, browser } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -30,9 +30,7 @@ export class CoordinatesPage extends BasePage {
     private txtLongitude = element(by.name('longitude'))
     private txtSearch = element(by.id('coordinatesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
-    private btnYes = element(by.buttonText('Yes'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private readonly config = config;
     private randomize = randomize;
 
     async OpenCoordinatesPage() {

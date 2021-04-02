@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -27,11 +27,9 @@ export class ServiceCategoriesPage extends BasePage {
     private btnCreateServiceCategories = element(by.name("createServiceCategoryButton"));
     private txtSearch = element(by.id('serviceCategoriesTable_filter')).element(by.css('label input'));
     private txtName = element(by.id('name'));
-    private txtTenant = element(by.name("tenantId"))
 
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = config;
     private randomize = randomize;
 
     async OpenServicesMenu() {
