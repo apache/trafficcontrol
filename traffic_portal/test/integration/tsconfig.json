@@ -11,7 +11,7 @@
     "resolveJsonModule": true,
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
     "noImplicitThis": true
   },
   "exclude": [

@@ -69,7 +69,7 @@ export class ServersPage extends BasePage {
     return this.lblInputError.getText()
   }
 
-  IsServersItemPresent(serversName: string) {
+  public IsServersItemPresent(): PromiseLike<boolean> {
     return element(by.xpath("//table[@id='serversTable']//tr/td[text()='" + "']")).isPresent()
   }
 
