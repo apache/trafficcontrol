@@ -91,8 +91,7 @@ export class PhysLocationsPage extends BasePage {
       });
     }).first().click();
   }
-  async UpdatePhysLocation(physlocation) {
-    let result = false;
+  public async UpdatePhysLocation(physlocation): Promise<boolean | undefined> {
     let basePage = new BasePage();
 
     switch (physlocation.description) {
@@ -101,19 +100,9 @@ export class PhysLocationsPage extends BasePage {
         await basePage.ClickUpdate();
         break;
       default:
-        result = undefined;
+        return undefined;
     }
-    if (result = !undefined) {
-        result = await basePage.GetOutputMessage().then(function (value) {
-          if (physlocation.validationMessage == value) {
-            return true;
-          } else {
-            return false;
-          }
-        })
-
-      }
-    return result;
+    return await basePage.GetOutputMessage().then(value => physlocation.validationMessage === value);
   }
   async DeletePhysLocation(physlocation) {
     let result = false;

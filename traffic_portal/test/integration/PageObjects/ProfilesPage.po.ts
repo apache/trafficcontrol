@@ -71,8 +71,7 @@ export class ProfilesPage extends BasePage {
         })
         return result;
     }
-    async SearchProfile(nameProfiles: string) {
-        let result = false;
+    public async SearchProfile(nameProfiles: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameProfiles + this.randomize;
         await snp.NavigateToProfilesPage();
@@ -80,11 +79,9 @@ export class ProfilesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
     async CompareProfile(profile1: string, profile2: string) {
         let result = false;
@@ -100,8 +97,7 @@ export class ProfilesPage extends BasePage {
             return result;
         }
     }
-    async UpdateProfile(profile) {
-        let result = false;
+    public async UpdateProfile(profile): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (profile.description) {
             case "update profile type":
@@ -109,19 +105,9 @@ export class ProfilesPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        if (result =! undefined) {
-            result = await basePage.GetOutputMessage().then(function (value) {
-                if (profile.validationMessage == value) {
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-
-        }
-        return result;
+        return await basePage.GetOutputMessage().then(value => profile.validationMessage === value);
     }
     async DeleteProfile(profile) {
         let result = false;

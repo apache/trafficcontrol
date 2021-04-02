@@ -170,21 +170,18 @@ export class ServersPage extends BasePage {
     await browser.actions().doubleClick(element(by.xpath("//span[text()='"+name+"']"))).perform();
   }
 
-  async SearchDeliveryServiceFromServerPage(name:string){
-    let result = false;
+  public async SearchDeliveryServiceFromServerPage(name:string): Promise<boolean> {
     await this.txtDSSearch.clear();
     await this.txtDSSearch.sendKeys(name);
     if(await browser.isElementPresent(element(by.xpath("//td[@data-search='^"+name+"$']"))) == true){
       await element(by.xpath("//td[@data-search='^"+name+"$']")).click();
-      result = true;
-    }else{
-      result = undefined;
+      return true;
     }
-    return result;
+    return false;
   }
 
-  async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string){
-    let result = false;
+  public async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let deliveryService = deliveryServiceName+this.randomize;
     let serverNameRandomized;
@@ -221,9 +218,8 @@ export class ServersPage extends BasePage {
 
   }
 
-  async AddServerCapabilitiesToServer(serverCapabilities){
-    let result = false;
-    let serverPage = new ServersPage();
+  public async AddServerCapabilitiesToServer(serverCapabilities): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesName = serverCapabilities.ServerCapability + this.randomize;
     await this.btnMore.click();
@@ -266,8 +262,8 @@ export class ServersPage extends BasePage {
    }
 
 
-   async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string){
-    let result = false;
+   public async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesname = serverCapabilities+this.randomize;
     let url;

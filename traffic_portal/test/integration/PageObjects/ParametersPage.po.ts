@@ -74,8 +74,7 @@ export class ParametersPage extends BasePage {
       });
     }).first().click();
   }
-  async UpdateParameter(parameter) {
-    let result = false;
+  public async UpdateParameter(parameter): Promise<boolean | undefined> {
     let basePage = new BasePage();
     switch (parameter.description) {
       case "update parameter configfile":
@@ -85,19 +84,9 @@ export class ParametersPage extends BasePage {
         await this.btnYes.click();
         break;
       default:
-        result = undefined;
+        return undefined;
     }
-    if (result = !undefined) {
-      result = await basePage.GetOutputMessage().then(function (value) {
-        if (parameter.validationMessage == value) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-
-    }
-    return result;
+    return await basePage.GetOutputMessage().then(value => parameter.validationMessage === value);
   }
   async DeleteParameter(parameter) {
     let result = false;

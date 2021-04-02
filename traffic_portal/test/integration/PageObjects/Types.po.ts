@@ -56,8 +56,7 @@ export class TypesPage extends BasePage {
         })
         return result;
     }
-    async SearchType(nameTypes: string) {
-        let result = false;
+    public async SearchType(nameTypes: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameTypes + this.randomize;
         await snp.NavigateToTypesPage();
@@ -65,14 +64,11 @@ export class TypesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateType(type) {
-        let result = false;
+    public async UpdateType(type): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (type.description) {
             case "update description type":
@@ -81,16 +77,9 @@ export class TypesPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (type.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+        return await basePage.GetOutputMessage().then(value => type.validationMessage === value);
     }
     async DeleteTypes(type) {
         let name = type.Name + this.randomize;

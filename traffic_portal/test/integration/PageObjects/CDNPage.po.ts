@@ -75,8 +75,8 @@ export class CDNPage extends BasePage {
     }).first().click();
   }
 
-  async UpdateCDN(cdn) {
-    let result = false;
+  public async UpdateCDN(cdn): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let snp = new SideNavigationPage();
     let basePage = new BasePage();
     switch (cdn.description) {
