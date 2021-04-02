@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
@@ -201,11 +202,18 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
 		if dsr.ChangeType != tc.DSRChangeTypeCreate {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+			query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.xml_id = :xmlid"
+			original, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"xmlid": dsr.XMLID}, inf.Tx)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
 			}
+			if len(original) != 1 {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("expected exactly one DS with XMLID '%s', found: %d", dsr.XMLID, len(original)))
+				return
+			}
+			dsr.Original = new(tc.DeliveryServiceV4)
+			*dsr.Original = original[0]
 		}
 	} else {
 		userErr, sysErr, errCode = api.ParseDBError(err)
