@@ -37,8 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 const (
@@ -54,8 +54,8 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if !inf.Config.RiakEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Riak for delivery service: Riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Traffic Vault for delivery service: Traffic Vault is not configured"))
 		return
 	}
 	req := tc.DeliveryServiceAddSSLKeysReq{}
@@ -109,8 +109,8 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		AuthType:        authType,
 	}
 
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
+	if err := inf.Vault.PutDeliveryServiceSSLKeys(dsSSLKeys, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Traffic Vault for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
 	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), inf.Tx.Tx); err != nil {
@@ -141,7 +141,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	getSSLKeysByXMLIDHelper(xmlID, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
+	getSSLKeysByXMLIDHelper(xmlID, inf.Vault, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
 }
 
 func getXmlIDFromRequest(w http.ResponseWriter, r *http.Request) (*api.APIInfo, string, error) {
@@ -154,8 +154,8 @@ func getXmlIDFromRequest(w http.ResponseWriter, r *http.Request) (*api.APIInfo, 
 		return inf, "", errors.New("getting XML ID from request")
 	}
 
-	if inf.Config.RiakEnabled == false {
-		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Traffic Vault by host name: Traffic Vault is not configured"))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return inf, "", errors.New("getting XML ID from request")
@@ -225,15 +225,15 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelper(xmlID, tc.Alerts{}, inf, w, r)
+	getSSLKeysByXMLIDHelper(xmlID, inf.Vault, tc.Alerts{}, inf, w, r)
 }
 
-func getSSLKeysByXMLIDHelper(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+func getSSLKeysByXMLIDHelper(xmlID string, tv trafficvault.TrafficVault, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
@@ -242,13 +242,14 @@ func getSSLKeysByXMLIDHelper(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	keyObjV15, ok, err := tv.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx)
 	if err != nil {
 		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
+	keyObj := keyObjV15.DeliveryServiceSSLKeys
 	if !ok {
 		keyObj = tc.DeliveryServiceSSLKeys{}
 	}
@@ -277,8 +278,8 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -294,7 +295,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	keyObj, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx)
 	if err != nil {
 		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -392,8 +393,8 @@ func deleteSSLKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 	defer inf.Close()
-	if inf.Config.RiakEnabled == false {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"), deprecated, &alt)
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"), deprecated, &alt)
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -409,7 +410,7 @@ func deleteSSLKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
-	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, xmlID, inf.Params["version"]); err != nil {
+	if err := inf.Vault.DeleteDeliveryServiceSSLKeys(xmlID, inf.Params["version"], inf.Tx.Tx); err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()), deprecated, &alt)
 		return
 	}

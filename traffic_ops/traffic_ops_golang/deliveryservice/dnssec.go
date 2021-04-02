@@ -30,16 +30,15 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/miekg/dns"
 )
 
-func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string, exampleURLs []string) (error, error, int) {
-	keys, ok, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort)
+func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []string, tv trafficvault.TrafficVault) (error, error, int) {
+	keys, ok, err := tv.GetDNSSECKeys(cdnName, tx)
 	if err != nil {
-		return nil, errors.New("getting DNSSec keys from Riak: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("getting DNSSec keys from Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	} else if !ok {
 		return fmt.Errorf("there are no DNSSec keys for the CDN %s which is required to create keys for the deliveryservice", cdnName), nil, http.StatusBadRequest
 	}
@@ -51,24 +50,24 @@ func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string,
 	kExp := getKeyExpiration(cdnKeys.KSK, dnssecDefaultKSKExpiration)
 	zExp := getKeyExpiration(cdnKeys.ZSK, dnssecDefaultZSKExpiration)
 	overrideTTL := false
-	dsKeys, err := CreateDNSSECKeys(tx, cfg, xmlID, exampleURLs, cdnKeys, kExp, zExp, dnssecDefaultTTL, overrideTTL)
+	dsKeys, err := CreateDNSSECKeys(exampleURLs, cdnKeys, kExp, zExp, dnssecDefaultTTL, overrideTTL)
 	if err != nil {
 		return nil, errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error()), http.StatusInternalServerError
 	}
 	keys[xmlID] = dsKeys
-	if err := riaksvc.PutDNSSECKeys(keys, cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return nil, errors.New("putting Riak DNSSEC keys: " + err.Error()), http.StatusInternalServerError
+	if err := tv.PutDNSSECKeys(cdnName, keys, tx); err != nil {
+		return nil, errors.New("putting DNSSEC keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
 
 // CreateDNSSECKeys creates DNSSEC keys for the given delivery service, updating existing keys if they exist. The overrideTTL parameter determines whether to reuse existing key TTLs if they exist, or to override existing TTLs with the ttl parameter's value.
-func CreateDNSSECKeys(tx *sql.Tx, cfg *config.Config, xmlID string, exampleURLs []string, cdnKeys tc.DNSSECKeySetV11, kskExpiration time.Duration, zskExpiration time.Duration, ttl time.Duration, overrideTTL bool) (tc.DNSSECKeySetV11, error) {
+func CreateDNSSECKeys(exampleURLs []string, cdnKeys tc.DNSSECKeySetV11, kskExpiration time.Duration, zskExpiration time.Duration, ttl time.Duration, overrideTTL bool) (tc.DNSSECKeySetV11, error) {
 	if len(cdnKeys.ZSK) == 0 {
-		return tc.DNSSECKeySetV11{}, errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
+		return tc.DNSSECKeySetV11{}, errors.New("getting DNSSec keys from Traffic Vault: no DNSSec ZSK keys for CDN")
 	}
 	if len(cdnKeys.KSK) == 0 {
-		return tc.DNSSECKeySetV11{}, errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
+		return tc.DNSSECKeySetV11{}, errors.New("getting DNSSec keys from Traffic Vault: no DNSSec ZSK keys for CDN")
 	}
 	if !overrideTTL {
 		ttl = getKeyTTL(cdnKeys.KSK, ttl)
@@ -208,7 +207,7 @@ func getKeyTTL(keys []tc.DNSSECKeyV11, defaultTTL time.Duration) time.Duration {
 
 // MakeDNSSECKeySetFromRiakKeySet creates a DNSSECKeySet (as served by Traffic Ops) from a DNSSECKeysRiak (as stored in Riak), adding any computed data.
 // Notably, this adds the full DS Record text to CDN KSKs
-func MakeDNSSECKeysFromRiakKeys(riakKeys tc.DNSSECKeysRiak, dsTTL time.Duration) (tc.DNSSECKeys, error) {
+func MakeDNSSECKeysFromTrafficVaultKeys(riakKeys tc.DNSSECKeysTrafficVault, dsTTL time.Duration) (tc.DNSSECKeys, error) {
 	keys := map[string]tc.DNSSECKeySet{}
 	for name, riakKeySet := range riakKeys {
 		newKeySet := tc.DNSSECKeySet{}

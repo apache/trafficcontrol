@@ -22,11 +22,11 @@ package vault
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"net/http"
 )
 
 func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
@@ -45,14 +45,14 @@ func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("riak.GetBucketKey: Riak is not configured!"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("getting bucket key: Traffic Vault is not configured"))
 		return
 	}
 
-	val, ok, err := riaksvc.GetBucketKey(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, inf.Params["bucket"], inf.Params["key"])
+	val, ok, err := inf.Vault.GetBucketKey(inf.Params["bucket"], inf.Params["key"], inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting bucket key from Riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting bucket key from Traffic Vault: "+err.Error()))
 		return
 	}
 	if !ok {
@@ -62,7 +62,7 @@ func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 
 	valObj := map[string]interface{}{}
 	if err := json.Unmarshal(val, &valObj); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetBucketKey bucket '"+inf.Params["bucket"]+"' key '"+inf.Params["key"]+"' Riak returned invalid JSON: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetBucketKey bucket '"+inf.Params["bucket"]+"' key '"+inf.Params["key"]+"' Traffic Vault returned invalid JSON: "+err.Error()))
 		return
 	}
 

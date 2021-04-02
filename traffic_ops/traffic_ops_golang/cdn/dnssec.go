@@ -31,10 +31,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 const CDNDNSSECKeyType = "dnssec"
@@ -47,6 +46,11 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys from Traffic Vault: Traffic Vault is not configured"))
+		return
+	}
 
 	req := tc.CDNDNSSECGenerateReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
@@ -77,7 +81,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
@@ -102,9 +106,14 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys from Traffic Vault: Traffic Vault is not configured"))
+		return
+	}
+
 	cdnName := inf.Params["name"]
 
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	tvKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -122,9 +131,9 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		dsTTL = DefaultDSTTL
 	}
 
-	keys, err := deliveryservice.MakeDNSSECKeysFromRiakKeys(riakKeys, dsTTL)
+	keys, err := deliveryservice.MakeDNSSECKeysFromTrafficVaultKeys(tvKeys, dsTTL)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys object from Riak keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys object from Traffic Vault keys: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, keys)
@@ -139,7 +148,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -162,20 +171,20 @@ func GetDSRecordTTL(tx *sql.Tx, cdn string) (time.Duration, error) {
 
 func generateStoreDNSSECKeys(
 	tx *sql.Tx,
-	cfg *config.Config,
 	cdnName string,
 	cdnDomain string,
 	ttlSeconds uint64,
 	kExpDays uint64,
 	zExpDays uint64,
 	effectiveDateUnix int64,
+	tv trafficvault.TrafficVault,
 ) error {
 
 	zExp := time.Duration(zExpDays) * time.Hour * 24
 	kExp := time.Duration(kExpDays) * time.Hour * 24
 	ttl := time.Duration(ttlSeconds) * time.Second
 
-	oldKeys, oldKeysExist, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort)
+	oldKeys, oldKeysExist, err := tv.GetDNSSECKeys(cdnName, tx)
 	if err != nil {
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
@@ -223,7 +232,7 @@ func generateStoreDNSSECKeys(
 		}
 	}
 
-	newKeys := tc.DNSSECKeysV11{}
+	newKeys := tc.DNSSECKeysTrafficVault{}
 	newKeys[cdnName] = tc.DNSSECKeySetV11{ZSK: newCDNZSKs, KSK: newCDNKSKs}
 
 	cdnKeys := newKeys[cdnName]
@@ -249,14 +258,14 @@ func generateStoreDNSSECKeys(
 		exampleURLs := deliveryservice.MakeExampleURLs(ds.Protocol, ds.Type, ds.RoutingName, matchlist, cdnDomain)
 		log.Infoln("Creating keys for " + ds.Name)
 		overrideTTL := true
-		dsKeys, err := deliveryservice.CreateDNSSECKeys(tx, cfg, ds.Name, exampleURLs, cdnKeys, kExp, zExp, ttl, overrideTTL)
+		dsKeys, err := deliveryservice.CreateDNSSECKeys(exampleURLs, cdnKeys, kExp, zExp, ttl, overrideTTL)
 		if err != nil {
 			return errors.New("creating delivery service DNSSEC keys: " + err.Error())
 		}
 		newKeys[ds.Name] = dsKeys
 	}
-	if err := riaksvc.PutDNSSECKeys(tc.DNSSECKeysRiak(newKeys), cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting Riak DNSSEC CDN keys: " + err.Error())
+	if err := tv.PutDNSSECKeys(cdnName, newKeys, tx); err != nil {
+		return errors.New("putting CDN DNSSEC keys in Traffic Vault: " + err.Error())
 	}
 	return nil
 }
@@ -325,9 +334,8 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	}
 	defer inf.Close()
 
-	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
-	if err != nil {
-		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()), deprecated)
+	if !inf.Config.TrafficVaultEnabled {
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys from Traffic Vault: Traffic Vault is not configured"), deprecated)
 		return
 	}
 
@@ -340,11 +348,11 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
 		return
 	}
-
-	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
-		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()), deprecated)
+	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx); err != nil {
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys: "+err.Error()), deprecated)
 		return
 	}
+
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	successMsg := "Successfully deleted " + CDNDNSSECKeyType + " for " + key
 	if deprecated {

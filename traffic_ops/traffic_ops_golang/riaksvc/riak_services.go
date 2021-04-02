@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"reflect"
 	"runtime"
 	"sort"
@@ -58,6 +57,7 @@ var (
 type TOAuthOptions struct {
 	riak.AuthOptions
 	MaxTLSVersion *string
+	Port          uint `json:"port"`
 }
 
 // StorageCluster ...
@@ -109,19 +109,18 @@ func setMaxTLSVersion(riakConfig *TOAuthOptions) error {
 	return err
 }
 
-func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
-	riakConfString, err := ioutil.ReadFile(riakConfigFile)
-	if err != nil {
-		return false, nil, fmt.Errorf("reading riak conf '%v': %v", riakConfigFile, err)
-	}
+type Config struct {
+	riak.AuthOptions
+	Port uint
+}
 
-	riakConfBytes := []byte(riakConfString)
-
+func UnmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
+	conf := Config{}
 	rconf := &TOAuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
-	err = json.Unmarshal(riakConfBytes, &rconf)
+	err := json.Unmarshal(riakConfBytes, &rconf)
 	if err != nil {
-		return false, nil, fmt.Errorf("Unmarshaling riak conf '%v': %v", riakConfigFile, err)
+		return false, conf, err
 	}
 	setMaxTLSVersion(rconf)
 
@@ -147,7 +146,12 @@ func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 
 	log.Infoln("Riak health check interval set to:", healthCheckInterval)
 
-	return true, &rconf.AuthOptions, nil
+	conf.AuthOptions = rconf.AuthOptions
+	conf.Port = rconf.Port
+	if conf.Port == 0 {
+		conf.Port = DefaultRiakPort
+	}
+	return true, conf, nil
 }
 
 // deletes an object from riak storage
@@ -308,6 +312,8 @@ func GetRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.
 }
 
 func GetRiakStorageCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	// NOTE: GetRiakStorageCluster is only used by Ping, which I assume is because it tests creating
+	// a new cluster, starting, and stopping it (as opposed to using GetPooledCluster)
 	cluster, err := GetRiakCluster(servers, authOptions)
 	if err != nil {
 		return nil, err
