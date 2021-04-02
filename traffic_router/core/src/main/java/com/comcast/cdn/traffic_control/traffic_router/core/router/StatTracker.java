@@ -332,10 +332,10 @@ public class StatTracker {
 		if(totalHttpCount==0) { return 0; }
 		return totalHttpTime/totalHttpCount;
 	}
-	public int getTotalDsMissCount() {
+	public long getTotalDsMissCount() {
 		return totalDsMissCount;
 	}
-	public void setTotalDsMissCount(final int totalDsMissCount) {
+	public void setTotalDsMissCount(final long totalDsMissCount) {
 		this.totalDsMissCount = totalDsMissCount;
 	}
 
@@ -343,7 +343,7 @@ public class StatTracker {
 	private long totalDnsTime;
 	private long totalHttpCount;
 	private long totalHttpTime;
-	private int totalDsMissCount = 0;
+	private long totalDsMissCount = 0;
 	public Map<String,Long> getUpdateTracker() {
 		return TrafficRouterManager.getTimeTracker();
 	}
