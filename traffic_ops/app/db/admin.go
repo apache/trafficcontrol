@@ -208,7 +208,7 @@ func createUser() {
 	stderr := bytes.Buffer{}
 	userExistsCmd.Stderr = &stderr
 	out, err := userExistsCmd.Output()
-	// An error is returned if the database could not be found, which is to be expected. Don't exit on this error.
+	// An error is returned if the user could not be found, which is to be expected. Don't exit on this error.
 	if err != nil {
 		fmt.Println("unable to check if user already exists: " + err.Error() + ", stderr: " + stderr.String())
 	}
