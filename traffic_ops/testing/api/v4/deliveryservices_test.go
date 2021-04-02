@@ -43,6 +43,7 @@ func TestDeliveryServices(t *testing.T) {
 
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
+			GetTestDeliveryServicesURLSigKeys(t)
 		}
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
@@ -1234,5 +1235,20 @@ func VerifyPaginationSupportDS(t *testing.T) {
 		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
 		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: " + err.Error())
+	}
+}
+
+func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.GetDeliveryServiceURLSigKeysWithHdr(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get url sig keys: " + err.Error())
 	}
 }
