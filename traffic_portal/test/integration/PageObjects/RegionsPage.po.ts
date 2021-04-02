@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { config, randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class RegionsPage extends BasePage {
     private btnCreateNewRegions = element(by.name('createRegionButton'));
     private txtSearch = element(by.id('regionsTable_filter')).element(by.css('label input'));
@@ -26,8 +29,8 @@ export class RegionsPage extends BasePage {
     private txtDivision = element(by.name('division'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private readonly config = config;
+    private randomize = randomize;
     async OpenRegionsPage(){
         let snp = new SideNavigationPage();
         await snp.NavigateToRegionsPage();

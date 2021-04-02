@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { config, randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class ProfilesPage extends BasePage {
 
     private btnCreateNewProfile = element(by.name('createProfileButton'));
@@ -37,8 +40,8 @@ export class ProfilesPage extends BasePage {
     private txtCompareDropdown2 = element(by.name('compareDropdown2'));
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private readonly config = config;
+    private randomize = randomize;
     async OpenProfilesPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();

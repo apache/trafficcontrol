@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { config, randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -27,8 +29,8 @@ export class DivisionsPage extends BasePage {
     private txtName = element(by.id('name'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private readonly config = config;
+    private randomize = randomize;
 
     async OpenDivisionsPage(){
         let snp = new SideNavigationPage();

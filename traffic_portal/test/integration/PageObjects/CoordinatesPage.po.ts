@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element, browser } from 'protractor'
+import { by, element, browser } from 'protractor';
+
+import { config, randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class CoordinatesPage extends BasePage {
 
     private btnCreateNewCoordinates = element(by.xpath("//button[@title='Create Coordinate']"));
@@ -29,8 +32,8 @@ export class CoordinatesPage extends BasePage {
     private btnDelete = element(by.buttonText('Delete'));
     private btnYes = element(by.buttonText('Yes'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private readonly config = config;
+    private randomize = randomize;
 
     async OpenCoordinatesPage() {
         let snp = new SideNavigationPage();

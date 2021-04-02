@@ -16,9 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element, ExpectedConditions } from 'protractor'
+import { browser, by, element, ExpectedConditions } from 'protractor';
+
+import randomIpv6 from "random-ipv6";
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
+import { config, randomize } from '../config';
 
 export class ServersPage extends BasePage {
 
@@ -102,9 +106,9 @@ export class ServersPage extends BasePage {
   private btnMoreCreateServer = element(by.name("moreBtn"))
   private btnCreateServer = element(by.name("createServerMenuItem"))
   private txtQuickSearch = element(by.id("quickSearch"));
-  private config = require('../config');
-  private randomize = this.config.randomize;
-  private randomIpv6 = require('random-ipv6');
+  private readonly config = config;
+  private randomize = randomize;
+
   async OpenServerPage(){
     let snp = new SideNavigationPage();
     await snp.NavigateToServersPage();
@@ -130,7 +134,7 @@ export class ServersPage extends BasePage {
     let basePage = new BasePage();
     let networkIp = Math.round(Math.random() * 100).toString()+ "." + Math.round(Math.random() * 100).toString() + "." + Math.round(Math.random() * 100).toString() +
     "." + Math.round(Math.random() * 100).toString();
-    let ipv6 = this.randomIpv6();
+    let ipv6 = randomIpv6();
     await this.btnMoreCreateServer.click();
     await this.btnCreateServer.click();
     await this.txtStatus.sendKeys(server.Status);
