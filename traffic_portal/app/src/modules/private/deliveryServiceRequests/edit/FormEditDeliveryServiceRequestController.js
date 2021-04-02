@@ -92,10 +92,6 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	var updateDeliveryServiceRequest = function(status) {
 		var promises = [];
-		// update the ds request if the ds request actually changed
-		if ($scope.deliveryServiceForm.$dirty) {
-			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest($scope.dsRequest.id, $scope.dsRequest));
-		}
 		// make sure the ds request is assigned to the user that is fulfilling the request
 		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.username));
 		// set the status if specified
