@@ -40,7 +40,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	};
 
 	$scope.saveable = function() {
-		return ($scope.dsRequest.status == 'draft' || $scope.dsRequest.status == 'submitted');
+		return $scope.dsRequest.changeType != 'delete' && ($scope.dsRequest.status == 'draft' || $scope.dsRequest.status == 'submitted');
 	};
 
 	$scope.deletable = function() {
