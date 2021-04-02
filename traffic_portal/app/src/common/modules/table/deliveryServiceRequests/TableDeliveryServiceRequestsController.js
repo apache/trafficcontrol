@@ -36,7 +36,13 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	columns = [
 		{
 			headerName: "Delivery Service",
-			field: "deliveryService.xmlId",
+			valueGetter: function(params) {
+				if (params.data.requested) {
+					return params.data.requested.xmlId;
+				} else {
+					return params.data.original.xmlId;
+				}
+			},
 			hide: false
 		},
 		{
@@ -136,12 +142,10 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
-				let path = '/delivery-service-requests/' + params.data.id + '?type=';
-				typeService.getType(params.data.deliveryService.typeId)
-					.then(function (result) {
-						path += result.name;
-						locationUtils.navigateToPath(path);
-					});
+				let type = (params.data.requested) ? params.data.requested.type : params.data.original.type,
+					path = '/delivery-service-requests/' + params.data.id + '?type=' + type;
+
+				locationUtils.navigateToPath(path);
 				$scope.$apply();
 			}
 			$scope.mouseDownSelectionText = "";
@@ -428,7 +432,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		// only the user assigned to the request can mark it as rejected (unless the user has override capabilities)
-		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
+		if ((request.assignee != userModel.user.username) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as rejected'
@@ -467,7 +471,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		// only the user assigned to the request can mark it as complete (unless the user has override capabilities)
-		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
+		if ((request.assignee != userModel.user.username) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as complete'
@@ -503,9 +507,10 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.deleteRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		let xmlId = (request.requested) ? request.requested.xmlId : request.original.xmlId;
 		var params = {
-			title: 'Delete the ' + request.deliveryService.xmlId + ' ' + request.changeType + ' request?',
-			key: request.deliveryService.xmlId + ' ' + request.changeType + ' request'
+			title: 'Delete the ' + xmlId + ' ' + request.changeType + ' request?',
+			key: xmlId + ' ' + request.changeType + ' request'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
@@ -529,12 +534,10 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.fulfillRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		var path = '/delivery-service-requests/' + request.id + '?type=';
-		typeService.getType(request.deliveryService.typeId)
-			.then(function (result) {
-				path += result.name;
-				locationUtils.navigateToPath(path);
-			});
+		let type = (request.requested) ? request.requested.type : request.original.type,
+			path = '/delivery-service-requests/' + request.id + '?type=' + type;
+
+		locationUtils.navigateToPath(path);
 	};
 
 	$scope.refresh = function () {
