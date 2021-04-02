@@ -19,7 +19,7 @@
 import { readFileSync } from "fs";
 
 import { browser } from 'protractor';
-import * as using from "jasmine-data-provider";
+import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CDNPage } from '../PageObjects/CDNPage.po';

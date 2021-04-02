@@ -20,7 +20,7 @@ import { ExpectedConditions, browser, by, element } from 'protractor';
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { config } from '../config';
+import { config, randomize } from '../config';
 
 export class ServerCapabilitiesPage extends BasePage{
 
@@ -40,7 +40,7 @@ export class ServerCapabilitiesPage extends BasePage{
      private selectCapabilities = element(by.name('selectFormDropdown'));
      private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
      private readonly config = config;
-     private randomize = this.config.randomize;
+     private randomize = randomize;
 
 
      async OpenServerCapabilityPage(){

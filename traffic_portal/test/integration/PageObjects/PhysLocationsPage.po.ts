@@ -18,7 +18,7 @@
  */
 import { by, element } from 'protractor';
 
-import { config } from '../config';
+import { config, randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -41,7 +41,7 @@ export class PhysLocationsPage extends BasePage {
   private btnDelete = element(by.buttonText('Delete'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
   private readonly config = config;
-  private randomize = this.config.randomize;
+  private randomize = randomize;
 
   async OpenPhysLocationPage() {
     let snp = new SideNavigationPage();

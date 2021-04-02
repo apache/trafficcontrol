@@ -21,16 +21,14 @@ import { resolve } from "path";
 
 import { emptyDir } from "fs-extra";
 import { Config, browser } from 'protractor';
-import * as HtmlReporter from "protractor-beautiful-reporter";
+import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
 import * as conf from "./config.json"
 
 let downloadsPath = resolve('Downloads');
-let randomize = Math.random().toString(36).substring(3, 7);
-let twoNumberRandomize = Math.floor(Math.random() * 101);
-exports.twoNumberRandomize = twoNumberRandomize;
-exports.randomize = randomize;
+export const randomize = Math.random().toString(36).substring(3, 7);
+export const twoNumberRandomize = Math.floor(Math.random() * 101);
 
 export let config: Config = conf;
 config.capabilities.chromeOptions.prefs.download.default_directory = downloadsPath;

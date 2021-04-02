@@ -23,7 +23,7 @@ import { Agent } from "https";
 import axios from 'axios';
 import randomIpv6 from "random-ipv6";
 
-import { config } from '../config';
+import { config, randomize } from '../config';
 
 export class API {
 
@@ -84,13 +84,13 @@ export class API {
                     break;
                 case "delete":
                     if ((data.route).includes('?name')){
-                        data.route = data.route + this.config.randomize
+                        data.route = data.route + randomize
                     }
                     if ((data.route).includes('?id')){
                         data.route = data.route + data.id;
                     }
                     if((data.route).includes('/service_categories/')){
-                        data.route = data.route + this.config.randomize
+                        data.route = data.route + randomize
                     }
                     response = await axios({
                         method: method,
@@ -113,7 +113,7 @@ export class API {
 
     GetId = async function (data) {
         for(var i = 0; i < data.getRequest.length; i++) {
-            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + this.config.randomize;
+            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + randomize;
             try {
                 const response = await axios({
                     method: 'get',
@@ -141,44 +141,44 @@ export class API {
 
    Randomize = function(data) {
         if(data.hasOwnProperty('email')) {
-            data['email'] = data.fullName + this.config.randomize + data.email;
+            data['email'] = data.fullName + randomize + data.email;
         }
         if(data.hasOwnProperty('fullName')) {
-            data['fullName'] = data.fullName + this.config.randomize;
+            data['fullName'] = data.fullName + randomize;
         }
         if(data.hasOwnProperty('hostName')) {
-            data['hostName'] = data.hostName + this.config.randomize;
+            data['hostName'] = data.hostName + randomize;
         }
         if(data.hasOwnProperty('ipAddress')) {
             data['ipAddress'] = (Math.floor(Math.random() * 255) + 1)+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255));
         }
         if(data.hasOwnProperty('name')) {
-            data['name'] = data.name + this.config.randomize;
+            data['name'] = data.name + randomize;
         }
         if(data.hasOwnProperty('requiredCapability')) {
-            data['requiredCapability'] = data.requiredCapability + this.config.randomize;
+            data['requiredCapability'] = data.requiredCapability + randomize;
         }
         if(data.hasOwnProperty('serverCapability')) {
-            data['serverCapability'] = data.serverCapability + this.config.randomize;
+            data['serverCapability'] = data.serverCapability + randomize;
         }
         if(data.hasOwnProperty('username')) {
-            data['username'] = data.username + this.config.randomize;
+            data['username'] = data.username + randomize;
         }
         if(data.hasOwnProperty('xmlId')) {
-            data['xmlId'] = data.xmlId + this.config.randomize;
+            data['xmlId'] = data.xmlId + randomize;
         }
         if(data.hasOwnProperty('shortName')) {
-            data['shortName'] = data.shortName + this.config.randomize;
+            data['shortName'] = data.shortName + randomize;
         }
         if(data.hasOwnProperty('divisionName')) {
-            data['divisionName'] = data.divisionName + this.config.randomize;
+            data['divisionName'] = data.divisionName + randomize;
         }
         if(data.hasOwnProperty('domainName')) {
-            data['domainName'] = data.domainName + this.config.randomize;
+            data['domainName'] = data.domainName + randomize;
         }
         if(data.hasOwnProperty('nodes')){
            for(var i in  data['nodes']){
-               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + this.config.randomize;
+               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + randomize;
            }
         }
         if(data.hasOwnProperty('interfaces')){

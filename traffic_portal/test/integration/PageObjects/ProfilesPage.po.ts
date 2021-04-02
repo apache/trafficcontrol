@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config } from '../config';
+import { config, randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -41,7 +41,7 @@ export class ProfilesPage extends BasePage {
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
     private readonly config = config;
-    private randomize = this.config.randomize;
+    private randomize = randomize;
     async OpenProfilesPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();

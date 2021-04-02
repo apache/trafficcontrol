@@ -18,7 +18,7 @@
  */
 import { by, element, browser } from 'protractor';
 
-import { config } from "../config";
+import { config, randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -33,7 +33,7 @@ export class CoordinatesPage extends BasePage {
     private btnYes = element(by.buttonText('Yes'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private readonly config = config;
-    private randomize = this.config.randomize;
+    private randomize = randomize;
 
     async OpenCoordinatesPage() {
         let snp = new SideNavigationPage();

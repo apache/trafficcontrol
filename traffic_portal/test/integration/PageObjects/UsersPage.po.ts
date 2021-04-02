@@ -20,7 +20,7 @@ import { by, element } from 'protractor';
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { config } from '../config';
+import { config, randomize } from '../config';
 
 export class UsersPage extends BasePage {
 
@@ -34,7 +34,7 @@ export class UsersPage extends BasePage {
     private txtConfirmPassword = element(by.name('confirmPassword'));
     private txtPublicSSHKey = element(by.name('publicSshKey'));
     private readonly config = config;
-    private randomize = this.config.randomize;
+    private randomize = randomize;
 
     async OpenUserPage(){
       let snp = new SideNavigationPage();
