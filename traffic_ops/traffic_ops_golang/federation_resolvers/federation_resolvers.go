@@ -121,9 +121,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"federation_resolver.id", api.IsInt},
-		"ipAddress": dbhelpers.WhereColumnInfo{"federation_resolver.ip_address", nil},
-		"type":      dbhelpers.WhereColumnInfo{"type.name", nil},
+		"id":        dbhelpers.WhereColumnInfo{Column: "federation_resolver.id", Checker: api.IsInt},
+		"ipAddress": dbhelpers.WhereColumnInfo{Column: "federation_resolver.ip_address"},
+		"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)

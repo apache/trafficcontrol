@@ -57,7 +57,7 @@ func (d *DnssecClient) GetRecords(nameserver string, name string, t uint16) *Msg
 	m.Id = Id()
 	m.RecursionDesired = true
 	m.SetEdns0(4096, true)
-	m.Question = []Question{{name, t, ClassINET}}
+	m.Question = []Question{{Name: name, Qtype: t, Qclass: ClassINET}}
 	r, _, err := d.Exchange(m, nameserver)
 
 	Expect(err).Should(BeNil())

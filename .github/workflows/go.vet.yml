@@ -15,44 +15,49 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Go Format
-
-env:
-  # alpine:3.13
-  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+name: Go Vet
 
 on:
   push:
     paths:
-      - .github/actions/go-fmt
-      - .github/workflows/go.fmt.yml
+      - .github/actions/go-vet
+      - .github/workflows/go.vet.yml
       - GO_VERSION
-      - "**.go"
+      - '**.go'
   create:
   pull_request:
     paths:
-      - .github/actions/go-fmt
-      - .github/workflows/go.fmt.yml
+      - .github/actions/go-vet
+      - .github/workflows/go.vet.yml
       - GO_VERSION
-      - "**.go"
+      - '**.go'
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
-  format:
+  go-vet:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Cache Alpine Docker image
-      uses: actions/cache@v2
+    - name: go-version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+    - uses: actions/setup-go@v2
       with:
-        path: ${{ github.workspace }}/docker-images
-        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-    - name: Import cached Alpine Docker image
-      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-    - name: Run Go fmt
-      uses: ./.github/actions/go-fmt
-    - name: Save Alpine Docker image
-      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+        go-version: ${{ steps.go-version.outputs.value }} # The Go version to download (if necessary) and use.
+    - name: Install modules
+      run: go mod vendor -v
+    - name: go vet
+      run: |
+        skip_analyzers=(
+          -copylocks=false
+          -httpresponse=false
+          -loopclosure=false
+          -lostcancel=false
+          -printf=false
+          -structtag=false
+          -tests=false
+          -unmarshal=false
+          -unreachable=false
+        )
+        go vet "${skip_analyzers[@]}" ./...
