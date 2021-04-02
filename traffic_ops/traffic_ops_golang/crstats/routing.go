@@ -58,13 +58,11 @@ const (
 
 func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *string, hostRegexs []string) (tc.Routing, error) {
 	forwardProxy, forwardProxyExists, err := dbhelpers.GetGlobalParam(tx, RouterProxyParameter)
-	fmt.Println(forwardProxy, forwardProxyExists, err)
 	if err != nil {
 		return tc.Routing{}, errors.New("getting global router proxy parameter: " + err.Error())
 	}
 	client := &http.Client{Timeout: RouterRequestTimeout}
 	if forwardProxyExists {
-		fmt.Println("Doubt you are here?")
 		proxyURI, err := url.Parse(forwardProxy)
 		if err != nil {
 			return tc.Routing{}, errors.New("router forward proxy '" + forwardProxy + "' in parameter '" + RouterProxyParameter + "' not a URI: " + err.Error())
@@ -77,7 +75,6 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *st
 	}
 
 	var hostRegex *regexp.Regexp
-	fmt.Println("Host", hostRegex, "Client", client)
 	if len(hostRegexs) > 0 {
 		hostRegex, err = regexp.Compile(strings.Join(hostRegexs, "|"))
 		if err != nil {
@@ -87,18 +84,15 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *st
 
 	count := 0
 	for _, routerFQDNs := range routers {
-		fmt.Println(routerFQDNs)
 		count += len(routerFQDNs)
 	}
 
 	resp := make(chan RouterResp, count)
 
 	wg := sync.WaitGroup{}
-	fmt.Println(count)
 	wg.Add(count)
 
 	for cdn, routerFQDNs := range routers {
-		fmt.Println(cdn, routerFQDNs)
 		for _, routerFQDN := range routerFQDNs {
 			go getCRSStats(resp, &wg, routerFQDN, string(cdn), client)
 		}
@@ -108,58 +102,12 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *st
 	close(resp)
 
 	dat := RouterData{}
-	//testmap := map[string]tc.CRSStatsStat{
-	//	"video.demo1.mycdn.ciab.test": tc.CRSStatsStat {10, 20, 0, 0, 0, 0, 0, 0, 0, 0},
-	//}
-	//test := tc.CRSStats{
-	//	App:   tc.CRSStatsApp{
-	//		BuildTimestamp: "2021-03-24",
-	//		Name:           "traffic_router",
-	//		DeployDir:      "/opt/traffic_router",
-	//		GitRevision:    "36a47e9a3",
-	//		Version:        "5.1.0",
-	//	},
-	//	Stats: tc.CRSStatsStats{
-	//		DNSMap:           nil,
-	//		HTTPMap:          testmap,
-	//		TotalDNSCount:    0,
-	//		TotalHTTPCount:   2,
-	//		TotalDSMissCount: 0,
-	//		AppStartTime:     1616606046447,
-	//		AverageDnsTime:   0,
-	//		AverageHttpTime:  1616606088088,
-	//		UpdateTracker:    tc.CRSStatsUpdateTracker{
-	//			LastHttpsCertificatesCheck:           0,
-	//			LastGeolocationDatabaseUpdaterUpdate: 2,
-	//			LastCacheStateCheck:                  0,
-	//			LastCacheStateChange:                 1616606408121,
-	//			LastNetworkUpdaterUpdate:             0,
-	//			LastHTTPSCertificatesUpdate:          1616606543653,
-	//			LastConfigCheck:                      1616606069501,
-	//			LastConfigChange:                     0,
-	//			LastHTTPSCertificatesFetchFail:       1616606410547,
-	//			LastNetworkUpdaterCheck:              1616606544371,
-	//			NewDNSSECKeysFound:                   1616606109280,
-	//			LastGeolocationDatabaseUpdaterCheck:  0,
-	//			LastHTTPSCertificatesFetchSuccess:    0,
-	//			LastSteeringWatcherCheck:             0,
-	//			LastDNSSECKeysCheck:                  0,
-	//			LastFederationsWatcherCheck:          1616606408507,
-	//			LastHTTPSCertificatesFetchAttempt:    1616606487260,
-	//		},
-	//	},
-	//}
-
-	fmt.Println("Resp", &resp)
 	for r := range resp {
-		fmt.Println("Data", dat, "r", r.Stats)
-		//if r.Error != nil {
-		//	return tc.Routing{}, err
-		//}
-		fmt.Println("You here?")
-		//r.Stats = test
+		if r.Error != nil {
+			return tc.Routing{}, r.Error
+		}
 		dat = addCRSStats(dat, r.Stats, statType, hostRegex)
-		fmt.Println("Data1", dat)
+
 	}
 	return sumRouterData(dat), nil
 }
@@ -192,9 +140,7 @@ func addCRSStats(d RouterData, stats tc.CRSStats, statType *string, hostRegex *r
 	// DNSMap
 	if statType == nil || *statType == "DNS" {
 		for host, stat := range stats.Stats.DNSMap {
-			fmt.Println("MH-dns", host, matchingHost(host))
 			if matchingHost(host) {
-				fmt.Println(d.StatTotal, stat)
 				d.StatTotal = sumCRSStat(d.StatTotal, stat)
 				d.Total += totalCRSStat(stat)
 			}
@@ -204,9 +150,7 @@ func addCRSStats(d RouterData, stats tc.CRSStats, statType *string, hostRegex *r
 	// HTTPMap
 	if statType == nil || *statType == "HTTP" {
 		for host, stat := range stats.Stats.HTTPMap {
-			fmt.Println("MH-http", host, matchingHost(host))
 			if matchingHost(host) {
-				fmt.Println(d.StatTotal, stat)
 				d.StatTotal = sumCRSStat(d.StatTotal, stat)
 				d.Total += totalCRSStat(stat)
 			}
@@ -253,14 +197,12 @@ func getCRSStats(respond chan<- RouterResp, wg *sync.WaitGroup, routerFQDN, cdn 
 		return
 	}
 	stats := tc.CRSStats{}
-	fmt.Println("Response", resp)
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
 		r.Error = fmt.Errorf("decoding stats from CDN %s router %s: %v", cdn, routerFQDN, err)
 		respond <- r
 		return
 	}
 	r.Stats = stats
-	fmt.Println(r.Stats)
 	respond <- r
 }
 
@@ -296,15 +238,10 @@ GROUP BY s.host_name, s.domain_name, c.name
 		if port.Valid {
 			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
 		}
-		fmt.Println(fqdn)
-		//fqdn = "cdn-tr-atl-01.cdn.comcast.net:3333"
-		fqdn = "cdn-tr-oshob-02.nightly.cdnlab.comcast.net:3333"
-		fmt.Println(fqdn)
 		if requiredCDN != nil && *requiredCDN != cdn {
 			continue
 		}
 		routers[tc.CDNName(cdn)] = append(routers[tc.CDNName(cdn)], fqdn)
 	}
-	fmt.Println(routers)
 	return routers, nil
 }
