@@ -39,8 +39,7 @@ let typesPage = new TypesPage();
 describe('Setup API for Types Test', function(){
     it('Setup', async function(){
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 using(testData.Types, async function(typesData){
@@ -85,7 +84,6 @@ using(testData.Types, async function(typesData){
 describe('Clean Up API for Types Test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })

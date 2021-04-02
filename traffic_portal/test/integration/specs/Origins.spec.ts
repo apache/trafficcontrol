@@ -39,8 +39,7 @@ let originsPage = new OriginsPage();
 describe('Setup Origin Delivery Service', function () {
     it('Setup', async function () {
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 using(testData.Origins, async function (originsData) {
@@ -93,7 +92,6 @@ using(testData.Origins, async function (originsData) {
 describe('Clean up Origin Delivery Service', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })
