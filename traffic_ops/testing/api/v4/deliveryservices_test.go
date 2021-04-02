@@ -153,11 +153,11 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int) 
 	if err != nil {
 		t.Error(err)
 	}
-	_, _, err = TOSession.DeleteCDNByID(oldCDNID)
+	_, _, err = TOSession.DeleteCDN(oldCDNID)
 	if err != nil {
 		t.Error(err)
 	}
-	_, _, err = TOSession.DeleteCDNByID(newCDNID)
+	_, _, err = TOSession.DeleteCDN(newCDNID)
 	if err != nil {
 		t.Error(err)
 	}

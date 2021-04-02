@@ -84,14 +84,6 @@ func GetTestProfilesIMS(t *testing.T) {
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
-		// TODO: Figure out how this ever worked and what it's meant to test.
-		// _, reqInf, err = TOSession.GetProfileByParameterWithHdr(pr.Parameter, header)
-		// if err != nil {
-		// 	t.Fatalf("Expected no error, but got %v", err.Error())
-		// }
-		// if reqInf.StatusCode != http.StatusNotModified {
-		// 	t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		// }
 	}
 }
 
@@ -407,6 +399,11 @@ func DeleteTestProfiles(t *testing.T) {
 		resp, _, err = TOSession.GetProfileByID(profileID, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by id: %v - %v", err, resp)
+			continue
+		}
+		if len(resp) < 1 {
+			t.Errorf("Traffic Ops returned no Profiles with ID %d", profileID)
+			continue
 		}
 		// delete any profile_parameter associations first
 		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter

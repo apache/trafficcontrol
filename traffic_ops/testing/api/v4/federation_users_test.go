@@ -38,6 +38,9 @@ func TestFederationUsers(t *testing.T) {
 }
 
 func GetTestValidFederationIDUsersIMSAfterChange(t *testing.T, header http.Header) {
+	if len(fedIDs) < 0 {
+		t.Fatal("Need at least one Federation ID to test Federation ID Users change")
+	}
 	_, reqInf, err := TOSession.GetFederationUsers(fedIDs[0], header)
 	if err != nil {
 		t.Fatalf("No error expected, but got: %v", err)

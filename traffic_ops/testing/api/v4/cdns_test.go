@@ -47,6 +47,9 @@ func TestCDNs(t *testing.T) {
 }
 
 func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test updating CDNs")
+	}
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the Update
 	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, header)
@@ -56,7 +59,7 @@ func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
 	if len(resp) > 0 {
 		remoteCDN := resp[0]
 		remoteCDN.DomainName = "domain2"
-		_, reqInf, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, header)
+		_, reqInf, err := TOSession.UpdateCDN(remoteCDN.ID, remoteCDN, header)
 		if err == nil {
 			t.Errorf("Expected error about Precondition Failed, got none")
 		}
@@ -151,7 +154,7 @@ func UpdateTestCDNs(t *testing.T) {
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, nil)
+	alert, _, err = TOSession.UpdateCDN(remoteCDN.ID, remoteCDN, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
 	}
@@ -189,7 +192,7 @@ func DeleteTestCDNs(t *testing.T) {
 		if len(resp) > 0 {
 			respCDN := resp[0]
 
-			_, _, err := TOSession.DeleteCDNByID(respCDN.ID)
+			_, _, err := TOSession.DeleteCDN(respCDN.ID)
 			if err != nil {
 				t.Errorf("cannot DELETE CDN by name: '%s' %v", respCDN.Name, err)
 			}

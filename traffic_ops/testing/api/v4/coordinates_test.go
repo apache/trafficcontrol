@@ -183,7 +183,7 @@ func DeleteTestCoordinates(t *testing.T) {
 		}
 		if len(resp) > 0 {
 			respCoord := resp[0]
-			_, _, err := TOSession.DeleteCoordinateByID(respCoord.ID)
+			_, _, err := TOSession.DeleteCoordinate(respCoord.ID)
 			if err != nil {
 				t.Errorf("cannot DELETE Coordinate by name: '%s' %v", respCoord.Name, err)
 			}

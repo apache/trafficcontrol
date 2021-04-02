@@ -132,6 +132,13 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Fatalf("Server '%s' has nil ID", hostname)
 	}
 
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test assignment of servers to Delivery Services")
+	}
+	if testData.DeliveryServices[0].XMLID == nil {
+		t.Fatal("Delivery Service selected for testing had null or undefined XMLID")
+	}
+
 	rd, _, err := TOSession.GetDeliveryServiceByXMLID(*testData.DeliveryServices[0].XMLID, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)

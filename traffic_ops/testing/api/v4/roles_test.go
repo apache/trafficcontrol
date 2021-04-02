@@ -163,31 +163,35 @@ func SortTestRoles(t *testing.T) {
 }
 
 func UpdateTestRoles(t *testing.T) {
-	t.Logf("testData.Roles contains: %+v\n", testData.Roles)
+	if len(testData.Roles) < 1 {
+		t.Fatalf("Need at least on Role to test updating Roles")
+	}
 	firstRole := testData.Roles[0]
+	if firstRole.Name == nil {
+		t.Fatal("Found Role with null or undefined name in test data")
+	}
 	// Retrieve the Role by role so we can get the id for the Update
-	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name, nil)
-	t.Log("Status Code: ", status)
+	resp, _, _, err := TOSession.GetRoleByName(*firstRole.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
-	t.Logf("got response: %+v", resp)
 	if len(resp) < 1 {
 		t.Fatal("got empty response if GET role by name")
 	}
 	remoteRole := resp[0]
+	if remoteRole.ID == nil {
+		t.Fatal("Role returned from Traffic Ops had null or undefined ID")
+	}
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole
 	var alert tc.Alerts
-	alert, _, status, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
-	t.Log("Status Code: ", status)
+	alert, _, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
 	if err != nil {
-		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
+		t.Fatalf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Role to check role got updated
-	resp, _, status, err = TOSession.GetRoleByID(*remoteRole.ID, nil)
-	t.Log("Status Code: ", status)
+	resp, _, _, err = TOSession.GetRoleByID(*remoteRole.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
@@ -198,8 +202,7 @@ func UpdateTestRoles(t *testing.T) {
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRole.Name = firstRole.Name
-	alert, _, status, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
-	t.Log("Status Code: ", status)
+	alert, _, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}

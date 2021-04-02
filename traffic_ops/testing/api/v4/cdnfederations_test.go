@@ -53,7 +53,7 @@ func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
-		if fed != nil && len(fed.Response) > 0 {
+		if len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
 			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, h)
@@ -84,7 +84,7 @@ func CreateTestCDNFederations(t *testing.T) {
 			break
 		}
 
-		data, _, err := TOSession.CreateCDNFederationByName(f, testData.CDNs[i].Name)
+		data, _, err := TOSession.CreateCDNFederation(f, testData.CDNs[i].Name)
 		if err != nil {
 			t.Errorf("could not POST federations: " + err.Error())
 		}
@@ -110,7 +110,7 @@ func SortTestCDNFederations(t *testing.T) {
 	ttl := 50
 	description := "test"
 	f := tc.CDNFederation{ID: nil, CName: &cname, TTL: &ttl, Description: &description, LastUpdated: nil}
-	data, _, err := TOSession.CreateCDNFederationByName(f, "cdn1")
+	data, _, err := TOSession.CreateCDNFederation(f, "cdn1")
 	if err != nil {
 		t.Errorf("could not POST federations: " + err.Error())
 	}
@@ -136,7 +136,7 @@ func SortTestCDNFederations(t *testing.T) {
 	}
 
 	// Delete the newly created federation
-	resp1, _, err1 := TOSession.DeleteCDNFederationByID("cdn1", id)
+	resp1, _, err1 := TOSession.DeleteCDNFederation("cdn1", id)
 	if err != nil {
 		t.Errorf("cannot DELETE federation by id: '%d' %v", id, err1)
 	}
@@ -150,6 +150,11 @@ func UpdateTestCDNFederations(t *testing.T) {
 		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
+			continue
+		}
+		if len(fed.Response) < 1 {
+			t.Error("Response from Traffic Ops included no Federations")
+			continue
 		}
 
 		expectedCName := "new.cname."
@@ -306,7 +311,7 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 func DeleteTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederationByID("foo", id)
+		resp, _, err := TOSession.DeleteCDNFederation("foo", id)
 		if err != nil {
 			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
