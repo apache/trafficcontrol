@@ -21,7 +21,7 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+FROM centos:${RHEL_VERSION} as trafficops
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION=$RHEL_VERSION
@@ -124,3 +124,13 @@ EXPOSE 443
 CMD /run-go.sh
 HEALTHCHECK --interval=10s --timeout=1s \
 	CMD bash -c 'source /to-access.sh && [[ "$(curl -sk "https://${TO_FQDN}/api/${TO_API_VERSION}/ping" | jq .ping)" == \"pong\" ]]'
+
+FROM trafficops as get-delve
+
+RUN go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM trafficops AS trafficops-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+
+# Makes trafficops the last/default stage in the Dockerfile
+FROM trafficops AS trafficops

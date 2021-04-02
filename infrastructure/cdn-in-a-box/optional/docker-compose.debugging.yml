@@ -32,13 +32,15 @@ services:
       - trafficmonitor-nondebug
   trafficops:
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile-debug
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
+      target: trafficops-debug
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     image: trafficops-debug
     ports:
       - "2345:2345" #Delve debugging port
-    depends_on:
-      - trafficops-nondebug
   trafficrouter:
     ports:
       - "5005:5005" # JPDA debugging port
@@ -61,14 +63,6 @@ services:
       dockerfile: traffic_monitor/Dockerfile
       args:
         TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
-    command: /usr/bin/true
-  # The trafficops-nondebug service ensures that the trafficops base image
-  # exists before trying to build trafficops-debug.
-  trafficops-nondebug:
-    image: trafficops
-    build:
-      context: ../../
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
     command: /usr/bin/true
   # The trafficstats-nondebug service exists to ensure that the trafficstats
   # base image exists before building trafficstats-debug.
