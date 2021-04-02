@@ -10,7 +10,6 @@
     "outDir": "GeneratedCode",
     "resolveJsonModule": true,
     "strict": true,
-    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false,
     "noImplicitThis": true
