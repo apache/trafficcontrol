@@ -28,6 +28,7 @@ import { config } from '../config';
 export class API {
 
     private cookie = "";
+    private readonly config = config;
 
     constructor() {
         axios.defaults.headers.common['Accept'] = 'application/json'
@@ -40,10 +41,10 @@ export class API {
         try {
             const response = await axios({
                 method: 'post',
-                url: config.params.apiUrl + '/user/login',
+                url: this.config.params.apiUrl + '/user/login',
                 data: {
-                    u: config.params.login.username,
-                    p: config.params.login.password
+                    u: this.config.params.login.username,
+                    p: this.config.params.login.password
                 }
             });
             this.cookie = await response.headers["set-cookie"][0];
@@ -69,7 +70,7 @@ export class API {
                 case "post":
                     response = await axios({
                         method: method,
-                        url: config.params.apiUrl + route,
+                        url: this.config.params.apiUrl + route,
                         headers: { Cookie: this.cookie},
                         data: data
                     });
@@ -77,23 +78,23 @@ export class API {
                 case "get":
                     response = await axios({
                         method: method,
-                        url: config.params.apiUrl + route,
+                        url: this.config.params.apiUrl + route,
                         headers: { Cookie: this.cookie},
                     });
                     break;
                 case "delete":
                     if ((data.route).includes('?name')){
-                        data.route = data.route + config.randomize
+                        data.route = data.route + this.config.randomize
                     }
                     if ((data.route).includes('?id')){
                         data.route = data.route + data.id;
                     }
                     if((data.route).includes('/service_categories/')){
-                        data.route = data.route + config.randomize
+                        data.route = data.route + this.config.randomize
                     }
                     response = await axios({
                         method: method,
-                        url: config.params.apiUrl + data.route,
+                        url: this.config.params.apiUrl + data.route,
                         headers: { Cookie: this.cookie},
                     });
                     break;
@@ -112,11 +113,11 @@ export class API {
 
     GetId = async function (data) {
         for(var i = 0; i < data.getRequest.length; i++) {
-            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + config.randomize;
+            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + this.config.randomize;
             try {
                 const response = await axios({
                     method: 'get',
-                    url: config.params.apiUrl + data.getRequest[i].route + query,
+                    url: this.config.params.apiUrl + data.getRequest[i].route + query,
                     headers: { Cookie: this.cookie},
                });
 
@@ -140,44 +141,44 @@ export class API {
 
    Randomize = function(data) {
         if(data.hasOwnProperty('email')) {
-            data['email'] = data.fullName + config.randomize + data.email;
+            data['email'] = data.fullName + this.config.randomize + data.email;
         }
         if(data.hasOwnProperty('fullName')) {
-            data['fullName'] = data.fullName + config.randomize;
+            data['fullName'] = data.fullName + this.config.randomize;
         }
         if(data.hasOwnProperty('hostName')) {
-            data['hostName'] = data.hostName + config.randomize;
+            data['hostName'] = data.hostName + this.config.randomize;
         }
         if(data.hasOwnProperty('ipAddress')) {
             data['ipAddress'] = (Math.floor(Math.random() * 255) + 1)+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255));
         }
         if(data.hasOwnProperty('name')) {
-            data['name'] = data.name + config.randomize;
+            data['name'] = data.name + this.config.randomize;
         }
         if(data.hasOwnProperty('requiredCapability')) {
-            data['requiredCapability'] = data.requiredCapability + config.randomize;
+            data['requiredCapability'] = data.requiredCapability + this.config.randomize;
         }
         if(data.hasOwnProperty('serverCapability')) {
-            data['serverCapability'] = data.serverCapability + config.randomize;
+            data['serverCapability'] = data.serverCapability + this.config.randomize;
         }
         if(data.hasOwnProperty('username')) {
-            data['username'] = data.username + config.randomize;
+            data['username'] = data.username + this.config.randomize;
         }
         if(data.hasOwnProperty('xmlId')) {
-            data['xmlId'] = data.xmlId + config.randomize;
+            data['xmlId'] = data.xmlId + this.config.randomize;
         }
         if(data.hasOwnProperty('shortName')) {
-            data['shortName'] = data.shortName + config.randomize;
+            data['shortName'] = data.shortName + this.config.randomize;
         }
         if(data.hasOwnProperty('divisionName')) {
-            data['divisionName'] = data.divisionName + config.randomize;
+            data['divisionName'] = data.divisionName + this.config.randomize;
         }
         if(data.hasOwnProperty('domainName')) {
-            data['domainName'] = data.domainName + config.randomize;
+            data['domainName'] = data.domainName + this.config.randomize;
         }
         if(data.hasOwnProperty('nodes')){
            for(var i in  data['nodes']){
-               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + config.randomize;
+               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + this.config.randomize;
            }
         }
         if(data.hasOwnProperty('interfaces')){
@@ -205,7 +206,7 @@ export class API {
                 }
                 return null
             } else if (response.status == undefined) {
-                throw new Error(`Error requesting ${config.params.apiUrl}: ${response}`);
+                throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
             } else {
                 throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
             }
