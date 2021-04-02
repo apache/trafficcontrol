@@ -68,7 +68,7 @@ func (to *Session) GetCoordinateByName(name string, header http.Header) ([]tc.Co
 }
 
 // DeleteCoordinateByID deletes the Coordinate with the given ID.
-func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteCoordinate(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APICoordinates, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

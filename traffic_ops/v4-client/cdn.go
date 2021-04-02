@@ -37,7 +37,7 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, toclientlib.ReqInf, error) 
 }
 
 // UpdateCDNByID replaces the identified CDN with the provided CDN.
-func (to *Session) UpdateCDNByID(id int, cdn tc.CDN, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateCDN(id int, cdn tc.CDN, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APICDNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, cdn, header, &alerts)
@@ -68,7 +68,7 @@ func (to *Session) GetCDNByName(name string, header http.Header) ([]tc.CDN, tocl
 }
 
 // DeleteCDNByID deletes the CDN with the given ID.
-func (to *Session) DeleteCDNByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteCDN(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APICDNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)
